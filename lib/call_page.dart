@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/phone.dart';
 import 'package:openup/phone_status.dart';
-import 'package:openup/signaling/signaling.dart';
-import 'package:openup/signaling/web_sockets_signaling_channel.dart';
 
-/// Start and stop calls from this page.
+/// Page on which the [Phone] is used. Calls start, proceed and end here.
 class CallPage extends StatefulWidget {
-  final String host;
+  final Phone phone;
+  final bool initiator;
 
   const CallPage({
     Key? key,
-    required this.host,
+    required this.phone,
+    required this.initiator,
   }) : super(key: key);
 
   @override
@@ -19,38 +19,25 @@ class CallPage extends StatefulWidget {
 }
 
 class _CallPageState extends State<CallPage> {
-  late final SignalingChannel _signalingChannel;
-  late final Phone _phone;
-
   bool _preparing = false;
-  bool _remoteReady = false;
   RTCVideoRenderer? _localRenderer;
   RTCVideoRenderer? _remoteRenderer;
 
-  late final String _nickname;
-  final _nicknameController = TextEditingController();
-
   @override
   void initState() {
-    _nickname = DateTime.now().microsecond.toString().padLeft(3, '0');
+    widget.phone.status.listen(_handlePhoneStatus);
+    if (widget.initiator) {
+      widget.phone.call();
+    } else {
+      widget.phone.answer();
+    }
 
-    _signalingChannel = WebSocketsSignalingChannel(
-      host: widget.host,
-    );
-    _phone = Phone(
-      signalingChannel: _signalingChannel,
-      nickname: _nickname,
-    );
-    _phone.status.listen(_handlePhoneStatus);
     super.initState();
-
-    _nicknameController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    _phone.hangUp().then((_) => _signalingChannel.dispose());
-    _nicknameController.dispose();
+    widget.phone.hangUp();
     super.dispose();
   }
 
@@ -72,17 +59,10 @@ class _CallPageState extends State<CallPage> {
       },
       remoteStreamReady: (remoteStreamReady) {
         if (mounted) {
-          setState(() {
-            _remoteRenderer?.srcObject = remoteStreamReady.stream;
-            _remoteReady = true;
-          });
+          setState(() => _remoteRenderer?.srcObject = remoteStreamReady.stream);
         }
       },
-      ended: (_) {
-        if (mounted) {
-          setState(() => _remoteReady = false);
-        }
-      },
+      ended: (_) => Navigator.of(context).pop(),
     );
   }
 
@@ -90,7 +70,7 @@ class _CallPageState extends State<CallPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Call prototype'),
+        title: const Text('Ongoing call'),
       ),
       body: Center(
         child: Padding(
@@ -123,44 +103,6 @@ class _CallPageState extends State<CallPage> {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text('Your number is: $_nickname'),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: 200,
-                child: TextField(
-                  controller: _nicknameController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 3,
-                  textAlign: TextAlign.center,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter number to call',
-                    counterText: '',
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  OutlinedButton.icon(
-                    label: const Text('Call'),
-                    icon: const Icon(Icons.call),
-                    onPressed: _nicknameController.text.isEmpty
-                        ? null
-                        : () {
-                            final nickname = _nicknameController.text;
-                            _phone.call(nickname);
-                          },
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    label: const Text('End call'),
-                    icon: const Icon(Icons.call_end),
-                    onPressed: _remoteReady ? _phone.hangUp : null,
-                  ),
-                ],
               ),
             ],
           ),

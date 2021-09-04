@@ -4,7 +4,8 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/phone_status.dart';
 import 'package:openup/signaling/signaling.dart';
 
-/// WebRTC calling service.
+/// WebRTC calling service. The signaling server must already have a room ready
+/// for the parties to make a call.
 class Phone {
   static const _configuration = {
     'iceServers': [
@@ -21,6 +22,8 @@ class Phone {
   StreamSubscription<Signal>? _signalSubscription;
 
   final _statusController = StreamController<PhoneStatus>.broadcast();
+  final String _uid;
+
   bool _idle = true;
   RTCPeerConnection? _peerConnection;
   MediaStream? _localMediaStream;
@@ -32,23 +35,44 @@ class Phone {
 
   Phone({
     required SignalingChannel signalingChannel,
-    required String nickname,
-  }) : _signalingChannel = signalingChannel {
-    _signalingChannel.send(RegisterClient(nickname: nickname));
-
-    _setup();
-  }
+    required String uid,
+  })  : _signalingChannel = signalingChannel,
+        _uid = uid;
 
   Future<void> get ready => _readyForCall.future;
 
   Stream<PhoneStatus> get status => _statusController.stream;
 
-  void _setup() async {
+  Future<void> dispose() async {
+    await hangUp();
+    _signalSubscription?.cancel();
+  }
+
+  Future<void> hangUp() => _disconnect();
+
+  Future<void> _disconnect() async {
+    await _peerConnection?.close();
+    await Future.wait([
+      ...?_localMediaStream?.getTracks().map((track) => track.stop()),
+      ...?_remoteMediaStream?.getTracks().map((track) => track.stop()),
+      _localMediaStream?.dispose(),
+      _remoteMediaStream?.dispose(),
+    ].whereType<Future>());
+    _statusController.add(const Ended());
+    _idle = true;
+  }
+
+  Future<void> call() async {
+    _idle = _idle ? false : throw 'Call in progress';
+
     final mediaStream = await _setupMedia();
     _localMediaStream = mediaStream;
 
     final peerConnection = await createPeerConnection(_configuration);
     _peerConnection = peerConnection;
+
+    _signalingChannel.send(BeginSignaling(uid: _uid));
+    _handleSignals(peerConnection, _signalingChannel);
 
     peerConnection.onAddStream = (stream) {
       _statusController.add(RemoteStreamReady(stream));
@@ -56,40 +80,8 @@ class Phone {
     };
 
     await _addLocalMedia(peerConnection, mediaStream);
-
     _listenAndSendIceCandidates(peerConnection);
-
-    _signalSubscription = _handleSignals(peerConnection, _signalingChannel);
     _readyForCall.complete();
-  }
-
-  Future<void> dispose() async {
-    await _peerConnection?.close();
-    _signalingChannel.send(const EndCall());
-    await hangUp();
-    await Future.wait([
-      _signalSubscription?.cancel(),
-      ...?_localMediaStream?.getTracks().map((track) => track.stop()),
-      ...?_remoteMediaStream?.getTracks().map((track) => track.stop()),
-      _localMediaStream?.dispose(),
-      _remoteMediaStream?.dispose(),
-    ].whereType<Future>());
-  }
-
-  Future<void> hangUp() async {
-    _idle = true;
-    _statusController.add(const Ended());
-  }
-
-  Future<void> call(String nickname) async {
-    _idle = _idle ? false : throw 'Call in progress';
-
-    final peerConnection = _peerConnection;
-    if (peerConnection == null) {
-      return;
-    }
-
-    _signalingChannel.send(StartCall(nickname: nickname));
 
     _listenForRemoteTracks(peerConnection);
     _setLocalDescriptionOffer(peerConnection);
@@ -100,10 +92,23 @@ class Phone {
   Future<void> answer() async {
     _idle = _idle ? false : throw 'Call in progress';
 
-    final peerConnection = _peerConnection;
-    if (peerConnection == null) {
-      return;
-    }
+    final mediaStream = await _setupMedia();
+    _localMediaStream = mediaStream;
+
+    final peerConnection = await createPeerConnection(_configuration);
+    _peerConnection = peerConnection;
+
+    _signalingChannel.send(BeginSignaling(uid: _uid));
+    _handleSignals(peerConnection, _signalingChannel);
+
+    peerConnection.onAddStream = (stream) {
+      _statusController.add(RemoteStreamReady(stream));
+      _remoteMediaStream = stream;
+    };
+
+    await _addLocalMedia(peerConnection, mediaStream);
+    _listenAndSendIceCandidates(peerConnection);
+    _readyForCall.complete();
 
     _hasIceCandidate = Completer<void>();
     _hasRemoteDescription = Completer<void>();
@@ -155,6 +160,7 @@ class Phone {
     peerConnection.onIceCandidate = (candidate) {
       _signalingChannel.send(
         IceCandidate(
+          uid: _uid,
           candidate: candidate.candidate,
           sdpMid: candidate.sdpMid,
           sdpMLineIndex: candidate.sdpMlineIndex,
@@ -193,6 +199,7 @@ class Phone {
   ) {
     signalingChannel.send(
       SessionDescription(
+        uid: _uid,
         sdp: sessionDescription.sdp,
         type: sessionDescription.type,
       ),
@@ -205,10 +212,7 @@ class Phone {
   ) {
     return signalingChannel.signals.listen((signal) {
       signal.map(
-        registerClient: (_) {},
-        startCall: (_) {},
-        answerCall: (_) => answer(),
-        endCall: (_) {},
+        beginSignaling: (_) {},
         sessionDescription: (sessionDescription) {
           if (!_hasRemoteDescription.isCompleted) {
             _hasRemoteDescription.complete();

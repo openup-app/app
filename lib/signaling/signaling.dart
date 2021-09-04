@@ -6,24 +6,18 @@ part 'signaling.g.dart';
 /// Commands used for signaling.
 @freezed
 class Signal with _$Signal {
-  const factory Signal.registerClient({
-    required String nickname,
-  }) = RegisterClient;
-
-  const factory Signal.startCall({
-    required String nickname,
-  }) = StartCall;
-
-  const factory Signal.answerCall() = AnswerCall;
-
-  const factory Signal.endCall() = EndCall;
+  const factory Signal.beginSignaling({
+    required String uid,
+  }) = BeginSignaling;
 
   const factory Signal.sessionDescription({
+    required String uid,
     String? sdp,
     String? type,
   }) = SessionDescription;
 
   const factory Signal.iceCandidate({
+    required String uid,
     String? candidate,
     String? sdpMid,
     int? sdpMLineIndex,

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:openup/signaling/signaling.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as status;
 
 /// Concrete implementation of a WebRTC signaling channel using
 /// WebSockets as the transport.
@@ -20,11 +21,7 @@ class WebSocketsSignalingChannel implements SignalingChannel {
   }
 
   @override
-  Future<void> dispose() async {
-    // TODO: Need to close the WebSocketChannel, does this do that?
-    _channel.sink.close();
-    await _controller.close();
-  }
+  Future<void> dispose() => _channel.sink.close(status.goingAway);
 
   @override
   Stream<Signal> get signals => _controller.stream;

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:openup/call_page.dart';
+import 'package:openup/lobby_page.dart';
+
+const _tempApplicationHost = '192.168.1.118:8080';
+const _tempSignalingHost = '192.168.1.118:8081';
 
 void main() {
   runApp(const MyApp());
@@ -13,12 +16,41 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  static const _tempHost = '192.168.1.118:8080';
-
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: CallPage(host: _tempHost),
+      home: MenuPage(),
+    );
+  }
+}
+
+class MenuPage extends StatelessWidget {
+  const MenuPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Openup'),
+      ),
+      body: Center(
+        child: OutlinedButton.icon(
+          label: const Text('Talk to someone new'),
+          icon: const Icon(Icons.video_call),
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) {
+                  return const LobbyPage(
+                    applicationHost: _tempApplicationHost,
+                    signalingHost: _tempSignalingHost,
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
