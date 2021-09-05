@@ -31,12 +31,12 @@ class MenuPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Openup'),
+        title: const Text('Meet people'),
       ),
       body: Center(
         child: OutlinedButton.icon(
           label: const Text('Talk to someone new'),
-          icon: const Icon(Icons.video_call),
+          icon: const Icon(Icons.call),
           onPressed: () {
             Navigator.of(context).push(
               MaterialPageRoute(

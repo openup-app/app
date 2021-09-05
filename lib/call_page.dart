@@ -73,39 +73,104 @@ class _CallPageState extends State<CallPage> {
         title: const Text('Ongoing call'),
       ),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _preparing
-                          ? const Center(
-                              child: CircularProgressIndicator(),
-                            )
-                          : Container(
-                              decoration: BoxDecoration(border: Border.all()),
-                              child: _localRenderer != null
-                                  ? RTCVideoView(_localRenderer!, mirror: true)
-                                  : null,
-                            ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(border: Border.all()),
-                        child: _remoteRenderer != null
-                            ? RTCVideoView(_remoteRenderer!)
-                            : null,
-                      ),
-                    ),
-                  ],
+        child: Stack(
+          children: [
+            if (_remoteRenderer != null)
+              Positioned.fill(
+                child: RTCVideoView(
+                  _remoteRenderer!,
+                  objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                 ),
               ),
-            ],
-          ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (_localRenderer != null)
+                    Container(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        alignment: Alignment.bottomRight,
+                        decoration: const BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(16),
+                          ),
+                        ),
+                        clipBehavior: Clip.hardEdge,
+                        constraints: const BoxConstraints(
+                          maxWidth: 100,
+                          maxHeight: 200,
+                        ),
+                        child: RTCVideoView(
+                          _localRenderer!,
+                          mirror: true,
+                          objectFit:
+                              RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                        ),
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _ScrimIconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.mic_off),
+                        ),
+                        _ScrimIconButton(
+                          onPressed: () {
+                            widget.phone.hangUp();
+                            Navigator.of(context).pop();
+                          },
+                          icon: const Icon(Icons.call_end),
+                          scrimColor: Colors.red,
+                        ),
+                        _ScrimIconButton(
+                          onPressed: () {},
+                          icon: const Icon(Icons.person_add),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ScrimIconButton extends StatelessWidget {
+  final Icon icon;
+  final VoidCallback onPressed;
+  final Color scrimColor;
+
+  const _ScrimIconButton({
+    Key? key,
+    required this.icon,
+    required this.onPressed,
+    this.scrimColor = Colors.white,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: const AlwaysStoppedAnimation(1.1),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(32)),
+          color: scrimColor.withOpacity(0.4),
+        ),
+        child: IconButton(
+          onPressed: onPressed,
+          icon: icon,
+          color: Colors.white,
         ),
       ),
     );

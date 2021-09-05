@@ -63,14 +63,11 @@ class _LobbyPageState extends State<LobbyPage> {
     event.map(
       makeCall: (_) => _startCall(initiator: true),
       answerCall: (_) => _startCall(initiator: false),
-      callEnded: (_) {
-        Navigator.of(context).pop();
-        return _disposePhone();
-      },
+      callEnded: (_) => _onCallEnded(),
     );
   }
 
-  void _startCall({required bool initiator}) {
+  void _startCall({required bool initiator}) async {
     final signalingChannel = WebSocketsSignalingChannel(
       host: widget.signalingHost,
     );
@@ -96,8 +93,21 @@ class _LobbyPageState extends State<LobbyPage> {
     );
   }
 
+  void _onCallEnded() {
+    Navigator.of(context).pop();
+    _disposePhone();
+  }
+
   Future<void> _disposePhone() async {
-    _phone?.dispose().then((value) => setState(() {}));
-    _signalingChannel?.dispose().then((value) => setState(() {}));
+    _phone?.dispose().then((value) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    _signalingChannel?.dispose().then((value) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 }

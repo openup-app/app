@@ -32,13 +32,8 @@ class CallApi {
   void _handleMessage(dynamic message) {
     message = message is Uint8List ? String.fromCharCodes(message) : message;
     final json = jsonDecode(message);
-    final serverMessage = _ServerMessage.fromJson(json);
-    serverMessage.map(
-      heartbeatPing: (_) => _send(const _HeartbeatPong()),
-      makeCall: (_) => _eventController.add(const MakeCall()),
-      answerCall: (_) => _eventController.add(const AnswerCall()),
-      callEnded: (_) => _eventController.add(const CallEnded()),
-    );
+    final callEvent = CallEvent.fromJson(json);
+    _eventController.add(callEvent);
   }
 
   void _send(_ClientMessage message) =>
@@ -49,24 +44,10 @@ class CallApi {
 class _ClientMessage with _$_ClientMessage {
   const factory _ClientMessage.register(String uid) = _Register;
 
-  const factory _ClientMessage.heartbeatPong() = _HeartbeatPong;
+  const factory _ClientMessage.hangUp() = _HangUp;
 
   factory _ClientMessage.fromJson(Map<String, dynamic> json) =>
       _$_ClientMessageFromJson(json);
-}
-
-@freezed
-class _ServerMessage with _$_ServerMessage {
-  const factory _ServerMessage.heartbeatPing() = _HeartbeatPing;
-
-  const factory _ServerMessage.makeCall() = _MakeCall;
-
-  const factory _ServerMessage.answerCall() = _AnswerCall;
-
-  const factory _ServerMessage.callEnded() = _CallEnded;
-
-  factory _ServerMessage.fromJson(Map<String, dynamic> json) =>
-      _$_ServerMessageFromJson(json);
 }
 
 @freezed
@@ -76,4 +57,7 @@ class CallEvent with _$CallEvent {
   const factory CallEvent.answerCall() = AnswerCall;
 
   const factory CallEvent.callEnded() = CallEnded;
+
+  factory CallEvent.fromJson(Map<String, dynamic> json) =>
+      _$CallEventFromJson(json);
 }
