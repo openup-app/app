@@ -15,8 +15,11 @@ class CallApi {
 
   final _eventController = StreamController<CallEvent>.broadcast();
 
-  CallApi({required String host}) {
-    _channel = WebSocketChannel.connect(Uri.parse('ws://$host'));
+  CallApi({
+    required String host,
+    required String uid,
+  }) {
+    _channel = WebSocketChannel.connect(Uri.parse('ws://$host/?uid=$uid'));
     _channel.stream.listen(_handleMessage);
   }
 
@@ -27,7 +30,7 @@ class CallApi {
 
   Stream<CallEvent> get events => _eventController.stream;
 
-  void register(String uid) => _send(_Register(uid));
+  void hangUp(String uid) => _send(const _HangUp());
 
   void _handleMessage(dynamic message) {
     message = message is Uint8List ? String.fromCharCodes(message) : message;
@@ -42,8 +45,6 @@ class CallApi {
 
 @freezed
 class _ClientMessage with _$_ClientMessage {
-  const factory _ClientMessage.register(String uid) = _Register;
-
   const factory _ClientMessage.hangUp() = _HangUp;
 
   factory _ClientMessage.fromJson(Map<String, dynamic> json) =>

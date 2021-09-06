@@ -15,8 +15,9 @@ class WebSocketsSignalingChannel implements SignalingChannel {
 
   WebSocketsSignalingChannel({
     required String host,
+    required String uid,
   }) {
-    _channel = WebSocketChannel.connect(Uri.parse('ws://$host'));
+    _channel = WebSocketChannel.connect(Uri.parse('ws://$host/?uid=$uid'));
     _channel.stream.listen(_handleSignal);
   }
 

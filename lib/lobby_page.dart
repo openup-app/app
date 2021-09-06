@@ -32,9 +32,11 @@ class _LobbyPageState extends State<LobbyPage> {
   void initState() {
     super.initState();
     _uid = Random().nextInt(1000000).toString().padLeft(7, '0');
-    _callApi = CallApi(host: widget.applicationHost);
+    _callApi = CallApi(
+      host: widget.applicationHost,
+      uid: _uid,
+    );
     _callApi.events.listen(_handleCallEvent);
-    _callApi.register(_uid);
   }
 
   @override
@@ -70,6 +72,7 @@ class _LobbyPageState extends State<LobbyPage> {
   void _startCall({required bool initiator}) async {
     final signalingChannel = WebSocketsSignalingChannel(
       host: widget.signalingHost,
+      uid: _uid,
     );
     final phone = Phone(
       signalingChannel: signalingChannel,
@@ -94,6 +97,7 @@ class _LobbyPageState extends State<LobbyPage> {
   }
 
   void _onCallEnded() {
+    print('Call ended!');
     Navigator.of(context).pop();
     _disposePhone();
   }

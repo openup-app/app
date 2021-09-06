@@ -6,10 +6,6 @@ part 'signaling.g.dart';
 /// Commands used for signaling.
 @freezed
 class Signal with _$Signal {
-  const factory Signal.beginSignaling({
-    required String uid,
-  }) = BeginSignaling;
-
   const factory Signal.sessionDescription({
     required String uid,
     String? sdp,

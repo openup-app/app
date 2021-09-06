@@ -38,7 +38,6 @@ class Phone {
     required String uid,
   })  : _signalingChannel = signalingChannel,
         _uid = uid;
-
   Future<void> get ready => _readyForCall.future;
 
   Stream<PhoneStatus> get status => _statusController.stream;
@@ -71,7 +70,6 @@ class Phone {
     final peerConnection = await createPeerConnection(_configuration);
     _peerConnection = peerConnection;
 
-    _signalingChannel.send(BeginSignaling(uid: _uid));
     _handleSignals(peerConnection, _signalingChannel);
 
     peerConnection.onAddStream = (stream) {
@@ -98,7 +96,6 @@ class Phone {
     final peerConnection = await createPeerConnection(_configuration);
     _peerConnection = peerConnection;
 
-    _signalingChannel.send(BeginSignaling(uid: _uid));
     _handleSignals(peerConnection, _signalingChannel);
 
     peerConnection.onAddStream = (stream) {
@@ -130,7 +127,9 @@ class Phone {
     await remoteRenderer.initialize();
 
     final mediaStream = await navigator.mediaDevices.getUserMedia({
-      'video': true,
+      'video': {
+        'facingMode': 'user',
+      },
       'audio': true,
     });
 
@@ -212,7 +211,6 @@ class Phone {
   ) {
     return signalingChannel.signals.listen((signal) {
       signal.map(
-        beginSignaling: (_) {},
         sessionDescription: (sessionDescription) {
           if (!_hasRemoteDescription.isCompleted) {
             _hasRemoteDescription.complete();
