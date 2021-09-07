@@ -27,6 +27,7 @@ class _CallPageState extends State<CallPage> {
 
   RTCVideoRenderer? _localRenderer;
   RTCVideoRenderer? _remoteRenderer;
+  bool _muted = false;
 
   @override
   void initState() {
@@ -46,6 +47,9 @@ class _CallPageState extends State<CallPage> {
         setState(() => _remoteRenderer?.srcObject = stream);
       },
       onDisconnected: Navigator.of(context).pop,
+      onToggleMute: (muted) {
+        setState(() => _muted = muted);
+      },
     );
 
     if (widget.initiator) {
@@ -116,8 +120,10 @@ class _CallPageState extends State<CallPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         _ScrimIconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.mic_off),
+                          onPressed: _phone.toggleMute,
+                          icon: _muted
+                              ? const Icon(Icons.mic_off)
+                              : const Icon(Icons.mic),
                         ),
                         _ScrimIconButton(
                           onPressed: Navigator.of(context).pop,

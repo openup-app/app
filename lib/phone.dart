@@ -26,6 +26,7 @@ class Phone {
   ) onMediaRenderers;
   final void Function(MediaStream stream) onRemoteStream;
   final void Function() onDisconnected;
+  final void Function(bool muted)? onToggleMute;
 
   bool _usedOnce = false;
   RTCPeerConnection? _peerConnection;
@@ -46,6 +47,7 @@ class Phone {
     required this.onMediaRenderers,
     required this.onRemoteStream,
     required this.onDisconnected,
+    this.onToggleMute,
   });
 
   Future<void> dispose() async {
@@ -59,6 +61,15 @@ class Phone {
       _localRenderer?.dispose(),
       _remoteRenderer?.dispose(),
     ].whereType<Future>());
+  }
+
+  void toggleMute() {
+    final mediaStream = _localMediaStream;
+    if (mediaStream != null) {
+      final track = mediaStream.getTracks().first;
+      track.enabled = !track.enabled;
+      onToggleMute?.call(!track.enabled);
+    }
   }
 
   Future<void> call() => _call(initiator: true);
