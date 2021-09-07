@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/phone.dart';
-import 'package:openup/phone_status.dart';
+import 'package:openup/signaling/signaling.dart';
+import 'package:openup/signaling/web_sockets_signaling_channel.dart';
 
 /// Page on which the [Phone] is used. Calls start, proceed and end here.
 class CallPage extends StatefulWidget {
-  final Phone phone;
+  final String uid;
+  final String signalingHost;
   final bool initiator;
 
   const CallPage({
     Key? key,
-    required this.phone,
+    required this.uid,
+    required this.signalingHost,
     required this.initiator,
   }) : super(key: key);
 
@@ -19,17 +22,36 @@ class CallPage extends StatefulWidget {
 }
 
 class _CallPageState extends State<CallPage> {
-  bool _preparing = false;
+  late final SignalingChannel _signalingChannel;
+  late final Phone _phone;
+
   RTCVideoRenderer? _localRenderer;
   RTCVideoRenderer? _remoteRenderer;
 
   @override
   void initState() {
-    widget.phone.status.listen(_handlePhoneStatus);
+    _signalingChannel = WebSocketsSignalingChannel(
+      host: widget.signalingHost,
+      uid: widget.uid,
+    );
+    _phone = Phone(
+      signalingChannel: _signalingChannel,
+      onMediaRenderers: (localRenderer, remoteRenderer) {
+        setState(() {
+          _localRenderer = localRenderer;
+          _remoteRenderer = remoteRenderer;
+        });
+      },
+      onRemoteStream: (stream) {
+        setState(() => _remoteRenderer?.srcObject = stream);
+      },
+      onDisconnected: Navigator.of(context).pop,
+    );
+
     if (widget.initiator) {
-      widget.phone.call();
+      _phone.call();
     } else {
-      widget.phone.answer();
+      _phone.answer();
     }
 
     super.initState();
@@ -37,33 +59,9 @@ class _CallPageState extends State<CallPage> {
 
   @override
   void dispose() {
-    widget.phone.hangUp();
+    _signalingChannel.dispose();
+    _phone.dispose();
     super.dispose();
-  }
-
-  void _handlePhoneStatus(PhoneStatus status) {
-    status.map(
-      preparingMedia: (_) {
-        if (mounted) {
-          setState(() => _preparing = true);
-        }
-      },
-      mediaReady: (media) {
-        if (mounted) {
-          setState(() {
-            _preparing = false;
-            _localRenderer = media.localVideo;
-            _remoteRenderer = media.remoteVideo;
-          });
-        }
-      },
-      remoteStreamReady: (remoteStreamReady) {
-        if (mounted) {
-          setState(() => _remoteRenderer?.srcObject = remoteStreamReady.stream);
-        }
-      },
-      ended: (_) => Navigator.of(context).pop(),
-    );
   }
 
   @override
@@ -122,10 +120,7 @@ class _CallPageState extends State<CallPage> {
                           icon: const Icon(Icons.mic_off),
                         ),
                         _ScrimIconButton(
-                          onPressed: () {
-                            widget.phone.hangUp();
-                            Navigator.of(context).pop();
-                          },
+                          onPressed: Navigator.of(context).pop,
                           icon: const Icon(Icons.call_end),
                           scrimColor: Colors.red,
                         ),

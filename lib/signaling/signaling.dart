@@ -7,19 +7,27 @@ part 'signaling.g.dart';
 @freezed
 class Signal with _$Signal {
   const factory Signal.sessionDescription({
-    required String uid,
     String? sdp,
     String? type,
   }) = SessionDescription;
 
-  const factory Signal.iceCandidate({
-    required String uid,
+  const factory Signal.iceCandidates(
+    List<IceCandidate> iceCandidates,
+  ) = IceCandidates;
+
+  factory Signal.fromJson(Map<String, dynamic> json) => _$SignalFromJson(json);
+}
+
+@freezed
+class IceCandidate with _$IceCandidate {
+  const factory IceCandidate({
     String? candidate,
     String? sdpMid,
     int? sdpMLineIndex,
-  }) = IceCandidate;
+  }) = _IceCandidate;
 
-  factory Signal.fromJson(Map<String, dynamic> json) => _$SignalFromJson(json);
+  factory IceCandidate.fromJson(Map<String, dynamic> json) =>
+      _$IceCandidateFromJson(json);
 }
 
 /// Interface for performing WebRTC signaling.

@@ -3,9 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:openup/call_api.dart';
 import 'package:openup/call_page.dart';
-import 'package:openup/phone.dart';
-import 'package:openup/signaling/signaling.dart';
-import 'package:openup/signaling/web_sockets_signaling_channel.dart';
 
 /// Page on which you wait to be matched with another user.
 class LobbyPage extends StatefulWidget {
@@ -25,8 +22,6 @@ class LobbyPage extends StatefulWidget {
 class _LobbyPageState extends State<LobbyPage> {
   late final String _uid;
   late final CallApi _callApi;
-  Phone? _phone;
-  SignalingChannel? _signalingChannel;
 
   @override
   void initState() {
@@ -35,14 +30,14 @@ class _LobbyPageState extends State<LobbyPage> {
     _callApi = CallApi(
       host: widget.applicationHost,
       uid: _uid,
+      onMakeCall: () => _startCall(initiator: true),
+      onReceiveCall: () => _startCall(initiator: false),
     );
-    _callApi.events.listen(_handleCallEvent);
   }
 
   @override
   void dispose() {
     _callApi.dispose();
-    _disposePhone();
     super.dispose();
   }
 
@@ -61,57 +56,17 @@ class _LobbyPageState extends State<LobbyPage> {
     );
   }
 
-  void _handleCallEvent(CallEvent event) {
-    event.map(
-      makeCall: (_) => _startCall(initiator: true),
-      answerCall: (_) => _startCall(initiator: false),
-      callEnded: (_) => _onCallEnded(),
-    );
-  }
-
   void _startCall({required bool initiator}) async {
-    final signalingChannel = WebSocketsSignalingChannel(
-      host: widget.signalingHost,
-      uid: _uid,
-    );
-    final phone = Phone(
-      signalingChannel: signalingChannel,
-      uid: _uid,
-    );
-
-    setState(() {
-      _signalingChannel = _signalingChannel;
-      _phone = phone;
-    });
-
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) {
           return CallPage(
-            phone: phone,
+            uid: _uid,
+            signalingHost: widget.signalingHost,
             initiator: initiator,
           );
         },
       ),
     );
-  }
-
-  void _onCallEnded() {
-    print('Call ended!');
-    Navigator.of(context).pop();
-    _disposePhone();
-  }
-
-  Future<void> _disposePhone() async {
-    _phone?.dispose().then((value) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-    _signalingChannel?.dispose().then((value) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
   }
 }

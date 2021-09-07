@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:openup/phone_status.dart';
 import 'package:openup/signaling/signaling.dart';
 
-/// WebRTC calling service. The signaling server must already have a room ready
-/// for the parties to make a call.
+/// WebRTC calling service, can only be used to [call()] or [answer()] once per
+/// instance. The signaling server must already have a room ready for the
+/// parties to make a call.
 class Phone {
   static const _configuration = {
     'iceServers': [
@@ -18,109 +19,83 @@ class Phone {
     ]
   };
 
-  final SignalingChannel _signalingChannel;
-  StreamSubscription<Signal>? _signalSubscription;
+  final SignalingChannel signalingChannel;
+  final void Function(
+    RTCVideoRenderer localRenderer,
+    RTCVideoRenderer remoteRenderer,
+  ) onMediaRenderers;
+  final void Function(MediaStream stream) onRemoteStream;
+  final void Function() onDisconnected;
 
-  final _statusController = StreamController<PhoneStatus>.broadcast();
-  final String _uid;
-
-  bool _idle = true;
+  bool _usedOnce = false;
   RTCPeerConnection? _peerConnection;
   MediaStream? _localMediaStream;
   MediaStream? _remoteMediaStream;
+  RTCVideoRenderer? _localRenderer;
+  RTCVideoRenderer? _remoteRenderer;
 
-  final _readyForCall = Completer<void>();
-  var _hasRemoteDescription = Completer<void>();
-  var _hasIceCandidate = Completer<void>();
+  final _receivedAnIceCandidate = Completer<void>();
+  bool _hasRemoteDescription = false;
+  final _iceCandidatesToIngest = Queue<IceCandidate>();
+
+  final _iceCandidatesToSend = <IceCandidate>[];
+  Timer? _iceCandidatesDebounceTimer;
 
   Phone({
-    required SignalingChannel signalingChannel,
-    required String uid,
-  })  : _signalingChannel = signalingChannel,
-        _uid = uid;
-  Future<void> get ready => _readyForCall.future;
-
-  Stream<PhoneStatus> get status => _statusController.stream;
+    required this.signalingChannel,
+    required this.onMediaRenderers,
+    required this.onRemoteStream,
+    required this.onDisconnected,
+  });
 
   Future<void> dispose() async {
-    await hangUp();
-    _signalSubscription?.cancel();
-  }
-
-  Future<void> hangUp() => _disconnect();
-
-  Future<void> _disconnect() async {
+    _iceCandidatesDebounceTimer?.cancel();
     await _peerConnection?.close();
     await Future.wait([
       ...?_localMediaStream?.getTracks().map((track) => track.stop()),
       ...?_remoteMediaStream?.getTracks().map((track) => track.stop()),
       _localMediaStream?.dispose(),
       _remoteMediaStream?.dispose(),
+      _localRenderer?.dispose(),
+      _remoteRenderer?.dispose(),
     ].whereType<Future>());
-    _statusController.add(const Ended());
-    _idle = true;
   }
 
-  Future<void> call() async {
-    _idle = _idle ? false : throw 'Call in progress';
+  Future<void> call() => _call(initiator: true);
+
+  Future<void> answer() => _call(initiator: false);
+
+  Future<void> _call({required bool initiator}) async {
+    _usedOnce = !_usedOnce ? true : throw 'Phone has already been used';
 
     final mediaStream = await _setupMedia();
     _localMediaStream = mediaStream;
 
     final peerConnection = await createPeerConnection(_configuration);
     _peerConnection = peerConnection;
+    _handleCallConnectionState(peerConnection);
 
-    _handleSignals(peerConnection, _signalingChannel);
+    _handleSignals(peerConnection, signalingChannel);
 
     peerConnection.onAddStream = (stream) {
-      _statusController.add(RemoteStreamReady(stream));
+      onRemoteStream(stream);
       _remoteMediaStream = stream;
     };
 
     await _addLocalMedia(peerConnection, mediaStream);
-    _listenAndSendIceCandidates(peerConnection);
-    _readyForCall.complete();
+    _emitIceCandidates(peerConnection);
+    if (!initiator) {
+      await _receivedAnIceCandidate.future;
+    }
 
     _listenForRemoteTracks(peerConnection);
-    _setLocalDescriptionOffer(peerConnection);
-    final sessionDescription = await _setLocalDescriptionOffer(peerConnection);
-    _sendSessionDescription(_signalingChannel, sessionDescription);
-  }
-
-  Future<void> answer() async {
-    _idle = _idle ? false : throw 'Call in progress';
-
-    final mediaStream = await _setupMedia();
-    _localMediaStream = mediaStream;
-
-    final peerConnection = await createPeerConnection(_configuration);
-    _peerConnection = peerConnection;
-
-    _handleSignals(peerConnection, _signalingChannel);
-
-    peerConnection.onAddStream = (stream) {
-      _statusController.add(RemoteStreamReady(stream));
-      _remoteMediaStream = stream;
-    };
-
-    await _addLocalMedia(peerConnection, mediaStream);
-    _listenAndSendIceCandidates(peerConnection);
-    _readyForCall.complete();
-
-    _hasIceCandidate = Completer<void>();
-    _hasRemoteDescription = Completer<void>();
-
-    await _hasRemoteDescription.future;
-    await _hasIceCandidate.future;
-
-    _listenForRemoteTracks(peerConnection);
-    final sessionDescription = await _setLocalDescriptionAnswer(peerConnection);
-    _sendSessionDescription(_signalingChannel, sessionDescription);
+    final sessionDescription = initiator
+        ? await _setLocalDescriptionOffer(peerConnection)
+        : await _setLocalDescriptionAnswer(peerConnection);
+    _sendSessionDescription(signalingChannel, sessionDescription);
   }
 
   Future<MediaStream> _setupMedia() async {
-    _statusController.add(const PreparingMedia());
-
     final localRenderer = RTCVideoRenderer();
     final remoteRenderer = RTCVideoRenderer();
     await localRenderer.initialize();
@@ -133,13 +108,12 @@ class Phone {
       'audio': true,
     });
 
-    _statusController.add(
-      MediaReady(
-        localVideo: localRenderer..srcObject = mediaStream,
-        remoteVideo: remoteRenderer
-          ..srcObject = await createLocalMediaStream('key'),
-      ),
+    onMediaRenderers(
+      localRenderer..srcObject = mediaStream,
+      remoteRenderer..srcObject = await createLocalMediaStream('key'),
     );
+    _localRenderer = localRenderer;
+    _remoteRenderer = remoteRenderer;
 
     return mediaStream;
   }
@@ -155,16 +129,23 @@ class Phone {
     );
   }
 
-  void _listenAndSendIceCandidates(RTCPeerConnection peerConnection) {
+  void _emitIceCandidates(RTCPeerConnection peerConnection) {
     peerConnection.onIceCandidate = (candidate) {
-      _signalingChannel.send(
+      _iceCandidatesToSend.add(
         IceCandidate(
-          uid: _uid,
           candidate: candidate.candidate,
           sdpMid: candidate.sdpMid,
           sdpMLineIndex: candidate.sdpMlineIndex,
         ),
       );
+
+      // Batching candidates to reduce network traffic
+      _iceCandidatesDebounceTimer ??=
+          Timer(const Duration(milliseconds: 300), () {
+        _iceCandidatesDebounceTimer = null;
+        signalingChannel.send(IceCandidates(_iceCandidatesToSend));
+        _iceCandidatesToSend.clear();
+      });
     };
   }
 
@@ -198,11 +179,19 @@ class Phone {
   ) {
     signalingChannel.send(
       SessionDescription(
-        uid: _uid,
         sdp: sessionDescription.sdp,
         type: sessionDescription.type,
       ),
     );
+  }
+
+  void _handleCallConnectionState(RTCPeerConnection peerConnection) {
+    peerConnection.onConnectionState = (state) {
+      if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected ||
+          state == RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
+        onDisconnected();
+      }
+    };
   }
 
   StreamSubscription<Signal> _handleSignals(
@@ -212,29 +201,47 @@ class Phone {
     return signalingChannel.signals.listen((signal) {
       signal.map(
         sessionDescription: (sessionDescription) {
-          if (!_hasRemoteDescription.isCompleted) {
-            _hasRemoteDescription.complete();
-          }
           peerConnection.setRemoteDescription(
             RTCSessionDescription(
               sessionDescription.sdp,
               sessionDescription.type,
             ),
           );
-        },
-        iceCandidate: (iceCandidate) {
-          if (!_hasIceCandidate.isCompleted) {
-            _hasIceCandidate.complete();
+          _hasRemoteDescription = true;
+
+          while (_iceCandidatesToIngest.isNotEmpty) {
+            _addIceCandidate(
+                peerConnection, _iceCandidatesToIngest.removeFirst());
           }
-          peerConnection.addCandidate(
-            RTCIceCandidate(
-              iceCandidate.candidate,
-              iceCandidate.sdpMid,
-              iceCandidate.sdpMLineIndex,
-            ),
-          );
+        },
+        iceCandidates: (iceCandidates) {
+          if (_hasRemoteDescription) {
+            // Should only add candidates after receciving remote description
+            iceCandidates.iceCandidates.forEach((iceCandidate) {
+              _addIceCandidate(peerConnection, iceCandidate);
+            });
+
+            if (!_receivedAnIceCandidate.isCompleted) {
+              _receivedAnIceCandidate.complete();
+            }
+          } else {
+            _iceCandidatesToIngest.addAll(iceCandidates.iceCandidates);
+          }
         },
       );
     });
+  }
+
+  void _addIceCandidate(
+    RTCPeerConnection peerConnection,
+    IceCandidate iceCandidate,
+  ) {
+    peerConnection.addCandidate(
+      RTCIceCandidate(
+        iceCandidate.candidate,
+        iceCandidate.sdpMid,
+        iceCandidate.sdpMLineIndex,
+      ),
+    );
   }
 }
