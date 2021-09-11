@@ -1,0 +1,37 @@
+import 'package:flutter/widgets.dart';
+import 'package:openup/theming.dart';
+
+class TitleAndTagline extends StatelessWidget {
+  const TitleAndTagline({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Image.asset('assets/images/title.png'),
+        const SizedBox(
+          height: 6,
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(Radius.circular(30)),
+            boxShadow: [
+              BoxShadow(
+                color: Theming.of(context).shadow.withOpacity(0.2),
+                offset: const Offset(0.0, 4.0),
+                blurRadius: 4.0,
+              ),
+            ],
+            color: Theming.of(context).datingRed1,
+          ),
+          child: Text(
+            'a new way to meet people',
+            style: Theming.of(context).text.body.copyWith(fontSize: 16),
+          ),
+        ),
+        const SizedBox(height: 48),
+      ],
+    );
+  }
+}

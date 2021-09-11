@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:openup/lobby_page.dart';
+import 'package:openup/theming.dart';
 
 const _tempApplicationHost = '192.168.1.118:8080';
 const _tempSignalingHost = '192.168.1.118:8081';
@@ -18,8 +19,17 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MenuPage(),
+    return Theming(
+      child: Builder(
+        builder: (context) {
+          return MaterialApp(
+            theme: ThemeData(fontFamily: 'Myriad'),
+            home: const Scaffold(
+              body: MenuPage(),
+            ),
+          );
+        },
+      ),
     );
   }
 }
