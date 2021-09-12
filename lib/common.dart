@@ -6,15 +6,15 @@ import 'package:openup/theming.dart';
 /// Prominent button with a horizontal pink gradient styling, comes in three
 /// sizes.
 class PrimaryButton extends StatelessWidget {
-  final Widget child;
   final VoidCallback onPressed;
+  final Widget child;
   final BorderRadius borderRadius;
   final double height;
 
   const PrimaryButton.large({
     Key? key,
-    required this.child,
     required this.onPressed,
+    required this.child,
   })  : borderRadius = const BorderRadius.all(Radius.circular(30)),
         height = 60.0,
         super(key: key);
@@ -35,8 +35,8 @@ class PrimaryButton extends StatelessWidget {
           ],
           gradient: LinearGradient(
             colors: [
-              Theming.of(context).datingRed1,
               Theming.of(context).datingRed2,
+              Theming.of(context).datingRed1,
             ],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
@@ -45,6 +45,57 @@ class PrimaryButton extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.only(top: 4.0),
           child: Center(child: child),
+        ),
+      ),
+      onPressed: onPressed,
+    );
+  }
+}
+
+/// Prominent button with an icon.
+class PrimaryIconButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final Widget icon;
+  final Color color;
+  final Widget child;
+
+  const PrimaryIconButton({
+    Key? key,
+    required this.onPressed,
+    required this.icon,
+    required this.color,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      child: Container(
+        height: 96,
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(48)),
+          boxShadow: [
+            BoxShadow(
+              color: Theming.of(context).shadow,
+              offset: const Offset(0.0, 4.0),
+              blurRadius: 12.0,
+            ),
+          ],
+          color: color,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 4.0),
+          child: Row(
+            children: [
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 64,
+                child: icon,
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: child),
+            ],
+          ),
         ),
       ),
       onPressed: onPressed,

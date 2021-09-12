@@ -28,6 +28,11 @@ flutter:
     - assets/images/title.png
     - assets/images/connection_female.png
     - assets/images/connection_male.png
+    - assets/images/heart.png
+    - assets/images/friends_with_friends.png
+    - assets/images/voice_call.png
+    - assets/images/video_call.png
+    - assets/images/preferences.png
   fonts:
     - family: Myriad
       fonts:
