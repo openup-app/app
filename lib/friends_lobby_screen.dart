@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:openup/button.dart';
@@ -19,8 +17,6 @@ class _FriendsLobbyScreenState extends State<FriendsLobbyScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
 
-  late final Timer _tempTimer;
-
   @override
   void initState() {
     super.initState();
@@ -34,16 +30,11 @@ class _FriendsLobbyScreenState extends State<FriendsLobbyScreen>
       }
     });
     _animationController.forward();
-
-    _tempTimer = Timer(const Duration(seconds: 5), () {
-      Navigator.of(context).pushNamed('friends-voice-call');
-    });
   }
 
   @override
   void dispose() {
     _animationController.dispose();
-    _tempTimer.cancel();
     super.dispose();
   }
 
@@ -66,31 +57,36 @@ class _FriendsLobbyScreenState extends State<FriendsLobbyScreen>
           child: Stack(
             alignment: Alignment.center,
             children: [
-              AnimatedBuilder(
-                animation: _animationController,
-                builder: (context, child) {
-                  final maxFractionalDuration = 1.0 / colors.length;
-                  final value =
-                      (_animationController.value % maxFractionalDuration) /
-                          maxFractionalDuration;
-                  final index =
-                      _animationController.value ~/ maxFractionalDuration;
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: constraints.maxWidth *
-                            (index.isEven ? value : 1 - value),
-                        color: colors[(2 * (index ~/ 2) + 1) % colors.length],
-                      ),
-                      Container(
-                        width: constraints.maxWidth *
-                            (index.isOdd ? value : 1 - value),
-                        color: colors[(2 * ((index + 1) ~/ 2)) % colors.length],
-                      ),
-                    ],
-                  );
-                },
+              GestureDetector(
+                onTap: () =>
+                    Navigator.of(context).pushNamed('friends-voice-call'),
+                child: AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (context, child) {
+                    final maxFractionalDuration = 1.0 / colors.length;
+                    final value =
+                        (_animationController.value % maxFractionalDuration) /
+                            maxFractionalDuration;
+                    final index =
+                        _animationController.value ~/ maxFractionalDuration;
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: constraints.maxWidth *
+                              (index.isEven ? value : 1 - value),
+                          color: colors[(2 * (index ~/ 2) + 1) % colors.length],
+                        ),
+                        Container(
+                          width: constraints.maxWidth *
+                              (index.isOdd ? value : 1 - value),
+                          color:
+                              colors[(2 * ((index + 1) ~/ 2)) % colors.length],
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,

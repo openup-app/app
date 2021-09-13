@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openup/page_transition.dart';
 import 'package:openup/voice_call_screen.dart';
 import 'package:openup/friends_home_screen.dart';
 import 'package:openup/friends_lobby_screen.dart';
@@ -58,6 +59,7 @@ class _MyAppState extends State<MyApp> {
                 case '/':
                   return _buildPageRoute(
                     settings: settings,
+                    transitionsBuilder: topToBottomPageTransition,
                     child: const HomeScreen(),
                   );
                 case 'friends':
@@ -78,6 +80,7 @@ class _MyAppState extends State<MyApp> {
                 case 'friends-voice-call':
                   return _buildPageRoute(
                     settings: settings,
+                    transitionsBuilder: fadePageTransition,
                     child: const VoiceCallScreen(),
                   );
                 default:
@@ -94,14 +97,16 @@ class _MyAppState extends State<MyApp> {
   }
 
   PageRoute _buildPageRoute({
-    required Widget child,
     required RouteSettings settings,
+    PageTransitionBuilder? transitionsBuilder,
+    required Widget child,
   }) {
-    return MaterialPageRoute(
+    return PageRouteBuilder(
       settings: settings,
-      builder: (context) {
-        return Scaffold(body: child);
-      },
+      transitionsBuilder: transitionsBuilder ?? sideAnticipatePageTransition,
+      transitionDuration: const Duration(seconds: 1),
+      reverseTransitionDuration: const Duration(seconds: 1),
+      pageBuilder: (_, __, ___) => Scaffold(body: child),
     );
   }
 }

@@ -24,52 +24,60 @@ class SignUpScreen extends StatelessWidget {
           end: Alignment.bottomCenter,
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          const Spacer(),
-          const TitleAndTagline(),
-          const InputArea(
-            child: TextField(
-              textAlign: TextAlign.center,
-              decoration: InputDecoration.collapsed(
-                hintText: 'Phone number or email',
+      child: SafeArea(
+        top: true,
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            const TitleAndTagline(),
+            const Spacer(),
+            const InputArea(
+              child: TextField(
+                textAlign: TextAlign.center,
+                decoration: InputDecoration.collapsed(
+                  hintText: 'Phone number or email',
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          const InputArea(
-            child: TextField(
-              textAlign: TextAlign.center,
-              obscureText: true,
-              decoration: InputDecoration.collapsed(
-                hintText: 'Password',
+            const SizedBox(height: 20),
+            const InputArea(
+              child: TextField(
+                textAlign: TextAlign.center,
+                obscureText: true,
+                decoration: InputDecoration.collapsed(
+                  hintText: 'Password',
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          const InputArea(
-            child: TextField(
-              textAlign: TextAlign.center,
-              decoration: InputDecoration.collapsed(
-                hintText: 'Birthday',
+            const SizedBox(height: 20),
+            const InputArea(
+              child: TextField(
+                textAlign: TextAlign.center,
+                decoration: InputDecoration.collapsed(
+                  hintText: 'Birthday',
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          PrimaryButton.large(
-            child: const Text('Send code'),
-            onPressed: () =>
-                Navigator.of(context).pushNamed('phone-verification'),
-          ),
-          const SizedBox(height: 15),
-          Button(
-            child: const Text('forgot info?'),
-            onPressed: () => Navigator.of(context).pushNamed('forgot-password'),
-          ),
-          const MaleFemaleConnectionImageApart(),
-        ],
+            const SizedBox(height: 20),
+            PrimaryButton.large(
+              child: const Text('Send code'),
+              onPressed: () =>
+                  Navigator.of(context).pushNamed('phone-verification'),
+            ),
+            const SizedBox(height: 15),
+            Button(
+              child: const Text('forgot info?'),
+              onPressed: () =>
+                  Navigator.of(context).pushNamed('forgot-password'),
+            ),
+            const Spacer(),
+            const Hero(
+              tag: 'male_female_connection',
+              child: MaleFemaleConnectionImageApart(),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -6,35 +6,42 @@ class TitleAndTagline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 200,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Image.asset('assets/images/title.png'),
-          const SizedBox(
-            height: 6,
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(30)),
-              boxShadow: [
-                BoxShadow(
-                  color: Theming.of(context).shadow.withOpacity(0.2),
-                  offset: const Offset(0.0, 4.0),
-                  blurRadius: 4.0,
+    return Hero(
+      tag: 'title_and_tagline',
+      child: DefaultTextStyle(
+        style: Theming.of(context).text.body,
+        child: SizedBox(
+          height: 200,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Image.asset('assets/images/title.png'),
+              const SizedBox(
+                height: 6,
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.all(Radius.circular(30)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theming.of(context).shadow.withOpacity(0.2),
+                      offset: const Offset(0.0, 4.0),
+                      blurRadius: 4.0,
+                    ),
+                  ],
+                  color: Theming.of(context).datingRed2,
                 ),
-              ],
-              color: Theming.of(context).datingRed2,
-            ),
-            child: Text(
-              'a new way to meet people',
-              style: Theming.of(context).text.body.copyWith(fontSize: 16),
-            ),
+                child: Text(
+                  'a new way to meet people',
+                  style: Theming.of(context).text.body.copyWith(fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 48),
+            ],
           ),
-          const SizedBox(height: 48),
-        ],
+        ),
       ),
     );
   }

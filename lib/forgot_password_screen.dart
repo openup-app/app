@@ -22,50 +22,57 @@ class ForgotPasswordScreen extends StatelessWidget {
           ],
         ),
       ),
-      child: Column(
-        children: [
-          const TitleAndTagline(),
-          Text(
-            'Enter new password',
-            textAlign: TextAlign.center,
-            style: Theming.of(context).text.subheading.copyWith(
-              shadows: [
-                Shadow(
-                  color: Theming.of(context).shadow,
-                  blurRadius: 6,
-                  offset: const Offset(0.0, 3.0),
+      child: SafeArea(
+        top: true,
+        child: Column(
+          children: [
+            const TitleAndTagline(),
+            const Spacer(),
+            Text(
+              'Enter new password',
+              textAlign: TextAlign.center,
+              style: Theming.of(context).text.subheading.copyWith(
+                shadows: [
+                  Shadow(
+                    color: Theming.of(context).shadow,
+                    blurRadius: 6,
+                    offset: const Offset(0.0, 3.0),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            const InputArea(
+              child: TextField(
+                textAlign: TextAlign.center,
+                obscureText: true,
+                decoration: InputDecoration.collapsed(
+                  hintText: 'update password',
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          const InputArea(
-            child: TextField(
-              textAlign: TextAlign.center,
-              obscureText: true,
-              decoration: InputDecoration.collapsed(
-                hintText: 'update password',
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          const InputArea(
-            child: TextField(
-              textAlign: TextAlign.center,
-              obscureText: true,
-              decoration: InputDecoration.collapsed(
-                hintText: 'retype password',
+            const SizedBox(height: 20),
+            const InputArea(
+              child: TextField(
+                textAlign: TextAlign.center,
+                obscureText: true,
+                decoration: InputDecoration.collapsed(
+                  hintText: 'retype password',
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          PrimaryButton.large(
-            onPressed: () {},
-            child: const Text('Log in'),
-          ),
-          const Spacer(),
-          const MaleFemaleConnectionImageApart(),
-        ],
+            const SizedBox(height: 20),
+            PrimaryButton.large(
+              onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
+              child: const Text('Log in'),
+            ),
+            const Spacer(),
+            const Hero(
+              tag: 'male_female_connection',
+              child: MaleFemaleConnectionImageApart(),
+            ),
+          ],
+        ),
       ),
     );
   }
