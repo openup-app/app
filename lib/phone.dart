@@ -20,6 +20,7 @@ class Phone {
   };
 
   final SignalingChannel signalingChannel;
+  final bool video;
   final void Function(
     RTCVideoRenderer localRenderer,
     RTCVideoRenderer remoteRenderer,
@@ -44,6 +45,7 @@ class Phone {
 
   Phone({
     required this.signalingChannel,
+    required this.video,
     required this.onMediaRenderers,
     required this.onRemoteStream,
     required this.onDisconnected,
@@ -113,8 +115,10 @@ class Phone {
     await remoteRenderer.initialize();
 
     final mediaStream = await navigator.mediaDevices.getUserMedia({
-      'video': {
-        'facingMode': 'user',
+      if (video) ...{
+        'video': {
+          'facingMode': 'user',
+        },
       },
       'audio': true,
     });

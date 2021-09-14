@@ -36,6 +36,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       uid: widget.uid,
     );
     _phone = Phone(
+      video: true,
       signalingChannel: _signalingChannel,
       onMediaRenderers: (localRenderer, remoteRenderer) {
         setState(() {

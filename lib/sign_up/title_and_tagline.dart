@@ -10,8 +10,12 @@ class TitleAndTagline extends StatelessWidget {
       tag: 'title_and_tagline',
       child: DefaultTextStyle(
         style: Theming.of(context).text.body,
-        child: SizedBox(
-          height: 200,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 400,
+            minHeight: 200,
+            maxHeight: 200,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [

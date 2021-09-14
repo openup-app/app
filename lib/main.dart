@@ -83,10 +83,15 @@ class _MyAppState extends State<MyApp> {
                     ),
                   );
                 case 'friends-voice-call':
+                  final args = settings.arguments as CallPageArguments;
                   return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
-                    child: const VoiceCallScreen(),
+                    child: VoiceCallScreen(
+                      uid: args.uid,
+                      signalingHost: _tempSignalingHost,
+                      initiator: args.initiator,
+                    ),
                   );
                 case 'friends-video-call':
                   final args = settings.arguments as CallPageArguments;

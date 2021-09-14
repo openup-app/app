@@ -1,11 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/button.dart';
+import 'package:openup/phone.dart';
+import 'package:openup/signaling/signaling.dart';
+import 'package:openup/signaling/web_sockets_signaling_channel.dart';
 import 'package:openup/slide_control.dart';
 import 'package:openup/theming.dart';
 
-class VoiceCallScreen extends StatelessWidget {
-  const VoiceCallScreen({Key? key}) : super(key: key);
+class VoiceCallScreen extends StatefulWidget {
+  final String uid;
+  final String signalingHost;
+  final bool initiator;
+
+  const VoiceCallScreen({
+    Key? key,
+    required this.uid,
+    required this.signalingHost,
+    required this.initiator,
+  }) : super(key: key);
+
+  @override
+  State<VoiceCallScreen> createState() => _VoiceCallScreenState();
+}
+
+class _VoiceCallScreenState extends State<VoiceCallScreen> {
+  late final SignalingChannel _signalingChannel;
+  late final Phone _phone;
+
+  RTCVideoRenderer? _remoteRenderer;
+  bool _muted = false;
+
+  @override
+  void initState() {
+    _signalingChannel = WebSocketsSignalingChannel(
+      host: widget.signalingHost,
+      uid: widget.uid,
+    );
+    _phone = Phone(
+      video: false,
+      signalingChannel: _signalingChannel,
+      onMediaRenderers: (_, remoteRenderer) {
+        setState(() {
+          _remoteRenderer = remoteRenderer;
+        });
+      },
+      onRemoteStream: (stream) {
+        setState(() => _remoteRenderer?.srcObject = stream);
+      },
+      onDisconnected: Navigator.of(context).pop,
+      onToggleMute: (muted) {
+        setState(() => _muted = muted);
+      },
+    );
+
+    if (widget.initiator) {
+      _phone.call();
+    } else {
+      _phone.answer();
+    }
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _signalingChannel.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,9 +155,11 @@ class VoiceCallScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _ButtonWithText(
-                        icon: const Icon(Icons.mic),
+                        icon: _muted
+                            ? const Icon(Icons.mic_off)
+                            : const Icon(Icons.mic),
                         label: 'Mute',
-                        onPressed: () {},
+                        onPressed: _phone.toggleMute,
                       ),
                       _ButtonWithText(
                         icon: const Icon(
