@@ -71,81 +71,77 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ongoing call'),
-      ),
-      body: Center(
-        child: Stack(
-          children: [
-            if (_remoteRenderer != null)
-              Positioned.fill(
-                child: RTCVideoView(
-                  _remoteRenderer!,
-                  objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                ),
-              ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (_localRenderer != null)
-                    Container(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        alignment: Alignment.bottomRight,
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(16),
-                          ),
-                        ),
-                        clipBehavior: Clip.hardEdge,
-                        constraints: const BoxConstraints(
-                          maxWidth: 100,
-                          maxHeight: 200,
-                        ),
-                        child: Opacity(
-                          opacity: 0.5,
-                          child: RTCVideoView(
-                            _localRenderer!,
-                            mirror: true,
-                            objectFit: RTCVideoViewObjectFit
-                                .RTCVideoViewObjectFitCover,
-                          ),
-                        ),
+    return Stack(
+      children: [
+        if (_remoteRenderer != null)
+          Positioned.fill(
+            child: RTCVideoView(
+              _remoteRenderer!,
+              objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+            ),
+          ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (_localRenderer != null)
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    alignment: Alignment.bottomRight,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(16),
                       ),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _ScrimIconButton(
-                          onPressed: _phone.toggleMute,
-                          icon: _muted
-                              ? const Icon(Icons.mic_off)
-                              : const Icon(Icons.mic),
-                        ),
-                        _ScrimIconButton(
-                          onPressed: Navigator.of(context).pop,
-                          icon: const Icon(Icons.call_end),
-                          scrimColor: Colors.red,
-                        ),
-                        _ScrimIconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.person_add),
-                        ),
-                      ],
+                    clipBehavior: Clip.hardEdge,
+                    constraints: const BoxConstraints(
+                      maxWidth: 100,
+                      maxHeight: 200,
                     ),
-                  )
-                ],
-              ),
-            ),
-          ],
+                    child: Opacity(
+                      opacity: 0.5,
+                      child: RTCVideoView(
+                        _localRenderer!,
+                        mirror: true,
+                        objectFit:
+                            RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                      ),
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _ScrimIconButton(
+                      onPressed: _phone.toggleMute,
+                      icon: _muted
+                          ? const Icon(Icons.mic_off)
+                          : const Icon(Icons.mic),
+                    ),
+                    _ScrimIconButton(
+                      onPressed: () {
+                        _signalingChannel.send(const HangUp());
+                        Navigator.of(context).pop();
+                      },
+                      icon: const Icon(Icons.call_end),
+                      scrimColor: Colors.red,
+                    ),
+                    _ScrimIconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.person_add),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

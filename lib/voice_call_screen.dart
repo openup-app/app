@@ -185,7 +185,10 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
             ),
             trackContents: const Text('slide to end call'),
             trackColor: const Color.fromARGB(0xFF, 0x01, 0x55, 0x67),
-            onSlideComplete: Navigator.of(context).pop,
+            onSlideComplete: () {
+              _signalingChannel.send(const HangUp());
+              Navigator.of(context).pop();
+            },
           ),
           const SizedBox(height: 50),
         ],

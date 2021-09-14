@@ -243,6 +243,7 @@ class Phone {
             _iceCandidatesToIngest.addAll(iceCandidates.iceCandidates);
           }
         },
+        hangUp: (_) => onDisconnected(),
       );
     });
   }

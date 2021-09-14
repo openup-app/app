@@ -15,6 +15,8 @@ class Signal with _$Signal {
     List<IceCandidate> iceCandidates,
   ) = IceCandidates;
 
+  const factory Signal.hangUp() = HangUp;
+
   factory Signal.fromJson(Map<String, dynamic> json) => _$SignalFromJson(json);
 }
 
