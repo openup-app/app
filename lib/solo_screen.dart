@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:openup/common.dart';
+import 'package:openup/lobby_screen.dart';
 import 'package:openup/home_button.dart';
 import 'package:openup/male_female_connection_image.dart';
 import 'package:openup/profile_button.dart';
@@ -56,8 +57,10 @@ class SoloFriends extends StatelessWidget {
                 ],
               ),
               PrimaryIconButton(
-                onPressed: () =>
-                    Navigator.of(context).pushNamed('friends-lobby'),
+                onPressed: () => Navigator.of(context).pushNamed(
+                  'friends-lobby',
+                  arguments: LobbyScreenArguments(video: false),
+                ),
                 icon: Image.asset('assets/images/voice_call.png'),
                 color: const Color.fromARGB(0xFF, 0x00, 0xB0, 0xD7),
                 child: Text(
@@ -67,8 +70,10 @@ class SoloFriends extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               PrimaryIconButton(
-                onPressed: () =>
-                    Navigator.of(context).pushNamed('friends-lobby'),
+                onPressed: () => Navigator.of(context).pushNamed(
+                  'friends-lobby',
+                  arguments: LobbyScreenArguments(video: true),
+                ),
                 icon: Image.asset('assets/images/video_call.png'),
                 color: const Color.fromARGB(0xFF, 0x5A, 0xC9, 0xEC),
                 child: Text(

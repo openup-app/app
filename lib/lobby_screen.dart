@@ -1,20 +1,37 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:openup/button.dart';
+import 'package:openup/call_api.dart';
+import 'package:openup/video_call_screen.dart';
 import 'package:openup/notification_banner.dart';
 import 'package:openup/theming.dart';
 
 import 'home_button.dart';
 
-class FriendsLobbyScreen extends StatefulWidget {
-  const FriendsLobbyScreen({Key? key}) : super(key: key);
+/// Page on which you wait to be matched with another user.
+class LobbyScreen extends StatefulWidget {
+  final String applicationHost;
+  final String signalingHost;
+  final bool video;
+
+  const LobbyScreen({
+    Key? key,
+    required this.applicationHost,
+    required this.signalingHost,
+    required this.video,
+  }) : super(key: key);
 
   @override
-  _FriendsLobbyScreenState createState() => _FriendsLobbyScreenState();
+  _LobbyScreenState createState() => _LobbyScreenState();
 }
 
-class _FriendsLobbyScreenState extends State<FriendsLobbyScreen>
+class _LobbyScreenState extends State<LobbyScreen>
     with SingleTickerProviderStateMixin {
+  late final String _uid;
+  late final CallApi _callApi;
+
   late final AnimationController _animationController;
 
   @override
@@ -30,11 +47,21 @@ class _FriendsLobbyScreenState extends State<FriendsLobbyScreen>
       }
     });
     _animationController.forward();
+
+    _uid = Random().nextInt(1000000).toString().padLeft(7, '0');
+    _callApi = CallApi(
+      host: widget.applicationHost,
+      uid: _uid,
+      onMakeCall: () => _startCall(initiator: true),
+      onReceiveCall: () => _startCall(initiator: false),
+      video: widget.video,
+    );
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _callApi.dispose();
     super.dispose();
   }
 
@@ -57,36 +84,31 @@ class _FriendsLobbyScreenState extends State<FriendsLobbyScreen>
           child: Stack(
             alignment: Alignment.center,
             children: [
-              GestureDetector(
-                onTap: () =>
-                    Navigator.of(context).pushNamed('friends-voice-call'),
-                child: AnimatedBuilder(
-                  animation: _animationController,
-                  builder: (context, child) {
-                    final maxFractionalDuration = 1.0 / colors.length;
-                    final value =
-                        (_animationController.value % maxFractionalDuration) /
-                            maxFractionalDuration;
-                    final index =
-                        _animationController.value ~/ maxFractionalDuration;
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: constraints.maxWidth *
-                              (index.isEven ? value : 1 - value),
-                          color: colors[(2 * (index ~/ 2) + 1) % colors.length],
-                        ),
-                        Container(
-                          width: constraints.maxWidth *
-                              (index.isOdd ? value : 1 - value),
-                          color:
-                              colors[(2 * ((index + 1) ~/ 2)) % colors.length],
-                        ),
-                      ],
-                    );
-                  },
-                ),
+              AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  final maxFractionalDuration = 1.0 / colors.length;
+                  final value =
+                      (_animationController.value % maxFractionalDuration) /
+                          maxFractionalDuration;
+                  final index =
+                      _animationController.value ~/ maxFractionalDuration;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: constraints.maxWidth *
+                            (index.isEven ? value : 1 - value),
+                        color: colors[(2 * (index ~/ 2) + 1) % colors.length],
+                      ),
+                      Container(
+                        width: constraints.maxWidth *
+                            (index.isOdd ? value : 1 - value),
+                        color: colors[(2 * ((index + 1) ~/ 2)) % colors.length],
+                      ),
+                    ],
+                  );
+                },
               ),
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -130,4 +152,22 @@ class _FriendsLobbyScreenState extends State<FriendsLobbyScreen>
       },
     );
   }
+
+  void _startCall({required bool initiator}) async {
+    final route = widget.video ? 'friends-video-call' : 'friends-voice-call';
+    Navigator.of(context).pushNamed(
+      route,
+      arguments: CallPageArguments(
+        uid: _uid,
+        initiator: initiator,
+      ),
+    );
+  }
+}
+
+class LobbyScreenArguments {
+  final bool video;
+  LobbyScreenArguments({
+    required this.video,
+  });
 }

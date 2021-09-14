@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:openup/video_call_screen.dart';
 import 'package:openup/page_transition.dart';
 import 'package:openup/voice_call_screen.dart';
 import 'package:openup/friends_home_screen.dart';
-import 'package:openup/friends_lobby_screen.dart';
+import 'package:openup/lobby_screen.dart';
 import 'package:openup/home_screen.dart';
-import 'package:openup/lobby_page.dart';
 import 'package:openup/forgot_password_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up/sign_up_screen.dart';
-import 'package:openup/solo_friends_screen.dart';
+import 'package:openup/solo_screen.dart';
 import 'package:openup/theming.dart';
 
 const _tempApplicationHost = '192.168.1.118:8080';
@@ -73,9 +73,14 @@ class _MyAppState extends State<MyApp> {
                     child: const SoloFriends(),
                   );
                 case 'friends-lobby':
+                  final args = settings.arguments as LobbyScreenArguments;
                   return _buildPageRoute(
                     settings: settings,
-                    child: const FriendsLobbyScreen(),
+                    child: LobbyScreen(
+                      applicationHost: _tempApplicationHost,
+                      signalingHost: _tempSignalingHost,
+                      video: args.video,
+                    ),
                   );
                 case 'friends-voice-call':
                   return _buildPageRoute(
@@ -83,11 +88,19 @@ class _MyAppState extends State<MyApp> {
                     transitionsBuilder: fadePageTransition,
                     child: const VoiceCallScreen(),
                   );
-                default:
+                case 'friends-video-call':
+                  final args = settings.arguments as CallPageArguments;
                   return _buildPageRoute(
                     settings: settings,
-                    child: const SignUpScreen(),
+                    transitionsBuilder: fadePageTransition,
+                    child: VideoCallScreen(
+                      uid: args.uid,
+                      signalingHost: _tempSignalingHost,
+                      initiator: args.initiator,
+                    ),
                   );
+                default:
+                  throw 'Route not found ${settings.name}';
               }
             },
           );
@@ -107,37 +120,6 @@ class _MyAppState extends State<MyApp> {
       transitionDuration: const Duration(milliseconds: 750),
       reverseTransitionDuration: const Duration(milliseconds: 650),
       pageBuilder: (_, __, ___) => Scaffold(body: child),
-    );
-  }
-}
-
-class MenuPage extends StatelessWidget {
-  const MenuPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Meet people'),
-      ),
-      body: Center(
-        child: OutlinedButton.icon(
-          label: const Text('Talk to someone new'),
-          icon: const Icon(Icons.call),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) {
-                  return const LobbyPage(
-                    applicationHost: _tempApplicationHost,
-                    signalingHost: _tempSignalingHost,
-                  );
-                },
-              ),
-            );
-          },
-        ),
-      ),
     );
   }
 }

@@ -21,8 +21,10 @@ class CallApi {
     required String uid,
     required this.onMakeCall,
     required this.onReceiveCall,
+    required bool video,
   }) {
-    _channel = WebSocketChannel.connect(Uri.parse('ws://$host/?uid=$uid'));
+    _channel = WebSocketChannel.connect(
+        Uri.parse('ws://$host/?uid=$uid&video=$video'));
     _channel.stream.listen(_handleMessage);
   }
 

@@ -5,12 +5,12 @@ import 'package:openup/signaling/signaling.dart';
 import 'package:openup/signaling/web_sockets_signaling_channel.dart';
 
 /// Page on which the [Phone] is used. Calls start, proceed and end here.
-class CallPage extends StatefulWidget {
+class VideoCallScreen extends StatefulWidget {
   final String uid;
   final String signalingHost;
   final bool initiator;
 
-  const CallPage({
+  const VideoCallScreen({
     Key? key,
     required this.uid,
     required this.signalingHost,
@@ -18,10 +18,10 @@ class CallPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<CallPage> createState() => _CallPageState();
+  State<VideoCallScreen> createState() => _VideoCallScreenState();
 }
 
-class _CallPageState extends State<CallPage> {
+class _VideoCallScreenState extends State<VideoCallScreen> {
   late final SignalingChannel _signalingChannel;
   late final Phone _phone;
 
@@ -96,7 +96,6 @@ class _CallPageState extends State<CallPage> {
                       child: Container(
                         alignment: Alignment.bottomRight,
                         decoration: const BoxDecoration(
-                          color: Colors.blue,
                           borderRadius: BorderRadius.all(
                             Radius.circular(16),
                           ),
@@ -106,11 +105,14 @@ class _CallPageState extends State<CallPage> {
                           maxWidth: 100,
                           maxHeight: 200,
                         ),
-                        child: RTCVideoView(
-                          _localRenderer!,
-                          mirror: true,
-                          objectFit:
-                              RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                        child: Opacity(
+                          opacity: 0.5,
+                          child: RTCVideoView(
+                            _localRenderer!,
+                            mirror: true,
+                            objectFit: RTCVideoViewObjectFit
+                                .RTCVideoViewObjectFitCover,
+                          ),
                         ),
                       ),
                     ),
@@ -176,4 +178,14 @@ class _ScrimIconButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class CallPageArguments {
+  final String uid;
+  final bool initiator;
+
+  CallPageArguments({
+    required this.uid,
+    required this.initiator,
+  });
 }
