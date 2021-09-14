@@ -99,7 +99,7 @@ class _FriendsLobbyScreenState extends State<FriendsLobbyScreen>
                   Text(
                     'please wait while we find\nsomeone new...',
                     textAlign: TextAlign.center,
-                    style: Theming.of(context).text.body,
+                    style: Theming.of(context).text.body.copyWith(fontSize: 16),
                   ),
                 ],
               ),

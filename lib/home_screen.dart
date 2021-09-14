@@ -40,7 +40,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       SizedBox(
-                        height: 115,
+                        height: 100,
                         child: Image.asset(
                           'assets/images/heart.png',
                           fit: BoxFit.fitHeight,
@@ -72,7 +72,7 @@ class HomeScreen extends StatelessWidget {
                       const Spacer(),
                       const SizedBox(height: 120),
                       const SizedBox(
-                        height: 115,
+                        height: 100,
                         child: MaleFemaleConnectionImage(),
                       ),
                       const SizedBox(height: 24),

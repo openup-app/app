@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:openup/button.dart';
+import 'package:openup/slide_control.dart';
 import 'package:openup/theming.dart';
 
 class VoiceCallScreen extends StatelessWidget {
@@ -77,9 +78,9 @@ class VoiceCallScreen extends StatelessWidget {
                         onPressed: () {},
                       ),
                       _ButtonWithText(
-                        icon: const Icon(
-                          Icons.report,
-                          color: Colors.red,
+                        icon: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Image.asset('assets/images/report.png'),
                         ),
                         label: 'Report',
                         onPressed: () {},
@@ -98,7 +99,7 @@ class VoiceCallScreen extends StatelessWidget {
                       _ButtonWithText(
                         icon: const Icon(
                           Icons.volume_up,
-                          color: Colors.green,
+                          color: Color.fromARGB(0xFF, 0x00, 0xFF, 0x19),
                         ),
                         label: 'Speaker',
                         onPressed: () {},
@@ -111,33 +112,15 @@ class VoiceCallScreen extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Container(
-            height: 64,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(
-                Radius.circular(64),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theming.of(context).shadow,
-                  offset: const Offset(0.0, 4.0),
-                  blurRadius: 2,
-                ),
-              ],
-              color: const Color.fromARGB(0xFF, 0x01, 0x55, 0x67),
+          SlideControl(
+            thumbContents: Icon(
+              Icons.call_end,
+              color: Theming.of(context).friendBlue4,
+              size: 40,
             ),
-            child: Row(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Icon(Icons.call_end),
-                ),
-                Text(
-                  'slide to end call',
-                  style: Theming.of(context).text.body,
-                ),
-              ],
-            ),
+            trackContents: const Text('slide to end call'),
+            trackColor: const Color.fromARGB(0xFF, 0x01, 0x55, 0x67),
+            onSlideComplete: Navigator.of(context).pop,
           ),
           const SizedBox(height: 50),
         ],
@@ -165,12 +148,18 @@ class _ButtonWithText extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          IconTheme(
-            data: IconTheme.of(context).copyWith(size: 48),
-            child: icon,
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 48,
+              maxHeight: 48,
+            ),
+            child: IconTheme(
+              data: IconTheme.of(context).copyWith(size: 48),
+              child: icon,
+            ),
           ),
           const SizedBox(height: 10),
-          Text(label, style: Theming.of(context).text.bodySecondary),
+          Text(label, style: Theming.of(context).text.button),
         ],
       ),
     );

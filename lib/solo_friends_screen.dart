@@ -60,7 +60,10 @@ class SoloFriends extends StatelessWidget {
                     Navigator.of(context).pushNamed('friends-lobby'),
                 icon: Image.asset('assets/images/voice_call.png'),
                 color: const Color.fromARGB(0xFF, 0x00, 0xB0, 0xD7),
-                child: const Text('Talk to someone new'),
+                child: Text(
+                  'Talk to someone new',
+                  style: Theming.of(context).text.bodySecondary,
+                ),
               ),
               const SizedBox(height: 20),
               PrimaryIconButton(
@@ -68,7 +71,10 @@ class SoloFriends extends StatelessWidget {
                     Navigator.of(context).pushNamed('friends-lobby'),
                 icon: Image.asset('assets/images/video_call.png'),
                 color: const Color.fromARGB(0xFF, 0x5A, 0xC9, 0xEC),
-                child: const Text('Video call someone new'),
+                child: Text(
+                  'Video call someone new',
+                  style: Theming.of(context).text.bodySecondary,
+                ),
               ),
               const SizedBox(height: 20),
               PrimaryIconButton(
@@ -78,7 +84,10 @@ class SoloFriends extends StatelessWidget {
                   child: Image.asset('assets/images/preferences.png'),
                 ),
                 color: const Color.fromARGB(0xFF, 0x8C, 0xDD, 0xF6),
-                child: const Text('Preferences'),
+                child: Text(
+                  'Preferences',
+                  style: Theming.of(context).text.bodySecondary,
+                ),
               ),
               const Spacer(),
             ],

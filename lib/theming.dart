@@ -49,6 +49,13 @@ class TextTheme {
   final bodySecondary = const TextStyle(
     color: Colors.white,
     fontFamily: 'Myriad',
+    fontSize: 19,
+    fontWeight: FontWeight.w400,
+  );
+
+  final button = const TextStyle(
+    color: Colors.white,
+    fontFamily: 'Myriad',
     fontSize: 14,
     fontWeight: FontWeight.w400,
   );

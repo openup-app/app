@@ -33,6 +33,7 @@ flutter:
     - assets/images/voice_call.png
     - assets/images/video_call.png
     - assets/images/preferences.png
+    - assets/images/report.png
   fonts:
     - family: Myriad
       fonts:
