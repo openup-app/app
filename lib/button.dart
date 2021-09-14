@@ -3,7 +3,7 @@ import 'package:openup/theming.dart';
 
 class Button extends StatefulWidget {
   final Widget child;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   const Button({
     Key? key,
     required this.child,
@@ -39,24 +39,27 @@ class _ButtonState extends State<Button> with SingleTickerProviderStateMixin {
       animation: _animationController,
       builder: (context, child) {
         return Opacity(
-          opacity: _animationController.value,
+          opacity: widget.onPressed == null ? 0.5 : _animationController.value,
           child: child!,
         );
       },
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _animationController.value = 0.6),
-        onTapUp: (_) {
-          setState(() {
+      child: IgnorePointer(
+        ignoring: widget.onPressed == null,
+        child: GestureDetector(
+          onTapDown: (_) => setState(() => _animationController.value = 0.6),
+          onTapUp: (_) {
+            setState(() {
+              _animationController.forward(from: 0.6);
+            });
+            widget.onPressed?.call();
+          },
+          onTapCancel: () => setState(() {
             _animationController.forward(from: 0.6);
-          });
-          widget.onPressed();
-        },
-        onTapCancel: () => setState(() {
-          _animationController.forward(from: 0.6);
-        }),
-        child: DefaultTextStyle(
-          style: Theming.of(context).text.body,
-          child: widget.child,
+          }),
+          child: DefaultTextStyle(
+            style: Theming.of(context).text.body,
+            child: widget.child,
+          ),
         ),
       ),
     );

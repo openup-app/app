@@ -26,6 +26,8 @@ class Phone {
     RTCVideoRenderer remoteRenderer,
   ) onMediaRenderers;
   final void Function(MediaStream stream) onRemoteStream;
+  final void Function() onAddTimeRequest;
+  final void Function(Duration duration) onAddTime;
   final void Function() onDisconnected;
   final void Function(bool muted)? onToggleMute;
 
@@ -48,6 +50,8 @@ class Phone {
     required this.video,
     required this.onMediaRenderers,
     required this.onRemoteStream,
+    required this.onAddTimeRequest,
+    required this.onAddTime,
     required this.onDisconnected,
     this.onToggleMute,
   });
@@ -243,6 +247,8 @@ class Phone {
             _iceCandidatesToIngest.addAll(iceCandidates.iceCandidates);
           }
         },
+        addTimeRequest: (_) => onAddTimeRequest(),
+        addTime: (addTime) => onAddTime(Duration(seconds: addTime.seconds)),
         hangUp: (_) => onDisconnected(),
       );
     });

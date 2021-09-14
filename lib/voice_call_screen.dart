@@ -7,6 +7,7 @@ import 'package:openup/signaling/signaling.dart';
 import 'package:openup/signaling/web_sockets_signaling_channel.dart';
 import 'package:openup/slide_control.dart';
 import 'package:openup/theming.dart';
+import 'package:openup/time_remaining.dart';
 
 class VoiceCallScreen extends StatefulWidget {
   final String uid;
@@ -31,6 +32,9 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
   RTCVideoRenderer? _remoteRenderer;
   bool _muted = false;
 
+  bool _hasSentTimeRequest = false;
+  late DateTime _endTime;
+
   @override
   void initState() {
     _signalingChannel = WebSocketsSignalingChannel(
@@ -48,10 +52,12 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
       onRemoteStream: (stream) {
         setState(() => _remoteRenderer?.srcObject = stream);
       },
-      onDisconnected: Navigator.of(context).pop,
-      onToggleMute: (muted) {
-        setState(() => _muted = muted);
+      onAddTimeRequest: () {
+        setState(() => _hasSentTimeRequest = false);
       },
+      onAddTime: _addTime,
+      onDisconnected: Navigator.of(context).pop,
+      onToggleMute: (muted) => setState(() => _muted = muted),
     );
 
     if (widget.initiator) {
@@ -59,6 +65,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
     } else {
       _phone.answer();
     }
+
+    _endTime = DateTime.now().add(const Duration(seconds: 90));
 
     super.initState();
   }
@@ -115,8 +123,9 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                         children: [
                           _ButtonWithText(
                             icon: const Icon(Icons.alarm_add),
-                            label: 'add tme',
-                            onPressed: () {},
+                            label: 'add time',
+                            onPressed:
+                                _hasSentTimeRequest ? null : _sendTimeRequest,
                           ),
                           const SizedBox(width: 30),
                         ],
@@ -125,9 +134,15 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                         'Jose',
                         style: Theming.of(context).text.headline,
                       ),
-                      Text(
-                        '01:29',
-                        style: Theming.of(context).text.body,
+                      TimeRemaining(
+                        endTime: _endTime,
+                        onTimeUp: Navigator.of(context).pop,
+                        builder: (context, remaining) {
+                          return Text(
+                            remaining,
+                            style: Theming.of(context).text.body,
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -195,12 +210,26 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
       ),
     );
   }
+
+  void _sendTimeRequest() {
+    if (!_hasSentTimeRequest) {
+      setState(() => _hasSentTimeRequest = true);
+      _signalingChannel.send(const AddTimeRequest());
+    }
+  }
+
+  void _addTime(Duration duration) {
+    setState(() {
+      _endTime = _endTime.add(duration);
+      _hasSentTimeRequest = false;
+    });
+  }
 }
 
 class _ButtonWithText extends StatelessWidget {
   final Widget icon;
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const _ButtonWithText({
     Key? key,
