@@ -17,7 +17,8 @@ class FriendsHomeScreen extends StatelessWidget {
           children: [
             Expanded(
               child: Button(
-                onPressed: () {},
+                onPressed: () =>
+                    Navigator.of(context).pushNamed('friends-solo'),
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
@@ -31,7 +32,7 @@ class FriendsHomeScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(
-                        height: 150,
+                        height: 115,
                         child: MaleFemaleConnectionImage(),
                       ),
                       const SizedBox(height: 24),

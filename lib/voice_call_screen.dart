@@ -28,7 +28,7 @@ class VoiceCallScreen extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.all(
-                  Radius.circular(64),
+                  Radius.circular(48),
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -129,8 +129,8 @@ class VoiceCallScreen extends StatelessWidget {
             child: Row(
               children: [
                 const Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: const Icon(Icons.call_end),
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Icon(Icons.call_end),
                 ),
                 Text(
                   'slide to end call',

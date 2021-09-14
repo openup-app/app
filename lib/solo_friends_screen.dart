@@ -26,11 +26,12 @@ class SoloFriends extends StatelessWidget {
                     .headline
                     .copyWith(color: Theming.of(context).friendBlue2),
               ),
+              const SizedBox(height: 40),
               Stack(
                 alignment: Alignment.bottomCenter,
                 children: [
                   const SizedBox(
-                    height: 150,
+                    height: 115,
                     child: MaleFemaleConnectionImage(),
                   ),
                   Align(

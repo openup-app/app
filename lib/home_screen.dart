@@ -40,7 +40,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       SizedBox(
-                        height: 100,
+                        height: 115,
                         child: Image.asset(
                           'assets/images/heart.png',
                           fit: BoxFit.fitHeight,
@@ -55,8 +55,7 @@ class HomeScreen extends StatelessWidget {
             ),
             Expanded(
               child: Button(
-                onPressed: () =>
-                    Navigator.of(context).pushNamed('friends-solo'),
+                onPressed: () => Navigator.of(context).pushNamed('friends'),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -71,9 +70,9 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       const Spacer(),
-                      const SizedBox(height: 100),
+                      const SizedBox(height: 120),
                       const SizedBox(
-                        height: 100,
+                        height: 115,
                         child: MaleFemaleConnectionImage(),
                       ),
                       const SizedBox(height: 24),

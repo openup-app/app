@@ -104,8 +104,8 @@ class _MyAppState extends State<MyApp> {
     return PageRouteBuilder(
       settings: settings,
       transitionsBuilder: transitionsBuilder ?? sideAnticipatePageTransition,
-      transitionDuration: const Duration(seconds: 1),
-      reverseTransitionDuration: const Duration(seconds: 1),
+      transitionDuration: const Duration(milliseconds: 750),
+      reverseTransitionDuration: const Duration(milliseconds: 650),
       pageBuilder: (_, __, ___) => Scaffold(body: child),
     );
   }
