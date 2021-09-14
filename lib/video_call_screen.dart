@@ -35,6 +35,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   bool _hasSentTimeRequest = false;
   late DateTime _endTime;
 
+  bool _showingControls = true;
+
   @override
   void initState() {
     _signalingChannel = WebSocketsSignalingChannel(
@@ -85,43 +87,30 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       children: [
         if (_remoteRenderer != null)
           Positioned.fill(
-            child: RTCVideoView(
-              _remoteRenderer!,
-              objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+            child: GestureDetector(
+              onTap: () => setState(() => _showingControls = !_showingControls),
+              child: RTCVideoView(
+                _remoteRenderer!,
+                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+              ),
             ),
           ),
-        Align(
-          alignment: Alignment.topLeft,
-          child: SafeArea(
-            top: true,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Button(
-                onPressed: () {},
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theming.of(context).shadow,
-                        offset: const Offset(0.0, 4.0),
-                        blurRadius: 1.0,
-                      ),
-                    ],
-                    color: const Color.fromARGB(0xFF, 0xDC, 0x5C, 0x5A),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'R',
-                      style: Theming.of(context).text.body.copyWith(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                          ),
+        AnimatedPositioned(
+          left: _showingControls ? 16.0 : -(56.0 + 16.0),
+          top: MediaQuery.of(context).padding.top + 32.0,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOut,
+          child: _CallControlButton(
+            onPressed: () {},
+            scrimColor: const Color.fromARGB(0xFF, 0xFF, 0x00, 0x00),
+            size: 56,
+            child: Center(
+              child: Text(
+                'R',
+                style: Theming.of(context).text.body.copyWith(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                ),
               ),
             ),
           ),
@@ -145,6 +134,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                         return Text(
                           remaining,
                           style: Theming.of(context).text.body.copyWith(
+                            fontWeight: FontWeight.normal,
                             shadows: [
                               Shadow(color: Theming.of(context).shadow)
                             ],
@@ -158,8 +148,14 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             ),
           ),
         ),
-        Align(
-          alignment: Alignment.bottomCenter,
+        AnimatedPositioned(
+          left: 0.0,
+          right: 0.0,
+          bottom: _showingControls
+              ? MediaQuery.of(context).padding.bottom + 16.0
+              : -(60.0 + 16),
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOut,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -171,7 +167,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     alignment: Alignment.bottomRight,
                     decoration: const BoxDecoration(
                       borderRadius: BorderRadius.all(
-                        Radius.circular(16),
+                        Radius.circular(32),
                       ),
                     ),
                     clipBehavior: Clip.hardEdge,
@@ -195,23 +191,31 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _ScrimIconButton(
+                    _CallControlButton(
                       onPressed: _phone.toggleMute,
-                      icon: _muted
+                      size: 56,
+                      child: _muted
                           ? const Icon(Icons.mic_off)
                           : const Icon(Icons.mic),
                     ),
-                    _ScrimIconButton(
+                    _CallControlButton(
                       onPressed: () {
                         _signalingChannel.send(const HangUp());
                         Navigator.of(context).pop();
                       },
-                      icon: const Icon(Icons.call_end),
-                      scrimColor: Colors.red,
+                      scrimColor: const Color.fromARGB(0xFF, 0xFF, 0x00, 0x00),
+                      gradientColor:
+                          const Color.fromARGB(0xFF, 0xFF, 0x88, 0x88),
+                      size: 66,
+                      child: const Icon(
+                        Icons.call_end,
+                        size: 40,
+                      ),
                     ),
-                    _ScrimIconButton(
+                    _CallControlButton(
                       onPressed: () {},
-                      icon: const Icon(Icons.person_add),
+                      size: 56,
+                      child: const Icon(Icons.person_add),
                     ),
                   ],
                 ),
@@ -238,31 +242,55 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   }
 }
 
-class _ScrimIconButton extends StatelessWidget {
-  final Icon icon;
+class _CallControlButton extends StatelessWidget {
   final VoidCallback onPressed;
   final Color scrimColor;
+  final Color? gradientColor;
+  final double size;
+  final Widget child;
 
-  const _ScrimIconButton({
+  const _CallControlButton({
     Key? key,
-    required this.icon,
     required this.onPressed,
     this.scrimColor = Colors.white,
+    this.gradientColor,
+    required this.size,
+    required this.child,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: const AlwaysStoppedAnimation(1.1),
+    return Button(
+      onPressed: onPressed,
       child: Container(
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(32)),
+          boxShadow: [
+            BoxShadow(
+              color: Theming.of(context).shadow,
+              offset: const Offset(0.0, 4.0),
+              blurRadius: 1.0,
+            ),
+          ],
+          gradient: gradientColor == null
+              ? null
+              : RadialGradient(
+                  colors: [
+                    scrimColor,
+                    gradientColor!,
+                  ],
+                  stops: const [0.7, 1.0],
+                ),
           color: scrimColor.withOpacity(0.4),
         ),
-        child: IconButton(
-          onPressed: onPressed,
-          icon: icon,
-          color: Colors.white,
+        child: IconTheme(
+          data: IconTheme.of(context).copyWith(
+            color: Colors.white,
+            size: 32,
+          ),
+          child: child,
         ),
       ),
     );
