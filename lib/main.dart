@@ -12,8 +12,8 @@ import 'package:openup/sign_up/sign_up_screen.dart';
 import 'package:openup/solo_screen.dart';
 import 'package:openup/theming.dart';
 
-const _tempApplicationHost = '192.168.1.118:8080';
-const _tempSignalingHost = '192.168.1.118:8081';
+const _tempApplicationHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8080';
+const _tempSignalingHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8081';
 
 void main() {
   runApp(const MyApp());
