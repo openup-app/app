@@ -31,6 +31,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
 
   RTCVideoRenderer? _remoteRenderer;
   bool _muted = false;
+  bool _speakerphone = false;
 
   bool _hasSentTimeRequest = false;
   late DateTime _endTime;
@@ -58,6 +59,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
       onAddTime: _addTime,
       onDisconnected: Navigator.of(context).pop,
       onToggleMute: (muted) => setState(() => _muted = muted),
+      onToggleSpeakerphone: (enabled) =>
+          setState(() => _speakerphone = enabled),
     );
 
     if (widget.initiator) {
@@ -177,12 +180,14 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                         onPressed: _phone.toggleMute,
                       ),
                       _ButtonWithText(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.volume_up,
-                          color: Color.fromARGB(0xFF, 0x00, 0xFF, 0x19),
+                          color: _speakerphone
+                              ? const Color.fromARGB(0xFF, 0x00, 0xFF, 0x19)
+                              : null,
                         ),
                         label: 'Speaker',
-                        onPressed: () {},
+                        onPressed: _phone.toggleSpeakerphone,
                       ),
                     ],
                   ),

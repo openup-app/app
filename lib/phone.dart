@@ -30,6 +30,7 @@ class Phone {
   final void Function(Duration duration) onAddTime;
   final void Function() onDisconnected;
   final void Function(bool muted)? onToggleMute;
+  final void Function(bool enabled)? onToggleSpeakerphone;
 
   bool _usedOnce = false;
   RTCPeerConnection? _peerConnection;
@@ -37,6 +38,7 @@ class Phone {
   MediaStream? _remoteMediaStream;
   RTCVideoRenderer? _localRenderer;
   RTCVideoRenderer? _remoteRenderer;
+  bool _speakerphone = false;
 
   final _receivedAnIceCandidate = Completer<void>();
   bool _hasRemoteDescription = false;
@@ -54,6 +56,7 @@ class Phone {
     required this.onAddTime,
     required this.onDisconnected,
     this.onToggleMute,
+    this.onToggleSpeakerphone,
   });
 
   Future<void> dispose() async {
@@ -72,9 +75,23 @@ class Phone {
   void toggleMute() {
     final mediaStream = _localMediaStream;
     if (mediaStream != null) {
-      final track = mediaStream.getTracks().first;
-      track.enabled = !track.enabled;
-      onToggleMute?.call(!track.enabled);
+      final track = _firstAudioTrack(mediaStream);
+      if (track != null) {
+        track.enabled = !track.enabled;
+        onToggleMute?.call(!track.enabled);
+      }
+    }
+  }
+
+  void toggleSpeakerphone() {
+    final mediaStream = _localMediaStream;
+    if (mediaStream != null) {
+      final track = _firstAudioTrack(mediaStream);
+      if (track != null) {
+        _speakerphone = !_speakerphone;
+        track.enableSpeakerphone(_speakerphone);
+        onToggleSpeakerphone?.call(_speakerphone);
+      }
     }
   }
 
@@ -265,5 +282,15 @@ class Phone {
         iceCandidate.sdpMLineIndex,
       ),
     );
+  }
+
+  MediaStreamTrack? _firstAudioTrack(MediaStream mediaStream) {
+    try {
+      return mediaStream
+          .getTracks()
+          .firstWhere((track) => track.kind == 'audio');
+    } on StateError {
+      return null;
+    }
   }
 }
