@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:openup/app_lifecycle.dart';
 import 'package:openup/button.dart';
 import 'package:openup/phone.dart';
 import 'package:openup/signaling/signaling.dart';
@@ -44,7 +45,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       uid: widget.uid,
     );
     _phone = Phone(
-      video: true,
+      useVideo: true,
       signalingChannel: _signalingChannel,
       onMediaRenderers: (localRenderer, remoteRenderer) {
         setState(() {
@@ -87,11 +88,16 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       children: [
         if (_remoteRenderer != null)
           Positioned.fill(
-            child: GestureDetector(
-              onTap: () => setState(() => _showingControls = !_showingControls),
-              child: RTCVideoView(
-                _remoteRenderer!,
-                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+            child: AppLifecycle(
+              onResumed: () => _phone.videoEnabled = true,
+              onPaused: () => _phone.videoEnabled = false,
+              child: GestureDetector(
+                onTap: () =>
+                    setState(() => _showingControls = !_showingControls),
+                child: RTCVideoView(
+                  _remoteRenderer!,
+                  objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                ),
               ),
             ),
           ),

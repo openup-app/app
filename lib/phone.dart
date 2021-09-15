@@ -20,7 +20,7 @@ class Phone {
   };
 
   final SignalingChannel signalingChannel;
-  final bool video;
+  final bool useVideo;
   final void Function(
     RTCVideoRenderer localRenderer,
     RTCVideoRenderer remoteRenderer,
@@ -49,7 +49,7 @@ class Phone {
 
   Phone({
     required this.signalingChannel,
-    required this.video,
+    required this.useVideo,
     required this.onMediaRenderers,
     required this.onRemoteStream,
     required this.onAddTimeRequest,
@@ -73,25 +73,26 @@ class Phone {
   }
 
   void toggleMute() {
-    final mediaStream = _localMediaStream;
-    if (mediaStream != null) {
-      final track = _firstAudioTrack(mediaStream);
-      if (track != null) {
-        track.enabled = !track.enabled;
-        onToggleMute?.call(!track.enabled);
-      }
+    final track = _firstAudioTrack(_localMediaStream);
+    if (track != null) {
+      track.enabled = !track.enabled;
+      onToggleMute?.call(!track.enabled);
     }
   }
 
   void toggleSpeakerphone() {
-    final mediaStream = _localMediaStream;
-    if (mediaStream != null) {
-      final track = _firstAudioTrack(mediaStream);
-      if (track != null) {
-        _speakerphone = !_speakerphone;
-        track.enableSpeakerphone(_speakerphone);
-        onToggleSpeakerphone?.call(_speakerphone);
-      }
+    final track = _firstAudioTrack(_localMediaStream);
+    if (track != null) {
+      _speakerphone = !_speakerphone;
+      track.enableSpeakerphone(_speakerphone);
+      onToggleSpeakerphone?.call(_speakerphone);
+    }
+  }
+
+  set videoEnabled(bool value) {
+    final track = _firstVideoTrack(_localMediaStream);
+    if (track != null) {
+      track.enabled = value;
     }
   }
 
@@ -136,7 +137,7 @@ class Phone {
     await remoteRenderer.initialize();
 
     final mediaStream = await navigator.mediaDevices.getUserMedia({
-      if (video) ...{
+      if (useVideo) ...{
         'video': {
           'facingMode': 'user',
         },
@@ -284,11 +285,21 @@ class Phone {
     );
   }
 
-  MediaStreamTrack? _firstAudioTrack(MediaStream mediaStream) {
+  MediaStreamTrack? _firstAudioTrack(MediaStream? mediaStream) {
     try {
       return mediaStream
-          .getTracks()
+          ?.getTracks()
           .firstWhere((track) => track.kind == 'audio');
+    } on StateError {
+      return null;
+    }
+  }
+
+  MediaStreamTrack? _firstVideoTrack(MediaStream? mediaStream) {
+    try {
+      return mediaStream
+          ?.getTracks()
+          .firstWhere((track) => track.kind == 'video');
     } on StateError {
       return null;
     }

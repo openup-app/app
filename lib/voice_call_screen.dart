@@ -43,7 +43,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
       uid: widget.uid,
     );
     _phone = Phone(
-      video: false,
+      useVideo: false,
       signalingChannel: _signalingChannel,
       onMediaRenderers: (_, remoteRenderer) {
         setState(() {
