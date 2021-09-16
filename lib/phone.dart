@@ -268,6 +268,8 @@ class Phone {
         addTimeRequest: (_) => onAddTimeRequest(),
         addTime: (addTime) => onAddTime(Duration(seconds: addTime.seconds)),
         hangUp: (_) => onDisconnected(),
+        ping: (_) => signalingChannel.send(const Pong()),
+        pong: (_) => {},
       );
     });
   }

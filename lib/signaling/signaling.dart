@@ -21,6 +21,10 @@ class Signal with _$Signal {
 
   const factory Signal.hangUp() = HangUp;
 
+  const factory Signal.ping() = Ping;
+
+  const factory Signal.pong() = Pong;
+
   factory Signal.fromJson(Map<String, dynamic> json) => _$SignalFromJson(json);
 }
 

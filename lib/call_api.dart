@@ -51,6 +51,8 @@ class CallApi {
     callEvent.map(
       makeCall: (_) => onMakeCall(),
       answerCall: (_) => onReceiveCall(),
+      ping: (_) => _channel.sink.add(jsonEncode((const _Pong()).toJson())),
+      pong: (_) {},
     );
   }
 }
@@ -60,6 +62,10 @@ class _CallEvent with _$_CallEvent {
   const factory _CallEvent.makeCall() = _MakeCall;
 
   const factory _CallEvent.answerCall() = _AnswerCall;
+
+  const factory _CallEvent.ping() = _Ping;
+
+  const factory _CallEvent.pong() = _Pong;
 
   factory _CallEvent.fromJson(Map<String, dynamic> json) =>
       _$_CallEventFromJson(json);
