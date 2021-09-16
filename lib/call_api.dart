@@ -15,17 +15,29 @@ class CallApi {
   late final WebSocketChannel _channel;
   final VoidCallback onMakeCall;
   final VoidCallback onReceiveCall;
+  final VoidCallback onConnectionError;
 
   CallApi({
     required String host,
     required String uid,
+    required bool video,
     required this.onMakeCall,
     required this.onReceiveCall,
-    required bool video,
+    required this.onConnectionError,
   }) {
     _channel = WebSocketChannel.connect(
-        Uri.parse('ws://$host/?uid=$uid&video=$video'));
-    _channel.stream.listen(_handleMessage);
+      Uri.parse('ws://$host/?uid=$uid&video=$video'),
+    );
+    _channel.stream.listen(
+      _handleMessage,
+      onError: (e) {
+        if (e is WebSocketChannelException) {
+          onConnectionError();
+        } else {
+          throw e;
+        }
+      },
+    );
   }
 
   Future<void> dispose() async {

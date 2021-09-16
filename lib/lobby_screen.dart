@@ -52,9 +52,17 @@ class _LobbyScreenState extends State<LobbyScreen>
     _callApi = CallApi(
       host: widget.applicationHost,
       uid: _uid,
+      video: widget.video,
       onMakeCall: () => _startCall(initiator: true),
       onReceiveCall: () => _startCall(initiator: false),
-      video: widget.video,
+      onConnectionError: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to connect to server'),
+          ),
+        );
+        Navigator.of(context).pop();
+      },
     );
   }
 
