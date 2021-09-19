@@ -39,7 +39,15 @@ class FriendsHomeScreen extends StatelessWidget {
                       Text(
                         'meet\npeople',
                         textAlign: TextAlign.center,
-                        style: Theming.of(context).text.headline,
+                        style: Theming.of(context).text.large.copyWith(
+                          shadows: [
+                            BoxShadow(
+                              color: Theming.of(context).shadow,
+                              spreadRadius: 0.0,
+                              blurRadius: 32.0,
+                            )
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -72,7 +80,15 @@ class FriendsHomeScreen extends StatelessWidget {
                       Text(
                         'meet people\nwith friends',
                         textAlign: TextAlign.center,
-                        style: Theming.of(context).text.headline,
+                        style: Theming.of(context).text.large.copyWith(
+                          shadows: [
+                            BoxShadow(
+                              color: Theming.of(context).shadow,
+                              spreadRadius: 0.0,
+                              blurRadius: 32.0,
+                            )
+                          ],
+                        ),
                       ),
                     ],
                   ),

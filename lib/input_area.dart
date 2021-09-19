@@ -13,9 +13,9 @@ class InputArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 60.0,
+      height: 72.0,
       decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(30)),
+        borderRadius: const BorderRadius.all(Radius.circular(36)),
         color: Colors.white,
         boxShadow: [
           BoxShadow(

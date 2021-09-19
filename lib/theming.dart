@@ -25,10 +25,17 @@ class ThemingData {
 }
 
 class TextTheme {
+  final large = const TextStyle(
+    color: Colors.white,
+    fontFamily: 'Myriad',
+    fontSize: 36,
+    fontWeight: FontWeight.w400,
+  );
+
   final headline = const TextStyle(
     color: Colors.white,
     fontFamily: 'Myriad',
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: FontWeight.w400,
   );
 
@@ -42,14 +49,14 @@ class TextTheme {
   final body = const TextStyle(
     color: Colors.white,
     fontFamily: 'Myriad',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: FontWeight.w600,
   );
 
   final bodySecondary = const TextStyle(
     color: Colors.white,
     fontFamily: 'Myriad',
-    fontSize: 19,
+    fontSize: 23,
     fontWeight: FontWeight.w400,
   );
 

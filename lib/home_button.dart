@@ -17,7 +17,7 @@ class HomeButton extends StatelessWidget {
         height: 48,
         child: Icon(
           Icons.home,
-          size: 32.0,
+          size: 48.0,
           color: Theming.of(context).friendBlue4,
         ),
       ),

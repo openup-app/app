@@ -27,12 +27,11 @@ class ProfileButton extends StatelessWidget {
                     blurRadius: 4.0,
                   ),
                 ],
-                shape: BoxShape.circle,
                 color: color,
+                shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.person,
-                size: 32.0,
+              child: Image.asset(
+                'assets/images/profile.png',
               ),
             ),
           ),

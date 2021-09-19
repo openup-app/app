@@ -26,8 +26,9 @@ class ForgotPasswordScreen extends StatelessWidget {
         top: true,
         child: Column(
           children: [
+            const SizedBox(height: 86),
             const TitleAndTagline(),
-            const Spacer(),
+            const SizedBox(height: 10),
             Text(
               'Enter new password',
               textAlign: TextAlign.center,
@@ -41,35 +42,47 @@ class ForgotPasswordScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            const InputArea(
+            const SizedBox(height: 22),
+            InputArea(
               child: TextField(
                 textAlign: TextAlign.center,
                 obscureText: true,
                 decoration: InputDecoration.collapsed(
                   hintText: 'update password',
+                  hintStyle: Theming.of(context)
+                      .text
+                      .body
+                      .copyWith(color: Colors.grey),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            const InputArea(
+            const SizedBox(height: 22),
+            InputArea(
               child: TextField(
                 textAlign: TextAlign.center,
                 obscureText: true,
                 decoration: InputDecoration.collapsed(
                   hintText: 'retype password',
+                  hintStyle: Theming.of(context)
+                      .text
+                      .body
+                      .copyWith(color: Colors.grey),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 22),
             PrimaryButton.large(
               onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
               child: const Text('Log in'),
             ),
-            const Spacer(),
-            const Hero(
-              tag: 'male_female_connection',
-              child: MaleFemaleConnectionImageApart(),
+            const SizedBox(
+              height: 17 + 22 + 25 + 19,
+            ),
+            const Expanded(
+              child: Hero(
+                tag: 'male_female_connection',
+                child: MaleFemaleConnectionImageApart(),
+              ),
             ),
           ],
         ),

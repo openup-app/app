@@ -30,36 +30,49 @@ class SignUpScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            const SizedBox(height: 86),
             const TitleAndTagline(),
-            const Spacer(),
-            const InputArea(
+            const SizedBox(height: 10),
+            InputArea(
               child: TextField(
                 textAlign: TextAlign.center,
                 decoration: InputDecoration.collapsed(
                   hintText: 'Phone number or email',
+                  hintStyle: Theming.of(context)
+                      .text
+                      .body
+                      .copyWith(color: Colors.grey),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            const InputArea(
+            const SizedBox(height: 22),
+            InputArea(
               child: TextField(
                 textAlign: TextAlign.center,
                 obscureText: true,
                 decoration: InputDecoration.collapsed(
                   hintText: 'Password',
+                  hintStyle: Theming.of(context)
+                      .text
+                      .body
+                      .copyWith(color: Colors.grey),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            const InputArea(
+            const SizedBox(height: 22),
+            InputArea(
               child: TextField(
                 textAlign: TextAlign.center,
                 decoration: InputDecoration.collapsed(
                   hintText: 'Birthday',
+                  hintStyle: Theming.of(context)
+                      .text
+                      .body
+                      .copyWith(color: Colors.grey),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 22),
             PrimaryButton.large(
               child: const Text('Send code'),
               onPressed: () =>
@@ -71,10 +84,11 @@ class SignUpScreen extends StatelessWidget {
               onPressed: () =>
                   Navigator.of(context).pushNamed('forgot-password'),
             ),
-            const Spacer(),
-            const Hero(
-              tag: 'male_female_connection',
-              child: MaleFemaleConnectionImageApart(),
+            Expanded(
+              child: const Hero(
+                tag: 'male_female_connection',
+                child: MaleFemaleConnectionImageApart(),
+              ),
             ),
           ],
         ),

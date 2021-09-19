@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:openup/button.dart';
 import 'package:openup/male_female_connection_image.dart';
@@ -10,6 +11,13 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
     return Stack(
       children: [
         Row(
@@ -23,7 +31,7 @@ class HomeScreen extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Theming.of(context).datingRed2,
+                        const Color.fromARGB(0xFF, 0xFF, 0x83, 0x83),
                         Theming.of(context).datingRed1,
                       ],
                     ),
@@ -31,16 +39,18 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       const Spacer(),
-                      SizedBox(
+                      Container(
+                        padding: const EdgeInsets.only(left: 40),
+                        alignment: Alignment.centerLeft,
                         child: Text(
                           'blind\ndating',
-                          textAlign: TextAlign.center,
-                          style: Theming.of(context).text.headline,
+                          textAlign: TextAlign.left,
+                          style: Theming.of(context).text.large,
                         ),
                       ),
                       const SizedBox(height: 24),
                       SizedBox(
-                        height: 100,
+                        height: 120,
                         child: Image.asset(
                           'assets/images/heart.png',
                           fit: BoxFit.fitHeight,
@@ -72,16 +82,17 @@ class HomeScreen extends StatelessWidget {
                       const Spacer(),
                       const SizedBox(height: 120),
                       const SizedBox(
-                        height: 100,
+                        height: 120,
                         child: MaleFemaleConnectionImage(),
                       ),
                       const SizedBox(height: 24),
-                      SizedBox(
-                        height: 100,
+                      Container(
+                        padding: const EdgeInsets.only(left: 40),
+                        alignment: Alignment.centerLeft,
                         child: Text(
                           'make\nfriends',
-                          textAlign: TextAlign.center,
-                          style: Theming.of(context).text.headline,
+                          textAlign: TextAlign.left,
+                          style: Theming.of(context).text.large,
                         ),
                       ),
                       const Spacer(),
@@ -95,8 +106,8 @@ class HomeScreen extends StatelessWidget {
         Positioned(
           top: MediaQuery.of(context).padding.top + 16,
           right: MediaQuery.of(context).padding.right + 16,
-          child: ProfileButton(
-            color: Theming.of(context).datingRed1,
+          child: const ProfileButton(
+            color: Color.fromARGB(0xFF, 0xFF, 0xAF, 0xAF),
           ),
         ),
       ],

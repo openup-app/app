@@ -15,8 +15,8 @@ class PrimaryButton extends StatelessWidget {
     Key? key,
     required this.onPressed,
     required this.child,
-  })  : borderRadius = const BorderRadius.all(Radius.circular(30)),
-        height = 60.0,
+  })  : borderRadius = const BorderRadius.all(Radius.circular(36)),
+        height = 72.0,
         super(key: key);
 
   @override
@@ -71,9 +71,9 @@ class PrimaryIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Button(
       child: Container(
-        height: 96,
+        height: 116,
         decoration: BoxDecoration(
-          borderRadius: const BorderRadius.all(Radius.circular(48)),
+          borderRadius: const BorderRadius.all(Radius.circular(58)),
           boxShadow: [
             BoxShadow(
               color: Theming.of(context).shadow,
@@ -89,7 +89,7 @@ class PrimaryIconButton extends StatelessWidget {
             children: [
               const SizedBox(width: 8),
               SizedBox(
-                width: 64,
+                width: 80,
                 child: icon,
               ),
               const SizedBox(width: 8),

@@ -26,8 +26,9 @@ class PhoneVerificationScreen extends StatelessWidget {
         top: true,
         child: Column(
           children: [
+            const SizedBox(height: 86),
             const TitleAndTagline(),
-            const Spacer(),
+            const SizedBox(height: 10),
             Text(
               'Verification code successfully\nsent to your phone!',
               textAlign: TextAlign.center,
@@ -41,16 +42,20 @@ class PhoneVerificationScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            const InputArea(
+            const SizedBox(height: 22),
+            InputArea(
               child: TextField(
                 textAlign: TextAlign.center,
                 decoration: InputDecoration.collapsed(
                   hintText: 'Enter verification code',
+                  hintStyle: Theming.of(context)
+                      .text
+                      .body
+                      .copyWith(color: Colors.grey),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 22),
             PrimaryButton.large(
               onPressed: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
@@ -58,10 +63,14 @@ class PhoneVerificationScreen extends StatelessWidget {
               },
               child: const Text('Verify account'),
             ),
-            const Spacer(),
-            const Hero(
-              tag: 'male_female_connection',
-              child: MaleFemaleConnectionImageApart(),
+            const SizedBox(
+              height: 17 + 22 + 72 + 15 + 25,
+            ),
+            const Expanded(
+              child: Hero(
+                tag: 'male_female_connection',
+                child: MaleFemaleConnectionImageApart(),
+              ),
             ),
           ],
         ),
