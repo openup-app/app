@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:openup/button.dart';
-import 'package:openup/call_api.dart';
+import 'package:openup/lobby_api.dart';
 import 'package:openup/video_call_screen.dart';
 import 'package:openup/notification_banner.dart';
 import 'package:openup/theming.dart';
@@ -12,13 +12,13 @@ import 'home_button.dart';
 
 /// Page on which you wait to be matched with another user.
 class LobbyScreen extends StatefulWidget {
-  final String applicationHost;
+  final String lobbyHost;
   final String signalingHost;
   final bool video;
 
   const LobbyScreen({
     Key? key,
-    required this.applicationHost,
+    required this.lobbyHost,
     required this.signalingHost,
     required this.video,
   }) : super(key: key);
@@ -30,7 +30,7 @@ class LobbyScreen extends StatefulWidget {
 class _LobbyScreenState extends State<LobbyScreen>
     with SingleTickerProviderStateMixin {
   late final String _uid;
-  late final CallApi _callApi;
+  late final LobbyApi _lobbyApi;
 
   late final AnimationController _animationController;
 
@@ -49,8 +49,8 @@ class _LobbyScreenState extends State<LobbyScreen>
     _animationController.forward();
 
     _uid = Random().nextInt(1000000).toString().padLeft(7, '0');
-    _callApi = CallApi(
-      host: widget.applicationHost,
+    _lobbyApi = LobbyApi(
+      host: widget.lobbyHost,
       uid: _uid,
       video: widget.video,
       onMakeCall: () => _startCall(initiator: true),
@@ -69,7 +69,7 @@ class _LobbyScreenState extends State<LobbyScreen>
   @override
   void dispose() {
     _animationController.dispose();
-    _callApi.dispose();
+    _lobbyApi.dispose();
     super.dispose();
   }
 
@@ -161,7 +161,7 @@ class _LobbyScreenState extends State<LobbyScreen>
     );
   }
 
-  void _startCall({required bool initiator}) async {
+  void _startCall({required bool initiator}) {
     final route = widget.video ? 'friends-video-call' : 'friends-voice-call';
     Navigator.of(context).pushNamed(
       route,

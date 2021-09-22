@@ -4,7 +4,7 @@ import 'package:openup/app_lifecycle.dart';
 import 'package:openup/button.dart';
 import 'package:openup/phone.dart';
 import 'package:openup/signaling/signaling.dart';
-import 'package:openup/signaling/web_sockets_signaling_channel.dart';
+import 'package:openup/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/theming.dart';
 import 'package:openup/time_remaining.dart';
 
@@ -40,7 +40,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   @override
   void initState() {
-    _signalingChannel = WebSocketsSignalingChannel(
+    _signalingChannel = SocketIoSignalingChannel(
       host: widget.signalingHost,
       uid: widget.uid,
     );

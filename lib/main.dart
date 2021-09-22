@@ -12,7 +12,7 @@ import 'package:openup/sign_up/sign_up_screen.dart';
 import 'package:openup/solo_screen.dart';
 import 'package:openup/theming.dart';
 
-const _tempApplicationHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8080';
+const _tempLobbyHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8080';
 const _tempSignalingHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8081';
 
 void main() {
@@ -91,7 +91,7 @@ class _MyAppState extends State<MyApp> {
                   return _buildPageRoute(
                     settings: settings,
                     child: LobbyScreen(
-                      applicationHost: _tempApplicationHost,
+                      lobbyHost: _tempLobbyHost,
                       signalingHost: _tempSignalingHost,
                       video: args.video,
                     ),

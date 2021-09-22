@@ -4,7 +4,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/button.dart';
 import 'package:openup/phone.dart';
 import 'package:openup/signaling/signaling.dart';
-import 'package:openup/signaling/web_sockets_signaling_channel.dart';
+import 'package:openup/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/slide_control.dart';
 import 'package:openup/theming.dart';
 import 'package:openup/time_remaining.dart';
@@ -38,7 +38,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
 
   @override
   void initState() {
-    _signalingChannel = WebSocketsSignalingChannel(
+    _signalingChannel = SocketIoSignalingChannel(
       host: widget.signalingHost,
       uid: widget.uid,
     );
