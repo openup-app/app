@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
 import 'package:openup/button.dart';
 import 'package:openup/common.dart';
 import 'package:openup/input_area.dart';
@@ -7,13 +10,41 @@ import 'package:openup/male_female_connection_image.dart';
 import 'package:openup/sign_up/title_and_tagline.dart';
 import 'package:openup/theming.dart';
 
-class SignUpScreen extends StatelessWidget {
+class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
 
   @override
+  State<SignUpScreen> createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  final _phoneEmailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  DateTime _birthday = DateTime.now();
+
+  final _phoneEmailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+
+  String? _phoneEmailErrorText;
+  String? _passwordErrorText;
+  String? _birthdayErrorText;
+
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _phoneEmailController.dispose();
+    _passwordController.dispose();
+    _phoneEmailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -24,75 +55,229 @@ class SignUpScreen extends StatelessWidget {
           end: Alignment.bottomCenter,
         ),
       ),
-      child: SafeArea(
-        top: true,
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            const SizedBox(height: 86),
-            const TitleAndTagline(),
-            const SizedBox(height: 10),
-            InputArea(
-              child: TextField(
-                textAlign: TextAlign.center,
-                decoration: InputDecoration.collapsed(
-                  hintText: 'Phone number or email',
-                  hintStyle: Theming.of(context)
-                      .text
-                      .body
-                      .copyWith(color: Colors.grey),
+      child: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.of(context).padding.top,
+              ),
+            ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 86),
+            ),
+            const SliverToBoxAdapter(
+              child: TitleAndTagline(),
+            ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 10),
+            ),
+            SliverToBoxAdapter(
+              child: InputArea(
+                errorText: _phoneEmailErrorText,
+                child: TextFormField(
+                  controller: _phoneEmailController,
+                  focusNode: _phoneEmailFocusNode,
+                  textInputAction: TextInputAction.next,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                  ],
+                  onEditingComplete: () {
+                    setState(() => _phoneEmailErrorText =
+                        _validateEmailPhone(_phoneEmailController.text));
+                    FocusScope.of(context).nextFocus();
+                  },
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration.collapsed(
+                    hintText: 'Phone number or email',
+                    hintStyle: Theming.of(context)
+                        .text
+                        .body
+                        .copyWith(color: Colors.grey),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 22),
-            InputArea(
-              child: TextField(
-                textAlign: TextAlign.center,
-                obscureText: true,
-                decoration: InputDecoration.collapsed(
-                  hintText: 'Password',
-                  hintStyle: Theming.of(context)
-                      .text
-                      .body
-                      .copyWith(color: Colors.grey),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 22),
+            ),
+            SliverToBoxAdapter(
+              child: InputArea(
+                errorText: _passwordErrorText,
+                child: TextFormField(
+                  controller: _passwordController,
+                  focusNode: _passwordFocusNode,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                  ],
+                  onEditingComplete: () {
+                    setState(() => _passwordErrorText =
+                        _validatePassword(_passwordController.text));
+                    FocusScope.of(context).unfocus();
+                  },
+                  textAlign: TextAlign.center,
+                  obscureText: true,
+                  decoration: InputDecoration.collapsed(
+                    hintText: 'Password',
+                    hintStyle: Theming.of(context)
+                        .text
+                        .body
+                        .copyWith(color: Colors.grey),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 22),
-            InputArea(
-              child: TextField(
-                textAlign: TextAlign.center,
-                decoration: InputDecoration.collapsed(
-                  hintText: 'Birthday',
-                  hintStyle: Theming.of(context)
-                      .text
-                      .body
-                      .copyWith(color: Colors.grey),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 22),
+            ),
+            SliverToBoxAdapter(
+              child: InputArea(
+                errorText: _birthdayErrorText,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Birthday',
+                      style: Theming.of(context).text.body.copyWith(
+                          color: Colors.grey, fontWeight: FontWeight.w500),
+                    ),
+                    Expanded(
+                      child: SizedBox(
+                        height: 64,
+                        child: ClipRect(
+                          child: OverflowBox(
+                            maxHeight: 200,
+                            child: DatePickerWidget(
+                              looping: true,
+                              onChange: (date, _) {
+                                setState(() {
+                                  _birthday = date;
+                                  _birthdayErrorText = _validateBirthday(date);
+                                });
+                              },
+                              dateFormat: 'MMM-dd-yyyy',
+                              locale: DateTimePickerLocale.en_us,
+                              pickerTheme: DateTimePickerTheme(
+                                itemTextStyle: Theming.of(context)
+                                    .text
+                                    .body
+                                    .copyWith(color: Colors.grey),
+                                backgroundColor: Colors.transparent,
+                                dividerColor: const Color.fromARGB(
+                                    0xFF, 0xFF, 0xAC, 0xAC),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 22),
-            PrimaryButton.large(
-              child: const Text('Send code'),
-              onPressed: () =>
-                  Navigator.of(context).pushNamed('phone-verification'),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 22),
             ),
-            const SizedBox(height: 15),
-            Button(
-              child: const Text('forgot info?'),
-              onPressed: () =>
-                  Navigator.of(context).pushNamed('forgot-password'),
+            SliverToBoxAdapter(
+              child: PrimaryButton.large(
+                child: _submitting
+                    ? const CircularProgressIndicator()
+                    : const Text('Send code'),
+                onPressed: _submitting ? null : _submit,
+              ),
             ),
-            Expanded(
-              child: const Hero(
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 15),
+            ),
+            SliverToBoxAdapter(
+              child: Center(
+                child: Button(
+                  child: const Text('forgot info?'),
+                  onPressed: _submitting
+                      ? null
+                      : () =>
+                          Navigator.of(context).pushNamed('forgot-password'),
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 15),
+            ),
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Hero(
                 tag: 'male_female_connection',
-                child: MaleFemaleConnectionImageApart(),
+                child: SizedBox(
+                  height: 100,
+                  child: MaleFemaleConnectionImageApart(),
+                ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String? _validateEmailPhone(String? value) {
+    if (value == null) {
+      return 'Enter a phone or email address';
+    }
+    // From https://stackoverflow.com/a/16888554
+    final emailRegex = RegExp(
+        r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
+    final phoneRegex = RegExp(r'^(?:[+0][1-9])?[0-9]{10,12}$');
+    if (phoneRegex.stringMatch(value) == value ||
+        emailRegex.stringMatch(value) == value) {
+      return null;
+    } else {
+      return 'Invalid phone or email address';
+    }
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null) {
+      return 'Enter a password';
+    }
+
+    if (value.length < 8) {
+      return '8 or more characters required';
+    }
+
+    if (!value.contains(RegExp(r'\d')) || !value.contains(RegExp('[a-zA-Z]'))) {
+      return 'Numbers and letters required';
+    }
+
+    if (!value.contains(RegExp('[a-z]')) || !value.contains(RegExp('[A-Z]'))) {
+      return 'Uppercase and lowercase letters required';
+    }
+  }
+
+  String? _validateBirthday(DateTime value) {
+    const ageLimit = Duration(days: 365 * 18);
+    final age = DateTime.now().difference(value);
+    if (age < ageLimit) {
+      return 'You must be 18 years old or older';
+    }
+  }
+
+  void _submit() async {
+    setState(() =>
+        _phoneEmailErrorText = _validateEmailPhone(_phoneEmailController.text));
+    setState(
+        () => _passwordErrorText = _validatePassword(_passwordController.text));
+
+    if (_phoneEmailErrorText == null &&
+        _passwordErrorText == null &&
+        _birthdayErrorText == null) {
+      setState(() => _submitting = true);
+      await Future.delayed(const Duration(seconds: 2));
+      setState(() => _submitting = false);
+
+      Navigator.of(context).pushNamed('phone-verification');
+    }
   }
 }

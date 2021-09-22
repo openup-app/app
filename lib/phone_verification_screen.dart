@@ -10,8 +10,7 @@ class PhoneVerificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -22,14 +21,19 @@ class PhoneVerificationScreen extends StatelessWidget {
           ],
         ),
       ),
-      child: SafeArea(
-        top: true,
-        child: Column(
-          children: [
-            const SizedBox(height: 86),
-            const TitleAndTagline(),
-            const SizedBox(height: 10),
-            Text(
+      child: CustomScrollView(
+        slivers: [
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 86),
+          ),
+          const SliverToBoxAdapter(
+            child: TitleAndTagline(),
+          ),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 10),
+          ),
+          SliverToBoxAdapter(
+            child: Text(
               'Verification code successfully\nsent to your phone!',
               textAlign: TextAlign.center,
               style: Theming.of(context).text.subheading.copyWith(
@@ -42,8 +46,12 @@ class PhoneVerificationScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 22),
-            InputArea(
+          ),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 22),
+          ),
+          SliverToBoxAdapter(
+            child: InputArea(
               child: TextField(
                 textAlign: TextAlign.center,
                 decoration: InputDecoration.collapsed(
@@ -55,25 +63,33 @@ class PhoneVerificationScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 22),
-            PrimaryButton.large(
+          ),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 22),
+          ),
+          SliverToBoxAdapter(
+            child: PrimaryButton.large(
               onPressed: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 Navigator.of(context).pushReplacementNamed('/');
               },
               child: const Text('Verify account'),
             ),
-            const SizedBox(
-              height: 17 + 22 + 72 + 15 + 25,
-            ),
-            const Expanded(
-              child: Hero(
-                tag: 'male_female_connection',
+          ),
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 15),
+          ),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Hero(
+              tag: 'male_female_connection',
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: 70),
                 child: MaleFemaleConnectionImageApart(),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -6,7 +6,7 @@ import 'package:openup/theming.dart';
 /// Prominent button with a horizontal pink gradient styling, comes in three
 /// sizes.
 class PrimaryButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Widget child;
   final BorderRadius borderRadius;
   final double height;
@@ -21,33 +21,36 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Button(
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          borderRadius: borderRadius,
-          boxShadow: [
-            BoxShadow(
-              color: Theming.of(context).shadow,
-              offset: const Offset(0.0, 4.0),
-              blurRadius: 1.0,
-            ),
-          ],
-          gradient: LinearGradient(
-            colors: [
-              Theming.of(context).datingRed2,
-              Theming.of(context).datingRed1,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Button(
+        child: Container(
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: borderRadius,
+            boxShadow: [
+              BoxShadow(
+                color: Theming.of(context).shadow,
+                offset: const Offset(0.0, 4.0),
+                blurRadius: 1.0,
+              ),
             ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
+            gradient: LinearGradient(
+              colors: [
+                Theming.of(context).datingRed2,
+                Theming.of(context).datingRed1,
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Center(child: child),
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 4.0),
-          child: Center(child: child),
-        ),
+        onPressed: onPressed,
       ),
-      onPressed: onPressed,
     );
   }
 }
