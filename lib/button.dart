@@ -46,6 +46,7 @@ class _ButtonState extends State<Button> with SingleTickerProviderStateMixin {
       child: IgnorePointer(
         ignoring: widget.onPressed == null,
         child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
           onTapDown: (_) => setState(() => _animationController.value = 0.6),
           onTapUp: (_) {
             setState(() {

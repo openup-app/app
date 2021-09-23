@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:openup/preferences.dart';
+import 'package:openup/preferences_screen.dart';
 import 'package:openup/video_call_screen.dart';
 import 'package:openup/page_transition.dart';
 import 'package:openup/voice_call_screen.dart';
@@ -86,6 +88,14 @@ class _MyAppState extends State<MyApp> {
                     settings: settings,
                     child: const SoloFriends(),
                   );
+                case 'friends-preferences':
+                  return _buildPageRoute<Preferences>(
+                    settings: settings,
+                    transitionsBuilder: bottomToTopPageTransition,
+                    child: const PreferencesScreen(
+                      initialPreferences: Preferences(),
+                    ),
+                  );
                 case 'friends-lobby':
                   final args = settings.arguments as LobbyScreenArguments;
                   return _buildPageRoute(
@@ -128,12 +138,12 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  PageRoute _buildPageRoute({
+  PageRoute _buildPageRoute<T>({
     required RouteSettings settings,
     PageTransitionBuilder? transitionsBuilder,
     required Widget child,
   }) {
-    return PageRouteBuilder(
+    return PageRouteBuilder<T>(
       settings: settings,
       transitionsBuilder: transitionsBuilder ?? sideAnticipatePageTransition,
       transitionDuration: const Duration(milliseconds: 750),

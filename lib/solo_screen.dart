@@ -5,6 +5,7 @@ import 'package:openup/common.dart';
 import 'package:openup/lobby_screen.dart';
 import 'package:openup/home_button.dart';
 import 'package:openup/male_female_connection_image.dart';
+import 'package:openup/preferences.dart';
 import 'package:openup/profile_button.dart';
 import 'package:openup/theming.dart';
 import 'package:openup/toggle_button.dart';
@@ -121,7 +122,10 @@ class SoloFriends extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 PrimaryIconButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    final _ = await Navigator.of(context)
+                        .pushNamed<Preferences>('friends-preferences');
+                  },
                   icon: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Image.asset('assets/images/preferences.png'),
