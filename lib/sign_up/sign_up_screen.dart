@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
-import 'package:openup/button.dart';
 import 'package:openup/common.dart';
 import 'package:openup/input_area.dart';
 import 'package:openup/male_female_connection_image.dart';
@@ -23,21 +23,14 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   static final _phoneRegex = RegExp(r'^(?:[+0][1-9])?[0-9]{10,12}$');
 
-// From https://stackoverflow.com/a/16888554
-  static final _emailRegex = RegExp(
-      r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
-
   final _formKey = GlobalKey<FormState>();
 
-  final _phoneEmailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _phoneController = TextEditingController();
   DateTime _birthday = DateTime.now();
 
-  final _phoneEmailFocusNode = FocusNode();
-  final _passwordFocusNode = FocusNode();
+  final _phoneFocusNode = FocusNode();
 
-  String? _phoneEmailErrorText;
-  String? _passwordErrorText;
+  String? _phoneErrorText;
   String? _birthdayErrorText;
 
   bool _submitting = false;
@@ -45,10 +38,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
-    _phoneEmailController.dispose();
-    _passwordController.dispose();
-    _phoneEmailFocusNode.dispose();
-    _passwordFocusNode.dispose();
+    _phoneController.dispose();
+    _phoneFocusNode.dispose();
     super.dispose();
   }
 
@@ -86,56 +77,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             SliverToBoxAdapter(
               child: InputArea(
-                errorText: _phoneEmailErrorText,
+                errorText: _phoneErrorText,
                 child: TextFormField(
-                  controller: _phoneEmailController,
-                  focusNode: _phoneEmailFocusNode,
-                  textInputAction: TextInputAction.next,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.deny(RegExp(r'\s')),
-                  ],
-                  onEditingComplete: () {
-                    setState(() {
-                      _phoneEmailErrorText =
-                          _validateEmailPhone(_phoneEmailController.text);
-                    });
-                    FocusScope.of(context).nextFocus();
-                  },
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration.collapsed(
-                    hintText: 'Phone number or email',
-                    hintStyle: Theming.of(context)
-                        .text
-                        .body
-                        .copyWith(color: Colors.grey),
-                  ),
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 22),
-            ),
-            SliverToBoxAdapter(
-              child: InputArea(
-                errorText: _passwordErrorText,
-                child: TextFormField(
-                  controller: _passwordController,
-                  focusNode: _passwordFocusNode,
+                  controller: _phoneController,
+                  focusNode: _phoneFocusNode,
+                  keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.done,
                   inputFormatters: [
                     FilteringTextInputFormatter.deny(RegExp(r'\s')),
                   ],
                   onEditingComplete: () {
                     setState(() {
-                      _passwordErrorText =
-                          _validatePassword(_passwordController.text);
+                      _phoneErrorText = _validatePhone(_phoneController.text);
                     });
                     FocusScope.of(context).unfocus();
                   },
                   textAlign: TextAlign.center,
-                  obscureText: true,
                   decoration: InputDecoration.collapsed(
-                    hintText: 'Password',
+                    hintText: 'Phone number',
                     hintStyle: Theming.of(context)
                         .text
                         .body
@@ -206,20 +165,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             const SliverToBoxAdapter(
               child: SizedBox(height: 15),
             ),
-            SliverToBoxAdapter(
-              child: Center(
-                child: Button(
-                  child: const Text('forgot info?'),
-                  onPressed: _submitting || !_valid
-                      ? null
-                      : () =>
-                          Navigator.of(context).pushNamed('forgot-password'),
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 15),
-            ),
             const SliverFillRemaining(
               hasScrollBody: false,
               child: Hero(
@@ -237,38 +182,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   bool get _valid =>
-      _validateEmailPhone(_phoneEmailController.text) == null &&
-      _validatePassword(_passwordController.text) == null &&
+      _validatePhone(_phoneController.text) == null &&
       _validateBirthday(_birthday) == null;
 
-  String? _validateEmailPhone(String? value) {
+  String? _validatePhone(String? value) {
     if (value == null) {
-      return 'Enter a phone or email address';
+      return 'Enter a phone number';
     }
 
-    if (_phoneRegex.stringMatch(value) == value ||
-        _emailRegex.stringMatch(value) == value) {
+    if (_phoneRegex.stringMatch(value) == value) {
       return null;
     } else {
-      return 'Invalid phone or email address';
-    }
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null) {
-      return 'Enter a password';
-    }
-
-    if (value.length < 8) {
-      return '8 or more characters required';
-    }
-
-    if (!value.contains(RegExp(r'\d')) || !value.contains(RegExp('[a-zA-Z]'))) {
-      return 'Numbers and letters required';
-    }
-
-    if (!value.contains(RegExp('[a-z]')) || !value.contains(RegExp('[A-Z]'))) {
-      return 'Uppercase and lowercase letters required';
+      return 'Invalid phone number';
     }
   }
 
@@ -281,17 +206,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _submit() async {
-    final phoneEmail = _phoneEmailController.text;
-    final password = _passwordController.text;
-    setState(() => _phoneEmailErrorText = _validateEmailPhone(phoneEmail));
-    setState(() => _passwordErrorText = _validatePassword(password));
+    final phone = _phoneController.text;
+    setState(() => _phoneErrorText = _validatePhone(phone));
 
-    if (_phoneEmailErrorText == null &&
-        _passwordErrorText == null &&
-        _birthdayErrorText == null) {
+    if (_phoneErrorText == null && _birthdayErrorText == null) {
       setState(() => _submitting = true);
       await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: phoneEmail,
+        phoneNumber: phone,
         verificationCompleted: (credential) async {
           final container = ProviderScope.containerOf(context);
           final usersApi = container.read(usersApiProvider);
