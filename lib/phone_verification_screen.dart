@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users.dart';
+import 'package:openup/api/users/users_api.dart';
 import 'package:openup/common.dart';
 import 'package:openup/input_area.dart';
 import 'package:openup/male_female_connection_image.dart';
@@ -139,7 +139,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
 
     setState(() => _submitting = true);
 
-    final container = ProviderContainer();
+    final container = ProviderScope.containerOf(context);
     final usersApi = container.read(usersApiProvider);
 
     String? uid;

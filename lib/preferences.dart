@@ -17,8 +17,14 @@ class Preferences with _$Preferences {
     @Default({}) Set<String> community,
     @Default({}) Set<String> language,
     @Default({}) Set<int> skinColor,
-    @RangeJsonConverter() @Default(Range(min: 30, max: 200)) @JsonKey() weight,
-    @RangeJsonConverter() @Default(Range(min: 50, max: 250)) @JsonKey() height,
+    @RangeJsonConverter()
+    @Default(Range(min: 30, max: 200))
+    @JsonKey()
+        Range weight,
+    @RangeJsonConverter()
+    @Default(Range(min: 50, max: 250))
+    @JsonKey()
+        Range height,
     @Default({}) Set<String> occupation,
     @Default({}) Set<HairColor> hairColor,
   }) = _Preferences;
@@ -37,17 +43,17 @@ class Range with _$Range {
   factory Range.fromJson(Map<String, dynamic> json) => _$RangeFromJson(json);
 }
 
-class RangeJsonConverter implements JsonConverter<Range, List<int>> {
+class RangeJsonConverter implements JsonConverter<Range, List<dynamic>> {
   static const defaultRange = Range(min: 0, max: 100);
 
   const RangeJsonConverter();
 
   @override
-  Range fromJson(List<int>? json) =>
+  Range fromJson(List<dynamic>? json) =>
       json == null ? defaultRange : Range(min: json[0], max: json[1]);
 
   @override
-  List<int> toJson(Range? object) => object == null
+  List<dynamic> toJson(Range? object) => object == null
       ? [defaultRange.min, defaultRange.max]
       : [object.min, object.max];
 }

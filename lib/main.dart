@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users.dart';
+import 'package:openup/api/users/users_api.dart';
 import 'package:openup/initial_loading.dart';
 import 'package:openup/preferences.dart';
 import 'package:openup/preferences_screen.dart';
@@ -108,11 +108,12 @@ class _OpenupAppState extends State<OpenupApp> {
                     child: const SoloFriends(),
                   );
                 case 'friends-preferences':
-                  return _buildPageRoute<Preferences>(
+                  final args = settings.arguments as Preferences;
+                  return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: bottomToTopPageTransition,
-                    child: const PreferencesScreen(
-                      initialPreferences: Preferences(),
+                    child: PreferencesScreen(
+                      initialPreferences: args,
                     ),
                   );
                 case 'friends-lobby':

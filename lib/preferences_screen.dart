@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users/users_api.dart';
 import 'package:openup/button.dart';
 import 'package:openup/male_female_connection_image.dart';
 import 'package:openup/preferences.dart';
@@ -30,10 +33,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () {
-        Navigator.of(context).pop(_notifier.value);
-        return Future.value(false);
-      },
+      onWillPop: () => _maybeUpdatePreferences(context),
       child: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -656,7 +656,11 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
               top: MediaQuery.of(context).padding.top + 16,
               left: MediaQuery.of(context).padding.left + 16,
               child: Button(
-                onPressed: () => Navigator.of(context).pop(_notifier.value),
+                onPressed: () async {
+                  if (await _maybeUpdatePreferences(context)) {
+                    Navigator.of(context).pop();
+                  }
+                },
                 child: const Icon(
                   Icons.arrow_upward,
                   size: 48,
@@ -739,6 +743,58 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     Color.fromARGB(0xFF, 0x57, 0x20, 0x01),
     Color.fromARGB(0xFF, 0x4C, 0x0E, 0x01),
   ];
+
+  Future<bool> _maybeUpdatePreferences(BuildContext context) async {
+    if (widget.initialPreferences == _notifier.value) {
+      return true;
+    }
+
+    final container = ProviderScope.containerOf(context);
+    final usersApi = container.read(usersApiProvider);
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return false;
+    }
+
+    BuildContext? dialogContext;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        dialogContext = context;
+        return WillPopScope(
+          onWillPop: () => Future.value(true),
+          child: const AlertDialog(
+            content: Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        );
+      },
+    );
+
+    try {
+      await usersApi.updateFriendsPreferences(uid, _notifier.value);
+      if (dialogContext != null) {
+        Navigator.of(dialogContext!).pop();
+      }
+    } catch (e, s) {
+      if (dialogContext != null) {
+        Navigator.of(dialogContext!).pop();
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update preferences'),
+        ),
+      );
+      print(e);
+      print(s);
+      return false;
+    }
+
+    return true;
+  }
 }
 
 class ExpansionSection extends StatefulWidget {
@@ -791,27 +847,30 @@ class _ExpansionSectionState extends State<ExpansionSection>
               _controller.reverse();
             }
           },
-          child: Row(
-            children: [
-              AnimatedRotation(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-                turns: _expanded ? 0.25 : 0,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    '►',
-                    style: Theming.of(context).text.body.copyWith(
-                          color: const Color.fromARGB(0xFF, 0xDD, 0x74, 0x7B),
-                        ),
+          child: SizedBox(
+            height: 32,
+            child: Row(
+              children: [
+                AnimatedRotation(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                  turns: _expanded ? 0.25 : 0,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0, right: 12.0),
+                    child: Text(
+                      '►',
+                      style: Theming.of(context).text.body.copyWith(
+                            color: const Color.fromARGB(0xFF, 0xDD, 0x74, 0x7B),
+                          ),
+                    ),
                   ),
                 ),
-              ),
-              Text(
-                widget.label,
-                style: _listTextStyle(context),
-              ),
-            ],
+                Text(
+                  widget.label,
+                  style: _listTextStyle(context),
+                ),
+              ],
+            ),
           ),
         ),
         Align(

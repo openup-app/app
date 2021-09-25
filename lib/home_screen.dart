@@ -1,13 +1,71 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users/users_api.dart';
 import 'package:openup/button.dart';
 import 'package:openup/male_female_connection_image.dart';
 import 'package:openup/profile_button.dart';
 import 'package:openup/theming.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _cachingStarted = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_cachingStarted) {
+      return;
+    }
+    _cachingStarted = true;
+
+    _cacheData();
+  }
+
+  void _cacheData() async {
+    final container = ProviderScope.containerOf(context);
+    final api = container.read(usersApiProvider);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      throw 'No user is logged in';
+    }
+
+    const dialogKey = Key('dialog');
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return WillPopScope(
+            key: dialogKey,
+            onWillPop: () => Future.value(false),
+            child: const AlertDialog(
+              content: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        },
+      );
+    });
+    await Future.wait([
+      api.getProfile(uid),
+      api.getFriendsPreferences(uid),
+      api.getDatingPreferences(uid),
+    ]);
+
+    if (mounted) {
+      Navigator.of(context).pop(dialogKey);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

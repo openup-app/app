@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users.dart';
+import 'package:openup/api/users/users_api.dart';
 import 'package:openup/button.dart';
 import 'package:openup/common.dart';
 import 'package:openup/input_area.dart';
@@ -95,8 +95,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     FilteringTextInputFormatter.deny(RegExp(r'\s')),
                   ],
                   onEditingComplete: () {
-                    setState(() => _phoneEmailErrorText =
-                        _validateEmailPhone(_phoneEmailController.text));
+                    setState(() {
+                      _phoneEmailErrorText =
+                          _validateEmailPhone(_phoneEmailController.text);
+                    });
                     FocusScope.of(context).nextFocus();
                   },
                   textAlign: TextAlign.center,
@@ -124,8 +126,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     FilteringTextInputFormatter.deny(RegExp(r'\s')),
                   ],
                   onEditingComplete: () {
-                    setState(() => _passwordErrorText =
-                        _validatePassword(_passwordController.text));
+                    setState(() {
+                      _passwordErrorText =
+                          _validatePassword(_passwordController.text);
+                    });
                     FocusScope.of(context).unfocus();
                   },
                   textAlign: TextAlign.center,
@@ -196,7 +200,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: _submitting
                     ? const CircularProgressIndicator()
                     : const Text('Send code'),
-                onPressed: _submitting ? null : _submit,
+                onPressed: _submitting || !_valid ? null : _submit,
               ),
             ),
             const SliverToBoxAdapter(
@@ -206,7 +210,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               child: Center(
                 child: Button(
                   child: const Text('forgot info?'),
-                  onPressed: _submitting
+                  onPressed: _submitting || !_valid
                       ? null
                       : () =>
                           Navigator.of(context).pushNamed('forgot-password'),
@@ -231,6 +235,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
+
+  bool get _valid =>
+      _validateEmailPhone(_phoneEmailController.text) == null &&
+      _validatePassword(_passwordController.text) == null &&
+      _validateBirthday(_birthday) == null;
 
   String? _validateEmailPhone(String? value) {
     if (value == null) {
@@ -284,7 +293,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: phoneEmail,
         verificationCompleted: (credential) async {
-          final container = ProviderContainer();
+          final container = ProviderScope.containerOf(context);
           final usersApi = container.read(usersApiProvider);
 
           String? uid;

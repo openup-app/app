@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users.dart';
+import 'package:openup/api/users/users_api.dart';
 import 'package:openup/button.dart';
 import 'package:openup/theming.dart';
 
@@ -72,7 +72,7 @@ class ProfileButton extends StatelessWidget {
             ),
             TextButton(
               onPressed: () async {
-                final container = ProviderContainer();
+                final container = ProviderScope.containerOf(context);
                 final usersApi = container.read(usersApiProvider);
                 final uid = FirebaseAuth.instance.currentUser?.uid;
                 if (uid != null) {
