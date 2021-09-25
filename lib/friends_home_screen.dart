@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:openup/button.dart';
-import 'package:openup/home_button.dart';
-import 'package:openup/male_female_connection_image.dart';
-import 'package:openup/profile_button.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/home_button.dart';
+import 'package:openup/widgets/male_female_connection_image.dart';
+import 'package:openup/widgets/profile_button.dart';
+import 'package:openup/widgets/theming.dart';
 
 class FriendsHomeScreen extends StatelessWidget {
   const FriendsHomeScreen({Key? key}) : super(key: key);

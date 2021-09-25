@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:openup/button.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/theming.dart';
 
 /// Prominent button with a horizontal pink gradient styling, comes in three
 /// sizes.

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/theming.dart';
 
 class Button extends StatefulWidget {
   final Widget child;

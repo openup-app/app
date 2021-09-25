@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:openup/signaling/signaling.dart';
+import 'package:openup/api/signaling/signaling.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 class SocketIoSignalingChannel implements SignalingChannel {

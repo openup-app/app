@@ -6,12 +6,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
-import 'package:openup/common.dart';
-import 'package:openup/input_area.dart';
-import 'package:openup/male_female_connection_image.dart';
+import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/input_area.dart';
+import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/phone_verification_screen.dart';
-import 'package:openup/sign_up/title_and_tagline.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/title_and_tagline.dart';
+import 'package:openup/widgets/theming.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);

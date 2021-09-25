@@ -4,13 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
-import 'package:openup/common.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/lobby_screen.dart';
-import 'package:openup/home_button.dart';
-import 'package:openup/male_female_connection_image.dart';
-import 'package:openup/profile_button.dart';
-import 'package:openup/theming.dart';
-import 'package:openup/toggle_button.dart';
+import 'package:openup/widgets/home_button.dart';
+import 'package:openup/widgets/male_female_connection_image.dart';
+import 'package:openup/widgets/profile_button.dart';
+import 'package:openup/widgets/theming.dart';
+import 'package:openup/widgets/toggle_button.dart';
 
 class SoloFriends extends StatelessWidget {
   const SoloFriends({Key? key}) : super(key: key);

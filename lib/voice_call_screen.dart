@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:openup/button.dart';
-import 'package:openup/phone.dart';
-import 'package:openup/signaling/signaling.dart';
-import 'package:openup/signaling/socket_io_signaling_channel.dart';
-import 'package:openup/slide_control.dart';
-import 'package:openup/theming.dart';
-import 'package:openup/time_remaining.dart';
+import 'package:openup/api/signaling/signaling.dart';
+import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
+import 'package:openup/widgets/button.dart';
+import 'package:openup/api/signaling/phone.dart';
+import 'package:openup/widgets/slide_control.dart';
+import 'package:openup/widgets/theming.dart';
+import 'package:openup/widgets/time_remaining.dart';
 
 class VoiceCallScreen extends StatefulWidget {
   final String uid;

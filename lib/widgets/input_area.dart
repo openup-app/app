@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/theming.dart';
 
 class InputArea extends StatelessWidget {
   final String? errorText;

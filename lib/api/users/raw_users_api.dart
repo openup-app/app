@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:openup/api/users/account.dart';
+import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/preferences.dart';
 
 class RawUsersApi {
   static const _headers = {

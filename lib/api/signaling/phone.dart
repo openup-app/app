@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:openup/signaling/signaling.dart';
+import 'package:openup/api/signaling/signaling.dart';
 
 /// WebRTC calling service, can only be used to [call()] or [answer()] once per
 /// instance. The signaling server must already have a room ready for the

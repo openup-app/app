@@ -2,12 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/users_api.dart';
-import 'package:openup/button.dart';
-import 'package:openup/male_female_connection_image.dart';
-import 'package:openup/preferences.dart';
-import 'package:openup/profile_button.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/male_female_connection_image.dart';
+import 'package:openup/widgets/profile_button.dart';
+import 'package:openup/widgets/theming.dart';
 
 class PreferencesScreen extends StatefulWidget {
   final Preferences initialPreferences;

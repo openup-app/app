@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:openup/common.dart';
-import 'package:openup/input_area.dart';
-import 'package:openup/male_female_connection_image.dart';
-import 'package:openup/sign_up/title_and_tagline.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/input_area.dart';
+import 'package:openup/widgets/male_female_connection_image.dart';
+import 'package:openup/widgets/title_and_tagline.dart';
+import 'package:openup/widgets/theming.dart';
 
 class ForgotPasswordScreen extends StatelessWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);

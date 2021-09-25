@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:openup/button.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/theming.dart';
 
 class HomeButton extends StatelessWidget {
   const HomeButton({Key? key}) : super(key: key);

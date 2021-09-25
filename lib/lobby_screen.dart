@@ -2,13 +2,13 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:openup/button.dart';
-import 'package:openup/lobby_api.dart';
+import 'package:openup/widgets/button.dart';
+import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/video_call_screen.dart';
-import 'package:openup/notification_banner.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/notification_banner.dart';
+import 'package:openup/widgets/theming.dart';
 
-import 'home_button.dart';
+import 'widgets/home_button.dart';
 
 /// Page on which you wait to be matched with another user.
 class LobbyScreen extends StatefulWidget {

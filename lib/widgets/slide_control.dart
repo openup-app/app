@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/theming.dart';
 
 class SlideControl extends StatefulWidget {
   final Widget thumbContents;

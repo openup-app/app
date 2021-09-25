@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/account.dart';
+import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/raw_users_api.dart';
-import 'package:openup/preferences.dart';
 
 late final Provider<UsersApi> usersApiProvider;
 

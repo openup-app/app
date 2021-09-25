@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/users_api.dart';
-import 'package:openup/initial_loading.dart';
-import 'package:openup/preferences.dart';
+import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/preferences_screen.dart';
 import 'package:openup/video_call_screen.dart';
-import 'package:openup/page_transition.dart';
+import 'package:openup/util/page_transition.dart';
 import 'package:openup/voice_call_screen.dart';
 import 'package:openup/friends_home_screen.dart';
 import 'package:openup/lobby_screen.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/forgot_password_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
-import 'package:openup/sign_up/sign_up_screen.dart';
+import 'package:openup/sign_up_screen.dart';
 import 'package:openup/solo_screen.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/theming.dart';
 
 const _tempLobbyHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8080';
 const _tempSignalingHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8081';
@@ -71,7 +71,7 @@ class _OpenupAppState extends State<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
-                    child: const InitialLoading(),
+                    child: const InitialLoadingScreen(),
                   );
                 case 'sign-up':
                   return _buildPageRoute(

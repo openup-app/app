@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:openup/app_lifecycle.dart';
-import 'package:openup/button.dart';
-import 'package:openup/phone.dart';
-import 'package:openup/signaling/signaling.dart';
-import 'package:openup/signaling/socket_io_signaling_channel.dart';
-import 'package:openup/theming.dart';
-import 'package:openup/time_remaining.dart';
+import 'package:openup/api/signaling/signaling.dart';
+import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
+import 'package:openup/widgets/app_lifecycle.dart';
+import 'package:openup/widgets/button.dart';
+import 'package:openup/api/signaling/phone.dart';
+import 'package:openup/widgets/theming.dart';
+import 'package:openup/widgets/time_remaining.dart';
 
 /// Page on which the [Phone] is used. Calls start, proceed and end here.
 class VideoCallScreen extends StatefulWidget {

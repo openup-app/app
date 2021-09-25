@@ -3,14 +3,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 /// Page used for asynchronous initialization.
-class InitialLoading extends StatefulWidget {
-  const InitialLoading({Key? key}) : super(key: key);
+class InitialLoadingScreen extends StatefulWidget {
+  const InitialLoadingScreen({Key? key}) : super(key: key);
 
   @override
-  State<InitialLoading> createState() => _InitialLoadingState();
+  State<InitialLoadingScreen> createState() => _InitialLoadingScreenState();
 }
 
-class _InitialLoadingState extends State<InitialLoading> {
+class _InitialLoadingScreenState extends State<InitialLoadingScreen> {
   @override
   void initState() {
     super.initState();

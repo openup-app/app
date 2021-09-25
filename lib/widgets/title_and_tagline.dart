@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:openup/theming.dart';
+import 'package:openup/widgets/theming.dart';
 
 class TitleAndTagline extends StatelessWidget {
   const TitleAndTagline({Key? key}) : super(key: key);
