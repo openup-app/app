@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users.dart';
+import 'package:openup/initial_loading.dart';
 import 'package:openup/preferences.dart';
 import 'package:openup/preferences_screen.dart';
 import 'package:openup/video_call_screen.dart';
@@ -16,22 +19,29 @@ import 'package:openup/theming.dart';
 
 const _tempLobbyHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8080';
 const _tempSignalingHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8081';
+const _tempUsersHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8082';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    const ProviderScope(
+      child: OpenupApp(),
+    ),
+  );
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+class OpenupApp extends StatefulWidget {
+  const OpenupApp({Key? key}) : super(key: key);
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<OpenupApp> createState() => _OpenupAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _OpenupAppState extends State<OpenupApp> {
   @override
   void initState() {
     super.initState();
+    initUsersApi(host: _tempUsersHost);
+
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -54,18 +64,27 @@ class _MyAppState extends State<MyApp> {
                 color: Colors.white,
               ),
             ),
-            initialRoute: 'sign-up',
+            initialRoute: 'initial-loading',
             onGenerateRoute: (settings) {
               switch (settings.name) {
+                case 'initial-loading':
+                  return _buildPageRoute(
+                    settings: settings,
+                    transitionsBuilder: fadePageTransition,
+                    child: const InitialLoading(),
+                  );
                 case 'sign-up':
                   return _buildPageRoute(
                     settings: settings,
                     child: const SignUpScreen(),
                   );
                 case 'phone-verification':
-                  return _buildPageRoute(
+                  final args = settings.arguments as CredentialVerification;
+                  return _buildPageRoute<bool>(
                     settings: settings,
-                    child: const PhoneVerificationScreen(),
+                    child: PhoneVerificationScreen(
+                      credentialVerification: args,
+                    ),
                   );
                 case 'forgot-password':
                   return _buildPageRoute(

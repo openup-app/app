@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users.dart';
 import 'package:openup/button.dart';
 import 'package:openup/theming.dart';
 
@@ -12,7 +15,7 @@ class ProfileButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Button(
-      onPressed: () {},
+      onPressed: () => _showDebugUserDialog(context),
       child: Stack(
         children: [
           SizedBox(
@@ -52,6 +55,44 @@ class ProfileButton extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDebugUserDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content:
+              Text('Signed in as ${FirebaseAuth.instance.currentUser?.uid}'),
+          actions: [
+            TextButton(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final container = ProviderContainer();
+                final usersApi = container.read(usersApiProvider);
+                final uid = FirebaseAuth.instance.currentUser?.uid;
+                if (uid != null) {
+                  await usersApi.deleteUser(uid);
+                  await FirebaseAuth.instance.signOut();
+                  Navigator.of(context).pushReplacementNamed('initial-loading');
+                }
+              },
+              child: const Text('Delete user'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.of(context).pushReplacementNamed('initial-loading');
+              },
+              child: const Text('Sign-out'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

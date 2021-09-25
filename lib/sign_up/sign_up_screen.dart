@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users.dart';
 import 'package:openup/button.dart';
 import 'package:openup/common.dart';
 import 'package:openup/input_area.dart';
 import 'package:openup/male_female_connection_image.dart';
+import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up/title_and_tagline.dart';
 import 'package:openup/theming.dart';
 
@@ -18,6 +21,12 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  static final _phoneRegex = RegExp(r'^(?:[+0][1-9])?[0-9]{10,12}$');
+
+// From https://stackoverflow.com/a/16888554
+  static final _emailRegex = RegExp(
+      r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
+
   final _formKey = GlobalKey<FormState>();
 
   final _phoneEmailController = TextEditingController();
@@ -32,6 +41,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _birthdayErrorText;
 
   bool _submitting = false;
+  int? _forceResendingToken;
 
   @override
   void dispose() {
@@ -226,12 +236,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (value == null) {
       return 'Enter a phone or email address';
     }
-    // From https://stackoverflow.com/a/16888554
-    final emailRegex = RegExp(
-        r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
-    final phoneRegex = RegExp(r'^(?:[+0][1-9])?[0-9]{10,12}$');
-    if (phoneRegex.stringMatch(value) == value ||
-        emailRegex.stringMatch(value) == value) {
+
+    if (_phoneRegex.stringMatch(value) == value ||
+        _emailRegex.stringMatch(value) == value) {
       return null;
     } else {
       return 'Invalid phone or email address';
@@ -265,19 +272,64 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _submit() async {
-    setState(() =>
-        _phoneEmailErrorText = _validateEmailPhone(_phoneEmailController.text));
-    setState(
-        () => _passwordErrorText = _validatePassword(_passwordController.text));
+    final phoneEmail = _phoneEmailController.text;
+    final password = _passwordController.text;
+    setState(() => _phoneEmailErrorText = _validateEmailPhone(phoneEmail));
+    setState(() => _passwordErrorText = _validatePassword(password));
 
     if (_phoneEmailErrorText == null &&
         _passwordErrorText == null &&
         _birthdayErrorText == null) {
       setState(() => _submitting = true);
-      await Future.delayed(const Duration(seconds: 2));
-      setState(() => _submitting = false);
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phoneEmail,
+        verificationCompleted: (credential) async {
+          final container = ProviderContainer();
+          final usersApi = container.read(usersApiProvider);
 
-      Navigator.of(context).pushNamed('phone-verification');
+          String? uid;
+          try {
+            final userCredential =
+                await FirebaseAuth.instance.signInWithCredential(credential);
+            uid = userCredential.user?.uid;
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Something went wrong'),
+              ),
+            );
+          }
+
+          if (uid != null) {
+            await usersApi.createUserWithUid(uid: uid, birthday: _birthday);
+          }
+          setState(() => _submitting = false);
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          print(e);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to send verification code'),
+            ),
+          );
+          setState(() => _submitting = false);
+        },
+        codeSent: (verificationId, forceResendingToken) async {
+          setState(() => _forceResendingToken = forceResendingToken);
+          await Navigator.of(context).pushNamed<bool>(
+            'phone-verification',
+            arguments: CredentialVerification(
+              verificationId: verificationId,
+              birthday: _birthday,
+            ),
+          );
+          setState(() => _submitting = false);
+        },
+        forceResendingToken: _forceResendingToken,
+        codeAutoRetrievalTimeout: (verificationId) {
+          // Android SMS auto-fill failed, nothing to do
+        },
+      );
     }
   }
 }
