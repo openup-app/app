@@ -91,9 +91,9 @@ class RawUsersApi {
     }
   }
 
-  Future<Profile> getProfile(String uid) async {
+  Future<PublicProfile> getPublicProfile(String uid) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/profile'),
+      Uri.parse('http://$_host/users/$uid/profile/public'),
       headers: _headers,
     );
 
@@ -105,12 +105,45 @@ class RawUsersApi {
       throw 'Failure';
     }
 
-    return Profile.fromJson(jsonDecode(response.body));
+    return PublicProfile.fromJson(jsonDecode(response.body));
   }
 
-  Future<void> updateProfile(String uid, Profile profile) async {
+  Future<void> updatePublicProfile(String uid, PublicProfile profile) async {
     final response = await http.patch(
-      Uri.parse('http://$_host/users/$uid/profile'),
+      Uri.parse('http://$_host/users/$uid/profile/public'),
+      headers: _headers,
+      body: jsonEncode(profile.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        throw 'Failed to update profile';
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      throw 'Failure';
+    }
+  }
+
+  Future<PrivateProfile> getPrivateProfile(String uid) async {
+    final response = await http.get(
+      Uri.parse('http://$_host/users/$uid/profile/private'),
+      headers: _headers,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        throw 'Failed to get profile';
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      throw 'Failure';
+    }
+
+    return PrivateProfile.fromJson(jsonDecode(response.body));
+  }
+
+  Future<void> updatePrivateProfile(String uid, PrivateProfile profile) async {
+    final response = await http.patch(
+      Uri.parse('http://$_host/users/$uid/profile/private'),
       headers: _headers,
       body: jsonEncode(profile.toJson()),
     );

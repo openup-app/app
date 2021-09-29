@@ -15,7 +15,8 @@ void initUsersApi({required String host}) {
 class UsersApi implements RawUsersApi {
   final RawUsersApi _rawUsersApi;
   Account? _account;
-  Profile? _profile;
+  PublicProfile? _publicProfile;
+  PrivateProfile? _privateProfile;
   Preferences? _friendsPreferences;
   Preferences? _datingPreferences;
 
@@ -57,15 +58,27 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
-  Future<Profile> getProfile(String uid) async {
-    _profile ??= await _rawUsersApi.getProfile(uid);
-    return _profile!;
+  Future<PublicProfile> getPublicProfile(String uid) async {
+    _publicProfile ??= await _rawUsersApi.getPublicProfile(uid);
+    return _publicProfile!;
   }
 
   @override
-  Future<void> updateProfile(String uid, Profile profile) {
-    _profile = profile;
-    return _rawUsersApi.updateProfile(uid, profile);
+  Future<void> updatePublicProfile(String uid, PublicProfile profile) {
+    _publicProfile = profile;
+    return _rawUsersApi.updatePublicProfile(uid, profile);
+  }
+
+  @override
+  Future<PrivateProfile> getPrivateProfile(String uid) async {
+    _privateProfile ??= await _rawUsersApi.getPrivateProfile(uid);
+    return _privateProfile!;
+  }
+
+  @override
+  Future<void> updatePrivateProfile(String uid, PrivateProfile profile) {
+    _privateProfile = profile;
+    return _rawUsersApi.updatePrivateProfile(uid, profile);
   }
 
   @override
@@ -100,7 +113,8 @@ class UsersApi implements RawUsersApi {
 
   void _clearCache() {
     _account = null;
-    _profile = null;
+    _publicProfile = null;
+    _privateProfile = null;
     _friendsPreferences = null;
     _datingPreferences = null;
   }

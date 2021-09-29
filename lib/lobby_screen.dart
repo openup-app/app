@@ -1,5 +1,4 @@
-import 'dart:math';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:openup/widgets/button.dart';
@@ -29,7 +28,6 @@ class LobbyScreen extends StatefulWidget {
 
 class _LobbyScreenState extends State<LobbyScreen>
     with SingleTickerProviderStateMixin {
-  late final String _uid;
   late final LobbyApi _lobbyApi;
 
   late final AnimationController _animationController;
@@ -48,10 +46,9 @@ class _LobbyScreenState extends State<LobbyScreen>
     });
     _animationController.forward();
 
-    _uid = Random().nextInt(1000000).toString().padLeft(7, '0');
     _lobbyApi = LobbyApi(
       host: widget.lobbyHost,
-      uid: _uid,
+      uid: FirebaseAuth.instance.currentUser!.uid,
       video: widget.video,
       onMakeCall: () => _startCall(initiator: true),
       onReceiveCall: () => _startCall(initiator: false),
@@ -166,7 +163,7 @@ class _LobbyScreenState extends State<LobbyScreen>
     Navigator.of(context).pushNamed(
       route,
       arguments: CallPageArguments(
-        uid: _uid,
+        uid: FirebaseAuth.instance.currentUser!.uid,
         initiator: initiator,
       ),
     );

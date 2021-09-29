@@ -57,7 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     });
     await Future.wait([
-      api.getProfile(uid),
+      api.getPublicProfile(uid),
+      api.getPrivateProfile(uid),
       api.getFriendsPreferences(uid),
       api.getDatingPreferences(uid),
     ]);
