@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/private_profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -63,8 +64,17 @@ class ProfileButton extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          content:
-              Text('Signed in as ${FirebaseAuth.instance.currentUser?.uid}'),
+          title: const Text('My profile'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('User ID: ${FirebaseAuth.instance.currentUser?.uid}'),
+              OutlinedButton(
+                onPressed: () => _showPrivateProfileDialog(context),
+                child: const Text('Update personal details'),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: Navigator.of(context).pop,
@@ -81,7 +91,7 @@ class ProfileButton extends StatelessWidget {
                   Navigator.of(context).pushReplacementNamed('initial-loading');
                 }
               },
-              child: const Text('Delete user'),
+              child: const Text('Delete account'),
             ),
             TextButton(
               onPressed: () async {
@@ -94,5 +104,25 @@ class ProfileButton extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _showPrivateProfileDialog(BuildContext context) async {
+    final container = ProviderScope.containerOf(context);
+    final usersApi = container.read(usersApiProvider);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final profile = await usersApi.getPrivateProfile(uid);
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) {
+            return Scaffold(
+              body: PrivateProfileScreen(
+                initialProfile: profile,
+              ),
+            );
+          },
+        ),
+      );
+    }
   }
 }
