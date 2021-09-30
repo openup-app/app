@@ -26,6 +26,7 @@ class SoloFriends extends StatelessWidget {
     );
 
     final buttonStyle = Theming.of(context).text.bodySecondary.copyWith(
+      fontSize: 19,
       shadows: [
         BoxShadow(
           color: Colors.black.withOpacity(0.4),

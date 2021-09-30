@@ -7,6 +7,7 @@ import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/flexible_single_child_scroll_view.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/phone_verification_screen.dart';
@@ -59,24 +60,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       child: Form(
         key: _formKey,
         autovalidateMode: AutovalidateMode.onUserInteraction,
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: SizedBox(
+        child: FlexibleSingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(
                 height: MediaQuery.of(context).padding.top,
               ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 86),
-            ),
-            const SliverToBoxAdapter(
-              child: TitleAndTagline(),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 10),
-            ),
-            SliverToBoxAdapter(
-              child: InputArea(
+              const SizedBox(height: 86),
+              const TitleAndTagline(),
+              const SizedBox(height: 10),
+              InputArea(
                 errorText: _phoneErrorText,
                 child: TextFormField(
                   controller: _phoneController,
@@ -102,12 +95,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
               ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 22),
-            ),
-            SliverToBoxAdapter(
-              child: InputArea(
+              const SizedBox(height: 22),
+              InputArea(
                 errorText: _birthdayErrorText,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -150,32 +139,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ],
                 ),
               ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 22),
-            ),
-            SliverToBoxAdapter(
-              child: PrimaryButton.large(
+              const SizedBox(height: 22),
+              PrimaryButton.large(
                 child: _submitting
                     ? const CircularProgressIndicator()
                     : const Text('Send code'),
                 onPressed: _submitting || !_valid ? null : _submit,
               ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 15),
-            ),
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Hero(
+              const SizedBox(height: 15),
+              const Spacer(),
+              const Hero(
                 tag: 'male_female_connection',
                 child: SizedBox(
                   height: 100,
                   child: MaleFemaleConnectionImageApart(),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

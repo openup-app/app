@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/flexible_single_child_scroll_view.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/title_and_tagline.dart';
@@ -51,19 +52,16 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
             ],
           ),
         ),
-        child: CustomScrollView(
-          slivers: [
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 86),
-            ),
-            const SliverToBoxAdapter(
-              child: TitleAndTagline(),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 10),
-            ),
-            SliverToBoxAdapter(
-              child: Text(
+        child: FlexibleSingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(
+                height: MediaQuery.of(context).padding.top,
+              ),
+              const SizedBox(height: 86),
+              const TitleAndTagline(),
+              const SizedBox(height: 10),
+              Text(
                 'Verification code successfully\nsent to your phone!',
                 textAlign: TextAlign.center,
                 style: Theming.of(context).text.subheading.copyWith(
@@ -76,12 +74,8 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                   ],
                 ),
               ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 22),
-            ),
-            SliverToBoxAdapter(
-              child: InputArea(
+              const SizedBox(height: 22),
+              InputArea(
                 child: TextField(
                   controller: _smsCodeController,
                   textAlign: TextAlign.center,
@@ -99,32 +93,24 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                   ),
                 ),
               ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 22),
-            ),
-            SliverToBoxAdapter(
-              child: PrimaryButton.large(
+              const SizedBox(height: 22),
+              PrimaryButton.large(
                 onPressed: _submitting ? null : _submit,
                 child: _submitting
                     ? const CircularProgressIndicator()
                     : const Text('Verify account'),
               ),
-            ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 15),
-            ),
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Hero(
+              const SizedBox(height: 15),
+              const Spacer(),
+              const Hero(
                 tag: 'male_female_connection',
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 70),
-                  child: const MaleFemaleConnectionImageApart(),
+                child: SizedBox(
+                  height: 100,
+                  child: MaleFemaleConnectionImageApart(),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
