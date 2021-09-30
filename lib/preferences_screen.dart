@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/loading_dialog.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -757,32 +758,16 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
       return false;
     }
 
-    BuildContext? dialogContext;
-    showDialog(
+    final popDialog = showBlockingModalDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        dialogContext = context;
-        return WillPopScope(
-          onWillPop: () => Future.value(true),
-          child: const AlertDialog(
-            content: Center(
-              child: CircularProgressIndicator(),
-            ),
-          ),
-        );
-      },
+      builder: (_) => const Loading(),
     );
 
     try {
       await usersApi.updateFriendsPreferences(uid, _notifier.value);
-      if (dialogContext != null) {
-        Navigator.of(dialogContext!).pop();
-      }
+      popDialog();
     } catch (e, s) {
-      if (dialogContext != null) {
-        Navigator.of(dialogContext!).pop();
-      }
+      popDialog();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to update preferences'),

@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/loading_dialog.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -38,22 +39,11 @@ class _HomeScreenState extends State<HomeScreen> {
       throw 'No user is logged in';
     }
 
-    const dialogKey = Key('dialog');
+    VoidCallback? popDialog;
     WidgetsBinding.instance?.addPostFrameCallback((_) {
-      showDialog(
+      popDialog = showBlockingModalDialog(
         context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          return WillPopScope(
-            key: dialogKey,
-            onWillPop: () => Future.value(false),
-            child: const AlertDialog(
-              content: Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          );
-        },
+        builder: (_) => const Loading(),
       );
     });
     await Future.wait([
@@ -64,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
 
     if (mounted) {
-      Navigator.of(context).pop(dialogKey);
+      popDialog?.call();
     }
   }
 
