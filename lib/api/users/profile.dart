@@ -28,7 +28,7 @@ class PrivateProfile with _$PrivateProfile {
     required Education education,
     required Set<String> community,
     required Set<String> language,
-    required int skinTone,
+    required SkinColor skinColor,
     required int weight,
     required int height,
     required String occupation,

@@ -16,7 +16,7 @@ class Preferences with _$Preferences {
     @Default({}) Set<Education> education,
     @Default({}) Set<String> community,
     @Default({}) Set<String> language,
-    @Default({}) Set<int> skinColor,
+    @Default({}) Set<SkinColor> skinColor,
     @RangeJsonConverter()
     @Default(Range(min: 30, max: 200))
     @JsonKey()
@@ -73,5 +73,7 @@ enum Education {
   mastersDegree,
   noSchooling
 }
+
+enum SkinColor { light, mediumLight, medium, mediumDark, dark }
 
 enum HairColor { black, blonde, brunette, brown, red, gray }

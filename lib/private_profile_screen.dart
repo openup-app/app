@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/util/emoji.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/loading_dialog.dart';
 import 'package:openup/widgets/theming.dart';
@@ -331,29 +332,23 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
                   ),
                 ],
               ),
-              ExpansionSection(
-                label: 'Skin Color',
-                children: [
-                  for (int i = 0; i < _skinColors.length; i++)
-                    _RadioTile<int>(
-                      title: Container(
-                        height: 16,
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+              ValueListenableBuilder<PrivateProfile>(
+                valueListenable: _notifier,
+                builder: (context, profile, child) {
+                  return ExpansionSection(
+                    label: 'Skin Color',
+                    children: [
+                      for (int i = 0; i < SkinColor.values.length; i++)
+                        _RadioTile<SkinColor>(
+                          title: Text(emojiForGender(profile.gender)[i]),
+                          value: SkinColor.values[i],
+                          notifier: _notifier,
+                          extract: (p) => p.skinColor,
+                          onUpdate: _setSkinColor,
                         ),
-                        decoration: BoxDecoration(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(8)),
-                          color: _skinColors[i],
-                        ),
-                      ),
-                      value: i,
-                      notifier: _notifier,
-                      extract: (p) => p.skinTone,
-                      onUpdate: _setSkinColor,
-                    ),
-                ],
+                    ],
+                  );
+                },
               ),
               ExpansionSection(
                 label: 'Weight',
@@ -504,53 +499,14 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
   void _setLanguage(Set<String> value) =>
       _notifier.value = _notifier.value.copyWith(language: value);
 
-  void _setSkinColor(int value) =>
-      _notifier.value = _notifier.value.copyWith(skinTone: value);
+  void _setSkinColor(SkinColor value) =>
+      _notifier.value = _notifier.value.copyWith(skinColor: value);
 
   void _setOccupation(String value) =>
       _notifier.value = _notifier.value.copyWith(occupation: value);
 
   void _setHairColor(HairColor value) =>
       _notifier.value = _notifier.value.copyWith(hairColor: value);
-
-  final List<Color> _skinColors = const [
-    Color.fromARGB(0xFF, 0xFD, 0xDA, 0xC6),
-    Color.fromARGB(0xFF, 0xEF, 0xD0, 0xB4),
-    Color.fromARGB(0xFF, 0xF1, 0xDC, 0xCB),
-    Color.fromARGB(0xFF, 0xF0, 0xC6, 0xB0),
-    Color.fromARGB(0xFF, 0xEA, 0xCB, 0xC6),
-    Color.fromARGB(0xFF, 0xEF, 0xD9, 0xCE),
-    Color.fromARGB(0xFF, 0xF9, 0xCC, 0xC6),
-    Color.fromARGB(0xFF, 0xFF, 0xC7, 0xAE),
-    Color.fromARGB(0xFF, 0xFA, 0xBE, 0xA2),
-    Color.fromARGB(0xFF, 0xF0, 0xBE, 0xB5),
-    Color.fromARGB(0xFF, 0xED, 0xC1, 0x9C),
-    Color.fromARGB(0xFF, 0xF5, 0xB5, 0x91),
-    Color.fromARGB(0xFF, 0xF7, 0xB5, 0x83),
-    Color.fromARGB(0xFF, 0xEB, 0xAA, 0x72),
-    Color.fromARGB(0xFF, 0xEE, 0x9A, 0x5E),
-    Color.fromARGB(0xFF, 0xE4, 0xB4, 0x86),
-    Color.fromARGB(0xFF, 0xDD, 0xA8, 0x80),
-    Color.fromARGB(0xFF, 0xE1, 0x8C, 0x4B),
-    Color.fromARGB(0xFF, 0xCF, 0x9E, 0x76),
-    Color.fromARGB(0xFF, 0xB2, 0x87, 0x74),
-    Color.fromARGB(0xFF, 0x9C, 0x78, 0x62),
-    Color.fromARGB(0xFF, 0xAD, 0x84, 0x58),
-    Color.fromARGB(0xFF, 0xA5, 0x6C, 0x35),
-    Color.fromARGB(0xFF, 0x92, 0x79, 0x51),
-    Color.fromARGB(0xFF, 0x8C, 0x71, 0x60),
-    Color.fromARGB(0xFF, 0x8F, 0x56, 0x2B),
-    Color.fromARGB(0xFF, 0x7D, 0x49, 0x21),
-    Color.fromARGB(0xFF, 0x9B, 0x5F, 0x3D),
-    Color.fromARGB(0xFF, 0x8E, 0x52, 0x2D),
-    Color.fromARGB(0xFF, 0x82, 0x43, 0x20),
-    Color.fromARGB(0xFF, 0x6C, 0x32, 0x0D),
-    Color.fromARGB(0xFF, 0x56, 0x33, 0x1D),
-    Color.fromARGB(0xFF, 0x55, 0x3E, 0x36),
-    Color.fromARGB(0xFF, 0x4B, 0x31, 0x22),
-    Color.fromARGB(0xFF, 0x57, 0x20, 0x01),
-    Color.fromARGB(0xFF, 0x4C, 0x0E, 0x01),
-  ];
 
   Future<bool> _maybeUpdateProfile(BuildContext context) async {
     if (widget.initialProfile == _notifier.value) {
