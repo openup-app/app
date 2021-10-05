@@ -30,12 +30,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
   DateTime _birthday = DateTime.now();
 
   final _phoneFocusNode = FocusNode();
+  bool _birthdayFocused = false;
 
   String? _phoneErrorText;
   String? _birthdayErrorText;
 
   bool _submitting = false;
   int? _forceResendingToken;
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneFocusNode.addListener(() {
+      if (_phoneFocusNode.hasFocus) {
+        setState(() => _birthdayFocused = false);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -88,55 +99,73 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   textAlign: TextAlign.center,
                   decoration: InputDecoration.collapsed(
                     hintText: 'Phone number',
-                    hintStyle: Theming.of(context)
-                        .text
-                        .body
-                        .copyWith(color: Colors.grey),
+                    hintStyle: Theming.of(context).text.body.copyWith(
+                        fontWeight: FontWeight.w400, color: Colors.grey),
                   ),
                 ),
               ),
               const SizedBox(height: 22),
               InputArea(
                 errorText: _birthdayErrorText,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Birthday',
-                      style: Theming.of(context).text.body.copyWith(
-                          color: Colors.grey, fontWeight: FontWeight.w500),
-                    ),
-                    Expanded(
-                      child: SizedBox(
-                        height: 64,
-                        child: ClipRect(
-                          child: OverflowBox(
-                            maxHeight: 200,
-                            child: DatePickerWidget(
-                              looping: true,
-                              onChange: (date, _) {
-                                setState(() {
-                                  _birthday = date;
-                                  _birthdayErrorText = _validateBirthday(date);
-                                });
-                              },
-                              dateFormat: 'MMM-dd-yyyy',
-                              locale: DateTimePickerLocale.en_us,
-                              pickerTheme: DateTimePickerTheme(
-                                itemTextStyle: Theming.of(context)
-                                    .text
-                                    .body
-                                    .copyWith(color: Colors.grey),
-                                backgroundColor: Colors.transparent,
-                                dividerColor: const Color.fromARGB(
-                                    0xFF, 0xFF, 0xAC, 0xAC),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _phoneFocusNode.unfocus();
+                      _birthdayFocused = true;
+                    });
+                  },
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Birthday',
+                        style: Theming.of(context).text.body.copyWith(
+                            color: Colors.grey, fontWeight: FontWeight.w400),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          height: 64,
+                          child: ClipRect(
+                            child: OverflowBox(
+                              maxHeight: 200,
+                              child: DatePickerWidget(
+                                looping: true,
+                                onChange: (date, _) {
+                                  setState(() {
+                                    _birthday = date;
+                                    _birthdayErrorText =
+                                        _validateBirthday(date);
+
+                                    if (_phoneFocusNode.hasFocus ||
+                                        !_birthdayFocused) {
+                                      _phoneFocusNode.unfocus();
+                                      _birthdayFocused = true;
+                                    }
+                                  });
+                                },
+                                dateFormat: 'MMM-dd-yyyy',
+                                locale: DateTimePickerLocale.en_us,
+                                pickerTheme: DateTimePickerTheme(
+                                  itemTextStyle: Theming.of(context)
+                                      .text
+                                      .body
+                                      .copyWith(
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.grey),
+                                  backgroundColor: Colors.transparent,
+                                  dividerColor: _birthdayFocused
+                                      ? const Color.fromARGB(
+                                          0xFF, 0xFF, 0x71, 0x71)
+                                      : const Color.fromARGB(
+                                          0x88, 0xFF, 0x71, 0x71),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 22),
@@ -151,7 +180,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const Hero(
                 tag: 'male_female_connection',
                 child: SizedBox(
-                  height: 100,
+                  height: 125,
                   child: MaleFemaleConnectionImageApart(),
                 ),
               ),
@@ -218,10 +247,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         },
         verificationFailed: (FirebaseAuthException e) {
           print(e);
+          String message;
+          if (e.code == 'network-request-failed') {
+            message = 'Network error';
+          } else {
+            message = 'Failed to send verification code';
+          }
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to send verification code'),
-            ),
+            SnackBar(content: Text(message)),
           );
           setState(() => _submitting = false);
         },

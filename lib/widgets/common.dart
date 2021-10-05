@@ -15,8 +15,8 @@ class PrimaryButton extends StatelessWidget {
     Key? key,
     required this.onPressed,
     required this.child,
-  })  : borderRadius = const BorderRadius.all(Radius.circular(36)),
-        height = 72.0,
+  })  : borderRadius = const BorderRadius.all(Radius.circular(32)),
+        height = 64.0,
         super(key: key);
 
   @override

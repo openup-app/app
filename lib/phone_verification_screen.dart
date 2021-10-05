@@ -105,7 +105,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
               const Hero(
                 tag: 'male_female_connection',
                 child: SizedBox(
-                  height: 100,
+                  height: 125,
                   child: MaleFemaleConnectionImageApart(),
                 ),
               ),

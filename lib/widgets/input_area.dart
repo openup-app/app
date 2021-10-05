@@ -15,11 +15,11 @@ class InputArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 72.0,
+      height: 64.0,
       margin: const EdgeInsets.symmetric(horizontal: 32),
       padding: const EdgeInsets.symmetric(horizontal: 32),
       decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(36)),
+        borderRadius: const BorderRadius.all(Radius.circular(32)),
         color: Colors.white,
         boxShadow: [
           BoxShadow(
@@ -30,23 +30,21 @@ class InputArea extends StatelessWidget {
         ],
       ),
       child: Stack(
+        alignment: Alignment.center,
         children: [
           DefaultTextStyle(
             style: Theming.of(context).text.body.copyWith(color: Colors.grey),
             child: Center(child: child),
           ),
           if (errorText != null)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 0.0),
-                child: Text(
-                  errorText!,
-                  style: Theming.of(context)
-                      .text
-                      .caption
-                      .copyWith(color: Colors.red, fontSize: 12),
-                ),
+            Positioned(
+              bottom: -1,
+              child: Text(
+                errorText!,
+                style: Theming.of(context)
+                    .text
+                    .caption
+                    .copyWith(color: Colors.red, fontSize: 11),
               ),
             ),
         ],

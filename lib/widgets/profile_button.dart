@@ -66,12 +66,20 @@ class ProfileButton extends StatelessWidget {
         return AlertDialog(
           title: const Text('My profile'),
           content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('User ID: ${FirebaseAuth.instance.currentUser?.uid}'),
-              OutlinedButton(
-                onPressed: () => _showPrivateProfileDialog(context),
-                child: const Text('Update personal details'),
+              const Text('User ID'),
+              Text('${FirebaseAuth.instance.currentUser?.uid}'),
+              const SizedBox(height: 8),
+              const Text('Phone number'),
+              Text('${FirebaseAuth.instance.currentUser?.phoneNumber}'),
+              const SizedBox(height: 8),
+              Center(
+                child: OutlinedButton(
+                  onPressed: () => _showPrivateProfileDialog(context),
+                  child: const Text('Update personal details'),
+                ),
               ),
             ],
           ),
