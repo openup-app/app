@@ -11,7 +11,14 @@ import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
 
-class PreferencesScreen extends StatefulWidget {
+late StateProvider<Preferences> _prefsProvider;
+void initPreferences(Preferences preferences) {
+  _prefsProvider = StateProvider<Preferences>((ref) {
+    return preferences;
+  });
+}
+
+class PreferencesScreen extends ConsumerStatefulWidget {
   final Preferences initialPreferences;
 
   const PreferencesScreen({
@@ -20,17 +27,34 @@ class PreferencesScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<PreferencesScreen> createState() => _PreferencesScreenState();
+  _PreferencesScreenState createState() => _PreferencesScreenState();
 }
 
-class _PreferencesScreenState extends State<PreferencesScreen> {
-  late _PrefsValueNotifier _notifier;
-
+class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
   @override
   void initState() {
     super.initState();
-    _notifier = _PrefsValueNotifier(widget.initialPreferences);
+    initPreferences(widget.initialPreferences);
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return _PreferencesScreen(
+      initialPreferences: widget.initialPreferences,
+      ref: ref,
+    );
+  }
+}
+
+class _PreferencesScreen extends StatelessWidget {
+  final Preferences initialPreferences;
+  final WidgetRef ref;
+
+  const _PreferencesScreen({
+    Key? key,
+    required this.initialPreferences,
+    required this.ref,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -185,467 +209,481 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        ExpansionSection(
-                          label: 'Age',
-                          children: [
-                            _RangeSlider(
-                              notifier: _notifier,
-                              min: 18,
-                              max: 99,
-                              buildRangeValues: (preferences) {
-                                return RangeValues(
-                                  preferences.age.min.toDouble(),
-                                  preferences.age.max.toDouble(),
-                                );
-                              },
-                              onUpdate: (range) {
-                                _notifier.value = _notifier.value.copyWith(
-                                  age: range,
-                                );
-                              },
-                            ),
-                          ],
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final ageRange = ref.watch(
+                                _prefsProvider.select((p) => p.state.age));
+                            const defaultRange = Range(min: 18, max: 99);
+                            return ExpansionSection(
+                              label: 'Age',
+                              highlighted: ageRange != defaultRange,
+                              children: [
+                                _RangeSlider(
+                                  values: ageRange,
+                                  min: defaultRange.min,
+                                  max: defaultRange.max,
+                                  onUpdate: (range) {
+                                    ref.read(_prefsProvider).state = ref
+                                        .read(_prefsProvider)
+                                        .state
+                                        .copyWith(age: range);
+                                  },
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        ExpansionSection(
-                          label: 'Gender',
-                          children: [
-                            _SelectableTile(
-                              title: const Text('Male'),
-                              value: Gender.male,
-                              notifier: _notifier,
-                              extract: (p) => p.gender,
-                              onUpdate: _setGender,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Female'),
-                              value: Gender.female,
-                              notifier: _notifier,
-                              extract: (p) => p.gender,
-                              onUpdate: _setGender,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Trans Male'),
-                              value: Gender.transMale,
-                              notifier: _notifier,
-                              extract: (p) => p.gender,
-                              onUpdate: _setGender,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Trans Female'),
-                              value: Gender.transFemale,
-                              notifier: _notifier,
-                              extract: (p) => p.gender,
-                              onUpdate: _setGender,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Non Binary'),
-                              value: Gender.nonBinary,
-                              notifier: _notifier,
-                              extract: (p) => p.gender,
-                              onUpdate: _setGender,
-                            ),
-                          ],
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final genders = ref.watch(
+                                _prefsProvider.select((p) => p.state.gender));
+                            return ExpansionSection(
+                              label: 'Gender',
+                              highlighted: genders.isNotEmpty,
+                              children: [
+                                _SetTile(
+                                  title: const Text('Male'),
+                                  value: Gender.male,
+                                  set: genders,
+                                  onChanged: _setGender,
+                                ),
+                                _SetTile(
+                                  title: const Text('Female'),
+                                  value: Gender.female,
+                                  set: genders,
+                                  onChanged: _setGender,
+                                ),
+                                _SetTile(
+                                  title: const Text('Trans Male'),
+                                  value: Gender.transMale,
+                                  set: genders,
+                                  onChanged: _setGender,
+                                ),
+                                _SetTile(
+                                  title: const Text('Trans Female'),
+                                  value: Gender.transFemale,
+                                  set: genders,
+                                  onChanged: _setGender,
+                                ),
+                                _SetTile(
+                                  title: const Text('Non Binary'),
+                                  value: Gender.nonBinary,
+                                  set: genders,
+                                  onChanged: _setGender,
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        ExpansionSection(
-                          label: 'Location',
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.only(right: 16),
-                              alignment: Alignment.centerRight,
-                              child: ValueListenableBuilder<Preferences>(
-                                valueListenable: _notifier,
-                                builder: (context, preferences, child) {
-                                  return Text(
-                                    'Up to ${preferences.distance} miles away',
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final distance = ref.watch(
+                                _prefsProvider.select((p) => p.state.distance));
+                            const max = 100;
+                            return ExpansionSection(
+                              label: 'Location',
+                              highlighted: distance < max,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    'Up to $distance miles away',
                                     style: _listTextStyle(context)
                                         .copyWith(fontSize: 16),
-                                  );
-                                },
-                              ),
-                            ),
-                            ValueListenableBuilder<Preferences>(
-                              valueListenable: _notifier,
-                              builder: (context, preferences, child) {
-                                return _Slider(
-                                  value: preferences.distance,
+                                  ),
+                                ),
+                                _Slider(
+                                  value: distance,
                                   min: 0,
-                                  max: 100,
+                                  max: max,
                                   onUpdate: (value) {
-                                    _notifier.value = _notifier.value
+                                    ref.read(_prefsProvider).state = ref
+                                        .read(_prefsProvider)
+                                        .state
                                         .copyWith(distance: value);
                                   },
-                                );
-                              },
-                            ),
-                          ],
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        ExpansionSection(
-                          label: 'Religion',
-                          children: [
-                            _SelectableTile(
-                              title: const Text('Islam'),
-                              value: 'Islam',
-                              notifier: _notifier,
-                              extract: (p) => p.religion,
-                              onUpdate: _setReligion,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Hinduism'),
-                              value: 'Hinduism',
-                              notifier: _notifier,
-                              extract: (p) => p.religion,
-                              onUpdate: _setReligion,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Judaism'),
-                              value: 'Judaism',
-                              notifier: _notifier,
-                              extract: (p) => p.religion,
-                              onUpdate: _setReligion,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Sikhism'),
-                              value: 'Sikhism',
-                              notifier: _notifier,
-                              extract: (p) => p.religion,
-                              onUpdate: _setReligion,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Buddhism'),
-                              value: 'Buddhism',
-                              notifier: _notifier,
-                              extract: (p) => p.religion,
-                              onUpdate: _setReligion,
-                            ),
-                          ],
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final religions = ref.watch(
+                                _prefsProvider.select((p) => p.state.religion));
+                            return ExpansionSection(
+                              label: 'Religion',
+                              highlighted: religions.isNotEmpty,
+                              children: [
+                                _SetTile(
+                                  title: const Text('Islam'),
+                                  value: 'Islam',
+                                  set: religions,
+                                  onChanged: _setReligion,
+                                ),
+                                _SetTile(
+                                  title: const Text('Hinduism'),
+                                  value: 'Hinduism',
+                                  set: religions,
+                                  onChanged: _setReligion,
+                                ),
+                                _SetTile(
+                                  title: const Text('Judaism'),
+                                  value: 'Judaism',
+                                  set: religions,
+                                  onChanged: _setReligion,
+                                ),
+                                _SetTile(
+                                  title: const Text('Sikhism'),
+                                  value: 'Sikhism',
+                                  set: religions,
+                                  onChanged: _setReligion,
+                                ),
+                                _SetTile(
+                                  title: const Text('Buddhism'),
+                                  value: 'Buddhism',
+                                  set: religions,
+                                  onChanged: _setReligion,
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        ExpansionSection(
-                          label: 'Education level',
-                          children: [
-                            _SelectableTile(
-                              title: const Text('High School'),
-                              value: Education.highSchool,
-                              notifier: _notifier,
-                              extract: (p) => p.education,
-                              onUpdate: _setEducation,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Associates Degree'),
-                              value: Education.associatesDegree,
-                              notifier: _notifier,
-                              extract: (p) => p.education,
-                              onUpdate: _setEducation,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Bachelors Degree'),
-                              value: Education.bachelorsDegree,
-                              notifier: _notifier,
-                              extract: (p) => p.education,
-                              onUpdate: _setEducation,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Masters Degree'),
-                              value: Education.mastersDegree,
-                              notifier: _notifier,
-                              extract: (p) => p.education,
-                              onUpdate: _setEducation,
-                            ),
-                            _SelectableTile(
-                              title: const Text('No Schooling'),
-                              value: Education.noSchooling,
-                              notifier: _notifier,
-                              extract: (p) => p.education,
-                              onUpdate: _setEducation,
-                            ),
-                          ],
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final educations = ref.watch(_prefsProvider
+                                .select((p) => p.state.education));
+                            return ExpansionSection(
+                              label: 'Education',
+                              highlighted: educations.isNotEmpty,
+                              children: [
+                                _SetTile(
+                                  title: const Text('High School'),
+                                  value: Education.highSchool,
+                                  set: educations,
+                                  onChanged: _setEducation,
+                                ),
+                                _SetTile(
+                                  title: const Text('Associates Degree'),
+                                  value: Education.associatesDegree,
+                                  set: educations,
+                                  onChanged: _setEducation,
+                                ),
+                                _SetTile(
+                                  title: const Text('Bachelors Degree'),
+                                  value: Education.bachelorsDegree,
+                                  set: educations,
+                                  onChanged: _setEducation,
+                                ),
+                                _SetTile(
+                                  title: const Text('Masters Degree'),
+                                  value: Education.mastersDegree,
+                                  set: educations,
+                                  onChanged: _setEducation,
+                                ),
+                                _SetTile(
+                                  title: const Text('No Schooling'),
+                                  value: Education.noSchooling,
+                                  set: educations,
+                                  onChanged: _setEducation,
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        ExpansionSection(
-                          label: 'Community',
-                          children: [
-                            _SelectableTile(
-                              title: const Text('Punjabi'),
-                              value: 'Punjabi',
-                              notifier: _notifier,
-                              extract: (p) => p.community,
-                              onUpdate: _setCommunity,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Black'),
-                              value: 'Black',
-                              notifier: _notifier,
-                              extract: (p) => p.community,
-                              onUpdate: _setCommunity,
-                            ),
-                            _SelectableTile(
-                              title: const Text('White'),
-                              value: 'White',
-                              notifier: _notifier,
-                              extract: (p) => p.community,
-                              onUpdate: _setCommunity,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Indian'),
-                              value: 'Indian',
-                              notifier: _notifier,
-                              extract: (p) => p.community,
-                              onUpdate: _setCommunity,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Gujarati'),
-                              value: 'Gujarati',
-                              notifier: _notifier,
-                              extract: (p) => p.community,
-                              onUpdate: _setCommunity,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Armenian'),
-                              value: 'Armenian',
-                              notifier: _notifier,
-                              extract: (p) => p.community,
-                              onUpdate: _setCommunity,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Chinese'),
-                              value: 'Chinese',
-                              notifier: _notifier,
-                              extract: (p) => p.community,
-                              onUpdate: _setCommunity,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Japanese'),
-                              value: 'Japanese',
-                              notifier: _notifier,
-                              extract: (p) => p.community,
-                              onUpdate: _setCommunity,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Lebanese'),
-                              value: 'Lebanese',
-                              notifier: _notifier,
-                              extract: (p) => p.community,
-                              onUpdate: _setCommunity,
-                            ),
-                            _SelectableTile(
-                              title: const Text('African'),
-                              value: 'African',
-                              notifier: _notifier,
-                              extract: (p) => p.community,
-                              onUpdate: _setCommunity,
-                            ),
-                          ],
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final communities = ref.watch(_prefsProvider
+                                .select((p) => p.state.community));
+                            return ExpansionSection(
+                              label: 'Community',
+                              highlighted: communities.isNotEmpty,
+                              children: [
+                                _SetTile(
+                                  title: const Text('Punjabi'),
+                                  value: 'Punjabi',
+                                  set: communities,
+                                  onChanged: _setCommunity,
+                                ),
+                                _SetTile(
+                                  title: const Text('Black'),
+                                  value: 'Black',
+                                  set: communities,
+                                  onChanged: _setCommunity,
+                                ),
+                                _SetTile(
+                                  title: const Text('White'),
+                                  value: 'White',
+                                  set: communities,
+                                  onChanged: _setCommunity,
+                                ),
+                                _SetTile(
+                                  title: const Text('Indian'),
+                                  value: 'Indian',
+                                  set: communities,
+                                  onChanged: _setCommunity,
+                                ),
+                                _SetTile(
+                                  title: const Text('Gujarati'),
+                                  value: 'Gujarati',
+                                  set: communities,
+                                  onChanged: _setCommunity,
+                                ),
+                                _SetTile(
+                                  title: const Text('Armenian'),
+                                  value: 'Armenian',
+                                  set: communities,
+                                  onChanged: _setCommunity,
+                                ),
+                                _SetTile(
+                                  title: const Text('Chinese'),
+                                  value: 'Chinese',
+                                  set: communities,
+                                  onChanged: _setCommunity,
+                                ),
+                                _SetTile(
+                                  title: const Text('Japanese'),
+                                  value: 'Japanese',
+                                  set: communities,
+                                  onChanged: _setCommunity,
+                                ),
+                                _SetTile(
+                                  title: const Text('Lebanese'),
+                                  value: 'Lebanese',
+                                  set: communities,
+                                  onChanged: _setCommunity,
+                                ),
+                                _SetTile(
+                                  title: const Text('African'),
+                                  value: 'African',
+                                  set: communities,
+                                  onChanged: _setCommunity,
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        ExpansionSection(
-                          label: 'Languages',
-                          children: [
-                            _SelectableTile(
-                              title: const Text('Punjabi'),
-                              value: 'Punjabi',
-                              notifier: _notifier,
-                              extract: (p) => p.language,
-                              onUpdate: _setLanguage,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Indian'),
-                              value: 'Indian',
-                              notifier: _notifier,
-                              extract: (p) => p.language,
-                              onUpdate: _setLanguage,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Gujarati'),
-                              value: 'Gujarati',
-                              notifier: _notifier,
-                              extract: (p) => p.language,
-                              onUpdate: _setLanguage,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Armenian'),
-                              value: 'Armenian',
-                              notifier: _notifier,
-                              extract: (p) => p.language,
-                              onUpdate: _setLanguage,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Chinese'),
-                              value: 'Chinese',
-                              notifier: _notifier,
-                              extract: (p) => p.language,
-                              onUpdate: _setLanguage,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Japanese'),
-                              value: 'Japanese',
-                              notifier: _notifier,
-                              extract: (p) => p.language,
-                              onUpdate: _setLanguage,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Lebanese'),
-                              value: 'Lebanese',
-                              notifier: _notifier,
-                              extract: (p) => p.language,
-                              onUpdate: _setLanguage,
-                            ),
-                            _SelectableTile(
-                              title: const Text('African'),
-                              value: 'African',
-                              notifier: _notifier,
-                              extract: (p) => p.language,
-                              onUpdate: _setLanguage,
-                            ),
-                          ],
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final languages = ref.watch(
+                                _prefsProvider.select((p) => p.state.language));
+                            return ExpansionSection(
+                              label: 'Languages',
+                              highlighted: languages.isNotEmpty,
+                              children: [
+                                _SetTile(
+                                  title: const Text('Punjabi'),
+                                  value: 'Punjabi',
+                                  set: languages,
+                                  onChanged: _setLanguage,
+                                ),
+                                _SetTile(
+                                  title: const Text('Indian'),
+                                  value: 'Indian',
+                                  set: languages,
+                                  onChanged: _setLanguage,
+                                ),
+                                _SetTile(
+                                  title: const Text('Gujarati'),
+                                  value: 'Gujarati',
+                                  set: languages,
+                                  onChanged: _setLanguage,
+                                ),
+                                _SetTile(
+                                  title: const Text('Armenian'),
+                                  value: 'Armenian',
+                                  set: languages,
+                                  onChanged: _setLanguage,
+                                ),
+                                _SetTile(
+                                  title: const Text('Chinese'),
+                                  value: 'Chinese',
+                                  set: languages,
+                                  onChanged: _setLanguage,
+                                ),
+                                _SetTile(
+                                  title: const Text('Japanese'),
+                                  value: 'Japanese',
+                                  set: languages,
+                                  onChanged: _setLanguage,
+                                ),
+                                _SetTile(
+                                  title: const Text('Lebanese'),
+                                  value: 'Lebanese',
+                                  set: languages,
+                                  onChanged: _setLanguage,
+                                ),
+                                _SetTile(
+                                  title: const Text('African'),
+                                  value: 'African',
+                                  set: languages,
+                                  onChanged: _setLanguage,
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        ValueListenableBuilder<Preferences>(
-                          valueListenable: _notifier,
-                          builder: (context, preferences, child) {
-                            final gender =
-                                genderForPreferredGenders(preferences.gender);
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final skinColors = ref.watch(_prefsProvider
+                                .select((p) => p.state.skinColor));
+                            final genders = ref.watch(
+                                _prefsProvider.select((p) => p.state.gender));
+                            final gender = genderForPreferredGenders(genders);
                             return ExpansionSection(
                               label: 'Skin Color',
+                              highlighted: skinColors.isNotEmpty,
                               children: [
                                 for (int i = 0;
                                     i < SkinColor.values.length;
                                     i++)
-                                  _SelectableTile<SkinColor>(
+                                  _SetTile(
                                     title: Text(emojiForGender(gender)[i]),
                                     value: SkinColor.values[i],
-                                    notifier: _notifier,
-                                    extract: (p) => p.skinColor,
-                                    onUpdate: _setSkinColor,
+                                    set: skinColors,
+                                    onChanged: _setSkinColor,
                                   ),
                               ],
                             );
                           },
                         ),
-                        ExpansionSection(
-                          label: 'Weight',
-                          children: [
-                            _RangeSlider(
-                              notifier: _notifier,
-                              min: 30,
-                              max: 200,
-                              buildRangeValues: (preferences) {
-                                return RangeValues(
-                                  preferences.weight.min.toDouble(),
-                                  preferences.weight.max.toDouble(),
-                                );
-                              },
-                              onUpdate: (range) {
-                                _notifier.value = _notifier.value.copyWith(
-                                  weight: range,
-                                );
-                              },
-                            ),
-                          ],
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final weightRange = ref.watch(
+                                _prefsProvider.select((p) => p.state.weight));
+                            const defaultRange = Range(min: 10, max: 500);
+                            return ExpansionSection(
+                              label: 'Weight',
+                              highlighted: weightRange != defaultRange,
+                              children: [
+                                _RangeSlider(
+                                  values: weightRange,
+                                  min: defaultRange.min,
+                                  max: defaultRange.max,
+                                  onUpdate: (range) {
+                                    ref.read(_prefsProvider).state = ref
+                                        .read(_prefsProvider)
+                                        .state
+                                        .copyWith(weight: range);
+                                  },
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        ExpansionSection(
-                          label: 'Height',
-                          children: [
-                            _RangeSlider(
-                              notifier: _notifier,
-                              min: 50,
-                              max: 250,
-                              buildRangeValues: (preferences) {
-                                return RangeValues(
-                                  preferences.height.min.toDouble(),
-                                  preferences.height.max.toDouble(),
-                                );
-                              },
-                              onUpdate: (range) {
-                                _notifier.value = _notifier.value.copyWith(
-                                  height: range,
-                                );
-                              },
-                            ),
-                          ],
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final heightRange = ref.watch(
+                                _prefsProvider.select((p) => p.state.height));
+                            const defaultRange = Range(min: 20, max: 100);
+                            return ExpansionSection(
+                              label: 'Height',
+                              highlighted: heightRange != defaultRange,
+                              children: [
+                                _RangeSlider(
+                                  values: heightRange,
+                                  min: defaultRange.min,
+                                  max: defaultRange.max,
+                                  onUpdate: (range) {
+                                    ref.read(_prefsProvider).state = ref
+                                        .read(_prefsProvider)
+                                        .state
+                                        .copyWith(height: range);
+                                  },
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        ExpansionSection(
-                          label: 'Job Occupation',
-                          children: [
-                            _SelectableTile(
-                              title: const Text('Accountant'),
-                              value: 'Accountant',
-                              notifier: _notifier,
-                              extract: (p) => p.occupation,
-                              onUpdate: _setOccupation,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Entrepreneur'),
-                              value: 'Entrepreneur',
-                              notifier: _notifier,
-                              extract: (p) => p.occupation,
-                              onUpdate: _setOccupation,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Oil Man'),
-                              value: 'Oil Man',
-                              notifier: _notifier,
-                              extract: (p) => p.occupation,
-                              onUpdate: _setOccupation,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Welder'),
-                              value: 'Welder',
-                              notifier: _notifier,
-                              extract: (p) => p.occupation,
-                              onUpdate: _setOccupation,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Data Scientist'),
-                              value: 'Data Scientist',
-                              notifier: _notifier,
-                              extract: (p) => p.occupation,
-                              onUpdate: _setOccupation,
-                            ),
-                          ],
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final occupations = ref.watch(_prefsProvider
+                                .select((p) => p.state.occupation));
+                            return ExpansionSection(
+                              label: 'Job Occupation',
+                              highlighted: occupations.isNotEmpty,
+                              children: [
+                                _SetTile(
+                                  title: const Text('Accountant'),
+                                  value: 'Accountant',
+                                  set: occupations,
+                                  onChanged: _setOccupation,
+                                ),
+                                _SetTile(
+                                  title: const Text('Entrepreneur'),
+                                  value: 'Entrepreneur',
+                                  set: occupations,
+                                  onChanged: _setOccupation,
+                                ),
+                                _SetTile(
+                                  title: const Text('Oil Man'),
+                                  value: 'Oil Man',
+                                  set: occupations,
+                                  onChanged: _setOccupation,
+                                ),
+                                _SetTile(
+                                  title: const Text('Welder'),
+                                  value: 'Welder',
+                                  set: occupations,
+                                  onChanged: _setOccupation,
+                                ),
+                                _SetTile(
+                                  title: const Text('Data Scientist'),
+                                  value: 'Data Scientist',
+                                  set: occupations,
+                                  onChanged: _setOccupation,
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        ExpansionSection(
-                          label: 'Hair Color',
-                          children: [
-                            _SelectableTile(
-                              title: const Text('Black'),
-                              value: HairColor.black,
-                              notifier: _notifier,
-                              extract: (p) => p.hairColor,
-                              onUpdate: _setHairColor,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Blonde'),
-                              value: HairColor.blonde,
-                              notifier: _notifier,
-                              extract: (p) => p.hairColor,
-                              onUpdate: _setHairColor,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Brunette'),
-                              value: HairColor.brunette,
-                              notifier: _notifier,
-                              extract: (p) => p.hairColor,
-                              onUpdate: _setHairColor,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Brown'),
-                              value: HairColor.brown,
-                              notifier: _notifier,
-                              extract: (p) => p.hairColor,
-                              onUpdate: _setHairColor,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Red'),
-                              value: HairColor.red,
-                              notifier: _notifier,
-                              extract: (p) => p.hairColor,
-                              onUpdate: _setHairColor,
-                            ),
-                            _SelectableTile(
-                              title: const Text('Gray'),
-                              value: HairColor.gray,
-                              notifier: _notifier,
-                              extract: (p) => p.hairColor,
-                              onUpdate: _setHairColor,
-                            ),
-                          ],
-                        ),
+                        Consumer(builder: (context, ref, child) {
+                          final hairColors = ref.watch(
+                              _prefsProvider.select((p) => p.state.hairColor));
+                          return ExpansionSection(
+                            label: 'Hair Color',
+                            highlighted: hairColors.isNotEmpty,
+                            children: [
+                              _SetTile(
+                                title: const Text('Black'),
+                                value: HairColor.black,
+                                set: hairColors,
+                                onChanged: _setHairColor,
+                              ),
+                              _SetTile(
+                                title: const Text('Blonde'),
+                                value: HairColor.blonde,
+                                set: hairColors,
+                                onChanged: _setHairColor,
+                              ),
+                              _SetTile(
+                                title: const Text('Brunette'),
+                                value: HairColor.brunette,
+                                set: hairColors,
+                                onChanged: _setHairColor,
+                              ),
+                              _SetTile(
+                                title: const Text('Brown'),
+                                value: HairColor.brown,
+                                set: hairColors,
+                                onChanged: _setHairColor,
+                              ),
+                              _SetTile(
+                                title: const Text('Red'),
+                                value: HairColor.red,
+                                set: hairColors,
+                                onChanged: _setHairColor,
+                              ),
+                              _SetTile(
+                                title: const Text('Gray'),
+                                value: HairColor.gray,
+                                set: hairColors,
+                                onChanged: _setHairColor,
+                              ),
+                            ],
+                          );
+                        }),
                       ],
                     ),
                   ),
@@ -681,32 +719,33 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     );
   }
 
-  void _setGender(Set<Gender> value) =>
-      _notifier.value = _notifier.value.copyWith(gender: value);
+  void _setGender(Set<Gender> value) => ref.read(_prefsProvider).state =
+      ref.read(_prefsProvider).state.copyWith(gender: value);
 
-  void _setReligion(Set<String> value) =>
-      _notifier.value = _notifier.value.copyWith(religion: value);
+  void _setReligion(Set<String> value) => ref.read(_prefsProvider).state =
+      ref.read(_prefsProvider).state.copyWith(religion: value);
 
-  void _setEducation(Set<Education> value) =>
-      _notifier.value = _notifier.value.copyWith(education: value);
+  void _setEducation(Set<Education> value) => ref.read(_prefsProvider).state =
+      ref.read(_prefsProvider).state.copyWith(education: value);
 
-  void _setCommunity(Set<String> value) =>
-      _notifier.value = _notifier.value.copyWith(community: value);
+  void _setCommunity(Set<String> value) => ref.read(_prefsProvider).state =
+      ref.read(_prefsProvider).state.copyWith(community: value);
 
-  void _setLanguage(Set<String> value) =>
-      _notifier.value = _notifier.value.copyWith(language: value);
+  void _setLanguage(Set<String> value) => ref.read(_prefsProvider).state =
+      ref.read(_prefsProvider).state.copyWith(language: value);
 
-  void _setSkinColor(Set<SkinColor> value) =>
-      _notifier.value = _notifier.value.copyWith(skinColor: value);
+  void _setSkinColor(Set<SkinColor> value) => ref.read(_prefsProvider).state =
+      ref.read(_prefsProvider).state.copyWith(skinColor: value);
 
-  void _setOccupation(Set<String> value) =>
-      _notifier.value = _notifier.value.copyWith(occupation: value);
+  void _setOccupation(Set<String> value) => ref.read(_prefsProvider).state =
+      ref.read(_prefsProvider).state.copyWith(occupation: value);
 
-  void _setHairColor(Set<HairColor> value) =>
-      _notifier.value = _notifier.value.copyWith(hairColor: value);
+  void _setHairColor(Set<HairColor> value) => ref.read(_prefsProvider).state =
+      ref.read(_prefsProvider).state.copyWith(hairColor: value);
 
   Future<bool> _maybeUpdatePreferences(BuildContext context) async {
-    if (widget.initialPreferences == _notifier.value) {
+    final preferences = ref.read(_prefsProvider).state;
+    if (initialPreferences == preferences) {
       return true;
     }
 
@@ -724,7 +763,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     );
 
     try {
-      await usersApi.updateFriendsPreferences(uid, _notifier.value);
+      await usersApi.updateFriendsPreferences(uid, preferences);
       popDialog();
     } catch (e, s) {
       popDialog();
@@ -744,11 +783,13 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
 
 class ExpansionSection extends StatefulWidget {
   final String label;
+  final bool highlighted;
   final List<Widget> children;
 
   const ExpansionSection({
     Key? key,
     required this.label,
+    this.highlighted = false,
     required this.children,
   }) : super(key: key);
 
@@ -766,7 +807,7 @@ class _ExpansionSectionState extends State<ExpansionSection>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 150),
       vsync: this,
     );
   }
@@ -792,12 +833,17 @@ class _ExpansionSectionState extends State<ExpansionSection>
               _controller.reverse();
             }
           },
-          child: SizedBox(
+          child: Container(
             height: 32,
+            decoration: BoxDecoration(
+              color: widget.highlighted
+                  ? const Color.fromARGB(0xFF, 0xFF, 0xD4, 0xD4)
+                  : null,
+            ),
             child: Row(
               children: [
                 AnimatedRotation(
-                  duration: const Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 150),
                   curve: Curves.easeOut,
                   turns: _expanded ? 0.25 : 0,
                   child: Padding(
@@ -835,10 +881,6 @@ class _ExpansionSectionState extends State<ExpansionSection>
   }
 }
 
-class _PrefsValueNotifier extends ValueNotifier<Preferences> {
-  _PrefsValueNotifier(Preferences value) : super(value);
-}
-
 class _Tile extends StatelessWidget {
   final Widget title;
   final bool selected;
@@ -868,8 +910,41 @@ class _Tile extends StatelessWidget {
   }
 }
 
+class _SetTile<T> extends StatelessWidget {
+  final Widget title;
+  final T value;
+  final Set<T> set;
+  final ValueChanged<Set<T>> onChanged;
+
+  const _SetTile({
+    Key? key,
+    required this.title,
+    required this.value,
+    required this.set,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return _Tile(
+      title: title,
+      selected: set.contains(value),
+      onChanged: (selected) {
+        final newSet = Set.of(set);
+        if (selected) {
+          newSet.add(value);
+        } else {
+          newSet.remove(value);
+        }
+        onChanged(newSet);
+      },
+    );
+  }
+}
+
 TextStyle _listTextStyle(BuildContext context) {
   return Theming.of(context).text.subheading.copyWith(
+    fontWeight: FontWeight.normal,
     color: const Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
     shadows: [
       BoxShadow(
@@ -879,68 +954,6 @@ TextStyle _listTextStyle(BuildContext context) {
       ),
     ],
   );
-}
-
-class _SelectableTile<T> extends StatefulWidget {
-  final Widget title;
-  final T value;
-  final _PrefsValueNotifier notifier;
-  final Set<T> Function(Preferences preferences) extract;
-  final void Function(Set<T> newSet) onUpdate;
-
-  const _SelectableTile({
-    Key? key,
-    required this.title,
-    required this.value,
-    required this.extract,
-    required this.notifier,
-    required this.onUpdate,
-  }) : super(key: key);
-
-  @override
-  State<_SelectableTile<T>> createState() => _SelectableTileState<T>();
-}
-
-class _SelectableTileState<T> extends State<_SelectableTile<T>> {
-  bool _contains = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _contains = widget.extract(widget.notifier.value).contains(widget.value);
-    widget.notifier.addListener(_listener);
-  }
-
-  @override
-  void dispose() {
-    widget.notifier.removeListener(_listener);
-    super.dispose();
-  }
-
-  void _listener() {
-    final contains =
-        widget.extract(widget.notifier.value).contains(widget.value);
-    if (_contains != contains) {
-      setState(() => _contains = contains);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _Tile(
-      title: widget.title,
-      selected: _contains,
-      onChanged: (selected) {
-        final newSet = Set.of(widget.extract(widget.notifier.value));
-        if (selected) {
-          newSet.add(widget.value);
-        } else {
-          newSet.remove(widget.value);
-        }
-        widget.onUpdate(newSet);
-      },
-    );
-  }
 }
 
 class _Slider extends StatelessWidget {
@@ -971,42 +984,39 @@ class _Slider extends StatelessWidget {
 }
 
 class _RangeSlider extends StatelessWidget {
-  final _PrefsValueNotifier notifier;
+  final Range values;
   final int min;
   final int max;
-  final RangeValues Function(Preferences preferences) buildRangeValues;
   final void Function(Range range) onUpdate;
   const _RangeSlider({
     Key? key,
-    required this.notifier,
+    required this.values,
     required this.min,
     required this.max,
-    required this.buildRangeValues,
     required this.onUpdate,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Preferences>(
-      valueListenable: notifier,
-      builder: (context, preferences, child) {
-        final values = buildRangeValues(preferences);
-        return RangeSlider(
-          activeColor: const Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
-          inactiveColor: const Color.fromARGB(0x88, 0xFF, 0x71, 0x71),
-          divisions: max - min,
-          min: min.toDouble(),
-          max: max.toDouble(),
-          values: values,
-          labels: RangeLabels(
-            values.start.toInt().toString(),
-            values.end.toInt().toString(),
-          ),
-          onChanged: (values) => onUpdate(
-            Range(
-              min: values.start.toInt(),
-              max: values.end.toInt(),
-            ),
+    return RangeSlider(
+      activeColor: const Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
+      inactiveColor: const Color.fromARGB(0x88, 0xFF, 0x71, 0x71),
+      divisions: max - min,
+      min: min.toDouble(),
+      max: max.toDouble(),
+      values: RangeValues(
+        values.min.toDouble(),
+        values.max.toDouble(),
+      ),
+      labels: RangeLabels(
+        values.min.toString(),
+        values.max.toString(),
+      ),
+      onChanged: (values) {
+        onUpdate(
+          Range(
+            min: values.start.toInt(),
+            max: values.end.toInt(),
           ),
         );
       },

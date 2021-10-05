@@ -569,7 +569,7 @@ class _ExpansionSectionState extends State<ExpansionSection>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 150),
       vsync: this,
     );
   }
@@ -600,7 +600,7 @@ class _ExpansionSectionState extends State<ExpansionSection>
             child: Row(
               children: [
                 AnimatedRotation(
-                  duration: const Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 150),
                   curve: Curves.easeOut,
                   turns: _expanded ? 0.25 : 0,
                   child: Padding(
