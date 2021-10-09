@@ -393,6 +393,14 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                               label: 'Religion',
                               highlighted: religions.isNotEmpty,
                               children: [
+                                _TextTile(
+                                  icon: const Icon(
+                                    Icons.add,
+                                    color: Colors.red,
+                                  ),
+                                  hintText: 'Add a religion',
+                                  onAdded: (value) {},
+                                ),
                                 _SetTile(
                                   title: const Text('Islam'),
                                   value: 'Islam',
@@ -477,6 +485,14 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                               label: 'Community',
                               highlighted: communities.isNotEmpty,
                               children: [
+                                _TextTile(
+                                  icon: const Icon(
+                                    Icons.add,
+                                    color: Colors.red,
+                                  ),
+                                  hintText: 'Add a community',
+                                  onAdded: (value) {},
+                                ),
                                 _SetTile(
                                   title: const Text('Punjabi'),
                                   value: 'Punjabi',
@@ -549,6 +565,14 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                               label: 'Languages',
                               highlighted: languages.isNotEmpty,
                               children: [
+                                _TextTile(
+                                  icon: const Icon(
+                                    Icons.add,
+                                    color: Colors.red,
+                                  ),
+                                  hintText: 'Add a language',
+                                  onAdded: (value) {},
+                                ),
                                 _SetTile(
                                   title: const Text('Punjabi'),
                                   value: 'Punjabi',
@@ -681,6 +705,14 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                               label: 'Job Occupation',
                               highlighted: occupations.isNotEmpty,
                               children: [
+                                _TextTile(
+                                  icon: const Icon(
+                                    Icons.add,
+                                    color: Colors.red,
+                                  ),
+                                  hintText: 'Add a job',
+                                  onAdded: (value) {},
+                                ),
                                 _SetTile(
                                   title: const Text('Accountant'),
                                   value: 'Accountant',
@@ -1037,6 +1069,54 @@ TextStyle _listTextStyle(BuildContext context) {
       ),
     ],
   );
+}
+
+class _TextTile extends StatelessWidget {
+  final String hintText;
+  final Widget icon;
+  final void Function(String value) onAdded;
+
+  const _TextTile({
+    Key? key,
+    required this.hintText,
+    required this.icon,
+    required this.onAdded,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Container(
+        height: 44.0,
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.only(left: 10, right: 22),
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(22)),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Theming.of(context).shadow,
+              offset: const Offset(0.0, 2.0),
+              blurRadius: 2.0,
+            ),
+          ],
+        ),
+        child: TextField(
+          textAlign: TextAlign.end,
+          decoration: InputDecoration(
+            icon: icon,
+            hintText: hintText,
+            hintStyle: Theming.of(context)
+                .text
+                .body
+                .copyWith(color: Colors.grey, fontWeight: FontWeight.normal),
+            border: InputBorder.none,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _Slider extends StatelessWidget {
