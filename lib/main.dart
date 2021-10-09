@@ -1,10 +1,16 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/preferences.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/preferences_screen.dart';
+import 'package:openup/private_profile_screen.dart';
+import 'package:openup/public_profile_edit_screen.dart';
+import 'package:openup/public_profile_screen.dart';
 import 'package:openup/video_call_screen.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/voice_call_screen.dart';
@@ -15,6 +21,7 @@ import 'package:openup/forgot_password_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/solo_screen.dart';
+import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/theming.dart';
 
 const _tempLobbyHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8080';
@@ -152,6 +159,24 @@ class _OpenupAppState extends State<OpenupApp> {
                       initiator: args.initiator,
                     ),
                   );
+                case 'public-profile':
+                  return _buildPageRoute(
+                    settings: settings,
+                    child: const PublicProfileScreen(),
+                  );
+                case 'public-profile-edit':
+                  return _buildPageRoute(
+                    settings: settings,
+                    child: const PublicProfileEditScreen(),
+                  );
+                case 'private-profile':
+                  final args = settings.arguments as PrivateProfile;
+                  return _buildPageRoute(
+                    settings: settings,
+                    child: PrivateProfileScreen(
+                      initialProfile: args,
+                    ),
+                  );
                 default:
                   throw 'Route not found ${settings.name}';
               }
@@ -172,7 +197,31 @@ class _OpenupAppState extends State<OpenupApp> {
       transitionsBuilder: transitionsBuilder ?? sideAnticipatePageTransition,
       transitionDuration: const Duration(milliseconds: 500),
       reverseTransitionDuration: const Duration(milliseconds: 400),
-      pageBuilder: (_, __, ___) => Scaffold(body: child),
+      pageBuilder: (_, __, ___) {
+        return Scaffold(
+          body: child,
+          endDrawer: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 6.0,
+              sigmaY: 6.0,
+            ),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 32,
+                  ),
+                ],
+              ),
+              child: Container(
+                color: Colors.white.withOpacity(0.6),
+                child: const ProfileDrawer(),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

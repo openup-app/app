@@ -139,6 +139,8 @@ class UsersApi implements RawUsersApi {
     return completer.future;
   }
 
+  PublicProfile? get publicProfile => _publicProfile;
+
   void _clearCache() {
     _account = null;
     _publicProfile = null;
