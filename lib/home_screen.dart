@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:location/location.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/loading_dialog.dart';
@@ -28,17 +30,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     _cachingStarted = true;
 
-    _cacheData();
-  }
-
-  void _cacheData() async {
-    final container = ProviderScope.containerOf(context);
-    final api = container.read(usersApiProvider);
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      throw 'No user is logged in';
-    }
-
     VoidCallback? popDialog;
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       popDialog = showBlockingModalDialog(
@@ -46,15 +37,52 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (_) => const Loading(),
       );
     });
-    await Future.wait([
+
+    final container = ProviderScope.containerOf(context);
+    final api = container.read(usersApiProvider);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      throw 'No user is logged in';
+    }
+
+    _cacheData(api, uid).then((_) => _updateLocation(api, uid)).then((_) {
+      if (mounted) {
+        popDialog?.call();
+      }
+    });
+  }
+
+  Future<void> _cacheData(UsersApi api, String uid) {
+    return Future.wait([
       api.getPublicProfile(uid),
       api.getPrivateProfile(uid),
       api.getFriendsPreferences(uid),
       api.getDatingPreferences(uid),
     ]);
+  }
 
-    if (mounted) {
-      popDialog?.call();
+  Future<void> _updateLocation(UsersApi api, String uid) async {
+    final location = Location();
+    try {
+      final result = await location.requestPermission();
+      if (result == PermissionStatus.granted ||
+          result == PermissionStatus.grantedLimited) {
+        final data = await location.getLocation();
+        if (data.latitude != null && data.longitude != null) {
+          final profile = await api.getPrivateProfile(uid);
+          api.updatePrivateProfile(
+            uid,
+            profile.copyWith(
+              location: LatLong(
+                lat: data.latitude ?? 0,
+                long: data.longitude ?? 0,
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print(e);
     }
   }
 
