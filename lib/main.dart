@@ -59,6 +59,10 @@ class _OpenupAppState extends State<OpenupApp> {
         builder: (context) {
           return MaterialApp(
             theme: ThemeData(
+              colorScheme: const ColorScheme.light(
+                primary: Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
+                secondary: Color.fromARGB(0xAA, 0xFF, 0x71, 0x71),
+              ),
               fontFamily: 'Myriad',
               iconTheme: const IconThemeData(
                 color: Colors.white,
@@ -166,8 +170,8 @@ class _OpenupAppState extends State<OpenupApp> {
     return PageRouteBuilder<T>(
       settings: settings,
       transitionsBuilder: transitionsBuilder ?? sideAnticipatePageTransition,
-      transitionDuration: const Duration(milliseconds: 750),
-      reverseTransitionDuration: const Duration(milliseconds: 650),
+      transitionDuration: const Duration(milliseconds: 500),
+      reverseTransitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (_, __, ___) => Scaffold(body: child),
     );
   }

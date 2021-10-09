@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/account.dart';
 import 'package:openup/api/users/preferences.dart';
@@ -19,6 +21,7 @@ class UsersApi implements RawUsersApi {
   PrivateProfile? _privateProfile;
   Preferences? _friendsPreferences;
   Preferences? _datingPreferences;
+  Timer? _countRequestDebounce;
 
   UsersApi({required String host}) : _rawUsersApi = RawUsersApi(host: host);
 
@@ -109,6 +112,31 @@ class UsersApi implements RawUsersApi {
   Future<void> updateDatingPreferences(String uid, Preferences preferences) {
     _datingPreferences = preferences;
     return _rawUsersApi.updateDatingPreferences(uid, preferences);
+  }
+
+  @override
+  Future<int> getPossibleFriendCount(
+    String uid,
+    Preferences preferences,
+  ) async {
+    final completer = Completer<int>();
+    _countRequestDebounce?.cancel();
+    _countRequestDebounce = Timer(const Duration(seconds: 2), () async {
+      final count = await _rawUsersApi.getPossibleFriendCount(uid, preferences);
+      completer.complete(count);
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<int> getPossibleDateCount(String uid, Preferences preferences) async {
+    final completer = Completer<int>();
+    _countRequestDebounce?.cancel();
+    _countRequestDebounce = Timer(const Duration(seconds: 2), () async {
+      final count = await _rawUsersApi.getPossibleDateCount(uid, preferences);
+      completer.complete(count);
+    });
+    return completer.future;
   }
 
   void _clearCache() {

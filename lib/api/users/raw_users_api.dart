@@ -220,4 +220,33 @@ class RawUsersApi {
       throw 'Failure';
     }
   }
+
+  Future<int> getPossibleFriendCount(String uid, Preferences preferences) =>
+      _getPossibleCount(uid, preferences, 'friends');
+
+  Future<int> getPossibleDateCount(String uid, Preferences preferences) =>
+      _getPossibleCount(uid, preferences, 'dating');
+
+  Future<int> _getPossibleCount(
+    String uid,
+    Preferences preferences,
+    String type,
+  ) async {
+    final response = await http.post(
+      Uri.parse('http://$_host/users/$uid/possible/$type'),
+      headers: _headers,
+      body: jsonEncode(preferences.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        throw 'Failed to get possible matches';
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      throw 'Failure';
+    }
+
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return json['matches'] as int;
+  }
 }

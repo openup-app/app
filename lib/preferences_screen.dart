@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,14 +10,17 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/loading_dialog.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_button.dart';
+import 'package:openup/widgets/slider.dart';
 import 'package:openup/widgets/theming.dart';
 
 late StateProvider<Preferences> _prefsProvider;
-void initPreferences(Preferences preferences) {
+void _initPreferences(Preferences preferences) {
   _prefsProvider = StateProvider<Preferences>((ref) {
     return preferences;
   });
 }
+
+final _matchCountProvider = StateProvider<int?>((ref) => 0);
 
 class PreferencesScreen extends ConsumerStatefulWidget {
   final Preferences initialPreferences;
@@ -34,7 +38,7 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
   @override
   void initState() {
     super.initState();
-    initPreferences(widget.initialPreferences);
+    _initPreferences(widget.initialPreferences);
   }
 
   @override
@@ -46,7 +50,7 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
   }
 }
 
-class _PreferencesScreen extends StatelessWidget {
+class _PreferencesScreen extends ConsumerStatefulWidget {
   final Preferences initialPreferences;
   final WidgetRef ref;
 
@@ -55,6 +59,49 @@ class _PreferencesScreen extends StatelessWidget {
     required this.initialPreferences,
     required this.ref,
   }) : super(key: key);
+
+  @override
+  ConsumerState<_PreferencesScreen> createState() => __PreferencesScreenState();
+}
+
+class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
+  void Function()? _removePreferencesUpdatedListener;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _removePreferencesUpdatedListener?.call();
+
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      _removePreferencesUpdatedListener =
+          ref.watch(_prefsProvider).addListener(_preferencesUpdated);
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _removePreferencesUpdatedListener?.call();
+  }
+
+  void _preferencesUpdated(Preferences preferences) async {
+    final auth = FirebaseAuth.instance;
+    final uid = auth.currentUser?.uid;
+    if (uid != null) {
+      int? count;
+
+      ref.read(_matchCountProvider).state = null;
+
+      try {
+        count = await ref
+            .read(usersApiProvider)
+            .getPossibleFriendCount(uid, preferences);
+      } catch (e) {
+        print(e);
+      }
+      ref.read(_matchCountProvider).state = count;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +171,6 @@ class _PreferencesScreen extends StatelessWidget {
                         bottom: 4,
                         child: Container(
                           height: 24,
-                          alignment: Alignment.bottomCenter,
                           decoration: BoxDecoration(
                             borderRadius: const BorderRadius.all(
                               Radius.circular(12),
@@ -138,39 +184,70 @@ class _PreferencesScreen extends StatelessWidget {
                             ],
                             color: Colors.white,
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 4.0),
-                                child: Text(
-                                  '•',
-                                  style: Theming.of(context).text.body.copyWith(
-                                      color: const Color.fromARGB(
-                                          0xFF, 0x00, 0xFF, 0x38)),
-                                ),
-                              ),
-                              Text(
-                                '1,031,547',
-                                style:
-                                    Theming.of(context).text.headline.copyWith(
-                                  fontSize: 18,
-                                  color: const Color.fromARGB(
-                                      0xFF, 0x00, 0xD1, 0xFF),
-                                  shadows: [
-                                    const BoxShadow(
-                                      color: Color.fromARGB(
-                                          0xAA, 0x00, 0xD1, 0xFF),
-                                      spreadRadius: 2.0,
-                                      blurRadius: 16.0,
-                                      offset: Offset(0.0, 2.0),
+                          child: AnimatedSize(
+                            duration: const Duration(milliseconds: 450),
+                            curve: Curves.easeOut,
+                            alignment: Alignment.bottomCenter,
+                            child: Consumer(builder: (context, ref, child) {
+                              final matchCount =
+                                  ref.watch(_matchCountProvider).state;
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (matchCount == null)
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 4,
+                                        horizontal: 8.0,
+                                      ),
+                                      child: Center(
+                                        child: AspectRatio(
+                                          aspectRatio: 1.0,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
                                     )
+                                  else ...[
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 4.0),
+                                      child: Text(
+                                        '•',
+                                        style: Theming.of(context)
+                                            .text
+                                            .body
+                                            .copyWith(
+                                                color: const Color.fromARGB(
+                                                    0xFF, 0x00, 0xFF, 0x38)),
+                                      ),
+                                    ),
+                                    Text(
+                                      matchCount.toString(),
+                                      style: Theming.of(context)
+                                          .text
+                                          .headline
+                                          .copyWith(
+                                        fontSize: 18,
+                                        color: const Color.fromARGB(
+                                            0xFF, 0x00, 0xD1, 0xFF),
+                                        shadows: [
+                                          const BoxShadow(
+                                            color: Color.fromARGB(
+                                                0xAA, 0x00, 0xD1, 0xFF),
+                                            spreadRadius: 2.0,
+                                            blurRadius: 16.0,
+                                            offset: Offset(0.0, 2.0),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
                                   ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
+                                ],
+                              );
+                            }),
                           ),
                         ),
                       ),
@@ -719,33 +796,40 @@ class _PreferencesScreen extends StatelessWidget {
     );
   }
 
-  void _setGender(Set<Gender> value) => ref.read(_prefsProvider).state =
-      ref.read(_prefsProvider).state.copyWith(gender: value);
+  void _setGender(Set<Gender> value) => widget.ref.read(_prefsProvider).state =
+      widget.ref.read(_prefsProvider).state.copyWith(gender: value);
 
-  void _setReligion(Set<String> value) => ref.read(_prefsProvider).state =
-      ref.read(_prefsProvider).state.copyWith(religion: value);
+  void _setReligion(Set<String> value) =>
+      widget.ref.read(_prefsProvider).state =
+          widget.ref.read(_prefsProvider).state.copyWith(religion: value);
 
-  void _setEducation(Set<Education> value) => ref.read(_prefsProvider).state =
-      ref.read(_prefsProvider).state.copyWith(education: value);
+  void _setEducation(Set<Education> value) =>
+      widget.ref.read(_prefsProvider).state =
+          widget.ref.read(_prefsProvider).state.copyWith(education: value);
 
-  void _setCommunity(Set<String> value) => ref.read(_prefsProvider).state =
-      ref.read(_prefsProvider).state.copyWith(community: value);
+  void _setCommunity(Set<String> value) =>
+      widget.ref.read(_prefsProvider).state =
+          widget.ref.read(_prefsProvider).state.copyWith(community: value);
 
-  void _setLanguage(Set<String> value) => ref.read(_prefsProvider).state =
-      ref.read(_prefsProvider).state.copyWith(language: value);
+  void _setLanguage(Set<String> value) =>
+      widget.ref.read(_prefsProvider).state =
+          widget.ref.read(_prefsProvider).state.copyWith(language: value);
 
-  void _setSkinColor(Set<SkinColor> value) => ref.read(_prefsProvider).state =
-      ref.read(_prefsProvider).state.copyWith(skinColor: value);
+  void _setSkinColor(Set<SkinColor> value) =>
+      widget.ref.read(_prefsProvider).state =
+          widget.ref.read(_prefsProvider).state.copyWith(skinColor: value);
 
-  void _setOccupation(Set<String> value) => ref.read(_prefsProvider).state =
-      ref.read(_prefsProvider).state.copyWith(occupation: value);
+  void _setOccupation(Set<String> value) =>
+      widget.ref.read(_prefsProvider).state =
+          widget.ref.read(_prefsProvider).state.copyWith(occupation: value);
 
-  void _setHairColor(Set<HairColor> value) => ref.read(_prefsProvider).state =
-      ref.read(_prefsProvider).state.copyWith(hairColor: value);
+  void _setHairColor(Set<HairColor> value) =>
+      widget.ref.read(_prefsProvider).state =
+          widget.ref.read(_prefsProvider).state.copyWith(hairColor: value);
 
   Future<bool> _maybeUpdatePreferences(BuildContext context) async {
-    final preferences = ref.read(_prefsProvider).state;
-    if (initialPreferences == preferences) {
+    final preferences = widget.ref.read(_prefsProvider).state;
+    if (widget.initialPreferences == preferences) {
       return true;
     }
 
@@ -823,9 +907,8 @@ class _ExpansionSectionState extends State<ExpansionSection>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () {
+        Button(
+          onPressed: () {
             setState(() => _expanded = !_expanded);
             if (_expanded) {
               _controller.forward();
@@ -998,28 +1081,23 @@ class _RangeSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RangeSlider(
-      activeColor: const Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
-      inactiveColor: const Color.fromARGB(0x88, 0xFF, 0x71, 0x71),
-      divisions: max - min,
-      min: min.toDouble(),
-      max: max.toDouble(),
-      values: RangeValues(
-        values.min.toDouble(),
-        values.max.toDouble(),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: LabeledRangedSlider(
+        values: RangeValues(values.min.toDouble(), values.max.toDouble()),
+        min: min.toDouble(),
+        max: max.toDouble(),
+        activeColor: const Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
+        inactiveColor: const Color.fromARGB(0x88, 0xFF, 0x71, 0x71),
+        onChanged: (values) {
+          onUpdate(
+            Range(
+              min: values.start.toInt(),
+              max: values.end.toInt(),
+            ),
+          );
+        },
       ),
-      labels: RangeLabels(
-        values.min.toString(),
-        values.max.toString(),
-      ),
-      onChanged: (values) {
-        onUpdate(
-          Range(
-            min: values.start.toInt(),
-            max: values.end.toInt(),
-          ),
-        );
-      },
     );
   }
 }
