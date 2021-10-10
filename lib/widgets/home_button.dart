@@ -3,7 +3,11 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 
 class HomeButton extends StatelessWidget {
-  const HomeButton({Key? key}) : super(key: key);
+  final Color? color;
+  const HomeButton({
+    Key? key,
+    this.color,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +22,7 @@ class HomeButton extends StatelessWidget {
         child: Icon(
           Icons.home,
           size: 48.0,
-          color: Theming.of(context).friendBlue4,
+          color: color ?? Theming.of(context).friendBlue4,
         ),
       ),
     );
