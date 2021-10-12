@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/account.dart';
@@ -82,6 +83,24 @@ class UsersApi implements RawUsersApi {
   Future<void> updatePrivateProfile(String uid, PrivateProfile profile) {
     _privateProfile = profile;
     return _rawUsersApi.updatePrivateProfile(uid, profile);
+  }
+
+  @override
+  Future<String> uploadProfilePhoto(
+    String uid,
+    Uint8List photo,
+    int index,
+  ) async {
+    final url = await _rawUsersApi.uploadProfilePhoto(uid, photo, index);
+    final gallery = _publicProfile?.gallery;
+    if (gallery != null) {
+      if (gallery.length > index) {
+        _publicProfile?.gallery[index] = url;
+      } else {
+        gallery.add(url);
+      }
+    }
+    return url;
   }
 
   @override

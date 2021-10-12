@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:openup/api/users/account.dart';
@@ -155,6 +156,32 @@ class RawUsersApi {
       print('Error ${response.statusCode}: ${response.body}');
       throw 'Failure';
     }
+  }
+
+  Future<String> uploadProfilePhoto(
+    String uid,
+    Uint8List photo,
+    int index,
+  ) async {
+    final response = await http.patch(
+      Uri.parse('http://$_host/users/$uid/public/gallery/$index'),
+      headers: {
+        ..._headers,
+        'Content-Type': 'application/octet-stream',
+      },
+      body: photo,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        throw 'Failed to upload photo';
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      throw 'Failure';
+    }
+
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return json['url'] as String;
   }
 
   Future<void> deleteUser(String uid) async {
