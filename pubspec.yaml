@@ -20,6 +20,9 @@ dependencies:
   flutter_riverpod: ^1.0.0-dev.7
   location: ^4.3.0
   flutter_svg: ^0.22.0
+  image_picker: ^0.8.4+2
+  just_audio: ^0.9.13
+  record: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -45,6 +48,8 @@ flutter:
     - assets/images/connections_icon.svg
     - assets/images/rekindle_icon.svg
     - assets/images/support_icon.svg
+    - assets/images/play_icon.svg
+    - assets/images/pause_icon.svg
   fonts:
     - family: Myriad
       fonts:
