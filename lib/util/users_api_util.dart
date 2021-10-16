@@ -101,46 +101,25 @@ Future<List<String>?> deleteAudio({required BuildContext context}) async {
   }
 }
 
-Future<void> updateName({
+Future<void> updateNameDescription({
   required BuildContext context,
   required String name,
-}) async {
-  try {
-    await _updateData(
-        context: context,
-        label: 'Updating name',
-        request: (usersApi, uid) {
-          final profile = usersApi.publicProfile;
-          if (profile != null) {
-            return usersApi.updatePublicProfile(
-                uid, profile.copyWith(name: name));
-          } else {
-            return Future.value();
-          }
-        });
-  } catch (e) {
-    print(e);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Failed to update name'),
-      ),
-    );
-  }
-}
-
-Future<void> updateDescription({
-  required BuildContext context,
   required String description,
 }) async {
   try {
     await _updateData(
       context: context,
-      label: 'Updating description',
+      label: 'Updating profile',
       request: (usersApi, uid) {
         final profile = usersApi.publicProfile;
         if (profile != null) {
           return usersApi.updatePublicProfile(
-              uid, profile.copyWith(name: description));
+            uid,
+            profile.copyWith(
+              name: name,
+              description: description,
+            ),
+          );
         } else {
           return Future.value();
         }
@@ -150,7 +129,7 @@ Future<void> updateDescription({
     print(e);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Failed to update name'),
+        content: Text('Failed to update profile'),
       ),
     );
   }

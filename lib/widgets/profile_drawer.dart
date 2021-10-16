@@ -27,6 +27,10 @@ class ProfileDrawer extends ConsumerWidget {
               onPressed: () =>
                   Navigator.of(context).pushNamed('public-profile'),
               child: Container(
+                constraints: const BoxConstraints(
+                  minWidth: 60,
+                  minHeight: 60,
+                ),
                 clipBehavior: Clip.hardEdge,
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
@@ -38,10 +42,33 @@ class ProfileDrawer extends ConsumerWidget {
                       blurRadius: 16,
                     ),
                   ],
+                  color: Colors.white,
                 ),
-                child: Image.network(
-                  'https://picsum.photos/230/200',
-                  fit: BoxFit.cover,
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final gallery = ref.watch(profileProvider).state?.gallery;
+
+                    late final String? photo;
+                    try {
+                      photo = gallery?.first;
+                    } on StateError {
+                      photo = null;
+                    } catch (e) {
+                      photo = null;
+                    }
+
+                    if (photo == null) {
+                      return Image.asset(
+                        'assets/images/profile.png',
+                        color: iconColor,
+                        fit: BoxFit.fitHeight,
+                      );
+                    }
+                    return Image.network(
+                      photo,
+                      fit: BoxFit.cover,
+                    );
+                  },
                 ),
               ),
             ),

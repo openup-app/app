@@ -100,22 +100,25 @@ class UsersApi implements RawUsersApi {
     int index,
   ) async {
     final url = await _rawUsersApi.updateGalleryPhoto(uid, photo, index);
-    _publicProfile = _publicProfile?.copyWith();
-    final gallery = _publicProfile?.gallery;
-    if (gallery != null) {
-      if (gallery.length > index) {
-        _publicProfile?.gallery[index] = url;
-        _profileStateController.state = _publicProfile;
-      } else {
-        gallery.add(url);
-      }
+    final gallery = List<String>.of(_publicProfile?.gallery ?? []);
+    if (index < gallery.length) {
+      gallery[index] = url;
+    } else {
+      gallery.add(url);
     }
+
+    _publicProfile = _publicProfile?.copyWith(gallery: gallery);
+    _profileStateController.state = _publicProfile;
     return url;
   }
 
   @override
   Future<void> deleteGalleryPhoto(String uid, int index) async {
     await _rawUsersApi.deleteGalleryPhoto(uid, index);
+    final gallery = List<String>.of(_publicProfile?.gallery ?? []);
+    gallery.removeAt(index);
+    _publicProfile = _publicProfile?.copyWith(gallery: gallery);
+    _profileStateController.state = _publicProfile;
   }
 
   @override
@@ -129,6 +132,8 @@ class UsersApi implements RawUsersApi {
   @override
   Future<void> deleteAudioBio(String uid) async {
     await _rawUsersApi.deleteAudioBio(uid);
+    _publicProfile = _publicProfile?.copyWith(audio: null);
+    _profileStateController.state = _publicProfile;
   }
 
   @override
@@ -194,5 +199,6 @@ class UsersApi implements RawUsersApi {
     _privateProfile = null;
     _friendsPreferences = null;
     _datingPreferences = null;
+    _profileStateController.state = null;
   }
 }

@@ -4,7 +4,7 @@ import 'package:openup/api/users/users_api.dart';
 import 'package:openup/util/users_api_util.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
-import 'package:openup/widgets/profile_audio_bio.dart';
+import 'package:openup/widgets/profile_bio.dart';
 import 'package:openup/widgets/theming.dart';
 
 class PublicProfileScreen extends ConsumerStatefulWidget {
@@ -16,7 +16,7 @@ class PublicProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
-  final _audioBioKey = GlobalKey<ProfileAudioBioState>();
+  final _audioBioKey = GlobalKey<ProfileBioState>();
   final _pageController = PageController(initialPage: 10000);
 
   @override
@@ -84,19 +84,25 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           right: 16,
           bottom: 80,
           height: 88,
-          child: Consumer(builder: (context, ref, child) {
-            final audio = ref
-                .watch(profileProvider.select((value) => value.state?.audio));
-            return ProfileAudioBio(
-              key: _audioBioKey,
-              url: audio,
-              onRecorded: (audio) =>
-                  uploadAudio(context: context, audio: audio),
-              onNameUpdated: (name) => updateName(context: context, name: name),
-              onDescriptionUpdated: (desc) =>
-                  updateDescription(context: context, description: desc),
-            );
-          }),
+          child: Consumer(
+            builder: (context, ref, child) {
+              final audio = ref
+                  .watch(profileProvider.select((value) => value.state?.audio));
+              return ProfileBio(
+                key: _audioBioKey,
+                url: audio,
+                onRecorded: (audio) =>
+                    uploadAudio(context: context, audio: audio),
+                onNameDescriptionUpdated: (name, description) {
+                  updateNameDescription(
+                    context: context,
+                    name: name,
+                    description: description,
+                  );
+                },
+              );
+            },
+          ),
         ),
         Positioned(
           left: MediaQuery.of(context).padding.left + 16,
