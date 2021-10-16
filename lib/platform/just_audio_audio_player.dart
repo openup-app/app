@@ -8,17 +8,27 @@ part 'just_audio_audio_player.freezed.dart';
 /// Audio playback implemented by package:just_audio.
 class JustAudioAudioPlayer {
   final _playbackInfoController = StreamController<PlaybackInfo>.broadcast();
-  final _player = AudioPlayer();
+  final _player = AudioPlayer(
+    audioLoadConfiguration: AudioLoadConfiguration(
+      androidLoadControl: AndroidLoadControl(
+        backBufferDuration: const Duration(seconds: 50),
+      ),
+    ),
+  );
+
+  late final StreamSubscription _stateSubscription;
+  late final StreamSubscription _positionSubscription;
+  late final StreamSubscription _durationSubscription;
 
   PlaybackInfo _playbackInfo = const PlaybackInfo();
 
   JustAudioAudioPlayer() {
-    _player.playerStateStream.listen((state) async {
+    _stateSubscription = _player.playerStateStream.listen((state) async {
       switch (state.processingState) {
         case ProcessingState.buffering:
         case ProcessingState.loading:
         case ProcessingState.idle:
-          _playbackInfo.copyWith(state: PlaybackState.loading);
+          _playbackInfo = _playbackInfo.copyWith(state: PlaybackState.loading);
           break;
         case ProcessingState.ready:
         case ProcessingState.completed:
@@ -37,12 +47,12 @@ class JustAudioAudioPlayer {
       _playbackInfoController.add(_playbackInfo);
     });
 
-    _player.positionStream.listen((position) {
+    _positionSubscription = _player.positionStream.listen((position) {
       _playbackInfo = _playbackInfo.copyWith(position: position);
       _playbackInfoController.add(_playbackInfo);
     });
 
-    _player.durationStream.listen((duration) {
+    _durationSubscription = _player.durationStream.listen((duration) {
       if (duration != null) {
         _playbackInfo = _playbackInfo.copyWith(duration: duration);
         _playbackInfoController.add(_playbackInfo);
@@ -51,6 +61,9 @@ class JustAudioAudioPlayer {
   }
 
   void dispose() {
+    _stateSubscription.cancel();
+    _positionSubscription.cancel();
+    _durationSubscription.cancel();
     _playbackInfoController.close();
     _player.dispose();
   }
@@ -59,20 +72,13 @@ class JustAudioAudioPlayer {
 
   Stream<Duration> get recordingDurationStream => const Stream.empty();
 
-  Future<void> play({String? uri}) async {
-    if (uri != null) {
-      await _player.setUrl(uri);
-    }
-    return _player.play();
-  }
+  Future<void> setUrl(String url) => _player.setUrl(url);
 
-  Future<void> pause() {
-    return _player.pause();
-  }
+  Future<void> play() => _player.play();
 
-  Future<void> stop() {
-    return _player.stop();
-  }
+  Future<void> pause() => _player.pause();
+
+  Future<void> stop() => _player.stop();
 }
 
 @freezed

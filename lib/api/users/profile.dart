@@ -10,6 +10,7 @@ class PublicProfile with _$PublicProfile {
     required String name,
     required int age,
     required String description,
+    String? audio,
     String? photo,
     required List<String> gallery,
   }) = _PublicProfile;

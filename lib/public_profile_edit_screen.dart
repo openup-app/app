@@ -1,16 +1,15 @@
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/platform/photo_picker.dart';
+import 'package:openup/util/users_api_util.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
-import 'package:openup/widgets/loading_dialog.dart';
 import 'package:openup/widgets/notification_banner.dart';
-import 'package:openup/widgets/profile_audio_recorder.dart';
+import 'package:openup/widgets/profile_audio_bio.dart';
 import 'package:openup/widgets/theming.dart';
 
 class PublicProfileEditScreen extends ConsumerStatefulWidget {
@@ -30,7 +29,8 @@ class _PublicProfileEditScreenState
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final gallery = ref.read(usersApiProvider).publicProfile?.gallery;
+    final profile = ref.read(usersApiProvider).publicProfile;
+    final gallery = profile?.gallery;
     if (gallery != null) {
       _gallery.clear();
       _gallery.addAll(gallery);
@@ -75,48 +75,72 @@ class _PublicProfileEditScreenState
                             children: [
                               for (var j = 0; j < 2; j++)
                                 Expanded(
-                                  child: Button(
-                                    onPressed: () async {
-                                      final index = i * 2 + j;
-                                      final photo = await _pickPhoto();
-                                      if (photo != null) {
-                                        await _uploadPhoto(photo, index);
-                                      }
-                                    },
-                                    child: Container(
-                                      margin: const EdgeInsets.symmetric(
-                                          horizontal: 4, vertical: 8),
-                                      clipBehavior: Clip.hardEdge,
-                                      decoration: BoxDecoration(
-                                        borderRadius: const BorderRadius.all(
-                                            Radius.circular(36)),
-                                        color: Colors.white.withOpacity(0.3),
-                                      ),
-                                      child: Stack(
-                                        alignment: Alignment.center,
-                                        fit: StackFit.expand,
-                                        children: [
-                                          if (_gallery.length > i * 2 + j)
-                                            ColorFiltered(
-                                              colorFilter: ColorFilter.mode(
-                                                Colors.black.withOpacity(0.25),
-                                                BlendMode.darken,
-                                              ),
-                                              child: Image.network(
-                                                _gallery[i * 2 + j],
-                                                fit: BoxFit.cover,
-                                                opacity:
-                                                    const AlwaysStoppedAnimation(
-                                                        0.75),
-                                              ),
-                                            ),
-                                          const Icon(
-                                            Icons.add,
-                                            size: 48,
+                                  child: Stack(
+                                    children: [
+                                      Button(
+                                        onPressed: () async {
+                                          final index = i * 2 + j;
+                                          final photo = await _pickPhoto();
+                                          if (photo != null) {
+                                            await _uploadPhoto(photo, index);
+                                          }
+                                        },
+                                        child: Container(
+                                          margin: const EdgeInsets.symmetric(
+                                              horizontal: 4, vertical: 8),
+                                          clipBehavior: Clip.hardEdge,
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                const BorderRadius.all(
+                                                    Radius.circular(36)),
+                                            color:
+                                                Colors.white.withOpacity(0.3),
                                           ),
-                                        ],
+                                          child: Stack(
+                                            alignment: Alignment.center,
+                                            fit: StackFit.expand,
+                                            children: [
+                                              if (_gallery.length > i * 2 + j)
+                                                ColorFiltered(
+                                                  colorFilter: ColorFilter.mode(
+                                                    Colors.black
+                                                        .withOpacity(0.25),
+                                                    BlendMode.darken,
+                                                  ),
+                                                  child: Image.network(
+                                                    _gallery[i * 2 + j],
+                                                    fit: BoxFit.cover,
+                                                    opacity:
+                                                        const AlwaysStoppedAnimation(
+                                                            0.75),
+                                                  ),
+                                                ),
+                                              const Icon(
+                                                Icons.add,
+                                                size: 48,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                      if (_gallery.length > i * 2 + j)
+                                        Positioned(
+                                          right: 20,
+                                          top: 20,
+                                          child: Button(
+                                            onPressed: () {
+                                              deletePhoto(
+                                                context: context,
+                                                index: i * 2 + j,
+                                              );
+                                            },
+                                            child: const Icon(
+                                              Icons.close,
+                                              size: 21,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                             ],
@@ -127,17 +151,29 @@ class _PublicProfileEditScreenState
                 ),
                 const Positioned(
                   right: 0,
-                  bottom: 160,
+                  bottom: 172,
                   child: NotificationBanner(
                     contents: 'Record an audio bio for your connects to hear',
                   ),
                 ),
-                const Positioned(
+                Positioned(
                   left: 16,
                   right: 16,
                   bottom: 80,
-                  height: 72,
-                  child: ProfileAudioRecorder(),
+                  height: 88,
+                  child: Consumer(builder: (context, ref, child) {
+                    final audio = ref.watch(
+                        profileProvider.select((value) => value.state?.audio));
+                    return ProfileAudioBio(
+                      url: audio,
+                      onRecorded: (audio) =>
+                          uploadAudio(context: context, audio: audio),
+                      onNameUpdated: (name) =>
+                          updateName(context: context, name: name),
+                      onDescriptionUpdated: (desc) => updateDescription(
+                          context: context, description: desc),
+                    );
+                  }),
                 ),
                 Positioned(
                   left: MediaQuery.of(context).padding.left + 16,
@@ -189,35 +225,8 @@ class _PublicProfileEditScreenState
   }
 
   Future<void> _uploadPhoto(Uint8List photo, int index) async {
-    final auth = FirebaseAuth.instance;
-    final uid = auth.currentUser?.uid;
-    if (uid == null) {
-      return;
-    }
-
-    final popDialog = showBlockingModalDialog(
-      context: context,
-      builder: (context) {
-        return const Loading(
-          title: Text('Uploading photo'),
-        );
-      },
-    );
-
-    final usersApi = ref.read(usersApiProvider);
-    try {
-      await usersApi.uploadProfilePhoto(uid, photo, index);
-    } catch (e) {
-      print(e);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to add photo'),
-        ),
-      );
-    }
-    popDialog();
-
-    final gallery = usersApi.publicProfile?.gallery;
+    final gallery =
+        await uploadPhoto(context: context, photo: photo, index: index);
     if (gallery != null) {
       setState(() {
         _gallery.clear();

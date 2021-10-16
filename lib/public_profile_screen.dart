@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users/users_api.dart';
+import 'package:openup/util/users_api_util.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
-import 'package:openup/widgets/profile_audio_recorder.dart';
+import 'package:openup/widgets/profile_audio_bio.dart';
 import 'package:openup/widgets/theming.dart';
 
-class PublicProfileScreen extends StatefulWidget {
+class PublicProfileScreen extends ConsumerStatefulWidget {
   const PublicProfileScreen({Key? key}) : super(key: key);
 
   @override
-  State<PublicProfileScreen> createState() => _PublicProfileScreenState();
+  ConsumerState<PublicProfileScreen> createState() =>
+      _PublicProfileScreenState();
 }
 
-class _PublicProfileScreenState extends State<PublicProfileScreen> {
+class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
+  final _audioBioKey = GlobalKey<ProfileAudioBioState>();
   final _pageController = PageController(initialPage: 10000);
 
   @override
@@ -22,15 +27,20 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final usersApi = ref.watch(usersApiProvider);
     return Stack(
       children: [
         Positioned.fill(
           child: PageView.builder(
             controller: _pageController,
             itemBuilder: (context, index) {
-              final i = index % 4;
+              final gallery = usersApi.publicProfile?.gallery ?? [];
+              if (gallery.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              final i = index % gallery.length;
               return Image.network(
-                'https://picsum.photos/20$i/20$i',
+                gallery[i],
                 fit: BoxFit.cover,
               );
             },
@@ -40,8 +50,11 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
           right: MediaQuery.of(context).padding.right + 16,
           top: MediaQuery.of(context).padding.top + 16,
           child: Button(
-            onPressed: () =>
-                Navigator.of(context).pushNamed('public-profile-edit'),
+            onPressed: () {
+              final state = _audioBioKey.currentState;
+              state?.stopAll();
+              Navigator.of(context).pushNamed('public-profile-edit');
+            },
             child: Container(
               width: 128,
               height: 128,
@@ -66,12 +79,24 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
             ),
           ),
         ),
-        const Positioned(
+        Positioned(
           left: 16,
           right: 16,
           bottom: 80,
-          height: 72,
-          child: ProfileAudioRecorder(),
+          height: 88,
+          child: Consumer(builder: (context, ref, child) {
+            final audio = ref
+                .watch(profileProvider.select((value) => value.state?.audio));
+            return ProfileAudioBio(
+              key: _audioBioKey,
+              url: audio,
+              onRecorded: (audio) =>
+                  uploadAudio(context: context, audio: audio),
+              onNameUpdated: (name) => updateName(context: context, name: name),
+              onDescriptionUpdated: (desc) =>
+                  updateDescription(context: context, description: desc),
+            );
+          }),
         ),
         Positioned(
           left: MediaQuery.of(context).padding.left + 16,

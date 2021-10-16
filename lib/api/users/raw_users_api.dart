@@ -158,12 +158,12 @@ class RawUsersApi {
     }
   }
 
-  Future<String> uploadProfilePhoto(
+  Future<String> updateGalleryPhoto(
     String uid,
     Uint8List photo,
     int index,
   ) async {
-    final response = await http.patch(
+    final response = await http.post(
       Uri.parse('http://$_host/users/$uid/public/gallery/$index'),
       headers: {
         ..._headers,
@@ -182,6 +182,58 @@ class RawUsersApi {
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return json['url'] as String;
+  }
+
+  Future<void> deleteGalleryPhoto(String uid, int index) async {
+    final response = await http.delete(
+      Uri.parse('http://$_host/users/$uid/public/gallery/$index'),
+      headers: _headers,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        throw 'Failed to delete photo';
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      throw 'Failure';
+    }
+  }
+
+  Future<String> updateAudioBio(String uid, Uint8List audio) async {
+    final response = await http.post(
+      Uri.parse('http://$_host/users/$uid/public/audio'),
+      headers: {
+        ..._headers,
+        'Content-Type': 'application/octet-stream',
+      },
+      body: audio,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        throw 'Failed to upload audio';
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      throw 'Failure';
+    }
+
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return json['url'] as String;
+  }
+
+  Future<void> deleteAudioBio(String uid) async {
+    final response = await http.delete(
+      Uri.parse('http://$_host/users/$uid/public/audio'),
+      headers: _headers,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        throw 'Failed to delete audio';
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      throw 'Failure';
+    }
   }
 
   Future<void> deleteUser(String uid) async {

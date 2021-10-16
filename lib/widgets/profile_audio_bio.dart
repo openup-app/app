@@ -1,32 +1,38 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:openup/api/users/users_api.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/platform/record_audio_recorder.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ProfileAudioBio extends StatefulWidget {
-  final String uri;
+  final String? url;
   final void Function(Uint8List newBio) onRecorded;
+  final ValueChanged<String> onNameUpdated;
+  final ValueChanged<String> onDescriptionUpdated;
 
   const ProfileAudioBio({
     Key? key,
-    required this.uri,
+    required this.url,
     required this.onRecorded,
+    required this.onNameUpdated,
+    required this.onDescriptionUpdated,
   }) : super(key: key);
 
   @override
-  _ProfileAudioBioState createState() => _ProfileAudioBioState();
+  ProfileAudioBioState createState() => ProfileAudioBioState();
 }
 
-class _ProfileAudioBioState extends State<ProfileAudioBio> {
+class ProfileAudioBioState extends State<ProfileAudioBio> {
   final _audio = JustAudioAudioPlayer();
   final _recorder = RecordAudioRecorder();
 
   PlaybackInfo _playbackInfo = const PlaybackInfo();
-  bool _needsToLoadAudio = true;
   bool _recording = false;
 
   @override
@@ -37,45 +43,45 @@ class _ProfileAudioBioState extends State<ProfileAudioBio> {
         setState(() => _playbackInfo = info);
       }
     });
+    final url = widget.url;
+    if (url != null) {
+      _setAudioUrl(url);
+    }
   }
 
   @override
   void dispose() {
     _audio.dispose();
+    _recorder.dispose();
     super.dispose();
   }
 
   @override
   void didUpdateWidget(covariant ProfileAudioBio oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.uri != widget.uri) {
-      setState(() => _needsToLoadAudio = true);
+    final uri = widget.url;
+    if (oldWidget.url != widget.url && uri != null) {
+      _setAudioUrl(uri);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final playButtonState = _playbackInfo.state == PlaybackState.loading
+        ? PlayButtonState.loading
+        : (_playbackInfo.state == PlaybackState.playing
+            ? PlayButtonState.playing
+            : PlayButtonState.paused);
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: _ProfileAudioBioDisplay(
-        playButton: _playbackInfo.state == PlaybackState.loading
-            ? PlayButtonState.loading
-            : (_playbackInfo.state == PlaybackState.playing
-                ? PlayButtonState.playing
-                : PlayButtonState.paused),
+        playButton: playButtonState,
         recording: _recording,
         progress: _playbackInfo.position.inMilliseconds /
             (_playbackInfo.duration.inMilliseconds == 0
                 ? 1
                 : _playbackInfo.duration.inMilliseconds),
-        onPlay: () {
-          if (_needsToLoadAudio) {
-            _audio.play(uri: widget.uri);
-            setState(() => _needsToLoadAudio = false);
-          } else {
-            _audio.play();
-          }
-        },
+        onPlay: () => _audio.play(),
         onPause: () => _audio.pause(),
         onRecord: () async {
           setState(() => _recording = true);
@@ -88,8 +94,25 @@ class _ProfileAudioBioState extends State<ProfileAudioBio> {
             widget.onRecorded(output);
           }
         },
+        onNameUpdated: widget.onNameUpdated,
+        onDescriptionUpdated: widget.onDescriptionUpdated,
       ),
     );
+  }
+
+  void _setAudioUrl(String url) {
+    try {
+      _audio.setUrl(url);
+    } on PlayerInterruptedException {
+      // Nothing to do
+      print('CAUGHT');
+    }
+  }
+
+  void stopAll() {
+    _audio.pause();
+    _recorder.stop();
+    setState(() => _recording = false);
   }
 }
 
@@ -101,17 +124,21 @@ class _ProfileAudioBioDisplay extends StatelessWidget {
   final VoidCallback onPause;
   final VoidCallback onRecord;
   final VoidCallback onRecordComplete;
+  final ValueChanged<String> onNameUpdated;
+  final ValueChanged<String> onDescriptionUpdated;
 
-  const _ProfileAudioBioDisplay({
-    Key? key,
-    required this.playButton,
-    required this.recording,
-    required this.progress,
-    required this.onPlay,
-    required this.onPause,
-    required this.onRecord,
-    required this.onRecordComplete,
-  }) : super(key: key);
+  const _ProfileAudioBioDisplay(
+      {Key? key,
+      required this.playButton,
+      required this.recording,
+      required this.progress,
+      required this.onPlay,
+      required this.onPause,
+      required this.onRecord,
+      required this.onRecordComplete,
+      required this.onNameUpdated,
+      required this.onDescriptionUpdated})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -136,39 +163,56 @@ class _ProfileAudioBioDisplay extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 24),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'John, 28',
-                style: Theming.of(context).text.headline.copyWith(
-                  fontSize: 28,
-                  shadows: [
-                    Shadow(
-                      color: Theming.of(context).shadow,
-                      blurRadius: 4,
-                      offset: const Offset(0.0, 2.0),
-                    ),
-                  ],
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Consumer(
+                  builder: (context, ref, child) {
+                    final usersApi = ref.read(usersApiProvider);
+                    final profile = usersApi.publicProfile;
+                    return Text(
+                      profile?.name ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theming.of(context).text.headline.copyWith(
+                        fontSize: 28,
+                        shadows: [
+                          Shadow(
+                            color: Theming.of(context).shadow,
+                            blurRadius: 4,
+                            offset: const Offset(0.0, 2.0),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              ),
-              Text(
-                'Three Words Only',
-                style: Theming.of(context).text.bodySecondary.copyWith(
-                  fontSize: 20,
-                  shadows: [
-                    Shadow(
-                      color: Theming.of(context).shadow,
-                      blurRadius: 4,
-                      offset: const Offset(0.0, 2.0),
-                    ),
-                  ],
+                Consumer(
+                  builder: (context, ref, child) {
+                    final usersApi = ref.read(usersApiProvider);
+                    final profile = usersApi.publicProfile;
+                    return Text(
+                      profile?.description ?? 'My Description Here',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theming.of(context).text.bodySecondary.copyWith(
+                        fontSize: 20,
+                        shadows: [
+                          Shadow(
+                            color: Theming.of(context).shadow,
+                            blurRadius: 4,
+                            offset: const Offset(0.0, 2.0),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
           Button(
             onPressed: playButton == PlayButtonState.playing
                 ? null
@@ -200,7 +244,10 @@ class _ProfileAudioBioDisplay extends StatelessWidget {
                 width: 48,
                 height: 48,
                 child: playButton == PlayButtonState.loading
-                    ? const CircularProgressIndicator()
+                    ? const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(),
+                      )
                     : (playButton == PlayButtonState.playing
                         ? Padding(
                             padding: const EdgeInsets.only(top: 8.0),

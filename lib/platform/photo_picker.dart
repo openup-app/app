@@ -6,7 +6,10 @@ class PhotoPicker {
   Future<Uint8List?> pickPhoto(bool useCamera) async {
     final a = ImagePicker();
     final image = await a.pickImage(
-        source: useCamera ? ImageSource.camera : ImageSource.gallery);
+      maxWidth: 800,
+      maxHeight: 800,
+      source: useCamera ? ImageSource.camera : ImageSource.gallery,
+    );
     return image?.readAsBytes();
   }
 }

@@ -8,9 +8,15 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/raw_users_api.dart';
 
 late final Provider<UsersApi> usersApiProvider;
+late final StateProvider<PublicProfile?> profileProvider;
+late final StateController<PublicProfile?> _profileStateController;
 
 void initUsersApi({required String host}) {
+  profileProvider = StateProvider<PublicProfile?>((ref) {
+    return null;
+  });
   usersApiProvider = Provider<UsersApi>((ref) {
+    _profileStateController = ref.read(profileProvider);
     return UsersApi(host: host);
   });
 }
@@ -64,12 +70,14 @@ class UsersApi implements RawUsersApi {
   @override
   Future<PublicProfile> getPublicProfile(String uid) async {
     _publicProfile ??= await _rawUsersApi.getPublicProfile(uid);
+    _profileStateController.state = _publicProfile;
     return _publicProfile!;
   }
 
   @override
   Future<void> updatePublicProfile(String uid, PublicProfile profile) {
     _publicProfile = profile;
+    _profileStateController.state = _publicProfile;
     return _rawUsersApi.updatePublicProfile(uid, profile);
   }
 
@@ -86,21 +94,41 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
-  Future<String> uploadProfilePhoto(
+  Future<String> updateGalleryPhoto(
     String uid,
     Uint8List photo,
     int index,
   ) async {
-    final url = await _rawUsersApi.uploadProfilePhoto(uid, photo, index);
+    final url = await _rawUsersApi.updateGalleryPhoto(uid, photo, index);
+    _publicProfile = _publicProfile?.copyWith();
     final gallery = _publicProfile?.gallery;
     if (gallery != null) {
       if (gallery.length > index) {
         _publicProfile?.gallery[index] = url;
+        _profileStateController.state = _publicProfile;
       } else {
         gallery.add(url);
       }
     }
     return url;
+  }
+
+  @override
+  Future<void> deleteGalleryPhoto(String uid, int index) async {
+    await _rawUsersApi.deleteGalleryPhoto(uid, index);
+  }
+
+  @override
+  Future<String> updateAudioBio(String uid, Uint8List audio) async {
+    final url = await _rawUsersApi.updateAudioBio(uid, audio);
+    _publicProfile = _publicProfile?.copyWith(audio: url);
+    _profileStateController.state = _publicProfile;
+    return url;
+  }
+
+  @override
+  Future<void> deleteAudioBio(String uid) async {
+    await _rawUsersApi.deleteAudioBio(uid);
   }
 
   @override
