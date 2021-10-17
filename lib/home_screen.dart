@@ -101,7 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: Button(
-                onPressed: () {},
+                onPressed: () =>
+                    Navigator.of(context).pushNamed('dating-solo-double'),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -142,7 +143,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Expanded(
               child: Button(
-                onPressed: () => Navigator.of(context).pushNamed('friends'),
+                onPressed: () =>
+                    Navigator.of(context).pushNamed('friends-solo-double'),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(

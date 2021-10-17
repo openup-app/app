@@ -1,12 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
-import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
 
-class FriendsHomeScreen extends StatelessWidget {
-  const FriendsHomeScreen({Key? key}) : super(key: key);
+part 'solo_double_screen.freezed.dart';
+
+class SoloDoubleScreen extends StatelessWidget {
+  final String labelUpper;
+  final String labelLower;
+  final Widget imageUpper;
+  final Widget imageLower;
+  final VoidCallback onPressedUpper;
+  final VoidCallback onPressedLower;
+
+  const SoloDoubleScreen({
+    Key? key,
+    required this.labelUpper,
+    required this.labelLower,
+    required this.imageUpper,
+    required this.imageLower,
+    required this.onPressedUpper,
+    required this.onPressedLower,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -17,27 +34,23 @@ class FriendsHomeScreen extends StatelessWidget {
           children: [
             Expanded(
               child: Button(
-                onPressed: () =>
-                    Navigator.of(context).pushNamed('friends-solo'),
+                onPressed: onPressedUpper,
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
                       colors: [
-                        Theming.of(context).friendBlue1,
-                        Theming.of(context).friendBlue2,
+                        SoloDoubleScreenTheme.of(context).upperGradientInner,
+                        SoloDoubleScreenTheme.of(context).upperGradientOuter,
                       ],
                     ),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(
-                        height: 115,
-                        child: MaleFemaleConnectionImage(),
-                      ),
+                      imageUpper,
                       const SizedBox(height: 24),
                       Text(
-                        'meet\npeople',
+                        labelUpper,
                         textAlign: TextAlign.center,
                         style: Theming.of(context).text.large.copyWith(
                           shadows: [
@@ -56,29 +69,23 @@ class FriendsHomeScreen extends StatelessWidget {
             ),
             Expanded(
               child: Button(
-                onPressed: () {},
+                onPressed: onPressedLower,
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
                       colors: [
-                        Theming.of(context).friendBlue1,
-                        Theming.of(context).friendBlue3,
+                        SoloDoubleScreenTheme.of(context).lowerGradientInner,
+                        SoloDoubleScreenTheme.of(context).lowerGradientOuter,
                       ],
                     ),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SizedBox(
-                        height: 100,
-                        child: Image.asset(
-                          'assets/images/friends_with_friends.png',
-                          fit: BoxFit.fitHeight,
-                        ),
-                      ),
+                      imageLower,
                       const SizedBox(height: 24),
                       Text(
-                        'meet people\nwith friends',
+                        labelLower,
                         textAlign: TextAlign.center,
                         style: Theming.of(context).text.large.copyWith(
                           shadows: [
@@ -101,15 +108,49 @@ class FriendsHomeScreen extends StatelessWidget {
           top: MediaQuery.of(context).padding.top + 16,
           right: MediaQuery.of(context).padding.right + 16,
           child: ProfileButton(
-            color: Theming.of(context).friendBlue4,
+            color: SoloDoubleScreenTheme.of(context).profileButtonColor,
           ),
         ),
         Positioned(
           right: MediaQuery.of(context).padding.right + 16,
           bottom: MediaQuery.of(context).padding.bottom + 16,
-          child: const HomeButton(),
+          child: HomeButton(
+            color: SoloDoubleScreenTheme.of(context).homeButtonColor,
+          ),
         ),
       ],
     );
   }
+}
+
+class SoloDoubleScreenTheme extends InheritedWidget {
+  final SoloDoubleScreenThemeData themeData;
+
+  const SoloDoubleScreenTheme({
+    Key? key,
+    required Widget child,
+    required this.themeData,
+  }) : super(key: key, child: child);
+
+  static SoloDoubleScreenThemeData of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<SoloDoubleScreenTheme>()!
+        .themeData;
+  }
+
+  @override
+  bool updateShouldNotify(SoloDoubleScreenTheme oldWidget) =>
+      oldWidget.themeData != themeData;
+}
+
+@freezed
+class SoloDoubleScreenThemeData with _$SoloDoubleScreenThemeData {
+  const factory SoloDoubleScreenThemeData({
+    required Color upperGradientInner,
+    required Color upperGradientOuter,
+    required Color lowerGradientInner,
+    required Color lowerGradientOuter,
+    required Color profileButtonColor,
+    Color? homeButtonColor,
+  }) = _SoloDoubleScreenThemeData;
 }

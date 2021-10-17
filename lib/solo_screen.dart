@@ -1,19 +1,30 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/users_api.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/lobby_screen.dart';
 import 'package:openup/widgets/home_button.dart';
-import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/toggle_button.dart';
 
-class SoloFriends extends StatelessWidget {
-  const SoloFriends({Key? key}) : super(key: key);
+part 'solo_screen.freezed.dart';
+
+class SoloScreen extends StatelessWidget {
+  final String label;
+  final Widget image;
+  final VoidCallback onPressedVoiceCall;
+  final VoidCallback onPressedVideoCall;
+  final VoidCallback onPressedPreferences;
+
+  const SoloScreen({
+    Key? key,
+    required this.label,
+    required this.image,
+    required this.onPressedVoiceCall,
+    required this.onPressedVideoCall,
+    required this.onPressedPreferences,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -36,13 +47,13 @@ class SoloFriends extends StatelessWidget {
       ],
     );
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
             Colors.white,
-            Color.fromARGB(0xFF, 0xDD, 0xFB, 0xFF),
+            SoloScreenTheme.of(context).backgroundGradientBottom,
           ],
         ),
       ),
@@ -55,15 +66,15 @@ class SoloFriends extends StatelessWidget {
               children: [
                 const Spacer(),
                 Text(
-                  'meet people',
+                  label,
                   style: Theming.of(context).text.headline.copyWith(
-                    color: const Color.fromARGB(0xFF, 0x00, 0xD1, 0xFF),
+                    color: SoloScreenTheme.of(context).titleColor,
                     shadows: [
-                      const BoxShadow(
-                        color: Color.fromARGB(0xAA, 0x00, 0xD1, 0xFF),
+                      BoxShadow(
+                        color: SoloScreenTheme.of(context).titleShadowColor,
                         spreadRadius: 2.0,
                         blurRadius: 16.0,
-                        offset: Offset(0.0, 2.0),
+                        offset: const Offset(0.0, 2.0),
                       )
                     ],
                   ),
@@ -72,10 +83,7 @@ class SoloFriends extends StatelessWidget {
                 Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
-                    const SizedBox(
-                      height: 115,
-                      child: MaleFemaleConnectionImage(),
-                    ),
+                    image,
                     Align(
                       alignment: Alignment.centerRight,
                       child: Column(
@@ -99,12 +107,9 @@ class SoloFriends extends StatelessWidget {
                   ],
                 ),
                 PrimaryIconButton(
-                  onPressed: () => Navigator.of(context).pushNamed(
-                    'friends-lobby',
-                    arguments: LobbyScreenArguments(video: false),
-                  ),
+                  onPressed: onPressedVoiceCall,
                   icon: Image.asset('assets/images/voice_call.png'),
-                  color: const Color.fromARGB(0xFF, 0x00, 0xB0, 0xD7),
+                  color: SoloScreenTheme.of(context).buttonColorTop,
                   child: Text(
                     'Talk to someone new',
                     style: buttonStyle,
@@ -112,12 +117,9 @@ class SoloFriends extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 PrimaryIconButton(
-                  onPressed: () => Navigator.of(context).pushNamed(
-                    'friends-lobby',
-                    arguments: LobbyScreenArguments(video: true),
-                  ),
+                  onPressed: onPressedVideoCall,
                   icon: Image.asset('assets/images/video_call.png'),
-                  color: const Color.fromARGB(0xFF, 0x5A, 0xC9, 0xEC),
+                  color: SoloScreenTheme.of(context).buttonColorMiddle,
                   child: Text(
                     'Video call someone new',
                     style: buttonStyle,
@@ -125,24 +127,12 @@ class SoloFriends extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 PrimaryIconButton(
-                  onPressed: () async {
-                    final container = ProviderScope.containerOf(context);
-                    final usersApi = container.read(usersApiProvider);
-                    final uid = FirebaseAuth.instance.currentUser?.uid;
-                    if (uid != null) {
-                      final preferences =
-                          await usersApi.getFriendsPreferences(uid);
-                      Navigator.of(context).pushNamed(
-                        'friends-preferences',
-                        arguments: preferences,
-                      );
-                    }
-                  },
+                  onPressed: onPressedPreferences,
                   icon: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Image.asset('assets/images/preferences.png'),
                   ),
-                  color: const Color.fromARGB(0xFF, 0x8C, 0xDD, 0xF6),
+                  color: SoloScreenTheme.of(context).buttonColorBottom,
                   child: Text(
                     'Preferences',
                     style: buttonStyle,
@@ -156,16 +146,52 @@ class SoloFriends extends StatelessWidget {
             top: MediaQuery.of(context).padding.top + 16,
             right: MediaQuery.of(context).padding.right + 16,
             child: ProfileButton(
-              color: Theming.of(context).friendBlue2,
+              color: SoloScreenTheme.of(context).profileButtonColor,
             ),
           ),
           Positioned(
             right: MediaQuery.of(context).padding.right + 16,
             bottom: MediaQuery.of(context).padding.bottom + 16,
-            child: const HomeButton(),
+            child: HomeButton(
+              color: SoloScreenTheme.of(context).homeButtonColor,
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+class SoloScreenTheme extends InheritedWidget {
+  final SoloScreenThemeData themeData;
+
+  const SoloScreenTheme({
+    Key? key,
+    required Widget child,
+    required this.themeData,
+  }) : super(key: key, child: child);
+
+  static SoloScreenThemeData of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<SoloScreenTheme>()!
+        .themeData;
+  }
+
+  @override
+  bool updateShouldNotify(SoloScreenTheme oldWidget) =>
+      oldWidget.themeData != themeData;
+}
+
+@freezed
+class SoloScreenThemeData with _$SoloScreenThemeData {
+  const factory SoloScreenThemeData({
+    required Color backgroundGradientBottom,
+    required Color titleColor,
+    required Color titleShadowColor,
+    required Color buttonColorTop,
+    required Color buttonColorMiddle,
+    required Color buttonColorBottom,
+    required Color profileButtonColor,
+    Color? homeButtonColor,
+  }) = _SoloScreenThemeData;
 }

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,13 +15,14 @@ import 'package:openup/public_profile_screen.dart';
 import 'package:openup/video_call_screen.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/voice_call_screen.dart';
-import 'package:openup/friends_home_screen.dart';
+import 'package:openup/solo_double_screen.dart';
 import 'package:openup/lobby_screen.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/forgot_password_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/solo_screen.dart';
+import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -82,100 +84,294 @@ class _OpenupAppState extends State<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
-                    child: const InitialLoadingScreen(),
+                    builder: (_) => const InitialLoadingScreen(),
                   );
                 case 'sign-up':
                   return _buildPageRoute(
                     settings: settings,
-                    child: const SignUpScreen(),
+                    builder: (_) => const SignUpScreen(),
                   );
                 case 'phone-verification':
                   final args = settings.arguments as CredentialVerification;
                   return _buildPageRoute<bool>(
                     settings: settings,
-                    child: PhoneVerificationScreen(
+                    builder: (_) => PhoneVerificationScreen(
                       credentialVerification: args,
                     ),
                   );
                 case 'forgot-password':
                   return _buildPageRoute(
                     settings: settings,
-                    child: const ForgotPasswordScreen(),
+                    builder: (_) => const ForgotPasswordScreen(),
                   );
                 case '/':
                   return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: topToBottomPageTransition,
-                    child: const HomeScreen(),
+                    builder: (_) => const HomeScreen(),
                   );
-                case 'friends':
+                case 'friends-solo-double':
                   return _buildPageRoute(
                     settings: settings,
-                    child: const FriendsHomeScreen(),
+                    builder: (context) {
+                      return SoloDoubleScreenTheme(
+                        themeData: const SoloDoubleScreenThemeData(
+                          upperGradientInner:
+                              Color.fromARGB(0xFF, 0xCE, 0xF6, 0xFF),
+                          upperGradientOuter:
+                              Color.fromARGB(0xFF, 0x1C, 0xC1, 0xE4),
+                          lowerGradientInner:
+                              Color.fromARGB(0xFF, 0xCE, 0xF6, 0xFF),
+                          lowerGradientOuter:
+                              Color.fromARGB(0xFF, 0x01, 0xAF, 0xD5),
+                          profileButtonColor:
+                              Color.fromARGB(0xFF, 0x11, 0x8E, 0xDD),
+                        ),
+                        child: SoloDoubleScreen(
+                          labelUpper: 'meet\npeople',
+                          labelLower: 'meet people\nwith friends',
+                          imageUpper: const SizedBox(
+                            height: 115,
+                            child: MaleFemaleConnectionImage(),
+                          ),
+                          imageLower: SizedBox(
+                            height: 100,
+                            child: Image.asset(
+                              'assets/images/friends_with_friends.png',
+                              fit: BoxFit.fitHeight,
+                            ),
+                          ),
+                          onPressedUpper: () =>
+                              Navigator.of(context).pushNamed('friends-solo'),
+                          onPressedLower: () {},
+                        ),
+                      );
+                    },
                   );
                 case 'friends-solo':
                   return _buildPageRoute(
                     settings: settings,
-                    child: const SoloFriends(),
+                    builder: (context) {
+                      return SoloScreenTheme(
+                        themeData: const SoloScreenThemeData(
+                          backgroundGradientBottom:
+                              Color.fromARGB(0xFF, 0xDD, 0xFB, 0xFF),
+                          titleColor: Color.fromARGB(0xFF, 0x00, 0xD1, 0xFF),
+                          titleShadowColor:
+                              Color.fromARGB(0xAA, 0x00, 0xD1, 0xFF),
+                          buttonColorTop:
+                              Color.fromARGB(0xFF, 0x00, 0xB0, 0xD7),
+                          buttonColorMiddle:
+                              Color.fromARGB(0xFF, 0x5A, 0xC9, 0xEC),
+                          buttonColorBottom:
+                              Color.fromARGB(0xFF, 0x8C, 0xDD, 0xF6),
+                          profileButtonColor:
+                              Color.fromARGB(0xFF, 0x1C, 0xC1, 0xE4),
+                        ),
+                        child: SoloScreen(
+                          label: 'meet people',
+                          image: const SizedBox(
+                            height: 115,
+                            child: MaleFemaleConnectionImage(),
+                          ),
+                          onPressedVoiceCall: () =>
+                              Navigator.of(context).pushNamed(
+                            'friends-lobby',
+                            arguments: LobbyScreenArguments(video: false),
+                          ),
+                          onPressedVideoCall: () =>
+                              Navigator.of(context).pushNamed(
+                            'friends-lobby',
+                            arguments: LobbyScreenArguments(video: true),
+                          ),
+                          onPressedPreferences: () async {
+                            final container =
+                                ProviderScope.containerOf(context);
+                            final usersApi = container.read(usersApiProvider);
+                            final uid = FirebaseAuth.instance.currentUser?.uid;
+                            if (uid != null) {
+                              final preferences =
+                                  await usersApi.getFriendsPreferences(uid);
+                              Navigator.of(context).pushNamed(
+                                'friends-preferences',
+                                arguments: preferences,
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
                   );
                 case 'friends-preferences':
                   final args = settings.arguments as Preferences;
                   return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: bottomToTopPageTransition,
-                    child: PreferencesScreen(
-                      initialPreferences: args,
-                    ),
+                    builder: (_) {
+                      return PreferencesScreen(
+                        initialPreferences: args,
+                      );
+                    },
                   );
                 case 'friends-lobby':
                   final args = settings.arguments as LobbyScreenArguments;
                   return _buildPageRoute(
                     settings: settings,
-                    child: LobbyScreen(
-                      lobbyHost: _tempLobbyHost,
-                      signalingHost: _tempSignalingHost,
-                      video: args.video,
-                    ),
+                    builder: (_) {
+                      return LobbyScreen(
+                        lobbyHost: _tempLobbyHost,
+                        signalingHost: _tempSignalingHost,
+                        video: args.video,
+                      );
+                    },
                   );
                 case 'friends-voice-call':
                   final args = settings.arguments as CallPageArguments;
                   return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
-                    child: VoiceCallScreen(
-                      uid: args.uid,
-                      signalingHost: _tempSignalingHost,
-                      initiator: args.initiator,
-                    ),
+                    builder: (_) {
+                      return VoiceCallScreen(
+                        uid: args.uid,
+                        signalingHost: _tempSignalingHost,
+                        initiator: args.initiator,
+                      );
+                    },
                   );
                 case 'friends-video-call':
                   final args = settings.arguments as CallPageArguments;
                   return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
-                    child: VideoCallScreen(
-                      uid: args.uid,
-                      signalingHost: _tempSignalingHost,
-                      initiator: args.initiator,
-                    ),
+                    builder: (_) {
+                      return VideoCallScreen(
+                        uid: args.uid,
+                        signalingHost: _tempSignalingHost,
+                        initiator: args.initiator,
+                      );
+                    },
+                  );
+                case 'dating-solo-double':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (context) {
+                      return SoloDoubleScreenTheme(
+                        themeData: const SoloDoubleScreenThemeData(
+                          upperGradientInner:
+                              Color.fromARGB(0xFF, 0xFF, 0xE8, 0xE8),
+                          upperGradientOuter:
+                              Color.fromARGB(0xFF, 0xFF, 0xB2, 0xB2),
+                          lowerGradientInner:
+                              Color.fromARGB(0xFF, 0xFF, 0xE6, 0xE6),
+                          lowerGradientOuter:
+                              Color.fromARGB(0xFF, 0xEE, 0x87, 0x87),
+                          profileButtonColor:
+                              Color.fromARGB(0xFF, 0xFF, 0x8A, 0x8A),
+                          homeButtonColor:
+                              Color.fromARGB(0xFF, 0xDD, 0x0F, 0x0F),
+                        ),
+                        child: SoloDoubleScreen(
+                          labelUpper: 'blind\ndate',
+                          labelLower: 'double\ndate',
+                          imageUpper: SizedBox(
+                            height: 120,
+                            child: Image.asset(
+                              'assets/images/heart.png',
+                              fit: BoxFit.fitHeight,
+                            ),
+                          ),
+                          imageLower: SizedBox(
+                            height: 160,
+                            child: Image.asset(
+                              'assets/images/double_hearts.png',
+                              fit: BoxFit.fitHeight,
+                            ),
+                          ),
+                          onPressedUpper: () =>
+                              Navigator.of(context).pushNamed('dating-solo'),
+                          onPressedLower: () {},
+                        ),
+                      );
+                    },
+                  );
+                case 'dating-solo':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (context) {
+                      return SoloScreenTheme(
+                        themeData: const SoloScreenThemeData(
+                          backgroundGradientBottom:
+                              Color.fromARGB(0xFF, 0xFF, 0xE2, 0xE2),
+                          titleColor: Color.fromARGB(0xFF, 0xFD, 0x65, 0x65),
+                          titleShadowColor:
+                              Color.fromARGB(0xAA, 0xF0, 0x59, 0x59),
+                          buttonColorTop:
+                              Color.fromARGB(0xFF, 0xFF, 0x77, 0x77),
+                          buttonColorMiddle:
+                              Color.fromARGB(0xFF, 0xFF, 0x88, 0x88),
+                          buttonColorBottom:
+                              Color.fromARGB(0xFF, 0xF6, 0x9E, 0x9E),
+                          profileButtonColor:
+                              Color.fromARGB(0xFF, 0xFF, 0x8A, 0x8A),
+                          homeButtonColor:
+                              Color.fromARGB(0xFF, 0xDD, 0x0F, 0x0F),
+                        ),
+                        child: SoloScreen(
+                          label: 'blind date',
+                          image: SizedBox(
+                            height: 120,
+                            child: Image.asset(
+                              'assets/images/heart.png',
+                              fit: BoxFit.fitHeight,
+                            ),
+                          ),
+                          onPressedVoiceCall: () =>
+                              Navigator.of(context).pushNamed(
+                            'dating-lobby',
+                            arguments: LobbyScreenArguments(video: false),
+                          ),
+                          onPressedVideoCall: () =>
+                              Navigator.of(context).pushNamed(
+                            'dating-lobby',
+                            arguments: LobbyScreenArguments(video: true),
+                          ),
+                          onPressedPreferences: () async {
+                            final container =
+                                ProviderScope.containerOf(context);
+                            final usersApi = container.read(usersApiProvider);
+                            final uid = FirebaseAuth.instance.currentUser?.uid;
+                            if (uid != null) {
+                              final preferences =
+                                  await usersApi.getDatingPreferences(uid);
+                              Navigator.of(context).pushNamed(
+                                'dating-preferences',
+                                arguments: preferences,
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
                   );
                 case 'public-profile':
                   return _buildPageRoute(
                     settings: settings,
-                    child: const PublicProfileScreen(),
+                    builder: (_) => const PublicProfileScreen(),
                   );
                 case 'public-profile-edit':
                   return _buildPageRoute(
                     settings: settings,
-                    child: const PublicProfileEditScreen(),
+                    builder: (_) => const PublicProfileEditScreen(),
                   );
                 case 'private-profile':
                   final args = settings.arguments as PrivateProfile;
                   return _buildPageRoute(
                     settings: settings,
-                    child: PrivateProfileScreen(
-                      initialProfile: args,
-                    ),
+                    builder: (_) {
+                      return PrivateProfileScreen(
+                        initialProfile: args,
+                      );
+                    },
                   );
                 default:
                   throw 'Route not found ${settings.name}';
@@ -190,7 +386,7 @@ class _OpenupAppState extends State<OpenupApp> {
   PageRoute _buildPageRoute<T>({
     required RouteSettings settings,
     PageTransitionBuilder? transitionsBuilder,
-    required Widget child,
+    required WidgetBuilder builder,
   }) {
     return PageRouteBuilder<T>(
       settings: settings,
@@ -199,7 +395,7 @@ class _OpenupAppState extends State<OpenupApp> {
       reverseTransitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (_, __, ___) {
         return Scaffold(
-          body: child,
+          body: Builder(builder: builder),
           endDrawer: BackdropFilter(
             filter: ImageFilter.blur(
               sigmaX: 6.0,
