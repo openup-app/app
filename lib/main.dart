@@ -207,9 +207,31 @@ class _OpenupAppState extends State<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: bottomToTopPageTransition,
-                    builder: (_) {
-                      return PreferencesScreen(
-                        initialPreferences: args,
+                    builder: (context) {
+                      return PreferencesScreenTheme(
+                        themeData: const PreferencesScreenThemeData(
+                          backgroundGradientBottom:
+                              Color.fromARGB(0xFF, 0x9E, 0xD5, 0xE2),
+                          titleColor: Color.fromARGB(0xFF, 0x00, 0xD1, 0xFF),
+                          titleShadowColor:
+                              Color.fromARGB(0xAA, 0x00, 0xD1, 0xFF),
+                          backArrowColor:
+                              Color.fromARGB(0xFF, 0x89, 0xDE, 0xFF),
+                          profileButtonColor:
+                              Color.fromARGB(0xFF, 0x89, 0xDE, 0xFF),
+                        ),
+                        child: PreferencesScreen(
+                          initialPreferences: args,
+                          title: 'meet people',
+                          image: const SizedBox(
+                            width: 125,
+                            height: 40,
+                            child: MaleFemaleConnectionImageApart(),
+                          ),
+                          updatePreferences: (usersApi, uid, preferences) =>
+                              usersApi.updateFriendsPreferences(
+                                  uid, preferences),
+                        ),
                       );
                     },
                   );
@@ -217,11 +239,35 @@ class _OpenupAppState extends State<OpenupApp> {
                   final args = settings.arguments as LobbyScreenArguments;
                   return _buildPageRoute(
                     settings: settings,
-                    builder: (_) {
-                      return LobbyScreen(
-                        lobbyHost: _tempLobbyHost,
-                        signalingHost: _tempSignalingHost,
-                        video: args.video,
+                    builder: (context) {
+                      return LobbyScreenTheme(
+                        themeData: const LobbyScreenThemeData(
+                          backgroundColors: [
+                            Color.fromARGB(0xFF, 0xB3, 0xE3, 0xFB),
+                            Color.fromARGB(0xFF, 0x6C, 0xBA, 0xDC),
+                            Color.fromARGB(0xFF, 0x0B, 0x92, 0xD2),
+                            Color.fromARGB(0xFF, 0x18, 0x76, 0xA4),
+                            Color.fromARGB(0xFF, 0x37, 0x98, 0xD8),
+                            Color.fromARGB(0xFF, 0x0B, 0x92, 0xD2),
+                          ],
+                        ),
+                        child: LobbyScreen(
+                          lobbyHost: _tempLobbyHost,
+                          signalingHost: _tempSignalingHost,
+                          video: args.video,
+                          onStartCall: ({required bool initiator}) {
+                            final route = args.video
+                                ? 'friends-video-call'
+                                : 'friends-voice-call';
+                            Navigator.of(context).pushNamed(
+                              route,
+                              arguments: CallPageArguments(
+                                uid: FirebaseAuth.instance.currentUser!.uid,
+                                initiator: initiator,
+                              ),
+                            );
+                          },
+                        ),
                       );
                     },
                   );
@@ -348,6 +394,76 @@ class _OpenupAppState extends State<OpenupApp> {
                                 arguments: preferences,
                               );
                             }
+                          },
+                        ),
+                      );
+                    },
+                  );
+                case 'dating-preferences':
+                  final args = settings.arguments as Preferences;
+                  return _buildPageRoute(
+                    settings: settings,
+                    transitionsBuilder: bottomToTopPageTransition,
+                    builder: (context) {
+                      return PreferencesScreenTheme(
+                        themeData: const PreferencesScreenThemeData(
+                          backgroundGradientBottom:
+                              Color.fromARGB(0xFF, 0xFF, 0xDD, 0xDD),
+                          titleColor: Color.fromARGB(0xFF, 0xFF, 0x7A, 0x7A),
+                          titleShadowColor:
+                              Color.fromARGB(0xAA, 0xF0, 0x59, 0x59),
+                          backArrowColor:
+                              Color.fromARGB(0xFF, 0xFD, 0x89, 0x89),
+                          profileButtonColor:
+                              Color.fromARGB(0xFF, 0xFF, 0x8A, 0x8A),
+                        ),
+                        child: PreferencesScreen(
+                          initialPreferences: args,
+                          title: 'blind date',
+                          image: SizedBox(
+                            width: 125,
+                            height: 40,
+                            child: Image.asset('assets/images/heart.png'),
+                          ),
+                          updatePreferences: (usersApi, uid, preferences) =>
+                              usersApi.updateDatingPreferences(
+                                  uid, preferences),
+                        ),
+                      );
+                    },
+                  );
+                case 'dating-lobby':
+                  final args = settings.arguments as LobbyScreenArguments;
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (context) {
+                      return LobbyScreenTheme(
+                        themeData: const LobbyScreenThemeData(
+                          backgroundColors: [
+                            Color.fromARGB(0xFF, 0xFB, 0x8B, 0x8B),
+                            Color.fromARGB(0xFF, 0xFB, 0x6B, 0x6B),
+                            Color.fromARGB(0xFF, 0xFB, 0x43, 0x43),
+                            Color.fromARGB(0xFF, 0xFA, 0x3B, 0x3B),
+                            Color.fromARGB(0xFF, 0xFB, 0x23, 0x23),
+                            Color.fromARGB(0xFF, 0xB3, 0x03, 0x03),
+                          ],
+                          homeButtonColor: Colors.white,
+                        ),
+                        child: LobbyScreen(
+                          lobbyHost: _tempLobbyHost,
+                          signalingHost: _tempSignalingHost,
+                          video: args.video,
+                          onStartCall: ({required bool initiator}) {
+                            final route = args.video
+                                ? 'dating-video-call'
+                                : 'dating-voice-call';
+                            Navigator.of(context).pushNamed(
+                              route,
+                              arguments: CallPageArguments(
+                                uid: FirebaseAuth.instance.currentUser!.uid,
+                                initiator: initiator,
+                              ),
+                            );
                           },
                         ),
                       );

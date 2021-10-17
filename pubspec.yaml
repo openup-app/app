@@ -51,6 +51,7 @@ flutter:
     - assets/images/play_icon.svg
     - assets/images/pause_icon.svg
     - assets/images/double_hearts.png
+    - assets/images/preferences_back.png
   fonts:
     - family: Myriad
       fonts:

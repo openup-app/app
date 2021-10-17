@@ -3,15 +3,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/util/emoji.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/loading_dialog.dart';
-import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/slider.dart';
 import 'package:openup/widgets/theming.dart';
+
+part 'preferences_screen.freezed.dart';
 
 late StateProvider<Preferences> _prefsProvider;
 void _initPreferences(Preferences preferences) {
@@ -24,10 +26,17 @@ final _matchCountProvider = StateProvider<int?>((ref) => 0);
 
 class PreferencesScreen extends ConsumerStatefulWidget {
   final Preferences initialPreferences;
+  final String title;
+  final Widget image;
+  final Future<void> Function(
+      UsersApi usersApi, String uid, Preferences preferences) updatePreferences;
 
   const PreferencesScreen({
     Key? key,
     required this.initialPreferences,
+    required this.title,
+    required this.image,
+    required this.updatePreferences,
   }) : super(key: key);
 
   @override
@@ -45,6 +54,9 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
   Widget build(BuildContext context) {
     return _PreferencesScreen(
       initialPreferences: widget.initialPreferences,
+      title: widget.title,
+      image: widget.image,
+      updatePreferences: widget.updatePreferences,
       ref: ref,
     );
   }
@@ -52,11 +64,18 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
 
 class _PreferencesScreen extends ConsumerStatefulWidget {
   final Preferences initialPreferences;
+  final String title;
+  final Widget image;
+  final Future<void> Function(
+      UsersApi usersApi, String uid, Preferences preferences) updatePreferences;
   final WidgetRef ref;
 
   const _PreferencesScreen({
     Key? key,
     required this.initialPreferences,
+    required this.title,
+    required this.image,
+    required this.updatePreferences,
     required this.ref,
   }) : super(key: key);
 
@@ -108,13 +127,13 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
     return WillPopScope(
       onWillPop: () => _maybeUpdatePreferences(context),
       child: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
               Colors.white,
-              Color.fromARGB(0xFF, 0x9E, 0xD5, 0xE2),
+              PreferencesScreenTheme.of(context).backgroundGradientBottom,
             ],
           ),
         ),
@@ -125,15 +144,16 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                 SizedBox(height: MediaQuery.of(context).padding.top),
                 const SizedBox(height: 40),
                 Text(
-                  'meet people',
+                  widget.title,
                   style: Theming.of(context).text.headline.copyWith(
-                    color: const Color.fromARGB(0xFF, 0x00, 0xD1, 0xFF),
+                    color: PreferencesScreenTheme.of(context).titleColor,
                     shadows: [
-                      const BoxShadow(
-                        color: Color.fromARGB(0xAA, 0x00, 0xD1, 0xFF),
+                      BoxShadow(
+                        color:
+                            PreferencesScreenTheme.of(context).titleShadowColor,
                         spreadRadius: 2.0,
                         blurRadius: 16.0,
-                        offset: Offset(0.0, 2.0),
+                        offset: const Offset(0.0, 2.0),
                       )
                     ],
                   ),
@@ -142,13 +162,14 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                   'preferences',
                   style: Theming.of(context).text.headline.copyWith(
                     fontSize: 24,
-                    color: const Color.fromARGB(0xFF, 0x00, 0xD1, 0xFF),
+                    color: PreferencesScreenTheme.of(context).titleColor,
                     shadows: [
-                      const BoxShadow(
-                        color: Color.fromARGB(0xAA, 0x00, 0xD1, 0xFF),
+                      BoxShadow(
+                        color:
+                            PreferencesScreenTheme.of(context).titleShadowColor,
                         spreadRadius: 2.0,
                         blurRadius: 16.0,
-                        offset: Offset(0.0, 2.0),
+                        offset: const Offset(0.0, 2.0),
                       )
                     ],
                   ),
@@ -158,13 +179,9 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 32),
                   child: Stack(
                     children: [
-                      const Align(
+                      Align(
                         alignment: Alignment.bottomCenter,
-                        child: SizedBox(
-                          width: 125,
-                          height: 40,
-                          child: MaleFemaleConnectionImageApart(),
-                        ),
+                        child: widget.image,
                       ),
                       Positioned(
                         right: 12,
@@ -747,52 +764,54 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                             );
                           },
                         ),
-                        Consumer(builder: (context, ref, child) {
-                          final hairColors = ref.watch(
-                              _prefsProvider.select((p) => p.state.hairColor));
-                          return ExpansionSection(
-                            label: 'Hair Color',
-                            highlighted: hairColors.isNotEmpty,
-                            children: [
-                              _SetTile(
-                                title: const Text('Black'),
-                                value: HairColor.black,
-                                set: hairColors,
-                                onChanged: _setHairColor,
-                              ),
-                              _SetTile(
-                                title: const Text('Blonde'),
-                                value: HairColor.blonde,
-                                set: hairColors,
-                                onChanged: _setHairColor,
-                              ),
-                              _SetTile(
-                                title: const Text('Brunette'),
-                                value: HairColor.brunette,
-                                set: hairColors,
-                                onChanged: _setHairColor,
-                              ),
-                              _SetTile(
-                                title: const Text('Brown'),
-                                value: HairColor.brown,
-                                set: hairColors,
-                                onChanged: _setHairColor,
-                              ),
-                              _SetTile(
-                                title: const Text('Red'),
-                                value: HairColor.red,
-                                set: hairColors,
-                                onChanged: _setHairColor,
-                              ),
-                              _SetTile(
-                                title: const Text('Gray'),
-                                value: HairColor.gray,
-                                set: hairColors,
-                                onChanged: _setHairColor,
-                              ),
-                            ],
-                          );
-                        }),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final hairColors = ref.watch(_prefsProvider
+                                .select((p) => p.state.hairColor));
+                            return ExpansionSection(
+                              label: 'Hair Color',
+                              highlighted: hairColors.isNotEmpty,
+                              children: [
+                                _SetTile(
+                                  title: const Text('Black'),
+                                  value: HairColor.black,
+                                  set: hairColors,
+                                  onChanged: _setHairColor,
+                                ),
+                                _SetTile(
+                                  title: const Text('Blonde'),
+                                  value: HairColor.blonde,
+                                  set: hairColors,
+                                  onChanged: _setHairColor,
+                                ),
+                                _SetTile(
+                                  title: const Text('Brunette'),
+                                  value: HairColor.brunette,
+                                  set: hairColors,
+                                  onChanged: _setHairColor,
+                                ),
+                                _SetTile(
+                                  title: const Text('Brown'),
+                                  value: HairColor.brown,
+                                  set: hairColors,
+                                  onChanged: _setHairColor,
+                                ),
+                                _SetTile(
+                                  title: const Text('Red'),
+                                  value: HairColor.red,
+                                  set: hairColors,
+                                  onChanged: _setHairColor,
+                                ),
+                                _SetTile(
+                                  title: const Text('Gray'),
+                                  value: HairColor.gray,
+                                  set: hairColors,
+                                  onChanged: _setHairColor,
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -808,18 +827,19 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                     Navigator.of(context).pop();
                   }
                 },
-                child: const Icon(
-                  Icons.arrow_upward,
-                  size: 48,
-                  color: Color.fromARGB(0xFF, 0x89, 0xDE, 0xFF),
+                child: Image.asset(
+                  'assets/images/preferences_back.png',
+                  width: 40,
+                  height: 40,
+                  color: PreferencesScreenTheme.of(context).backArrowColor,
                 ),
               ),
             ),
             Positioned(
               top: MediaQuery.of(context).padding.top + 16,
               right: MediaQuery.of(context).padding.right + 16,
-              child: const ProfileButton(
-                color: Color.fromARGB(0xFF, 0x89, 0xDE, 0xFF),
+              child: ProfileButton(
+                color: PreferencesScreenTheme.of(context).profileButtonColor,
               ),
             ),
           ],
@@ -879,7 +899,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
     );
 
     try {
-      await usersApi.updateFriendsPreferences(uid, preferences);
+      await widget.updatePreferences(usersApi, uid, preferences);
       popDialog();
     } catch (e, s) {
       popDialog();
@@ -1180,4 +1200,35 @@ class _RangeSlider extends StatelessWidget {
       ),
     );
   }
+}
+
+class PreferencesScreenTheme extends InheritedWidget {
+  final PreferencesScreenThemeData themeData;
+
+  const PreferencesScreenTheme({
+    Key? key,
+    required Widget child,
+    required this.themeData,
+  }) : super(key: key, child: child);
+
+  static PreferencesScreenThemeData of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<PreferencesScreenTheme>()!
+        .themeData;
+  }
+
+  @override
+  bool updateShouldNotify(PreferencesScreenTheme oldWidget) =>
+      oldWidget.themeData != themeData;
+}
+
+@freezed
+class PreferencesScreenThemeData with _$PreferencesScreenThemeData {
+  const factory PreferencesScreenThemeData({
+    required Color backgroundGradientBottom,
+    required Color titleColor,
+    required Color titleShadowColor,
+    required Color backArrowColor,
+    required Color profileButtonColor,
+  }) = _PreferencesScreenThemeData;
 }

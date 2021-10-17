@@ -1,25 +1,29 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
-import 'package:openup/video_call_screen.dart';
 import 'package:openup/widgets/notification_banner.dart';
 import 'package:openup/widgets/theming.dart';
 
 import 'widgets/home_button.dart';
+
+part 'lobby_screen.freezed.dart';
 
 /// Page on which you wait to be matched with another user.
 class LobbyScreen extends StatefulWidget {
   final String lobbyHost;
   final String signalingHost;
   final bool video;
+  final void Function({required bool initiator}) onStartCall;
 
   const LobbyScreen({
     Key? key,
     required this.lobbyHost,
     required this.signalingHost,
     required this.video,
+    required this.onStartCall,
   }) : super(key: key);
 
   @override
@@ -50,8 +54,8 @@ class _LobbyScreenState extends State<LobbyScreen>
       host: widget.lobbyHost,
       uid: FirebaseAuth.instance.currentUser!.uid,
       video: widget.video,
-      onMakeCall: () => _startCall(initiator: true),
-      onReceiveCall: () => _startCall(initiator: false),
+      onMakeCall: () => widget.onStartCall(initiator: true),
+      onReceiveCall: () => widget.onStartCall(initiator: false),
       onConnectionError: () {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -72,17 +76,9 @@ class _LobbyScreenState extends State<LobbyScreen>
 
   @override
   Widget build(BuildContext context) {
-    const colors = [
-      Color.fromARGB(0xFF, 0xB3, 0xE3, 0xFB),
-      Color.fromARGB(0xFF, 0x6C, 0xBA, 0xDC),
-      Color.fromARGB(0xFF, 0x0B, 0x92, 0xD2),
-      Color.fromARGB(0xFF, 0x18, 0x76, 0xA4),
-      Color.fromARGB(0xFF, 0x37, 0x98, 0xD8),
-      Color.fromARGB(0xFF, 0x0B, 0x92, 0xD2),
-    ];
-
     return LayoutBuilder(
       builder: (context, constraints) {
+        final colors = LobbyScreenTheme.of(context).backgroundColors;
         return SizedBox(
           width: constraints.maxWidth,
           height: constraints.maxHeight,
@@ -149,23 +145,14 @@ class _LobbyScreenState extends State<LobbyScreen>
               Positioned(
                 right: MediaQuery.of(context).padding.right + 16,
                 bottom: MediaQuery.of(context).padding.bottom + 16,
-                child: const HomeButton(),
+                child: HomeButton(
+                  color: LobbyScreenTheme.of(context).homeButtonColor,
+                ),
               ),
             ],
           ),
         );
       },
-    );
-  }
-
-  void _startCall({required bool initiator}) {
-    final route = widget.video ? 'friends-video-call' : 'friends-voice-call';
-    Navigator.of(context).pushNamed(
-      route,
-      arguments: CallPageArguments(
-        uid: FirebaseAuth.instance.currentUser!.uid,
-        initiator: initiator,
-      ),
     );
   }
 }
@@ -175,4 +162,32 @@ class LobbyScreenArguments {
   LobbyScreenArguments({
     required this.video,
   });
+}
+
+class LobbyScreenTheme extends InheritedWidget {
+  final LobbyScreenThemeData themeData;
+
+  const LobbyScreenTheme({
+    Key? key,
+    required Widget child,
+    required this.themeData,
+  }) : super(key: key, child: child);
+
+  static LobbyScreenThemeData of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<LobbyScreenTheme>()!
+        .themeData;
+  }
+
+  @override
+  bool updateShouldNotify(LobbyScreenTheme oldWidget) =>
+      oldWidget.themeData != themeData;
+}
+
+@freezed
+class LobbyScreenThemeData with _$LobbyScreenThemeData {
+  const factory LobbyScreenThemeData({
+    required List<Color> backgroundColors,
+    Color? homeButtonColor,
+  }) = _LobbyScreenThemeData;
 }
