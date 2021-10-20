@@ -694,7 +694,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                           builder: (context, ref, child) {
                             final heightRange = ref.watch(
                                 _prefsProvider.select((p) => p.state.height));
-                            const defaultRange = Range(min: 20, max: 100);
+                            const defaultRange = Range(min: 50, max: 250);
                             return ExpansionSection(
                               label: 'Height',
                               highlighted: heightRange != defaultRange,

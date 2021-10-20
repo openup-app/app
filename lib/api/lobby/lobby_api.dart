@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/rendering.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 part 'lobby_api.freezed.dart';
@@ -11,8 +12,8 @@ part 'lobby_api.g.dart';
 /// Handle callbacks to participate in a call, dispose to leave the lobby.
 class LobbyApi {
   late final Socket _socket;
-  final VoidCallback onMakeCall;
-  final VoidCallback onReceiveCall;
+  final void Function(List<PublicProfile> profiles) onMakeCall;
+  final void Function(List<PublicProfile> profile) onReceiveCall;
   final VoidCallback onConnectionError;
 
   LobbyApi({
@@ -58,17 +59,21 @@ class LobbyApi {
     final json = jsonDecode(message);
     final lobbyEvent = _LobbyEvent.fromJson(json);
     lobbyEvent.map(
-      makeCall: (_) => onMakeCall(),
-      answerCall: (_) => onReceiveCall(),
+      makeCall: (event) => onMakeCall(event.profiles),
+      answerCall: (event) => onReceiveCall(event.profiles),
     );
   }
 }
 
 @freezed
 class _LobbyEvent with _$_LobbyEvent {
-  const factory _LobbyEvent.makeCall() = _MakeCall;
+  const factory _LobbyEvent.makeCall({
+    required List<PublicProfile> profiles,
+  }) = _MakeCall;
 
-  const factory _LobbyEvent.answerCall() = _AnswerCall;
+  const factory _LobbyEvent.answerCall({
+    required List<PublicProfile> profiles,
+  }) = _AnswerCall;
 
   factory _LobbyEvent.fromJson(Map<String, dynamic> json) =>
       _$_LobbyEventFromJson(json);

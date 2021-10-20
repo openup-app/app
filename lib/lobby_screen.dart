@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/widgets/notification_banner.dart';
@@ -16,7 +17,10 @@ class LobbyScreen extends StatefulWidget {
   final String lobbyHost;
   final String signalingHost;
   final bool video;
-  final void Function({required bool initiator}) onStartCall;
+  final void Function({
+    required bool initiator,
+    required List<PublicProfile> profiles,
+  }) onStartCall;
 
   const LobbyScreen({
     Key? key,
@@ -54,8 +58,14 @@ class _LobbyScreenState extends State<LobbyScreen>
       host: widget.lobbyHost,
       uid: FirebaseAuth.instance.currentUser!.uid,
       video: widget.video,
-      onMakeCall: () => widget.onStartCall(initiator: true),
-      onReceiveCall: () => widget.onStartCall(initiator: false),
+      onMakeCall: (profiles) => widget.onStartCall(
+        initiator: true,
+        profiles: profiles,
+      ),
+      onReceiveCall: (profiles) => widget.onStartCall(
+        initiator: false,
+        profiles: profiles,
+      ),
       onConnectionError: () {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

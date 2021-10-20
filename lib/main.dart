@@ -12,6 +12,7 @@ import 'package:openup/preferences_screen.dart';
 import 'package:openup/private_profile_screen.dart';
 import 'package:openup/public_profile_edit_screen.dart';
 import 'package:openup/public_profile_screen.dart';
+import 'package:openup/rekindle_screen.dart';
 import 'package:openup/video_call_screen.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/voice_call_screen.dart';
@@ -255,7 +256,10 @@ class _OpenupAppState extends State<OpenupApp> {
                           lobbyHost: _tempLobbyHost,
                           signalingHost: _tempSignalingHost,
                           video: args.video,
-                          onStartCall: ({required bool initiator}) {
+                          onStartCall: ({
+                            required bool initiator,
+                            required List<PublicProfile> profiles,
+                          }) {
                             final route = args.video
                                 ? 'friends-video-call'
                                 : 'friends-voice-call';
@@ -264,6 +268,7 @@ class _OpenupAppState extends State<OpenupApp> {
                               arguments: CallPageArguments(
                                 uid: FirebaseAuth.instance.currentUser!.uid,
                                 initiator: initiator,
+                                profiles: profiles,
                               ),
                             );
                           },
@@ -281,6 +286,7 @@ class _OpenupAppState extends State<OpenupApp> {
                         uid: args.uid,
                         signalingHost: _tempSignalingHost,
                         initiator: args.initiator,
+                        profiles: args.profiles,
                       );
                     },
                   );
@@ -294,6 +300,7 @@ class _OpenupAppState extends State<OpenupApp> {
                         uid: args.uid,
                         signalingHost: _tempSignalingHost,
                         initiator: args.initiator,
+                        profiles: args.profiles,
                       );
                     },
                   );
@@ -453,7 +460,10 @@ class _OpenupAppState extends State<OpenupApp> {
                           lobbyHost: _tempLobbyHost,
                           signalingHost: _tempSignalingHost,
                           video: args.video,
-                          onStartCall: ({required bool initiator}) {
+                          onStartCall: ({
+                            required bool initiator,
+                            required List<PublicProfile> profiles,
+                          }) {
                             final route = args.video
                                 ? 'dating-video-call'
                                 : 'dating-voice-call';
@@ -462,10 +472,22 @@ class _OpenupAppState extends State<OpenupApp> {
                               arguments: CallPageArguments(
                                 uid: FirebaseAuth.instance.currentUser!.uid,
                                 initiator: initiator,
+                                profiles: profiles,
                               ),
                             );
                           },
                         ),
+                      );
+                    },
+                  );
+                case 'rekindle':
+                  final args = settings.arguments as RekindleScreenArguments;
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (context) {
+                      return RekindleScreen(
+                        profiles: args.profiles,
+                        index: args.index,
                       );
                     },
                   );
@@ -512,6 +534,7 @@ class _OpenupAppState extends State<OpenupApp> {
       pageBuilder: (_, __, ___) {
         return Scaffold(
           body: Builder(builder: builder),
+          endDrawerEnableOpenDragGesture: false,
           endDrawer: BackdropFilter(
             filter: ImageFilter.blur(
               sigmaX: 6.0,

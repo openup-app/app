@@ -1,8 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
+import 'package:openup/api/users/profile.dart';
+import 'package:openup/rekindle_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/widgets/slide_control.dart';
@@ -13,12 +17,14 @@ class VoiceCallScreen extends StatefulWidget {
   final String uid;
   final String signalingHost;
   final bool initiator;
+  final List<PublicProfile> profiles;
 
   const VoiceCallScreen({
     Key? key,
     required this.uid,
     required this.signalingHost,
     required this.initiator,
+    required this.profiles,
   }) : super(key: key);
 
   @override
@@ -57,7 +63,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
         setState(() => _hasSentTimeRequest = false);
       },
       onAddTime: _addTime,
-      onDisconnected: Navigator.of(context).pop,
+      onDisconnected: _navigateToRekindle,
       onToggleMute: (muted) => setState(() => _muted = muted),
       onToggleSpeakerphone: (enabled) =>
           setState(() => _speakerphone = enabled),
@@ -83,136 +89,164 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color.fromARGB(0xFF, 0x02, 0x4A, 0x5A),
-            Color.fromARGB(0xFF, 0x9C, 0xED, 0xFF),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 40),
-          SafeArea(
-            top: true,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(48),
+    String? photo;
+    try {
+      photo = widget.profiles.first.gallery.first;
+    } on StateError {
+      // Nothing to do
+    }
+    return Stack(
+      alignment: Alignment.center,
+      fit: StackFit.expand,
+      children: [
+        ImageFiltered(
+          imageFilter: ImageFilter.blur(
+            sigmaX: 8.0,
+            sigmaY: 8.0,
+          ),
+          child: photo != null
+              ? Image.network(
+                  photo,
+                  fit: BoxFit.cover,
+                )
+              : Image.asset(
+                  'assets/images/profile.png',
+                  fit: BoxFit.fitHeight,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theming.of(context).shadow,
-                    offset: const Offset(0.0, 4.0),
-                    blurRadius: 2,
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(0xAA, 0x02, 0x4A, 0x5A),
+                Color.fromARGB(0xAA, 0x9C, 0xED, 0xFF),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              SafeArea(
+                top: true,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(48),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theming.of(context).shadow,
+                        offset: const Offset(0.0, 4.0),
+                        blurRadius: 2,
+                      ),
+                    ],
+                    color: const Color.fromARGB(0xAA, 0x01, 0x55, 0x67),
                   ),
-                ],
-                color: const Color.fromARGB(0xFF, 0x01, 0x55, 0x67),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 20),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                      const SizedBox(height: 20),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _ButtonWithText(
-                            icon: const Icon(Icons.alarm_add),
-                            label: 'add time',
-                            onPressed:
-                                _hasSentTimeRequest ? null : _sendTimeRequest,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _ButtonWithText(
+                                icon: const Icon(Icons.alarm_add),
+                                label: 'add time',
+                                onPressed: _hasSentTimeRequest
+                                    ? null
+                                    : _sendTimeRequest,
+                              ),
+                              const SizedBox(width: 30),
+                            ],
                           ),
-                          const SizedBox(width: 30),
+                          Text(
+                            widget.profiles.first.name,
+                            style: Theming.of(context).text.headline,
+                          ),
+                          TimeRemaining(
+                            endTime: _endTime,
+                            onTimeUp: _navigateToRekindle,
+                            builder: (context, remaining) {
+                              return Text(
+                                remaining,
+                                style: Theming.of(context).text.body,
+                              );
+                            },
+                          ),
                         ],
                       ),
-                      Text(
-                        'Jose',
-                        style: Theming.of(context).text.headline,
+                      const SizedBox(height: 40),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _ButtonWithText(
+                            icon: const Icon(Icons.person_add),
+                            label: 'Connect',
+                            onPressed: () {},
+                          ),
+                          _ButtonWithText(
+                            icon: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: Image.asset('assets/images/report.png'),
+                            ),
+                            label: 'Report',
+                            onPressed: () {},
+                          ),
+                        ],
                       ),
-                      TimeRemaining(
-                        endTime: _endTime,
-                        onTimeUp: Navigator.of(context).pop,
-                        builder: (context, remaining) {
-                          return Text(
-                            remaining,
-                            style: Theming.of(context).text.body,
-                          );
-                        },
+                      const SizedBox(height: 40),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _ButtonWithText(
+                            icon: _muted
+                                ? const Icon(Icons.mic_off)
+                                : const Icon(Icons.mic),
+                            label: 'Mute',
+                            onPressed: _phone.toggleMute,
+                          ),
+                          _ButtonWithText(
+                            icon: Icon(
+                              Icons.volume_up,
+                              color: _speakerphone
+                                  ? const Color.fromARGB(0xFF, 0x00, 0xFF, 0x19)
+                                  : null,
+                            ),
+                            label: 'Speaker',
+                            onPressed: _phone.toggleSpeakerphone,
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 40),
                     ],
                   ),
-                  const SizedBox(height: 40),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _ButtonWithText(
-                        icon: const Icon(Icons.person_add),
-                        label: 'Connect',
-                        onPressed: () {},
-                      ),
-                      _ButtonWithText(
-                        icon: Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Image.asset('assets/images/report.png'),
-                        ),
-                        label: 'Report',
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _ButtonWithText(
-                        icon: _muted
-                            ? const Icon(Icons.mic_off)
-                            : const Icon(Icons.mic),
-                        label: 'Mute',
-                        onPressed: _phone.toggleMute,
-                      ),
-                      _ButtonWithText(
-                        icon: Icon(
-                          Icons.volume_up,
-                          color: _speakerphone
-                              ? const Color.fromARGB(0xFF, 0x00, 0xFF, 0x19)
-                              : null,
-                        ),
-                        label: 'Speaker',
-                        onPressed: _phone.toggleSpeakerphone,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
-                ],
+                ),
               ),
-            ),
+              const Spacer(),
+              SlideControl(
+                thumbContents: Icon(
+                  Icons.call_end,
+                  color: Theming.of(context).friendBlue4,
+                  size: 40,
+                ),
+                trackContents: const Text('slide to end call'),
+                trackColor: const Color.fromARGB(0xFF, 0x01, 0x55, 0x67),
+                onSlideComplete: () {
+                  _signalingChannel.send(const HangUp());
+                  _navigateToRekindle();
+                },
+              ),
+              const SizedBox(height: 50),
+            ],
           ),
-          const Spacer(),
-          SlideControl(
-            thumbContents: Icon(
-              Icons.call_end,
-              color: Theming.of(context).friendBlue4,
-              size: 40,
-            ),
-            trackContents: const Text('slide to end call'),
-            trackColor: const Color.fromARGB(0xFF, 0x01, 0x55, 0x67),
-            onSlideComplete: () {
-              _signalingChannel.send(const HangUp());
-              Navigator.of(context).pop();
-            },
-          ),
-          const SizedBox(height: 50),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -228,6 +262,16 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
       _endTime = _endTime.add(duration);
       _hasSentTimeRequest = false;
     });
+  }
+
+  void _navigateToRekindle() {
+    Navigator.of(context).pushReplacementNamed(
+      'rekindle',
+      arguments: RekindleScreenArguments(
+        profiles: widget.profiles,
+        index: 0,
+      ),
+    );
   }
 }
 
