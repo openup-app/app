@@ -17,6 +17,7 @@ class LobbyScreen extends StatefulWidget {
   final String lobbyHost;
   final String signalingHost;
   final bool video;
+  final Purpose purpose;
   final void Function({
     required bool initiator,
     required List<PublicProfile> profiles,
@@ -27,6 +28,7 @@ class LobbyScreen extends StatefulWidget {
     required this.lobbyHost,
     required this.signalingHost,
     required this.video,
+    required this.purpose,
     required this.onStartCall,
   }) : super(key: key);
 
@@ -58,6 +60,7 @@ class _LobbyScreenState extends State<LobbyScreen>
       host: widget.lobbyHost,
       uid: FirebaseAuth.instance.currentUser!.uid,
       video: widget.video,
+      purpose: widget.purpose,
       onMakeCall: (profiles) => widget.onStartCall(
         initiator: true,
         profiles: profiles,

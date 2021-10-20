@@ -20,6 +20,7 @@ class LobbyApi {
     required String host,
     required String uid,
     required bool video,
+    required Purpose purpose,
     required this.onMakeCall,
     required this.onReceiveCall,
     required this.onConnectionError,
@@ -34,7 +35,7 @@ class LobbyApi {
           .disableReconnection()
           .setQuery({
             'uid': uid,
-            'lobby_type': 'friends',
+            'lobby_type': purpose == Purpose.friends ? 'friends' : 'dating',
             'video': video,
           })
           .build(),
@@ -77,4 +78,9 @@ class _LobbyEvent with _$_LobbyEvent {
 
   factory _LobbyEvent.fromJson(Map<String, dynamic> json) =>
       _$_LobbyEventFromJson(json);
+}
+
+enum Purpose {
+  friends,
+  dating,
 }

@@ -28,7 +28,10 @@ class JustAudioAudioPlayer {
         case ProcessingState.buffering:
         case ProcessingState.loading:
         case ProcessingState.idle:
-          _playbackInfo = _playbackInfo.copyWith(state: PlaybackState.loading);
+          _playbackInfo = _playbackInfo.copyWith(
+              state: state.processingState == ProcessingState.idle
+                  ? PlaybackState.disabled
+                  : PlaybackState.loading);
           break;
         case ProcessingState.ready:
         case ProcessingState.completed:
@@ -90,4 +93,4 @@ class PlaybackInfo with _$PlaybackInfo {
   }) = _PlaybackInfo;
 }
 
-enum PlaybackState { loading, playing, paused, idle }
+enum PlaybackState { loading, playing, paused, idle, disabled }

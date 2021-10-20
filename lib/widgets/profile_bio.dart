@@ -65,11 +65,13 @@ class ProfileBioState extends State<ProfileBio> {
 
   @override
   Widget build(BuildContext context) {
-    final playButtonState = _playbackInfo.state == PlaybackState.loading
-        ? PlayButtonState.loading
-        : (_playbackInfo.state == PlaybackState.playing
-            ? PlayButtonState.playing
-            : PlayButtonState.paused);
+    final playButtonState = _playbackInfo.state == PlaybackState.disabled
+        ? PlayButtonState.none
+        : (_playbackInfo.state == PlaybackState.loading
+            ? PlayButtonState.loading
+            : (_playbackInfo.state == PlaybackState.playing
+                ? PlayButtonState.playing
+                : PlayButtonState.paused));
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: _ProfileBioDisplay(
@@ -234,7 +236,9 @@ class _ProfileBioDisplay extends ConsumerWidget {
           IgnorePointer(
             ignoring: recording,
             child: Button(
-              onPressed: (recording || playButton == PlayButtonState.loading)
+              onPressed: (recording ||
+                      playButton == PlayButtonState.loading ||
+                      playButton == PlayButtonState.none)
                   ? null
                   : (playButton == PlayButtonState.playing ? onPause : onPlay),
               child: SizedBox(
@@ -283,7 +287,7 @@ class _ProfileBioDisplay extends ConsumerWidget {
   }
 }
 
-enum PlayButtonState { playing, paused, loading }
+enum PlayButtonState { playing, paused, loading, none }
 
 class _NameDescriptionDialogContents extends StatefulWidget {
   final String initialName;

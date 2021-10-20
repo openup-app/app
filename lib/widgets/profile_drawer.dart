@@ -142,44 +142,43 @@ class ProfileDrawer extends ConsumerWidget {
             ],
           ),
           const Spacer(flex: 1),
-          if (!kReleaseMode)
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: () async {
-                          final container = ProviderScope.containerOf(context);
-                          final usersApi = container.read(usersApiProvider);
-                          final uid = FirebaseAuth.instance.currentUser?.uid;
-                          if (uid != null) {
-                            await usersApi.deleteUser(uid);
-                            await FirebaseAuth.instance.signOut();
-                            Navigator.of(context)
-                                .pushReplacementNamed('initial-loading');
-                          }
-                        },
-                        child: const Text('Delete account'),
-                      ),
-                      TextButton(
-                        onPressed: () async {
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: () async {
+                        final container = ProviderScope.containerOf(context);
+                        final usersApi = container.read(usersApiProvider);
+                        final uid = FirebaseAuth.instance.currentUser?.uid;
+                        if (uid != null) {
+                          await usersApi.deleteUser(uid);
                           await FirebaseAuth.instance.signOut();
                           Navigator.of(context)
                               .pushReplacementNamed('initial-loading');
-                        },
-                        child: const Text('Sign-out'),
-                      ),
-                    ],
-                  ),
-                  Text('${FirebaseAuth.instance.currentUser?.uid}'),
-                  Text('${FirebaseAuth.instance.currentUser?.phoneNumber}'),
-                ],
-              ),
+                        }
+                      },
+                      child: const Text('Delete account'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.of(context)
+                            .pushReplacementNamed('initial-loading');
+                      },
+                      child: const Text('Sign-out'),
+                    ),
+                  ],
+                ),
+                Text('${FirebaseAuth.instance.currentUser?.uid}'),
+                Text('${FirebaseAuth.instance.currentUser?.phoneNumber}'),
+              ],
             ),
+          ),
           SizedBox(
             height: MediaQuery.of(context).padding.bottom,
           ),

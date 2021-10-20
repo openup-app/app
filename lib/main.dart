@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
@@ -256,6 +257,7 @@ class _OpenupAppState extends State<OpenupApp> {
                           lobbyHost: _tempLobbyHost,
                           signalingHost: _tempSignalingHost,
                           video: args.video,
+                          purpose: Purpose.friends,
                           onStartCall: ({
                             required bool initiator,
                             required List<PublicProfile> profiles,
@@ -460,13 +462,15 @@ class _OpenupAppState extends State<OpenupApp> {
                           lobbyHost: _tempLobbyHost,
                           signalingHost: _tempSignalingHost,
                           video: args.video,
+                          purpose: Purpose.dating,
                           onStartCall: ({
                             required bool initiator,
                             required List<PublicProfile> profiles,
                           }) {
+                            // TOOD: Proper routes
                             final route = args.video
-                                ? 'dating-video-call'
-                                : 'dating-voice-call';
+                                ? 'friends-video-call'
+                                : 'friends-voice-call';
                             Navigator.of(context).pushNamed(
                               route,
                               arguments: CallPageArguments(

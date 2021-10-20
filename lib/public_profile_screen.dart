@@ -28,8 +28,17 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final usersApi = ref.watch(usersApiProvider);
+    final gallery = usersApi.publicProfile?.gallery;
     return Stack(
       children: [
+        if (gallery == null || gallery.isEmpty)
+          Center(
+            child: Text('Add your first photo',
+                style: Theming.of(context)
+                    .text
+                    .subheading
+                    .copyWith(color: Colors.black)),
+          ),
         Positioned.fill(
           child: PageView.builder(
             controller: _pageController,
