@@ -28,9 +28,9 @@ import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/theming.dart';
 
-const _tempLobbyHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8080';
-const _tempSignalingHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8081';
-const _tempUsersHost = 'ec2-54-81-84-156.compute-1.amazonaws.com:8082';
+const _tempLobbyHost = 'ec2-54-156-60-224.compute-1.amazonaws.com:8080';
+const _tempSignalingHost = 'ec2-54-156-60-224.compute-1.amazonaws.com:8081';
+const _tempUsersHost = 'ec2-54-156-60-224.compute-1.amazonaws.com:8082';
 
 void main() {
   runApp(
