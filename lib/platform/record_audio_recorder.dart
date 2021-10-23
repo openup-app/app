@@ -7,10 +7,14 @@ import 'package:record/record.dart';
 class RecordAudioRecorder {
   final _record = Record();
 
-  Future<void> start() async {
-    if (!await _record.isRecording()) {
-      return _record.start();
+  Future<bool> start() async {
+    if (await _record.hasPermission()) {
+      if (!await _record.isRecording()) {
+        _record.start();
+        return true;
+      }
     }
+    return false;
   }
 
   Future<Uint8List?> stop() async {

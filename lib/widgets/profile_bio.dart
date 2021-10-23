@@ -84,8 +84,9 @@ class ProfileBioState extends State<ProfileBio> {
         onPlay: () => _audio.play(),
         onPause: () => _audio.pause(),
         onRecord: () async {
-          setState(() => _recording = true);
-          await _recorder.start();
+          if (await _recorder.start()) {
+            setState(() => _recording = true);
+          }
         },
         onRecordComplete: () async {
           final output = await _recorder.stop();
