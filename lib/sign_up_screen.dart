@@ -216,7 +216,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _submit() async {
-    final phone = _phoneController.text;
+    final phoneText = _phoneController.text;
+
+    // American numbers are default audience
+    final phone = phoneText.startsWith('+') ? phoneText : '+1$phoneText';
+
     setState(() => _phoneErrorText = _validatePhone(phone));
 
     if (_phoneErrorText == null && _birthdayErrorText == null) {
