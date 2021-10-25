@@ -3,6 +3,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/rekindle_screen.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/api/signaling/phone.dart';
@@ -63,7 +64,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         setState(() => _hasSentTimeRequest = false);
       },
       onAddTime: _addTime,
-      onDisconnected: Navigator.of(context).pop,
+      onDisconnected: _navigateToRekindle,
       onToggleMute: (muted) => setState(() => _muted = muted),
     );
 
@@ -138,7 +139,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     const Icon(Icons.alarm_add),
                     TimeRemaining(
                       endTime: _endTime,
-                      onTimeUp: Navigator.of(context).pop,
+                      onTimeUp: _navigateToRekindle,
                       builder: (context, remaining) {
                         return Text(
                           remaining,
@@ -210,7 +211,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     _CallControlButton(
                       onPressed: () {
                         _signalingChannel.send(const HangUp());
-                        Navigator.of(context).pop();
+                        _navigateToRekindle();
                       },
                       scrimColor: const Color.fromARGB(0xFF, 0xFF, 0x00, 0x00),
                       gradientColor:
@@ -248,6 +249,16 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       _endTime = _endTime.add(duration);
       _hasSentTimeRequest = false;
     });
+  }
+
+  void _navigateToRekindle() {
+    Navigator.of(context).pushReplacementNamed(
+      'rekindle',
+      arguments: RekindleScreenArguments(
+        profiles: widget.profiles,
+        index: 0,
+      ),
+    );
   }
 }
 

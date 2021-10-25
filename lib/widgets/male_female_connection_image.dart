@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class MaleFemaleConnectionImage extends StatelessWidget {
-  const MaleFemaleConnectionImage({Key? key}) : super(key: key);
+  final Color? color;
+  const MaleFemaleConnectionImage({
+    Key? key,
+    this.color,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -12,10 +16,12 @@ class MaleFemaleConnectionImage extends StatelessWidget {
         Image.asset(
           'assets/images/connection_male.png',
           fit: BoxFit.fitHeight,
+          color: color,
         ),
         Image.asset(
           'assets/images/connection_female.png',
           fit: BoxFit.fitHeight,
+          color: color,
         ),
       ],
     );
