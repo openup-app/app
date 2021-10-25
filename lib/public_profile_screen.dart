@@ -5,6 +5,7 @@ import 'package:openup/util/users_api_util.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/profile_bio.dart';
+import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
 class PublicProfileScreen extends ConsumerStatefulWidget {
@@ -17,7 +18,16 @@ class PublicProfileScreen extends ConsumerStatefulWidget {
 
 class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   final _audioBioKey = GlobalKey<ProfileBioState>();
-  final _pageController = PageController(initialPage: 10000);
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    final usersApi = ref.read(usersApiProvider);
+    final gallery = usersApi.publicProfile?.gallery;
+    _pageController =
+        PageController(initialPage: (gallery?.length ?? 1) * 100000);
+  }
 
   @override
   void dispose() {
@@ -29,103 +39,107 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   Widget build(BuildContext context) {
     final usersApi = ref.watch(usersApiProvider);
     final gallery = usersApi.publicProfile?.gallery;
-    return Stack(
-      children: [
-        if (gallery == null || gallery.isEmpty)
-          Center(
-            child: Text('Add your first photo',
-                style: Theming.of(context)
-                    .text
-                    .subheading
-                    .copyWith(color: Colors.black)),
+    return Container(
+      color: Colors.black,
+      child: Stack(
+        children: [
+          if (gallery == null || gallery.isEmpty)
+            Center(
+              child: Text('Add your first photo',
+                  style: Theming.of(context).text.subheading),
+            ),
+          Positioned.fill(
+            child: PageView.builder(
+              controller: _pageController,
+              itemBuilder: (context, index) {
+                final gallery = usersApi.publicProfile?.gallery ?? [];
+                if (gallery.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                final i = index % gallery.length;
+                return Image.network(
+                  gallery[i],
+                  fit: BoxFit.cover,
+                  frameBuilder: fadeInFrameBuilder,
+                  loadingBuilder: circularProgressLoadingBuilder,
+                  errorBuilder: iconErrorBuilder,
+                );
+              },
+            ),
           ),
-        Positioned.fill(
-          child: PageView.builder(
-            controller: _pageController,
-            itemBuilder: (context, index) {
-              final gallery = usersApi.publicProfile?.gallery ?? [];
-              if (gallery.isEmpty) {
-                return const SizedBox.shrink();
-              }
-              final i = index % gallery.length;
-              return Image.network(
-                gallery[i],
-                fit: BoxFit.cover,
-              );
-            },
-          ),
-        ),
-        Positioned(
-          right: MediaQuery.of(context).padding.right + 16,
-          top: MediaQuery.of(context).padding.top + 16,
-          child: Button(
-            onPressed: () {
-              final state = _audioBioKey.currentState;
-              state?.stopAll();
-              Navigator.of(context).pushNamed('public-profile-edit');
-            },
-            child: Container(
-              width: 128,
-              height: 128,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(Radius.circular(40)),
-                color: Colors.black.withOpacity(0.3),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.add,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Edit Photos',
-                    style: Theming.of(context).text.body.copyWith(fontSize: 14),
-                  ),
-                ],
+          Positioned(
+            right: MediaQuery.of(context).padding.right + 16,
+            top: MediaQuery.of(context).padding.top + 16,
+            child: Button(
+              onPressed: () {
+                final state = _audioBioKey.currentState;
+                state?.stopAll();
+                Navigator.of(context).pushNamed('public-profile-edit');
+              },
+              child: Container(
+                width: 128,
+                height: 128,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.all(Radius.circular(40)),
+                  color: Colors.black.withOpacity(0.3),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.add,
+                      size: 48,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Edit Photos',
+                      style:
+                          Theming.of(context).text.body.copyWith(fontSize: 14),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        Positioned(
-          left: 16,
-          right: 16,
-          bottom: 80,
-          height: 88,
-          child: Consumer(
-            builder: (context, ref, child) {
-              final audio = ref
-                  .watch(profileProvider.select((value) => value.state?.audio));
-              return ProfileBio(
-                key: _audioBioKey,
-                url: audio,
-                onRecorded: (audio) =>
-                    uploadAudio(context: context, audio: audio),
-                onNameDescriptionUpdated: (name, description) {
-                  updateNameDescription(
-                    context: context,
-                    name: name,
-                    description: description,
-                  );
-                },
-              );
-            },
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 80,
+            height: 88,
+            child: Consumer(
+              builder: (context, ref, child) {
+                final audio = ref.watch(
+                    profileProvider.select((value) => value.state?.audio));
+                return ProfileBio(
+                  key: _audioBioKey,
+                  url: audio,
+                  onRecorded: (audio) =>
+                      uploadAudio(context: context, audio: audio),
+                  onNameDescriptionUpdated: (name, description) {
+                    updateNameDescription(
+                      context: context,
+                      name: name,
+                      description: description,
+                    );
+                  },
+                );
+              },
+            ),
           ),
-        ),
-        Positioned(
-          left: MediaQuery.of(context).padding.left + 16,
-          bottom: MediaQuery.of(context).padding.bottom + 16,
-          child: const BackButton(),
-        ),
-        Positioned(
-          right: MediaQuery.of(context).padding.right + 16,
-          bottom: MediaQuery.of(context).padding.bottom + 16,
-          child: const HomeButton(
-            color: Colors.white,
+          Positioned(
+            left: MediaQuery.of(context).padding.left + 16,
+            bottom: MediaQuery.of(context).padding.bottom + 16,
+            child: const BackButton(),
           ),
-        ),
-      ],
+          Positioned(
+            right: MediaQuery.of(context).padding.right + 16,
+            bottom: MediaQuery.of(context).padding.bottom + 16,
+            child: const HomeButton(
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

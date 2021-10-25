@@ -45,11 +45,18 @@ class _HomeScreenState extends State<HomeScreen> {
       throw 'No user is logged in';
     }
 
-    _cacheData(api, uid).then((_) => _updateLocation(api, uid)).then((_) {
-      if (mounted) {
-        popDialog?.call();
-      }
-    });
+    _cacheData(api, uid)
+        .onError((error, stackTrace) {
+          Navigator.of(context).pushReplacementNamed('error');
+        })
+        .then((_) => _updateLocation(api, uid))
+        .then(
+          (_) {
+            if (mounted) {
+              popDialog?.call();
+            }
+          },
+        );
   }
 
   Future<void> _cacheData(UsersApi api, String uid) {

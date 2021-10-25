@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ProfileDrawer extends ConsumerWidget {
@@ -16,6 +17,7 @@ class ProfileDrawer extends ConsumerWidget {
     return SizedBox(
       width: 300,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
             height: MediaQuery.of(context).padding.top,
@@ -61,12 +63,17 @@ class ProfileDrawer extends ConsumerWidget {
                       return Image.asset(
                         'assets/images/profile.png',
                         color: iconColor,
-                        fit: BoxFit.fitHeight,
+                        fit: BoxFit.contain,
+                        frameBuilder: fadeInFrameBuilder,
+                        errorBuilder: iconErrorBuilder,
                       );
                     }
                     return Image.network(
                       photo,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
+                      frameBuilder: fadeInFrameBuilder,
+                      loadingBuilder: circularProgressLoadingBuilder,
+                      errorBuilder: iconErrorBuilder,
                     );
                   },
                 ),

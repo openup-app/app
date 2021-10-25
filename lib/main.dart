@@ -8,6 +8,7 @@ import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/preferences_screen.dart';
 import 'package:openup/private_profile_screen.dart';
@@ -87,6 +88,12 @@ class _OpenupAppState extends State<OpenupApp> {
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
                     builder: (_) => const InitialLoadingScreen(),
+                  );
+                case 'error':
+                  return _buildPageRoute(
+                    settings: settings,
+                    transitionsBuilder: fadePageTransition,
+                    builder: (_) => const ErrorScreen(),
                   );
                 case 'sign-up':
                   return _buildPageRoute(

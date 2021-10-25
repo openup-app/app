@@ -15,7 +15,7 @@ Future<List<String>?> uploadPhoto({
   try {
     final profile = await _updateData(
       context: context,
-      label: 'Updating photo',
+      label: 'Uploading photo',
       request: (usersApi, uid) {
         return usersApi.updateGalleryPhoto(uid, photo, index);
       },
@@ -63,7 +63,7 @@ Future<String?> uploadAudio({
   try {
     final profile = await _updateData(
       context: context,
-      label: 'Updating audio',
+      label: 'Uploading audio',
       request: (usersApi, uid) {
         return usersApi.updateAudioBio(uid, audio);
       },

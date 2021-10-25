@@ -10,6 +10,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/notification_banner.dart';
 import 'package:openup/widgets/profile_bio.dart';
+import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
 class PublicProfileEditScreen extends StatefulWidget {
@@ -112,6 +113,12 @@ class _PublicProfileEditScreenState extends State<PublicProfileEditScreen> {
                                                       child: Image.network(
                                                         gallery[i * 2 + j],
                                                         fit: BoxFit.cover,
+                                                        frameBuilder:
+                                                            fadeInFrameBuilder,
+                                                        loadingBuilder:
+                                                            circularProgressLoadingBuilder,
+                                                        errorBuilder:
+                                                            iconErrorBuilder,
                                                         opacity:
                                                             const AlwaysStoppedAnimation(
                                                                 0.75),

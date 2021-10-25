@@ -358,6 +358,7 @@ class _NameDescriptionStateDialogContents
             children: [
               TextFormField(
                 controller: _nameController,
+                textCapitalization: TextCapitalization.sentences,
                 validator: _validateName,
                 decoration: const InputDecoration(
                   label: Text('Name'),
@@ -366,6 +367,7 @@ class _NameDescriptionStateDialogContents
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
+                textCapitalization: TextCapitalization.sentences,
                 validator: _validateDescription,
                 decoration: const InputDecoration(
                   label: Text('Description'),
