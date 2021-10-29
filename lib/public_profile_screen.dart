@@ -18,21 +18,28 @@ class PublicProfileScreen extends ConsumerStatefulWidget {
 
 class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   final _audioBioKey = GlobalKey<ProfileBioState>();
-  late final PageController _pageController;
+  PageController? _pageController;
 
   @override
   void initState() {
     super.initState();
-    final usersApi = ref.read(usersApiProvider);
-    final gallery = usersApi.publicProfile?.gallery;
-    _pageController =
-        PageController(initialPage: (gallery?.length ?? 1) * 100000);
+    _resetPage();
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _pageController?.dispose();
     super.dispose();
+  }
+
+  void _resetPage() {
+    final usersApi = ref.read(usersApiProvider);
+    final gallery = usersApi.publicProfile?.gallery;
+    _pageController?.dispose();
+    setState(() {
+      _pageController =
+          PageController(initialPage: (gallery?.length ?? 1) * 100000);
+    });
   }
 
   @override
@@ -71,10 +78,11 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             right: MediaQuery.of(context).padding.right + 16,
             top: MediaQuery.of(context).padding.top + 16,
             child: Button(
-              onPressed: () {
+              onPressed: () async {
                 final state = _audioBioKey.currentState;
                 state?.stopAll();
-                Navigator.of(context).pushNamed('public-profile-edit');
+                await Navigator.of(context).pushNamed('public-profile-edit');
+                _resetPage();
               },
               child: Container(
                 width: 128,
