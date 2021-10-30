@@ -6,6 +6,7 @@ import 'package:openup/api/users/account.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/raw_users_api.dart';
+import 'package:openup/api/users/rekindle.dart';
 
 late final Provider<UsersApi> usersApiProvider;
 late final StateProvider<PublicProfile?> profileProvider;
@@ -190,6 +191,10 @@ class UsersApi implements RawUsersApi {
     });
     return completer.future;
   }
+
+  @override
+  Future<List<Rekindle>> getRekindleList(String uid) =>
+      _rawUsersApi.getRekindleList(uid);
 
   PublicProfile? get publicProfile => _publicProfile;
 

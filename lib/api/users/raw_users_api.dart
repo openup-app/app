@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:openup/api/users/account.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/users/rekindle.dart';
 
 class RawUsersApi {
   static const _headers = {
@@ -327,5 +328,23 @@ class RawUsersApi {
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return json['matches'] as int;
+  }
+
+  Future<List<Rekindle>> getRekindleList(String uid) async {
+    final response = await http.get(
+      Uri.parse('http://$_host/users/$uid/rekindles'),
+      headers: _headers,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        throw 'Failed to get rekindle list';
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      throw 'Failure';
+    }
+
+    final list = jsonDecode(response.body) as List<dynamic>;
+    return List<Rekindle>.from(list.map((e) => Rekindle.fromJson(e)));
   }
 }
