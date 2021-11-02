@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
-import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/rekindle_screen.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
@@ -15,14 +15,14 @@ class VideoCallScreen extends StatefulWidget {
   final String uid;
   final String signalingHost;
   final bool initiator;
-  final List<PublicProfile> profiles;
+  final List<Rekindle> rekindles;
 
   const VideoCallScreen({
     Key? key,
     required this.uid,
     required this.signalingHost,
     required this.initiator,
-    required this.profiles,
+    required this.rekindles,
   }) : super(key: key);
 
   @override
@@ -255,8 +255,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     Navigator.of(context).pushReplacementNamed(
       'rekindle',
       arguments: RekindleScreenArguments(
-        profiles: widget.profiles,
+        rekindles: widget.rekindles,
         index: 0,
+        title: 'meet people',
       ),
     );
   }
@@ -320,11 +321,11 @@ class _CallControlButton extends StatelessWidget {
 class CallPageArguments {
   final String uid;
   final bool initiator;
-  final List<PublicProfile> profiles;
+  final List<Rekindle> rekindles;
 
   CallPageArguments({
     required this.uid,
     required this.initiator,
-    required this.profiles,
+    required this.rekindles,
   });
 }

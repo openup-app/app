@@ -2,7 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/lobby/lobby_api.dart';
+import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
@@ -11,24 +12,21 @@ import 'package:openup/widgets/slide_control.dart';
 import 'package:openup/widgets/theming.dart';
 
 class RekindleScreen extends StatelessWidget {
-  final List<PublicProfile> profiles;
+  final List<Rekindle> rekindles;
   final int index;
+  final String title;
+
   const RekindleScreen({
     Key? key,
-    required this.profiles,
+    required this.rekindles,
     required this.index,
+    required this.title,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final profile = profiles[index];
-    String? photo;
-    try {
-      photo = profile.gallery.first;
-    } on StateError {
-      // Nothing to do
-    }
-
+    final rekindle = rekindles[index];
+    final photo = rekindle.photo;
     final dateFormat = DateFormat('MM / dd / yyyy');
 
     return Stack(
@@ -70,8 +68,8 @@ class RekindleScreen extends StatelessWidget {
             padding:
                 EdgeInsets.only(top: MediaQuery.of(context).padding.top + 12),
             child: Text(
-              'meet people',
-              style: Theming.of(context).text.large.copyWith(
+              title,
+              style: Theming.of(context).text.headline.copyWith(
                 shadows: [
                   BoxShadow(
                     color: Theming.of(context).shadow,
@@ -98,13 +96,19 @@ class RekindleScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(
-                height: 100,
-                child: MaleFemaleConnectionImage(
-                  color: Color.fromARGB(0xFF, 0xAA, 0xDD, 0xED),
+              if (rekindle.purpose == Purpose.friends)
+                const SizedBox(
+                  height: 50,
+                  child: MaleFemaleConnectionImage(
+                    color: Color.fromARGB(0xFF, 0xAA, 0xDD, 0xED),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 50,
+                  child: Image.asset('assets/images/heart.png'),
                 ),
-              ),
-              Text(profile.name, style: Theming.of(context).text.headline),
+              Text(rekindle.name, style: Theming.of(context).text.headline),
               const SizedBox(height: 4),
               Text(
                 dateFormat.format(DateTime.now()),
@@ -217,12 +221,13 @@ class RekindleScreen extends StatelessWidget {
   }
 
   void _moveToNextScreen(BuildContext context) {
-    if (index + 1 < profiles.length) {
+    if (index + 1 < rekindles.length) {
       Navigator.of(context).pushReplacementNamed(
         'rekindle',
         arguments: RekindleScreenArguments(
-          profiles: profiles,
+          rekindles: rekindles,
           index: index + 1,
+          title: 'rekindle',
         ),
       );
     } else {
@@ -232,11 +237,13 @@ class RekindleScreen extends StatelessWidget {
 }
 
 class RekindleScreenArguments {
-  final List<PublicProfile> profiles;
+  final List<Rekindle> rekindles;
   final int index;
+  final String title;
 
   RekindleScreenArguments({
-    required this.profiles,
+    required this.rekindles,
     required this.index,
+    required this.title,
   });
 }

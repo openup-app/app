@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
@@ -267,7 +268,7 @@ class _OpenupAppState extends State<OpenupApp> {
                           purpose: Purpose.friends,
                           onStartCall: ({
                             required bool initiator,
-                            required List<PublicProfile> profiles,
+                            required List<Rekindle> rekindles,
                           }) {
                             final route = args.video
                                 ? 'friends-video-call'
@@ -277,7 +278,7 @@ class _OpenupAppState extends State<OpenupApp> {
                               arguments: CallPageArguments(
                                 uid: FirebaseAuth.instance.currentUser!.uid,
                                 initiator: initiator,
-                                profiles: profiles,
+                                rekindles: rekindles,
                               ),
                             );
                           },
@@ -295,7 +296,7 @@ class _OpenupAppState extends State<OpenupApp> {
                         uid: args.uid,
                         signalingHost: _tempSignalingHost,
                         initiator: args.initiator,
-                        profiles: args.profiles,
+                        rekindles: args.rekindles,
                       );
                     },
                   );
@@ -309,7 +310,7 @@ class _OpenupAppState extends State<OpenupApp> {
                         uid: args.uid,
                         signalingHost: _tempSignalingHost,
                         initiator: args.initiator,
-                        profiles: args.profiles,
+                        rekindles: args.rekindles,
                       );
                     },
                   );
@@ -472,7 +473,7 @@ class _OpenupAppState extends State<OpenupApp> {
                           purpose: Purpose.dating,
                           onStartCall: ({
                             required bool initiator,
-                            required List<PublicProfile> profiles,
+                            required List<Rekindle> rekindles,
                           }) {
                             // TOOD: Proper routes
                             final route = args.video
@@ -483,7 +484,7 @@ class _OpenupAppState extends State<OpenupApp> {
                               arguments: CallPageArguments(
                                 uid: FirebaseAuth.instance.currentUser!.uid,
                                 initiator: initiator,
-                                profiles: profiles,
+                                rekindles: rekindles,
                               ),
                             );
                           },
@@ -497,8 +498,9 @@ class _OpenupAppState extends State<OpenupApp> {
                     settings: settings,
                     builder: (context) {
                       return RekindleScreen(
-                        profiles: args.profiles,
+                        rekindles: args.rekindles,
                         index: args.index,
+                        title: args.title,
                       );
                     },
                   );

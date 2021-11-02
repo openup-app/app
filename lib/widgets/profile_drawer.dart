@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/rekindle_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
@@ -133,7 +134,7 @@ class ProfileDrawer extends ConsumerWidget {
                   fit: BoxFit.scaleDown,
                 ),
                 title: 'rekindle',
-                onPressed: () {},
+                onPressed: () => _showRekindleScreen(context),
               ),
               _MenuButton(
                 icon: SvgPicture.asset(
@@ -201,6 +202,23 @@ class ProfileDrawer extends ConsumerWidget {
     if (uid != null) {
       final profile = await usersApi.getPrivateProfile(uid);
       Navigator.of(context).pushNamed('private-profile', arguments: profile);
+    }
+  }
+
+  void _showRekindleScreen(BuildContext context) async {
+    final container = ProviderScope.containerOf(context);
+    final usersApi = container.read(usersApiProvider);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final rekindles = await usersApi.getRekindleList(uid);
+      Navigator.of(context).pushNamed(
+        'rekindle',
+        arguments: RekindleScreenArguments(
+          rekindles: rekindles,
+          index: 0,
+          title: 'rekindle',
+        ),
+      );
     }
   }
 }

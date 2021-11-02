@@ -10,7 +10,7 @@ class Rekindle with _$Rekindle {
     required String uid,
     required int date,
     required Purpose purpose,
-    String? name,
+    required String name,
     String? photo,
   }) = _Rekindle;
 

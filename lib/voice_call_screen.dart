@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
-import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/rekindle_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/api/signaling/phone.dart';
@@ -17,14 +17,14 @@ class VoiceCallScreen extends StatefulWidget {
   final String uid;
   final String signalingHost;
   final bool initiator;
-  final List<PublicProfile> profiles;
+  final List<Rekindle> rekindles;
 
   const VoiceCallScreen({
     Key? key,
     required this.uid,
     required this.signalingHost,
     required this.initiator,
-    required this.profiles,
+    required this.rekindles,
   }) : super(key: key);
 
   @override
@@ -89,12 +89,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    String? photo;
-    try {
-      photo = widget.profiles.first.gallery.first;
-    } on StateError {
-      // Nothing to do
-    }
+    final rekindle = widget.rekindles.first;
+    final photo = rekindle.photo;
     return Stack(
       alignment: Alignment.center,
       fit: StackFit.expand,
@@ -166,7 +162,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                             ],
                           ),
                           Text(
-                            widget.profiles.first.name,
+                            rekindle.name,
                             style: Theming.of(context).text.headline,
                           ),
                           TimeRemaining(
@@ -268,8 +264,9 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
     Navigator.of(context).pushReplacementNamed(
       'rekindle',
       arguments: RekindleScreenArguments(
-        profiles: widget.profiles,
+        rekindles: widget.rekindles,
         index: 0,
+        title: 'meet people',
       ),
     );
   }
