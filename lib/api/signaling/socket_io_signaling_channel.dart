@@ -5,7 +5,7 @@ import 'package:openup/api/signaling/signaling.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 class SocketIoSignalingChannel implements SignalingChannel {
-  final _controller = StreamController<Signal>.broadcast();
+  final _controller = StreamController<Signal>();
 
   late final Socket _socket;
 
