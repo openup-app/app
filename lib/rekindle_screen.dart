@@ -1,9 +1,12 @@
 import 'dart:ui';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
@@ -11,7 +14,7 @@ import 'package:openup/widgets/notification_banner.dart';
 import 'package:openup/widgets/slide_control.dart';
 import 'package:openup/widgets/theming.dart';
 
-class RekindleScreen extends StatelessWidget {
+class RekindleScreen extends ConsumerWidget {
   final List<Rekindle> rekindles;
   final int index;
   final String title;
@@ -24,7 +27,38 @@ class RekindleScreen extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (rekindles.isEmpty) {
+      return Container(
+        color: Colors.black,
+        child: Stack(
+          children: [
+            Center(
+              child: Text('No one to rekindle with',
+                  style: Theming.of(context).text.headline),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).padding.top,
+              left: 0,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: IconButton(
+                  onPressed: Navigator.of(context).pop,
+                  icon: const Icon(Icons.arrow_back, size: 32),
+                ),
+              ),
+            ),
+            Positioned(
+              right: MediaQuery.of(context).padding.right + 16,
+              bottom: MediaQuery.of(context).padding.bottom + 16,
+              child: const HomeButton(
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     final rekindle = rekindles[index];
     final photo = rekindle.photo;
     final dateFormat = DateFormat('MM / dd / yyyy');
@@ -167,7 +201,10 @@ class RekindleScreen extends StatelessWidget {
                     ),
                   ),
                   trackContents: const Text('slide to connect'),
-                  onSlideComplete: () => _moveToNextScreen(context),
+                  onSlideComplete: () {
+                    _addRekindle(ref, rekindle);
+                    _moveToNextScreen(context);
+                  },
                   trackBorder: true,
                   trackGradient: const LinearGradient(
                     begin: Alignment.topCenter,
@@ -218,6 +255,16 @@ class RekindleScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _addRekindle(WidgetRef ref, Rekindle rekindle) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return;
+    }
+
+    final usersApi = ref.read(usersApiProvider);
+    usersApi.addConnectionRequest(uid, rekindle.uid);
   }
 
   void _moveToNextScreen(BuildContext context) {

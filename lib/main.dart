@@ -9,6 +9,7 @@ import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/connections_screen.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/preferences_screen.dart';
@@ -523,6 +524,11 @@ class _OpenupAppState extends State<OpenupApp> {
                         initialProfile: args,
                       );
                     },
+                  );
+                case 'connections':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (_) => const ConnectionsScreen(),
                   );
                 default:
                   throw 'Route not found ${settings.name}';

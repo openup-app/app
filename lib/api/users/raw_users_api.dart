@@ -33,10 +33,10 @@ class RawUsersApi {
     );
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Invalid sign-up';
+        return Future.error('Invalid sign-up');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
   }
 
@@ -53,10 +53,10 @@ class RawUsersApi {
     );
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Invalid creation';
+        return Future.error('Invalid creation');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
   }
 
@@ -68,10 +68,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to get account';
+        return Future.error('Failed to get account');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
 
     return Account.fromJson(jsonDecode(response.body));
@@ -86,10 +86,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to update preferences';
+        return Future.error('Failed to update preferences');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
   }
 
@@ -101,10 +101,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to get profile';
+        return Future.error('Failed to get profile');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
 
     return PublicProfile.fromJson(jsonDecode(response.body));
@@ -119,10 +119,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to update profile';
+        return Future.error('Failed to update profile');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
   }
 
@@ -134,10 +134,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to get profile';
+        return Future.error('Failed to get profile');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
 
     return PrivateProfile.fromJson(jsonDecode(response.body));
@@ -152,10 +152,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to update profile';
+        return Future.error('Failed to update profile');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
   }
 
@@ -175,10 +175,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to upload photo';
+        return Future.error('Failed to upload photo');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -193,10 +193,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to delete photo';
+        return Future.error('Failed to delete photo');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
   }
 
@@ -212,10 +212,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to upload audio';
+        return Future.error('Failed to upload audio');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -230,10 +230,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to delete audio';
+        return Future.error('Failed to delete audio');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
   }
 
@@ -245,10 +245,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to delete user';
+        return Future.error('Failed to delete user');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
   }
 
@@ -266,10 +266,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to get preferences';
+        return Future.error('Failed to get preferences');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
 
     return Preferences.fromJson(jsonDecode(response.body));
@@ -294,10 +294,9 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to update preferences';
+        return Future.error('Failed to update preferences');
       }
-      print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
   }
 
@@ -320,10 +319,10 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to get possible matches';
+        return Future.error('Failed to get possible matches');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -338,13 +337,66 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        throw 'Failed to get rekindle list';
+        return Future.error('Failed to get rekindle list');
       }
       print('Error ${response.statusCode}: ${response.body}');
-      throw 'Failure';
+      return Future.error('Failure');
     }
 
     final list = jsonDecode(response.body) as List<dynamic>;
     return List<Rekindle>.from(list.map((e) => Rekindle.fromJson(e)));
+  }
+
+  Future<void> addConnectionRequest(String uid, String otherUid) async {
+    final response = await http.post(
+      Uri.parse('http://$_host/users/$uid/connection_request'),
+      headers: _headers,
+      body: jsonEncode({'uid': otherUid}),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to request connection');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+  }
+
+  Future<List<PublicProfile>> getConnections(String uid) async {
+    final response = await http.get(
+      Uri.parse('http://$_host/users/$uid/connections'),
+      headers: _headers,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to get connections');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+
+    final list = jsonDecode(response.body) as List<dynamic>;
+    return List<PublicProfile>.from(list.map((e) => PublicProfile.fromJson(e)));
+  }
+
+  Future<List<PublicProfile>> deleteConnection(String uid, String deleteUid) async {
+    final response = await http.delete(
+      Uri.parse('http://$_host/users/$uid/connections'),
+      headers: _headers,
+      body: jsonEncode({'uid': deleteUid}),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to delete connection');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+
+    final list = jsonDecode(response.body) as List<dynamic>;
+    return List<PublicProfile>.from(list.map((e) => PublicProfile.fromJson(e)));
   }
 }

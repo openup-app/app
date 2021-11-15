@@ -196,6 +196,18 @@ class UsersApi implements RawUsersApi {
   Future<List<Rekindle>> getRekindleList(String uid) =>
       _rawUsersApi.getRekindleList(uid);
 
+  @override
+  Future<void> addConnectionRequest(String uid, String otherUid) =>
+      _rawUsersApi.addConnectionRequest(uid, otherUid);
+
+  @override
+  Future<List<PublicProfile>> getConnections(String uid) =>
+      _rawUsersApi.getConnections(uid);
+
+  @override
+  Future<List<PublicProfile>> deleteConnection(String uid, String deleteUid) =>
+      _rawUsersApi.deleteConnection(uid, deleteUid);
+
   PublicProfile? get publicProfile => _publicProfile;
 
   void _clearCache() {
