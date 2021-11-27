@@ -4,20 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/platform/record_audio_recorder.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ProfileBio extends StatefulWidget {
+  final String? name;
+  final String? description;
   final String? url;
+  final bool editable;
   final void Function(Uint8List newBio) onRecorded;
   final void Function(String name, String description) onNameDescriptionUpdated;
 
   const ProfileBio({
     Key? key,
+    required this.name,
+    required this.description,
     required this.url,
+    required this.editable,
     required this.onRecorded,
     required this.onNameDescriptionUpdated,
   }) : super(key: key);
@@ -75,8 +80,11 @@ class ProfileBioState extends State<ProfileBio> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: _ProfileBioDisplay(
+        name: widget.name,
+        description: widget.description,
         playButton: playButtonState,
         recording: _recording,
+        showRecordButton: widget.editable,
         progress: _playbackInfo.position.inMilliseconds /
             (_playbackInfo.duration.inMilliseconds == 0
                 ? 1
@@ -116,8 +124,11 @@ class ProfileBioState extends State<ProfileBio> {
 }
 
 class _ProfileBioDisplay extends ConsumerWidget {
+  final String? name;
+  final String? description;
   final PlayButtonState playButton;
   final bool recording;
+  final bool showRecordButton;
   final double progress;
   final VoidCallback onPlay;
   final VoidCallback onPause;
@@ -127,8 +138,11 @@ class _ProfileBioDisplay extends ConsumerWidget {
 
   const _ProfileBioDisplay({
     Key? key,
+    required this.name,
+    required this.description,
     required this.playButton,
     required this.recording,
+    required this.showRecordButton,
     required this.progress,
     required this.onPlay,
     required this.onPause,
@@ -167,72 +181,61 @@ class _ProfileBioDisplay extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final name = ref.watch(
-                          profileProvider.select((value) => value.state?.name));
-                      return Text(
-                        name ?? '',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theming.of(context).text.headline.copyWith(
-                          fontSize: 28,
-                          shadows: [
-                            Shadow(
-                              color: Theming.of(context).shadow,
-                              blurRadius: 4,
-                              offset: const Offset(0.0, 2.0),
-                            ),
-                          ],
+                  Text(
+                    name ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theming.of(context).text.headline.copyWith(
+                      fontSize: 28,
+                      shadows: [
+                        Shadow(
+                          color: Theming.of(context).shadow,
+                          blurRadius: 4,
+                          offset: const Offset(0.0, 2.0),
                         ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final description = ref.watch(profileProvider
-                          .select((value) => value.state?.description));
-                      return Text(
-                        description ?? 'My Description Here',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theming.of(context).text.bodySecondary.copyWith(
-                          fontSize: 20,
-                          shadows: [
-                            Shadow(
-                              color: Theming.of(context).shadow,
-                              blurRadius: 4,
-                              offset: const Offset(0.0, 2.0),
-                            ),
-                          ],
+                  Text(
+                    description ?? 'My Description Here',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theming.of(context).text.bodySecondary.copyWith(
+                      fontSize: 20,
+                      shadows: [
+                        Shadow(
+                          color: Theming.of(context).shadow,
+                          blurRadius: 4,
+                          offset: const Offset(0.0, 2.0),
                         ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-          Button(
-            onPressed: playButton == PlayButtonState.playing
-                ? null
-                : (recording ? onRecordComplete : onRecord),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(0xFF, 0xFF, 0x00, 0x00),
-                shape: recording ? BoxShape.rectangle : BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Theming.of(context).shadow,
-                    blurRadius: 4,
-                    offset: const Offset(0.0, 2.0),
-                  ),
-                ],
+          if (showRecordButton)
+            Button(
+              onPressed: playButton == PlayButtonState.playing
+                  ? null
+                  : (recording ? onRecordComplete : onRecord),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(0xFF, 0xFF, 0x00, 0x00),
+                  shape: recording ? BoxShape.rectangle : BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theming.of(context).shadow,
+                      blurRadius: 4,
+                      offset: const Offset(0.0, 2.0),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
           const SizedBox(width: 28),
           IgnorePointer(
             ignoring: recording,
@@ -271,13 +274,12 @@ class _ProfileBioDisplay extends ConsumerWidget {
   }
 
   void _showNameDescriptionDialog(BuildContext context, WidgetRef ref) async {
-    final profile = ref.read(profileProvider).state;
     final result = await showDialog<_NameDescription>(
       context: context,
       builder: (context) {
         return _NameDescriptionDialogContents(
-          initialName: profile?.name ?? '',
-          initialDescription: profile?.description ?? '',
+          initialName: name ?? '',
+          initialDescription: description ?? '',
         );
       },
     );

@@ -176,11 +176,13 @@ class _PublicProfileEditScreenState extends State<PublicProfileEditScreen> {
                   height: 88,
                   child: Consumer(
                     builder: (context, ref, child) {
-                      final audio = ref.watch(profileProvider
-                          .select((value) => value.state?.audio));
+                      final editableProfile = ref.watch(profileProvider).state;
                       return ProfileBio(
                         key: _audioBioKey,
-                        url: audio,
+                        name: editableProfile?.name,
+                        description: editableProfile?.description,
+                        url: editableProfile?.audio,
+                        editable: true,
                         onRecorded: (audio) =>
                             uploadAudio(context: context, audio: audio),
                         onNameDescriptionUpdated: (name, description) {

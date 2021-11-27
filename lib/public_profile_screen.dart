@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/util/users_api_util.dart';
 import 'package:openup/widgets/button.dart';
@@ -9,7 +10,14 @@ import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
 class PublicProfileScreen extends ConsumerStatefulWidget {
-  const PublicProfileScreen({Key? key}) : super(key: key);
+  final PublicProfile publicProfile;
+  final bool editable;
+
+  const PublicProfileScreen({
+    Key? key,
+    required this.publicProfile,
+    required this.editable,
+  }) : super(key: key);
 
   @override
   ConsumerState<PublicProfileScreen> createState() =>
@@ -33,33 +41,31 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   }
 
   void _resetPage() {
-    final usersApi = ref.read(usersApiProvider);
-    final gallery = usersApi.publicProfile?.gallery;
+    final gallery = widget.publicProfile.gallery;
     _pageController?.dispose();
     setState(() {
-      _pageController =
-          PageController(initialPage: (gallery?.length ?? 1) * 100000);
+      _pageController = PageController(initialPage: gallery.length * 100000);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final usersApi = ref.watch(usersApiProvider);
-    final gallery = usersApi.publicProfile?.gallery;
+    final gallery = widget.publicProfile.gallery;
     return Container(
       color: Colors.black,
       child: Stack(
         children: [
-          if (gallery == null || gallery.isEmpty)
+          if (gallery.isEmpty)
             Center(
-              child: Text('Add your first photo',
+              child: Text(
+                  widget.editable ? 'Add your first photo' : 'No photos',
                   style: Theming.of(context).text.subheading),
             ),
           Positioned.fill(
             child: PageView.builder(
               controller: _pageController,
               itemBuilder: (context, index) {
-                final gallery = usersApi.publicProfile?.gallery ?? [];
+                final gallery = widget.publicProfile.gallery;
                 if (gallery.isEmpty) {
                   return const SizedBox.shrink();
                 }
@@ -74,63 +80,83 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
               },
             ),
           ),
-          Positioned(
-            right: MediaQuery.of(context).padding.right + 16,
-            top: MediaQuery.of(context).padding.top + 16,
-            child: Button(
-              onPressed: () async {
-                final state = _audioBioKey.currentState;
-                state?.stopAll();
-                await Navigator.of(context).pushNamed('public-profile-edit');
-                _resetPage();
-              },
-              child: Container(
-                width: 128,
-                height: 128,
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.all(Radius.circular(40)),
-                  color: Colors.black.withOpacity(0.3),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.add,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Edit Photos',
-                      style:
-                          Theming.of(context).text.body.copyWith(fontSize: 14),
-                    ),
-                  ],
+          if (widget.editable)
+            Positioned(
+              right: MediaQuery.of(context).padding.right + 16,
+              top: MediaQuery.of(context).padding.top + 16,
+              child: Button(
+                onPressed: () async {
+                  final state = _audioBioKey.currentState;
+                  state?.stopAll();
+                  await Navigator.of(context).pushNamed('public-profile-edit');
+                  _resetPage();
+                },
+                child: Container(
+                  width: 128,
+                  height: 128,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(40)),
+                    color: Colors.black.withOpacity(0.3),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.add,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Edit Photos',
+                        style: Theming.of(context)
+                            .text
+                            .body
+                            .copyWith(fontSize: 14),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
           Positioned(
             left: 16,
             right: 16,
             bottom: 80,
             height: 88,
-            child: Consumer(
-              builder: (context, ref, child) {
-                final audio = ref.watch(
-                    profileProvider.select((value) => value.state?.audio));
-                return ProfileBio(
-                  key: _audioBioKey,
-                  url: audio,
-                  onRecorded: (audio) =>
-                      uploadAudio(context: context, audio: audio),
-                  onNameDescriptionUpdated: (name, description) {
-                    updateNameDescription(
-                      context: context,
-                      name: name,
-                      description: description,
-                    );
-                  },
-                );
+            child: Builder(
+              builder: (context) {
+                if (widget.editable) {
+                  return Consumer(
+                    builder: (context, ref, child) {
+                      final editableProfile = ref.watch(profileProvider).state;
+                      return ProfileBio(
+                        key: _audioBioKey,
+                        name: editableProfile?.name,
+                        description: editableProfile?.description,
+                        url: editableProfile?.audio,
+                        editable: true,
+                        onRecorded: (audio) =>
+                            uploadAudio(context: context, audio: audio),
+                        onNameDescriptionUpdated: (name, description) {
+                          updateNameDescription(
+                            context: context,
+                            name: name,
+                            description: description,
+                          );
+                        },
+                      );
+                    },
+                  );
+                } else {
+                  return ProfileBio(
+                    name: widget.publicProfile.name,
+                    description: widget.publicProfile.description,
+                    url: widget.publicProfile.audio,
+                    editable: false,
+                    onRecorded: (_) {},
+                    onNameDescriptionUpdated: (_, __) {},
+                  );
+                }
               },
             ),
           ),
@@ -150,4 +176,14 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
       ),
     );
   }
+}
+
+class PublicProfileArguments {
+  final PublicProfile publicProfile;
+  final bool editable;
+
+  PublicProfileArguments({
+    required this.publicProfile,
+    required this.editable,
+  });
 }

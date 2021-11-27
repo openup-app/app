@@ -11,6 +11,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/notification_banner.dart';
+import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/slide_control.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -72,15 +73,7 @@ class RekindleScreen extends ConsumerWidget {
             sigmaX: 8.0,
             sigmaY: 8.0,
           ),
-          child: photo != null
-              ? Image.network(
-                  photo,
-                  fit: BoxFit.cover,
-                )
-              : Image.asset(
-                  'assets/images/profile.png',
-                  fit: BoxFit.fitHeight,
-                ),
+          child: ProfilePhoto(url: photo),
         ),
         Container(
           color: const Color.fromARGB(0x4F, 0x3F, 0xC8, 0xFD),

@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/public_profile_screen.dart';
 import 'package:openup/rekindle_screen.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/image_builder.dart';
+import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ProfileDrawer extends ConsumerWidget {
@@ -26,8 +27,16 @@ class ProfileDrawer extends ConsumerWidget {
           Expanded(
             flex: 3,
             child: Button(
-              onPressed: () =>
-                  Navigator.of(context).pushNamed('public-profile'),
+              onPressed: () {
+                final usersApi = ref.watch(usersApiProvider);
+                Navigator.of(context).pushNamed(
+                  'public-profile',
+                  arguments: PublicProfileArguments(
+                    publicProfile: usersApi.publicProfile!,
+                    editable: true,
+                  ),
+                );
+              },
               child: Container(
                 constraints: const BoxConstraints(
                   minWidth: 60,
@@ -48,33 +57,8 @@ class ProfileDrawer extends ConsumerWidget {
                 ),
                 child: Consumer(
                   builder: (context, ref, child) {
-                    final gallery = ref.watch(profileProvider).state?.gallery;
-
-                    late final String? photo;
-                    try {
-                      photo = gallery?.first;
-                    } on StateError {
-                      photo = null;
-                    } catch (e) {
-                      photo = null;
-                    }
-
-                    if (photo == null) {
-                      return Image.asset(
-                        'assets/images/profile.png',
-                        color: iconColor,
-                        fit: BoxFit.contain,
-                        frameBuilder: fadeInFrameBuilder,
-                        errorBuilder: iconErrorBuilder,
-                      );
-                    }
-                    return Image.network(
-                      photo,
-                      fit: BoxFit.contain,
-                      frameBuilder: fadeInFrameBuilder,
-                      loadingBuilder: circularProgressLoadingBuilder,
-                      errorBuilder: iconErrorBuilder,
-                    );
+                    final photo = ref.watch(profileProvider).state?.photo;
+                    return ProfilePhoto(url: photo);
                   },
                 ),
               ),

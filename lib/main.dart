@@ -506,9 +506,15 @@ class _OpenupAppState extends State<OpenupApp> {
                     },
                   );
                 case 'public-profile':
+                  final args = settings.arguments as PublicProfileArguments;
                   return _buildPageRoute(
                     settings: settings,
-                    builder: (_) => const PublicProfileScreen(),
+                    builder: (_) {
+                      return PublicProfileScreen(
+                        publicProfile: args.publicProfile,
+                        editable: args.editable,
+                      );
+                    },
                   );
                 case 'public-profile-edit':
                   return _buildPageRoute(
