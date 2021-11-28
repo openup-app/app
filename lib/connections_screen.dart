@@ -56,6 +56,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
             ?.where(
                 (profile) => profile.name.trim().toLowerCase().contains(search))
             .toList();
+    filteredConnections?.sort((a, b) => a.name.compareTo(b.name));
 
     return Container(
       color: Colors.black,
