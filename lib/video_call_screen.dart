@@ -256,7 +256,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       'precached-rekindle',
       arguments: PrecachedRekindleScreenArguments(
         rekindles: widget.rekindles,
-        index: 0,
         title: 'meet people',
       ),
     );

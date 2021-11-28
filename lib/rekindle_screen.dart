@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -69,6 +70,7 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
               rekindles: rekindles,
               index: 0,
               title: title,
+              countdown: false,
             ),
       crossFadeState: _rekindles == null
           ? CrossFadeState.showFirst
@@ -83,12 +85,14 @@ class RekindleScreenPrecached extends ConsumerWidget {
   final List<Rekindle> rekindles;
   final int index;
   final String title;
+  final bool countdown;
 
   const RekindleScreenPrecached({
     Key? key,
     required this.rekindles,
     required this.index,
     required this.title,
+    required this.countdown,
   }) : super(key: key);
 
   @override
@@ -123,7 +127,9 @@ class RekindleScreenPrecached extends ConsumerWidget {
           child: ProfilePhoto(url: photo),
         ),
         Container(
-          color: const Color.fromARGB(0x4F, 0x3F, 0xC8, 0xFD),
+          color: rekindle.purpose == Purpose.friends
+              ? const Color.fromARGB(0x4F, 0x3F, 0xC8, 0xFD)
+              : const Color.fromARGB(0x4F, 0xFF, 0x60, 0x60),
         ),
         const Positioned(
           right: 0,
@@ -201,13 +207,30 @@ class RekindleScreenPrecached extends ConsumerWidget {
                   thumbContents: Center(
                     child: Padding(
                       padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(
-                        '5',
-                        style: Theming.of(context).text.headline.copyWith(
-                            fontSize: 42,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.grey),
-                      ),
+                      child: countdown
+                          ? _Countdown(
+                              builder: (context, remainingSeconds) {
+                                return Text(
+                                  remainingSeconds.toString(),
+                                  style: Theming.of(context)
+                                      .text
+                                      .headline
+                                      .copyWith(
+                                          fontSize: 42,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.grey),
+                                );
+                              },
+                              onTimeUp: () => _moveToNextScreen(context),
+                            )
+                          : const Padding(
+                              padding: EdgeInsets.only(bottom: 4.0),
+                              child: Icon(
+                                Icons.fingerprint,
+                                color: Colors.black12,
+                                size: 44,
+                              ),
+                            ),
                     ),
                   ),
                   trackContents: const Text('slide to connect'),
@@ -279,6 +302,7 @@ class RekindleScreenPrecached extends ConsumerWidget {
           rekindles: rekindles,
           index: index + 1,
           title: 'rekindle',
+          countdown: countdown,
         ),
       );
     } else {
@@ -327,14 +351,60 @@ List<Widget> _backTitleAndHomeButtons(BuildContext context, String title) => [
       ),
     ];
 
+class _Countdown extends StatefulWidget {
+  final int startSeconds;
+  final Widget Function(BuildContext context, int remainingSeconds) builder;
+  final VoidCallback onTimeUp;
+  const _Countdown({
+    Key? key,
+    this.startSeconds = 5,
+    required this.builder,
+    required this.onTimeUp,
+  }) : super(key: key);
+
+  @override
+  _CountdownState createState() => _CountdownState();
+}
+
+class _CountdownState extends State<_Countdown> {
+  late final Timer _timer;
+  late int _remaining;
+
+  @override
+  void initState() {
+    super.initState();
+    _remaining = widget.startSeconds;
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        if (_remaining > 0) {
+          setState(() => _remaining--);
+        } else {
+          widget.onTimeUp();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, _remaining);
+}
+
 class PrecachedRekindleScreenArguments {
   final List<Rekindle> rekindles;
   final int index;
   final String title;
+  final bool countdown;
 
   PrecachedRekindleScreenArguments({
     required this.rekindles,
-    required this.index,
+    this.index = 0,
     required this.title,
+    this.countdown = true,
   });
 }

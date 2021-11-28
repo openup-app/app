@@ -508,6 +508,7 @@ class _OpenupAppState extends State<OpenupApp> {
                         rekindles: args.rekindles,
                         index: args.index,
                         title: args.title,
+                        countdown: args.countdown,
                       );
                     },
                   );
