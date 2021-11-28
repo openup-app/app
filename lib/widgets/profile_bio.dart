@@ -84,7 +84,7 @@ class ProfileBioState extends State<ProfileBio> {
         description: widget.description,
         playButton: playButtonState,
         recording: _recording,
-        showRecordButton: widget.editable,
+        editable: widget.editable,
         progress: _playbackInfo.position.inMilliseconds /
             (_playbackInfo.duration.inMilliseconds == 0
                 ? 1
@@ -128,7 +128,7 @@ class _ProfileBioDisplay extends ConsumerWidget {
   final String? description;
   final PlayButtonState playButton;
   final bool recording;
-  final bool showRecordButton;
+  final bool editable;
   final double progress;
   final VoidCallback onPlay;
   final VoidCallback onPause;
@@ -142,7 +142,7 @@ class _ProfileBioDisplay extends ConsumerWidget {
     required this.description,
     required this.playButton,
     required this.recording,
-    required this.showRecordButton,
+    required this.editable,
     required this.progress,
     required this.onPlay,
     required this.onPause,
@@ -175,47 +175,50 @@ class _ProfileBioDisplay extends ConsumerWidget {
         children: [
           const SizedBox(width: 24),
           Expanded(
-            child: Button(
-              onPressed: () => _showNameDescriptionDialog(context, ref),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theming.of(context).text.headline.copyWith(
-                      fontSize: 28,
-                      shadows: [
-                        Shadow(
-                          color: Theming.of(context).shadow,
-                          blurRadius: 4,
-                          offset: const Offset(0.0, 2.0),
-                        ),
-                      ],
+            child: IgnorePointer(
+              ignoring: !editable,
+              child: Button(
+                onPressed: () => _showNameDescriptionDialog(context, ref),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theming.of(context).text.headline.copyWith(
+                        fontSize: 28,
+                        shadows: [
+                          Shadow(
+                            color: Theming.of(context).shadow,
+                            blurRadius: 4,
+                            offset: const Offset(0.0, 2.0),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Text(
-                    description ?? 'My Description Here',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theming.of(context).text.bodySecondary.copyWith(
-                      fontSize: 20,
-                      shadows: [
-                        Shadow(
-                          color: Theming.of(context).shadow,
-                          blurRadius: 4,
-                          offset: const Offset(0.0, 2.0),
-                        ),
-                      ],
+                    Text(
+                      description ?? 'My Description Here',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theming.of(context).text.bodySecondary.copyWith(
+                        fontSize: 20,
+                        shadows: [
+                          Shadow(
+                            color: Theming.of(context).shadow,
+                            blurRadius: 4,
+                            offset: const Offset(0.0, 2.0),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-          if (showRecordButton)
+          if (editable)
             Button(
               onPressed: playButton == PlayButtonState.playing
                   ? null
