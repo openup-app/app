@@ -253,8 +253,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   void _navigateToRekindle() {
     Navigator.of(context).pushReplacementNamed(
-      'rekindle',
-      arguments: RekindleScreenArguments(
+      'precached-rekindle',
+      arguments: PrecachedRekindleScreenArguments(
         rekindles: widget.rekindles,
         index: 0,
         title: 'meet people',

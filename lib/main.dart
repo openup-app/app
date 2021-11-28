@@ -494,11 +494,17 @@ class _OpenupAppState extends State<OpenupApp> {
                     },
                   );
                 case 'rekindle':
-                  final args = settings.arguments as RekindleScreenArguments;
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (context) => const RekindleScreen(),
+                  );
+                case 'precached-rekindle':
+                  final args =
+                      settings.arguments as PrecachedRekindleScreenArguments;
                   return _buildPageRoute(
                     settings: settings,
                     builder: (context) {
-                      return RekindleScreen(
+                      return RekindleScreenPrecached(
                         rekindles: args.rekindles,
                         index: args.index,
                         title: args.title,

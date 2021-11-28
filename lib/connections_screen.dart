@@ -5,7 +5,6 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/public_profile_screen.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/loading_dialog.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -28,14 +27,6 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
   void initState() {
     super.initState();
 
-    VoidCallback? popDialog;
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      popDialog = showBlockingModalDialog(
-        context: context,
-        builder: (_) => const Loading(),
-      );
-    });
-
     final api = ref.read(usersApiProvider);
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
@@ -45,7 +36,6 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
     api.getConnections(uid).then((connections) {
       if (mounted) {
         setState(() => _connections = connections);
-        popDialog?.call();
       }
     });
   }
@@ -107,8 +97,12 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
             ),
             child: Builder(
               builder: (context) {
-                if (filteredConnections == null ||
-                    filteredConnections.isEmpty) {
+                if (filteredConnections == null) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                if (filteredConnections.isEmpty) {
                   return Center(
                     child: Text(
                       'No Connections',
@@ -208,10 +202,12 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                 );
               }
               return Button(
-                onPressed: () {
-                  setState(() => _showSearchBox = true);
-                  _searchFocusNode.requestFocus();
-                },
+                onPressed: _connections == null
+                    ? null
+                    : () {
+                        setState(() => _showSearchBox = true);
+                        _searchFocusNode.requestFocus();
+                      },
                 child: Container(
                   height: 48,
                   padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -15,12 +15,76 @@ import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/slide_control.dart';
 import 'package:openup/widgets/theming.dart';
 
-class RekindleScreen extends ConsumerWidget {
+/// Screen to re-connect with matches. This screen will fetch rekindles, then
+/// pass them onto [PrecachedRekindleScreen].
+class RekindleScreen extends ConsumerStatefulWidget {
+  const RekindleScreen({Key? key}) : super(key: key);
+
+  @override
+  _RekindleScreenState createState() => _RekindleScreenState();
+}
+
+class _RekindleScreenState extends ConsumerState<RekindleScreen> {
+  List<Rekindle>? _rekindles;
+
+  @override
+  void initState() {
+    super.initState();
+    final usersApi = ref.read(usersApiProvider);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      usersApi.getRekindleList(uid).then((rekindles) {
+        if (mounted) {
+          setState(() => _rekindles = rekindles);
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const title = 'rekindle';
+    final rekindles = _rekindles;
+    return AnimatedCrossFade(
+      duration: const Duration(milliseconds: 500),
+      firstChild: Container(
+        color: Colors.black,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const Center(
+              child: CircularProgressIndicator(),
+            ),
+            ..._backTitleAndHomeButtons(context, title),
+          ],
+        ),
+      ),
+      secondChild: rekindles == null
+          ? const DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.black,
+              ),
+            )
+          : RekindleScreenPrecached(
+              rekindles: rekindles,
+              index: 0,
+              title: title,
+            ),
+      crossFadeState: _rekindles == null
+          ? CrossFadeState.showFirst
+          : CrossFadeState.showSecond,
+    );
+  }
+}
+
+/// Screen to re-connect with matches. This screen does not fetch rekindles,
+/// instead they must be passed in.
+class RekindleScreenPrecached extends ConsumerWidget {
   final List<Rekindle> rekindles;
   final int index;
   final String title;
 
-  const RekindleScreen({
+  const RekindleScreenPrecached({
     Key? key,
     required this.rekindles,
     required this.index,
@@ -38,24 +102,7 @@ class RekindleScreen extends ConsumerWidget {
               child: Text('No one to rekindle with',
                   style: Theming.of(context).text.headline),
             ),
-            Positioned(
-              top: MediaQuery.of(context).padding.top,
-              left: 0,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: IconButton(
-                  onPressed: Navigator.of(context).pop,
-                  icon: const Icon(Icons.arrow_back, size: 32),
-                ),
-              ),
-            ),
-            Positioned(
-              right: MediaQuery.of(context).padding.right + 16,
-              bottom: MediaQuery.of(context).padding.bottom + 16,
-              child: const HomeButton(
-                color: Colors.white,
-              ),
-            ),
+            ..._backTitleAndHomeButtons(context, title),
           ],
         ),
       );
@@ -77,36 +124,6 @@ class RekindleScreen extends ConsumerWidget {
         ),
         Container(
           color: const Color.fromARGB(0x4F, 0x3F, 0xC8, 0xFD),
-        ),
-        Positioned(
-          top: MediaQuery.of(context).padding.top,
-          left: 0,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: IconButton(
-              onPressed: Navigator.of(context).pop,
-              icon: const Icon(Icons.arrow_back, size: 32),
-            ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.topCenter,
-          child: Padding(
-            padding:
-                EdgeInsets.only(top: MediaQuery.of(context).padding.top + 12),
-            child: Text(
-              title,
-              style: Theming.of(context).text.headline.copyWith(
-                shadows: [
-                  BoxShadow(
-                    color: Theming.of(context).shadow,
-                    spreadRadius: 0.0,
-                    blurRadius: 32.0,
-                  )
-                ],
-              ),
-            ),
-          ),
         ),
         const Positioned(
           right: 0,
@@ -239,13 +256,7 @@ class RekindleScreen extends ConsumerWidget {
             ],
           ),
         ),
-        Positioned(
-          right: MediaQuery.of(context).padding.right + 16,
-          bottom: MediaQuery.of(context).padding.bottom + 16,
-          child: const HomeButton(
-            color: Colors.white,
-          ),
-        ),
+        ..._backTitleAndHomeButtons(context, title),
       ],
     );
   }
@@ -263,8 +274,8 @@ class RekindleScreen extends ConsumerWidget {
   void _moveToNextScreen(BuildContext context) {
     if (index + 1 < rekindles.length) {
       Navigator.of(context).pushReplacementNamed(
-        'rekindle',
-        arguments: RekindleScreenArguments(
+        'precached-rekindle',
+        arguments: PrecachedRekindleScreenArguments(
           rekindles: rekindles,
           index: index + 1,
           title: 'rekindle',
@@ -276,12 +287,52 @@ class RekindleScreen extends ConsumerWidget {
   }
 }
 
-class RekindleScreenArguments {
+List<Widget> _backTitleAndHomeButtons(BuildContext context, String title) => [
+      Positioned(
+        top: MediaQuery.of(context).padding.top,
+        left: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: IconButton(
+            onPressed: Navigator.of(context).pop,
+            icon: const Icon(Icons.arrow_back, size: 32),
+          ),
+        ),
+      ),
+      Positioned(
+        right: MediaQuery.of(context).padding.right + 16,
+        bottom: MediaQuery.of(context).padding.bottom + 16,
+        child: const HomeButton(
+          color: Colors.white,
+        ),
+      ),
+      Align(
+        alignment: Alignment.topCenter,
+        child: Padding(
+          padding:
+              EdgeInsets.only(top: MediaQuery.of(context).padding.top + 20),
+          child: Text(
+            title,
+            style: Theming.of(context).text.bodySecondary.copyWith(
+              shadows: [
+                BoxShadow(
+                  color: Theming.of(context).shadow,
+                  spreadRadius: 0.0,
+                  blurRadius: 32.0,
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    ];
+
+class PrecachedRekindleScreenArguments {
   final List<Rekindle> rekindles;
   final int index;
   final String title;
 
-  RekindleScreenArguments({
+  PrecachedRekindleScreenArguments({
     required this.rekindles,
     required this.index,
     required this.title,
