@@ -24,6 +24,8 @@ dependencies:
   just_audio: ^0.9.13
   record: ^3.0.0
   intl: ^0.17.0
+  firebase_messaging: ^11.1.0
+  flutter_local_notifications: ^9.1.4
 
 dev_dependencies:
   flutter_test:

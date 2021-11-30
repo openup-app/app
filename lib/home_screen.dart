@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:location/location.dart';
 import 'package:openup/api/users/profile.dart';
@@ -21,6 +23,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _cachingStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    FirebaseMessaging.onMessage.listen(_onNotification);
+    FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
+  }
 
   @override
   void didChangeDependencies() {
@@ -45,6 +55,10 @@ class _HomeScreenState extends State<HomeScreen> {
       throw 'No user is logged in';
     }
 
+    FirebaseMessaging.instance.getToken().then((token) {
+      if (token != null) api.updateNotificationToken(uid, token);
+    });
+
     _cacheData(api, uid)
         .onError((error, stackTrace) {
           Navigator.of(context).pushReplacementNamed('error');
@@ -59,8 +73,8 @@ class _HomeScreenState extends State<HomeScreen> {
         );
   }
 
-  Future<void> _cacheData(UsersApi api, String uid) {
-    return Future.wait([
+  Future<void> _cacheData(UsersApi api, String uid) async {
+    Future.wait([
       api.getPublicProfile(uid),
       api.getPrivateProfile(uid),
       api.getFriendsPreferences(uid),
@@ -199,4 +213,42 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+}
+
+void _onNotification(RemoteMessage message) => _handleNotification(message);
+
+Future<void> _onBackgroundNotification(RemoteMessage message) =>
+    _handleNotification(message);
+
+Future<void> _handleNotification(RemoteMessage message) async {
+  print(message.data);
+  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+  const initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  const androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    'your channel id',
+    'your channel name',
+    ongoing: true,
+    channelDescription: 'your channel description',
+    importance: Importance.max,
+    priority: Priority.high,
+    ticker: 'ticker',
+  );
+  const platformChannelSpecifics =
+      NotificationDetails(android: androidPlatformChannelSpecifics);
+
+  await flutterLocalNotificationsPlugin.show(
+    0,
+    'Incoming call from Openup',
+    'Openup',
+    platformChannelSpecifics,
+    payload: 'item x',
+  );
 }

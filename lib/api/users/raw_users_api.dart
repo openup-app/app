@@ -43,12 +43,14 @@ class RawUsersApi {
   Future<void> createUserWithUid({
     required String uid,
     required DateTime birthday,
+    required String? notificationToken,
   }) async {
     final response = await http.post(
       Uri.parse('http://$_host/users/$uid/create'),
       headers: _headers,
       body: jsonEncode({
         'birthday': birthday.toIso8601String(),
+        'notificationToken': notificationToken,
       }),
     );
     if (response.statusCode != 200) {
@@ -381,7 +383,10 @@ class RawUsersApi {
     return List<PublicProfile>.from(list.map((e) => PublicProfile.fromJson(e)));
   }
 
-  Future<List<PublicProfile>> deleteConnection(String uid, String deleteUid) async {
+  Future<List<PublicProfile>> deleteConnection(
+    String uid,
+    String deleteUid,
+  ) async {
     final response = await http.delete(
       Uri.parse('http://$_host/users/$uid/connections'),
       headers: _headers,
@@ -398,5 +403,44 @@ class RawUsersApi {
 
     final list = jsonDecode(response.body) as List<dynamic>;
     return List<PublicProfile>.from(list.map((e) => PublicProfile.fromJson(e)));
+  }
+
+  Future<String> call(String uid, String calleeUid, bool video) async {
+    final response = await http.post(
+      Uri.parse('http://$_host/users/$calleeUid/call'),
+      headers: _headers,
+      body: jsonEncode({'uid': uid, 'video': video}),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to call user');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return json['rid'] as String;
+  }
+
+  @override
+  Future<void> updateNotificationToken(
+    String uid,
+    String notificationToken,
+  ) async {
+    final response = await http.post(
+      Uri.parse('http://$_host/users/$uid/notification_token'),
+      headers: _headers,
+      body: jsonEncode({'notification_token': notificationToken}),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to update notification token');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
   }
 }

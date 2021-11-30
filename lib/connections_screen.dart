@@ -115,12 +115,23 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                   padding: const EdgeInsets.only(bottom: 64),
                   itemCount: filteredConnections.length,
                   itemBuilder: (context, index) {
-                    final connection = filteredConnections[index];
+                    final profile = filteredConnections[index];
                     return ConnectionTile(
                       onPressed: () => setState(
                           () => _openIndex = _openIndex == index ? -1 : index),
-                      profile: connection,
+                      profile: profile,
                       expanded: _openIndex == index,
+                      onShowProfile: () {
+                        Navigator.of(context).pushNamed(
+                          'public-profile',
+                          arguments: PublicProfileArguments(
+                            publicProfile: profile,
+                            editable: false,
+                          ),
+                        );
+                      },
+                      onCall: () => _onCall(profile.uid!, video: false),
+                      onVideoCall: () => _onCall(profile.uid!, video: true),
                     );
                   },
                 );
@@ -235,18 +246,37 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
       ),
     );
   }
+
+  void _onCall(String calleeUid, {required bool video}) async {
+    final api = ref.read(usersApiProvider);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      throw 'No user is logged in';
+    }
+    final rid = await api.call(uid, calleeUid, video);
+    print(rid);
+    if (mounted) {
+      
+    }
+  }
 }
 
 class ConnectionTile extends StatefulWidget {
   final VoidCallback? onPressed;
   final PublicProfile profile;
   final bool expanded;
+  final VoidCallback onShowProfile;
+  final VoidCallback onCall;
+  final VoidCallback onVideoCall;
 
   const ConnectionTile({
     Key? key,
     required this.onPressed,
     required this.profile,
     required this.expanded,
+    required this.onShowProfile,
+    required this.onCall,
+    required this.onVideoCall,
   }) : super(key: key);
 
   @override
@@ -368,21 +398,13 @@ class _ConnectionTileState extends State<ConnectionTile>
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Button(
-                    onPressed: () {
-                      Navigator.of(context).pushNamed(
-                        'public-profile',
-                        arguments: PublicProfileArguments(
-                          publicProfile: widget.profile,
-                          editable: false,
-                        ),
-                      );
-                    },
+                    onPressed: widget.onShowProfile,
                     child: const Icon(
                       Icons.account_circle,
                     ),
                   ),
                   Button(
-                    onPressed: () {},
+                    onPressed: widget.onCall,
                     child: const Icon(
                       Icons.phone,
                     ),
@@ -394,7 +416,7 @@ class _ConnectionTileState extends State<ConnectionTile>
                     ),
                   ),
                   Button(
-                    onPressed: () {},
+                    onPressed: widget.onVideoCall,
                     child: const Icon(
                       Icons.videocam_sharp,
                     ),

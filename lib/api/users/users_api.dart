@@ -51,8 +51,13 @@ class UsersApi implements RawUsersApi {
   Future<void> createUserWithUid({
     required String uid,
     required DateTime birthday,
+    required String? notificationToken,
   }) async {
-    await _rawUsersApi.createUserWithUid(uid: uid, birthday: birthday);
+    await _rawUsersApi.createUserWithUid(
+      uid: uid,
+      birthday: birthday,
+      notificationToken: notificationToken,
+    );
     _clearCache();
   }
 
@@ -207,6 +212,14 @@ class UsersApi implements RawUsersApi {
   @override
   Future<List<PublicProfile>> deleteConnection(String uid, String deleteUid) =>
       _rawUsersApi.deleteConnection(uid, deleteUid);
+
+  @override
+  Future<String> call(String uid, String calleeUid, bool video) =>
+      _rawUsersApi.call(uid, calleeUid, video);
+
+  @override
+  Future<void> updateNotificationToken(String uid, String notificationToken) =>
+      _rawUsersApi.updateNotificationToken(uid, notificationToken);
 
   PublicProfile? get publicProfile => _publicProfile;
 
