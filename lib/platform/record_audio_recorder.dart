@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 /// Audio recording implemented by package:record.
@@ -10,7 +12,9 @@ class RecordAudioRecorder {
   Future<bool> start() async {
     if (await _record.hasPermission()) {
       if (!await _record.isRecording()) {
-        _record.start();
+        final tempDir = await getTemporaryDirectory();
+        final path = join(tempDir.path, 'audio.m4a');
+        _record.start(path: path);
         return true;
       }
     }
@@ -25,7 +29,9 @@ class RecordAudioRecorder {
     final path = await _record.stop();
     if (path != null) {
       final file = File(path);
-      return file.readAsBytes();
+      final bytes = await file.readAsBytes();
+      await file.delete();
+      return bytes;
     }
   }
 
