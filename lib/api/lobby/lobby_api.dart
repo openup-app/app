@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/rendering.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
@@ -12,8 +13,10 @@ part 'lobby_api.g.dart';
 /// Handle callbacks to participate in a call, dispose to leave the lobby.
 class LobbyApi {
   late final Socket _socket;
-  final void Function(List<Rekindle> rekindles) onMakeCall;
-  final void Function(List<Rekindle> rekindles) onReceiveCall;
+  final void Function(List<PublicProfile> public, List<Rekindle> rekindles)
+      onMakeCall;
+  final void Function(List<PublicProfile> public, List<Rekindle> rekindles)
+      onReceiveCall;
   final VoidCallback onConnectionError;
 
   LobbyApi({
@@ -60,8 +63,8 @@ class LobbyApi {
     final json = jsonDecode(message);
     final lobbyEvent = _LobbyEvent.fromJson(json);
     lobbyEvent.map(
-      makeCall: (event) => onMakeCall(event.rekindles),
-      answerCall: (event) => onReceiveCall(event.rekindles),
+      makeCall: (event) => onMakeCall(event.profiles, event.rekindles),
+      answerCall: (event) => onReceiveCall(event.profiles, event.rekindles),
     );
   }
 }
@@ -69,10 +72,12 @@ class LobbyApi {
 @freezed
 class _LobbyEvent with _$_LobbyEvent {
   const factory _LobbyEvent.makeCall({
+    required List<PublicProfile> profiles,
     required List<Rekindle> rekindles,
   }) = _MakeCall;
 
   const factory _LobbyEvent.answerCall({
+    required List<PublicProfile> profiles,
     required List<Rekindle> rekindles,
   }) = _AnswerCall;
 

@@ -1,10 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/rekindle_screen.dart';
 import 'package:openup/widgets/button.dart';
@@ -17,6 +17,7 @@ class VoiceCallScreen extends StatefulWidget {
   final String uid;
   final String signalingHost;
   final bool initiator;
+  final List<PublicProfile> profiles;
   final List<Rekindle> rekindles;
 
   const VoiceCallScreen({
@@ -24,6 +25,7 @@ class VoiceCallScreen extends StatefulWidget {
     required this.uid,
     required this.signalingHost,
     required this.initiator,
+    required this.profiles,
     required this.rekindles,
   }) : super(key: key);
 
@@ -89,8 +91,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final rekindle = widget.rekindles.first;
-    final photo = rekindle.photo;
+    final profile = widget.profiles.first;
+    final photo = profile.photo;
     return Stack(
       alignment: Alignment.center,
       fit: StackFit.expand,
@@ -162,7 +164,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                             ],
                           ),
                           Text(
-                            rekindle.name,
+                            profile.name,
                             style: Theming.of(context).text.headline,
                           ),
                           TimeRemaining(

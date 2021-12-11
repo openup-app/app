@@ -31,14 +31,19 @@ import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/theming.dart';
 
-const _tempLobbyHost = 'ec2-54-156-60-224.compute-1.amazonaws.com:8080';
-const _tempSignalingHost = 'ec2-54-156-60-224.compute-1.amazonaws.com:8081';
-const _tempUsersHost = 'ec2-54-156-60-224.compute-1.amazonaws.com:8082';
+const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
+const _tempLobbyHost = '$host:8080';
+const _tempSignalingHost = '$host:8081';
+const _tempUsersHost = '$host:8082';
+
+final navigatorKey = GlobalKey<NavigatorState>();
+final container = ProviderContainer();
 
 void main() {
   runApp(
-    const ProviderScope(
-      child: OpenupApp(),
+    UncontrolledProviderScope(
+      container: container,
+      child: const OpenupApp(),
     ),
   );
 }
@@ -72,6 +77,7 @@ class _OpenupAppState extends State<OpenupApp> {
       child: Builder(
         builder: (context) {
           return MaterialApp(
+            navigatorKey: navigatorKey,
             theme: ThemeData(
               colorScheme: const ColorScheme.light(
                 primary: Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
@@ -269,6 +275,7 @@ class _OpenupAppState extends State<OpenupApp> {
                           purpose: Purpose.friends,
                           onStartCall: ({
                             required bool initiator,
+                            required List<PublicProfile> profiles,
                             required List<Rekindle> rekindles,
                           }) {
                             final route = args.video
@@ -279,6 +286,7 @@ class _OpenupAppState extends State<OpenupApp> {
                               arguments: CallPageArguments(
                                 uid: FirebaseAuth.instance.currentUser!.uid,
                                 initiator: initiator,
+                                profiles: profiles,
                                 rekindles: rekindles,
                               ),
                             );
@@ -297,6 +305,7 @@ class _OpenupAppState extends State<OpenupApp> {
                         uid: args.uid,
                         signalingHost: _tempSignalingHost,
                         initiator: args.initiator,
+                        profiles: args.profiles,
                         rekindles: args.rekindles,
                       );
                     },
@@ -311,6 +320,7 @@ class _OpenupAppState extends State<OpenupApp> {
                         uid: args.uid,
                         signalingHost: _tempSignalingHost,
                         initiator: args.initiator,
+                        profiles: args.profiles,
                         rekindles: args.rekindles,
                       );
                     },
@@ -474,6 +484,7 @@ class _OpenupAppState extends State<OpenupApp> {
                           purpose: Purpose.dating,
                           onStartCall: ({
                             required bool initiator,
+                            required List<PublicProfile> profiles,
                             required List<Rekindle> rekindles,
                           }) {
                             // TOOD: Proper routes
@@ -485,6 +496,7 @@ class _OpenupAppState extends State<OpenupApp> {
                               arguments: CallPageArguments(
                                 uid: FirebaseAuth.instance.currentUser!.uid,
                                 initiator: initiator,
+                                profiles: profiles,
                                 rekindles: rekindles,
                               ),
                             );

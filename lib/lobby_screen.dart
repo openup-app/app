@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
@@ -20,6 +20,7 @@ class LobbyScreen extends StatefulWidget {
   final Purpose purpose;
   final void Function({
     required bool initiator,
+    required List<PublicProfile> profiles,
     required List<Rekindle> rekindles,
   }) onStartCall;
 
@@ -61,12 +62,14 @@ class _LobbyScreenState extends State<LobbyScreen>
       uid: FirebaseAuth.instance.currentUser!.uid,
       video: widget.video,
       purpose: widget.purpose,
-      onMakeCall: (rekindles) => widget.onStartCall(
+      onMakeCall: (profiles, rekindles) => widget.onStartCall(
         initiator: true,
+        profiles: profiles,
         rekindles: rekindles,
       ),
-      onReceiveCall: (rekindles) => widget.onStartCall(
+      onReceiveCall: (profiles, rekindles) => widget.onStartCall(
         initiator: false,
+        profiles: profiles,
         rekindles: rekindles,
       ),
       onConnectionError: () {
