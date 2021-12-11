@@ -37,13 +37,11 @@ const _tempSignalingHost = '$host:8081';
 const _tempUsersHost = '$host:8082';
 
 final navigatorKey = GlobalKey<NavigatorState>();
-final container = ProviderContainer();
 
 void main() {
   runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const OpenupApp(),
+    const ProviderScope(
+      child: OpenupApp(),
     ),
   );
 }

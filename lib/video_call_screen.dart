@@ -255,13 +255,17 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   }
 
   void _navigateToRekindle() {
-    Navigator.of(context).pushReplacementNamed(
-      'precached-rekindle',
-      arguments: PrecachedRekindleScreenArguments(
-        rekindles: widget.rekindles,
-        title: 'meet people',
-      ),
-    );
+    if (widget.rekindles.isEmpty) {
+      Navigator.pop(context);
+    } else {
+      Navigator.of(context).pushReplacementNamed(
+        'precached-rekindle',
+        arguments: PrecachedRekindleScreenArguments(
+          rekindles: widget.rekindles,
+          title: 'meet people',
+        ),
+      );
+    }
   }
 }
 
