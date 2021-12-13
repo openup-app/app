@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:openup/api/users/account.dart';
+import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
@@ -365,7 +366,7 @@ class RawUsersApi {
     }
   }
 
-  Future<List<PublicProfile>> getConnections(String uid) async {
+  Future<List<Connection>> getConnections(String uid) async {
     final response = await http.get(
       Uri.parse('http://$_host/users/$uid/connections'),
       headers: _headers,
@@ -380,10 +381,10 @@ class RawUsersApi {
     }
 
     final list = jsonDecode(response.body) as List<dynamic>;
-    return List<PublicProfile>.from(list.map((e) => PublicProfile.fromJson(e)));
+    return List<Connection>.from(list.map((e) => Connection.fromJson(e)));
   }
 
-  Future<List<PublicProfile>> deleteConnection(
+  Future<List<Connection>> deleteConnection(
     String uid,
     String deleteUid,
   ) async {
@@ -402,7 +403,7 @@ class RawUsersApi {
     }
 
     final list = jsonDecode(response.body) as List<dynamic>;
-    return List<PublicProfile>.from(list.map((e) => PublicProfile.fromJson(e)));
+    return List<Connection>.from(list.map((e) => Connection.fromJson(e)));
   }
 
   Future<String> call(String uid, String calleeUid, bool video) async {

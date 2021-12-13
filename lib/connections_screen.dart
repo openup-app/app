@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/chat_screen.dart';
 import 'package:openup/public_profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_photo.dart';
@@ -16,7 +18,7 @@ class ConnectionsScreen extends ConsumerStatefulWidget {
 }
 
 class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
-  List<PublicProfile>? _connections;
+  List<Connection>? _connections;
   int _openIndex = -1;
 
   String? _search;
@@ -53,10 +55,10 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
     final filteredConnections = search == null
         ? connections
         : connections
-            ?.where(
-                (profile) => profile.name.trim().toLowerCase().contains(search))
+            ?.where((c) => c.profile.name.trim().toLowerCase().contains(search))
             .toList();
-    filteredConnections?.sort((a, b) => a.name.compareTo(b.name));
+    filteredConnections
+        ?.sort((a, b) => a.profile.name.compareTo(b.profile.name));
 
     return Container(
       color: Colors.black,
@@ -115,7 +117,8 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                   padding: const EdgeInsets.only(bottom: 64),
                   itemCount: filteredConnections.length,
                   itemBuilder: (context, index) {
-                    final profile = filteredConnections[index];
+                    final connection = filteredConnections[index];
+                    final profile = connection.profile;
                     return ConnectionTile(
                       onPressed: () => setState(
                           () => _openIndex = _openIndex == index ? -1 : index),
@@ -127,6 +130,15 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                           arguments: PublicProfileArguments(
                             publicProfile: profile,
                             editable: false,
+                          ),
+                        );
+                      },
+                      onChat: () {
+                        Navigator.of(context).pushNamed(
+                          'chat',
+                          arguments: ChatArguments(
+                            profile: profile,
+                            chatroomId: connection.chatroomId,
                           ),
                         );
                       },
@@ -255,9 +267,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
     }
     final rid = await api.call(uid, calleeUid, video);
     print(rid);
-    if (mounted) {
-      
-    }
+    if (mounted) {}
   }
 }
 
@@ -266,6 +276,7 @@ class ConnectionTile extends StatefulWidget {
   final PublicProfile profile;
   final bool expanded;
   final VoidCallback onShowProfile;
+  final VoidCallback onChat;
   final VoidCallback onCall;
   final VoidCallback onVideoCall;
 
@@ -275,6 +286,7 @@ class ConnectionTile extends StatefulWidget {
     required this.profile,
     required this.expanded,
     required this.onShowProfile,
+    required this.onChat,
     required this.onCall,
     required this.onVideoCall,
   }) : super(key: key);
@@ -399,26 +411,38 @@ class _ConnectionTileState extends State<ConnectionTile>
                 children: [
                   Button(
                     onPressed: widget.onShowProfile,
-                    child: const Icon(
-                      Icons.account_circle,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.account_circle,
+                      ),
                     ),
                   ),
                   Button(
                     onPressed: widget.onCall,
-                    child: const Icon(
-                      Icons.phone,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.phone,
+                      ),
                     ),
                   ),
                   Button(
-                    onPressed: () {},
-                    child: const Icon(
-                      Icons.message,
+                    onPressed: widget.onChat,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.message,
+                      ),
                     ),
                   ),
                   Button(
                     onPressed: widget.onVideoCall,
-                    child: const Icon(
-                      Icons.videocam_sharp,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.videocam_sharp,
+                      ),
                     ),
                   ),
                 ],

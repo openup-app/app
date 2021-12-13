@@ -9,6 +9,7 @@ import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/chat_screen.dart';
 import 'package:openup/connections_screen.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
@@ -35,6 +36,7 @@ const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
 const _tempLobbyHost = '$host:8080';
 const _tempSignalingHost = '$host:8081';
 const _tempUsersHost = '$host:8082';
+const _tempChatHost = '$host:8083';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -552,6 +554,18 @@ class _OpenupAppState extends State<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     builder: (_) => const ConnectionsScreen(),
+                  );
+                case 'chat':
+                  final args = settings.arguments as ChatArguments;
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (_) {
+                      return ChatScreen(
+                        chatHost: _tempChatHost,
+                        profile: args.profile,
+                        chatroomId: args.chatroomId,
+                      );
+                    },
                   );
                 default:
                   throw 'Route not found ${settings.name}';

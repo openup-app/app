@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/account.dart';
+import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/raw_users_api.dart';
@@ -206,11 +207,11 @@ class UsersApi implements RawUsersApi {
       _rawUsersApi.addConnectionRequest(uid, otherUid);
 
   @override
-  Future<List<PublicProfile>> getConnections(String uid) =>
+  Future<List<Connection>> getConnections(String uid) =>
       _rawUsersApi.getConnections(uid);
 
   @override
-  Future<List<PublicProfile>> deleteConnection(String uid, String deleteUid) =>
+  Future<List<Connection>> deleteConnection(String uid, String deleteUid) =>
       _rawUsersApi.deleteConnection(uid, deleteUid);
 
   @override
