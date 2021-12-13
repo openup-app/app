@@ -84,5 +84,6 @@ class _ChatEvent with _$_ChatEvent {
 enum ChatType {
   emoji,
   image,
+  video,
   audio,
 }
