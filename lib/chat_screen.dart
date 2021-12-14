@@ -43,6 +43,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _connectionError = false;
   late final String _uid;
 
+  bool _loading = true;
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +57,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     _chatApi = ChatApi(
       host: widget.host,
+      webPort: widget.webPort,
       socketPort: widget.socketPort,
       uid: uid,
       chatroomId: widget.chatroomId,
@@ -67,6 +70,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         }
       },
     );
+
+    _chatApi?.getMessages(widget.chatroomId).then((messages) {
+      if (mounted) {
+        print('Received $messages');
+        setState(() {
+          _loading = false;
+          _messages.addAll(messages.reversed);
+        });
+      }
+    });
   }
 
   @override
@@ -113,8 +126,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             top: MediaQuery.of(context).padding.top + 64,
                             bottom: 80,
                           ),
-                          itemCount: _messages.length,
+                          itemCount: _messages.length + (_loading ? 1 : 0),
                           itemBuilder: (context, index) {
+                            if (_loading && index == _messages.length) {
+                              index--;
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
                             final message = _messages[index];
                             final fromMe = message.uid == _uid;
                             return Container(
