@@ -14,8 +14,8 @@ part 'lobby_screen.freezed.dart';
 
 /// Page on which you wait to be matched with another user.
 class LobbyScreen extends StatefulWidget {
-  final String lobbyHost;
-  final String signalingHost;
+  final String host;
+  final int socketPort;
   final bool video;
   final Purpose purpose;
   final void Function({
@@ -26,8 +26,8 @@ class LobbyScreen extends StatefulWidget {
 
   const LobbyScreen({
     Key? key,
-    required this.lobbyHost,
-    required this.signalingHost,
+    required this.host,
+    required this.socketPort,
     required this.video,
     required this.purpose,
     required this.onStartCall,
@@ -58,7 +58,8 @@ class _LobbyScreenState extends State<LobbyScreen>
     _animationController.forward();
 
     _lobbyApi = LobbyApi(
-      host: widget.lobbyHost,
+      host: widget.host,
+      socketPort: widget.socketPort,
       uid: FirebaseAuth.instance.currentUser!.uid,
       video: widget.video,
       purpose: widget.purpose,

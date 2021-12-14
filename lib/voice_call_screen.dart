@@ -15,7 +15,8 @@ import 'package:openup/widgets/time_remaining.dart';
 
 class VoiceCallScreen extends StatefulWidget {
   final String uid;
-  final String signalingHost;
+  final String host;
+  final int socketPort;
   final bool initiator;
   final List<PublicProfile> profiles;
   final List<Rekindle> rekindles;
@@ -23,7 +24,8 @@ class VoiceCallScreen extends StatefulWidget {
   const VoiceCallScreen({
     Key? key,
     required this.uid,
-    required this.signalingHost,
+    required this.host,
+    required this.socketPort,
     required this.initiator,
     required this.profiles,
     required this.rekindles,
@@ -47,7 +49,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
   @override
   void initState() {
     _signalingChannel = SocketIoSignalingChannel(
-      host: widget.signalingHost,
+      host: widget.host,
+      port: widget.socketPort,
       uid: widget.uid,
     );
     _phone = Phone(

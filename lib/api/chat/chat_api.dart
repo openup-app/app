@@ -16,22 +16,23 @@ class ChatApi {
 
   ChatApi({
     required String host,
+    required int socketPort,
     required String uid,
     required String chatroomId,
     required this.onMessage,
     required this.onConnectionError,
   }) {
     _socket = io(
-      'http://$host',
+      'http://$host:$socketPort/chats',
       OptionBuilder()
           .setTimeout(1500)
           .setTransports(['websocket'])
-          .setPath('/chat')
           .enableForceNew()
           .disableReconnection()
           .setQuery({'uid': uid, 'chatroomId': chatroomId})
           .build(),
     );
+
     _socket.onConnectError((_) {
       onConnectionError();
     });

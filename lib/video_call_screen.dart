@@ -14,7 +14,8 @@ import 'package:openup/widgets/time_remaining.dart';
 /// Page on which the [Phone] is used. Calls start, proceed and end here.
 class VideoCallScreen extends StatefulWidget {
   final String uid;
-  final String signalingHost;
+  final String host;
+  final int socketPort;
   final bool initiator;
   final List<PublicProfile> profiles;
   final List<Rekindle> rekindles;
@@ -22,7 +23,8 @@ class VideoCallScreen extends StatefulWidget {
   const VideoCallScreen({
     Key? key,
     required this.uid,
-    required this.signalingHost,
+    required this.host,
+    required this.socketPort,
     required this.initiator,
     required this.profiles,
     required this.rekindles,
@@ -48,7 +50,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   @override
   void initState() {
     _signalingChannel = SocketIoSignalingChannel(
-      host: widget.signalingHost,
+      host: widget.host,
+      port: widget.socketPort,
       uid: widget.uid,
     );
     _phone = Phone(

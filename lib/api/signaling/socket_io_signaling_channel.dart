@@ -11,14 +11,14 @@ class SocketIoSignalingChannel implements SignalingChannel {
 
   SocketIoSignalingChannel({
     required String host,
+    required int port,
     required String uid,
   }) {
     _socket = io(
-      'http://$host',
+      'http://$host:$port/call',
       OptionBuilder()
           .setTimeout(1500)
           .setTransports(['websocket'])
-          .setPath('/call')
           .enableForceNew()
           .disableReconnection()
           .setQuery({'uid': uid})

@@ -21,6 +21,7 @@ class LobbyApi {
 
   LobbyApi({
     required String host,
+    required int socketPort,
     required String uid,
     required bool video,
     required Purpose purpose,
@@ -29,11 +30,10 @@ class LobbyApi {
     required this.onConnectionError,
   }) {
     _socket = io(
-      'http://$host',
+      'http://$host:$socketPort/lobby',
       OptionBuilder()
           .setTimeout(1500)
           .setTransports(['websocket'])
-          .setPath('/lobby')
           .enableForceNew()
           .disableReconnection()
           .setQuery({

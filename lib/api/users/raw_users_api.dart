@@ -14,9 +14,12 @@ class RawUsersApi {
     'Accept': 'application/json',
   };
 
-  final String _host;
+  final String _urlBase;
 
-  RawUsersApi({required String host}) : _host = host;
+  RawUsersApi({
+    required String host,
+    required int port,
+  }) : _urlBase = 'http://$host:$port';
 
   Future<void> createUserWithEmail({
     required String email,
@@ -24,7 +27,7 @@ class RawUsersApi {
     required DateTime birthday,
   }) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/'),
+      Uri.parse('$_urlBase/users/'),
       headers: _headers,
       body: jsonEncode({
         'email': email,
@@ -47,7 +50,7 @@ class RawUsersApi {
     required String? notificationToken,
   }) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/create'),
+      Uri.parse('$_urlBase/users/$uid/create'),
       headers: _headers,
       body: jsonEncode({
         'birthday': birthday.toIso8601String(),
@@ -65,7 +68,7 @@ class RawUsersApi {
 
   Future<Account> getAccount(String uid) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/account'),
+      Uri.parse('$_urlBase/users/$uid/account'),
       headers: _headers,
     );
 
@@ -82,7 +85,7 @@ class RawUsersApi {
 
   Future<void> updateAccount(String uid, Account account) async {
     final response = await http.patch(
-      Uri.parse('http://$_host/users/$uid/account'),
+      Uri.parse('$_urlBase/users/$uid/account'),
       headers: _headers,
       body: jsonEncode(account.toJson()),
     );
@@ -98,7 +101,7 @@ class RawUsersApi {
 
   Future<PublicProfile> getPublicProfile(String uid) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/profile/public'),
+      Uri.parse('$_urlBase/users/$uid/profile/public'),
       headers: _headers,
     );
 
@@ -115,7 +118,7 @@ class RawUsersApi {
 
   Future<void> updatePublicProfile(String uid, PublicProfile profile) async {
     final response = await http.patch(
-      Uri.parse('http://$_host/users/$uid/profile/public'),
+      Uri.parse('$_urlBase/users/$uid/profile/public'),
       headers: _headers,
       body: jsonEncode(profile.toJson()),
     );
@@ -131,7 +134,7 @@ class RawUsersApi {
 
   Future<PrivateProfile> getPrivateProfile(String uid) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/profile/private'),
+      Uri.parse('$_urlBase/users/$uid/profile/private'),
       headers: _headers,
     );
 
@@ -148,7 +151,7 @@ class RawUsersApi {
 
   Future<void> updatePrivateProfile(String uid, PrivateProfile profile) async {
     final response = await http.patch(
-      Uri.parse('http://$_host/users/$uid/profile/private'),
+      Uri.parse('$_urlBase/users/$uid/profile/private'),
       headers: _headers,
       body: jsonEncode(profile.toJson()),
     );
@@ -168,7 +171,7 @@ class RawUsersApi {
     int index,
   ) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/public/gallery/$index'),
+      Uri.parse('$_urlBase/users/$uid/public/gallery/$index'),
       headers: {
         ..._headers,
         'Content-Type': 'application/octet-stream',
@@ -190,7 +193,7 @@ class RawUsersApi {
 
   Future<void> deleteGalleryPhoto(String uid, int index) async {
     final response = await http.delete(
-      Uri.parse('http://$_host/users/$uid/public/gallery/$index'),
+      Uri.parse('$_urlBase/users/$uid/public/gallery/$index'),
       headers: _headers,
     );
 
@@ -205,7 +208,7 @@ class RawUsersApi {
 
   Future<String> updateAudioBio(String uid, Uint8List audio) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/public/audio'),
+      Uri.parse('$_urlBase/users/$uid/public/audio'),
       headers: {
         ..._headers,
         'Content-Type': 'application/octet-stream',
@@ -227,7 +230,7 @@ class RawUsersApi {
 
   Future<void> deleteAudioBio(String uid) async {
     final response = await http.delete(
-      Uri.parse('http://$_host/users/$uid/public/audio'),
+      Uri.parse('$_urlBase/users/$uid/public/audio'),
       headers: _headers,
     );
 
@@ -242,7 +245,7 @@ class RawUsersApi {
 
   Future<void> deleteUser(String uid) async {
     final response = await http.delete(
-      Uri.parse('http://$_host/users/$uid'),
+      Uri.parse('$_urlBase/users/$uid'),
       headers: _headers,
     );
 
@@ -263,7 +266,7 @@ class RawUsersApi {
 
   Future<Preferences> _getPreferences(String uid, String type) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/preferences/$type'),
+      Uri.parse('$_urlBase/users/$uid/preferences/$type'),
       headers: _headers,
     );
 
@@ -290,7 +293,7 @@ class RawUsersApi {
     String type,
   ) async {
     final response = await http.patch(
-      Uri.parse('http://$_host/users/$uid/preferences/$type'),
+      Uri.parse('$_urlBase/users/$uid/preferences/$type'),
       headers: _headers,
       body: jsonEncode(preferences.toJson()),
     );
@@ -315,7 +318,7 @@ class RawUsersApi {
     String type,
   ) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/possible/$type'),
+      Uri.parse('$_urlBase/users/$uid/possible/$type'),
       headers: _headers,
       body: jsonEncode(preferences.toJson()),
     );
@@ -334,7 +337,7 @@ class RawUsersApi {
 
   Future<List<Rekindle>> getRekindleList(String uid) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/rekindles'),
+      Uri.parse('$_urlBase/users/$uid/rekindles'),
       headers: _headers,
     );
 
@@ -352,7 +355,7 @@ class RawUsersApi {
 
   Future<void> addConnectionRequest(String uid, String otherUid) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/connection_request'),
+      Uri.parse('$_urlBase/users/$uid/connection_request'),
       headers: _headers,
       body: jsonEncode({'uid': otherUid}),
     );
@@ -368,7 +371,7 @@ class RawUsersApi {
 
   Future<List<Connection>> getConnections(String uid) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/connections'),
+      Uri.parse('$_urlBase/users/$uid/connections'),
       headers: _headers,
     );
 
@@ -389,7 +392,7 @@ class RawUsersApi {
     String deleteUid,
   ) async {
     final response = await http.delete(
-      Uri.parse('http://$_host/users/$uid/connections'),
+      Uri.parse('$_urlBase/users/$uid/connections'),
       headers: _headers,
       body: jsonEncode({'uid': deleteUid}),
     );
@@ -408,7 +411,7 @@ class RawUsersApi {
 
   Future<String> call(String uid, String calleeUid, bool video) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$calleeUid/call'),
+      Uri.parse('$_urlBase/users/$calleeUid/call'),
       headers: _headers,
       body: jsonEncode({'callerUid': uid, 'video': video}),
     );
@@ -431,7 +434,7 @@ class RawUsersApi {
     String notificationToken,
   ) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/notification_token'),
+      Uri.parse('$_urlBase/users/$uid/notification_token'),
       headers: _headers,
       body: jsonEncode({'notification_token': notificationToken}),
     );

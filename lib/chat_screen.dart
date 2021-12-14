@@ -12,13 +12,17 @@ import 'package:openup/widgets/chat_input_box.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
-  final String chatHost;
+  final String host;
+  final int webPort;
+  final int socketPort;
   final PublicProfile profile;
   final String chatroomId;
 
   const ChatScreen({
     Key? key,
-    required this.chatHost,
+    required this.host,
+    required this.webPort,
+    required this.socketPort,
     required this.profile,
     required this.chatroomId,
   }) : super(key: key);
@@ -50,7 +54,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _uid = uid;
 
     _chatApi = ChatApi(
-      host: widget.chatHost,
+      host: widget.host,
+      socketPort: widget.socketPort,
       uid: uid,
       chatroomId: widget.chatroomId,
       onMessage: (message) {
@@ -104,7 +109,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         child: ListView.builder(
                           controller: _scrollController,
                           reverse: true,
-                          padding: const EdgeInsets.only(bottom: 72),
+                          padding: EdgeInsets.only(
+                            top: MediaQuery.of(context).padding.top + 64,
+                            bottom: 80,
+                          ),
                           itemCount: _messages.length,
                           itemBuilder: (context, index) {
                             final message = _messages[index];
@@ -243,13 +251,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               ],
             ),
-            const Positioned(
-              left: 8,
-              top: 24,
-              child: BackButton(),
+            Positioned(
+              left: 0,
+              top: 16 + MediaQuery.of(context).padding.top,
+              child: const BackButton(),
             ),
             Positioned(
-              top: 32,
+              top: 16 + MediaQuery.of(context).padding.top,
               child: Button(
                 onPressed: () {
                   Navigator.of(context).pushNamed(

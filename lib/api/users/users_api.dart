@@ -13,13 +13,16 @@ late final Provider<UsersApi> usersApiProvider;
 late final StateProvider<PublicProfile?> profileProvider;
 late final StateController<PublicProfile?> _profileStateController;
 
-void initUsersApi({required String host}) {
+void initUsersApi({
+  required String host,
+  required int port,
+}) {
   profileProvider = StateProvider<PublicProfile?>((ref) {
     return null;
   });
   usersApiProvider = Provider<UsersApi>((ref) {
     _profileStateController = ref.read(profileProvider);
-    return UsersApi(host: host);
+    return UsersApi(host: host, port: port);
   });
 }
 
@@ -32,7 +35,13 @@ class UsersApi implements RawUsersApi {
   Preferences? _datingPreferences;
   Timer? _countRequestDebounce;
 
-  UsersApi({required String host}) : _rawUsersApi = RawUsersApi(host: host);
+  UsersApi({
+    required String host,
+    required int port,
+  }) : _rawUsersApi = RawUsersApi(
+          host: host,
+          port: port,
+        );
 
   @override
   Future<void> createUserWithEmail({

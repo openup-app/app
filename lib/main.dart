@@ -32,11 +32,9 @@ import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/theming.dart';
 
-const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
-const _tempLobbyHost = '$host:8080';
-const _tempSignalingHost = '$host:8081';
-const _tempUsersHost = '$host:8082';
-const _tempChatHost = '$host:8083';
+const host = '192.168.1.108';
+const webPort = 8080;
+const socketPort = 8081;
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -59,7 +57,10 @@ class _OpenupAppState extends State<OpenupApp> {
   @override
   void initState() {
     super.initState();
-    initUsersApi(host: _tempUsersHost);
+    initUsersApi(
+      host: host,
+      port: webPort,
+    );
 
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -269,8 +270,8 @@ class _OpenupAppState extends State<OpenupApp> {
                           ],
                         ),
                         child: LobbyScreen(
-                          lobbyHost: _tempLobbyHost,
-                          signalingHost: _tempSignalingHost,
+                          host: host,
+                          socketPort: socketPort,
                           video: args.video,
                           purpose: Purpose.friends,
                           onStartCall: ({
@@ -303,7 +304,8 @@ class _OpenupAppState extends State<OpenupApp> {
                     builder: (_) {
                       return VoiceCallScreen(
                         uid: args.uid,
-                        signalingHost: _tempSignalingHost,
+                        host: host,
+                        socketPort: socketPort,
                         initiator: args.initiator,
                         profiles: args.profiles,
                         rekindles: args.rekindles,
@@ -318,7 +320,8 @@ class _OpenupAppState extends State<OpenupApp> {
                     builder: (_) {
                       return VideoCallScreen(
                         uid: args.uid,
-                        signalingHost: _tempSignalingHost,
+                        host: host,
+                        socketPort: socketPort,
                         initiator: args.initiator,
                         profiles: args.profiles,
                         rekindles: args.rekindles,
@@ -478,8 +481,8 @@ class _OpenupAppState extends State<OpenupApp> {
                           homeButtonColor: Colors.white,
                         ),
                         child: LobbyScreen(
-                          lobbyHost: _tempLobbyHost,
-                          signalingHost: _tempSignalingHost,
+                          host: host,
+                          socketPort: socketPort,
                           video: args.video,
                           purpose: Purpose.dating,
                           onStartCall: ({
@@ -561,7 +564,9 @@ class _OpenupAppState extends State<OpenupApp> {
                     settings: settings,
                     builder: (_) {
                       return ChatScreen(
-                        chatHost: _tempChatHost,
+                        host: host,
+                        webPort: webPort,
+                        socketPort: socketPort,
                         profile: args.profile,
                         chatroomId: args.chatroomId,
                       );
