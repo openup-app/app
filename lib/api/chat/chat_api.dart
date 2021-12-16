@@ -95,10 +95,11 @@ class ChatApi {
 
   Future<List<ChatMessage>> getMessages(
     String chatroomId, {
-    String? startId,
+    DateTime? startDate,
     int limit = 10,
   }) async {
-    final query = '${startId == null ? '' : 'startId=$startId&'}limit=$limit';
+    final query =
+        '${startDate == null ? '' : 'startDate=${startDate.toIso8601String()}&'}limit=$limit';
     final response = await http.get(
       Uri.parse('$_urlBase/chats/$chatroomId?$query'),
       headers: _headers,
@@ -120,6 +121,7 @@ class ChatApi {
 @freezed
 class _ChatEvent with _$_ChatEvent {
   const factory _ChatEvent.chatMessage({
+    String? messageId,
     required String uid,
     required DateTime date,
     required ChatType type,

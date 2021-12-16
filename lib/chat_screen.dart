@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:openup/api/chat/chat_api.dart';
@@ -10,6 +11,7 @@ import 'package:openup/public_profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_input_box.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:uuid/uuid.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String host;
@@ -36,7 +38,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   ChatApi? _chatApi;
   _InputType _inputType = _InputType.none;
-  final _messages = <ChatMessage>[];
+  final _messages = <String, ChatMessage>{};
 
   final _scrollController = ScrollController();
 
@@ -54,7 +56,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       throw 'No user is logged in';
     }
     _uid = uid;
-
     _chatApi = ChatApi(
       host: widget.host,
       webPort: widget.webPort,
@@ -62,7 +63,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       uid: uid,
       chatroomId: widget.chatroomId,
       onMessage: (message) {
-        setState(() => _messages.insert(0, message));
+        setState(() => _messages[message.messageId!] = message);
       },
       onConnectionError: () {
         if (mounted) {
@@ -71,19 +72,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       },
     );
 
-    _chatApi?.getMessages(widget.chatroomId).then((messages) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _messages.addAll(messages.reversed);
-        });
-      }
-    });
+    _fetchHistory();
+
+    _scrollController.addListener(_scrollListener);
   }
 
   @override
   void dispose() {
     _chatApi?.dispose();
+    _scrollController.removeListener(_scrollListener);
     super.dispose();
   }
 
@@ -126,16 +123,43 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             bottom: 80,
                           ),
                           itemCount: _messages.length + (_loading ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (_loading && index == _messages.length) {
-                              index--;
+                          itemBuilder: (context, forwardIndex) {
+                            var index =
+                                _messages.values.length - forwardIndex - 1;
+                            if (_loading && forwardIndex == _messages.length) {
                               return const Center(
                                 child: CircularProgressIndicator(),
                               );
                             }
-                            final message = _messages[index];
+                            final message = _messages.values.toList()[index];
                             final fromMe = message.uid == _uid;
+
+                            const ColorFilter defaultColorMatrix =
+                                ColorFilter.matrix(
+                              <double>[
+                                1, 0, 0, 0, 0, // Comments to stop dart format
+                                0, 1, 0, 0, 0, //
+                                0, 0, 1, 0, 0, //
+                                0, 0, 0, 1, 0, //
+                              ],
+                            );
+
+                            // Based on Lomski's answer at https://stackoverflow.com/a/62078847/1702627
+                            const ColorFilter greyscaleColorMatrix =
+                                ColorFilter.matrix(
+                              <double>[
+                                0.2126, 0.7152, 0.0722, 0,
+                                0, // Comments to stop dart format
+                                0.2126, 0.7152, 0.0722, 0, 0, //
+                                0.2126, 0.7152, 0.0722, 0, 0, //
+                                0, 0, 0, 1, 0, //
+                              ],
+                            );
+
                             return Container(
+                              key: message.messageId != null
+                                  ? Key(message.messageId!)
+                                  : null,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 4,
@@ -144,22 +168,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               alignment: fromMe
                                   ? Alignment.centerRight
                                   : Alignment.centerLeft,
-                              child: Builder(
-                                builder: (context) {
-                                  switch (message.type) {
-                                    case ChatType.emoji:
-                                      return _buildEmojiMessage(message);
-                                    case ChatType.image:
-                                      return _buildImageMessage(message);
-                                    case ChatType.video:
-                                      return _buildVideoMessage(message);
-                                    case ChatType.audio:
-                                      return _buildAudioMessage(
-                                        message,
-                                        fromMe: fromMe,
-                                      );
-                                  }
-                                },
+                              child: ColorFiltered(
+                                colorFilter: message.messageId == null
+                                    ? greyscaleColorMatrix
+                                    : defaultColorMatrix,
+                                child: Builder(
+                                  builder: (context) {
+                                    switch (message.type) {
+                                      case ChatType.emoji:
+                                        return _buildEmojiMessage(message);
+                                      case ChatType.image:
+                                        return _buildImageMessage(message);
+                                      case ChatType.video:
+                                        return _buildVideoMessage(message);
+                                      case ChatType.audio:
+                                        return _buildAudioMessage(
+                                          message,
+                                          fromMe: fromMe,
+                                        );
+                                    }
+                                  },
+                                ),
                               ),
                             );
                           },
@@ -327,7 +356,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget _buildEmojiMessage(ChatMessage message) {
     return Text(
       message.content,
-      style: const TextStyle(fontSize: 100),
+      style: const TextStyle(
+        fontSize: 100,
+        color: Colors.white,
+      ),
     );
   }
 
@@ -508,11 +540,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  void _send(ChatType type, String content) {
-    _chatApi?.sendMessage(_uid, widget.chatroomId, type, content);
-    _scrollController.jumpTo(0);
-  }
-
   Widget _buildDateText(
     DateTime date, {
     double opacity = 0.5,
@@ -524,6 +551,57 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           fontWeight: FontWeight.normal,
           color: Colors.white.withOpacity(opacity)),
     );
+  }
+
+  void _send(ChatType type, String content) {
+    const uuid = Uuid();
+    final pendingId = uuid.v4();
+    _chatApi
+        ?.sendMessage(_uid, widget.chatroomId, type, content)
+        .then((message) {
+      if (mounted) {
+        setState(() {
+          _messages[pendingId] = message;
+        });
+      }
+    });
+    setState(() {
+      _messages[pendingId] = ChatMessage(
+        uid: _uid,
+        date: DateTime.now(),
+        type: type,
+        content: content,
+      );
+    });
+    _scrollController.jumpTo(0);
+  }
+
+  void _scrollListener() {
+    final startDate = _messages.values.first.date;
+    if (_scrollController.position.userScrollDirection ==
+            ScrollDirection.reverse &&
+        _scrollController.position.extentAfter < 200 &&
+        _messages.isNotEmpty &&
+        !_loading) {
+      setState(() => _loading = true);
+      _fetchHistory(startDate: startDate);
+    }
+  }
+
+  void _fetchHistory({DateTime? startDate}) {
+    _chatApi
+        ?.getMessages(widget.chatroomId, startDate: startDate)
+        .then((messages) {
+      if (mounted) {
+        final entries = _messages.entries.toList();
+        entries.insertAll(0, messages.map((e) => MapEntry(e.messageId!, e)));
+        setState(() {
+          _loading = false;
+          _messages.clear();
+          _messages.addEntries(entries);
+        });
+      }
+    });
   }
 
   _InputType _switchToInputTypeOrNone(_InputType type) =>
