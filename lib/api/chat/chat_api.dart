@@ -57,16 +57,6 @@ class ChatApi {
     return Future.value();
   }
 
-  void sendMessage(ChatType type, String content) {
-    _socket.emit(
-      'chat_message',
-      jsonEncode({
-        'type': describeEnum(type),
-        'content': content,
-      }),
-    );
-  }
-
   void _handleMessage(String message) {
     final json = jsonDecode(message);
     final data = json['message'];
@@ -74,6 +64,33 @@ class ChatApi {
     chatEvent.map(
       chatMessage: (event) => onMessage(event),
     );
+  }
+
+  Future<ChatMessage> sendMessage(
+    String uid,
+    String chatroomId,
+    ChatType type,
+    String content,
+  ) async {
+    final response = await http.post(
+      Uri.parse('$_urlBase/chats/$chatroomId'),
+      headers: _headers,
+      body: jsonEncode({
+        'uid': uid,
+        'type': type.name,
+        'content': content,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to get send message ${response.body}');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+
+    return ChatMessage.fromJson(jsonDecode(response.body));
   }
 
   Future<List<ChatMessage>> getMessages(
@@ -96,7 +113,6 @@ class ChatApi {
     }
 
     final list = jsonDecode(response.body) as List<dynamic>;
-    print('got $list');
     return List<ChatMessage>.from(list.map((e) => ChatMessage.fromJson(e)));
   }
 }

@@ -73,7 +73,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     _chatApi?.getMessages(widget.chatroomId).then((messages) {
       if (mounted) {
-        print('Received $messages');
         setState(() {
           _loading = false;
           _messages.addAll(messages.reversed);
@@ -166,6 +165,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           },
                         ),
                       ),
+                      if (!_loading && _messages.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Text(
+                              'Send your first message to ${widget.profile.name}!',
+                              style: Theming.of(context).text.bodySecondary,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
                       Positioned(
                         height: 64,
                         left: 8,
@@ -498,7 +509,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _send(ChatType type, String content) {
-    _chatApi?.sendMessage(type, content);
+    _chatApi?.sendMessage(_uid, widget.chatroomId, type, content);
     _scrollController.jumpTo(0);
   }
 
