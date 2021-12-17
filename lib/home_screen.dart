@@ -1,40 +1,26 @@
-import 'dart:convert';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:location/location.dart';
-import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
-import 'package:openup/chat_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/loading_dialog.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _cachingStarted = false;
-  bool _notificationsComplete = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    FirebaseMessaging.onMessage.listen(_onNotification);
-    FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
-  }
 
   @override
   void didChangeDependencies() {
@@ -52,36 +38,10 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     });
 
-    final container = ProviderScope.containerOf(context);
-    final api = container.read(usersApiProvider);
+    final api = ref.read(usersApiProvider);
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       throw 'No user is logged in';
-    }
-
-    if (!_notificationsComplete) {
-      _notificationsComplete = true;
-      FlutterLocalNotificationsPlugin()
-          .getNotificationAppLaunchDetails()
-          .then((value) async {
-        final payload = value?.payload;
-        if (payload != null) {
-          final payloadMap = jsonDecode(payload);
-
-          if (payloadMap['route'] == 'chat') {
-            final chatUid = payloadMap['uid'];
-            final chatroomId = payloadMap['chatroomId'];
-            final profile = await api.getPublicProfile(payloadMap['uid']);
-            Navigator.of(context).pushNamed(
-              'chat',
-              arguments: ChatArguments(
-                profile: profile,
-                chatroomId: chatroomId,
-              ),
-            );
-          }
-        }
-      });
     }
 
     FirebaseMessaging.instance.getToken().then((token) {
@@ -242,101 +202,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-}
-
-void _onNotification(RemoteMessage message) => _handleNotification(message);
-
-Future<void> _onBackgroundNotification(RemoteMessage message) =>
-    _handleNotification(message, background: true);
-
-Future<void> _handleNotification(
-  RemoteMessage message, {
-  bool background = false,
-}) async {
-  final type = message.data['type'];
-  final String notificationTitle;
-  final String notificationBody;
-  final Map<String, dynamic> notificationPayload;
-  final String channelName;
-  final String channelDescription;
-
-  String? chatroomId;
-  if (type == 'call') {
-    final uid = message.data['uid'];
-    final senderName = message.data['senderName'];
-    final senderPhoto = message.data['senderPhoto'];
-    notificationTitle = 'Incoming call on Openup';
-    notificationBody = senderName;
-    channelName = 'Calls';
-    channelDescription = 'Calls from your connections';
-    notificationPayload = {
-      'route': 'voice-call',
-      'uid': uid,
-    };
-  } else if (type == 'chat') {
-    final messageJson = message.data['message'];
-    final senderName = message.data['senderName'];
-    final senderPhoto = message.data['senderPhoto'];
-    notificationTitle = senderName;
-    chatroomId = message.data['chatroomId'];
-    final chatMessage = ChatMessage.fromJson(jsonDecode(messageJson));
-    channelName = 'Chat messages';
-    channelDescription = 'Messages from your connections';
-    notificationPayload = {
-      'route': 'chat',
-      'uid': chatMessage.uid,
-      'chatroomId': chatroomId,
-    };
-
-    switch (chatMessage.type) {
-      case ChatType.emoji:
-        notificationBody = chatMessage.content;
-        break;
-      case ChatType.image:
-        notificationBody = '$senderName sent a photo';
-        break;
-      case ChatType.video:
-        notificationBody = '$senderName sent a video';
-        break;
-      case ChatType.audio:
-        notificationBody = '$senderName sent a voice memo';
-        break;
-    }
-  } else {
-    throw 'Unknown notification type $type';
-  }
-
-  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const iOSInit = IOSInitializationSettings();
-  const initializationSettings = InitializationSettings(
-    android: androidInit,
-    iOS: iOSInit,
-  );
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-
-  final androidDetails = AndroidNotificationDetails(
-    type,
-    channelName,
-    ongoing: true,
-    channelDescription: channelDescription,
-    importance: Importance.max,
-    priority: Priority.high,
-    ticker: notificationBody,
-  );
-  final iOSDetails = IOSNotificationDetails(
-    threadIdentifier: chatroomId,
-  );
-  final platformChannelSpecifics = NotificationDetails(
-    android: androidDetails,
-    iOS: iOSDetails,
-  );
-
-  await flutterLocalNotificationsPlugin.show(
-    0,
-    notificationTitle,
-    notificationBody,
-    platformChannelSpecifics,
-    payload: jsonEncode(notificationPayload),
-  );
 }
