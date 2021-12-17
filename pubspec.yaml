@@ -27,6 +27,7 @@ dependencies:
   firebase_messaging: ^11.1.0
   flutter_local_notifications: ^9.1.4
   emoji_picker_flutter: ^1.0.8
+  uuid: ^3.0.5
 
 dev_dependencies:
   flutter_test:
