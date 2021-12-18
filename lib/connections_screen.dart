@@ -9,6 +9,7 @@ import 'package:openup/public_profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:openup/widgets/unread_message_badge.dart';
 
 class ConnectionsScreen extends ConsumerStatefulWidget {
   const ConnectionsScreen({Key? key}) : super(key: key);
@@ -114,7 +115,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                   );
                 }
                 return ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 64),
+                  padding: const EdgeInsets.only(top: 20, bottom: 64),
                   itemCount: filteredConnections.length,
                   itemBuilder: (context, index) {
                     final connection = filteredConnections[index];
@@ -123,6 +124,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                       onPressed: () => setState(
                           () => _openIndex = _openIndex == index ? -1 : index),
                       profile: profile,
+                      unreadCount: connection.chatroomUnread,
                       expanded: _openIndex == index,
                       onShowProfile: () {
                         Navigator.of(context).pushNamed(
@@ -274,6 +276,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
 class ConnectionTile extends StatefulWidget {
   final VoidCallback? onPressed;
   final PublicProfile profile;
+  final int unreadCount;
   final bool expanded;
   final VoidCallback onShowProfile;
   final VoidCallback onChat;
@@ -284,6 +287,7 @@ class ConnectionTile extends StatefulWidget {
     Key? key,
     required this.onPressed,
     required this.profile,
+    required this.unreadCount,
     required this.expanded,
     required this.onShowProfile,
     required this.onChat,
@@ -330,52 +334,64 @@ class _ConnectionTileState extends State<ConnectionTile>
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Button(
-            onPressed: widget.onPressed,
-            child: Row(
+        Button(
+          onPressed: widget.onPressed,
+          child: SizedBox(
+            height: 96,
+            child: Stack(
               children: [
-                const SizedBox(width: 32),
-                Container(
-                  width: 42,
-                  height: 56,
-                  clipBehavior: Clip.hardEdge,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(8),
+                Row(
+                  children: [
+                    const SizedBox(width: 32),
+                    Container(
+                      width: 42,
+                      height: 56,
+                      clipBehavior: Clip.hardEdge,
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
+                        color: Colors.blue,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theming.of(context).shadow,
+                            offset: const Offset(0, 4),
+                            blurRadius: 2.0,
+                          ),
+                        ],
+                      ),
+                      child: ProfilePhoto(url: widget.profile.photo),
                     ),
-                    color: Colors.blue,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theming.of(context).shadow,
-                        offset: const Offset(0, 4),
-                        blurRadius: 2.0,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.profile.name,
+                            style: Theming.of(context).text.subheading,
+                          ),
+                          Text(
+                            widget.profile.description,
+                            style: Theming.of(context)
+                                .text
+                                .body
+                                .copyWith(fontWeight: FontWeight.w500),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: ProfilePhoto(url: widget.profile.photo),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.profile.name,
-                        style: Theming.of(context).text.subheading,
-                      ),
-                      Text(
-                        widget.profile.description,
-                        style: Theming.of(context)
-                            .text
-                            .body
-                            .copyWith(fontWeight: FontWeight.w500),
-                      ),
-                    ],
+                if (widget.unreadCount != 0)
+                  Positioned(
+                    left: 64,
+                    top: 0,
+                    width: 32,
+                    height: 32,
+                    child: UnreadMessageBadge(count: widget.unreadCount),
                   ),
-                ),
               ],
             ),
           ),
@@ -412,7 +428,7 @@ class _ConnectionTileState extends State<ConnectionTile>
                   Button(
                     onPressed: widget.onShowProfile,
                     child: const Padding(
-                      padding: EdgeInsets.all(8.0),
+                      padding: EdgeInsets.all(10.0),
                       child: Icon(
                         Icons.account_circle,
                       ),
@@ -421,7 +437,7 @@ class _ConnectionTileState extends State<ConnectionTile>
                   Button(
                     onPressed: widget.onCall,
                     child: const Padding(
-                      padding: EdgeInsets.all(8.0),
+                      padding: EdgeInsets.all(10.0),
                       child: Icon(
                         Icons.phone,
                       ),
@@ -429,17 +445,31 @@ class _ConnectionTileState extends State<ConnectionTile>
                   ),
                   Button(
                     onPressed: widget.onChat,
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Icon(
-                        Icons.message,
-                      ),
+                    child: Stack(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.all(10.0),
+                          child: Icon(
+                            Icons.message,
+                          ),
+                        ),
+                        if (widget.unreadCount != 0)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            width: 22,
+                            height: 22,
+                            child: UnreadMessageBadge(
+                              count: widget.unreadCount,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   Button(
                     onPressed: widget.onVideoCall,
                     child: const Padding(
-                      padding: EdgeInsets.all(8.0),
+                      padding: EdgeInsets.all(10.0),
                       child: Icon(
                         Icons.videocam_sharp,
                       ),

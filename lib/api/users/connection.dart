@@ -9,6 +9,7 @@ class Connection with _$Connection {
   const factory Connection({
     required PublicProfile profile,
     required String chatroomId,
+    required int chatroomUnread,
   }) = _Connection;
 
   factory Connection.fromJson(Map<String, dynamic> json) =>
