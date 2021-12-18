@@ -43,6 +43,7 @@ Future<bool> _handleLaunchNotification({
       call: (call) async {},
       chat: (chat) async {
         final profile = await usersApi.getPublicProfile(chat.uid);
+        Navigator.of(context).pushReplacementNamed('home');
         Navigator.of(context).pushNamed(
           'chat',
           arguments: ChatArguments(

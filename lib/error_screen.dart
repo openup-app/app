@@ -26,7 +26,7 @@ class ErrorScreen extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pushNamed('initial-loading');
+                Navigator.of(context).pushNamed('/');
               },
               child: const Text('Retry'),
             ),

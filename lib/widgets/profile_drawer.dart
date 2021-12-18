@@ -149,7 +149,7 @@ class ProfileDrawer extends ConsumerWidget {
                           await usersApi.deleteUser(uid);
                           await FirebaseAuth.instance.signOut();
                           Navigator.of(context)
-                              .pushReplacementNamed('initial-loading');
+                              .pushReplacementNamed('/');
                         }
                       },
                       child: const Text('Delete account'),
@@ -158,7 +158,7 @@ class ProfileDrawer extends ConsumerWidget {
                       onPressed: () async {
                         await FirebaseAuth.instance.signOut();
                         Navigator.of(context)
-                            .pushReplacementNamed('initial-loading');
+                            .pushReplacementNamed('/');
                       },
                       child: const Text('Sign-out'),
                     ),

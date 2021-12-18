@@ -72,7 +72,7 @@ class ForgotPasswordScreen extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             PrimaryButton.large(
-              onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
+              onPressed: () => Navigator.of(context).pushReplacementNamed('home'),
               child: const Text('Log in'),
             ),
             const SizedBox(

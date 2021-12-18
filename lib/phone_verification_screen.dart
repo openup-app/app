@@ -156,7 +156,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       }
 
       Navigator.of(context).popUntil((route) => route.isFirst);
-      Navigator.of(context).pushReplacementNamed('/');
+      Navigator.of(context).pushReplacementNamed('home');
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(

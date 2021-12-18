@@ -37,7 +37,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     );
 
     if (!deepLinked) {
-      Navigator.of(context).pushReplacementNamed('/');
+      Navigator.of(context).pushReplacementNamed('home');
     }
   }
 

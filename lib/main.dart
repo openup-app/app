@@ -32,7 +32,7 @@ import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/theming.dart';
 
-const host = '192.168.1.108';
+const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
 const webPort = 8080;
 const socketPort = 8081;
 
@@ -89,10 +89,10 @@ class _OpenupAppState extends State<OpenupApp> {
                 color: Colors.white,
               ),
             ),
-            initialRoute: 'initial-loading',
+            initialRoute: '/',
             onGenerateRoute: (settings) {
               switch (settings.name) {
-                case 'initial-loading':
+                case '/':
                   return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
@@ -122,7 +122,7 @@ class _OpenupAppState extends State<OpenupApp> {
                     settings: settings,
                     builder: (_) => const ForgotPasswordScreen(),
                   );
-                case '/':
+                case 'home':
                   return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: topToBottomPageTransition,
