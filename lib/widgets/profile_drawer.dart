@@ -7,6 +7,7 @@ import 'package:openup/public_profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:openup/widgets/unread_message_badge.dart';
 
 class ProfileDrawer extends ConsumerWidget {
   const ProfileDrawer({Key? key}) : super(key: key);
@@ -81,17 +82,25 @@ class ProfileDrawer extends ConsumerWidget {
           ),
           Column(
             children: [
-              _MenuButton(
-                icon: SvgPicture.asset(
-                  'assets/images/connections_icon.svg',
-                  color: iconColor,
-                  width: 32,
-                  height: 32,
-                  fit: BoxFit.scaleDown,
-                ),
-                title: 'connections',
-                badgeNumber: 4,
-                onPressed: () => Navigator.of(context).pushNamed('connections'),
+              StreamBuilder<int>(
+                stream: ref.read(usersApiProvider).unreadChatMessageSumStream,
+                initialData: 0,
+                builder: (context, snapshot) {
+                  final sum = snapshot.requireData;
+                  return _MenuButton(
+                    icon: SvgPicture.asset(
+                      'assets/images/connections_icon.svg',
+                      color: iconColor,
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.scaleDown,
+                    ),
+                    title: 'connections',
+                    badgeNumber: sum,
+                    onPressed: () =>
+                        Navigator.of(context).pushNamed('connections'),
+                  );
+                },
               ),
               _MenuButton(
                 icon: Center(
@@ -148,8 +157,7 @@ class ProfileDrawer extends ConsumerWidget {
                         if (uid != null) {
                           await usersApi.deleteUser(uid);
                           await FirebaseAuth.instance.signOut();
-                          Navigator.of(context)
-                              .pushReplacementNamed('/');
+                          Navigator.of(context).pushReplacementNamed('/');
                         }
                       },
                       child: const Text('Delete account'),
@@ -157,8 +165,7 @@ class ProfileDrawer extends ConsumerWidget {
                     TextButton(
                       onPressed: () async {
                         await FirebaseAuth.instance.signOut();
-                        Navigator.of(context)
-                            .pushReplacementNamed('/');
+                        Navigator.of(context).pushReplacementNamed('/');
                       },
                       child: const Text('Sign-out'),
                     ),
@@ -234,24 +241,14 @@ class _MenuButton extends StatelessWidget {
                     ),
                     child: icon,
                   ),
-                  if (badgeNumber != null)
+                  if (badgeNumber != null && badgeNumber != 0)
                     Positioned(
                       top: 6,
                       right: 6,
-                      child: Container(
-                        width: 22,
-                        height: 22,
-                        decoration: const BoxDecoration(
-                          color: Color.fromARGB(0xFF, 0xDC, 0x35, 0x35),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            badgeNumber.toString(),
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 16, fontWeight: FontWeight.normal),
-                          ),
-                        ),
+                      width: 22,
+                      height: 22,
+                      child: UnreadMessageBadge(
+                        count: badgeNumber!,
                       ),
                     ),
                 ],

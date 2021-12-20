@@ -14,7 +14,7 @@ class UnreadMessageBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.red,
+        color: const Color.fromRGBO(0xDC, 0x35, 0x35, 1.0),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(

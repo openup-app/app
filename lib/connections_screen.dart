@@ -118,34 +118,48 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                   padding: const EdgeInsets.only(top: 20, bottom: 64),
                   itemCount: filteredConnections.length,
                   itemBuilder: (context, index) {
-                    final connection = filteredConnections[index];
+                    final connection = filteredConnections[0];
                     final profile = connection.profile;
-                    return ConnectionTile(
-                      onPressed: () => setState(
-                          () => _openIndex = _openIndex == index ? -1 : index),
-                      profile: profile,
-                      unreadCount: connection.chatroomUnread,
-                      expanded: _openIndex == index,
-                      onShowProfile: () {
-                        Navigator.of(context).pushNamed(
-                          'public-profile',
-                          arguments: PublicProfileArguments(
-                            publicProfile: profile,
-                            editable: false,
-                          ),
+                    final usersApi = ref.read(usersApiProvider);
+                    final countStream = usersApi.unreadChatMessageCountsStream
+                        .map((event) => event[profile.uid!] ?? 0);
+                    return StreamBuilder<int>(
+                      stream: countStream,
+                      initialData: 0,
+                      builder: (context, snapshot) {
+                        final count = snapshot.requireData;
+                        return ConnectionTile(
+                          onPressed: () => setState(() =>
+                              _openIndex = _openIndex == index ? -1 : index),
+                          profile: profile,
+                          unreadCount: count,
+                          expanded: _openIndex == index,
+                          onShowProfile: () {
+                            Navigator.of(context).pushNamed(
+                              'public-profile',
+                              arguments: PublicProfileArguments(
+                                publicProfile: profile,
+                                editable: false,
+                              ),
+                            );
+                          },
+                          onChat: () {
+                            usersApi.updateUnreadChatMessagesCount(
+                              profile.uid!,
+                              0,
+                            );
+                            Navigator.of(context).pushNamed(
+                              'chat',
+                              arguments: ChatArguments(
+                                profile: profile,
+                                chatroomId: connection.chatroomId,
+                              ),
+                            );
+                          },
+                          onCall: () => _onCall(profile.uid!, video: false),
+                          onVideoCall: () => _onCall(profile.uid!, video: true),
                         );
                       },
-                      onChat: () {
-                        Navigator.of(context).pushNamed(
-                          'chat',
-                          arguments: ChatArguments(
-                            profile: profile,
-                            chatroomId: connection.chatroomId,
-                          ),
-                        );
-                      },
-                      onCall: () => _onCall(profile.uid!, video: false),
-                      onVideoCall: () => _onCall(profile.uid!, video: true),
                     );
                   },
                 );
@@ -302,6 +316,8 @@ class ConnectionTile extends StatefulWidget {
 class _ConnectionTileState extends State<ConnectionTile>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  final _chatButtonKey = GlobalKey();
+  final _profileIconKey = GlobalKey();
 
   @override
   void initState() {
@@ -332,15 +348,24 @@ class _ConnectionTileState extends State<ConnectionTile>
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final profileIconOffset =
+        ((_profileIconKey.currentContext?.findRenderObject() as RenderBox?)
+                ?.localToGlobal(Offset.zero) ??
+            Offset.zero);
+    final chatButtonOffset =
+        ((_chatButtonKey.currentContext?.findRenderObject() as RenderBox?)
+                ?.localToGlobal(Offset.zero) ??
+            Offset.zero);
+
+    return Stack(
       children: [
-        Button(
-          onPressed: widget.onPressed,
-          child: SizedBox(
-            height: 96,
-            child: Stack(
-              children: [
-                Row(
+        Column(
+          children: [
+            Button(
+              onPressed: widget.onPressed,
+              child: SizedBox(
+                height: 96,
+                child: Row(
                   children: [
                     const SizedBox(width: 32),
                     Container(
@@ -360,7 +385,10 @@ class _ConnectionTileState extends State<ConnectionTile>
                           ),
                         ],
                       ),
-                      child: ProfilePhoto(url: widget.profile.photo),
+                      child: ProfilePhoto(
+                        key: _profileIconKey,
+                        url: widget.profile.photo,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -384,102 +412,99 @@ class _ConnectionTileState extends State<ConnectionTile>
                     ),
                   ],
                 ),
-                if (widget.unreadCount != 0)
-                  Positioned(
-                    left: 64,
-                    top: 0,
-                    width: 32,
-                    height: 32,
-                    child: UnreadMessageBadge(count: widget.unreadCount),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        SizeTransition(
-          sizeFactor: CurvedAnimation(
-            parent: _controller,
-            curve: Curves.easeIn,
-          ),
-          child: FadeTransition(
-            opacity: CurvedAnimation(
-              parent: _controller,
-              curve: Curves.easeIn,
-            ),
-            child: Container(
-              height: 54,
-              margin:
-                  const EdgeInsets.only(left: 92, right: 16, bottom: 8, top: 4),
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(Radius.circular(8)),
-                color: const Color.fromARGB(0xFF, 0x77, 0x77, 0x77),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theming.of(context).shadow,
-                    offset: const Offset(0, 4),
-                    blurRadius: 2.0,
-                  ),
-                ],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Button(
-                    onPressed: widget.onShowProfile,
-                    child: const Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: Icon(
-                        Icons.account_circle,
-                      ),
-                    ),
+            ),
+            SizeTransition(
+              sizeFactor: CurvedAnimation(
+                parent: _controller,
+                curve: Curves.easeIn,
+              ),
+              child: FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: _controller,
+                  curve: Curves.easeIn,
+                ),
+                child: Container(
+                  height: 54,
+                  margin: const EdgeInsets.only(
+                    left: 92,
+                    right: 16,
+                    bottom: 8,
+                    top: 4,
                   ),
-                  Button(
-                    onPressed: widget.onCall,
-                    child: const Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: Icon(
-                        Icons.phone,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                    color: const Color.fromARGB(0xFF, 0x77, 0x77, 0x77),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theming.of(context).shadow,
+                        offset: const Offset(0, 4),
+                        blurRadius: 2.0,
                       ),
-                    ),
+                    ],
                   ),
-                  Button(
-                    onPressed: widget.onChat,
-                    child: Stack(
-                      children: [
-                        const Padding(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Button(
+                        onPressed: widget.onShowProfile,
+                        child: const Padding(
                           padding: EdgeInsets.all(10.0),
                           child: Icon(
-                            Icons.message,
+                            Icons.account_circle,
                           ),
                         ),
-                        if (widget.unreadCount != 0)
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            width: 22,
-                            height: 22,
-                            child: UnreadMessageBadge(
-                              count: widget.unreadCount,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  Button(
-                    onPressed: widget.onVideoCall,
-                    child: const Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: Icon(
-                        Icons.videocam_sharp,
                       ),
-                    ),
+                      Button(
+                        onPressed: widget.onCall,
+                        child: const Padding(
+                          padding: EdgeInsets.all(10.0),
+                          child: Icon(
+                            Icons.phone,
+                          ),
+                        ),
+                      ),
+                      Button(
+                        onPressed: widget.onChat,
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Icon(
+                            Icons.message,
+                            key: _chatButtonKey,
+                          ),
+                        ),
+                      ),
+                      Button(
+                        onPressed: widget.onVideoCall,
+                        child: const Padding(
+                          padding: EdgeInsets.all(10.0),
+                          child: Icon(
+                            Icons.videocam_sharp,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
+        if (widget.unreadCount != 0)
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            left: widget.expanded
+                ? chatButtonOffset.dx + 12
+                : profileIconOffset.dx + 28,
+            top: widget.expanded ? 104 : 0,
+            width: widget.expanded ? 22 : 32,
+            height: widget.expanded ? 22 : 32,
+            child: UnreadMessageBadge(
+              count: widget.unreadCount,
+            ),
+          ),
       ],
     );
   }
