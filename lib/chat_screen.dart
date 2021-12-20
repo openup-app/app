@@ -7,9 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/users/users_api.dart';
 import 'package:openup/public_profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_input_box.dart';
+import 'package:openup/widgets/chat_message.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:uuid/uuid.dart';
 
@@ -47,6 +49,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   bool _loading = true;
 
+  String? _myAvatar;
+
   @override
   void initState() {
     super.initState();
@@ -71,6 +75,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         }
       },
     );
+
+    final usersApi = ref.read(usersApiProvider);
+    usersApi.getPublicProfile(uid).then((profile) {
+      if (mounted) {
+        setState(() => _myAvatar = profile.photo);
+      }
+    });
 
     _fetchHistory();
 
@@ -182,8 +193,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                       case ChatType.video:
                                         return _buildVideoMessage(message);
                                       case ChatType.audio:
-                                        return _buildAudioMessage(
-                                          message,
+                                        return AudioChatMessage(
+                                          audioUrl: message.content,
+                                          photoUrl: fromMe
+                                              ? _myAvatar
+                                              : widget.profile.photo,
+                                          date: _buildDateText(message.date),
                                           fromMe: fromMe,
                                         );
                                     }
@@ -457,82 +472,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildAudioMessage(
-    ChatMessage message, {
-    required bool fromMe,
-  }) {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: fromMe
-            ? const Color.fromRGBO(0x5E, 0x5C, 0x5C, 0.3)
-            : const Color.fromRGBO(0xC4, 0xC4, 0xC4, 0.30),
-        border: Border.all(
-          color: const Color.fromRGBO(0x60, 0x5E, 0x5E, 1.0),
-          width: 2,
-        ),
-        borderRadius: const BorderRadius.all(
-          Radius.circular(36),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (!fromMe)
-            ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(24)),
-              child: Image.network('https://i.pravatar.cc/100'),
-            ),
-          const Padding(
-            padding: EdgeInsets.only(right: 4.0),
-            child: Icon(
-              Icons.play_arrow,
-              size: 40,
-            ),
-          ),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 100,
-                    height: 2,
-                    color: Colors.red,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      '00:21',
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontWeight: FontWeight.normal),
-                    ),
-                  ),
-                ],
-              ),
-              Positioned(
-                right: fromMe ? 0 : 8,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 40.0, right: 4.0),
-                  child: _buildDateText(message.date),
-                ),
-              ),
-            ],
-          ),
-          if (fromMe)
-            ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(24)),
-              child: Image.network('https://i.pravatar.cc/100'),
-            ),
-        ],
       ),
     );
   }
