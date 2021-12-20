@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/notifications.dart';
 import 'package:openup/public_profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_photo.dart';
@@ -155,6 +156,7 @@ class ProfileDrawer extends ConsumerWidget {
                         final usersApi = container.read(usersApiProvider);
                         final uid = FirebaseAuth.instance.currentUser?.uid;
                         if (uid != null) {
+                          await dismissAllNotifications();
                           await usersApi.deleteUser(uid);
                           await FirebaseAuth.instance.signOut();
                           Navigator.of(context).pushReplacementNamed('/');
@@ -164,6 +166,7 @@ class ProfileDrawer extends ConsumerWidget {
                     ),
                     TextButton(
                       onPressed: () async {
+                        await dismissAllNotifications();
                         await FirebaseAuth.instance.signOut();
                         Navigator.of(context).pushReplacementNamed('/');
                       },

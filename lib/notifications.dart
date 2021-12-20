@@ -27,6 +27,9 @@ Future<bool> initializeNotifications({
   );
 }
 
+Future<void> dismissAllNotifications() =>
+    FlutterLocalNotificationsPlugin().cancelAll();
+
 /// Returns [true] if this notification did deep link, false otherwise.
 Future<bool> _handleLaunchNotification({
   required BuildContext context,
