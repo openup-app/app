@@ -72,25 +72,50 @@ class ChatApi {
     ChatType type,
     String content,
   ) async {
-    final response = await http.post(
-      Uri.parse('$_urlBase/chats/$chatroomId'),
-      headers: _headers,
-      body: jsonEncode({
-        'uid': uid,
-        'type': type.name,
-        'content': content,
-      }),
-    );
+    final uri = Uri.parse('$_urlBase/chats/$chatroomId');
+    final int statusCode;
+    final String body;
+    switch (type) {
+      case ChatType.emoji:
+        final response = await http.post(
+          uri,
+          headers: _headers,
+          body: jsonEncode({
+            'uid': uid,
+            'type': type.name,
+            'content': content,
+          }),
+        );
+        statusCode = response.statusCode;
+        body = response.body;
+        break;
+      case ChatType.image:
+      case ChatType.video:
+      case ChatType.audio:
+        final request = http.MultipartRequest('POST', uri);
+        request.fields['uid'] = uid;
+        request.fields['type'] = type.name;
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'media',
+            content,
+          ),
+        );
+        final response = await request.send();
+        statusCode = response.statusCode;
+        body = await response.stream.bytesToString();
+        break;
+    }
 
-    if (response.statusCode != 200) {
-      if (response.statusCode == 400) {
-        return Future.error('Failed to get send message ${response.body}');
+    if (statusCode != 200) {
+      if (statusCode == 400) {
+        return Future.error('Failed to get send message $body');
       }
-      print('Error ${response.statusCode}: ${response.body}');
+      print('Error $statusCode: $body');
       return Future.error('Failure');
     }
 
-    return ChatMessage.fromJson(jsonDecode(response.body));
+    return ChatMessage.fromJson(jsonDecode(body));
   }
 
   Future<List<ChatMessage>> getMessages(

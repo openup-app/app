@@ -295,11 +295,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               ),
                             );
                           case _InputType.audio:
-                            return Center(
-                              child: Text(
-                                'Audio',
-                                style: Theming.of(context).text.body,
-                              ),
+                            return AudioInputBox(
+                              onRecord: (path) => _send(ChatType.audio, path),
                             );
                           case _InputType.none:
                             return const SizedBox.shrink();
@@ -553,18 +550,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  void _send(ChatType type, String content) {
+  void _send(ChatType type, String content) async {
     const uuid = Uuid();
     final pendingId = uuid.v4();
-    _chatApi
-        ?.sendMessage(_uid, widget.chatroomId, type, content)
-        .then((message) {
-      if (mounted) {
-        setState(() {
-          _messages[pendingId] = message;
-        });
-      }
-    });
     setState(() {
       _messages[pendingId] = ChatMessage(
         uid: _uid,
@@ -573,6 +561,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         content: content,
       );
     });
+    final message =
+        await _chatApi?.sendMessage(_uid, widget.chatroomId, type, content);
+
+    if (message == null) {
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _messages[pendingId] = message;
+      });
+    }
+
     _scrollController.jumpTo(0);
   }
 
