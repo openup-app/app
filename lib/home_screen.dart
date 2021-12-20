@@ -139,9 +139,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       const SizedBox(height: 24),
                       SizedBox(
-                        height: 120,
+                        height: 140,
                         child: Image.asset(
-                          'assets/images/heart.png',
+                          'assets/images/heart.gif',
                           fit: BoxFit.fitHeight,
                         ),
                       ),

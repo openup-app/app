@@ -10,21 +10,7 @@ class MaleFemaleConnectionImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset(
-          'assets/images/connection_male.png',
-          fit: BoxFit.fitHeight,
-          color: color,
-        ),
-        Image.asset(
-          'assets/images/connection_female.png',
-          fit: BoxFit.fitHeight,
-          color: color,
-        ),
-      ],
-    );
+    return Image.asset('assets/images/friends.gif');
   }
 }
 

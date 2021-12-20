@@ -155,7 +155,7 @@ class _OpenupAppState extends State<OpenupApp> {
                           imageLower: SizedBox(
                             height: 100,
                             child: Image.asset(
-                              'assets/images/friends_with_friends.png',
+                              'assets/images/friends_with_friends.gif',
                               fit: BoxFit.fitHeight,
                             ),
                           ),
@@ -353,14 +353,14 @@ class _OpenupAppState extends State<OpenupApp> {
                           imageUpper: SizedBox(
                             height: 120,
                             child: Image.asset(
-                              'assets/images/heart.png',
+                              'assets/images/heart.gif',
                               fit: BoxFit.fitHeight,
                             ),
                           ),
                           imageLower: SizedBox(
                             height: 160,
                             child: Image.asset(
-                              'assets/images/double_hearts.png',
+                              'assets/images/double_dating.gif',
                               fit: BoxFit.fitHeight,
                             ),
                           ),

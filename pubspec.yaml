@@ -1,6 +1,6 @@
 name: openup
 description: Video and voice calling app with strangers
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -44,8 +44,6 @@ flutter:
     - assets/images/title.png
     - assets/images/connection_female.png
     - assets/images/connection_male.png
-    - assets/images/heart.png
-    - assets/images/friends_with_friends.png
     - assets/images/voice_call.png
     - assets/images/video_call.png
     - assets/images/preferences.png
@@ -56,8 +54,11 @@ flutter:
     - assets/images/support_icon.svg
     - assets/images/play_icon.svg
     - assets/images/pause_icon.svg
-    - assets/images/double_hearts.png
     - assets/images/preferences_back.png
+    - assets/images/friends.gif
+    - assets/images/heart.gif
+    - assets/images/friends_with_friends.gif
+    - assets/images/double_dating.gif
   fonts:
     - family: Myriad
       fonts:
