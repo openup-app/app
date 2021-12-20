@@ -16,7 +16,9 @@ Future<bool> initializeNotifications({
   required BuildContext context,
   required UsersApi usersApi,
 }) {
-  FirebaseMessaging.onMessage.listen(_onForegroundNotification);
+  FirebaseMessaging.onMessage.listen((remoteMessage) {
+    _onForegroundNotification(remoteMessage, usersApi);
+  });
   FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
 
   return _handleLaunchNotification(
@@ -58,8 +60,14 @@ Future<bool> _handleLaunchNotification({
   return false;
 }
 
-void _onForegroundNotification(RemoteMessage message) async {
+void _onForegroundNotification(RemoteMessage message, UsersApi api) async {
   final parsed = await _parseRemoteMessage(message);
+  parsed.payload?.map(
+    call: (_) => _,
+    chat: (chat) {
+      api.updateUnreadChatMessagesCount(chat.uid, chat.chatroomUnread);
+    },
+  );
   _displayNotification(parsed);
 }
 
@@ -96,12 +104,14 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
     final senderPhoto = message.data['senderPhoto'];
     notificationTitle = senderName;
     chatroomId = message.data['chatroomId'];
+    final chatroomUnread = int.parse(message.data['chatroomUnread']);
     final chatMessage = ChatMessage.fromJson(jsonDecode(messageJson));
     channelName = 'Chat messages';
     channelDescription = 'Messages from your connections';
     notificationPayload = _ChatPayload(
       uid: chatMessage.uid,
       chatroomId: chatroomId!,
+      chatroomUnread: chatroomUnread,
     );
 
     switch (chatMessage.type) {
@@ -199,6 +209,7 @@ class _NotificationPayload with _$_NotificationPayload {
   const factory _NotificationPayload.chat({
     required String uid,
     required String chatroomId,
+    required int chatroomUnread,
   }) = _ChatPayload;
 
   factory _NotificationPayload.fromJson(Map<String, dynamic> json) =>

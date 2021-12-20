@@ -428,6 +428,23 @@ class RawUsersApi {
     return json['rid'] as String;
   }
 
+  Future<Map<String, int>> getAllChatroomUnreadCounts(String uid) async {
+    final response = await http.get(
+      Uri.parse('$_urlBase/users/$uid/chats/unread'),
+      headers: _headers,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to get unread chat counts');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+
+    return Map<String, int>.from(jsonDecode(response.body));
+  }
+
   @override
   Future<void> updateNotificationToken(
     String uid,

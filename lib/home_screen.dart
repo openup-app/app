@@ -68,6 +68,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       api.getPrivateProfile(uid),
       api.getFriendsPreferences(uid),
       api.getDatingPreferences(uid),
+      api.getAllChatroomUnreadCounts(uid),
     ]);
   }
 

@@ -8,6 +8,7 @@ import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/raw_users_api.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:rxdart/subjects.dart';
 
 late final Provider<UsersApi> usersApiProvider;
 late final StateProvider<PublicProfile?> profileProvider;
@@ -34,6 +35,9 @@ class UsersApi implements RawUsersApi {
   Preferences? _friendsPreferences;
   Preferences? _datingPreferences;
   Timer? _countRequestDebounce;
+  Map<String, int> _unreadChatMessageCounts = {};
+  final _unreadChatMessageCountsController =
+      BehaviorSubject<Map<String, int>>();
 
   UsersApi({
     required String host,
@@ -42,6 +46,10 @@ class UsersApi implements RawUsersApi {
           host: host,
           port: port,
         );
+
+  Future<void> dispose() {
+    return _unreadChatMessageCountsController.close();
+  }
 
   @override
   Future<void> createUserWithEmail({
@@ -228,10 +236,32 @@ class UsersApi implements RawUsersApi {
       _rawUsersApi.call(uid, calleeUid, video);
 
   @override
+  Future<Map<String, int>> getAllChatroomUnreadCounts(String uid) async {
+    final counts = await _rawUsersApi.getAllChatroomUnreadCounts(uid);
+    _unreadChatMessageCounts = counts;
+    _unreadChatMessageCountsController.add(_unreadChatMessageCounts);
+    return counts;
+  }
+
+  @override
   Future<void> updateNotificationToken(String uid, String notificationToken) =>
       _rawUsersApi.updateNotificationToken(uid, notificationToken);
 
   PublicProfile? get publicProfile => _publicProfile;
+
+  Map<String, int> get unreadChatMessageCounts => _unreadChatMessageCounts;
+
+  Stream<Map<String, int>> get unreadChatMessageCountsStream =>
+      _unreadChatMessageCountsController.stream;
+
+  void updateUnreadChatMessagesCount(String uid, int count) {
+    _unreadChatMessageCounts[uid] = count;
+    _unreadChatMessageCountsController.add(_unreadChatMessageCounts);
+  }
+
+  Stream<int> get unreadChatMessageSumStream =>
+      _unreadChatMessageCountsController.stream
+          .map<int>((e) => e.values.fold(0, (p, e) => p + e));
 
   void _clearCache() {
     _account = null;
