@@ -71,7 +71,6 @@ void _onForegroundNotification(RemoteMessage message, UsersApi api) async {
       api.updateUnreadChatMessagesCount(chat.uid, chat.chatroomUnread);
     },
   );
-  _displayNotification(parsed);
 }
 
 Future<void> _onBackgroundNotification(RemoteMessage message) async {
