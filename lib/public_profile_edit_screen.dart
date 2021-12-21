@@ -56,7 +56,7 @@ class _PublicProfileEditScreenState extends State<PublicProfileEditScreen> {
                   child: Consumer(
                     builder: (context, ref, child) {
                       final gallery = ref.watch(profileProvider
-                          .select((value) => value.state?.gallery ?? []));
+                          .select((value) => value?.gallery ?? []));
                       return Column(
                         children: [
                           for (var i = 0; i < 3; i++)
@@ -176,7 +176,7 @@ class _PublicProfileEditScreenState extends State<PublicProfileEditScreen> {
                   height: 88,
                   child: Consumer(
                     builder: (context, ref, child) {
-                      final editableProfile = ref.watch(profileProvider).state;
+                      final editableProfile = ref.watch(profileProvider);
                       return ProfileBio(
                         key: _audioBioKey,
                         name: editableProfile?.name,

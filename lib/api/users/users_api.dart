@@ -22,7 +22,7 @@ void initUsersApi({
     return null;
   });
   usersApiProvider = Provider<UsersApi>((ref) {
-    _profileStateController = ref.read(profileProvider);
+    _profileStateController = ref.read(profileProvider.state);
     return UsersApi(host: host, port: port);
   });
 }

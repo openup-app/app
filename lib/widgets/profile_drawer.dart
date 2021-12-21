@@ -58,7 +58,7 @@ class ProfileDrawer extends ConsumerWidget {
                 ),
                 child: Consumer(
                   builder: (context, ref, child) {
-                    final photo = ref.watch(profileProvider).state?.photo;
+                    final photo = ref.watch(profileProvider)?.photo;
                     return ProfilePhoto(url: photo);
                   },
                 ),

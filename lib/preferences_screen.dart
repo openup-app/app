@@ -93,7 +93,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
 
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       _removePreferencesUpdatedListener =
-          ref.watch(_prefsProvider).addListener(_preferencesUpdated);
+          ref.watch(_prefsProvider.state).addListener(_preferencesUpdated);
     });
   }
 
@@ -109,7 +109,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
     if (uid != null) {
       int? count;
 
-      ref.read(_matchCountProvider).state = null;
+      ref.read(_matchCountProvider.state).state = null;
 
       try {
         count = await ref
@@ -118,7 +118,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
       } catch (e) {
         print(e);
       }
-      ref.read(_matchCountProvider).state = count;
+      ref.read(_matchCountProvider.state).state = count;
     }
   }
 
@@ -207,7 +207,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                             alignment: Alignment.bottomCenter,
                             child: Consumer(builder: (context, ref, child) {
                               final matchCount =
-                                  ref.watch(_matchCountProvider).state;
+                                  ref.watch(_matchCountProvider.state).state;
                               return Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -306,7 +306,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final ageRange = ref.watch(
-                                _prefsProvider.select((p) => p.state.age));
+                                _prefsProvider.select((p) => p.age));
                             const defaultRange = Range(min: 18, max: 99);
                             return ExpansionSection(
                               label: 'Age',
@@ -317,9 +317,8 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                                   min: defaultRange.min,
                                   max: defaultRange.max,
                                   onUpdate: (range) {
-                                    ref.read(_prefsProvider).state = ref
+                                    ref.read(_prefsProvider.state).state = ref
                                         .read(_prefsProvider)
-                                        .state
                                         .copyWith(age: range);
                                   },
                                 ),
@@ -330,7 +329,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final genders = ref.watch(
-                                _prefsProvider.select((p) => p.state.gender));
+                                _prefsProvider.select((p) => p.gender));
                             return ExpansionSection(
                               label: 'Gender',
                               highlighted: genders.isNotEmpty,
@@ -372,7 +371,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final distance = ref.watch(
-                                _prefsProvider.select((p) => p.state.distance));
+                                _prefsProvider.select((p) => p.distance));
                             const max = 100;
                             return ExpansionSection(
                               label: 'Location',
@@ -392,9 +391,8 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                                   min: 0,
                                   max: max,
                                   onUpdate: (value) {
-                                    ref.read(_prefsProvider).state = ref
+                                    ref.read(_prefsProvider.state).state = ref
                                         .read(_prefsProvider)
-                                        .state
                                         .copyWith(distance: value);
                                   },
                                 ),
@@ -405,7 +403,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final religions = ref.watch(
-                                _prefsProvider.select((p) => p.state.religion));
+                                _prefsProvider.select((p) => p.religion));
                             return ExpansionSection(
                               label: 'Religion',
                               highlighted: religions.isNotEmpty,
@@ -455,7 +453,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final educations = ref.watch(_prefsProvider
-                                .select((p) => p.state.education));
+                                .select((p) => p.education));
                             return ExpansionSection(
                               label: 'Education',
                               highlighted: educations.isNotEmpty,
@@ -497,7 +495,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final communities = ref.watch(_prefsProvider
-                                .select((p) => p.state.community));
+                                .select((p) => p.community));
                             return ExpansionSection(
                               label: 'Community',
                               highlighted: communities.isNotEmpty,
@@ -577,7 +575,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final languages = ref.watch(
-                                _prefsProvider.select((p) => p.state.language));
+                                _prefsProvider.select((p) => p.language));
                             return ExpansionSection(
                               label: 'Languages',
                               highlighted: languages.isNotEmpty,
@@ -645,9 +643,9 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final skinColors = ref.watch(_prefsProvider
-                                .select((p) => p.state.skinColor));
+                                .select((p) => p.skinColor));
                             final genders = ref.watch(
-                                _prefsProvider.select((p) => p.state.gender));
+                                _prefsProvider.select((p) => p.gender));
                             final gender = genderForPreferredGenders(genders);
                             return ExpansionSection(
                               label: 'Skin Color',
@@ -669,7 +667,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final weightRange = ref.watch(
-                                _prefsProvider.select((p) => p.state.weight));
+                                _prefsProvider.select((p) => p.weight));
                             const defaultRange = Range(min: 10, max: 500);
                             return ExpansionSection(
                               label: 'Weight',
@@ -680,9 +678,9 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                                   min: defaultRange.min,
                                   max: defaultRange.max,
                                   onUpdate: (range) {
-                                    ref.read(_prefsProvider).state = ref
+                                    ref.read(_prefsProvider.state).state = ref
                                         .read(_prefsProvider)
-                                        .state
+
                                         .copyWith(weight: range);
                                   },
                                 ),
@@ -693,7 +691,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final heightRange = ref.watch(
-                                _prefsProvider.select((p) => p.state.height));
+                                _prefsProvider.select((p) => p.height));
                             const defaultRange = Range(min: 50, max: 250);
                             return ExpansionSection(
                               label: 'Height',
@@ -704,9 +702,9 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                                   min: defaultRange.min,
                                   max: defaultRange.max,
                                   onUpdate: (range) {
-                                    ref.read(_prefsProvider).state = ref
+                                    ref.read(_prefsProvider.state).state = ref
                                         .read(_prefsProvider)
-                                        .state
+                                        
                                         .copyWith(height: range);
                                   },
                                 ),
@@ -717,7 +715,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final occupations = ref.watch(_prefsProvider
-                                .select((p) => p.state.occupation));
+                                .select((p) => p.occupation));
                             return ExpansionSection(
                               label: 'Job Occupation',
                               highlighted: occupations.isNotEmpty,
@@ -767,7 +765,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         Consumer(
                           builder: (context, ref, child) {
                             final hairColors = ref.watch(_prefsProvider
-                                .select((p) => p.state.hairColor));
+                                .select((p) => p.hairColor));
                             return ExpansionSection(
                               label: 'Hair Color',
                               highlighted: hairColors.isNotEmpty,
@@ -848,39 +846,39 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
     );
   }
 
-  void _setGender(Set<Gender> value) => widget.ref.read(_prefsProvider).state =
-      widget.ref.read(_prefsProvider).state.copyWith(gender: value);
+  void _setGender(Set<Gender> value) => widget.ref.read(_prefsProvider.state).state =
+      widget.ref.read(_prefsProvider).copyWith(gender: value);
 
   void _setReligion(Set<String> value) =>
-      widget.ref.read(_prefsProvider).state =
-          widget.ref.read(_prefsProvider).state.copyWith(religion: value);
+      widget.ref.read(_prefsProvider.state).state =
+          widget.ref.read(_prefsProvider).copyWith(religion: value);
 
   void _setEducation(Set<Education> value) =>
-      widget.ref.read(_prefsProvider).state =
-          widget.ref.read(_prefsProvider).state.copyWith(education: value);
+      widget.ref.read(_prefsProvider.state).state =
+          widget.ref.read(_prefsProvider).copyWith(education: value);
 
   void _setCommunity(Set<String> value) =>
-      widget.ref.read(_prefsProvider).state =
-          widget.ref.read(_prefsProvider).state.copyWith(community: value);
+      widget.ref.read(_prefsProvider.state).state =
+          widget.ref.read(_prefsProvider).copyWith(community: value);
 
   void _setLanguage(Set<String> value) =>
-      widget.ref.read(_prefsProvider).state =
-          widget.ref.read(_prefsProvider).state.copyWith(language: value);
+      widget.ref.read(_prefsProvider.state).state =
+          widget.ref.read(_prefsProvider).copyWith(language: value);
 
   void _setSkinColor(Set<SkinColor> value) =>
-      widget.ref.read(_prefsProvider).state =
-          widget.ref.read(_prefsProvider).state.copyWith(skinColor: value);
+      widget.ref.read(_prefsProvider.state).state =
+          widget.ref.read(_prefsProvider).copyWith(skinColor: value);
 
   void _setOccupation(Set<String> value) =>
-      widget.ref.read(_prefsProvider).state =
-          widget.ref.read(_prefsProvider).state.copyWith(occupation: value);
+      widget.ref.read(_prefsProvider.state).state =
+          widget.ref.read(_prefsProvider).copyWith(occupation: value);
 
   void _setHairColor(Set<HairColor> value) =>
-      widget.ref.read(_prefsProvider).state =
-          widget.ref.read(_prefsProvider).state.copyWith(hairColor: value);
+      widget.ref.read(_prefsProvider.state).state =
+          widget.ref.read(_prefsProvider).copyWith(hairColor: value);
 
   Future<bool> _maybeUpdatePreferences(BuildContext context) async {
-    final preferences = widget.ref.read(_prefsProvider).state;
+    final preferences = widget.ref.read(_prefsProvider);
     if (widget.initialPreferences == preferences) {
       return true;
     }

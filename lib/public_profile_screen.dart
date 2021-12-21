@@ -128,7 +128,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 if (widget.editable) {
                   return Consumer(
                     builder: (context, ref, child) {
-                      final editableProfile = ref.watch(profileProvider).state;
+                      final editableProfile = ref.watch(profileProvider);
                       return ProfileBio(
                         key: _audioBioKey,
                         name: editableProfile?.name,
