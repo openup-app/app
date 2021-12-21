@@ -80,6 +80,13 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
+  Future<bool> checkBirthday({
+    required String phone,
+    required DateTime birthday,
+  }) =>
+      _rawUsersApi.checkBirthday(phone: phone, birthday: birthday);
+
+  @override
   Future<Account> getAccount(String uid) async {
     _account ??= await _rawUsersApi.getAccount(uid);
     return _account!;

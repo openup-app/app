@@ -9,7 +9,7 @@ class PublicProfile with _$PublicProfile {
   const factory PublicProfile({
     String? uid,
     required String name,
-    required int age,
+    required DateTime birthday,
     required String description,
     String? audio,
     String? photo,
@@ -23,7 +23,7 @@ class PublicProfile with _$PublicProfile {
 @freezed
 class PrivateProfile with _$PrivateProfile {
   const factory PrivateProfile({
-    required int age,
+    required DateTime birthday,
     required Gender gender,
     required LatLong location,
     required String religion,

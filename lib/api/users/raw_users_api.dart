@@ -66,6 +66,29 @@ class RawUsersApi {
     }
   }
 
+  Future<bool> checkBirthday({
+    required String phone,
+    required DateTime birthday,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_urlBase/users/check_birthday'),
+      headers: _headers,
+      body: jsonEncode({
+        'phone': phone,
+        'birthday': birthday.toIso8601String(),
+      }),
+    );
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Invalid creation');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+    final resultMap = jsonDecode(response.body);
+    return resultMap['success'];
+  }
+
   Future<Account> getAccount(String uid) async {
     final response = await http.get(
       Uri.parse('$_urlBase/users/$uid/account'),

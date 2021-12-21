@@ -265,11 +265,26 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
 
     if (_phoneErrorText == null && _birthdayErrorText == null) {
       setState(() => _submitting = true);
+
+      final usersApi = ref.read(usersApiProvider);
+
+      final success = await usersApi.checkBirthday(
+        phone: phone,
+        birthday: _birthday,
+      );
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid details for existing user'),
+          ),
+        );
+        setState(() => _submitting = false);
+        return;
+      }
+
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: phone,
         verificationCompleted: (credential) async {
-          final usersApi = ref.read(usersApiProvider);
-
           String? uid;
           try {
             final userCredential =
