@@ -6,9 +6,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:openup/api/chat/chat_api.dart';
+import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/public_profile_screen.dart';
+import 'package:openup/video_call_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_input_box.dart';
 import 'package:openup/widgets/chat_message.dart';
@@ -238,51 +240,56 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               Radius.circular(36),
                             ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.add_a_photo,
-                                    color: _inputType == _InputType.imageVideo
-                                        ? Theming.of(context).friendBlue3
-                                        : null),
-                                onPressed: () {
-                                  setState(() => _inputType =
-                                      _switchToInputTypeOrNone(
-                                          _InputType.imageVideo));
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.phone),
-                                onPressed: () {},
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.video_camera_front),
-                                onPressed: () {},
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.emoji_emotions,
-                                    color: _inputType == _InputType.emoji
-                                        ? Theming.of(context).friendBlue3
-                                        : null),
-                                onPressed: () {
-                                  setState(() => _inputType =
-                                      _switchToInputTypeOrNone(
-                                          _InputType.emoji));
-                                },
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.settings_voice,
-                                    color: _inputType == _InputType.audio
-                                        ? Theming.of(context).friendBlue3
-                                        : null),
-                                onPressed: () {
-                                  setState(() => _inputType =
-                                      _switchToInputTypeOrNone(
-                                          _InputType.audio));
-                                },
-                              ),
-                            ],
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.add_a_photo,
+                                      color: _inputType == _InputType.imageVideo
+                                          ? Theming.of(context).friendBlue3
+                                          : null),
+                                  onPressed: () {
+                                    setState(() => _inputType =
+                                        _switchToInputTypeOrNone(
+                                            _InputType.imageVideo));
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.phone),
+                                  onPressed: () =>
+                                      _call(widget.profile, video: false),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.video_camera_front),
+                                  onPressed: () =>
+                                      _call(widget.profile, video: true),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.emoji_emotions,
+                                      color: _inputType == _InputType.emoji
+                                          ? Theming.of(context).friendBlue3
+                                          : null),
+                                  onPressed: () {
+                                    setState(() => _inputType =
+                                        _switchToInputTypeOrNone(
+                                            _InputType.emoji));
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.settings_voice,
+                                      color: _inputType == _InputType.audio
+                                          ? Theming.of(context).friendBlue3
+                                          : null),
+                                  onPressed: () {
+                                    setState(() => _inputType =
+                                        _switchToInputTypeOrNone(
+                                            _InputType.audio));
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -542,6 +549,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         });
       }
     });
+  }
+
+  void _call(
+    PublicProfile profile, {
+    required bool video,
+  }) async {
+    // TODO: Use correct purpose
+    final purpose = Purpose.friends.name;
+    final route = video ? '$purpose-video-call' : '$purpose-voice-call';
+    final usersApi = ref.read(usersApiProvider);
+    final profile = await usersApi.getPublicProfile(widget.profile.uid!);
+    await usersApi.call(_uid, widget.profile.uid!, video);
+    Navigator.of(context).pushNamed(
+      route,
+      arguments: CallPageArguments(
+        uid: FirebaseAuth.instance.currentUser!.uid,
+        initiator: true,
+        profiles: [profile],
+        rekindles: [],
+      ),
+    );
   }
 
   _InputType _switchToInputTypeOrNone(_InputType type) =>
