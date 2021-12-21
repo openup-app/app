@@ -1,14 +1,19 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/chat/chat_api.dart';
+import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/chat_screen.dart';
+import 'package:openup/main.dart';
 import 'package:openup/notifications/connectycube_call_kit_integration.dart';
+import 'package:openup/notifications/notification_comms.dart';
 import 'package:openup/util/string.dart';
+import 'package:openup/video_call_screen.dart';
 
 part 'notifications.freezed.dart';
 part 'notifications.g.dart';
@@ -37,6 +42,31 @@ Future<bool> _handleLaunchNotification({
   required BuildContext context,
   required UsersApi usersApi,
 }) async {
+  // Calls that don't go through the standard FirebaseMessaging app launch method
+  final backgroundCallNotification =
+      await deserializeBackgroundCallNotification();
+  await removeBackgroundCallNotification();
+  if (backgroundCallNotification != null) {
+    final video = backgroundCallNotification.video;
+    final purpose = backgroundCallNotification.purpose == Purpose.friends
+        ? 'friends'
+        : 'dating';
+    final route = video ? '$purpose-video-call' : '$purpose-voice-call';
+    final profile =
+        await usersApi.getPublicProfile(backgroundCallNotification.uid);
+    Navigator.of(context).pushReplacementNamed('home');
+    Navigator.of(context).pushNamed(
+      route,
+      arguments: CallPageArguments(
+        uid: FirebaseAuth.instance.currentUser!.uid,
+        initiator: false,
+        profiles: [profile],
+        rekindles: [],
+      ),
+    );
+    return true;
+  }
+
   final launchDetails =
       await FlutterLocalNotificationsPlugin().getNotificationAppLaunchDetails();
   if (launchDetails == null) {
@@ -65,7 +95,7 @@ Future<bool> _handleLaunchNotification({
   return false;
 }
 
-void _onForegroundNotification(RemoteMessage message, UsersApi api) async {
+void _onForegroundNotification(RemoteMessage message, UsersApi usersApi) async {
   final parsed = await _parseRemoteMessage(message);
   parsed.payload?.map(
     call: (call) {
@@ -73,12 +103,27 @@ void _onForegroundNotification(RemoteMessage message, UsersApi api) async {
         rid: call.rid,
         callerName: call.name,
         video: call.video,
-        onCallAccepted: () {},
+        onCallAccepted: () async {
+          final purpose =
+              call.purpose == Purpose.friends ? 'friends' : 'dating';
+          final route =
+              call.video ? '$purpose-video-call' : '$purpose-voice-call';
+          final profile = await usersApi.getPublicProfile(call.uid);
+          Navigator.of(navigatorKey.currentContext!).pushNamed(
+            route,
+            arguments: CallPageArguments(
+              uid: FirebaseAuth.instance.currentUser!.uid,
+              initiator: false,
+              profiles: [profile],
+              rekindles: [],
+            ),
+          );
+        },
         onCallRejected: () {},
       );
     },
     chat: (chat) {
-      api.updateUnreadChatMessagesCount(chat.uid, chat.chatroomUnread);
+      usersApi.updateUnreadChatMessagesCount(chat.uid, chat.chatroomUnread);
     },
   );
 }
@@ -93,7 +138,14 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
         rid: call.rid,
         callerName: call.name,
         video: call.video,
-        onCallAccepted: () {},
+        onCallAccepted: () async {
+          final backgroundCallNotification = BackgroundCallNotification(
+            uid: call.uid,
+            video: call.video,
+            purpose: Purpose.friends,
+          );
+          await serializeBackgroundCallNotification(backgroundCallNotification);
+        },
         onCallRejected: () {},
       );
     },
@@ -118,6 +170,8 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
     final senderName = message.data['senderName'];
     final senderPhoto = message.data['senderPhoto'];
     final rid = message.data['rid'];
+    final purpose =
+        message.data['purpose'] == 'friends' ? Purpose.friends : Purpose.dating;
     final video = (message.data['video'] as String).parseBool();
     notificationTitle =
         'Incoming ${video ? 'video call' : 'call'} from $senderName';
@@ -127,9 +181,10 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
     notificationPayload = _CallPayload(
       name: senderName,
       photo: senderPhoto,
-      video: true,
+      video: video,
       rid: rid,
       uid: uid,
+      purpose: purpose,
     );
   } else if (type == 'chat') {
     final messageJson = message.data['message'];
@@ -238,6 +293,7 @@ class _NotificationPayload with _$_NotificationPayload {
     required String name,
     required String photo,
     required String rid,
+    required Purpose purpose,
     required bool video,
   }) = _CallPayload;
 

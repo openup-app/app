@@ -39,9 +39,7 @@ Future<void> displayIncomingCall({
     String callerName,
     Set<int> opponentsIds,
     Map<String, String>? userInfo,
-  ) {
-    onCallAccepted();
-  };
+  ) {};
 
   return ConnectycubeFlutterCallKit.showCallNotification(
     sessionId: rid,

@@ -6,6 +6,7 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/public_profile_screen.dart';
+import 'package:openup/video_call_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
@@ -156,8 +157,8 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                               ),
                             );
                           },
-                          onCall: () => _onCall(profile.uid!, video: false),
-                          onVideoCall: () => _onCall(profile.uid!, video: true),
+                          onCall: () => _onCall(profile, video: false),
+                          onVideoCall: () => _onCall(profile, video: true),
                         );
                       },
                     );
@@ -275,15 +276,25 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
     );
   }
 
-  void _onCall(String calleeUid, {required bool video}) async {
+  void _onCall(PublicProfile profile, {required bool video}) async {
     final api = ref.read(usersApiProvider);
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       throw 'No user is logged in';
     }
-    final rid = await api.call(uid, calleeUid, video);
-    print(rid);
-    if (mounted) {}
+    final rid = await api.call(uid, profile.uid!, video);
+    if (mounted) {
+      final route = video ? 'friends-video-call' : 'friends-voice-call';
+      Navigator.of(context).pushNamed(
+        route,
+        arguments: CallPageArguments(
+          uid: FirebaseAuth.instance.currentUser!.uid,
+          initiator: true,
+          profiles: [profile],
+          rekindles: [],
+        ),
+      );
+    }
   }
 }
 
