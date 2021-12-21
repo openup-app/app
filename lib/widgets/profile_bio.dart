@@ -11,6 +11,7 @@ import 'package:openup/widgets/theming.dart';
 
 class ProfileBio extends StatefulWidget {
   final String? name;
+  final DateTime? birthday;
   final String? description;
   final String? url;
   final bool editable;
@@ -20,6 +21,7 @@ class ProfileBio extends StatefulWidget {
   const ProfileBio({
     Key? key,
     required this.name,
+    required this.birthday,
     required this.description,
     required this.url,
     required this.editable,
@@ -81,6 +83,7 @@ class ProfileBioState extends State<ProfileBio> {
       padding: const EdgeInsets.all(8.0),
       child: _ProfileBioDisplay(
         name: widget.name,
+        birthday: widget.birthday,
         description: widget.description,
         playButton: playButtonState,
         recording: _recording,
@@ -125,6 +128,7 @@ class ProfileBioState extends State<ProfileBio> {
 
 class _ProfileBioDisplay extends ConsumerWidget {
   final String? name;
+  final DateTime? birthday;
   final String? description;
   final PlayButtonState playButton;
   final bool recording;
@@ -139,6 +143,7 @@ class _ProfileBioDisplay extends ConsumerWidget {
   const _ProfileBioDisplay({
     Key? key,
     required this.name,
+    required this.birthday,
     required this.description,
     required this.playButton,
     required this.recording,
@@ -153,6 +158,8 @@ class _ProfileBioDisplay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final age =
+        DateTime.now().difference(birthday ?? DateTime.now()).inDays ~/ 365;
     return Container(
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.all(Radius.circular(20)),
@@ -184,7 +191,7 @@ class _ProfileBioDisplay extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name ?? '',
+                      name == null ? '' : '$name, $age',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theming.of(context).text.headline.copyWith(

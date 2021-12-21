@@ -180,6 +180,7 @@ class _PublicProfileEditScreenState extends State<PublicProfileEditScreen> {
                       return ProfileBio(
                         key: _audioBioKey,
                         name: editableProfile?.name,
+                        birthday: editableProfile?.birthday,
                         description: editableProfile?.description,
                         url: editableProfile?.audio,
                         editable: true,

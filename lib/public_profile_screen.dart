@@ -132,6 +132,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                       return ProfileBio(
                         key: _audioBioKey,
                         name: editableProfile?.name,
+                        birthday: editableProfile?.birthday,
                         description: editableProfile?.description,
                         url: editableProfile?.audio,
                         editable: true,
@@ -150,6 +151,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 } else {
                   return ProfileBio(
                     name: widget.publicProfile.name,
+                    birthday: widget.publicProfile.birthday,
                     description: widget.publicProfile.description,
                     url: widget.publicProfile.audio,
                     editable: false,
