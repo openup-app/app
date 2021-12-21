@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
-import 'package:openup/notifications.dart';
+import 'package:openup/notifications/notifications.dart';
 
 /// Page used for asynchronous initialization.
 class InitialLoadingScreen extends ConsumerStatefulWidget {

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/users/users_api.dart';
-import 'package:openup/notifications.dart';
+import 'package:openup/notifications/notifications.dart';
 import 'package:openup/public_profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_photo.dart';

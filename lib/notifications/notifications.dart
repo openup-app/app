@@ -7,7 +7,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/chat_screen.dart';
-import 'package:openup/connectycube_call_kit_integration.dart';
+import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/util/string.dart';
 
 part 'notifications.freezed.dart';
@@ -73,11 +73,8 @@ void _onForegroundNotification(RemoteMessage message, UsersApi api) async {
         rid: call.rid,
         callerName: call.name,
         video: call.video,
-        onCallAccepted: () {
-          
-        },
-        onCallRejected: () {
-        },
+        onCallAccepted: () {},
+        onCallRejected: () {},
       );
     },
     chat: (chat) {
@@ -96,10 +93,8 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
         rid: call.rid,
         callerName: call.name,
         video: call.video,
-        onCallAccepted: () {
-        },
-        onCallRejected: () {
-        },
+        onCallAccepted: () {},
+        onCallRejected: () {},
       );
     },
     chat: (_) {},
