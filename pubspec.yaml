@@ -29,6 +29,8 @@ dependencies:
   emoji_picker_flutter: ^1.0.8
   uuid: ^3.0.5
   rxdart: ^0.27.3
+  connectycube_flutter_call_kit:
+    git: git@github.com:openup-app/connectycube-flutter-call-kit.git
 
 dev_dependencies:
   flutter_test:

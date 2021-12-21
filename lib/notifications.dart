@@ -7,6 +7,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/chat_screen.dart';
+import 'package:openup/connectycube_call_kit_integration.dart';
+import 'package:openup/util/string.dart';
 
 part 'notifications.freezed.dart';
 part 'notifications.g.dart';
@@ -66,7 +68,18 @@ Future<bool> _handleLaunchNotification({
 void _onForegroundNotification(RemoteMessage message, UsersApi api) async {
   final parsed = await _parseRemoteMessage(message);
   parsed.payload?.map(
-    call: (_) => _,
+    call: (call) {
+      displayIncomingCall(
+        rid: call.rid,
+        callerName: call.name,
+        video: call.video,
+        onCallAccepted: () {
+          
+        },
+        onCallRejected: () {
+        },
+      );
+    },
     chat: (chat) {
       api.updateUnreadChatMessagesCount(chat.uid, chat.chatroomUnread);
     },
@@ -74,8 +87,26 @@ void _onForegroundNotification(RemoteMessage message, UsersApi api) async {
 }
 
 Future<void> _onBackgroundNotification(RemoteMessage message) async {
+  bool shouldDisplay = true;
   final parsed = await _parseRemoteMessage(message);
-  return _displayNotification(parsed);
+  parsed.payload?.map(
+    call: (call) {
+      shouldDisplay = false;
+      displayIncomingCall(
+        rid: call.rid,
+        callerName: call.name,
+        video: call.video,
+        onCallAccepted: () {
+        },
+        onCallRejected: () {
+        },
+      );
+    },
+    chat: (_) {},
+  );
+  if (shouldDisplay) {
+    return _displayNotification(parsed);
+  }
 }
 
 Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
@@ -91,13 +122,18 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
     final uid = message.data['uid'];
     final senderName = message.data['senderName'];
     final senderPhoto = message.data['senderPhoto'];
-    notificationTitle = 'Incoming call on Openup';
+    final rid = message.data['rid'];
+    final video = (message.data['video'] as String).parseBool();
+    notificationTitle =
+        'Incoming ${video ? 'video call' : 'call'} from $senderName';
     notificationBody = senderName;
     channelName = 'Calls';
     channelDescription = 'Calls from your connections';
     notificationPayload = _CallPayload(
+      name: senderName,
+      photo: senderPhoto,
       video: true,
-      rid: '',
+      rid: rid,
       uid: uid,
     );
   } else if (type == 'chat') {
@@ -204,6 +240,8 @@ class _ParsedNotification {
 class _NotificationPayload with _$_NotificationPayload {
   const factory _NotificationPayload.call({
     required String uid,
+    required String name,
+    required String photo,
     required String rid,
     required bool video,
   }) = _CallPayload;
