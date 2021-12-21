@@ -3,14 +3,19 @@ import 'package:flutter/widgets.dart';
 
 class MaleFemaleConnectionImage extends StatelessWidget {
   final Color? color;
+  final Offset offset;
   const MaleFemaleConnectionImage({
     Key? key,
     this.color,
+    this.offset = Offset.zero,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset('assets/images/friends.gif');
+    return Transform.translate(
+      offset: offset,
+      child: Image.asset('assets/images/friends.gif'),
+    );
   }
 }
 

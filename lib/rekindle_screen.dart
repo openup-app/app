@@ -156,7 +156,7 @@ class RekindleScreenPrecached extends ConsumerWidget {
               else
                 SizedBox(
                   height: 50,
-                  child: Image.asset('assets/images/heart.png'),
+                  child: Image.asset('assets/images/heart.gif'),
                 ),
               Text(rekindle.name, style: Theming.of(context).text.headline),
               const SizedBox(height: 4),

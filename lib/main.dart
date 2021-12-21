@@ -189,8 +189,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         child: SoloScreen(
                           label: 'meet people',
                           image: const SizedBox(
-                            height: 115,
-                            child: MaleFemaleConnectionImage(),
+                            height: 90,
+                            child: MaleFemaleConnectionImage(
+                              offset: Offset(0.0, 13.0),
+                            ),
                           ),
                           onPressedVoiceCall: () =>
                               Navigator.of(context).pushNamed(
@@ -241,8 +243,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           title: 'meet people',
                           image: const SizedBox(
                             width: 125,
-                            height: 40,
-                            child: MaleFemaleConnectionImageApart(),
+                            height: 60,
+                            child: MaleFemaleConnectionImage(
+                              offset: Offset(0.0, 6.0),
+                            ),
                           ),
                           updatePreferences: (usersApi, uid, preferences) =>
                               usersApi.updateFriendsPreferences(
@@ -396,7 +400,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           image: SizedBox(
                             height: 120,
                             child: Image.asset(
-                              'assets/images/heart.png',
+                              'assets/images/heart.gif',
                               fit: BoxFit.fitHeight,
                             ),
                           ),
@@ -452,7 +456,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           image: SizedBox(
                             width: 125,
                             height: 40,
-                            child: Image.asset('assets/images/heart.png'),
+                            child: Image.asset('assets/images/heart.gif'),
                           ),
                           updatePreferences: (usersApi, uid, preferences) =>
                               usersApi.updateDatingPreferences(
