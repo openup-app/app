@@ -10,7 +10,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/loading_dialog.dart';
 import 'package:openup/widgets/theming.dart';
 
-class PrivateProfileScreen extends StatefulWidget {
+class PrivateProfileScreen extends ConsumerStatefulWidget {
   final PrivateProfile initialProfile;
 
   const PrivateProfileScreen({
@@ -19,10 +19,10 @@ class PrivateProfileScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<PrivateProfileScreen> createState() => _PrivateProfileScreenState();
+  _PrivateProfileScreenState createState() => _PrivateProfileScreenState();
 }
 
-class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
+class _PrivateProfileScreenState extends ConsumerState<PrivateProfileScreen> {
   late _ProfileValueNotifier _notifier;
 
   @override
@@ -513,8 +513,7 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
       return true;
     }
 
-    final container = ProviderScope.containerOf(context);
-    final usersApi = container.read(usersApiProvider);
+    final usersApi = ref.read(usersApiProvider);
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {

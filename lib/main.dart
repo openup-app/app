@@ -46,14 +46,14 @@ void main() {
   );
 }
 
-class OpenupApp extends StatefulWidget {
+class OpenupApp extends ConsumerStatefulWidget {
   const OpenupApp({Key? key}) : super(key: key);
 
   @override
-  State<OpenupApp> createState() => _OpenupAppState();
+  _OpenupAppState createState() => _OpenupAppState();
 }
 
-class _OpenupAppState extends State<OpenupApp> {
+class _OpenupAppState extends ConsumerState<OpenupApp> {
   @override
   void initState() {
     super.initState();
@@ -203,9 +203,7 @@ class _OpenupAppState extends State<OpenupApp> {
                             arguments: LobbyScreenArguments(video: true),
                           ),
                           onPressedPreferences: () async {
-                            final container =
-                                ProviderScope.containerOf(context);
-                            final usersApi = container.read(usersApiProvider);
+                            final usersApi = ref.read(usersApiProvider);
                             final uid = FirebaseAuth.instance.currentUser?.uid;
                             if (uid != null) {
                               final preferences =

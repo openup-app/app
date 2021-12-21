@@ -13,14 +13,14 @@ import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/widgets/title_and_tagline.dart';
 import 'package:openup/widgets/theming.dart';
 
-class SignUpScreen extends StatefulWidget {
+class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  _SignUpScreenState createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen>
+class _SignUpScreenState extends ConsumerState<SignUpScreen>
     with SingleTickerProviderStateMixin {
   static final _phoneRegex = RegExp(r'^(?:[+0][1-9])?[0-9]{10,12}$');
 
@@ -268,8 +268,7 @@ class _SignUpScreenState extends State<SignUpScreen>
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: phone,
         verificationCompleted: (credential) async {
-          final container = ProviderScope.containerOf(context);
-          final usersApi = container.read(usersApiProvider);
+          final usersApi = ref.read(usersApiProvider);
 
           String? uid;
           try {

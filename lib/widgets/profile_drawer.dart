@@ -152,8 +152,7 @@ class ProfileDrawer extends ConsumerWidget {
                   children: [
                     TextButton(
                       onPressed: () async {
-                        final container = ProviderScope.containerOf(context);
-                        final usersApi = container.read(usersApiProvider);
+                        final usersApi = ref.read(usersApiProvider);
                         final uid = FirebaseAuth.instance.currentUser?.uid;
                         if (uid != null) {
                           await dismissAllNotifications();
