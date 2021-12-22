@@ -488,7 +488,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     double opacity = 0.5,
   }) {
     return Text(
-      _kDateFormat.format(date),
+      _kDateFormat.format(date.toLocal()),
       style: Theming.of(context).text.body.copyWith(
           fontSize: 14,
           fontWeight: FontWeight.normal,
@@ -502,7 +502,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     setState(() {
       _messages[pendingId] = ChatMessage(
         uid: _uid,
-        date: DateTime.now(),
+        date: DateTime.now().toUtc(),
         type: type,
         content: content,
       );
