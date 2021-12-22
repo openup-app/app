@@ -123,10 +123,23 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
               Row(
                 children: [
                   if (_playbackInfo.state != PlaybackState.disabled)
-                    Container(
+                    SizedBox(
                       width: 100,
-                      height: 2,
-                      color: Colors.red,
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          thumbShape: AudioSliderThumbShape(),
+                          trackShape: AudioSliderTrackShape(),
+                          overlayColor: Colors.transparent,
+                        ),
+                        child: Slider(
+                          min: Duration.zero.inMilliseconds.toDouble(),
+                          max: _playbackInfo.duration.inMilliseconds.toDouble(),
+                          value:
+                              _playbackInfo.position.inMilliseconds.toDouble(),
+                          onChanged: (value) => _audio
+                              .seek(Duration(milliseconds: value.toInt())),
+                        ),
+                      ),
                     )
                   else
                     SizedBox(
@@ -180,4 +193,70 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
 
   void _onPlaybackInfo(PlaybackInfo info) =>
       setState(() => _playbackInfo = info);
+}
+
+class AudioSliderThumbShape extends RoundSliderThumbShape {
+  @override
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    required bool isDiscrete,
+    required TextPainter labelPainter,
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required TextDirection textDirection,
+    required double value,
+    required double textScaleFactor,
+    required Size sizeWithOverflow,
+  }) {
+    final canvas = context.canvas;
+    final left = parentBox.size.centerLeft(Offset.zero).dx;
+    final width = parentBox.size.width;
+    final horizontalPadding = 8;
+    canvas.drawCircle(
+      Offset(left + horizontalPadding + (width - horizontalPadding * 2) * value,
+          center.dy),
+      8,
+      Paint()..color = const Color.fromRGBO(0xFF, 0x87, 0x87, 1.0),
+    );
+  }
+}
+
+class AudioSliderTrackShape extends SliderTrackShape {
+  @override
+  Rect getPreferredRect({
+    required RenderBox parentBox,
+    Offset offset = Offset.zero,
+    required SliderThemeData sliderTheme,
+    bool? isEnabled,
+    bool? isDiscrete,
+  }) {
+    return offset & parentBox.size;
+  }
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset offset, {
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required Animation<double> enableAnimation,
+    required Offset thumbCenter,
+    bool? isEnabled,
+    bool? isDiscrete,
+    required TextDirection textDirection,
+  }) {
+    final canvas = context.canvas;
+    const height = 2.0;
+    const horizontalPadding = 8.0;
+    final rect = parentBox.size
+            .centerLeft(const Offset(horizontalPadding, -height / 2)) &
+        Size(parentBox.size.width - horizontalPadding * 2, height);
+    canvas.drawRect(
+      rect,
+      Paint()..color = const Color.fromRGBO(0xFF, 0x87, 0x87, 1.0),
+    );
+  }
 }

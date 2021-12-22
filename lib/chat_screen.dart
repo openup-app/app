@@ -169,10 +169,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               ],
                             );
 
+                            final messageReady = message.messageId != null;
+
                             return Container(
-                              key: message.messageId != null
-                                  ? Key(message.messageId!)
-                                  : null,
+                              key:
+                                  messageReady ? Key(message.messageId!) : null,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 4,
@@ -181,30 +182,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               alignment: fromMe
                                   ? Alignment.centerRight
                                   : Alignment.centerLeft,
-                              child: ColorFiltered(
-                                colorFilter: message.messageId == null
-                                    ? greyscaleColorMatrix
-                                    : defaultColorMatrix,
-                                child: Builder(
-                                  builder: (context) {
-                                    switch (message.type) {
-                                      case ChatType.emoji:
-                                        return _buildEmojiMessage(message);
-                                      case ChatType.image:
-                                        return _buildImageMessage(message);
-                                      case ChatType.video:
-                                        return _buildVideoMessage(message);
-                                      case ChatType.audio:
-                                        return AudioChatMessage(
-                                          audioUrl: message.content,
-                                          photoUrl: fromMe
-                                              ? _myAvatar
-                                              : widget.profile.photo,
-                                          date: _buildDateText(message.date),
-                                          fromMe: fromMe,
-                                        );
-                                    }
-                                  },
+                              child: IgnorePointer(
+                                ignoring: !messageReady,
+                                child: ColorFiltered(
+                                  colorFilter: messageReady
+                                      ? defaultColorMatrix
+                                      : greyscaleColorMatrix,
+                                  child: Builder(
+                                    builder: (context) {
+                                      switch (message.type) {
+                                        case ChatType.emoji:
+                                          return _buildEmojiMessage(message);
+                                        case ChatType.image:
+                                          return _buildImageMessage(message);
+                                        case ChatType.video:
+                                          return _buildVideoMessage(message);
+                                        case ChatType.audio:
+                                          return AudioChatMessage(
+                                            audioUrl: message.content,
+                                            photoUrl: fromMe
+                                                ? _myAvatar
+                                                : widget.profile.photo,
+                                            date: _buildDateText(message.date),
+                                            fromMe: fromMe,
+                                          );
+                                      }
+                                    },
+                                  ),
                                 ),
                               ),
                             );
@@ -312,7 +316,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           case _InputType.imageVideo:
                             return Center(
                               child: Text(
-                                'Image',
+                                'Image/Video',
                                 style: Theming.of(context).text.body,
                               ),
                             );

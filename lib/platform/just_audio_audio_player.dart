@@ -80,6 +80,8 @@ class JustAudioAudioPlayer {
   Future<void> pause() => _player.pause();
 
   Future<void> stop() => _player.stop();
+
+  Future<void> seek(Duration position) => _player.seek(position);
 }
 
 @freezed
