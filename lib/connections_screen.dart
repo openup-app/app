@@ -119,7 +119,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                   padding: const EdgeInsets.only(top: 20, bottom: 64),
                   itemCount: filteredConnections.length,
                   itemBuilder: (context, index) {
-                    final connection = filteredConnections[0];
+                    final connection = filteredConnections[index];
                     final profile = connection.profile;
                     final usersApi = ref.read(usersApiProvider);
                     final countStream = usersApi.unreadChatMessageCountsStream
