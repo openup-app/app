@@ -255,9 +255,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                           ? Theming.of(context).friendBlue3
                                           : null),
                                   onPressed: () {
-                                    setState(() => _inputType =
-                                        _switchToInputTypeOrNone(
-                                            _InputType.imageVideo));
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) {
+                                          return Scaffold(
+                                            body: ImageVideoInputBox(
+                                              onCapture:
+                                                  (chatType, bytes, muted) {
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    );
                                   },
                                 ),
                                 IconButton(
@@ -314,12 +325,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               onEmoji: (emoji) => _send(ChatType.emoji, emoji),
                             );
                           case _InputType.imageVideo:
-                            return Center(
-                              child: Text(
-                                'Image/Video',
-                                style: Theming.of(context).text.body,
-                              ),
-                            );
+                            return const SizedBox.shrink();
                           case _InputType.audio:
                             return AudioInputBox(
                               onRecord: (path) => _send(ChatType.audio, path),

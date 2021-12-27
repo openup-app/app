@@ -32,6 +32,9 @@ dependencies:
   connectycube_flutter_call_kit:
     git: git@github.com:openup-app/connectycube-flutter-call-kit.git
   shared_preferences: ^2.0.11
+  camera: ^0.9.4+5
+  decorated_icon: ^1.2.1
+  video_player: ^2.2.10
 
 dev_dependencies:
   flutter_test:

@@ -4,10 +4,14 @@ import 'package:openup/widgets/theming.dart';
 class Button extends StatefulWidget {
   final Widget child;
   final VoidCallback? onPressed;
+  final VoidCallback? onLongPressStart;
+  final VoidCallback? onLongPressEnd;
   const Button({
     Key? key,
     required this.child,
     required this.onPressed,
+    this.onLongPressStart,
+    this.onLongPressEnd,
   }) : super(key: key);
 
   @override
@@ -57,6 +61,12 @@ class _ButtonState extends State<Button> with SingleTickerProviderStateMixin {
           onTapCancel: () => setState(() {
             _animationController.forward(from: 0.6);
           }),
+          onLongPressStart: widget.onLongPressStart == null
+              ? null
+              : (_) => widget.onLongPressStart?.call(),
+          onLongPressEnd: widget.onLongPressEnd == null
+              ? null
+              : (_) => widget.onLongPressEnd?.call(),
           child: DefaultTextStyle(
             style: Theming.of(context).text.body,
             child: widget.child,
