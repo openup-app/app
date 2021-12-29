@@ -45,22 +45,29 @@ class ProfileButton extends ConsumerWidget {
               initialData: 0,
               builder: (context, snapshot) {
                 final sum = snapshot.requireData;
+                if (sum == 0) {
+                  return const SizedBox.shrink();
+                }
                 return Container(
                   width: 16,
                   height: 16,
-                  decoration: sum == 0
-                      ? null
-                      : BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theming.of(context).shadow,
-                              offset: const Offset(0.0, 4.0),
-                              blurRadius: 2.0,
-                            ),
-                          ],
-                          shape: BoxShape.circle,
-                          color: Theming.of(context).alertRed,
-                        ),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theming.of(context).shadow,
+                        offset: const Offset(0.0, 4.0),
+                        blurRadius: 2.0,
+                      ),
+                    ],
+                    shape: BoxShape.circle,
+                    color: Theming.of(context).alertRed,
+                  ),
+                  child: Text(
+                    sum.toString(),
+                    textAlign: TextAlign.center,
+                    style: Theming.of(context).text.caption,
+                  ),
                 );
               },
             ),
