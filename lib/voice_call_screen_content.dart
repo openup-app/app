@@ -8,10 +8,13 @@ import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/time_remaining.dart';
 
 /// Voice call display and controls.
+///
+/// Setting [endTime] to `null` will disable the timer UI and will not
+/// trigger [onTimeUp].
 class VoiceCallScreenContent extends StatelessWidget {
   final List<PublicProfile> profiles;
   final bool hasSentTimeRequest;
-  final DateTime endTime;
+  final DateTime? endTime;
   final bool muted;
   final bool speakerphone;
   final VoidCallback onTimeUp;
@@ -95,33 +98,37 @@ class VoiceCallScreenContent extends StatelessWidget {
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              _ButtonWithText(
-                                icon: const Icon(Icons.alarm_add),
-                                label: 'add time',
-                                onPressed: hasSentTimeRequest
-                                    ? null
-                                    : onSendTimeRequest,
-                              ),
-                              const SizedBox(width: 30),
-                            ],
-                          ),
+                          if (endTime == null)
+                            const SizedBox(height: 75)
+                          else
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                _ButtonWithText(
+                                  icon: const Icon(Icons.alarm_add),
+                                  label: 'add time',
+                                  onPressed: hasSentTimeRequest
+                                      ? null
+                                      : onSendTimeRequest,
+                                ),
+                                const SizedBox(width: 30),
+                              ],
+                            ),
                           Text(
                             profile.name,
                             style: Theming.of(context).text.headline,
                           ),
-                          TimeRemaining(
-                            endTime: endTime,
-                            onTimeUp: onTimeUp,
-                            builder: (context, remaining) {
-                              return Text(
-                                remaining,
-                                style: Theming.of(context).text.body,
-                              );
-                            },
-                          ),
+                          if (endTime != null)
+                            TimeRemaining(
+                              endTime: endTime!,
+                              onTimeUp: onTimeUp,
+                              builder: (context, remaining) {
+                                return Text(
+                                  remaining,
+                                  style: Theming.of(context).text.body,
+                                );
+                              },
+                            ),
                         ],
                       ),
                       const SizedBox(height: 40),

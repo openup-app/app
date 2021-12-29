@@ -5,11 +5,14 @@ import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/time_remaining.dart';
 
 /// Video call display and controls.
+///
+/// Setting [endTime] to `null` will disable the timer UI and will not
+/// trigger [onTimeUp].
 class VideoCallScreenContent extends StatefulWidget {
   final RTCVideoRenderer? localRenderer;
   final RTCVideoRenderer? remoteRenderer;
   final bool hasSentTimeRequest;
-  final DateTime endTime;
+  final DateTime? endTime;
   final bool muted;
   final VoidCallback onTimeUp;
   final VoidCallback onHangUp;
@@ -70,40 +73,42 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
             ),
           ),
         ),
-        Align(
-          alignment: Alignment.topCenter,
-          child: SafeArea(
-            top: true,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Button(
-                onPressed:
-                    widget.hasSentTimeRequest ? null : widget.onSendTimeRequest,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.alarm_add),
-                    TimeRemaining(
-                      endTime: widget.endTime,
-                      onTimeUp: widget.onTimeUp,
-                      builder: (context, remaining) {
-                        return Text(
-                          remaining,
-                          style: Theming.of(context).text.body.copyWith(
-                            fontWeight: FontWeight.normal,
-                            shadows: [
-                              Shadow(color: Theming.of(context).shadow)
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+        if (widget.endTime != null)
+          Align(
+            alignment: Alignment.topCenter,
+            child: SafeArea(
+              top: true,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Button(
+                  onPressed: widget.hasSentTimeRequest
+                      ? null
+                      : widget.onSendTimeRequest,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.alarm_add),
+                      TimeRemaining(
+                        endTime: widget.endTime!,
+                        onTimeUp: widget.onTimeUp,
+                        builder: (context, remaining) {
+                          return Text(
+                            remaining,
+                            style: Theming.of(context).text.body.copyWith(
+                              fontWeight: FontWeight.normal,
+                              shadows: [
+                                Shadow(color: Theming.of(context).shadow)
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         AnimatedPositioned(
           left: 0.0,
           right: 0.0,

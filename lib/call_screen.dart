@@ -101,7 +101,7 @@ class _CallScreenState extends State<CallScreen> {
         localRenderer: _localRenderer,
         remoteRenderer: _remoteRenderer,
         hasSentTimeRequest: _hasSentTimeRequest,
-        endTime: _endTime,
+        endTime: widget.rekindles.isEmpty ? null : _endTime,
         muted: _muted,
         onTimeUp: _navigateToRekindle,
         onHangUp: () {
@@ -115,7 +115,7 @@ class _CallScreenState extends State<CallScreen> {
       return VoiceCallScreenContent(
         profiles: widget.profiles,
         hasSentTimeRequest: _hasSentTimeRequest,
-        endTime: _endTime,
+        endTime: widget.rekindles.isEmpty ? null : _endTime,
         muted: _muted,
         speakerphone: _speakerphone,
         onTimeUp: _navigateToRekindle,
