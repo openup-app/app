@@ -9,6 +9,7 @@ import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/connections_screen.dart';
 import 'package:openup/error_screen.dart';
@@ -18,9 +19,7 @@ import 'package:openup/private_profile_screen.dart';
 import 'package:openup/public_profile_edit_screen.dart';
 import 'package:openup/public_profile_screen.dart';
 import 'package:openup/rekindle_screen.dart';
-import 'package:openup/video_call_screen.dart';
 import 'package:openup/util/page_transition.dart';
-import 'package:openup/voice_call_screen.dart';
 import 'package:openup/solo_double_screen.dart';
 import 'package:openup/lobby_screen.dart';
 import 'package:openup/home_screen.dart';
@@ -304,11 +303,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
                     builder: (_) {
-                      return VoiceCallScreen(
+                      return CallScreen(
                         uid: args.uid,
                         host: host,
                         socketPort: socketPort,
                         initiator: args.initiator,
+                        video: false,
                         profiles: args.profiles,
                         rekindles: args.rekindles,
                       );
@@ -320,11 +320,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
                     builder: (_) {
-                      return VideoCallScreen(
+                      return CallScreen(
                         uid: args.uid,
                         host: host,
                         socketPort: socketPort,
                         initiator: args.initiator,
+                        video: true,
                         profiles: args.profiles,
                         rekindles: args.rekindles,
                       );

@@ -1,100 +1,42 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:openup/api/signaling/signaling.dart';
-import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/rekindle.dart';
-import 'package:openup/rekindle_screen.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/widgets/slide_control.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/time_remaining.dart';
 
-class VoiceCallScreen extends StatefulWidget {
-  final String uid;
-  final String host;
-  final int socketPort;
-  final bool initiator;
+/// Voice call display and controls.
+class VoiceCallScreenContent extends StatelessWidget {
   final List<PublicProfile> profiles;
-  final List<Rekindle> rekindles;
+  final bool hasSentTimeRequest;
+  final DateTime endTime;
+  final bool muted;
+  final bool speakerphone;
+  final VoidCallback onTimeUp;
+  final VoidCallback onHangUp;
+  final VoidCallback onSendTimeRequest;
+  final VoidCallback onToggleMute;
+  final VoidCallback onToggleSpeakerphone;
 
-  const VoiceCallScreen({
+  const VoiceCallScreenContent({
     Key? key,
-    required this.uid,
-    required this.host,
-    required this.socketPort,
-    required this.initiator,
     required this.profiles,
-    required this.rekindles,
+    required this.hasSentTimeRequest,
+    required this.endTime,
+    required this.muted,
+    required this.speakerphone,
+    required this.onTimeUp,
+    required this.onHangUp,
+    required this.onSendTimeRequest,
+    required this.onToggleMute,
+    required this.onToggleSpeakerphone,
   }) : super(key: key);
 
   @override
-  State<VoiceCallScreen> createState() => _VoiceCallScreenState();
-}
-
-class _VoiceCallScreenState extends State<VoiceCallScreen> {
-  late final SignalingChannel _signalingChannel;
-  late final Phone _phone;
-
-  RTCVideoRenderer? _remoteRenderer;
-  bool _muted = false;
-  bool _speakerphone = false;
-
-  bool _hasSentTimeRequest = false;
-  late DateTime _endTime;
-
-  @override
-  void initState() {
-    _signalingChannel = SocketIoSignalingChannel(
-      host: widget.host,
-      port: widget.socketPort,
-      uid: widget.uid,
-    );
-    _phone = Phone(
-      useVideo: false,
-      signalingChannel: _signalingChannel,
-      onMediaRenderers: (_, remoteRenderer) {
-        setState(() {
-          _remoteRenderer = remoteRenderer;
-        });
-      },
-      onRemoteStream: (stream) {
-        setState(() => _remoteRenderer?.srcObject = stream);
-      },
-      onAddTimeRequest: () {
-        setState(() => _hasSentTimeRequest = false);
-      },
-      onAddTime: _addTime,
-      onDisconnected: _navigateToRekindle,
-      onToggleMute: (muted) => setState(() => _muted = muted),
-      onToggleSpeakerphone: (enabled) =>
-          setState(() => _speakerphone = enabled),
-    );
-
-    if (widget.initiator) {
-      _phone.call();
-    } else {
-      _phone.answer();
-    }
-
-    _endTime = DateTime.now().add(const Duration(seconds: 90));
-
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _signalingChannel.dispose();
-    _phone.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final profile = widget.profiles.first;
+    final profile = profiles.first;
     final photo = profile.photo;
     return Stack(
       alignment: Alignment.center,
@@ -159,9 +101,9 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                               _ButtonWithText(
                                 icon: const Icon(Icons.alarm_add),
                                 label: 'add time',
-                                onPressed: _hasSentTimeRequest
+                                onPressed: hasSentTimeRequest
                                     ? null
-                                    : _sendTimeRequest,
+                                    : onSendTimeRequest,
                               ),
                               const SizedBox(width: 30),
                             ],
@@ -171,8 +113,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                             style: Theming.of(context).text.headline,
                           ),
                           TimeRemaining(
-                            endTime: _endTime,
-                            onTimeUp: _navigateToRekindle,
+                            endTime: endTime,
+                            onTimeUp: onTimeUp,
                             builder: (context, remaining) {
                               return Text(
                                 remaining,
@@ -206,21 +148,21 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _ButtonWithText(
-                            icon: _muted
+                            icon: muted
                                 ? const Icon(Icons.mic_off)
                                 : const Icon(Icons.mic),
                             label: 'Mute',
-                            onPressed: _phone.toggleMute,
+                            onPressed: onToggleMute,
                           ),
                           _ButtonWithText(
                             icon: Icon(
                               Icons.volume_up,
-                              color: _speakerphone
+                              color: speakerphone
                                   ? const Color.fromARGB(0xFF, 0x00, 0xFF, 0x19)
                                   : null,
                             ),
                             label: 'Speaker',
-                            onPressed: _phone.toggleSpeakerphone,
+                            onPressed: onToggleSpeakerphone,
                           ),
                         ],
                       ),
@@ -238,10 +180,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                 ),
                 trackContents: const Text('slide to end call'),
                 trackColor: const Color.fromARGB(0xFF, 0x01, 0x55, 0x67),
-                onSlideComplete: () {
-                  _signalingChannel.send(const HangUp());
-                  _navigateToRekindle();
-                },
+                onSlideComplete: onHangUp,
               ),
               const SizedBox(height: 50),
             ],
@@ -249,34 +188,6 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
         ),
       ],
     );
-  }
-
-  void _sendTimeRequest() {
-    if (!_hasSentTimeRequest) {
-      setState(() => _hasSentTimeRequest = true);
-      _signalingChannel.send(const AddTimeRequest());
-    }
-  }
-
-  void _addTime(Duration duration) {
-    setState(() {
-      _endTime = _endTime.add(duration);
-      _hasSentTimeRequest = false;
-    });
-  }
-
-  void _navigateToRekindle() {
-    if (widget.rekindles.isEmpty) {
-      Navigator.pop(context);
-    } else {
-      Navigator.of(context).pushReplacementNamed(
-        'precached-rekindle',
-        arguments: PrecachedRekindleScreenArguments(
-          rekindles: widget.rekindles,
-          title: 'meet people',
-        ),
-      );
-    }
   }
 }
 

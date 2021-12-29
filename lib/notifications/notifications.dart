@@ -8,12 +8,12 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/main.dart';
 import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/notifications/notification_comms.dart';
 import 'package:openup/util/string.dart';
-import 'package:openup/video_call_screen.dart';
 
 part 'notifications.freezed.dart';
 part 'notifications.g.dart';

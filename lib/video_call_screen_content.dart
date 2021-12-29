@@ -1,113 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:openup/api/signaling/signaling.dart';
-import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
-import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/rekindle.dart';
-import 'package:openup/rekindle_screen.dart';
-import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/time_remaining.dart';
 
-/// Page on which the [Phone] is used. Calls start, proceed and end here.
-class VideoCallScreen extends StatefulWidget {
-  final String uid;
-  final String host;
-  final int socketPort;
-  final bool initiator;
-  final List<PublicProfile> profiles;
-  final List<Rekindle> rekindles;
+/// Video call display and controls.
+class VideoCallScreenContent extends StatefulWidget {
+  final RTCVideoRenderer? localRenderer;
+  final RTCVideoRenderer? remoteRenderer;
+  final bool hasSentTimeRequest;
+  final DateTime endTime;
+  final bool muted;
+  final VoidCallback onTimeUp;
+  final VoidCallback onHangUp;
+  final VoidCallback onSendTimeRequest;
+  final VoidCallback onToggleMute;
 
-  const VideoCallScreen({
+  const VideoCallScreenContent({
     Key? key,
-    required this.uid,
-    required this.host,
-    required this.socketPort,
-    required this.initiator,
-    required this.profiles,
-    required this.rekindles,
+    required this.localRenderer,
+    required this.remoteRenderer,
+    required this.hasSentTimeRequest,
+    required this.endTime,
+    required this.muted,
+    required this.onTimeUp,
+    required this.onHangUp,
+    required this.onSendTimeRequest,
+    required this.onToggleMute,
   }) : super(key: key);
 
   @override
-  State<VideoCallScreen> createState() => _VideoCallScreenState();
+  State<VideoCallScreenContent> createState() => _VideoCallScreenContentState();
 }
 
-class _VideoCallScreenState extends State<VideoCallScreen> {
-  late final SignalingChannel _signalingChannel;
-  late final Phone _phone;
-
-  RTCVideoRenderer? _localRenderer;
-  RTCVideoRenderer? _remoteRenderer;
-  bool _muted = false;
-
-  bool _hasSentTimeRequest = false;
-  late DateTime _endTime;
-
+class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
   bool _showingControls = true;
-
-  @override
-  void initState() {
-    _signalingChannel = SocketIoSignalingChannel(
-      host: widget.host,
-      port: widget.socketPort,
-      uid: widget.uid,
-    );
-    _phone = Phone(
-      useVideo: true,
-      signalingChannel: _signalingChannel,
-      onMediaRenderers: (localRenderer, remoteRenderer) {
-        setState(() {
-          _localRenderer = localRenderer;
-          _remoteRenderer = remoteRenderer;
-        });
-      },
-      onRemoteStream: (stream) {
-        setState(() => _remoteRenderer?.srcObject = stream);
-      },
-      onAddTimeRequest: () {
-        setState(() => _hasSentTimeRequest = false);
-      },
-      onAddTime: _addTime,
-      onDisconnected: _navigateToRekindle,
-      onToggleMute: (muted) => setState(() => _muted = muted),
-    );
-
-    if (widget.initiator) {
-      _phone.call();
-    } else {
-      _phone.answer();
-    }
-
-    _endTime = DateTime.now().add(const Duration(seconds: 90));
-
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _signalingChannel.dispose();
-    _phone.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        if (_remoteRenderer != null)
+        if (widget.remoteRenderer != null)
           Positioned.fill(
-            child: AppLifecycle(
-              onResumed: () => _phone.videoEnabled = true,
-              onPaused: () => _phone.videoEnabled = false,
-              child: GestureDetector(
-                onTap: () =>
-                    setState(() => _showingControls = !_showingControls),
-                child: RTCVideoView(
-                  _remoteRenderer!,
-                  objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                ),
+            child: GestureDetector(
+              onTap: () => setState(() => _showingControls = !_showingControls),
+              child: RTCVideoView(
+                widget.remoteRenderer!,
+                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
               ),
             ),
           ),
@@ -138,14 +77,15 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Button(
-                onPressed: _hasSentTimeRequest ? null : _sendTimeRequest,
+                onPressed:
+                    widget.hasSentTimeRequest ? null : widget.onSendTimeRequest,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.alarm_add),
                     TimeRemaining(
-                      endTime: _endTime,
-                      onTimeUp: _navigateToRekindle,
+                      endTime: widget.endTime,
+                      onTimeUp: widget.onTimeUp,
                       builder: (context, remaining) {
                         return Text(
                           remaining,
@@ -176,7 +116,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (_localRenderer != null)
+              if (widget.localRenderer != null)
                 Container(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
@@ -194,7 +134,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     child: Opacity(
                       opacity: 0.5,
                       child: RTCVideoView(
-                        _localRenderer!,
+                        widget.localRenderer!,
                         mirror: true,
                         objectFit:
                             RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
@@ -208,17 +148,14 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _CallControlButton(
-                      onPressed: _phone.toggleMute,
+                      onPressed: widget.onToggleMute,
                       size: 56,
-                      child: _muted
+                      child: widget.muted
                           ? const Icon(Icons.mic_off)
                           : const Icon(Icons.mic),
                     ),
                     _CallControlButton(
-                      onPressed: () {
-                        _signalingChannel.send(const HangUp());
-                        _navigateToRekindle();
-                      },
+                      onPressed: widget.onHangUp,
                       scrimColor: const Color.fromARGB(0xFF, 0xFF, 0x00, 0x00),
                       gradientColor:
                           const Color.fromARGB(0xFF, 0xFF, 0x88, 0x88),
@@ -241,34 +178,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         ),
       ],
     );
-  }
-
-  void _sendTimeRequest() {
-    if (!_hasSentTimeRequest) {
-      setState(() => _hasSentTimeRequest = true);
-      _signalingChannel.send(const AddTimeRequest());
-    }
-  }
-
-  void _addTime(Duration duration) {
-    setState(() {
-      _endTime = _endTime.add(duration);
-      _hasSentTimeRequest = false;
-    });
-  }
-
-  void _navigateToRekindle() {
-    if (widget.rekindles.isEmpty) {
-      Navigator.pop(context);
-    } else {
-      Navigator.of(context).pushReplacementNamed(
-        'precached-rekindle',
-        arguments: PrecachedRekindleScreenArguments(
-          rekindles: widget.rekindles,
-          title: 'meet people',
-        ),
-      );
-    }
   }
 }
 
@@ -325,18 +234,4 @@ class _CallControlButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class CallPageArguments {
-  final String uid;
-  final bool initiator;
-  final List<PublicProfile> profiles;
-  final List<Rekindle> rekindles;
-
-  CallPageArguments({
-    required this.uid,
-    required this.initiator,
-    required this.profiles,
-    required this.rekindles,
-  });
 }
