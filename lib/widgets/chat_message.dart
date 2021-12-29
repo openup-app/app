@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:video_player/video_player.dart';
 
 class AudioChatMessage extends StatefulWidget {
   final String audioUrl;
@@ -214,7 +216,7 @@ class AudioSliderThumbShape extends RoundSliderThumbShape {
     final canvas = context.canvas;
     final left = parentBox.size.centerLeft(Offset.zero).dx;
     final width = parentBox.size.width;
-    final horizontalPadding = 8;
+    const horizontalPadding = 8;
     canvas.drawCircle(
       Offset(left + horizontalPadding + (width - horizontalPadding * 2) * value,
           center.dy),
@@ -257,6 +259,147 @@ class AudioSliderTrackShape extends SliderTrackShape {
     canvas.drawRect(
       rect,
       Paint()..color = const Color.fromRGBO(0xFF, 0x87, 0x87, 1.0),
+    );
+  }
+}
+
+class VideoChatMessage extends StatefulWidget {
+  final String videoUrl;
+  final Widget date;
+  final bool fromMe;
+
+  const VideoChatMessage({
+    Key? key,
+    required this.videoUrl,
+    required this.date,
+    required this.fromMe,
+  }) : super(key: key);
+
+  @override
+  _VideoChatMessageState createState() => _VideoChatMessageState();
+}
+
+class _VideoChatMessageState extends State<VideoChatMessage> {
+  late final VideoPlayerController _controller;
+  bool _playing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.network(widget.videoUrl);
+    _controller.initialize().whenComplete(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    _controller.addListener(() async {
+      if (_controller.value.isPlaying != _playing) {
+        if (mounted) {
+          setState(() => _playing = _controller.value.isPlaying);
+        }
+        if (_controller.value.position == _controller.value.duration) {
+          await _controller.seekTo(Duration.zero);
+          if (mounted) {
+            setState(() {});
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.all(
+        Radius.circular(36),
+      ),
+      child: Button(
+        onPressed: () async {
+          final playing = _controller.value.isPlaying;
+          if (!playing) {
+            await _controller.play();
+          } else {
+            await _controller.pause();
+          }
+          if (mounted) {
+            setState(() => _playing = _controller.value.isPlaying);
+          }
+        },
+        child: SizedBox(
+          width: 200,
+          height: 250,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.all(
+                  Radius.circular(34),
+                ),
+                child: Builder(
+                  builder: (context) {
+                    if (_controller.value.isInitialized) {
+                      return FittedBox(
+                        fit: BoxFit.cover,
+                        child: SizedBox(
+                          width: _controller.value.size.width,
+                          height: _controller.value.size.height,
+                          child: VideoPlayer(_controller),
+                        ),
+                      );
+                    } else {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  },
+                ),
+              ),
+              if (!_playing)
+                BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: 10,
+                    sigmaY: 10,
+                  ),
+                  child: const DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.3),
+                    ),
+                  ),
+                ),
+              Positioned(
+                right: 24,
+                bottom: 12,
+                child: widget.date,
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: const Color.fromRGBO(0x9E, 0x9E, 0x9E, 1.0),
+                    width: 2,
+                  ),
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(36),
+                  ),
+                ),
+                child: const SizedBox.expand(),
+              ),
+              if (_controller.value.isInitialized && !_playing)
+                const Center(
+                  child: Icon(
+                    Icons.play_arrow,
+                    size: 48,
+                  ),
+                )
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

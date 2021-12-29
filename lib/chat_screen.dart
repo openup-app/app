@@ -196,7 +196,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                         case ChatType.image:
                                           return _buildImageMessage(message);
                                         case ChatType.video:
-                                          return _buildVideoMessage(message);
+                                          return VideoChatMessage(
+                                            videoUrl: message.content,
+                                            date: _buildDateText(message.date),
+                                            fromMe: fromMe,
+                                          );
                                         case ChatType.audio:
                                           return AudioChatMessage(
                                             audioUrl: message.content,
