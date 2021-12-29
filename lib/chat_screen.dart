@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -14,6 +12,7 @@ import 'package:openup/video_call_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_input_box.dart';
 import 'package:openup/widgets/chat_message.dart';
+import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:uuid/uuid.dart';
 
@@ -421,6 +420,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: Image.network(
                 message.content,
                 fit: BoxFit.cover,
+                frameBuilder: fadeInFrameBuilder,
+                loadingBuilder: circularProgressLoadingBuilder,
+                errorBuilder: iconErrorBuilder,
               ),
             ),
             Positioned(
@@ -429,69 +431,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: _buildDateText(message.date, opacity: 0.8),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVideoMessage(ChatMessage message) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.all(
-        Radius.circular(36),
-      ),
-      child: Button(
-        onPressed: () {},
-        child: SizedBox(
-          width: 200,
-          height: 250,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(34),
-                ),
-                child: Image.network(
-                  'https://i.pravatar.cc/250',
-                  fit: BoxFit.cover,
-                ),
-              ),
-              BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: 10,
-                  sigmaY: 10,
-                ),
-                child: const DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.3),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 24,
-                bottom: 12,
-                child: _buildDateText(message.date, opacity: 0.8),
-              ),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: const Color.fromRGBO(0x9E, 0x9E, 0x9E, 1.0),
-                    width: 2,
-                  ),
-                  borderRadius: const BorderRadius.all(
-                    Radius.circular(36),
-                  ),
-                ),
-                child: const SizedBox.expand(),
-              ),
-              const Center(
-                child: Icon(
-                  Icons.play_arrow,
-                  size: 48,
-                ),
-              )
-            ],
-          ),
         ),
       ),
     );
