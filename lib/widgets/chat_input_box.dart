@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:camera/camera.dart';
@@ -119,7 +118,7 @@ class _AudioInputBoxState extends State<AudioInputBox> {
 }
 
 class ImageVideoInputBox extends StatefulWidget {
-  final void Function(ChatType chatType, Uint8List bytes, bool muted) onCapture;
+  final void Function(ChatType chatType, String path, bool muted) onCapture;
   const ImageVideoInputBox({
     Key? key,
     required this.onCapture,
@@ -137,7 +136,7 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
   DateTime? _recordStartTime;
 
   ChatType? _chatType;
-  ui.Image? _capture;
+  File? _imageFile;
   File? _videoFile;
   bool _muted = false;
 
@@ -163,6 +162,7 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
 
       _cameraLensDirection = camera.lensDirection;
       _controller = CameraController(camera, ResolutionPreset.max);
+      _controller?.setFlashMode(FlashMode.off);
     }
     await _controller?.initialize();
     if (mounted) {
@@ -194,8 +194,7 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
   @override
   Widget build(BuildContext context) {
     final chatType = _chatType;
-    final capture = _capture;
-    final imageTaken = chatType != null && capture != null;
+    final imageTaken = chatType != null && _imageFile != null;
     final videoTaken = chatType != null && _videoFile != null;
     if (!imageTaken && !videoTaken) {
       return Stack(
@@ -298,19 +297,19 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
               },
               onBack: () => _exitPreview(),
               onSend: () async {
-                Uint8List? bytes;
+                String? path;
                 if (_chatType == ChatType.image) {
-                  bytes = (await capture?.toByteData())?.buffer.asUint8List();
+                  path = _imageFile?.path;
                 } else {
-                  bytes = await _videoFile?.readAsBytes();
+                  path = _videoFile?.path;
                 }
-                if (bytes != null) {
-                  widget.onCapture(chatType!, bytes, _muted);
+                if (path != null) {
+                  widget.onCapture(chatType!, path, _muted);
                 }
               },
               previewBuilder: (context) {
                 if (imageTaken) {
-                  return _ImagePreview(image: _capture!);
+                  return Image.file(_imageFile!);
                 } else {
                   return _VideoPreview(
                     file: _videoFile!,
@@ -342,6 +341,7 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
 
     _cameraLensDirection = camera.lensDirection;
     _controller = CameraController(camera, ResolutionPreset.max);
+    _controller?.setFlashMode(FlashMode.off);
     _controller?.addListener(() {
       if (mounted) {
         setState(() {
@@ -356,7 +356,7 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
     await _controller?.resumePreview();
     setState(() {
       _chatType = null;
-      _capture = null;
+      _imageFile = null;
       _videoFile = null;
     });
     return false;
@@ -366,24 +366,10 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
     await _controller?.pausePreview();
     setState(() => _takingImage = true);
     final file = await _controller!.takePicture();
-    final bytes = await file.readAsBytes();
-
-    final completer = Completer<ui.Image>();
-    final memoryImage = MemoryImage(bytes);
-    final listener = ImageStreamListener(
-      (imageInfo, _) {
-        completer.complete(imageInfo.image);
-      },
-      onError: (error, stackTrace) =>
-          completer.completeError(error, stackTrace),
-    );
-    memoryImage.resolve(ImageConfiguration.empty).addListener(listener);
-
-    final image = await completer.future;
     if (mounted) {
       setState(() {
         _chatType = ChatType.image;
-        _capture = image;
+        _imageFile = File(file.path);
         _takingImage = false;
       });
     }
@@ -440,21 +426,6 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
     }
     WidgetsBinding.instance
         ?.addPostFrameCallback((_) => _updateRecordingDuration());
-  }
-}
-
-class _ImagePreview extends StatelessWidget {
-  final ui.Image image;
-  const _ImagePreview({
-    Key? key,
-    required this.image,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _ImagePainter(image: image),
-    );
   }
 }
 
