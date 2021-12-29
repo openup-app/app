@@ -508,16 +508,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     PublicProfile profile, {
     required bool video,
   }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return;
+    }
+
     // TODO: Use correct purpose
     final purpose = Purpose.friends.name;
     final route = video ? '$purpose-video-call' : '$purpose-voice-call';
     final usersApi = ref.read(usersApiProvider);
-    final profile = await usersApi.getPublicProfile(widget.profile.uid!);
-    await usersApi.call(_uid, widget.profile.uid!, video);
+    final profile = await usersApi.getPublicProfile(widget.profile.uid);
+    await usersApi.call(_uid, widget.profile.uid, video);
     Navigator.of(context).pushNamed(
       route,
       arguments: CallPageArguments(
-        uid: FirebaseAuth.instance.currentUser!.uid,
+        uid: uid,
         initiator: true,
         profiles: [profile],
         rekindles: [],

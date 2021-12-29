@@ -123,7 +123,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                     final profile = connection.profile;
                     final usersApi = ref.read(usersApiProvider);
                     final countStream = usersApi.unreadChatMessageCountsStream
-                        .map((event) => event[profile.uid!] ?? 0);
+                        .map((event) => event[profile.uid] ?? 0);
                     return StreamBuilder<int>(
                       stream: countStream,
                       initialData: 0,
@@ -146,7 +146,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                           },
                           onChat: () {
                             usersApi.updateUnreadChatMessagesCount(
-                              profile.uid!,
+                              profile.uid,
                               0,
                             );
                             Navigator.of(context).pushNamed(
@@ -282,7 +282,8 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
     if (uid == null) {
       throw 'No user is logged in';
     }
-    final rid = await api.call(uid, profile.uid!, video);
+
+    await api.call(uid, profile.uid, video);
     if (mounted) {
       final route = video ? 'friends-video-call' : 'friends-voice-call';
       Navigator.of(context).pushNamed(

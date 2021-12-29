@@ -7,7 +7,7 @@ part 'profile.g.dart';
 @freezed
 class PublicProfile with _$PublicProfile {
   const factory PublicProfile({
-    String? uid,
+    required String uid,
     required String name,
     required DateTime birthday,
     required String description,
