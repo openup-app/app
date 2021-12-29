@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/time_remaining.dart';
@@ -9,6 +11,8 @@ import 'package:openup/widgets/time_remaining.dart';
 /// Setting [endTime] to `null` will disable the timer UI and will not
 /// trigger [onTimeUp].
 class VideoCallScreenContent extends StatefulWidget {
+  final List<PublicProfile> profiles;
+  final List<Rekindle> rekindles;
   final RTCVideoRenderer? localRenderer;
   final RTCVideoRenderer? remoteRenderer;
   final bool hasSentTimeRequest;
@@ -16,11 +20,15 @@ class VideoCallScreenContent extends StatefulWidget {
   final bool muted;
   final VoidCallback onTimeUp;
   final VoidCallback onHangUp;
+  final void Function(String uid) onConnect;
+  final void Function(String uid) onReport;
   final VoidCallback onSendTimeRequest;
   final VoidCallback onToggleMute;
 
   const VideoCallScreenContent({
     Key? key,
+    required this.profiles,
+    required this.rekindles,
     required this.localRenderer,
     required this.remoteRenderer,
     required this.hasSentTimeRequest,
@@ -28,6 +36,8 @@ class VideoCallScreenContent extends StatefulWidget {
     required this.muted,
     required this.onTimeUp,
     required this.onHangUp,
+    required this.onConnect,
+    required this.onReport,
     required this.onSendTimeRequest,
     required this.onToggleMute,
   }) : super(key: key);
@@ -59,7 +69,7 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeOut,
           child: _CallControlButton(
-            onPressed: () {},
+            onPressed: () => widget.onReport(widget.profiles.first.uid),
             scrimColor: const Color.fromARGB(0xFF, 0xFF, 0x00, 0x00),
             size: 56,
             child: Center(
@@ -171,7 +181,11 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
                       ),
                     ),
                     _CallControlButton(
-                      onPressed: () {},
+                      onPressed: widget.rekindles
+                              .map((r) => r.uid)
+                              .contains(widget.profiles.first.uid)
+                          ? () => widget.onConnect(widget.profiles.first.uid)
+                          : null,
                       size: 56,
                       child: const Icon(Icons.person_add),
                     ),
@@ -187,7 +201,7 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
 }
 
 class _CallControlButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Color scrimColor;
   final Color? gradientColor;
   final double size;
@@ -195,7 +209,7 @@ class _CallControlButton extends StatelessWidget {
 
   const _CallControlButton({
     Key? key,
-    required this.onPressed,
+    this.onPressed,
     this.scrimColor = Colors.white,
     this.gradientColor,
     required this.size,

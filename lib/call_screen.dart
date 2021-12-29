@@ -1,9 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/api/users/users_api.dart';
 import 'package:openup/rekindle_screen.dart';
 import 'package:openup/video_call_screen_content.dart';
 import 'package:openup/voice_call_screen_content.dart';
@@ -11,7 +14,7 @@ import 'package:openup/api/signaling/phone.dart';
 
 /// Page on which the [Phone] is used to do voice and video calls. Calls
 /// start, proceed and end here.
-class CallScreen extends StatefulWidget {
+class CallScreen extends ConsumerStatefulWidget {
   final String uid;
   final String host;
   final int socketPort;
@@ -32,10 +35,10 @@ class CallScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<CallScreen> createState() => _CallScreenState();
+  _CallScreenState createState() => _CallScreenState();
 }
 
-class _CallScreenState extends State<CallScreen> {
+class _CallScreenState extends ConsumerState<CallScreen> {
   late final SignalingChannel _signalingChannel;
   late final Phone _phone;
 
@@ -47,8 +50,12 @@ class _CallScreenState extends State<CallScreen> {
   bool _hasSentTimeRequest = false;
   late DateTime _endTime;
 
+  final _unrequestedConnections = <Rekindle>{};
+
   @override
   void initState() {
+    super.initState();
+
     _signalingChannel = SocketIoSignalingChannel(
       host: widget.host,
       port: widget.socketPort,
@@ -70,7 +77,7 @@ class _CallScreenState extends State<CallScreen> {
         setState(() => _hasSentTimeRequest = false);
       },
       onAddTime: _addTime,
-      onDisconnected: _navigateToRekindle,
+      onDisconnected: _navigateToRekindleOrPop,
       onToggleMute: (muted) => setState(() => _muted = muted),
       onToggleSpeakerphone: (enabled) =>
           setState(() => _speakerphone = enabled),
@@ -84,7 +91,7 @@ class _CallScreenState extends State<CallScreen> {
 
     _endTime = DateTime.now().add(const Duration(seconds: 90));
 
-    super.initState();
+    _unrequestedConnections.addAll(widget.rekindles);
   }
 
   @override
@@ -98,31 +105,38 @@ class _CallScreenState extends State<CallScreen> {
   Widget build(BuildContext context) {
     if (widget.video) {
       return VideoCallScreenContent(
+        profiles: widget.profiles,
+        rekindles: _unrequestedConnections.toList(),
         localRenderer: _localRenderer,
         remoteRenderer: _remoteRenderer,
         hasSentTimeRequest: _hasSentTimeRequest,
         endTime: widget.rekindles.isEmpty ? null : _endTime,
         muted: _muted,
-        onTimeUp: _navigateToRekindle,
+        onTimeUp: _navigateToRekindleOrPop,
         onHangUp: () {
           _signalingChannel.send(const HangUp());
-          _navigateToRekindle();
+          _navigateToRekindleOrPop();
         },
+        onConnect: _connect,
+        onReport: _report,
         onSendTimeRequest: _sendTimeRequest,
         onToggleMute: _phone.toggleMute,
       );
     } else {
       return VoiceCallScreenContent(
         profiles: widget.profiles,
+        rekindles: _unrequestedConnections.toList(),
         hasSentTimeRequest: _hasSentTimeRequest,
         endTime: widget.rekindles.isEmpty ? null : _endTime,
         muted: _muted,
         speakerphone: _speakerphone,
-        onTimeUp: _navigateToRekindle,
+        onTimeUp: _navigateToRekindleOrPop,
         onHangUp: () {
           _signalingChannel.send(const HangUp());
-          _navigateToRekindle();
+          _navigateToRekindleOrPop();
         },
+        onConnect: _connect,
+        onReport: _report,
         onSendTimeRequest: _sendTimeRequest,
         onToggleMute: _phone.toggleMute,
         onToggleSpeakerphone: _phone.toggleSpeakerphone,
@@ -144,14 +158,29 @@ class _CallScreenState extends State<CallScreen> {
     });
   }
 
-  void _navigateToRekindle() {
-    if (widget.rekindles.isEmpty) {
+  void _connect(String uid) {
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
+    if (myUid == null) {
+      return;
+    }
+
+    final usersApi = ref.read(usersApiProvider);
+    usersApi.addConnectionRequest(myUid, uid);
+    setState(() => _unrequestedConnections.removeWhere((r) => r.uid == uid));
+  }
+
+  void _report(String uid) {
+    // TODO
+  }
+
+  void _navigateToRekindleOrPop() {
+    if (_unrequestedConnections.isEmpty) {
       Navigator.pop(context);
     } else {
       Navigator.of(context).pushReplacementNamed(
         'precached-rekindle',
         arguments: PrecachedRekindleScreenArguments(
-          rekindles: widget.rekindles,
+          rekindles: _unrequestedConnections.toList(),
           title: 'meet people',
         ),
       );
