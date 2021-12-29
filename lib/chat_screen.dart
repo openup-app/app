@@ -260,8 +260,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                         builder: (context) {
                                           return Scaffold(
                                             body: ImageVideoInputBox(
-                                              onCapture:
-                                                  (chatType, path, muted) {
+                                              onCapture: (chatType, path) {
                                                 _send(chatType, path);
                                                 Navigator.of(context).pop();
                                               },

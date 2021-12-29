@@ -118,7 +118,7 @@ class _AudioInputBoxState extends State<AudioInputBox> {
 }
 
 class ImageVideoInputBox extends StatefulWidget {
-  final void Function(ChatType chatType, String path, bool muted) onCapture;
+  final void Function(ChatType chatType, String path) onCapture;
   const ImageVideoInputBox({
     Key? key,
     required this.onCapture,
@@ -138,7 +138,6 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
   ChatType? _chatType;
   File? _imageFile;
   File? _videoFile;
-  bool _muted = false;
 
   late List<CameraDescription> _cameras;
   late CameraLensDirection _cameraLensDirection;
@@ -290,11 +289,6 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
         child: Builder(
           builder: (context) {
             return _ImageVideoPreviewControls(
-              muted: _muted,
-              showMute: videoTaken,
-              onMute: (value) {
-                setState(() => _muted = value);
-              },
               onBack: () => _exitPreview(),
               onSend: () async {
                 String? path;
@@ -304,7 +298,7 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
                   path = _videoFile?.path;
                 }
                 if (path != null) {
-                  widget.onCapture(chatType!, path, _muted);
+                  widget.onCapture(chatType!, path);
                 }
               },
               previewBuilder: (context) {
@@ -313,7 +307,6 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
                 } else {
                   return _VideoPreview(
                     file: _videoFile!,
-                    muted: _muted,
                   );
                 }
               },
@@ -431,12 +424,10 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox>
 
 class _VideoPreview extends StatefulWidget {
   final File file;
-  final bool muted;
 
   const _VideoPreview({
     Key? key,
     required this.file,
-    required this.muted,
   }) : super(key: key);
 
   @override
@@ -455,18 +446,9 @@ class _VideoPreviewState extends State<_VideoPreview> {
       if (mounted) {
         _playerController.setLooping(true);
         _playerController.play();
-        _updateVolume(widget.muted);
         setState(() => _ready = true);
       }
     });
-  }
-
-  @override
-  void didUpdateWidget(covariant _VideoPreview oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.muted != oldWidget.muted) {
-      _updateVolume(widget.muted);
-    }
   }
 
   @override
@@ -485,25 +467,16 @@ class _VideoPreviewState extends State<_VideoPreview> {
     }
     return VideoPlayer(_playerController);
   }
-
-  void _updateVolume(bool muted) =>
-      _playerController.setVolume(muted ? 0.0 : 1.0);
 }
 
 class _ImageVideoPreviewControls extends StatelessWidget {
   final WidgetBuilder previewBuilder;
-  final bool muted;
-  final bool showMute;
-  final ValueChanged<bool> onMute;
   final VoidCallback onBack;
   final VoidCallback onSend;
 
   const _ImageVideoPreviewControls({
     Key? key,
     required this.previewBuilder,
-    required this.muted,
-    required this.showMute,
-    required this.onMute,
     required this.onBack,
     required this.onSend,
   }) : super(key: key);
@@ -531,22 +504,6 @@ class _ImageVideoPreviewControls extends StatelessWidget {
             ),
           ),
         ),
-        if (showMute)
-          Align(
-            alignment: Alignment.bottomLeft,
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: 32 + MediaQuery.of(context).padding.bottom,
-                left: 16,
-              ),
-              child: Button(
-                onPressed: () => onMute(!muted),
-                child: IconWithShadow(
-                  muted ? Icons.volume_off : Icons.volume_up,
-                ),
-              ),
-            ),
-          ),
         Align(
           alignment: Alignment.bottomRight,
           child: Padding(
