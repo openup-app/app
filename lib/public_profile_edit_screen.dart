@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -181,16 +180,14 @@ class _PublicProfileEditScreenState extends State<PublicProfileEditScreen> {
                         key: _audioBioKey,
                         name: editableProfile?.name,
                         birthday: editableProfile?.birthday,
-                        description: editableProfile?.description,
                         url: editableProfile?.audio,
                         editable: true,
                         onRecorded: (audio) =>
                             uploadAudio(context: context, audio: audio),
-                        onNameDescriptionUpdated: (name, description) {
-                          updateNameDescription(
+                        onUpdateName: (name) {
+                          updateName(
                             context: context,
                             name: name,
-                            description: description,
                           );
                         },
                       );

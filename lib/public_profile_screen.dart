@@ -133,16 +133,14 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                         key: _audioBioKey,
                         name: editableProfile?.name,
                         birthday: editableProfile?.birthday,
-                        description: editableProfile?.description,
                         url: editableProfile?.audio,
                         editable: true,
                         onRecorded: (audio) =>
                             uploadAudio(context: context, audio: audio),
-                        onNameDescriptionUpdated: (name, description) {
-                          updateNameDescription(
+                        onUpdateName: (name) {
+                          updateName(
                             context: context,
                             name: name,
-                            description: description,
                           );
                         },
                       );
@@ -152,11 +150,10 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   return ProfileBio(
                     name: widget.publicProfile.name,
                     birthday: widget.publicProfile.birthday,
-                    description: widget.publicProfile.description,
                     url: widget.publicProfile.audio,
                     editable: false,
                     onRecorded: (_) {},
-                    onNameDescriptionUpdated: (_, __) {},
+                    onUpdateName: (_) {},
                   );
                 }
               },

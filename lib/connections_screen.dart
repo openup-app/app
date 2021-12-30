@@ -403,24 +403,9 @@ class _ConnectionTileState extends State<ConnectionTile>
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.profile.name,
-                            style: Theming.of(context).text.subheading,
-                          ),
-                          Text(
-                            widget.profile.description,
-                            style: Theming.of(context)
-                                .text
-                                .body
-                                .copyWith(fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ),
+                    Text(
+                      widget.profile.name,
+                      style: Theming.of(context).text.subheading,
                     ),
                   ],
                 ),

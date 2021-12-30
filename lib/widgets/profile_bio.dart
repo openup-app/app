@@ -12,21 +12,19 @@ import 'package:openup/widgets/theming.dart';
 class ProfileBio extends StatefulWidget {
   final String? name;
   final DateTime? birthday;
-  final String? description;
   final String? url;
   final bool editable;
   final void Function(Uint8List newBio) onRecorded;
-  final void Function(String name, String description) onNameDescriptionUpdated;
+  final void Function(String name) onUpdateName;
 
   const ProfileBio({
     Key? key,
     required this.name,
     required this.birthday,
-    required this.description,
     required this.url,
     required this.editable,
     required this.onRecorded,
-    required this.onNameDescriptionUpdated,
+    required this.onUpdateName,
   }) : super(key: key);
 
   @override
@@ -84,7 +82,6 @@ class ProfileBioState extends State<ProfileBio> {
       child: _ProfileBioDisplay(
         name: widget.name,
         birthday: widget.birthday,
-        description: widget.description,
         playButton: playButtonState,
         recording: _recording,
         editable: widget.editable,
@@ -106,7 +103,7 @@ class ProfileBioState extends State<ProfileBio> {
             widget.onRecorded(output);
           }
         },
-        onNameDescriptionUpdated: widget.onNameDescriptionUpdated,
+        onUpdateName: widget.onUpdateName,
       ),
     );
   }
@@ -129,7 +126,6 @@ class ProfileBioState extends State<ProfileBio> {
 class _ProfileBioDisplay extends ConsumerWidget {
   final String? name;
   final DateTime? birthday;
-  final String? description;
   final PlayButtonState playButton;
   final bool recording;
   final bool editable;
@@ -138,13 +134,12 @@ class _ProfileBioDisplay extends ConsumerWidget {
   final VoidCallback onPause;
   final VoidCallback onRecord;
   final VoidCallback onRecordComplete;
-  final void Function(String name, String description) onNameDescriptionUpdated;
+  final void Function(String name) onUpdateName;
 
   const _ProfileBioDisplay({
     Key? key,
     required this.name,
     required this.birthday,
-    required this.description,
     required this.playButton,
     required this.recording,
     required this.editable,
@@ -153,7 +148,7 @@ class _ProfileBioDisplay extends ConsumerWidget {
     required this.onPause,
     required this.onRecord,
     required this.onRecordComplete,
-    required this.onNameDescriptionUpdated,
+    required this.onUpdateName,
   }) : super(key: key);
 
   @override
@@ -185,42 +180,24 @@ class _ProfileBioDisplay extends ConsumerWidget {
             child: IgnorePointer(
               ignoring: !editable,
               child: Button(
-                onPressed: () => _showNameDescriptionDialog(context, ref),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name == null ? '' : '$name, $age',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theming.of(context).text.headline.copyWith(
-                        fontSize: 28,
-                        shadows: [
-                          Shadow(
-                            color: Theming.of(context).shadow,
-                            blurRadius: 4,
-                            offset: const Offset(0.0, 2.0),
-                          ),
-                        ],
-                      ),
+                onPressed: () => _showNameDialog(context),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    name == null ? '' : '$name, $age',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theming.of(context).text.headline.copyWith(
+                      fontSize: 34,
+                      shadows: [
+                        Shadow(
+                          color: Theming.of(context).shadow,
+                          blurRadius: 4,
+                          offset: const Offset(0.0, 2.0),
+                        ),
+                      ],
                     ),
-                    Text(
-                      description ?? 'My Description Here',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theming.of(context).text.bodySecondary.copyWith(
-                        fontSize: 20,
-                        shadows: [
-                          Shadow(
-                            color: Theming.of(context).shadow,
-                            blurRadius: 4,
-                            offset: const Offset(0.0, 2.0),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -283,65 +260,56 @@ class _ProfileBioDisplay extends ConsumerWidget {
     );
   }
 
-  void _showNameDescriptionDialog(BuildContext context, WidgetRef ref) async {
-    final result = await showDialog<_NameDescription>(
+  void _showNameDialog(BuildContext context) async {
+    final newName = await showDialog<String>(
       context: context,
       builder: (context) {
-        return _NameDescriptionDialogContents(
+        return _NameDialogContents(
           initialName: name ?? '',
-          initialDescription: description ?? '',
         );
       },
     );
 
-    if (result != null) {
-      onNameDescriptionUpdated(result.name, result.description);
+    if (newName != null) {
+      onUpdateName(newName);
     }
   }
 }
 
 enum PlayButtonState { playing, paused, loading, none }
 
-class _NameDescriptionDialogContents extends StatefulWidget {
+class _NameDialogContents extends StatefulWidget {
   final String initialName;
-  final String initialDescription;
 
-  const _NameDescriptionDialogContents({
+  const _NameDialogContents({
     Key? key,
     required this.initialName,
-    required this.initialDescription,
   }) : super(key: key);
 
   @override
-  _NameDescriptionStateDialogContents createState() =>
-      _NameDescriptionStateDialogContents();
+  _NameStateDialogContents createState() => _NameStateDialogContents();
 }
 
-class _NameDescriptionStateDialogContents
-    extends State<_NameDescriptionDialogContents> {
+class _NameStateDialogContents extends State<_NameDialogContents> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
-  late final TextEditingController _descriptionController;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialName);
-    _descriptionController =
-        TextEditingController(text: widget.initialDescription);
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _descriptionController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Update info'),
+      title: const Text('Update your name'),
       actions: [
         TextButton(
           onPressed: Navigator.of(context).pop,
@@ -350,12 +318,7 @@ class _NameDescriptionStateDialogContents
         TextButton(
           onPressed: () {
             if (_formKey.currentState?.validate() == true) {
-              Navigator.of(context).pop(
-                _NameDescription(
-                  _nameController.text.trim(),
-                  _descriptionController.text.trim(),
-                ),
-              );
+              Navigator.of(context).pop(_nameController.text.trim());
             }
           },
           child: const Text('Save'),
@@ -376,16 +339,6 @@ class _NameDescriptionStateDialogContents
                   label: Text('Name'),
                 ),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                textCapitalization: TextCapitalization.sentences,
-                validator: _validateDescription,
-                decoration: const InputDecoration(
-                  label: Text('Description'),
-                  hintText: 'Three Words Only',
-                ),
-              ),
             ],
           ),
         ),
@@ -398,25 +351,4 @@ class _NameDescriptionStateDialogContents
       return 'Enter a name';
     }
   }
-
-  String? _validateDescription(String? value) {
-    if (value == null) {
-      return 'Enter a description';
-    }
-
-    if (value.isEmpty) {
-      return 'Enter a description';
-    }
-
-    if (value.trim().split(' ').length > 3) {
-      return 'Enter up to three words';
-    }
-  }
-}
-
-class _NameDescription {
-  final String name;
-  final String description;
-
-  _NameDescription(this.name, this.description);
 }

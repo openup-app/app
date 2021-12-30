@@ -10,7 +10,6 @@ class PublicProfile with _$PublicProfile {
     required String uid,
     required String name,
     required DateTime birthday,
-    required String description,
     String? audio,
     String? photo,
     required List<String> gallery,
