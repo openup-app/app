@@ -22,7 +22,7 @@ class SocketIoSignalingChannel implements SignalingChannel {
           .setTransports(['websocket'])
           .enableForceNew()
           .disableReconnection()
-          .setQuery({'uid': uid, 'rid': uid})
+          .setQuery({'uid': uid, 'rid': rid})
           .build(),
     );
     _socket.onConnectError((_) {

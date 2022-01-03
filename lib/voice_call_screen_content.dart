@@ -1,8 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/call_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/slide_control.dart';
 import 'package:openup/widgets/theming.dart';
@@ -13,8 +12,7 @@ import 'package:openup/widgets/time_remaining.dart';
 /// Setting [endTime] to `null` will disable the timer UI and will not
 /// trigger [onTimeUp].
 class VoiceCallScreenContent extends StatelessWidget {
-  final List<PublicProfile> profiles;
-  final List<Rekindle> rekindles;
+  final List<UserConnection> users;
   final bool hasSentTimeRequest;
   final DateTime? endTime;
   final bool muted;
@@ -29,8 +27,7 @@ class VoiceCallScreenContent extends StatelessWidget {
 
   const VoiceCallScreenContent({
     Key? key,
-    required this.profiles,
-    required this.rekindles,
+    required this.users,
     required this.hasSentTimeRequest,
     required this.endTime,
     required this.muted,
@@ -46,7 +43,8 @@ class VoiceCallScreenContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profile = profiles.first;
+    final data = users.first;
+    final profile = data.profile;
     final photo = profile.photo;
     return Stack(
       alignment: Alignment.center,
@@ -145,10 +143,8 @@ class VoiceCallScreenContent extends StatelessWidget {
                           _ButtonWithText(
                             icon: const Icon(Icons.person_add),
                             label: 'Connect',
-                            onPressed: rekindles
-                                    .map((r) => r.uid)
-                                    .contains(profiles.first.uid)
-                                ? () => onConnect(profiles.first.uid)
+                            onPressed: data.rekindle != null
+                                ? () => onConnect(profile.uid)
                                 : null,
                           ),
                           _ButtonWithText(
@@ -157,7 +153,7 @@ class VoiceCallScreenContent extends StatelessWidget {
                               child: Image.asset('assets/images/report.png'),
                             ),
                             label: 'Report',
-                            onPressed: () => onReport(profiles.first.uid),
+                            onPressed: () => onReport(profile.uid),
                           ),
                         ],
                       ),

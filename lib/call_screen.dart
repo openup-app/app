@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
@@ -11,6 +14,8 @@ import 'package:openup/api/users/users_api.dart';
 import 'package:openup/rekindle_screen.dart';
 import 'package:openup/video_call_screen_content.dart';
 import 'package:openup/voice_call_screen_content.dart';
+
+part 'call_screen.freezed.dart';
 
 /// Page on which the [Phone] is used to do voice and video calls. Calls
 /// start, proceed and end here.
@@ -38,10 +43,6 @@ class CallScreen extends ConsumerStatefulWidget {
 
 class _CallScreenState extends ConsumerState<CallScreen> {
   late final SignalingChannel _signalingChannel;
-  late final Phone _phone;
-
-  RTCVideoRenderer? _localRenderer;
-  RTCVideoRenderer? _remoteRenderer;
   bool _muted = false;
   bool _speakerphone = false;
 
@@ -49,6 +50,9 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   DateTime? _endTime;
 
   final _unrequestedConnections = <Rekindle>{};
+
+  final _users = <String, CallData>{};
+  final _connectionStateSubscriptions = <StreamSubscription>[];
 
   @override
   void initState() {
@@ -66,39 +70,90 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       uid: uid,
       rid: widget.rid,
     );
-    _phone = Phone(
-      useVideo: true,
-      signalingChannel: _signalingChannel,
-      onMediaRenderers: (localRenderer, remoteRenderer) {
-        setState(() {
-          _localRenderer = localRenderer;
-          _remoteRenderer = remoteRenderer;
-        });
-      },
-      onRemoteStream: (stream) {
-        setState(() => _remoteRenderer?.srcObject = stream);
-      },
-      onAddTimeRequest: () {
-        setState(() => _hasSentTimeRequest = false);
-      },
-      onAddTime: _addTime,
-      onDisconnected: _navigateToRekindleOrPop,
-      onToggleMute: (muted) => setState(() => _muted = muted),
-      onToggleSpeakerphone: (enabled) =>
-          setState(() => _speakerphone = enabled),
-    );
+
+    for (var i = 0; i < widget.profiles.length; i++) {
+      final profile = widget.profiles[i];
+      final phone = Phone(
+        useVideo: widget.video,
+        signalingChannel: _signalingChannel,
+        onMediaRenderers: (localRenderer, remoteRenderer) {
+          final callData = _users[profile.uid];
+          setState(() {
+            if (callData != null) {
+              _users[profile.uid] = callData.copyWith.userConnection(
+                localVideoRenderer: localRenderer,
+                videoRenderer: remoteRenderer,
+              );
+            }
+          });
+        },
+        onRemoteStream: (stream) {
+          final callData = _users[profile.uid];
+          if (callData != null) {
+            setState(() =>
+                callData.userConnection.videoRenderer?.srcObject = stream);
+          }
+        },
+        onAddTimeRequest: () {
+          setState(() => _hasSentTimeRequest = false);
+        },
+        onAddTime: _addTime,
+        onDisconnected: _navigateToRekindleOrPop,
+        onToggleMute: (muted) {
+          if (_muted != muted) {
+            setState(() => _muted = muted);
+          }
+        },
+        onToggleSpeakerphone: (enabled) {
+          if (_speakerphone != enabled) {
+            setState(() => _speakerphone = enabled);
+          }
+        },
+      );
+      final userConnection = UserConnection(
+        profile: profile,
+        rekindle: widget.rekindles.firstWhereOrNull(
+          (r) => r.uid == profile.uid,
+        ),
+        localVideoRenderer: null,
+        videoRenderer: null,
+        connectionState: PhoneConnectionState.none,
+      );
+      _users[profile.uid] = CallData(
+        phone: phone,
+        userConnection: userConnection,
+      );
+    }
 
     _unrequestedConnections.addAll(widget.rekindles);
 
     _endTime = DateTime.now().add(const Duration(seconds: 90));
 
-    _phone.join(initiator: _isInitiator(uid, widget.profiles.first.uid));
+    for (var call in _users.entries) {
+      final otherUid = call.key;
+      _connectionStateSubscriptions
+          .add(call.value.phone.connectionStateStream.listen((state) {
+        final latestData = _users[otherUid];
+        if (latestData != null) {
+          setState(() {
+            _users[otherUid] =
+                latestData.copyWith.userConnection(connectionState: state);
+          });
+        }
+      }));
+    }
+    _users.values.first.phone
+        .join(initiator: _isInitiator(uid, _users.keys.first));
   }
 
   @override
   void dispose() {
     _signalingChannel.dispose();
-    _phone.dispose();
+    _connectionStateSubscriptions.map((s) => s.cancel()).toList();
+    _users.values.map((e) {
+      e.phone.dispose();
+    }).toList();
+
     super.dispose();
   }
 
@@ -106,11 +161,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   Widget build(BuildContext context) {
     if (widget.video) {
       return VideoCallScreenContent(
-        profiles: widget.profiles,
-        rekindles: _unrequestedConnections.toList(),
-        connectionStateStreams: [_phone.connectionStateStream],
-        localRenderer: _localRenderer,
-        remoteRenderer: _remoteRenderer,
+        localRenderer: _users.values.first.userConnection.localVideoRenderer,
+        users: _users.values.map((data) => data.userConnection).toList(),
         hasSentTimeRequest: _hasSentTimeRequest,
         endTime: widget.rekindles.isEmpty ? null : _endTime,
         muted: _muted,
@@ -122,12 +174,12 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         onConnect: _connect,
         onReport: _report,
         onSendTimeRequest: _sendTimeRequest,
-        onToggleMute: _phone.toggleMute,
+        onToggleMute: () =>
+            _users.values.forEach((element) => element.phone.toggleMute()),
       );
     } else {
       return VoiceCallScreenContent(
-        profiles: widget.profiles,
-        rekindles: _unrequestedConnections.toList(),
+        users: _users.values.map((data) => data.userConnection).toList(),
         hasSentTimeRequest: _hasSentTimeRequest,
         endTime: widget.rekindles.isEmpty ? null : _endTime,
         muted: _muted,
@@ -140,8 +192,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         onConnect: _connect,
         onReport: _report,
         onSendTimeRequest: _sendTimeRequest,
-        onToggleMute: _phone.toggleMute,
-        onToggleSpeakerphone: _phone.toggleSpeakerphone,
+        onToggleMute: () =>
+            _users.values.forEach((element) => element.phone.toggleMute()),
+        onToggleSpeakerphone: () => _users.values
+            .forEach((element) => element.phone.toggleSpeakerphone()),
       );
     }
   }
@@ -168,6 +222,12 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
     final usersApi = ref.read(usersApiProvider);
     usersApi.addConnectionRequest(myUid, uid);
+    final callData = _users[uid];
+    if (callData != null) {
+      setState(() {
+        _users[uid] = callData.copyWith.userConnection(rekindle: null);
+      });
+    }
     setState(() => _unrequestedConnections.removeWhere((r) => r.uid == uid));
   }
 
@@ -216,6 +276,25 @@ String connectionStateText({
     case PhoneConnectionState.complete:
       return 'Disconnected';
   }
+}
+
+@freezed
+class CallData with _$CallData {
+  const factory CallData({
+    required Phone phone,
+    required UserConnection userConnection,
+  }) = _CallData;
+}
+
+@freezed
+class UserConnection with _$UserConnection {
+  const factory UserConnection({
+    required PublicProfile profile,
+    required Rekindle? rekindle,
+    required RTCVideoRenderer? localVideoRenderer,
+    required RTCVideoRenderer? videoRenderer,
+    required PhoneConnectionState connectionState,
+  }) = _UserConnection;
 }
 
 class CallPageArguments {

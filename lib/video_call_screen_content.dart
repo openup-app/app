@@ -1,10 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/api/signaling/phone.dart';
-import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -15,11 +11,8 @@ import 'package:openup/widgets/time_remaining.dart';
 /// Setting [endTime] to `null` will disable the timer UI and will not
 /// trigger [onTimeUp].
 class VideoCallScreenContent extends StatefulWidget {
-  final List<PublicProfile> profiles;
-  final List<Rekindle> rekindles;
-  final List<Stream<PhoneConnectionState>> connectionStateStreams;
   final RTCVideoRenderer? localRenderer;
-  final RTCVideoRenderer? remoteRenderer;
+  final List<UserConnection> users;
   final bool hasSentTimeRequest;
   final DateTime? endTime;
   final bool muted;
@@ -32,11 +25,8 @@ class VideoCallScreenContent extends StatefulWidget {
 
   const VideoCallScreenContent({
     Key? key,
-    required this.profiles,
-    required this.rekindles,
-    required this.connectionStateStreams,
     required this.localRenderer,
-    required this.remoteRenderer,
+    required this.users,
     required this.hasSentTimeRequest,
     required this.endTime,
     required this.muted,
@@ -54,36 +44,18 @@ class VideoCallScreenContent extends StatefulWidget {
 
 class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
   bool _showingControls = true;
-  late final StreamSubscription _connectionStateSubscription;
-  PhoneConnectionState _connectionState = PhoneConnectionState.none;
-
-  @override
-  void initState() {
-    super.initState();
-    _connectionStateSubscription =
-        widget.connectionStateStreams.first.listen((connectionState) {
-      setState(() {
-        _connectionState = connectionState;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _connectionStateSubscription.cancel;
-  }
 
   @override
   Widget build(BuildContext context) {
+    final data = widget.users.first;
     return Stack(
       children: [
-        if (widget.remoteRenderer != null)
+        if (data.videoRenderer != null)
           Positioned.fill(
             child: GestureDetector(
               onTap: () => setState(() => _showingControls = !_showingControls),
               child: RTCVideoView(
-                widget.remoteRenderer!,
+                data.videoRenderer!,
                 objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
               ),
             ),
@@ -94,7 +66,7 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeOut,
           child: _CallControlButton(
-            onPressed: () => widget.onReport(widget.profiles.first.uid),
+            onPressed: () => widget.onReport(data.profile.uid),
             scrimColor: const Color.fromARGB(0xFF, 0xFF, 0x00, 0x00),
             size: 56,
             child: Center(
@@ -206,10 +178,8 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
                       ),
                     ),
                     _CallControlButton(
-                      onPressed: widget.rekindles
-                              .map((r) => r.uid)
-                              .contains(widget.profiles.first.uid)
-                          ? () => widget.onConnect(widget.profiles.first.uid)
+                      onPressed: data.rekindle != null
+                          ? () => widget.onConnect(data.profile.uid)
                           : null,
                       size: 56,
                       child: const Icon(Icons.person_add),
@@ -225,22 +195,24 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
             builder: (context) {
               final style = Theming.of(context).text.headline;
               final text = connectionStateText(
-                connectionState: _connectionState,
-                name: widget.profiles.first.name,
+                connectionState: data.connectionState,
+                name: data.profile.name,
               );
-              if (_connectionState == PhoneConnectionState.none) {
+              if (data.connectionState == PhoneConnectionState.none) {
                 return const SizedBox.shrink();
               } else {
                 return AnimatedOpacity(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOut,
-                  opacity: _connectionState == PhoneConnectionState.connected
-                      ? 0.0
-                      : 1.0,
+                  opacity:
+                      data.connectionState == PhoneConnectionState.connected
+                          ? 0.0
+                          : 1.0,
                   child: Text(
                     text,
                     style: style,
                     textAlign: TextAlign.center,
+                    maxLines: 2,
                   ),
                 );
               }
