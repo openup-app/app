@@ -275,8 +275,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           socketPort: socketPort,
                           video: args.video,
                           purpose: Purpose.friends,
-                          onStartCall: ({
-                            required bool initiator,
+                          onJoinCall: ({
+                            required String rid,
                             required List<PublicProfile> profiles,
                             required List<Rekindle> rekindles,
                           }) {
@@ -286,8 +286,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             Navigator.of(context).pushNamed(
                               route,
                               arguments: CallPageArguments(
-                                uid: FirebaseAuth.instance.currentUser!.uid,
-                                initiator: initiator,
+                                rid: rid,
                                 profiles: profiles,
                                 rekindles: rekindles,
                               ),
@@ -304,10 +303,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     transitionsBuilder: fadePageTransition,
                     builder: (_) {
                       return CallScreen(
-                        uid: args.uid,
+                        rid: args.rid,
                         host: host,
                         socketPort: socketPort,
-                        initiator: args.initiator,
                         video: false,
                         profiles: args.profiles,
                         rekindles: args.rekindles,
@@ -321,10 +319,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     transitionsBuilder: fadePageTransition,
                     builder: (_) {
                       return CallScreen(
-                        uid: args.uid,
+                        rid: args.rid,
                         host: host,
                         socketPort: socketPort,
-                        initiator: args.initiator,
                         video: true,
                         profiles: args.profiles,
                         rekindles: args.rekindles,
@@ -488,8 +485,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           socketPort: socketPort,
                           video: args.video,
                           purpose: Purpose.dating,
-                          onStartCall: ({
-                            required bool initiator,
+                          onJoinCall: ({
+                            required String rid,
                             required List<PublicProfile> profiles,
                             required List<Rekindle> rekindles,
                           }) {
@@ -500,8 +497,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             Navigator.of(context).pushNamed(
                               route,
                               arguments: CallPageArguments(
-                                uid: FirebaseAuth.instance.currentUser!.uid,
-                                initiator: initiator,
+                                rid: rid,
                                 profiles: profiles,
                                 rekindles: rekindles,
                               ),

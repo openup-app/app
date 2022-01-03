@@ -13,10 +13,9 @@ part 'lobby_api.g.dart';
 /// Handle callbacks to participate in a call, dispose to leave the lobby.
 class LobbyApi {
   late final Socket _socket;
-  final void Function(List<PublicProfile> public, List<Rekindle> rekindles)
-      onMakeCall;
-  final void Function(List<PublicProfile> public, List<Rekindle> rekindles)
-      onReceiveCall;
+  final void Function(
+          String rid, List<PublicProfile> public, List<Rekindle> rekindles)
+      onJoinCall;
   final VoidCallback onConnectionError;
 
   LobbyApi({
@@ -25,8 +24,7 @@ class LobbyApi {
     required String uid,
     required bool video,
     required Purpose purpose,
-    required this.onMakeCall,
-    required this.onReceiveCall,
+    required this.onJoinCall,
     required this.onConnectionError,
   }) {
     _socket = io(
@@ -63,23 +61,19 @@ class LobbyApi {
     final json = jsonDecode(message);
     final lobbyEvent = _LobbyEvent.fromJson(json);
     lobbyEvent.map(
-      makeCall: (event) => onMakeCall(event.profiles, event.rekindles),
-      answerCall: (event) => onReceiveCall(event.profiles, event.rekindles),
+      joinCall: (event) =>
+          onJoinCall(event.rid, event.profiles, event.rekindles),
     );
   }
 }
 
 @freezed
 class _LobbyEvent with _$_LobbyEvent {
-  const factory _LobbyEvent.makeCall({
+  const factory _LobbyEvent.joinCall({
+    required String rid,
     required List<PublicProfile> profiles,
     required List<Rekindle> rekindles,
-  }) = _MakeCall;
-
-  const factory _LobbyEvent.answerCall({
-    required List<PublicProfile> profiles,
-    required List<Rekindle> rekindles,
-  }) = _AnswerCall;
+  }) = _JoinCall;
 
   factory _LobbyEvent.fromJson(Map<String, dynamic> json) =>
       _$_LobbyEventFromJson(json);

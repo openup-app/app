@@ -19,10 +19,10 @@ class LobbyScreen extends StatefulWidget {
   final bool video;
   final Purpose purpose;
   final void Function({
-    required bool initiator,
+    required String rid,
     required List<PublicProfile> profiles,
     required List<Rekindle> rekindles,
-  }) onStartCall;
+  }) onJoinCall;
 
   const LobbyScreen({
     Key? key,
@@ -30,7 +30,7 @@ class LobbyScreen extends StatefulWidget {
     required this.socketPort,
     required this.video,
     required this.purpose,
-    required this.onStartCall,
+    required this.onJoinCall,
   }) : super(key: key);
 
   @override
@@ -63,13 +63,8 @@ class _LobbyScreenState extends State<LobbyScreen>
       uid: FirebaseAuth.instance.currentUser!.uid,
       video: widget.video,
       purpose: widget.purpose,
-      onMakeCall: (profiles, rekindles) => widget.onStartCall(
-        initiator: true,
-        profiles: profiles,
-        rekindles: rekindles,
-      ),
-      onReceiveCall: (profiles, rekindles) => widget.onStartCall(
-        initiator: false,
+      onJoinCall: (rid, profiles, rekindles) => widget.onJoinCall(
+        rid: rid,
         profiles: profiles,
         rekindles: rekindles,
       ),

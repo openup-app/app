@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/users/profile.dart';
@@ -10,25 +11,22 @@ import 'package:openup/api/users/users_api.dart';
 import 'package:openup/rekindle_screen.dart';
 import 'package:openup/video_call_screen_content.dart';
 import 'package:openup/voice_call_screen_content.dart';
-import 'package:openup/api/signaling/phone.dart';
 
 /// Page on which the [Phone] is used to do voice and video calls. Calls
 /// start, proceed and end here.
 class CallScreen extends ConsumerStatefulWidget {
-  final String uid;
+  final String rid;
   final String host;
   final int socketPort;
-  final bool initiator;
   final bool video;
   final List<PublicProfile> profiles;
   final List<Rekindle> rekindles;
 
   const CallScreen({
     Key? key,
-    required this.uid,
+    required this.rid,
     required this.host,
     required this.socketPort,
-    required this.initiator,
     required this.video,
     required this.profiles,
     required this.rekindles,
@@ -48,7 +46,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   bool _speakerphone = false;
 
   bool _hasSentTimeRequest = false;
-  late DateTime _endTime;
+  late final DateTime _endTime;
 
   final _unrequestedConnections = <Rekindle>{};
 
@@ -56,10 +54,17 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   void initState() {
     super.initState();
 
+    final auth = FirebaseAuth.instance;
+    final uid = auth.currentUser?.uid;
+    if (uid == null) {
+      throw 'User is not logged in';
+    }
+
     _signalingChannel = SocketIoSignalingChannel(
       host: widget.host,
       port: widget.socketPort,
-      uid: widget.uid,
+      uid: uid,
+      rid: widget.rid,
     );
     _phone = Phone(
       useVideo: true,
@@ -83,15 +88,11 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           setState(() => _speakerphone = enabled),
     );
 
-    if (widget.initiator) {
-      _phone.call();
-    } else {
-      _phone.answer();
-    }
+    _unrequestedConnections.addAll(widget.rekindles);
 
     _endTime = DateTime.now().add(const Duration(seconds: 90));
 
-    _unrequestedConnections.addAll(widget.rekindles);
+    _phone.join(initiator: _isInitiator(uid, widget.profiles.first.uid));
   }
 
   @override
@@ -186,17 +187,18 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       );
     }
   }
+
+  bool _isInitiator(String myUid, String theirUid) =>
+      myUid.compareTo(theirUid) <= 0;
 }
 
 class CallPageArguments {
-  final String uid;
-  final bool initiator;
+  final String rid;
   final List<PublicProfile> profiles;
   final List<Rekindle> rekindles;
 
   CallPageArguments({
-    required this.uid,
-    required this.initiator,
+    required this.rid,
     required this.profiles,
     required this.rekindles,
   });

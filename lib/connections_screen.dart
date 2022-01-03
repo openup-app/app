@@ -283,14 +283,13 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
       throw 'No user is logged in';
     }
 
-    await api.call(uid, profile.uid, video);
+    final rid = await api.call(uid, profile.uid, video);
     if (mounted) {
       final route = video ? 'friends-video-call' : 'friends-voice-call';
       Navigator.of(context).pushNamed(
         route,
         arguments: CallPageArguments(
-          uid: FirebaseAuth.instance.currentUser!.uid,
-          initiator: true,
+          rid: rid,
           profiles: [profile],
           rekindles: [],
         ),

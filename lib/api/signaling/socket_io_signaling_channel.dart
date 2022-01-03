@@ -13,6 +13,7 @@ class SocketIoSignalingChannel implements SignalingChannel {
     required String host,
     required int port,
     required String uid,
+    required String rid,
   }) {
     _socket = io(
       'http://$host:$port/call',
@@ -21,7 +22,7 @@ class SocketIoSignalingChannel implements SignalingChannel {
           .setTransports(['websocket'])
           .enableForceNew()
           .disableReconnection()
-          .setQuery({'uid': uid})
+          .setQuery({'uid': uid, 'rid': uid})
           .build(),
     );
     _socket.onConnectError((_) {

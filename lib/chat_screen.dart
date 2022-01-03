@@ -518,12 +518,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final route = video ? '$purpose-video-call' : '$purpose-voice-call';
     final usersApi = ref.read(usersApiProvider);
     final profile = await usersApi.getPublicProfile(widget.profile.uid);
-    await usersApi.call(_uid, widget.profile.uid, video);
+    final rid = await usersApi.call(_uid, widget.profile.uid, video);
     Navigator.of(context).pushNamed(
       route,
       arguments: CallPageArguments(
-        uid: uid,
-        initiator: true,
+        rid: rid,
         profiles: [profile],
         rekindles: [],
       ),

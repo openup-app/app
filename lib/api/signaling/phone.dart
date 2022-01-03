@@ -96,11 +96,7 @@ class Phone {
     }
   }
 
-  Future<void> call() => _call(initiator: true);
-
-  Future<void> answer() => _call(initiator: false);
-
-  Future<void> _call({required bool initiator}) async {
+  Future<void> join({required bool initiator}) async {
     _usedOnce = !_usedOnce ? true : throw 'Phone has already been used';
 
     final mediaStream = await _setupMedia();

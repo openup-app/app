@@ -47,6 +47,7 @@ Future<bool> _handleLaunchNotification({
       await deserializeBackgroundCallNotification();
   await removeBackgroundCallNotification();
   if (backgroundCallNotification != null) {
+    final rid = backgroundCallNotification.rid;
     final video = backgroundCallNotification.video;
     final purpose = backgroundCallNotification.purpose == Purpose.friends
         ? 'friends'
@@ -58,8 +59,7 @@ Future<bool> _handleLaunchNotification({
     Navigator.of(context).pushNamed(
       route,
       arguments: CallPageArguments(
-        uid: FirebaseAuth.instance.currentUser!.uid,
-        initiator: false,
+        rid: rid,
         profiles: [profile],
         rekindles: [],
       ),
@@ -112,8 +112,7 @@ void _onForegroundNotification(RemoteMessage message, UsersApi usersApi) async {
           Navigator.of(navigatorKey.currentContext!).pushNamed(
             route,
             arguments: CallPageArguments(
-              uid: FirebaseAuth.instance.currentUser!.uid,
-              initiator: false,
+              rid: call.rid,
               profiles: [profile],
               rekindles: [],
             ),
@@ -141,6 +140,7 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
         onCallAccepted: () async {
           final backgroundCallNotification = BackgroundCallNotification(
             uid: call.uid,
+            rid: call.rid,
             video: call.video,
             purpose: Purpose.friends,
           );
