@@ -46,7 +46,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   bool _speakerphone = false;
 
   bool _hasSentTimeRequest = false;
-  late final DateTime _endTime;
+  DateTime? _endTime;
 
   final _unrequestedConnections = <Rekindle>{};
 
@@ -108,6 +108,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       return VideoCallScreenContent(
         profiles: widget.profiles,
         rekindles: _unrequestedConnections.toList(),
+        connectionStateStreams: [_phone.connectionStateStream],
         localRenderer: _localRenderer,
         remoteRenderer: _remoteRenderer,
         hasSentTimeRequest: _hasSentTimeRequest,
@@ -154,7 +155,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
   void _addTime(Duration duration) {
     setState(() {
-      _endTime = _endTime.add(duration);
+      _endTime = _endTime?.add(duration);
       _hasSentTimeRequest = false;
     });
   }
@@ -189,7 +190,32 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   }
 
   bool _isInitiator(String myUid, String theirUid) =>
-      myUid.compareTo(theirUid) <= 0;
+      myUid.compareTo(theirUid) < 0;
+}
+
+String connectionStateText({
+  required PhoneConnectionState connectionState,
+  required String name,
+}) {
+  switch (connectionState) {
+    case PhoneConnectionState.none:
+      return '';
+
+    case PhoneConnectionState.waiting:
+      return 'Waiting for $name';
+
+    case PhoneConnectionState.declined:
+      return '$name did not join';
+
+    case PhoneConnectionState.connecting:
+      return 'Connecting';
+
+    case PhoneConnectionState.connected:
+      return 'Connected';
+
+    case PhoneConnectionState.complete:
+      return 'Disconnected';
+  }
 }
 
 class CallPageArguments {

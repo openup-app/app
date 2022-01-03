@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/call_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/time_remaining.dart';
@@ -13,6 +17,7 @@ import 'package:openup/widgets/time_remaining.dart';
 class VideoCallScreenContent extends StatefulWidget {
   final List<PublicProfile> profiles;
   final List<Rekindle> rekindles;
+  final List<Stream<PhoneConnectionState>> connectionStateStreams;
   final RTCVideoRenderer? localRenderer;
   final RTCVideoRenderer? remoteRenderer;
   final bool hasSentTimeRequest;
@@ -29,6 +34,7 @@ class VideoCallScreenContent extends StatefulWidget {
     Key? key,
     required this.profiles,
     required this.rekindles,
+    required this.connectionStateStreams,
     required this.localRenderer,
     required this.remoteRenderer,
     required this.hasSentTimeRequest,
@@ -48,6 +54,25 @@ class VideoCallScreenContent extends StatefulWidget {
 
 class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
   bool _showingControls = true;
+  late final StreamSubscription _connectionStateSubscription;
+  PhoneConnectionState _connectionState = PhoneConnectionState.none;
+
+  @override
+  void initState() {
+    super.initState();
+    _connectionStateSubscription =
+        widget.connectionStateStreams.first.listen((connectionState) {
+      setState(() {
+        _connectionState = connectionState;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _connectionStateSubscription.cancel;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -193,6 +218,33 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
                 ),
               )
             ],
+          ),
+        ),
+        Center(
+          child: Builder(
+            builder: (context) {
+              final style = Theming.of(context).text.headline;
+              final text = connectionStateText(
+                connectionState: _connectionState,
+                name: widget.profiles.first.name,
+              );
+              if (_connectionState == PhoneConnectionState.none) {
+                return const SizedBox.shrink();
+              } else {
+                return AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                  opacity: _connectionState == PhoneConnectionState.connected
+                      ? 0.0
+                      : 1.0,
+                  child: Text(
+                    text,
+                    style: style,
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              }
+            },
           ),
         ),
       ],

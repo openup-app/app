@@ -3,6 +3,7 @@ import 'dart:collection';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/api/signaling/signaling.dart';
+import 'package:rxdart/rxdart.dart';
 
 /// WebRTC calling service, can only be used to [call()] or [answer()] once per
 /// instance. The signaling server must already have a room ready for the
@@ -47,6 +48,9 @@ class Phone {
   final _iceCandidatesToSend = <IceCandidate>[];
   Timer? _iceCandidatesDebounceTimer;
 
+  final _connectionStateController =
+      BehaviorSubject<PhoneConnectionState>.seeded(PhoneConnectionState.none);
+
   Phone({
     required this.signalingChannel,
     required this.useVideo,
@@ -69,8 +73,12 @@ class Phone {
       _remoteMediaStream?.dispose(),
       _localRenderer?.dispose(),
       _remoteRenderer?.dispose(),
+      _connectionStateController.close(),
     ].whereType<Future>());
   }
+
+  Stream<PhoneConnectionState> get connectionStateStream =>
+      _connectionStateController;
 
   void toggleMute() {
     final track = _firstAudioTrack(_localMediaStream);
@@ -98,6 +106,7 @@ class Phone {
 
   Future<void> join({required bool initiator}) async {
     _usedOnce = !_usedOnce ? true : throw 'Phone has already been used';
+    _connectionStateController.add(PhoneConnectionState.waiting);
 
     final mediaStream = await _setupMedia();
     _localMediaStream = mediaStream;
@@ -224,6 +233,12 @@ class Phone {
           state == RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
         onDisconnected();
       }
+      if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnecting) {
+        _connectionStateController.add(PhoneConnectionState.connecting);
+      } else if (state ==
+          RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+        _connectionStateController.add(PhoneConnectionState.connected);
+      }
     };
   }
 
@@ -263,7 +278,10 @@ class Phone {
         },
         addTimeRequest: (_) => onAddTimeRequest(),
         addTime: (addTime) => onAddTime(Duration(seconds: addTime.seconds)),
-        hangUp: (_) => onDisconnected(),
+        hangUp: (_) {
+          _connectionStateController.add(PhoneConnectionState.complete);
+          onDisconnected();
+        },
       );
     });
   }
@@ -300,4 +318,24 @@ class Phone {
       return null;
     }
   }
+}
+
+enum PhoneConnectionState {
+  /// Have not yet attempted to join a call.
+  none,
+
+  /// Attempting to join a call but have not yet received connection signals.
+  waiting,
+
+  /// The other party has refused the call.
+  declined,
+
+  /// Connection signals have been received, the call has been accepted.
+  connecting,
+
+  /// Video/audio communication by the users can begin.
+  connected,
+
+  /// The call has been completed.
+  complete
 }
