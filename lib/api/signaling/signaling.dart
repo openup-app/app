@@ -7,19 +7,28 @@ part 'signaling.g.dart';
 @freezed
 class Signal with _$Signal {
   const factory Signal.sessionDescription({
+    required String recipient,
     String? sdp,
     String? type,
   }) = SessionDescription;
 
-  const factory Signal.iceCandidates(
-    List<IceCandidate> iceCandidates,
-  ) = IceCandidates;
+  const factory Signal.iceCandidates({
+    required String recipient,
+    required List<IceCandidate> iceCandidates,
+  }) = IceCandidates;
 
-  const factory Signal.addTimeRequest() = AddTimeRequest;
+  const factory Signal.addTimeRequest({
+    @Default('room') String recipient,
+  }) = AddTimeRequest;
 
-  const factory Signal.addTime(int seconds) = AddTime;
+  const factory Signal.addTime({
+    @Default('room') String recipient,
+    required int seconds,
+  }) = AddTime;
 
-  const factory Signal.hangUp() = HangUp;
+  const factory Signal.hangUp({
+    @Default('room') String recipient,
+  }) = HangUp;
 
   factory Signal.fromJson(Map<String, dynamic> json) => _$SignalFromJson(json);
 }

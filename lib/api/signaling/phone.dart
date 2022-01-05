@@ -21,6 +21,7 @@ class Phone {
   };
 
   final SignalingChannel signalingChannel;
+  final String partnerUid;
   final bool useVideo;
   final void Function(
     RTCVideoRenderer localRenderer,
@@ -53,6 +54,7 @@ class Phone {
 
   Phone({
     required this.signalingChannel,
+    required this.partnerUid,
     required this.useVideo,
     required this.onMediaRenderers,
     required this.onRemoteStream,
@@ -185,7 +187,10 @@ class Phone {
       _iceCandidatesDebounceTimer ??=
           Timer(const Duration(milliseconds: 300), () {
         _iceCandidatesDebounceTimer = null;
-        signalingChannel.send(IceCandidates(_iceCandidatesToSend));
+        signalingChannel.send(IceCandidates(
+          recipient: partnerUid,
+          iceCandidates: _iceCandidatesToSend,
+        ));
         _iceCandidatesToSend.clear();
       });
     };
@@ -221,6 +226,7 @@ class Phone {
   ) {
     signalingChannel.send(
       SessionDescription(
+        recipient: partnerUid,
         sdp: sessionDescription.sdp,
         type: sessionDescription.type,
       ),

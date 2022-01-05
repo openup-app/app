@@ -74,8 +74,9 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     for (var i = 0; i < widget.profiles.length; i++) {
       final profile = widget.profiles[i];
       final phone = Phone(
-        useVideo: widget.video,
         signalingChannel: _signalingChannel,
+        partnerUid: profile.uid,
+        useVideo: widget.video,
         onMediaRenderers: (localRenderer, remoteRenderer) {
           final callData = _users[profile.uid];
           setState(() {
