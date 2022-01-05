@@ -432,11 +432,20 @@ class RawUsersApi {
     return List<Connection>.from(list.map((e) => Connection.fromJson(e)));
   }
 
-  Future<String> call(String uid, String calleeUid, bool video) async {
+  Future<String> call(
+    String uid,
+    String calleeUid,
+    bool video, {
+    required bool group,
+  }) async {
     final response = await http.post(
       Uri.parse('$_urlBase/users/$calleeUid/call'),
       headers: _headers,
-      body: jsonEncode({'callerUid': uid, 'video': video}),
+      body: jsonEncode({
+        'callerUid': uid,
+        'video': video,
+        'group': group,
+      }),
     );
 
     if (response.statusCode != 200) {

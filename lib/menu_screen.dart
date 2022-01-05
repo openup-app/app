@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/home_button.dart';
@@ -8,19 +7,21 @@ import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/toggle_button.dart';
 
-part 'solo_screen.freezed.dart';
+part 'menu_screen.freezed.dart';
 
-class SoloScreen extends StatelessWidget {
+class MenuScreen extends StatelessWidget {
   final String label;
   final Widget image;
+  final bool groupCalling;
   final VoidCallback onPressedVoiceCall;
   final VoidCallback onPressedVideoCall;
   final VoidCallback onPressedPreferences;
 
-  const SoloScreen({
+  const MenuScreen({
     Key? key,
     required this.label,
     required this.image,
+    this.groupCalling = false,
     required this.onPressedVoiceCall,
     required this.onPressedVideoCall,
     required this.onPressedPreferences,
@@ -53,7 +54,7 @@ class SoloScreen extends StatelessWidget {
           end: Alignment.bottomCenter,
           colors: [
             Colors.white,
-            SoloScreenTheme.of(context).backgroundGradientBottom,
+            MenuScreenTheme.of(context).backgroundGradientBottom,
           ],
         ),
       ),
@@ -68,10 +69,10 @@ class SoloScreen extends StatelessWidget {
                 Text(
                   label,
                   style: Theming.of(context).text.headline.copyWith(
-                    color: SoloScreenTheme.of(context).titleColor,
+                    color: MenuScreenTheme.of(context).titleColor,
                     shadows: [
                       BoxShadow(
-                        color: SoloScreenTheme.of(context).titleShadowColor,
+                        color: MenuScreenTheme.of(context).titleShadowColor,
                         spreadRadius: 2.0,
                         blurRadius: 16.0,
                         offset: const Offset(0.0, 2.0),
@@ -84,32 +85,33 @@ class SoloScreen extends StatelessWidget {
                   alignment: Alignment.bottomCenter,
                   children: [
                     image,
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Column(
-                        children: [
-                          ToggleButton(
-                            value: true,
-                            onChanged: (_) {},
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'casual',
-                            style: TextStyle(
-                              color: Color.fromARGB(0xFF, 0x8B, 0xC0, 0xFF),
-                              fontSize: 15,
+                    if (!groupCalling)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Column(
+                          children: [
+                            ToggleButton(
+                              value: true,
+                              onChanged: (_) {},
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                        ],
+                            const SizedBox(height: 8),
+                            const Text(
+                              'casual',
+                              style: TextStyle(
+                                color: Color.fromARGB(0xFF, 0x8B, 0xC0, 0xFF),
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 PrimaryIconButton(
                   onPressed: onPressedVoiceCall,
                   icon: Image.asset('assets/images/voice_call.png'),
-                  color: SoloScreenTheme.of(context).buttonColorTop,
+                  color: MenuScreenTheme.of(context).buttonColorTop,
                   child: Text(
                     'Talk to someone new',
                     style: buttonStyle,
@@ -119,7 +121,7 @@ class SoloScreen extends StatelessWidget {
                 PrimaryIconButton(
                   onPressed: onPressedVideoCall,
                   icon: Image.asset('assets/images/video_call.png'),
-                  color: SoloScreenTheme.of(context).buttonColorMiddle,
+                  color: MenuScreenTheme.of(context).buttonColorMiddle,
                   child: Text(
                     'Video call someone new',
                     style: buttonStyle,
@@ -132,7 +134,7 @@ class SoloScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(16.0),
                     child: Image.asset('assets/images/preferences.png'),
                   ),
-                  color: SoloScreenTheme.of(context).buttonColorBottom,
+                  color: MenuScreenTheme.of(context).buttonColorBottom,
                   child: Text(
                     'Preferences',
                     style: buttonStyle,
@@ -146,14 +148,14 @@ class SoloScreen extends StatelessWidget {
             top: MediaQuery.of(context).padding.top + 16,
             right: MediaQuery.of(context).padding.right + 16,
             child: ProfileButton(
-              color: SoloScreenTheme.of(context).profileButtonColor,
+              color: MenuScreenTheme.of(context).profileButtonColor,
             ),
           ),
           Positioned(
             right: MediaQuery.of(context).padding.right + 16,
             bottom: MediaQuery.of(context).padding.bottom + 16,
             child: HomeButton(
-              color: SoloScreenTheme.of(context).homeButtonColor,
+              color: MenuScreenTheme.of(context).homeButtonColor,
             ),
           ),
         ],
@@ -162,29 +164,29 @@ class SoloScreen extends StatelessWidget {
   }
 }
 
-class SoloScreenTheme extends InheritedWidget {
-  final SoloScreenThemeData themeData;
+class MenuScreenTheme extends InheritedWidget {
+  final MenuScreenThemeData themeData;
 
-  const SoloScreenTheme({
+  const MenuScreenTheme({
     Key? key,
     required Widget child,
     required this.themeData,
   }) : super(key: key, child: child);
 
-  static SoloScreenThemeData of(BuildContext context) {
+  static MenuScreenThemeData of(BuildContext context) {
     return context
-        .dependOnInheritedWidgetOfExactType<SoloScreenTheme>()!
+        .dependOnInheritedWidgetOfExactType<MenuScreenTheme>()!
         .themeData;
   }
 
   @override
-  bool updateShouldNotify(SoloScreenTheme oldWidget) =>
+  bool updateShouldNotify(MenuScreenTheme oldWidget) =>
       oldWidget.themeData != themeData;
 }
 
 @freezed
-class SoloScreenThemeData with _$SoloScreenThemeData {
-  const factory SoloScreenThemeData({
+class MenuScreenThemeData with _$MenuScreenThemeData {
+  const factory MenuScreenThemeData({
     required Color backgroundGradientBottom,
     required Color titleColor,
     required Color titleShadowColor,
@@ -193,5 +195,5 @@ class SoloScreenThemeData with _$SoloScreenThemeData {
     required Color buttonColorBottom,
     required Color profileButtonColor,
     Color? homeButtonColor,
-  }) = _SoloScreenThemeData;
+  }) = _MenuScreenThemeData;
 }

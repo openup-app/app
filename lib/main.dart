@@ -26,7 +26,8 @@ import 'package:openup/home_screen.dart';
 import 'package:openup/forgot_password_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
-import 'package:openup/solo_screen.dart';
+import 'package:openup/menu_screen.dart';
+import 'package:openup/widgets/connections_list.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/theming.dart';
@@ -160,7 +161,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           ),
                           onPressedUpper: () =>
                               Navigator.of(context).pushNamed('friends-solo'),
-                          onPressedLower: () {},
+                          onPressedLower: () =>
+                              Navigator.of(context).pushNamed('friends-double'),
                         ),
                       );
                     },
@@ -169,8 +171,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     builder: (context) {
-                      return SoloScreenTheme(
-                        themeData: const SoloScreenThemeData(
+                      return MenuScreenTheme(
+                        themeData: const MenuScreenThemeData(
                           backgroundGradientBottom:
                               Color.fromARGB(0xFF, 0xDD, 0xFB, 0xFF),
                           titleColor: Color.fromARGB(0xFF, 0x00, 0xD1, 0xFF),
@@ -185,7 +187,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           profileButtonColor:
                               Color.fromARGB(0xFF, 0x1C, 0xC1, 0xE4),
                         ),
-                        child: SoloScreen(
+                        child: MenuScreen(
                           label: 'meet people',
                           image: const SizedBox(
                             height: 90,
@@ -203,18 +205,48 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             'friends-lobby',
                             arguments: LobbyScreenArguments(video: true),
                           ),
-                          onPressedPreferences: () async {
-                            final usersApi = ref.read(usersApiProvider);
-                            final uid = FirebaseAuth.instance.currentUser?.uid;
-                            if (uid != null) {
-                              final preferences =
-                                  await usersApi.getFriendsPreferences(uid);
-                              Navigator.of(context).pushNamed(
-                                'friends-preferences',
-                                arguments: preferences,
-                              );
-                            }
-                          },
+                          onPressedPreferences: () =>
+                              _navigateToPreferences(context, Purpose.friends),
+                        ),
+                      );
+                    },
+                  );
+                case 'friends-double':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (context) {
+                      return MenuScreenTheme(
+                        themeData: const MenuScreenThemeData(
+                          backgroundGradientBottom:
+                              Color.fromARGB(0xFF, 0xDD, 0xFB, 0xFF),
+                          titleColor: Color.fromARGB(0xFF, 0x00, 0xD1, 0xFF),
+                          titleShadowColor:
+                              Color.fromARGB(0xAA, 0x00, 0xD1, 0xFF),
+                          buttonColorTop:
+                              Color.fromARGB(0xFF, 0x00, 0xB0, 0xD7),
+                          buttonColorMiddle:
+                              Color.fromARGB(0xFF, 0x5A, 0xC9, 0xEC),
+                          buttonColorBottom:
+                              Color.fromARGB(0xFF, 0x8C, 0xDD, 0xF6),
+                          profileButtonColor:
+                              Color.fromARGB(0xFF, 0x1C, 0xC1, 0xE4),
+                        ),
+                        child: MenuScreen(
+                          label: 'meet people\nwith friends',
+                          image: SizedBox(
+                            height: 120,
+                            child: Image.asset(
+                              'assets/images/friends_with_friends.gif',
+                              fit: BoxFit.fitHeight,
+                            ),
+                          ),
+                          groupCalling: true,
+                          onPressedVoiceCall: () =>
+                              _displayConnections(context, video: false),
+                          onPressedVideoCall: () =>
+                              _displayConnections(context, video: true),
+                          onPressedPreferences: () =>
+                              _navigateToPreferences(context, Purpose.friends),
                         ),
                       );
                     },
@@ -366,7 +398,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           ),
                           onPressedUpper: () =>
                               Navigator.of(context).pushNamed('dating-solo'),
-                          onPressedLower: () {},
+                          onPressedLower: () =>
+                              Navigator.of(context).pushNamed('dating-double'),
                         ),
                       );
                     },
@@ -375,8 +408,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     builder: (context) {
-                      return SoloScreenTheme(
-                        themeData: const SoloScreenThemeData(
+                      return MenuScreenTheme(
+                        themeData: const MenuScreenThemeData(
                           backgroundGradientBottom:
                               Color.fromARGB(0xFF, 0xFF, 0xE2, 0xE2),
                           titleColor: Color.fromARGB(0xFF, 0xFD, 0x65, 0x65),
@@ -393,7 +426,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           homeButtonColor:
                               Color.fromARGB(0xFF, 0xDD, 0x0F, 0x0F),
                         ),
-                        child: SoloScreen(
+                        child: MenuScreen(
                           label: 'blind date',
                           image: SizedBox(
                             height: 120,
@@ -412,20 +445,50 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             'dating-lobby',
                             arguments: LobbyScreenArguments(video: true),
                           ),
-                          onPressedPreferences: () async {
-                            final container =
-                                ProviderScope.containerOf(context);
-                            final usersApi = container.read(usersApiProvider);
-                            final uid = FirebaseAuth.instance.currentUser?.uid;
-                            if (uid != null) {
-                              final preferences =
-                                  await usersApi.getDatingPreferences(uid);
-                              Navigator.of(context).pushNamed(
-                                'dating-preferences',
-                                arguments: preferences,
-                              );
-                            }
-                          },
+                          onPressedPreferences: () =>
+                              _navigateToPreferences(context, Purpose.dating),
+                        ),
+                      );
+                    },
+                  );
+                case 'dating-double':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (context) {
+                      return MenuScreenTheme(
+                        themeData: const MenuScreenThemeData(
+                          backgroundGradientBottom:
+                              Color.fromARGB(0xFF, 0xFF, 0xE2, 0xE2),
+                          titleColor: Color.fromARGB(0xFF, 0xFD, 0x65, 0x65),
+                          titleShadowColor:
+                              Color.fromARGB(0xAA, 0xF0, 0x59, 0x59),
+                          buttonColorTop:
+                              Color.fromARGB(0xFF, 0xFF, 0x77, 0x77),
+                          buttonColorMiddle:
+                              Color.fromARGB(0xFF, 0xFF, 0x88, 0x88),
+                          buttonColorBottom:
+                              Color.fromARGB(0xFF, 0xF6, 0x9E, 0x9E),
+                          profileButtonColor:
+                              Color.fromARGB(0xFF, 0xFF, 0x8A, 0x8A),
+                          homeButtonColor:
+                              Color.fromARGB(0xFF, 0xDD, 0x0F, 0x0F),
+                        ),
+                        child: MenuScreen(
+                          label: 'double dating',
+                          image: SizedBox(
+                            height: 120,
+                            child: Image.asset(
+                              'assets/images/double_dating.gif',
+                              fit: BoxFit.fitHeight,
+                            ),
+                          ),
+                          groupCalling: true,
+                          onPressedVoiceCall: () =>
+                              _displayConnections(context, video: false),
+                          onPressedVideoCall: () =>
+                              _displayConnections(context, video: true),
+                          onPressedPreferences: () =>
+                              _navigateToPreferences(context, Purpose.dating),
                         ),
                       );
                     },
@@ -615,6 +678,56 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  void _navigateToPreferences(BuildContext context, Purpose purpose) async {
+    final usersApi = ref.read(usersApiProvider);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final preferences = purpose == Purpose.friends
+          ? await usersApi.getFriendsPreferences(uid)
+          : await usersApi.getDatingPreferences(uid);
+      final route = purpose == Purpose.friends ? 'friends' : 'dating';
+      Navigator.of(context).pushNamed(
+        '$route-preferences',
+        arguments: preferences,
+      );
+    }
+  }
+
+  void _displayConnections(BuildContext context, {required bool video}) async {
+    showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return ConnectionsBottomSheet(
+          onSelected: (profile) async {
+            final usersApi = ref.read(usersApiProvider);
+            final uid = FirebaseAuth.instance.currentUser?.uid;
+            if (uid != null) {
+              final rid = await usersApi.call(
+                uid,
+                profile.uid,
+                video,
+                group: true,
+              );
+              if (mounted) {
+                final route =
+                    video ? 'friends-video-call' : 'friends-voice-call';
+                Navigator.of(context).pushNamed(
+                  route,
+                  arguments: CallPageArguments(
+                    rid: rid,
+                    profiles: [profile],
+                    rekindles: [],
+                  ),
+                );
+              }
+            }
+          },
         );
       },
     );

@@ -239,8 +239,13 @@ class UsersApi implements RawUsersApi {
       _rawUsersApi.deleteConnection(uid, deleteUid);
 
   @override
-  Future<String> call(String uid, String calleeUid, bool video) =>
-      _rawUsersApi.call(uid, calleeUid, video);
+  Future<String> call(
+    String uid,
+    String calleeUid,
+    bool video, {
+    bool group = false,
+  }) =>
+      _rawUsersApi.call(uid, calleeUid, video, group: group);
 
   @override
   Future<Map<String, int>> getAllChatroomUnreadCounts(String uid) async {

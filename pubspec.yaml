@@ -65,6 +65,7 @@ flutter:
     - assets/images/heart.gif
     - assets/images/friends_with_friends.gif
     - assets/images/double_dating.gif
+    - assets/images/chevron_right.png
   fonts:
     - family: Myriad
       fonts:
