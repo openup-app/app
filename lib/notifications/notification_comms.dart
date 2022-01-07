@@ -35,7 +35,7 @@ Future<void> removeBackgroundCallNotification() async {
 @freezed
 class BackgroundCallNotification with _$BackgroundCallNotification {
   const factory BackgroundCallNotification({
-    required String uid,
+    required String callerUid,
     required String rid,
     required bool video,
     required Purpose purpose,

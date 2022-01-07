@@ -12,6 +12,8 @@ import 'package:rxdart/subjects.dart';
 
 late final Provider<UsersApi> usersApiProvider;
 late final StateProvider<PublicProfile?> profileProvider;
+late final StateProvider<PublicProfile?> profileCache;
+
 late final StateController<PublicProfile?> _profileStateController;
 
 void initUsersApi({
@@ -99,18 +101,16 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
-  Future<PublicProfile> getPublicProfile(String uid) async {
-    _publicProfile ??= await _rawUsersApi.getPublicProfile(uid);
+  Future<PublicProfile> getPublicProfile(String uid) =>
+      _rawUsersApi.getPublicProfile(uid);
+
+  void tempUpdatePublicProfileCache(PublicProfile profile) {
     _profileStateController.state = _publicProfile;
-    return _publicProfile!;
   }
 
   @override
-  Future<void> updatePublicProfile(String uid, PublicProfile profile) {
-    _publicProfile = profile;
-    _profileStateController.state = _publicProfile;
-    return _rawUsersApi.updatePublicProfile(uid, profile);
-  }
+  Future<void> updatePublicProfile(String uid, PublicProfile profile) =>
+      _rawUsersApi.updatePublicProfile(uid, profile);
 
   @override
   Future<PrivateProfile> getPrivateProfile(String uid) async {

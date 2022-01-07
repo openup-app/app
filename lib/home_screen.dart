@@ -63,13 +63,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _cacheData(UsersApi api, String uid) async {
-    Future.wait([
+    final data = await Future.wait([
       api.getPublicProfile(uid),
       api.getPrivateProfile(uid),
       api.getFriendsPreferences(uid),
       api.getDatingPreferences(uid),
       api.getAllChatroomUnreadCounts(uid),
     ]);
+    api.tempUpdatePublicProfileCache(data[0] as PublicProfile);
   }
 
   Future<void> _updateLocation(UsersApi api, String uid) async {

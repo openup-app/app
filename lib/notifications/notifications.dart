@@ -54,7 +54,7 @@ Future<bool> _handleLaunchNotification({
         : 'dating';
     final route = video ? '$purpose-video-call' : '$purpose-voice-call';
     final profile =
-        await usersApi.getPublicProfile(backgroundCallNotification.uid);
+        await usersApi.getPublicProfile(backgroundCallNotification.callerUid);
     Navigator.of(context).pushReplacementNamed('home');
     Navigator.of(context).pushNamed(
       route,
@@ -108,7 +108,7 @@ void _onForegroundNotification(RemoteMessage message, UsersApi usersApi) async {
               call.purpose == Purpose.friends ? 'friends' : 'dating';
           final route =
               call.video ? '$purpose-video-call' : '$purpose-voice-call';
-          final profile = await usersApi.getPublicProfile(call.uid);
+          final profile = await usersApi.getPublicProfile(call.callerUid);
           Navigator.of(navigatorKey.currentContext!).pushNamed(
             route,
             arguments: CallPageArguments(
@@ -139,7 +139,7 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
         video: call.video,
         onCallAccepted: () async {
           final backgroundCallNotification = BackgroundCallNotification(
-            uid: call.uid,
+            callerUid: call.callerUid,
             rid: call.rid,
             video: call.video,
             purpose: Purpose.friends,
@@ -166,24 +166,24 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
 
   String? chatroomId;
   if (type == 'call') {
-    final uid = message.data['uid'];
-    final senderName = message.data['senderName'];
-    final senderPhoto = message.data['senderPhoto'];
+    final callerUid = message.data['callerUid'];
+    final callerName = message.data['callerName'];
+    final callerPhoto = message.data['callerPhoto'];
     final rid = message.data['rid'];
     final purpose =
         message.data['purpose'] == 'friends' ? Purpose.friends : Purpose.dating;
     final video = (message.data['video'] as String).parseBool();
     notificationTitle =
-        'Incoming ${video ? 'video call' : 'call'} from $senderName';
-    notificationBody = senderName;
+        'Incoming ${video ? 'video call' : 'call'} from $callerName';
+    notificationBody = callerName;
     channelName = 'Calls';
     channelDescription = 'Calls from your connections';
     notificationPayload = _CallPayload(
-      name: senderName,
-      photo: senderPhoto,
+      name: callerName,
+      photo: callerPhoto,
       video: video,
       rid: rid,
-      uid: uid,
+      callerUid: callerUid,
       purpose: purpose,
     );
   } else if (type == 'chat') {
@@ -289,7 +289,7 @@ class _ParsedNotification {
 @freezed
 class _NotificationPayload with _$_NotificationPayload {
   const factory _NotificationPayload.call({
-    required String uid,
+    required String callerUid,
     required String name,
     required String photo,
     required String rid,
