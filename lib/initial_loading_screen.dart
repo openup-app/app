@@ -30,6 +30,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       Navigator.of(context).pushReplacementNamed('sign-up');
       return;
     }
+    usersApi.uid = user.uid;
 
     final deepLinked = await initializeNotifications(
       context: context,

@@ -304,6 +304,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
               birthday: _birthday,
               notificationToken: await FirebaseMessaging.instance.getToken(),
             );
+            usersApi.uid = uid;
           }
           setState(() => _submitting = false);
         },

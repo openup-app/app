@@ -12,7 +12,6 @@ import 'package:rxdart/subjects.dart';
 
 late final Provider<UsersApi> usersApiProvider;
 late final StateProvider<PublicProfile?> profileProvider;
-late final StateProvider<PublicProfile?> profileCache;
 
 late final StateController<PublicProfile?> _profileStateController;
 
@@ -25,12 +24,16 @@ void initUsersApi({
   });
   usersApiProvider = Provider<UsersApi>((ref) {
     _profileStateController = ref.read(profileProvider.state);
-    return UsersApi(host: host, port: port);
+    return UsersApi(
+      host: host,
+      port: port,
+    );
   });
 }
 
 class UsersApi implements RawUsersApi {
   final RawUsersApi _rawUsersApi;
+  String? _uid;
   Account? _account;
   PublicProfile? _publicProfile;
   PrivateProfile? _privateProfile;
@@ -52,6 +55,8 @@ class UsersApi implements RawUsersApi {
   Future<void> dispose() {
     return _unreadChatMessageCountsController.close();
   }
+
+  set uid(String value) => _uid = value;
 
   @override
   Future<void> createUserWithEmail({
@@ -90,32 +95,55 @@ class UsersApi implements RawUsersApi {
 
   @override
   Future<Account> getAccount(String uid) async {
-    _account ??= await _rawUsersApi.getAccount(uid);
-    return _account!;
+    final account = await _rawUsersApi.getAccount(uid);
+    if (uid == _uid) {
+      _account = account;
+    }
+    return account;
   }
 
   @override
   Future<void> updateAccount(String uid, Account account) {
-    _account = account;
+    if (uid == _uid) {
+      _account = account;
+    }
     return _rawUsersApi.updateAccount(uid, account);
   }
 
   @override
-  Future<PublicProfile> getPublicProfile(String uid) =>
-      _rawUsersApi.getPublicProfile(uid);
+  Future<PublicProfile> getPublicProfile(String uid) async {
+    if (uid == _uid && _publicProfile != null) {
+      return _publicProfile!;
+    }
 
-  void tempUpdatePublicProfileCache(PublicProfile profile) {
-    _profileStateController.state = _publicProfile;
+    final publicProfile = await _rawUsersApi.getPublicProfile(uid);
+    if (uid == _uid) {
+      _publicProfile = publicProfile;
+      _profileStateController.state = _publicProfile;
+    }
+    return publicProfile;
   }
 
   @override
-  Future<void> updatePublicProfile(String uid, PublicProfile profile) =>
-      _rawUsersApi.updatePublicProfile(uid, profile);
+  Future<void> updatePublicProfile(String uid, PublicProfile profile) {
+    if (uid == _uid) {
+      _publicProfile = profile;
+      _profileStateController.state = _publicProfile;
+    }
+    return _rawUsersApi.updatePublicProfile(uid, profile);
+  }
 
   @override
   Future<PrivateProfile> getPrivateProfile(String uid) async {
-    _privateProfile ??= await _rawUsersApi.getPrivateProfile(uid);
-    return _privateProfile!;
+    if (uid == _uid && _privateProfile != null) {
+      return _privateProfile!;
+    }
+
+    final privateProfile = await _rawUsersApi.getPrivateProfile(uid);
+    if (uid == _uid) {
+      _privateProfile = privateProfile;
+    }
+    return privateProfile;
   }
 
   @override

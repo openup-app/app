@@ -24,7 +24,8 @@ class PhoneVerificationScreen extends ConsumerStatefulWidget {
       _PhoneVerificationScreenState();
 }
 
-class _PhoneVerificationScreenState extends ConsumerState<PhoneVerificationScreen> {
+class _PhoneVerificationScreenState
+    extends ConsumerState<PhoneVerificationScreen> {
   final _smsCodeController = TextEditingController();
   bool _submitting = false;
 
@@ -133,6 +134,9 @@ class _PhoneVerificationScreenState extends ConsumerState<PhoneVerificationScree
       final userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
       uid = userCredential.user?.uid;
+      if (uid != null) {
+        usersApi.uid = uid;
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-verification-code') {
         ScaffoldMessenger.of(context).showSnackBar(
