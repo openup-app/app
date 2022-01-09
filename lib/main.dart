@@ -341,6 +341,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         video: false,
                         profiles: args.profiles,
                         rekindles: args.rekindles,
+                        groupLobby: args.groupLobby,
                       );
                     },
                   );
@@ -357,6 +358,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         video: true,
                         profiles: args.profiles,
                         rekindles: args.rekindles,
+                        groupLobby: args.groupLobby,
                       );
                     },
                   );

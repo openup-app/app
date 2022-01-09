@@ -49,6 +49,7 @@ Future<bool> _handleLaunchNotification({
   if (backgroundCallNotification != null) {
     final rid = backgroundCallNotification.rid;
     final video = backgroundCallNotification.video;
+    final group = backgroundCallNotification.group;
     final purpose = backgroundCallNotification.purpose == Purpose.friends
         ? 'friends'
         : 'dating';
@@ -62,6 +63,7 @@ Future<bool> _handleLaunchNotification({
         rid: rid,
         profiles: [profile],
         rekindles: [],
+        groupLobby: group,
       ),
     );
     return true;
@@ -115,6 +117,7 @@ void _onForegroundNotification(RemoteMessage message, UsersApi usersApi) async {
               rid: call.rid,
               profiles: [profile],
               rekindles: [],
+              groupLobby: call.group,
             ),
           );
         },
@@ -143,6 +146,7 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
             rid: call.rid,
             video: call.video,
             purpose: Purpose.friends,
+            group: call.group,
           );
           await serializeBackgroundCallNotification(backgroundCallNotification);
         },
@@ -173,8 +177,11 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
     final purpose =
         message.data['purpose'] == 'friends' ? Purpose.friends : Purpose.dating;
     final video = (message.data['video'] as String).parseBool();
-    notificationTitle =
-        'Incoming ${video ? 'video call' : 'call'} from $callerName';
+    final group = (message.data['group'] as String).parseBool();
+    notificationTitle = group
+        ? ('Incoming ${purpose == Purpose.friends ? 'friends with friends' : 'double date'} ${video ? 'video call' : 'call'} from $callerName')
+        : ('Incoming ${video ? 'video call' : 'call'} from $callerName');
+    print('Received ${message.data} $group, title $notificationTitle');
     notificationBody = callerName;
     channelName = 'Calls';
     channelDescription = 'Calls from your connections';
@@ -182,6 +189,7 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
       name: callerName,
       photo: callerPhoto,
       video: video,
+      group: group,
       rid: rid,
       callerUid: callerUid,
       purpose: purpose,
@@ -295,6 +303,7 @@ class _NotificationPayload with _$_NotificationPayload {
     required String rid,
     required Purpose purpose,
     required bool video,
+    required bool group,
   }) = _CallPayload;
 
   const factory _NotificationPayload.chat({

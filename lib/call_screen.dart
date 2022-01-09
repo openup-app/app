@@ -26,6 +26,7 @@ class CallScreen extends ConsumerStatefulWidget {
   final bool video;
   final List<PublicProfile> profiles;
   final List<Rekindle> rekindles;
+  final bool groupLobby;
 
   const CallScreen({
     Key? key,
@@ -35,6 +36,7 @@ class CallScreen extends ConsumerStatefulWidget {
     required this.video,
     required this.profiles,
     required this.rekindles,
+    required this.groupLobby,
   }) : super(key: key);
 
   @override
@@ -302,10 +304,12 @@ class CallPageArguments {
   final String rid;
   final List<PublicProfile> profiles;
   final List<Rekindle> rekindles;
+  final bool groupLobby;
 
   CallPageArguments({
     required this.rid,
     required this.profiles,
     required this.rekindles,
+    this.groupLobby = false,
   });
 }

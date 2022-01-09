@@ -39,6 +39,7 @@ class BackgroundCallNotification with _$BackgroundCallNotification {
     required String rid,
     required bool video,
     required Purpose purpose,
+    required bool group,
   }) = _BackgroundCallNotification;
 
   factory BackgroundCallNotification.fromJson(Map<String, dynamic> json) =>
