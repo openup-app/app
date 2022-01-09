@@ -725,6 +725,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     rid: rid,
                     profiles: [profile],
                     rekindles: [],
+                    groupLobby: true,
                   ),
                 );
               }

@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/users/rekindle.dart';
 
 part 'signaling.freezed.dart';
 part 'signaling.g.dart';
@@ -29,6 +31,23 @@ class Signal with _$Signal {
   const factory Signal.hangUp({
     @Default('room') String recipient,
   }) = HangUp;
+
+  const factory Signal.groupCallLobbyReady({
+    @Default('room') String recipient,
+    required bool ready,
+  }) = GroupCallLobbyReady;
+
+  const factory Signal.groupCallLobbyReadyStates({
+    @Default('room') String recipient,
+    required Map<String, bool> readyStates,
+  }) = _GroupCallLobbyReadyStates;
+
+  const factory Signal.groupCallJoin({
+    @Default('room') String recipient,
+    required String rid,
+    required List<PublicProfile> profiles,
+    required List<Rekindle> rekindles,
+  }) = _GroupCallJoin;
 
   factory Signal.fromJson(Map<String, dynamic> json) => _$SignalFromJson(json);
 }

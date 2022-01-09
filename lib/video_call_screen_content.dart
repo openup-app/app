@@ -16,12 +16,15 @@ class VideoCallScreenContent extends StatefulWidget {
   final bool hasSentTimeRequest;
   final DateTime? endTime;
   final bool muted;
+  final bool isGroupLobby;
+  final bool readyForGroupCall;
   final VoidCallback onTimeUp;
   final VoidCallback onHangUp;
   final void Function(String uid) onConnect;
   final void Function(String uid) onReport;
   final VoidCallback onSendTimeRequest;
   final VoidCallback onToggleMute;
+  final void Function() onSendReadyForGroupCall;
 
   const VideoCallScreenContent({
     Key? key,
@@ -30,12 +33,15 @@ class VideoCallScreenContent extends StatefulWidget {
     required this.hasSentTimeRequest,
     required this.endTime,
     required this.muted,
+    required this.isGroupLobby,
+    required this.readyForGroupCall,
     required this.onTimeUp,
     required this.onHangUp,
     required this.onConnect,
     required this.onReport,
     required this.onSendTimeRequest,
     required this.onToggleMute,
+    required this.onSendReadyForGroupCall,
   }) : super(key: key);
 
   @override
@@ -48,6 +54,10 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
   @override
   Widget build(BuildContext context) {
     final data = widget.users.first;
+    final waitingForMe = !widget.readyForGroupCall;
+    final waitingForFriend =
+        !waitingForMe && !widget.users.first.readyForGroupCall;
+    final matching = !(waitingForMe && waitingForFriend);
     return Stack(
       children: [
         if (data.videoRenderer != null)
@@ -57,6 +67,58 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
               child: RTCVideoView(
                 data.videoRenderer!,
                 objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+              ),
+            ),
+          ),
+        if (widget.isGroupLobby)
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 36.0),
+              child: Button(
+                onPressed: waitingForMe ? widget.onSendReadyForGroupCall : null,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(24)),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .secondary
+                        .withOpacity(1.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theming.of(context).shadow,
+                        offset: const Offset(0.0, 4.0),
+                        blurRadius: 1.0,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (waitingForMe)
+                        const Icon(Icons.done)
+                      else if (waitingForFriend)
+                        const Icon(Icons.close)
+                      else if (matching)
+                        const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                      const SizedBox(width: 8),
+                      if (waitingForMe)
+                        const Text('I am ready')
+                      else if (waitingForFriend)
+                        const Text('Friend is not ready')
+                      else if (matching)
+                        const Text('Finding a match...'),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

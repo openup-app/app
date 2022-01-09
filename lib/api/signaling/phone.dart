@@ -3,6 +3,8 @@ import 'dart:collection';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/api/signaling/signaling.dart';
+import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/users/rekindle.dart';
 import 'package:rxdart/rxdart.dart';
 
 /// WebRTC calling service, can only be used to [call()] or [answer()] once per
@@ -33,6 +35,12 @@ class Phone {
   final void Function() onDisconnected;
   final void Function(bool muted)? onToggleMute;
   final void Function(bool enabled)? onToggleSpeakerphone;
+  final void Function(Map<String, bool> states) onGroupCallLobbyStates;
+  final void Function(
+    String rid,
+    List<PublicProfile> profiles,
+    List<Rekindle> rekindles,
+  ) onJoinGroupCall;
 
   bool _usedOnce = false;
   RTCPeerConnection? _peerConnection;
@@ -63,6 +71,8 @@ class Phone {
     required this.onDisconnected,
     this.onToggleMute,
     this.onToggleSpeakerphone,
+    required this.onGroupCallLobbyStates,
+    required this.onJoinGroupCall,
   });
 
   Future<void> dispose() async {
@@ -284,6 +294,14 @@ class Phone {
         },
         addTimeRequest: (_) => onAddTimeRequest(),
         addTime: (addTime) => onAddTime(Duration(seconds: addTime.seconds)),
+        groupCallLobbyReady: (_) {},
+        groupCallLobbyReadyStates: (states) =>
+            onGroupCallLobbyStates(states.readyStates),
+        groupCallJoin: (room) => onJoinGroupCall(
+          room.rid,
+          room.profiles,
+          room.rekindles,
+        ),
         hangUp: (_) {
           _connectionStateController.add(PhoneConnectionState.complete);
           onDisconnected();

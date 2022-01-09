@@ -55,6 +55,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
   final _users = <String, CallData>{};
   final _connectionStateSubscriptions = <StreamSubscription>[];
+  bool _readyForGroupCall = false;
 
   @override
   void initState() {
@@ -112,6 +113,24 @@ class _CallScreenState extends ConsumerState<CallScreen> {
             setState(() => _speakerphone = enabled);
           }
         },
+        onGroupCallLobbyStates: (states) {
+          final myReadyState = states[uid];
+          if (myReadyState != null) {
+            setState(() => _readyForGroupCall = myReadyState);
+          }
+          for (var entry in states.entries) {
+            if (entry.key == uid) {
+              setState(() => _readyForGroupCall = entry.value);
+            } else {
+              final user = _users[entry.key];
+              if (user != null) {
+                setState(() => _users[entry.key] = user.copyWith
+                    .userConnection(readyForGroupCall: entry.value));
+              }
+            }
+          }
+        },
+        onJoinGroupCall: (rid, profiles, rekindles) {},
       );
       final userConnection = UserConnection(
         profile: profile,
@@ -121,6 +140,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         localVideoRenderer: null,
         videoRenderer: null,
         connectionState: PhoneConnectionState.none,
+        readyForGroupCall: false,
       );
       _users[profile.uid] = CallData(
         phone: phone,
@@ -169,6 +189,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         hasSentTimeRequest: _hasSentTimeRequest,
         endTime: widget.rekindles.isEmpty ? null : _endTime,
         muted: _muted,
+        isGroupLobby: widget.groupLobby,
+        readyForGroupCall: _readyForGroupCall,
         onTimeUp: _navigateToRekindleOrPop,
         onHangUp: () {
           _signalingChannel.send(const HangUp());
@@ -179,6 +201,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         onSendTimeRequest: _sendTimeRequest,
         onToggleMute: () =>
             _users.values.forEach((element) => element.phone.toggleMute()),
+        onSendReadyForGroupCall: () =>
+            _users.values.first.phone.signalingChannel.send(
+          const GroupCallLobbyReady(ready: true),
+        ),
       );
     } else {
       return VoiceCallScreenContent(
@@ -297,6 +323,7 @@ class UserConnection with _$UserConnection {
     required RTCVideoRenderer? localVideoRenderer,
     required RTCVideoRenderer? videoRenderer,
     required PhoneConnectionState connectionState,
+    required bool readyForGroupCall,
   }) = _UserConnection;
 }
 
