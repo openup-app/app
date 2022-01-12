@@ -130,7 +130,20 @@ class _CallScreenState extends ConsumerState<CallScreen> {
             }
           }
         },
-        onJoinGroupCall: (rid, profiles, rekindles) {},
+        onJoinGroupCall: (rid, profiles, rekindles) {
+          final route = ModalRoute.of(context)?.settings.name;
+          if (route != null) {
+            Navigator.of(context).popAndPushNamed(
+              route,
+              arguments: CallPageArguments(
+                rid: rid,
+                profiles: profiles,
+                rekindles: rekindles,
+                groupLobby: false,
+              ),
+            );
+          }
+        },
       );
       final userConnection = UserConnection(
         profile: profile,

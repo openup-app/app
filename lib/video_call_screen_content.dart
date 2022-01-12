@@ -53,23 +53,62 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-    final data = widget.users.first;
+    final groupCall = widget.users.length > 1;
+    final tempFirstUser = widget.users.first;
     final waitingForMe = !widget.readyForGroupCall;
     final waitingForFriend =
         !waitingForMe && !widget.users.first.readyForGroupCall;
     final matching = !(waitingForMe && waitingForFriend);
     return Stack(
       children: [
-        if (data.videoRenderer != null)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () => setState(() => _showingControls = !_showingControls),
+        if (!groupCall) ...[
+          if (widget.users.first.videoRenderer != null)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () =>
+                    setState(() => _showingControls = !_showingControls),
+                child: RTCVideoView(
+                  widget.users.first.videoRenderer!,
+                  objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                ),
+              ),
+            ),
+        ] else ...[
+          for (var i = 0; i < 2; i++)
+            if (widget.users[i].videoRenderer != null)
+              Align(
+                alignment: [
+                  Alignment.topLeft,
+                  Alignment.topRight,
+                  Alignment.bottomLeft
+                ][i],
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  color: [Colors.blue, Colors.orange, Colors.pink][i],
+                  child: FractionallySizedBox(
+                    widthFactor: 0.5,
+                    heightFactor: 0.5,
+                    child: RTCVideoView(
+                      widget.users[i].videoRenderer!,
+                      objectFit:
+                          RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                    ),
+                  ),
+                ),
+              ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: FractionallySizedBox(
+              widthFactor: 0.5,
+              heightFactor: 0.5,
               child: RTCVideoView(
-                data.videoRenderer!,
+                widget.localRenderer!,
+                mirror: true,
                 objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
               ),
             ),
           ),
+        ],
         if (widget.isGroupLobby)
           Align(
             alignment: Alignment.topCenter,
@@ -128,7 +167,7 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeOut,
           child: _CallControlButton(
-            onPressed: () => widget.onReport(data.profile.uid),
+            onPressed: () => widget.onReport(tempFirstUser.profile.uid),
             scrimColor: const Color.fromARGB(0xFF, 0xFF, 0x00, 0x00),
             size: 56,
             child: Center(
@@ -190,7 +229,7 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (widget.localRenderer != null)
+              if (!groupCall && widget.localRenderer != null)
                 Container(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
@@ -240,8 +279,8 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
                       ),
                     ),
                     _CallControlButton(
-                      onPressed: data.rekindle != null
-                          ? () => widget.onConnect(data.profile.uid)
+                      onPressed: tempFirstUser.rekindle != null
+                          ? () => widget.onConnect(tempFirstUser.profile.uid)
                           : null,
                       size: 56,
                       child: const Icon(Icons.person_add),
@@ -257,19 +296,19 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
             builder: (context) {
               final style = Theming.of(context).text.headline;
               final text = connectionStateText(
-                connectionState: data.connectionState,
-                name: data.profile.name,
+                connectionState: tempFirstUser.connectionState,
+                name: tempFirstUser.profile.name,
               );
-              if (data.connectionState == PhoneConnectionState.none) {
+              if (tempFirstUser.connectionState == PhoneConnectionState.none) {
                 return const SizedBox.shrink();
               } else {
                 return AnimatedOpacity(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOut,
-                  opacity:
-                      data.connectionState == PhoneConnectionState.connected
-                          ? 0.0
-                          : 1.0,
+                  opacity: tempFirstUser.connectionState ==
+                          PhoneConnectionState.connected
+                      ? 0.0
+                      : 1.0,
                   child: Text(
                     text,
                     style: style,
