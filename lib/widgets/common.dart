@@ -3,20 +3,44 @@ import 'package:flutter/widgets.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 
-/// Prominent button with a horizontal pink gradient styling, comes in three
-/// sizes.
-class PrimaryButton extends StatelessWidget {
+/// Prominent button with a horizontal gradient styling.
+class SignificantButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final Widget child;
   final BorderRadius borderRadius;
   final double height;
+  final Gradient gradient;
 
-  const PrimaryButton.large({
+  const SignificantButton.pink({
     Key? key,
     required this.onPressed,
     required this.child,
-  })  : borderRadius = const BorderRadius.all(Radius.circular(32)),
-        height = 64.0,
+  })  : borderRadius = const BorderRadius.all(Radius.circular(94)),
+        height = 69.0,
+        gradient = const LinearGradient(
+          colors: [
+            Color.fromRGBO(0xFF, 0xA1, 0xA1, 1.0),
+            Color.fromRGBO(0xFF, 0xCC, 0xCC, 1.0),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        super(key: key);
+
+  const SignificantButton.blue({
+    Key? key,
+    required this.onPressed,
+    required this.child,
+  })  : borderRadius = const BorderRadius.all(Radius.circular(94)),
+        height = 69.0,
+        gradient = const LinearGradient(
+          colors: [
+            Color.fromRGBO(0x26, 0xC4, 0xE6, 1.0),
+            Color.fromRGBO(0x7B, 0xDC, 0xF1, 1.0),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
         super(key: key);
 
   @override
@@ -29,20 +53,9 @@ class PrimaryButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: borderRadius,
             boxShadow: [
-              BoxShadow(
-                color: Theming.of(context).shadow,
-                offset: const Offset(0.0, 4.0),
-                blurRadius: 1.0,
-              ),
+              Theming.of(context).boxShadow,
             ],
-            gradient: LinearGradient(
-              colors: [
-                Theming.of(context).datingRed2,
-                Theming.of(context).datingRed1,
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
+            gradient: gradient,
           ),
           child: Padding(
             padding: const EdgeInsets.only(top: 4.0),

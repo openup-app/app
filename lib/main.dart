@@ -19,6 +19,11 @@ import 'package:openup/private_profile_screen.dart';
 import 'package:openup/public_profile_edit_screen.dart';
 import 'package:openup/public_profile_screen.dart';
 import 'package:openup/rekindle_screen.dart';
+import 'package:openup/sign_up_audio_bio_screen.dart';
+import 'package:openup/sign_up_info_screen.dart';
+import 'package:openup/sign_up_photos_screen.dart';
+import 'package:openup/sign_up_private_profile_screen.dart';
+import 'package:openup/sign_up_welcome_info.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/solo_double_screen.dart';
 import 'package:openup/lobby_screen.dart';
@@ -122,10 +127,35 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     settings: settings,
                     builder: (_) => const ForgotPasswordScreen(),
                   );
+                case 'sign-up-info':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (_) => const SignUpInfoScreen(),
+                  );
+                case 'sign-up-private-profile':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (_) => const SignUpPrivateProfileScreen(),
+                  );
+                case 'sign-up-photos':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (_) => const SignUpPhotosScreen(),
+                  );
+                case 'sign-up-audio-bio':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (_) => const SignUpAudioBioScreen(),
+                  );
+                case 'sign-up-welcome-info':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (_) => const SignUpWelcomeInfoScreen(),
+                  );
                 case 'home':
                   return _buildPageRoute(
                     settings: settings,
-                    transitionsBuilder: topToBottomPageTransition,
+                    transitionsBuilder: fadePageTransition,
                     builder: (_) => const HomeScreen(),
                   );
                 case 'friends-solo-double':

@@ -66,6 +66,7 @@ flutter:
     - assets/images/friends_with_friends.gif
     - assets/images/double_dating.gif
     - assets/images/chevron_right.png
+    - assets/images/close_circle.png
   fonts:
     - family: Myriad
       fonts:

@@ -209,7 +209,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                 ),
               ),
               const SizedBox(height: 22),
-              PrimaryButton.large(
+              SignificantButton.pink(
                 child: _submitting
                     ? const CircularProgressIndicator()
                     : const Text('Send code'),

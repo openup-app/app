@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openup/api/users/preferences.dart';
 import 'package:openup/widgets/theming.dart';
 
 class LabeledRangedSlider extends StatelessWidget {
@@ -71,6 +72,69 @@ class LabeledRangedSlider extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class PreferencesSlider extends StatelessWidget {
+  final int value;
+  final int min;
+  final int max;
+  final void Function(int value) onUpdate;
+  const PreferencesSlider({
+    Key? key,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onUpdate,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Slider(
+      activeColor: const Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
+      inactiveColor: const Color.fromARGB(0x88, 0xFF, 0x71, 0x71),
+      divisions: max - min,
+      value: value.toDouble(),
+      min: min.toDouble(),
+      max: max.toDouble(),
+      onChanged: (value) => onUpdate(value.toInt()),
+    );
+  }
+}
+
+class PreferencesRangeSlider extends StatelessWidget {
+  final Range values;
+  final int min;
+  final int max;
+  final void Function(Range range) onUpdate;
+  const PreferencesRangeSlider({
+    Key? key,
+    required this.values,
+    required this.min,
+    required this.max,
+    required this.onUpdate,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: LabeledRangedSlider(
+        values: RangeValues(values.min.toDouble(), values.max.toDouble()),
+        min: min.toDouble(),
+        max: max.toDouble(),
+        activeColor: const Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
+        inactiveColor: const Color.fromARGB(0x88, 0xFF, 0x71, 0x71),
+        onChanged: (values) {
+          onUpdate(
+            Range(
+              min: values.start.toInt(),
+              max: values.end.toInt(),
             ),
           );
         },

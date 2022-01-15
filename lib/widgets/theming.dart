@@ -19,6 +19,12 @@ class ThemingData {
 
   final shadow = const Color.fromARGB(0x40, 0x00, 0x00, 0x00);
 
+  final boxShadow = const BoxShadow(
+    color: Color.fromRGBO(0, 0, 0, 0.25),
+    offset: Offset(0.0, 4.0),
+    blurRadius: 4.0,
+  );
+
   final text = const TextTheme._();
 
   const ThemingData._();

@@ -96,7 +96,7 @@ class _PhoneVerificationScreenState
                 ),
               ),
               const SizedBox(height: 22),
-              PrimaryButton.large(
+              SignificantButton.pink(
                 onPressed: _submitting ? null : _submit,
                 child: _submitting
                     ? const CircularProgressIndicator()
@@ -159,7 +159,7 @@ class _PhoneVerificationScreenState
       }
 
       Navigator.of(context).popUntil((route) => route.isFirst);
-      Navigator.of(context).pushReplacementNamed('home');
+      Navigator.of(context).pushReplacementNamed('/');
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
