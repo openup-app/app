@@ -37,14 +37,17 @@ class _SignUpAudioBioScreenState extends State<SignUpAudioBioScreen> {
         const SizedBox(height: 12),
         Align(
           alignment: Alignment.center,
-          child: Text(
-            'Our bio design is different than any other on the internet. Record your bio for up to 10 seconds, say anything you want and have fun!\n\n(Fill in your name by simply tapping on name)',
-            textAlign: TextAlign.center,
-            style: Theming.of(context).text.body.copyWith(
-                  color: const Color.fromRGBO(0x99, 0x99, 0x99, 1.0),
-                  fontWeight: FontWeight.w400,
-                  fontSize: 18,
-                ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              'Our bio design is different than any other on the internet. Record your bio for up to 10 seconds, say anything you want and have fun!\n\n(Fill in your name by simply tapping on name)',
+              textAlign: TextAlign.left,
+              style: Theming.of(context).text.body.copyWith(
+                    color: const Color.fromRGBO(0x99, 0x99, 0x99, 1.0),
+                    fontWeight: FontWeight.w400,
+                    fontSize: 18,
+                  ),
+            ),
           ),
         ),
         Expanded(
@@ -77,7 +80,7 @@ class _SignUpAudioBioScreenState extends State<SignUpAudioBioScreen> {
             ),
           ),
         ),
-        SignificantButton.pink(
+        SignificantButton.blue(
           onPressed: () {
             Navigator.of(context).pushNamed('sign-up-welcome-info');
           },

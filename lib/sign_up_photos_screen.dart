@@ -46,12 +46,15 @@ class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
         ),
         const Expanded(
           child: Center(
-            child: PhotoGrid(
-              horizontal: true,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: PhotoGrid(
+                horizontal: true,
+              ),
             ),
           ),
         ),
-        SignificantButton.pink(
+        SignificantButton.blue(
           onPressed: () {
             Navigator.of(context).pushNamed('sign-up-audio-bio');
           },

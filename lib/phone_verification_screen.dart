@@ -60,7 +60,7 @@ class _PhoneVerificationScreenState
               SizedBox(
                 height: MediaQuery.of(context).padding.top,
               ),
-              const SizedBox(height: 86),
+              const Spacer(),
               const TitleAndTagline(),
               const SizedBox(height: 10),
               Text(
@@ -102,7 +102,6 @@ class _PhoneVerificationScreenState
                     ? const CircularProgressIndicator()
                     : const Text('Verify account'),
               ),
-              const SizedBox(height: 15),
               const Spacer(),
               const MaleFemaleConnectionImageApart(),
             ],

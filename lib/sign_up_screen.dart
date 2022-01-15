@@ -86,7 +86,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
               SizedBox(
                 height: MediaQuery.of(context).padding.top,
               ),
-              const SizedBox(height: 86),
+              const Spacer(),
               const TitleAndTagline(),
               const SizedBox(height: 10),
               Stack(
@@ -215,7 +215,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                     : const Text('Send code'),
                 onPressed: _submitting || !_valid ? null : _submit,
               ),
-              const SizedBox(height: 15),
               const Spacer(),
               const MaleFemaleConnectionImageApart(),
             ],

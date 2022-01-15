@@ -127,7 +127,11 @@ class PhotoGrid extends StatelessWidget {
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: horizontal
+                      ? (i == 0
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start)
+                      : CrossAxisAlignment.stretch,
                   children: [
                     for (var j = 0; j < (horizontal ? 3 : 2); j++)
                       Expanded(
@@ -146,9 +150,11 @@ class PhotoGrid extends StatelessWidget {
                                 }
                               },
                               child: Container(
+                                constraints:
+                                    const BoxConstraints(maxHeight: 145),
                                 margin: const EdgeInsets.symmetric(
                                   horizontal: 4,
-                                  vertical: 8,
+                                  vertical: 12,
                                 ),
                                 clipBehavior: Clip.hardEdge,
                                 decoration: BoxDecoration(
