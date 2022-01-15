@@ -104,13 +104,7 @@ class _PhoneVerificationScreenState
               ),
               const SizedBox(height: 15),
               const Spacer(),
-              const Hero(
-                tag: 'male_female_connection',
-                child: SizedBox(
-                  height: 125,
-                  child: MaleFemaleConnectionImageApart(),
-                ),
-              ),
+              const MaleFemaleConnectionImageApart(),
             ],
           ),
         ),

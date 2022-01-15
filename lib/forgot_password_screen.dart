@@ -80,10 +80,7 @@ class ForgotPasswordScreen extends StatelessWidget {
               height: 17 + 22 + 25 + 19,
             ),
             const Expanded(
-              child: Hero(
-                tag: 'male_female_connection',
-                child: MaleFemaleConnectionImageApart(),
-              ),
+              child: MaleFemaleConnectionImageApart(),
             ),
           ],
         ),

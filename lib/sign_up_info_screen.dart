@@ -44,13 +44,7 @@ class SignUpInfoScreen extends StatelessWidget {
         ),
         const Align(
           alignment: Alignment.bottomCenter,
-          child: Hero(
-            tag: 'male_female_connection',
-            child: SizedBox(
-              height: 125,
-              child: MaleFemaleConnectionImageApart(),
-            ),
-          ),
+          child: MaleFemaleConnectionImageApart(),
         ),
       ],
     );

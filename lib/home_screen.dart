@@ -106,9 +106,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     children: [
                       const Spacer(),
                       const SizedBox(height: 120),
-                      const SizedBox(
+                      Image.asset(
+                        'assets/images/friends.gif',
                         height: 120,
-                        child: MaleFemaleConnectionImage(),
                       ),
                       const SizedBox(height: 24),
                       Container(

@@ -33,7 +33,6 @@ import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/menu_screen.dart';
 import 'package:openup/widgets/connections_list.dart';
-import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -178,9 +177,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         child: SoloDoubleScreen(
                           labelUpper: 'meet\npeople',
                           labelLower: 'meet people\nwith friends',
-                          imageUpper: const SizedBox(
+                          imageUpper: Image.asset(
+                            'assets/images/friends.gif',
                             height: 115,
-                            child: MaleFemaleConnectionImage(),
                           ),
                           imageLower: SizedBox(
                             height: 100,
@@ -219,10 +218,11 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         ),
                         child: MenuScreen(
                           label: 'meet people',
-                          image: const SizedBox(
-                            height: 90,
-                            child: MaleFemaleConnectionImage(
-                              offset: Offset(0.0, 13.0),
+                          image: Transform.translate(
+                            offset: const Offset(0.0, 12.0),
+                            child: Image.asset(
+                              'assets/images/friends.gif',
+                              height: 90,
                             ),
                           ),
                           onPressedVoiceCall: () =>
@@ -302,11 +302,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         child: PreferencesScreen(
                           initialPreferences: args,
                           title: 'meet people',
-                          image: const SizedBox(
-                            width: 125,
-                            height: 60,
-                            child: MaleFemaleConnectionImage(
-                              offset: Offset(0.0, 6.0),
+                          image: Transform.translate(
+                            offset: const Offset(0.0, 6.0),
+                            child: Image.asset(
+                              'assets/images/friends.gif',
+                              width: 125,
+                              height: 60,
                             ),
                           ),
                           updatePreferences: (usersApi, uid, preferences) =>

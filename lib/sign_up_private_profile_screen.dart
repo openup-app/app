@@ -197,19 +197,17 @@ class _SignUpPrivateProfileScreenState
             ),
           ),
         ),
-        SignificantButton.pink(
-          onPressed: () {
-            Navigator.of(context).pushNamed('sign-up-photos');
-          },
-          child: const Text('Continue'),
-        ),
-        const SizedBox(height: 32),
-        const Hero(
-          tag: 'male_female_connection',
-          child: SizedBox(
-            height: 125,
-            child: MaleFemaleConnectionImageApart(),
-          ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SignificantButton.pink(
+              onPressed: () {
+                Navigator.of(context).pushNamed('sign-up-photos');
+              },
+              child: const Text('Continue'),
+            ),
+            const MaleFemaleConnectionImageApart(),
+          ],
         ),
       ],
     );

@@ -147,10 +147,11 @@ class RekindleScreenPrecached extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (rekindle.purpose == Purpose.friends)
-                const SizedBox(
+                SizedBox(
                   height: 50,
-                  child: MaleFemaleConnectionImage(
-                    color: Color.fromARGB(0xFF, 0xAA, 0xDD, 0xED),
+                  child: Image.asset(
+                    'assets/images/friends.gif',
+                    color: const Color.fromARGB(0xFF, 0xAA, 0xDD, 0xED),
                   ),
                 )
               else

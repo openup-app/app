@@ -57,14 +57,7 @@ class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
           },
           child: const Text('Continue'),
         ),
-        const SizedBox(height: 32),
-        const Hero(
-          tag: 'male_female_connection',
-          child: SizedBox(
-            height: 125,
-            child: MaleFemaleConnectionImageApart(),
-          ),
-        ),
+        const MaleFemaleConnectionImageApart(),
       ],
     );
   }

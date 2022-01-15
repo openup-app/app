@@ -1,43 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-class MaleFemaleConnectionImage extends StatelessWidget {
-  final Color? color;
-  final Offset offset;
-  const MaleFemaleConnectionImage({
-    Key? key,
-    this.color,
-    this.offset = Offset.zero,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.translate(
-      offset: offset,
-      child: Image.asset('assets/images/friends.gif'),
-    );
-  }
-}
-
 class MaleFemaleConnectionImageApart extends StatelessWidget {
   const MaleFemaleConnectionImageApart({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Image.asset(
-            'assets/images/connection_female.png',
-            fit: BoxFit.fitHeight,
-          ),
-          Image.asset(
-            'assets/images/connection_male.png',
-            fit: BoxFit.fitHeight,
-          ),
-        ],
+    return Hero(
+      tag: 'male_female_connection',
+      child: SizedBox(
+        height: 180,
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          fit: StackFit.loose,
+          children: [
+            Positioned(
+              height: 210,
+              left: -115,
+              bottom: -25,
+              child: Image.asset('assets/images/friends.gif'),
+            ),
+            Positioned(
+              height: 210,
+              right: -132,
+              bottom: -25,
+              child: Image.asset('assets/images/friends.gif'),
+            ),
+          ],
+        ),
       ),
     );
   }
