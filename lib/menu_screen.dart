@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -38,12 +38,12 @@ class MenuScreen extends StatelessWidget {
     );
 
     final buttonStyle = Theming.of(context).text.bodySecondary.copyWith(
-      fontSize: 19,
+      fontSize: 24,
       shadows: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.4),
-          blurRadius: 16.0,
-          offset: const Offset(0.0, 2.0),
+          color: Colors.black.withOpacity(0.5),
+          blurRadius: 8.0,
+          offset: const Offset(2.0, 2.0),
         ),
       ],
     );
@@ -61,7 +61,7 @@ class MenuScreen extends StatelessWidget {
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            padding: const EdgeInsets.symmetric(horizontal: 22.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -108,7 +108,7 @@ class MenuScreen extends StatelessWidget {
                       ),
                   ],
                 ),
-                PrimaryIconButton(
+                _MenuButton(
                   onPressed: onPressedVoiceCall,
                   icon: Image.asset('assets/images/voice_call.png'),
                   color: MenuScreenTheme.of(context).buttonColorTop,
@@ -118,7 +118,7 @@ class MenuScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                PrimaryIconButton(
+                _MenuButton(
                   onPressed: onPressedVideoCall,
                   icon: Image.asset('assets/images/video_call.png'),
                   color: MenuScreenTheme.of(context).buttonColorMiddle,
@@ -128,7 +128,7 @@ class MenuScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                PrimaryIconButton(
+                _MenuButton(
                   onPressed: onPressedPreferences,
                   icon: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -160,6 +160,58 @@ class MenuScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Prominent button with an icon.
+class _MenuButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final Widget icon;
+  final Color color;
+  final Widget child;
+
+  const _MenuButton({
+    Key? key,
+    required this.onPressed,
+    required this.icon,
+    required this.color,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      child: Container(
+        height: 116,
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(58)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+              offset: Offset(0.0, 4.0),
+              blurRadius: 20.0,
+            ),
+          ],
+          color: color,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 4.0),
+          child: Row(
+            children: [
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 80,
+                child: icon,
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: child),
+              const SizedBox(width: 4),
+            ],
+          ),
+        ),
+      ),
+      onPressed: onPressed,
     );
   }
 }

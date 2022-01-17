@@ -32,6 +32,7 @@ import 'package:openup/forgot_password_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/menu_screen.dart';
+import 'package:openup/voice_call_screen_content.dart';
 import 'package:openup/widgets/connections_list.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/theming.dart';
@@ -163,14 +164,48 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     builder: (context) {
                       return SoloDoubleScreenTheme(
                         themeData: const SoloDoubleScreenThemeData(
-                          upperGradientInner:
-                              Color.fromARGB(0xFF, 0xCE, 0xF6, 0xFF),
-                          upperGradientOuter:
-                              Color.fromARGB(0xFF, 0x1C, 0xC1, 0xE4),
-                          lowerGradientInner:
-                              Color.fromARGB(0xFF, 0xCE, 0xF6, 0xFF),
-                          lowerGradientOuter:
-                              Color.fromARGB(0xFF, 0x01, 0xAF, 0xD5),
+                          upperGradients: [
+                            RadialGradient(
+                              colors: [
+                                Color.fromRGBO(0xB1, 0xEF, 0xFD, 1.0),
+                                Color.fromRGBO(0xCA, 0xF5, 0xFF, 0.0),
+                              ],
+                            ),
+                            RadialGradient(
+                              colors: [
+                                Color.fromRGBO(0x14, 0xCE, 0xFF, 0.5),
+                                Color.fromRGBO(0x00, 0xB3, 0xDA, 0.5),
+                              ],
+                            ),
+                            // Solid color
+                            LinearGradient(
+                              colors: [
+                                Color.fromRGBO(0x81, 0xE8, 0xFF, 1.0),
+                                Color.fromRGBO(0x81, 0xE8, 0xFF, 1.0),
+                              ],
+                            ),
+                          ],
+                          lowerGradients: [
+                            RadialGradient(
+                              colors: [
+                                Color.fromRGBO(0xA6, 0xEF, 0xFF, 1.0),
+                                Color.fromRGBO(0xCA, 0xF5, 0xFF, 0.0),
+                              ],
+                            ),
+                            RadialGradient(
+                              colors: [
+                                Color.fromRGBO(0x34, 0xD5, 0xFF, 0.5),
+                                Color.fromRGBO(0x00, 0xB3, 0xDA, 0.5),
+                              ],
+                            ),
+                            // Solid color
+                            LinearGradient(
+                              colors: [
+                                Color.fromRGBO(0x02, 0xAB, 0xD0, 1.0),
+                                Color.fromRGBO(0x02, 0xAB, 0xD0, 1.0),
+                              ],
+                            ),
+                          ],
                           profileButtonColor:
                               Color.fromARGB(0xFF, 0x11, 0x8E, 0xDD),
                         ),
@@ -203,7 +238,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       return MenuScreenTheme(
                         themeData: const MenuScreenThemeData(
                           backgroundGradientBottom:
-                              Color.fromARGB(0xFF, 0xDD, 0xFB, 0xFF),
+                              Color.fromRGBO(0xAA, 0xF0, 0xFF, 0.12),
                           titleColor: Color.fromARGB(0xFF, 0x00, 0xD1, 0xFF),
                           titleShadowColor:
                               Color.fromARGB(0xAA, 0x00, 0xD1, 0xFF),
@@ -248,7 +283,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       return MenuScreenTheme(
                         themeData: const MenuScreenThemeData(
                           backgroundGradientBottom:
-                              Color.fromARGB(0xFF, 0xDD, 0xFB, 0xFF),
+                              Color.fromRGBO(0xAA, 0xF0, 0xFF, 0.12),
                           titleColor: Color.fromARGB(0xFF, 0x00, 0xD1, 0xFF),
                           titleShadowColor:
                               Color.fromARGB(0xAA, 0x00, 0xD1, 0xFF),
@@ -365,14 +400,44 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
                     builder: (_) {
-                      return CallScreen(
-                        rid: args.rid,
-                        host: host,
-                        socketPort: socketPort,
-                        video: false,
-                        profiles: args.profiles,
-                        rekindles: args.rekindles,
-                        groupLobby: args.groupLobby,
+                      return VoiceCallScreenTheme(
+                        themeData: const VoiceCallScreenThemeData(
+                          backgroundGradient: LinearGradient(
+                            colors: [
+                              Color.fromRGBO(0x02, 0x4A, 0x5A, 0.4),
+                              Color.fromRGBO(0x01, 0x43, 0x52, 0.9),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          panelGradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+                              Color.fromRGBO(0x00, 0xAA, 0xCF, 0.5),
+                            ],
+                          ),
+                          endCallGradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+                              Color.fromRGBO(0x00, 0x92, 0xB2, 0.5),
+                            ],
+                          ),
+                          endCallSymbolColor:
+                              Color.fromRGBO(0x00, 0x6C, 0xA1, 1.0),
+                        ),
+                        child: CallScreen(
+                          rid: args.rid,
+                          host: host,
+                          socketPort: socketPort,
+                          video: false,
+                          profiles: args.profiles,
+                          rekindles: args.rekindles,
+                          groupLobby: args.groupLobby,
+                        ),
                       );
                     },
                   );
@@ -399,14 +464,52 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     builder: (context) {
                       return SoloDoubleScreenTheme(
                         themeData: const SoloDoubleScreenThemeData(
-                          upperGradientInner:
-                              Color.fromARGB(0xFF, 0xFF, 0xE8, 0xE8),
-                          upperGradientOuter:
-                              Color.fromARGB(0xFF, 0xFF, 0xB2, 0xB2),
-                          lowerGradientInner:
-                              Color.fromARGB(0xFF, 0xFF, 0xE6, 0xE6),
-                          lowerGradientOuter:
-                              Color.fromARGB(0xFF, 0xEE, 0x87, 0x87),
+                          upperGradients: [
+                            RadialGradient(
+                              colors: [
+                                Color.fromRGBO(0xFF, 0xE8, 0xE8, 1.0),
+                                Color.fromRGBO(0xFF, 0xB0, 0xB0, 0.0),
+                              ],
+                            ),
+                            RadialGradient(
+                              colors: [
+                                Color.fromRGBO(0xFF, 0xC7, 0xC7, 0.5),
+                                Color.fromRGBO(0xFF, 0xB4, 0xB4, 0.25),
+                                Color.fromRGBO(0xFF, 0xD4, 0xD4, 0.125),
+                                Color.fromRGBO(0xFD, 0xEF, 0xEF, 0.0),
+                              ],
+                            ),
+                            // Solid color
+                            LinearGradient(
+                              colors: [
+                                Color.fromRGBO(0xFF, 0xB2, 0xB2, 1.0),
+                                Color.fromRGBO(0xFF, 0xB2, 0xB2, 1.0),
+                              ],
+                            ),
+                          ],
+                          lowerGradients: [
+                            RadialGradient(
+                              colors: [
+                                Color.fromRGBO(0xFF, 0xED, 0xED, 1.0),
+                                Color.fromRGBO(0xFF, 0xB0, 0xB0, 0.0),
+                              ],
+                            ),
+                            RadialGradient(
+                              colors: [
+                                Color.fromRGBO(0xFF, 0xA8, 0xA8, 0.50),
+                                Color.fromRGBO(0xFF, 0xB4, 0xB4, 0.25),
+                                Color.fromRGBO(0xFF, 0xA5, 0xA5, 0.125),
+                                Color.fromRGBO(0xFF, 0x90, 0x90, 0.0),
+                              ],
+                            ),
+                            // Solid color
+                            LinearGradient(
+                              colors: [
+                                Color.fromRGBO(0xEE, 0x87, 0x87, 1.0),
+                                Color.fromRGBO(0xEE, 0x87, 0x87, 1.0),
+                              ],
+                            ),
+                          ],
                           profileButtonColor:
                               Color.fromARGB(0xFF, 0xFF, 0x8A, 0x8A),
                           homeButtonColor:
@@ -444,7 +547,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       return MenuScreenTheme(
                         themeData: const MenuScreenThemeData(
                           backgroundGradientBottom:
-                              Color.fromARGB(0xFF, 0xFF, 0xE2, 0xE2),
+                              Color.fromRGBO(0xFF, 0xD2, 0xD2, 1.0),
                           titleColor: Color.fromARGB(0xFF, 0xFD, 0x65, 0x65),
                           titleShadowColor:
                               Color.fromARGB(0xAA, 0xF0, 0x59, 0x59),
@@ -600,6 +703,70 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             );
                           },
                         ),
+                      );
+                    },
+                  );
+                case 'dating-voice-call':
+                  final args = settings.arguments as CallPageArguments;
+                  return _buildPageRoute(
+                    settings: settings,
+                    transitionsBuilder: fadePageTransition,
+                    builder: (_) {
+                      return VoiceCallScreenTheme(
+                        themeData: const VoiceCallScreenThemeData(
+                          backgroundGradient: LinearGradient(
+                            colors: [
+                              Color.fromRGBO(0x53, 0x01, 0x01, 0.4),
+                              Color.fromRGBO(0x25, 0x00, 0x01, 0.9),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          panelGradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+                              Color.fromRGBO(0xFF, 0x00, 0x00, 0.5),
+                            ],
+                          ),
+                          endCallGradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+                              Color.fromRGBO(0xFF, 0x4A, 0x4A, 0.5),
+                            ],
+                          ),
+                          endCallSymbolColor:
+                              Color.fromRGBO(0x9E, 0x00, 0x00, 1.0),
+                        ),
+                        child: CallScreen(
+                          rid: args.rid,
+                          host: host,
+                          socketPort: socketPort,
+                          video: false,
+                          profiles: args.profiles,
+                          rekindles: args.rekindles,
+                          groupLobby: args.groupLobby,
+                        ),
+                      );
+                    },
+                  );
+                case 'dating-video-call':
+                  final args = settings.arguments as CallPageArguments;
+                  return _buildPageRoute(
+                    settings: settings,
+                    transitionsBuilder: fadePageTransition,
+                    builder: (_) {
+                      return CallScreen(
+                        rid: args.rid,
+                        host: host,
+                        socketPort: socketPort,
+                        video: true,
+                        profiles: args.profiles,
+                        rekindles: args.rekindles,
+                        groupLobby: args.groupLobby,
                       );
                     },
                   );

@@ -1,11 +1,15 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/slide_control.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/time_remaining.dart';
+
+part 'voice_call_screen_content.freezed.dart';
 
 /// Voice call display and controls.
 ///
@@ -67,15 +71,8 @@ class VoiceCallScreenContent extends StatelessWidget {
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 32),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color.fromARGB(0xAA, 0x02, 0x4A, 0x5A),
-                Color.fromARGB(0xAA, 0x9C, 0xED, 0xFF),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+          decoration: BoxDecoration(
+            gradient: VoiceCallScreenTheme.of(context).backgroundGradient,
           ),
           child: Column(
             children: [
@@ -87,14 +84,14 @@ class VoiceCallScreenContent extends StatelessWidget {
                     borderRadius: const BorderRadius.all(
                       Radius.circular(48),
                     ),
-                    boxShadow: [
+                    gradient: VoiceCallScreenTheme.of(context).panelGradient,
+                    boxShadow: const [
                       BoxShadow(
-                        color: Theming.of(context).shadow,
-                        offset: const Offset(0.0, 4.0),
-                        blurRadius: 2,
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                        offset: Offset(0.0, 4.0),
+                        blurRadius: 10,
                       ),
                     ],
-                    color: const Color.fromARGB(0xAA, 0x01, 0x55, 0x67),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -104,13 +101,13 @@ class VoiceCallScreenContent extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           if (endTime == null)
-                            const SizedBox(height: 75)
+                            const SizedBox(height: 82)
                           else
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 _ButtonWithText(
-                                  icon: const Icon(Icons.alarm_add),
+                                  icon: const IconWithShadow(Icons.alarm_add),
                                   label: 'add time',
                                   onPressed: hasSentTimeRequest
                                       ? null
@@ -121,7 +118,16 @@ class VoiceCallScreenContent extends StatelessWidget {
                             ),
                           Text(
                             profile.name,
-                            style: Theming.of(context).text.headline,
+                            style: Theming.of(context).text.headline.copyWith(
+                              fontSize: 36,
+                              shadows: [
+                                const Shadow(
+                                  offset: Offset(0.0, 4.0),
+                                  blurRadius: 4,
+                                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                                ),
+                              ],
+                            ),
                           ),
                           if (endTime != null)
                             TimeRemaining(
@@ -130,18 +136,36 @@ class VoiceCallScreenContent extends StatelessWidget {
                               builder: (context, remaining) {
                                 return Text(
                                   remaining,
-                                  style: Theming.of(context).text.body,
+                                  style: Theming.of(context)
+                                      .text
+                                      .bodySecondary
+                                      .copyWith(
+                                    fontSize: 24,
+                                    shadows: [
+                                      const Shadow(
+                                        color: Color.fromRGBO(
+                                            0x00, 0x00, 0x00, 0.25),
+                                        blurRadius: 4,
+                                        offset: Offset(0.0, 4.0),
+                                      ),
+                                    ],
+                                  ),
                                 );
                               },
                             ),
                         ],
                       ),
-                      const SizedBox(height: 40),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxHeight: 56,
+                          minHeight: 20,
+                        ),
+                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _ButtonWithText(
-                            icon: const Icon(Icons.person_add),
+                            icon: const IconWithShadow(Icons.person_add),
                             label: 'Connect',
                             onPressed: data.rekindle != null
                                 ? () => onConnect(profile.uid)
@@ -157,19 +181,24 @@ class VoiceCallScreenContent extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 40),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxHeight: 90,
+                          minHeight: 40,
+                        ),
+                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _ButtonWithText(
                             icon: muted
-                                ? const Icon(Icons.mic_off)
-                                : const Icon(Icons.mic),
+                                ? const IconWithShadow(Icons.mic_off)
+                                : const IconWithShadow(Icons.mic),
                             label: 'Mute',
                             onPressed: onToggleMute,
                           ),
                           _ButtonWithText(
-                            icon: Icon(
+                            icon: IconWithShadow(
                               Icons.volume_up,
                               color: speakerphone
                                   ? const Color.fromARGB(0xFF, 0x00, 0xFF, 0x19)
@@ -189,11 +218,11 @@ class VoiceCallScreenContent extends StatelessWidget {
               SlideControl(
                 thumbContents: Icon(
                   Icons.call_end,
-                  color: Theming.of(context).friendBlue4,
+                  color: VoiceCallScreenTheme.of(context).endCallSymbolColor,
                   size: 40,
                 ),
                 trackContents: const Text('slide to end call'),
-                trackColor: const Color.fromARGB(0xFF, 0x01, 0x55, 0x67),
+                trackGradient: VoiceCallScreenTheme.of(context).endCallGradient,
                 onSlideComplete: onHangUp,
               ),
               const SizedBox(height: 50),
@@ -219,25 +248,72 @@ class _ButtonWithText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 48,
-              maxHeight: 48,
-            ),
-            child: IconTheme(
-              data: IconTheme.of(context).copyWith(size: 48),
-              child: icon,
-            ),
+    return SizedBox(
+      width: 90,
+      child: Center(
+        child: Button(
+          onPressed: onPressed,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 48,
+                  maxHeight: 48,
+                ),
+                child: IconTheme(
+                  data: IconTheme.of(context).copyWith(size: 48),
+                  child: icon,
+                ),
+              ),
+              const SizedBox(height: 15),
+              Text(
+                label,
+                style: Theming.of(context).text.bodySecondary.copyWith(
+                  fontSize: 20,
+                  shadows: [
+                    const Shadow(
+                      offset: Offset(0.0, 4.0),
+                      blurRadius: 4,
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          Text(label, style: Theming.of(context).text.button),
-        ],
+        ),
       ),
     );
   }
+}
+
+class VoiceCallScreenTheme extends InheritedWidget {
+  final VoiceCallScreenThemeData themeData;
+
+  const VoiceCallScreenTheme({
+    Key? key,
+    required Widget child,
+    required this.themeData,
+  }) : super(key: key, child: child);
+
+  static VoiceCallScreenThemeData of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<VoiceCallScreenTheme>()!
+        .themeData;
+  }
+
+  @override
+  bool updateShouldNotify(VoiceCallScreenTheme oldWidget) =>
+      oldWidget.themeData != themeData;
+}
+
+@freezed
+class VoiceCallScreenThemeData with _$VoiceCallScreenThemeData {
+  const factory VoiceCallScreenThemeData({
+    required LinearGradient backgroundGradient,
+    required LinearGradient panelGradient,
+    required LinearGradient endCallGradient,
+    required Color endCallSymbolColor,
+  }) = _VoiceCallScreenThemeData;
 }

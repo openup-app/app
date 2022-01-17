@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:openup/widgets/theming.dart';
 
 class SlideControl extends StatefulWidget {
@@ -66,11 +65,11 @@ class _SlideControlState extends State<SlideControl>
             border: widget.trackBorder
                 ? Border.all(color: Colors.white, width: 4)
                 : null,
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: Theming.of(context).shadow,
-                offset: const Offset(0.0, 4.0),
-                blurRadius: 2,
+                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.50),
+                offset: Offset(0.0, 4.0),
+                blurRadius: 10,
               ),
             ],
             gradient: widget.trackGradient,

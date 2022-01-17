@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -50,13 +49,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onPressed: () =>
                     Navigator.of(context).pushNamed('dating-solo-double'),
                 child: DecoratedBox(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        const Color.fromARGB(0xFF, 0xFF, 0x83, 0x83),
-                        Theming.of(context).datingRed1,
+                        Color.fromRGBO(0xFF, 0x83, 0x83, 1.0),
+                        Color.fromRGBO(0xFF, 0xC8, 0xC8, 1.0),
                       ],
                     ),
                   ),
@@ -92,13 +91,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onPressed: () =>
                     Navigator.of(context).pushNamed('friends-solo-double'),
                 child: DecoratedBox(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Theming.of(context).friendBlue1,
-                        Theming.of(context).friendBlue2,
+                        Color.fromRGBO(0xB7, 0xF2, 0xFF, 1.0),
+                        Color.fromRGBO(0x00, 0xB9, 0xE2, 1.0),
                       ],
                     ),
                   ),

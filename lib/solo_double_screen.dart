@@ -27,6 +27,8 @@ class SoloDoubleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final upperGradients = SoloDoubleScreenTheme.of(context).upperGradients;
+    final lowerGradients = SoloDoubleScreenTheme.of(context).lowerGradients;
     return Stack(
       children: [
         Column(
@@ -35,70 +37,70 @@ class SoloDoubleScreen extends StatelessWidget {
             Expanded(
               child: Button(
                 onPressed: onPressedUpper,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      colors: [
-                        SoloDoubleScreenTheme.of(context).upperGradientInner,
-                        SoloDoubleScreenTheme.of(context).upperGradientOuter,
-                      ],
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    for (var gradient in upperGradients.reversed)
+                      DecoratedBox(
+                        decoration: BoxDecoration(gradient: gradient),
+                      ),
+                    Align(
+                      alignment: const Alignment(0.0, -0.4),
+                      child: imageUpper,
                     ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      imageUpper,
-                      const SizedBox(height: 24),
-                      Text(
+                    Align(
+                      alignment: const Alignment(0.0, 0.6),
+                      child: Text(
                         labelUpper,
                         textAlign: TextAlign.center,
                         style: Theming.of(context).text.large.copyWith(
                           shadows: [
-                            BoxShadow(
-                              color: Theming.of(context).shadow,
+                            const BoxShadow(
+                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
                               spreadRadius: 0.0,
-                              blurRadius: 32.0,
-                            )
+                              blurRadius: 10.0,
+                              offset: Offset(2.0, 2.0),
+                            ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
             Expanded(
               child: Button(
                 onPressed: onPressedLower,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      colors: [
-                        SoloDoubleScreenTheme.of(context).lowerGradientInner,
-                        SoloDoubleScreenTheme.of(context).lowerGradientOuter,
-                      ],
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    for (var gradient in lowerGradients.reversed)
+                      DecoratedBox(
+                        decoration: BoxDecoration(gradient: gradient),
+                      ),
+                    Align(
+                      alignment: const Alignment(0.0, -0.4),
+                      child: imageLower,
                     ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      imageLower,
-                      const SizedBox(height: 24),
-                      Text(
+                    Align(
+                      alignment: const Alignment(0.0, 0.6),
+                      child: Text(
                         labelLower,
                         textAlign: TextAlign.center,
                         style: Theming.of(context).text.large.copyWith(
                           shadows: [
-                            BoxShadow(
-                              color: Theming.of(context).shadow,
+                            const BoxShadow(
+                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
                               spreadRadius: 0.0,
-                              blurRadius: 32.0,
-                            )
+                              blurRadius: 10.0,
+                              offset: Offset(2.0, 2.0),
+                            ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -146,10 +148,8 @@ class SoloDoubleScreenTheme extends InheritedWidget {
 @freezed
 class SoloDoubleScreenThemeData with _$SoloDoubleScreenThemeData {
   const factory SoloDoubleScreenThemeData({
-    required Color upperGradientInner,
-    required Color upperGradientOuter,
-    required Color lowerGradientInner,
-    required Color lowerGradientOuter,
+    required List<Gradient> upperGradients,
+    required List<Gradient> lowerGradients,
     required Color profileButtonColor,
     Color? homeButtonColor,
   }) = _SoloDoubleScreenThemeData;
