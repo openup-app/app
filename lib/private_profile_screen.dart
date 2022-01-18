@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
@@ -94,241 +93,18 @@ class _PrivateProfileScreenState extends ConsumerState<PrivateProfileScreen> {
                     onUpdate: _setGender,
                   ),
                   _RadioTile(
-                    title: const Text('Trans Male'),
-                    value: Gender.transMale,
-                    notifier: _notifier,
-                    extract: (p) => p.gender,
-                    onUpdate: _setGender,
-                  ),
-                  _RadioTile(
-                    title: const Text('Trans Female'),
-                    value: Gender.transFemale,
-                    notifier: _notifier,
-                    extract: (p) => p.gender,
-                    onUpdate: _setGender,
-                  ),
-                  _RadioTile(
                     title: const Text('Non Binary'),
                     value: Gender.nonBinary,
                     notifier: _notifier,
                     extract: (p) => p.gender,
                     onUpdate: _setGender,
                   ),
-                ],
-              ),
-              ExpansionSection(
-                label: 'Religion',
-                children: [
                   _RadioTile(
-                    title: const Text('Islam'),
-                    value: 'Islam',
+                    title: const Text('Transgender'),
+                    value: Gender.transgender,
                     notifier: _notifier,
-                    extract: (p) => p.religion,
-                    onUpdate: _setReligion,
-                  ),
-                  _RadioTile(
-                    title: const Text('Hinduism'),
-                    value: 'Hinduism',
-                    notifier: _notifier,
-                    extract: (p) => p.religion,
-                    onUpdate: _setReligion,
-                  ),
-                  _RadioTile(
-                    title: const Text('Judaism'),
-                    value: 'Judaism',
-                    notifier: _notifier,
-                    extract: (p) => p.religion,
-                    onUpdate: _setReligion,
-                  ),
-                  _RadioTile(
-                    title: const Text('Sikhism'),
-                    value: 'Sikhism',
-                    notifier: _notifier,
-                    extract: (p) => p.religion,
-                    onUpdate: _setReligion,
-                  ),
-                  _RadioTile(
-                    title: const Text('Buddhism'),
-                    value: 'Buddhism',
-                    notifier: _notifier,
-                    extract: (p) => p.religion,
-                    onUpdate: _setReligion,
-                  ),
-                ],
-              ),
-              ExpansionSection(
-                label: 'Education level',
-                children: [
-                  _RadioTile(
-                    title: const Text('High School'),
-                    value: Education.highSchool,
-                    notifier: _notifier,
-                    extract: (p) => p.education,
-                    onUpdate: _setEducation,
-                  ),
-                  _RadioTile(
-                    title: const Text('Associates Degree'),
-                    value: Education.associatesDegree,
-                    notifier: _notifier,
-                    extract: (p) => p.education,
-                    onUpdate: _setEducation,
-                  ),
-                  _RadioTile(
-                    title: const Text('Bachelors Degree'),
-                    value: Education.bachelorsDegree,
-                    notifier: _notifier,
-                    extract: (p) => p.education,
-                    onUpdate: _setEducation,
-                  ),
-                  _RadioTile(
-                    title: const Text('Masters Degree'),
-                    value: Education.mastersDegree,
-                    notifier: _notifier,
-                    extract: (p) => p.education,
-                    onUpdate: _setEducation,
-                  ),
-                  _RadioTile(
-                    title: const Text('No Schooling'),
-                    value: Education.noSchooling,
-                    notifier: _notifier,
-                    extract: (p) => p.education,
-                    onUpdate: _setEducation,
-                  ),
-                ],
-              ),
-              ExpansionSection(
-                label: 'Community',
-                children: [
-                  _SelectableTile(
-                    title: const Text('Punjabi'),
-                    value: 'Punjabi',
-                    notifier: _notifier,
-                    extract: (p) => p.community,
-                    onUpdate: _setCommunity,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Black'),
-                    value: 'Black',
-                    notifier: _notifier,
-                    extract: (p) => p.community,
-                    onUpdate: _setCommunity,
-                  ),
-                  _SelectableTile(
-                    title: const Text('White'),
-                    value: 'White',
-                    notifier: _notifier,
-                    extract: (p) => p.community,
-                    onUpdate: _setCommunity,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Indian'),
-                    value: 'Indian',
-                    notifier: _notifier,
-                    extract: (p) => p.community,
-                    onUpdate: _setCommunity,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Gujarati'),
-                    value: 'Gujarati',
-                    notifier: _notifier,
-                    extract: (p) => p.community,
-                    onUpdate: _setCommunity,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Armenian'),
-                    value: 'Armenian',
-                    notifier: _notifier,
-                    extract: (p) => p.community,
-                    onUpdate: _setCommunity,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Chinese'),
-                    value: 'Chinese',
-                    notifier: _notifier,
-                    extract: (p) => p.community,
-                    onUpdate: _setCommunity,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Japanese'),
-                    value: 'Japanese',
-                    notifier: _notifier,
-                    extract: (p) => p.community,
-                    onUpdate: _setCommunity,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Lebanese'),
-                    value: 'Lebanese',
-                    notifier: _notifier,
-                    extract: (p) => p.community,
-                    onUpdate: _setCommunity,
-                  ),
-                  _SelectableTile(
-                    title: const Text('African'),
-                    value: 'African',
-                    notifier: _notifier,
-                    extract: (p) => p.community,
-                    onUpdate: _setCommunity,
-                  ),
-                ],
-              ),
-              ExpansionSection(
-                label: 'Languages',
-                children: [
-                  _SelectableTile(
-                    title: const Text('Punjabi'),
-                    value: 'Punjabi',
-                    notifier: _notifier,
-                    extract: (p) => p.language,
-                    onUpdate: _setLanguage,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Indian'),
-                    value: 'Indian',
-                    notifier: _notifier,
-                    extract: (p) => p.language,
-                    onUpdate: _setLanguage,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Gujarati'),
-                    value: 'Gujarati',
-                    notifier: _notifier,
-                    extract: (p) => p.language,
-                    onUpdate: _setLanguage,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Armenian'),
-                    value: 'Armenian',
-                    notifier: _notifier,
-                    extract: (p) => p.language,
-                    onUpdate: _setLanguage,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Chinese'),
-                    value: 'Chinese',
-                    notifier: _notifier,
-                    extract: (p) => p.language,
-                    onUpdate: _setLanguage,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Japanese'),
-                    value: 'Japanese',
-                    notifier: _notifier,
-                    extract: (p) => p.language,
-                    onUpdate: _setLanguage,
-                  ),
-                  _SelectableTile(
-                    title: const Text('Lebanese'),
-                    value: 'Lebanese',
-                    notifier: _notifier,
-                    extract: (p) => p.language,
-                    onUpdate: _setLanguage,
-                  ),
-                  _SelectableTile(
-                    title: const Text('African'),
-                    value: 'African',
-                    notifier: _notifier,
-                    extract: (p) => p.language,
-                    onUpdate: _setLanguage,
+                    extract: (p) => p.gender,
+                    onUpdate: _setGender,
                   ),
                 ],
               ),
@@ -340,7 +116,7 @@ class _PrivateProfileScreenState extends ConsumerState<PrivateProfileScreen> {
                     children: [
                       for (int i = 0; i < SkinColor.values.length; i++)
                         _RadioTile<SkinColor>(
-                          title: Text(emojiForGender(profile.gender)[i]),
+                          title: Text(genderToEmoji(profile.gender)[i]),
                           value: SkinColor.values[i],
                           notifier: _notifier,
                           extract: (p) => p.skinColor,
@@ -358,8 +134,8 @@ class _PrivateProfileScreenState extends ConsumerState<PrivateProfileScreen> {
                     builder: (context, value, child) {
                       return _Slider(
                         value: value.weight,
-                        min: 30,
-                        max: 200,
+                        min: 1,
+                        max: 10,
                         onUpdate: (weight) {
                           _notifier.value = _notifier.value.copyWith(
                             weight: weight,
@@ -378,8 +154,8 @@ class _PrivateProfileScreenState extends ConsumerState<PrivateProfileScreen> {
                     builder: (context, value, child) {
                       return _Slider(
                         value: value.height,
-                        min: 50,
-                        max: 250,
+                        min: 1,
+                        max: 10,
                         onUpdate: (height) {
                           _notifier.value = _notifier.value.copyWith(
                             height: height,
@@ -391,89 +167,70 @@ class _PrivateProfileScreenState extends ConsumerState<PrivateProfileScreen> {
                 ],
               ),
               ExpansionSection(
-                label: 'Job Occupation',
-                children: [
-                  _RadioTile(
-                    title: const Text('Accountant'),
-                    value: 'Accountant',
-                    notifier: _notifier,
-                    extract: (p) => p.occupation,
-                    onUpdate: _setOccupation,
-                  ),
-                  _RadioTile(
-                    title: const Text('Entrepreneur'),
-                    value: 'Entrepreneur',
-                    notifier: _notifier,
-                    extract: (p) => p.occupation,
-                    onUpdate: _setOccupation,
-                  ),
-                  _RadioTile(
-                    title: const Text('Oil Man'),
-                    value: 'Oil Man',
-                    notifier: _notifier,
-                    extract: (p) => p.occupation,
-                    onUpdate: _setOccupation,
-                  ),
-                  _RadioTile(
-                    title: const Text('Welder'),
-                    value: 'Welder',
-                    notifier: _notifier,
-                    extract: (p) => p.occupation,
-                    onUpdate: _setOccupation,
-                  ),
-                  _RadioTile(
-                    title: const Text('Data Scientist'),
-                    value: 'Data Scientist',
-                    notifier: _notifier,
-                    extract: (p) => p.occupation,
-                    onUpdate: _setOccupation,
-                  ),
-                ],
-              ),
-              ExpansionSection(
-                label: 'Hair Color',
+                label: 'Ethnicity',
                 children: [
                   _RadioTile(
                     title: const Text('Black'),
-                    value: HairColor.black,
+                    value: 'Black',
                     notifier: _notifier,
-                    extract: (p) => p.hairColor,
-                    onUpdate: _setHairColor,
+                    extract: (p) => p.ethnicity,
+                    onUpdate: _setEthnicity,
                   ),
                   _RadioTile(
-                    title: const Text('Blonde'),
-                    value: HairColor.blonde,
+                    title: const Text('White'),
+                    value: 'White',
                     notifier: _notifier,
-                    extract: (p) => p.hairColor,
-                    onUpdate: _setHairColor,
+                    extract: (p) => p.ethnicity,
+                    onUpdate: _setEthnicity,
                   ),
                   _RadioTile(
-                    title: const Text('Brunette'),
-                    value: HairColor.brunette,
+                    title: const Text('Indian'),
+                    value: 'Indian',
                     notifier: _notifier,
-                    extract: (p) => p.hairColor,
-                    onUpdate: _setHairColor,
+                    extract: (p) => p.ethnicity,
+                    onUpdate: _setEthnicity,
                   ),
                   _RadioTile(
-                    title: const Text('Brown'),
-                    value: HairColor.brown,
+                    title: const Text('Gujarati'),
+                    value: 'Gujarati',
                     notifier: _notifier,
-                    extract: (p) => p.hairColor,
-                    onUpdate: _setHairColor,
+                    extract: (p) => p.ethnicity,
+                    onUpdate: _setEthnicity,
                   ),
                   _RadioTile(
-                    title: const Text('Red'),
-                    value: HairColor.red,
+                    title: const Text('Armenian'),
+                    value: 'Armenian',
                     notifier: _notifier,
-                    extract: (p) => p.hairColor,
-                    onUpdate: _setHairColor,
+                    extract: (p) => p.ethnicity,
+                    onUpdate: _setEthnicity,
                   ),
                   _RadioTile(
-                    title: const Text('Gray'),
-                    value: HairColor.gray,
+                    title: const Text('Chinese'),
+                    value: 'Chinese',
                     notifier: _notifier,
-                    extract: (p) => p.hairColor,
-                    onUpdate: _setHairColor,
+                    extract: (p) => p.ethnicity,
+                    onUpdate: _setEthnicity,
+                  ),
+                  _RadioTile(
+                    title: const Text('Japanese'),
+                    value: 'Japanese',
+                    notifier: _notifier,
+                    extract: (p) => p.ethnicity,
+                    onUpdate: _setEthnicity,
+                  ),
+                  _RadioTile(
+                    title: const Text('Lebanese'),
+                    value: 'Lebanese',
+                    notifier: _notifier,
+                    extract: (p) => p.ethnicity,
+                    onUpdate: _setEthnicity,
+                  ),
+                  _RadioTile(
+                    title: const Text('Other'),
+                    value: 'Other',
+                    notifier: _notifier,
+                    extract: (p) => p.ethnicity,
+                    onUpdate: _setEthnicity,
                   ),
                 ],
               ),
@@ -487,26 +244,11 @@ class _PrivateProfileScreenState extends ConsumerState<PrivateProfileScreen> {
   void _setGender(Gender value) =>
       _notifier.value = _notifier.value.copyWith(gender: value);
 
-  void _setReligion(String value) =>
-      _notifier.value = _notifier.value.copyWith(religion: value);
-
-  void _setEducation(Education value) =>
-      _notifier.value = _notifier.value.copyWith(education: value);
-
-  void _setCommunity(Set<String> value) =>
-      _notifier.value = _notifier.value.copyWith(community: value);
-
-  void _setLanguage(Set<String> value) =>
-      _notifier.value = _notifier.value.copyWith(language: value);
-
   void _setSkinColor(SkinColor value) =>
       _notifier.value = _notifier.value.copyWith(skinColor: value);
 
-  void _setOccupation(String value) =>
-      _notifier.value = _notifier.value.copyWith(occupation: value);
-
-  void _setHairColor(HairColor value) =>
-      _notifier.value = _notifier.value.copyWith(hairColor: value);
+  void _setEthnicity(String value) =>
+      _notifier.value = _notifier.value.copyWith(ethnicity: value);
 
   Future<bool> _maybeUpdateProfile(BuildContext context) async {
     if (widget.initialProfile == _notifier.value) {

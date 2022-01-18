@@ -1,7 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/users/preferences.dart';
@@ -305,31 +303,8 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         const SizedBox(height: 16),
                         Consumer(
                           builder: (context, ref, child) {
-                            final ageRange = ref.watch(
-                                _prefsProvider.select((p) => p.age));
-                            const defaultRange = Range(min: 18, max: 99);
-                            return ExpansionSection(
-                              label: 'Age',
-                              highlighted: ageRange != defaultRange,
-                              children: [
-                                _RangeSlider(
-                                  values: ageRange,
-                                  min: defaultRange.min,
-                                  max: defaultRange.max,
-                                  onUpdate: (range) {
-                                    ref.read(_prefsProvider.state).state = ref
-                                        .read(_prefsProvider)
-                                        .copyWith(age: range);
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final genders = ref.watch(
-                                _prefsProvider.select((p) => p.gender));
+                            final genders = ref
+                                .watch(_prefsProvider.select((p) => p.gender));
                             return ExpansionSection(
                               label: 'Gender',
                               highlighted: genders.isNotEmpty,
@@ -347,54 +322,16 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                                   onChanged: _setGender,
                                 ),
                                 _SetTile(
-                                  title: const Text('Trans Male'),
-                                  value: Gender.transMale,
-                                  set: genders,
-                                  onChanged: _setGender,
-                                ),
-                                _SetTile(
-                                  title: const Text('Trans Female'),
-                                  value: Gender.transFemale,
-                                  set: genders,
-                                  onChanged: _setGender,
-                                ),
-                                _SetTile(
-                                  title: const Text('Non Binary'),
+                                  title: const Text('Non-Binary'),
                                   value: Gender.nonBinary,
                                   set: genders,
                                   onChanged: _setGender,
                                 ),
-                              ],
-                            );
-                          },
-                        ),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final distance = ref.watch(
-                                _prefsProvider.select((p) => p.distance));
-                            const max = 100;
-                            return ExpansionSection(
-                              label: 'Location',
-                              highlighted: distance < max,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.only(right: 16),
-                                  alignment: Alignment.centerRight,
-                                  child: Text(
-                                    'Up to $distance miles away',
-                                    style: _listTextStyle(context)
-                                        .copyWith(fontSize: 16),
-                                  ),
-                                ),
-                                _Slider(
-                                  value: distance,
-                                  min: 0,
-                                  max: max,
-                                  onUpdate: (value) {
-                                    ref.read(_prefsProvider.state).state = ref
-                                        .read(_prefsProvider)
-                                        .copyWith(distance: value);
-                                  },
+                                _SetTile(
+                                  title: const Text('Transgender'),
+                                  value: Gender.transgender,
+                                  set: genders,
+                                  onChanged: _setGender,
                                 ),
                               ],
                             );
@@ -402,250 +339,10 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         ),
                         Consumer(
                           builder: (context, ref, child) {
-                            final religions = ref.watch(
-                                _prefsProvider.select((p) => p.religion));
-                            return ExpansionSection(
-                              label: 'Religion',
-                              highlighted: religions.isNotEmpty,
-                              children: [
-                                _TextTile(
-                                  icon: const Icon(
-                                    Icons.add,
-                                    color: Colors.red,
-                                  ),
-                                  hintText: 'Add a religion',
-                                  onAdded: (value) {},
-                                ),
-                                _SetTile(
-                                  title: const Text('Islam'),
-                                  value: 'Islam',
-                                  set: religions,
-                                  onChanged: _setReligion,
-                                ),
-                                _SetTile(
-                                  title: const Text('Hinduism'),
-                                  value: 'Hinduism',
-                                  set: religions,
-                                  onChanged: _setReligion,
-                                ),
-                                _SetTile(
-                                  title: const Text('Judaism'),
-                                  value: 'Judaism',
-                                  set: religions,
-                                  onChanged: _setReligion,
-                                ),
-                                _SetTile(
-                                  title: const Text('Sikhism'),
-                                  value: 'Sikhism',
-                                  set: religions,
-                                  onChanged: _setReligion,
-                                ),
-                                _SetTile(
-                                  title: const Text('Buddhism'),
-                                  value: 'Buddhism',
-                                  set: religions,
-                                  onChanged: _setReligion,
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final educations = ref.watch(_prefsProvider
-                                .select((p) => p.education));
-                            return ExpansionSection(
-                              label: 'Education',
-                              highlighted: educations.isNotEmpty,
-                              children: [
-                                _SetTile(
-                                  title: const Text('High School'),
-                                  value: Education.highSchool,
-                                  set: educations,
-                                  onChanged: _setEducation,
-                                ),
-                                _SetTile(
-                                  title: const Text('Associates Degree'),
-                                  value: Education.associatesDegree,
-                                  set: educations,
-                                  onChanged: _setEducation,
-                                ),
-                                _SetTile(
-                                  title: const Text('Bachelors Degree'),
-                                  value: Education.bachelorsDegree,
-                                  set: educations,
-                                  onChanged: _setEducation,
-                                ),
-                                _SetTile(
-                                  title: const Text('Masters Degree'),
-                                  value: Education.mastersDegree,
-                                  set: educations,
-                                  onChanged: _setEducation,
-                                ),
-                                _SetTile(
-                                  title: const Text('No Schooling'),
-                                  value: Education.noSchooling,
-                                  set: educations,
-                                  onChanged: _setEducation,
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final communities = ref.watch(_prefsProvider
-                                .select((p) => p.community));
-                            return ExpansionSection(
-                              label: 'Community',
-                              highlighted: communities.isNotEmpty,
-                              children: [
-                                _TextTile(
-                                  icon: const Icon(
-                                    Icons.add,
-                                    color: Colors.red,
-                                  ),
-                                  hintText: 'Add a community',
-                                  onAdded: (value) {},
-                                ),
-                                _SetTile(
-                                  title: const Text('Punjabi'),
-                                  value: 'Punjabi',
-                                  set: communities,
-                                  onChanged: _setCommunity,
-                                ),
-                                _SetTile(
-                                  title: const Text('Black'),
-                                  value: 'Black',
-                                  set: communities,
-                                  onChanged: _setCommunity,
-                                ),
-                                _SetTile(
-                                  title: const Text('White'),
-                                  value: 'White',
-                                  set: communities,
-                                  onChanged: _setCommunity,
-                                ),
-                                _SetTile(
-                                  title: const Text('Indian'),
-                                  value: 'Indian',
-                                  set: communities,
-                                  onChanged: _setCommunity,
-                                ),
-                                _SetTile(
-                                  title: const Text('Gujarati'),
-                                  value: 'Gujarati',
-                                  set: communities,
-                                  onChanged: _setCommunity,
-                                ),
-                                _SetTile(
-                                  title: const Text('Armenian'),
-                                  value: 'Armenian',
-                                  set: communities,
-                                  onChanged: _setCommunity,
-                                ),
-                                _SetTile(
-                                  title: const Text('Chinese'),
-                                  value: 'Chinese',
-                                  set: communities,
-                                  onChanged: _setCommunity,
-                                ),
-                                _SetTile(
-                                  title: const Text('Japanese'),
-                                  value: 'Japanese',
-                                  set: communities,
-                                  onChanged: _setCommunity,
-                                ),
-                                _SetTile(
-                                  title: const Text('Lebanese'),
-                                  value: 'Lebanese',
-                                  set: communities,
-                                  onChanged: _setCommunity,
-                                ),
-                                _SetTile(
-                                  title: const Text('African'),
-                                  value: 'African',
-                                  set: communities,
-                                  onChanged: _setCommunity,
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final languages = ref.watch(
-                                _prefsProvider.select((p) => p.language));
-                            return ExpansionSection(
-                              label: 'Languages',
-                              highlighted: languages.isNotEmpty,
-                              children: [
-                                _TextTile(
-                                  icon: const Icon(
-                                    Icons.add,
-                                    color: Colors.red,
-                                  ),
-                                  hintText: 'Add a language',
-                                  onAdded: (value) {},
-                                ),
-                                _SetTile(
-                                  title: const Text('Punjabi'),
-                                  value: 'Punjabi',
-                                  set: languages,
-                                  onChanged: _setLanguage,
-                                ),
-                                _SetTile(
-                                  title: const Text('Indian'),
-                                  value: 'Indian',
-                                  set: languages,
-                                  onChanged: _setLanguage,
-                                ),
-                                _SetTile(
-                                  title: const Text('Gujarati'),
-                                  value: 'Gujarati',
-                                  set: languages,
-                                  onChanged: _setLanguage,
-                                ),
-                                _SetTile(
-                                  title: const Text('Armenian'),
-                                  value: 'Armenian',
-                                  set: languages,
-                                  onChanged: _setLanguage,
-                                ),
-                                _SetTile(
-                                  title: const Text('Chinese'),
-                                  value: 'Chinese',
-                                  set: languages,
-                                  onChanged: _setLanguage,
-                                ),
-                                _SetTile(
-                                  title: const Text('Japanese'),
-                                  value: 'Japanese',
-                                  set: languages,
-                                  onChanged: _setLanguage,
-                                ),
-                                _SetTile(
-                                  title: const Text('Lebanese'),
-                                  value: 'Lebanese',
-                                  set: languages,
-                                  onChanged: _setLanguage,
-                                ),
-                                _SetTile(
-                                  title: const Text('African'),
-                                  value: 'African',
-                                  set: languages,
-                                  onChanged: _setLanguage,
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final skinColors = ref.watch(_prefsProvider
-                                .select((p) => p.skinColor));
-                            final genders = ref.watch(
-                                _prefsProvider.select((p) => p.gender));
+                            final skinColors = ref.watch(
+                                _prefsProvider.select((p) => p.skinColor));
+                            final genders = ref
+                                .watch(_prefsProvider.select((p) => p.gender));
                             final gender = genderForPreferredGenders(genders);
                             return ExpansionSection(
                               label: 'Skin Color',
@@ -655,7 +352,7 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                                     i < SkinColor.values.length;
                                     i++)
                                   _SetTile(
-                                    title: Text(emojiForGender(gender)[i]),
+                                    title: Text(genderToEmoji(gender)[i]),
                                     value: SkinColor.values[i],
                                     set: skinColors,
                                     onChanged: _setSkinColor,
@@ -666,9 +363,9 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         ),
                         Consumer(
                           builder: (context, ref, child) {
-                            final weightRange = ref.watch(
-                                _prefsProvider.select((p) => p.weight));
-                            const defaultRange = Range(min: 10, max: 500);
+                            final weightRange = ref
+                                .watch(_prefsProvider.select((p) => p.weight));
+                            const defaultRange = Range(min: 1, max: 10);
                             return ExpansionSection(
                               label: 'Weight',
                               highlighted: weightRange != defaultRange,
@@ -680,7 +377,6 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                                   onUpdate: (range) {
                                     ref.read(_prefsProvider.state).state = ref
                                         .read(_prefsProvider)
-
                                         .copyWith(weight: range);
                                   },
                                 ),
@@ -690,9 +386,9 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         ),
                         Consumer(
                           builder: (context, ref, child) {
-                            final heightRange = ref.watch(
-                                _prefsProvider.select((p) => p.height));
-                            const defaultRange = Range(min: 50, max: 250);
+                            final heightRange = ref
+                                .watch(_prefsProvider.select((p) => p.height));
+                            const defaultRange = Range(min: 1, max: 10);
                             return ExpansionSection(
                               label: 'Height',
                               highlighted: heightRange != defaultRange,
@@ -704,7 +400,6 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                                   onUpdate: (range) {
                                     ref.read(_prefsProvider.state).state = ref
                                         .read(_prefsProvider)
-                                        
                                         .copyWith(height: range);
                                   },
                                 ),
@@ -714,97 +409,73 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
                         ),
                         Consumer(
                           builder: (context, ref, child) {
-                            final occupations = ref.watch(_prefsProvider
-                                .select((p) => p.occupation));
+                            final ethnicity = ref.watch(
+                                _prefsProvider.select((p) => p.ethnicity));
                             return ExpansionSection(
-                              label: 'Job Occupation',
-                              highlighted: occupations.isNotEmpty,
+                              label: 'Ethnicity',
+                              highlighted: ethnicity.isNotEmpty,
                               children: [
                                 _TextTile(
                                   icon: const Icon(
                                     Icons.add,
                                     color: Colors.red,
                                   ),
-                                  hintText: 'Add a job',
+                                  hintText: 'Add an ethnicity',
                                   onAdded: (value) {},
                                 ),
                                 _SetTile(
-                                  title: const Text('Accountant'),
-                                  value: 'Accountant',
-                                  set: occupations,
-                                  onChanged: _setOccupation,
-                                ),
-                                _SetTile(
-                                  title: const Text('Entrepreneur'),
-                                  value: 'Entrepreneur',
-                                  set: occupations,
-                                  onChanged: _setOccupation,
-                                ),
-                                _SetTile(
-                                  title: const Text('Oil Man'),
-                                  value: 'Oil Man',
-                                  set: occupations,
-                                  onChanged: _setOccupation,
-                                ),
-                                _SetTile(
-                                  title: const Text('Welder'),
-                                  value: 'Welder',
-                                  set: occupations,
-                                  onChanged: _setOccupation,
-                                ),
-                                _SetTile(
-                                  title: const Text('Data Scientist'),
-                                  value: 'Data Scientist',
-                                  set: occupations,
-                                  onChanged: _setOccupation,
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final hairColors = ref.watch(_prefsProvider
-                                .select((p) => p.hairColor));
-                            return ExpansionSection(
-                              label: 'Hair Color',
-                              highlighted: hairColors.isNotEmpty,
-                              children: [
-                                _SetTile(
                                   title: const Text('Black'),
-                                  value: HairColor.black,
-                                  set: hairColors,
-                                  onChanged: _setHairColor,
+                                  value: 'Black',
+                                  set: ethnicity,
+                                  onChanged: _setEthnicity,
                                 ),
                                 _SetTile(
-                                  title: const Text('Blonde'),
-                                  value: HairColor.blonde,
-                                  set: hairColors,
-                                  onChanged: _setHairColor,
+                                  title: const Text('White'),
+                                  value: 'White',
+                                  set: ethnicity,
+                                  onChanged: _setEthnicity,
                                 ),
                                 _SetTile(
-                                  title: const Text('Brunette'),
-                                  value: HairColor.brunette,
-                                  set: hairColors,
-                                  onChanged: _setHairColor,
+                                  title: const Text('Indian'),
+                                  value: 'Indian',
+                                  set: ethnicity,
+                                  onChanged: _setEthnicity,
                                 ),
                                 _SetTile(
-                                  title: const Text('Brown'),
-                                  value: HairColor.brown,
-                                  set: hairColors,
-                                  onChanged: _setHairColor,
+                                  title: const Text('Gujarati'),
+                                  value: 'Gujarati',
+                                  set: ethnicity,
+                                  onChanged: _setEthnicity,
                                 ),
                                 _SetTile(
-                                  title: const Text('Red'),
-                                  value: HairColor.red,
-                                  set: hairColors,
-                                  onChanged: _setHairColor,
+                                  title: const Text('Armenian'),
+                                  value: 'Armenian',
+                                  set: ethnicity,
+                                  onChanged: _setEthnicity,
                                 ),
                                 _SetTile(
-                                  title: const Text('Gray'),
-                                  value: HairColor.gray,
-                                  set: hairColors,
-                                  onChanged: _setHairColor,
+                                  title: const Text('Chinese'),
+                                  value: 'Chinese',
+                                  set: ethnicity,
+                                  onChanged: _setEthnicity,
+                                ),
+                                _SetTile(
+                                  title: const Text('Japanese'),
+                                  value: 'Japanese',
+                                  set: ethnicity,
+                                  onChanged: _setEthnicity,
+                                ),
+                                _SetTile(
+                                  title: const Text('Lebanese'),
+                                  value: 'Lebanase',
+                                  set: ethnicity,
+                                  onChanged: _setEthnicity,
+                                ),
+                                _SetTile(
+                                  title: const Text('Other'),
+                                  value: 'Other',
+                                  set: ethnicity,
+                                  onChanged: _setEthnicity,
                                 ),
                               ],
                             );
@@ -846,36 +517,17 @@ class __PreferencesScreenState extends ConsumerState<_PreferencesScreen> {
     );
   }
 
-  void _setGender(Set<Gender> value) => widget.ref.read(_prefsProvider.state).state =
-      widget.ref.read(_prefsProvider).copyWith(gender: value);
-
-  void _setReligion(Set<String> value) =>
+  void _setGender(Set<Gender> value) =>
       widget.ref.read(_prefsProvider.state).state =
-          widget.ref.read(_prefsProvider).copyWith(religion: value);
-
-  void _setEducation(Set<Education> value) =>
-      widget.ref.read(_prefsProvider.state).state =
-          widget.ref.read(_prefsProvider).copyWith(education: value);
-
-  void _setCommunity(Set<String> value) =>
-      widget.ref.read(_prefsProvider.state).state =
-          widget.ref.read(_prefsProvider).copyWith(community: value);
-
-  void _setLanguage(Set<String> value) =>
-      widget.ref.read(_prefsProvider.state).state =
-          widget.ref.read(_prefsProvider).copyWith(language: value);
+          widget.ref.read(_prefsProvider).copyWith(gender: value);
 
   void _setSkinColor(Set<SkinColor> value) =>
       widget.ref.read(_prefsProvider.state).state =
           widget.ref.read(_prefsProvider).copyWith(skinColor: value);
 
-  void _setOccupation(Set<String> value) =>
+  void _setEthnicity(Set<String> value) =>
       widget.ref.read(_prefsProvider.state).state =
-          widget.ref.read(_prefsProvider).copyWith(occupation: value);
-
-  void _setHairColor(Set<HairColor> value) =>
-      widget.ref.read(_prefsProvider.state).state =
-          widget.ref.read(_prefsProvider).copyWith(hairColor: value);
+          widget.ref.read(_prefsProvider).copyWith(ethnicity: value);
 
   Future<bool> _maybeUpdatePreferences(BuildContext context) async {
     final preferences = widget.ref.read(_prefsProvider);

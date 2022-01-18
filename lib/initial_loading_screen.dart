@@ -2,8 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:location/location.dart';
-import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/theming.dart';
@@ -39,7 +37,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     // Begin caching
     try {
       await _cacheData(usersApi, user.uid);
-      await _updateLocation(usersApi, user.uid);
     } catch (e) {
       Navigator.of(context).pushReplacementNamed('error');
       return;
@@ -71,31 +68,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       api.getDatingPreferences(uid),
       api.getAllChatroomUnreadCounts(uid),
     ]);
-  }
-
-  Future<void> _updateLocation(UsersApi api, String uid) async {
-    final location = Location();
-    try {
-      final result = await location.requestPermission();
-      if (result == PermissionStatus.granted ||
-          result == PermissionStatus.grantedLimited) {
-        final data = await location.getLocation();
-        if (data.latitude != null && data.longitude != null) {
-          final profile = await api.getPrivateProfile(uid);
-          api.updatePrivateProfile(
-            uid,
-            profile.copyWith(
-              location: LatLong(
-                lat: data.latitude ?? 0,
-                long: data.longitude ?? 0,
-              ),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      print(e);
-    }
   }
 
   @override

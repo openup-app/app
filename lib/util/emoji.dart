@@ -2,7 +2,7 @@ import 'package:openup/api/users/preferences.dart';
 
 /// A list of 5 emojis with skin colors ramping from light to dark,
 /// based on the gender provided.
-List<String> emojiForGender(Gender gender) {
+List<String> genderToEmoji(Gender gender) {
   const faceLists = [
     ['🧑🏻', '🧑🏼', '🧑🏽', '🧑🏾', '🧑🏿'],
     ['👨🏻', '👨🏼', '👨🏽', '👨🏾', '👨🏿'],
@@ -10,11 +10,10 @@ List<String> emojiForGender(Gender gender) {
   ];
   switch (gender) {
     case Gender.male:
-    case Gender.transMale:
       return faceLists[1];
     case Gender.female:
-    case Gender.transFemale:
       return faceLists[2];
+    case Gender.transgender:
     case Gender.nonBinary:
       return faceLists[0];
   }
@@ -23,13 +22,11 @@ List<String> emojiForGender(Gender gender) {
 /// Converts gender preferences into a single gender. No preference implies
 /// non-binary, as does a preference of both a male and female type gender.
 Gender genderForPreferredGenders(Set<Gender> genders) {
-  final containsMale =
-      genders.contains(Gender.male) || genders.contains(Gender.transMale);
-  final containsFemale =
-      genders.contains(Gender.female) || genders.contains(Gender.transFemale);
-  final containsNonBinary =
-      genders.isEmpty || genders.contains(Gender.nonBinary);
-  if (containsNonBinary) {
+  final containsMale = genders.contains(Gender.male);
+  final containsFemale = genders.contains(Gender.female);
+  final containsOther = genders.contains(Gender.nonBinary) ||
+      genders.contains(Gender.transgender);
+  if (containsOther) {
     return Gender.nonBinary;
   } else if (containsMale && !containsFemale) {
     return Gender.male;
@@ -37,5 +34,18 @@ Gender genderForPreferredGenders(Set<Gender> genders) {
     return Gender.female;
   } else {
     return Gender.nonBinary;
+  }
+}
+
+String genderToLabel(Gender gender) {
+  switch (gender) {
+    case Gender.male:
+      return 'Male';
+    case Gender.female:
+      return 'Female';
+    case Gender.nonBinary:
+      return 'Non-Binary';
+    case Gender.transgender:
+      return 'Transgender';
   }
 }

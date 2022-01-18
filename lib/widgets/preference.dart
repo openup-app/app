@@ -73,7 +73,7 @@ class _PreferencesListState extends ConsumerState<PreferencesList> {
                 ),
                 PreferencesSetTile(
                   title: const Text('Transgender'),
-                  value: Gender.transMale,
+                  value: Gender.transgender,
                   set: genders,
                   onChanged: _setGender,
                 ),
@@ -344,37 +344,3 @@ class PreferencesRadioTile<T> extends StatelessWidget {
     );
   }
 }
-
-/// A list of 5 emojis with skin colors ramping from light to dark,
-/// based on the gender provided.
-List<String> genderToEmoji(Gender2 gender) {
-  const faceLists = [
-    ['🧑🏻', '🧑🏼', '🧑🏽', '🧑🏾', '🧑🏿'],
-    ['👨🏻', '👨🏼', '👨🏽', '👨🏾', '👨🏿'],
-    ['👩🏻', '👩🏼', '👩🏽', '👩🏾', '👩🏿'],
-  ];
-  switch (gender) {
-    case Gender2.male:
-      return faceLists[1];
-    case Gender2.female:
-      return faceLists[2];
-    case Gender2.transgender:
-    case Gender2.nonBinary:
-      return faceLists[0];
-  }
-}
-
-String genderToLabel(Gender2 gender) {
-  switch (gender) {
-    case Gender2.male:
-      return 'Male';
-    case Gender2.female:
-      return 'Female';
-    case Gender2.nonBinary:
-      return 'Non-Binary';
-    case Gender2.transgender:
-      return 'Transgender';
-  }
-}
-
-enum Gender2 { male, female, nonBinary, transgender }

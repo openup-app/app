@@ -1,27 +1,35 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users/preferences.dart';
+import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/users/users_api.dart';
+import 'package:openup/util/emoji.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/preference.dart';
 import 'package:openup/widgets/slider.dart';
 import 'package:openup/widgets/theming.dart';
 
-class SignUpPrivateProfileScreen extends StatefulWidget {
+class SignUpPrivateProfileScreen extends ConsumerStatefulWidget {
   const SignUpPrivateProfileScreen({Key? key}) : super(key: key);
 
   @override
-  State<SignUpPrivateProfileScreen> createState() =>
+  _SignUpPrivateProfileScreenState createState() =>
       _SignUpPrivateProfileScreenState();
 }
 
 class _SignUpPrivateProfileScreenState
-    extends State<SignUpPrivateProfileScreen> {
-  Gender2 _gender = Gender2.male;
-  int _skinColor = 0;
-  int _weight = 5;
-  int _height = 5;
-  String _ethnicity = 'Indian';
+    extends ConsumerState<SignUpPrivateProfileScreen> {
+  PrivateProfile _profile = const PrivateProfile(
+    gender: Gender.male,
+    skinColor: SkinColor.light,
+    weight: 5,
+    height: 5,
+    ethnicity: 'White',
+  );
 
-  int? _expandedSection;
+  bool _uploading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -63,133 +71,11 @@ class _SignUpPrivateProfileScreenState
                 Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 300),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'I identify as a ...',
-                          style: Theming.of(context).text.body.copyWith(
-                                color:
-                                    const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                                fontWeight: FontWeight.w400,
-                                fontSize: 18,
-                              ),
-                        ),
-                        PreferencesExpansionSection(
-                          label: 'Male',
-                          expanded: _expandedSection == 0,
-                          onPressed: () => setState(() => _expandedSection = 0),
-                          children: [
-                            for (final gender in Gender2.values)
-                              PreferencesRadioTile(
-                                title: Text(genderToLabel(gender)),
-                                value: gender,
-                                groupValue: _gender,
-                                onSelected: () {
-                                  setState(() => _gender = gender);
-                                },
-                              ),
-                          ],
-                        ),
-                        Text(
-                          'My skin color ...',
-                          style: Theming.of(context).text.body.copyWith(
-                                color:
-                                    const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                                fontWeight: FontWeight.w400,
-                                fontSize: 18,
-                              ),
-                        ),
-                        PreferencesExpansionSection(
-                          label: genderToEmoji(_gender)[_skinColor],
-                          expanded: _expandedSection == 1,
-                          onPressed: () => setState(() => _expandedSection = 1),
-                          children: [
-                            for (var i = 0; i < 5; i++)
-                              PreferencesRadioTile(
-                                title: Text(genderToEmoji(_gender)[i]),
-                                value: i,
-                                groupValue: _skinColor,
-                                onSelected: () {
-                                  setState(() => _skinColor = i);
-                                },
-                              ),
-                          ],
-                        ),
-                        Text(
-                          'My weight ...',
-                          style: Theming.of(context).text.body.copyWith(
-                                color:
-                                    const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                                fontWeight: FontWeight.w400,
-                                fontSize: 18,
-                              ),
-                        ),
-                        PreferencesSlider(
-                          value: _weight,
-                          min: 1,
-                          max: 10,
-                          onUpdate: (value) {
-                            setState(() {
-                              _weight = value;
-                            });
-                          },
-                        ),
-                        Text(
-                          'My height ...',
-                          style: Theming.of(context).text.body.copyWith(
-                                color:
-                                    const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                                fontWeight: FontWeight.w400,
-                                fontSize: 18,
-                              ),
-                        ),
-                        PreferencesSlider(
-                          value: _height,
-                          min: 1,
-                          max: 10,
-                          onUpdate: (value) {
-                            setState(() {
-                              _height = value;
-                            });
-                          },
-                        ),
-                        Text(
-                          'My ethnicity ...',
-                          style: Theming.of(context).text.body.copyWith(
-                                color:
-                                    const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                                fontWeight: FontWeight.w400,
-                                fontSize: 18,
-                              ),
-                        ),
-                        PreferencesExpansionSection(
-                          label: _ethnicity,
-                          expanded: _expandedSection == 3,
-                          onPressed: () => setState(() => _expandedSection = 3),
-                          children: [
-                            for (var ethnicity in [
-                              'Black',
-                              'White',
-                              'Indian',
-                              'Gujarati',
-                              'Armenian',
-                              'Chinese',
-                              'Japanese',
-                              'Lebanese',
-                              'Other',
-                            ])
-                              PreferencesRadioTile(
-                                title: Text(ethnicity),
-                                value: ethnicity,
-                                groupValue: _ethnicity,
-                                onSelected: () {
-                                  setState(() => _ethnicity = ethnicity);
-                                },
-                              ),
-                          ],
-                        ),
-                      ],
+                    child: PrivateProfileSelection(
+                      profile: _profile,
+                      onChanged: (profile) {
+                        setState(() => _profile = profile);
+                      },
                     ),
                   ),
                 ),
@@ -201,12 +87,170 @@ class _SignUpPrivateProfileScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             SignificantButton.pink(
-              onPressed: () {
-                Navigator.of(context).pushNamed('sign-up-photos');
+              onPressed: () async {
+                setState(() => _uploading = true);
+                final user = FirebaseAuth.instance.currentUser;
+                final uid = user?.uid;
+                if (uid != null) {
+                  final usersApi = ref.read(usersApiProvider);
+                  await usersApi.updatePrivateProfile(uid, _profile);
+                  if (mounted) {
+                    setState(() => _uploading = false);
+                    Navigator.of(context).pushNamed('sign-up-photos');
+                  }
+                }
               },
-              child: const Text('Continue'),
+              child: _uploading
+                  ? const CircularProgressIndicator()
+                  : const Text('Continue'),
             ),
             const MaleFemaleConnectionImageApart(),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class PrivateProfileSelection extends StatefulWidget {
+  final PrivateProfile profile;
+  final void Function(PrivateProfile profile) onChanged;
+
+  const PrivateProfileSelection({
+    Key? key,
+    required this.profile,
+    required this.onChanged,
+  }) : super(key: key);
+
+  @override
+  _PrivateProfileSelectionState createState() =>
+      _PrivateProfileSelectionState();
+}
+
+class _PrivateProfileSelectionState extends State<PrivateProfileSelection> {
+  int? _expandedSection;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'I identify as a ...',
+          style: Theming.of(context).text.body.copyWith(
+                color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
+                fontWeight: FontWeight.w400,
+                fontSize: 18,
+              ),
+        ),
+        PreferencesExpansionSection(
+          label: 'Male',
+          expanded: _expandedSection == 0,
+          onPressed: () => setState(() => _expandedSection = 0),
+          children: [
+            for (final gender in Gender.values)
+              PreferencesRadioTile(
+                title: Text(genderToLabel(gender)),
+                value: gender,
+                groupValue: widget.profile.gender,
+                onSelected: () {
+                  widget.onChanged(widget.profile.copyWith(gender: gender));
+                },
+              ),
+          ],
+        ),
+        Text(
+          'My skin color ...',
+          style: Theming.of(context).text.body.copyWith(
+                color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
+                fontWeight: FontWeight.w400,
+                fontSize: 18,
+              ),
+        ),
+        PreferencesExpansionSection(
+          label: genderToEmoji(
+              widget.profile.gender)[widget.profile.skinColor.index],
+          expanded: _expandedSection == 1,
+          onPressed: () => setState(() => _expandedSection = 1),
+          children: [
+            for (var skinColor in SkinColor.values)
+              PreferencesRadioTile(
+                title: Text(genderToEmoji(widget.profile.gender)[
+                    SkinColor.values.indexOf(skinColor)]),
+                value: skinColor,
+                groupValue: widget.profile.skinColor,
+                onSelected: () {
+                  widget
+                      .onChanged(widget.profile.copyWith(skinColor: skinColor));
+                },
+              ),
+          ],
+        ),
+        Text(
+          'My weight ...',
+          style: Theming.of(context).text.body.copyWith(
+                color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
+                fontWeight: FontWeight.w400,
+                fontSize: 18,
+              ),
+        ),
+        PreferencesSlider(
+          value: widget.profile.weight,
+          min: 1,
+          max: 10,
+          onUpdate: (value) {
+            widget.onChanged(widget.profile.copyWith(weight: value));
+          },
+        ),
+        Text(
+          'My height ...',
+          style: Theming.of(context).text.body.copyWith(
+                color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
+                fontWeight: FontWeight.w400,
+                fontSize: 18,
+              ),
+        ),
+        PreferencesSlider(
+          value: widget.profile.height,
+          min: 1,
+          max: 10,
+          onUpdate: (value) {
+            widget.onChanged(widget.profile.copyWith(height: value));
+          },
+        ),
+        Text(
+          'My ethnicity ...',
+          style: Theming.of(context).text.body.copyWith(
+                color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
+                fontWeight: FontWeight.w400,
+                fontSize: 18,
+              ),
+        ),
+        PreferencesExpansionSection(
+          label: widget.profile.ethnicity,
+          expanded: _expandedSection == 3,
+          onPressed: () => setState(() => _expandedSection = 3),
+          children: [
+            for (var ethnicity in [
+              'Black',
+              'White',
+              'Indian',
+              'Gujarati',
+              'Armenian',
+              'Chinese',
+              'Japanese',
+              'Lebanese',
+              'Other',
+            ])
+              PreferencesRadioTile(
+                title: Text(ethnicity),
+                value: ethnicity,
+                groupValue: widget.profile.ethnicity,
+                onSelected: () {
+                  widget
+                      .onChanged(widget.profile.copyWith(ethnicity: ethnicity));
+                },
+              ),
           ],
         ),
       ],

@@ -6,27 +6,17 @@ part 'preferences.g.dart';
 @freezed
 class Preferences with _$Preferences {
   const factory Preferences({
-    @RangeJsonConverter()
-    @Default(Range(min: 18, max: 99))
-    @JsonKey()
-        Range age,
-    @Default({}) Set<Gender> gender,
-    @Default(20) int distance,
-    @Default({}) Set<String> religion,
-    @Default({}) Set<Education> education,
-    @Default({}) Set<String> community,
-    @Default({}) Set<String> language,
+    @RangeJsonConverter() @Default({}) Set<Gender> gender,
     @Default({}) Set<SkinColor> skinColor,
     @RangeJsonConverter()
-    @Default(Range(min: 30, max: 200))
+    @Default(Range(min: 1, max: 10))
     @JsonKey()
         Range weight,
     @RangeJsonConverter()
-    @Default(Range(min: 50, max: 250))
+    @Default(Range(min: 1, max: 10))
     @JsonKey()
         Range height,
-    @Default({}) Set<String> occupation,
-    @Default({}) Set<HairColor> hairColor,
+    @Default({}) Set<String> ethnicity,
   }) = _Preferences;
 
   factory Preferences.fromJson(Map<String, dynamic> json) =>
@@ -44,7 +34,7 @@ class Range with _$Range {
 }
 
 class RangeJsonConverter implements JsonConverter<Range, List<dynamic>> {
-  static const defaultRange = Range(min: 0, max: 100);
+  static const defaultRange = Range(min: 1, max: 10);
 
   const RangeJsonConverter();
 
@@ -58,22 +48,6 @@ class RangeJsonConverter implements JsonConverter<Range, List<dynamic>> {
       : [object.min, object.max];
 }
 
-enum Gender {
-  male,
-  female,
-  transMale,
-  transFemale,
-  nonBinary,
-}
-
-enum Education {
-  highSchool,
-  associatesDegree,
-  bachelorsDegree,
-  mastersDegree,
-  noSchooling
-}
+enum Gender { male, female, nonBinary, transgender }
 
 enum SkinColor { light, mediumLight, medium, mediumDark, dark }
-
-enum HairColor { black, blonde, brunette, brown, red, gray }
