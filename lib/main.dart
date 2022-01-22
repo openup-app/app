@@ -34,6 +34,7 @@ import 'package:openup/sign_up_screen.dart';
 import 'package:openup/menu_screen.dart';
 import 'package:openup/voice_call_screen_content.dart';
 import 'package:openup/widgets/connections_list.dart';
+import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -325,10 +326,20 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       return PreferencesScreenTheme(
                         themeData: const PreferencesScreenThemeData(
                           backgroundGradientBottom:
-                              Color.fromARGB(0xFF, 0x9E, 0xD5, 0xE2),
-                          titleColor: Color.fromARGB(0xFF, 0x00, 0xD1, 0xFF),
-                          titleShadowColor:
-                              Color.fromARGB(0xAA, 0x00, 0xD1, 0xFF),
+                              Color.fromRGBO(0xFF, 0xFF, 0xFF, 1.0),
+                          titleColor: Color.fromRGBO(0x63, 0xCD, 0xE3, 1.0),
+                          expansionButtonGradient: LinearGradient(
+                            colors: [
+                              Color.fromRGBO(0x26, 0xC4, 0xE6, 1.0),
+                              Color.fromRGBO(0x7B, 0xDC, 0xF1, 1.0),
+                            ],
+                          ),
+                          doneButtonGradient: LinearGradient(
+                            colors: [
+                              Color.fromRGBO(0xFF, 0xA5, 0xA5, 1.0),
+                              Color.fromRGBO(0xFF, 0xC9, 0xC9, 1.0),
+                            ],
+                          ),
                           backArrowColor:
                               Color.fromARGB(0xFF, 0x89, 0xDE, 0xFF),
                           profileButtonColor:
@@ -336,15 +347,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         ),
                         child: PreferencesScreen(
                           initialPreferences: args,
-                          title: 'meet people',
-                          image: Transform.translate(
-                            offset: const Offset(0.0, 6.0),
-                            child: Image.asset(
-                              'assets/images/friends.gif',
-                              width: 125,
-                              height: 60,
-                            ),
-                          ),
+                          title: 'Meet People',
+                          image: const MaleFemaleConnectionImageApart(),
                           updatePreferences: (usersApi, uid, preferences) =>
                               usersApi.updateFriendsPreferences(
                                   uid, preferences),
@@ -640,8 +644,18 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           backgroundGradientBottom:
                               Color.fromARGB(0xFF, 0xFF, 0xDD, 0xDD),
                           titleColor: Color.fromARGB(0xFF, 0xFF, 0x7A, 0x7A),
-                          titleShadowColor:
-                              Color.fromARGB(0xAA, 0xF0, 0x59, 0x59),
+                          expansionButtonGradient: LinearGradient(
+                            colors: [
+                              Color.fromRGBO(0xF3, 0x94, 0x94, 1.0),
+                              Color.fromRGBO(0xFF, 0x63, 0x63, 1.0),
+                            ],
+                          ),
+                          doneButtonGradient: LinearGradient(
+                            colors: [
+                              Color.fromRGBO(0xF3, 0x94, 0x94, 1.0),
+                              Color.fromRGBO(0xFF, 0x63, 0x63, 1.0),
+                            ],
+                          ),
                           backArrowColor:
                               Color.fromARGB(0xFF, 0xFD, 0x89, 0x89),
                           profileButtonColor:
@@ -649,11 +663,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         ),
                         child: PreferencesScreen(
                           initialPreferences: args,
-                          title: 'blind date',
-                          image: SizedBox(
-                            width: 125,
-                            height: 40,
-                            child: Image.asset('assets/images/heart.gif'),
+                          title: 'Blind Dating',
+                          image: Image.asset(
+                            'assets/images/double_dating.gif',
+                            height: 197,
                           ),
                           updatePreferences: (usersApi, uid, preferences) =>
                               usersApi.updateDatingPreferences(

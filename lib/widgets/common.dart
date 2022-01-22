@@ -11,6 +11,15 @@ class SignificantButton extends StatelessWidget {
   final double height;
   final Gradient gradient;
 
+  const SignificantButton({
+    Key? key,
+    required this.onPressed,
+    required this.gradient,
+    required this.child,
+  })  : borderRadius = const BorderRadius.all(Radius.circular(94)),
+        height = 69.0,
+        super(key: key);
+
   const SignificantButton.pink({
     Key? key,
     required this.onPressed,
@@ -45,25 +54,23 @@ class SignificantButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Button(
-        child: Container(
-          height: height,
-          decoration: BoxDecoration(
-            borderRadius: borderRadius,
-            boxShadow: [
-              Theming.of(context).boxShadow,
-            ],
-            gradient: gradient,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(top: 4.0),
-            child: Center(child: child),
-          ),
+    return Button(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 300),
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: borderRadius,
+          boxShadow: [
+            Theming.of(context).boxShadow,
+          ],
+          gradient: gradient,
         ),
-        onPressed: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 4.0),
+          child: Center(child: child),
+        ),
       ),
+      onPressed: onPressed,
     );
   }
 }

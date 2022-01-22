@@ -8,8 +8,8 @@ import 'package:openup/util/emoji.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/preference.dart';
-import 'package:openup/widgets/slider.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:syncfusion_flutter_sliders/sliders.dart';
 
 class SignUpPrivateProfileScreen extends ConsumerStatefulWidget {
   const SignUpPrivateProfileScreen({Key? key}) : super(key: key);
@@ -194,12 +194,25 @@ class _PrivateProfileSelectionState extends State<PrivateProfileSelection> {
                 fontSize: 18,
               ),
         ),
-        PreferencesSlider(
+        SfSlider(
           value: widget.profile.weight,
-          min: 1,
-          max: 10,
-          onUpdate: (value) {
-            widget.onChanged(widget.profile.copyWith(weight: value));
+          min: 0,
+          max: 400,
+          stepSize: 50,
+          interval: 50,
+          showDividers: true,
+          thumbIcon: Center(
+            child: Text(
+              widget.profile.weight.toString(),
+              textAlign: TextAlign.center,
+              style: Theming.of(context)
+                  .text
+                  .body
+                  .copyWith(fontSize: 11, fontWeight: FontWeight.w300),
+            ),
+          ),
+          onChanged: (v) {
+            widget.onChanged(widget.profile.copyWith(weight: v.toInt()));
           },
         ),
         Text(
@@ -210,12 +223,25 @@ class _PrivateProfileSelectionState extends State<PrivateProfileSelection> {
                 fontSize: 18,
               ),
         ),
-        PreferencesSlider(
+        SfSlider(
           value: widget.profile.height,
-          min: 1,
-          max: 10,
-          onUpdate: (value) {
-            widget.onChanged(widget.profile.copyWith(height: value));
+          min: 0,
+          max: 120,
+          stepSize: 6,
+          interval: 6,
+          showDividers: true,
+          thumbIcon: Center(
+            child: Text(
+              _inchToFtIn(widget.profile.height),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: Theming.of(context).text.body.copyWith(
+                  fontSize: widget.profile.height >= 120 ? 9 : 11,
+                  fontWeight: FontWeight.w300),
+            ),
+          ),
+          onChanged: (v) {
+            widget.onChanged(widget.profile.copyWith(height: v.toInt()));
           },
         ),
         Text(
@@ -256,4 +282,8 @@ class _PrivateProfileSelectionState extends State<PrivateProfileSelection> {
       ],
     );
   }
+}
+
+String _inchToFtIn(int inches) {
+  return '${inches ~/ 12}\'${((inches % 12))}"';
 }

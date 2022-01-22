@@ -1,98 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/preferences.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
-
-late StateProvider<Preferences> _prefsProvider;
-void _initPreferences(Preferences preferences) {
-  _prefsProvider = StateProvider<Preferences>((ref) {
-    return preferences;
-  });
-}
-
-class PreferencesList extends ConsumerStatefulWidget {
-  final Preferences initialPreferences;
-  final void Function(Preferences preferences) onPreferencesChanged;
-
-  const PreferencesList({
-    Key? key,
-    required this.initialPreferences,
-    required this.onPreferencesChanged,
-  }) : super(key: key);
-
-  @override
-  _PreferencesListState createState() => _PreferencesListState();
-}
-
-class _PreferencesListState extends ConsumerState<PreferencesList> {
-  @override
-  void initState() {
-    super.initState();
-    _initPreferences(widget.initialPreferences);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 18),
-      children: [
-        Text(
-          'I identify as a ...',
-          style: Theming.of(context).text.body.copyWith(
-                color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                fontWeight: FontWeight.w400,
-                fontSize: 18,
-              ),
-        ),
-        Consumer(
-          builder: (context, ref, child) {
-            final genders = ref.watch(_prefsProvider.select((p) => p.gender));
-            return PreferencesExpansionSection(
-              label: 'Gender',
-              expanded: false,
-              onPressed: () {},
-              children: [
-                PreferencesSetTile(
-                  title: const Text('Male'),
-                  value: Gender.male,
-                  set: genders,
-                  onChanged: _setGender,
-                ),
-                PreferencesSetTile(
-                  title: const Text('Female'),
-                  value: Gender.female,
-                  set: genders,
-                  onChanged: _setGender,
-                ),
-                PreferencesSetTile(
-                  title: const Text('Non-Binary'),
-                  value: Gender.nonBinary,
-                  set: genders,
-                  onChanged: _setGender,
-                ),
-                PreferencesSetTile(
-                  title: const Text('Transgender'),
-                  value: Gender.transgender,
-                  set: genders,
-                  onChanged: _setGender,
-                ),
-              ],
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  void _setGender(Set<Gender> value) => ref.read(_prefsProvider.state).state =
-      ref.read(_prefsProvider).copyWith(gender: value);
-}
 
 class PreferencesExpansionSection extends StatefulWidget {
   final String label;
   final bool expanded;
   final VoidCallback onPressed;
+  final Gradient? gradient;
   final List<Widget> children;
 
   const PreferencesExpansionSection({
@@ -100,6 +14,12 @@ class PreferencesExpansionSection extends StatefulWidget {
     required this.label,
     required this.expanded,
     required this.onPressed,
+    this.gradient = const LinearGradient(
+      colors: [
+        Color.fromRGBO(0x26, 0xC4, 0xE6, 1.0),
+        Color.fromRGBO(0x7B, 0xDC, 0xF1, 1.0),
+      ],
+    ),
     required this.children,
   }) : super(key: key);
 
@@ -150,14 +70,7 @@ class _PreferencesExpansionSectionState
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(32)),
           color: Colors.pink,
-          gradient: const LinearGradient(
-            colors: [
-              Color.fromRGBO(0x26, 0xC4, 0xE6, 1.0),
-              Color.fromRGBO(0x7B, 0xDC, 0xF1, 1.0),
-            ],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
+          gradient: widget.gradient,
           boxShadow: [
             Theming.of(context).boxShadow,
           ],
@@ -178,6 +91,8 @@ class _PreferencesExpansionSectionState
                     ),
                     child: Text(
                       widget.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theming.of(context).text.body.copyWith(
                           fontSize: 24,
                           fontWeight: FontWeight.w400,
