@@ -56,6 +56,7 @@ class _PhoneVerificationScreenState
         ),
         child: FlexibleSingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
                 height: MediaQuery.of(context).padding.top,

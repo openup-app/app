@@ -25,6 +25,7 @@ class ForgotPasswordScreen extends StatelessWidget {
       child: SafeArea(
         top: true,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 86),
             const TitleAndTagline(),

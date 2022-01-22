@@ -82,6 +82,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
         autovalidateMode: AutovalidateMode.onUserInteraction,
         child: FlexibleSingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
                 height: MediaQuery.of(context).padding.top,

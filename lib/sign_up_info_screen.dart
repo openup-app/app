@@ -12,6 +12,7 @@ class SignUpInfoScreen extends StatelessWidget {
       children: [
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               'Who are you?',

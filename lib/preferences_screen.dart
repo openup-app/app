@@ -56,7 +56,7 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
             height: MediaQuery.of(context).padding.top + 32,
@@ -107,6 +107,7 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
           ),
           Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SignificantButton(
                 onPressed: () async {
