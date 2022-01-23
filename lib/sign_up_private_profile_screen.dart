@@ -22,8 +22,8 @@ class _SignUpPrivateProfileScreenState
   PrivateProfile _profile = const PrivateProfile(
     gender: Gender.male,
     skinColor: SkinColor.light,
-    weight: 5,
-    height: 5,
+    weight: 200,
+    height: 60,
     ethnicity: 'White',
   );
 

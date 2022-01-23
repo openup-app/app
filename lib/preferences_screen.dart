@@ -172,12 +172,24 @@ class _PreferencesSelectionState extends State<PreferencesSelection> {
                 genderForPreferredGenders(widget.preferences.gender))[s.index])
             .join(' ');
 
+    final ethnicityList = [
+      'Black',
+      'White',
+      'Indian',
+      'Gujarati',
+      'Armenian',
+      'Chinese',
+      'Japanese',
+      'Lebanese',
+      'Other',
+    ];
     final ethnicityLabelElements = [...widget.preferences.ethnicity];
-    ethnicityLabelElements.sort((a, b) => a.compareTo(b));
+    ethnicityLabelElements.sort(
+        (a, b) => ethnicityList.indexOf(a).compareTo(ethnicityList.indexOf(b)));
     final ethnicityLabel = ethnicityLabelElements.isEmpty
         ? 'Any'
         : ethnicityLabelElements.join(', ');
-
+    print(widget.preferences);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -244,11 +256,13 @@ class _PreferencesSelectionState extends State<PreferencesSelection> {
         ),
         SfRangeSlider(
           values: SfRangeValues(
-              widget.preferences.weight.min, widget.preferences.weight.max),
-          min: 0,
+            widget.preferences.weight.min.toDouble(),
+            widget.preferences.weight.max.toDouble(),
+          ),
+          min: 25,
           max: 400,
-          stepSize: 50,
-          interval: 50,
+          stepSize: 25,
+          interval: 25,
           showDividers: true,
           startThumbIcon: Center(
             child: Text(
@@ -271,7 +285,7 @@ class _PreferencesSelectionState extends State<PreferencesSelection> {
             ),
           ),
           onChanged: (v) {
-            if (v.start < v.end) {
+            if (v.start < v.end - 25) {
               widget.onChanged(widget.preferences.copyWith(
                   weight: Range(min: v.start.toInt(), max: v.end.toInt())));
             }
@@ -287,8 +301,10 @@ class _PreferencesSelectionState extends State<PreferencesSelection> {
         ),
         SfRangeSlider(
           values: SfRangeValues(
-              widget.preferences.height.min, widget.preferences.height.max),
-          min: 0,
+            widget.preferences.height.min.toDouble(),
+            widget.preferences.height.max.toDouble(),
+          ),
+          min: 24,
           max: 120,
           stepSize: 6,
           interval: 6,
@@ -335,17 +351,7 @@ class _PreferencesSelectionState extends State<PreferencesSelection> {
           onPressed: () => setState(() => _expandedSection = 3),
           gradient: PreferencesScreenTheme.of(context).expansionButtonGradient,
           children: [
-            for (var ethnicity in [
-              'Black',
-              'White',
-              'Indian',
-              'Gujarati',
-              'Armenian',
-              'Chinese',
-              'Japanese',
-              'Lebanese',
-              'Other',
-            ])
+            for (var ethnicity in ethnicityList)
               PreferencesSetTile<String>(
                 title: Text(ethnicity),
                 value: ethnicity,

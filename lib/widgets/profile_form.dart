@@ -37,7 +37,7 @@ class _PrivateProfileFormState extends State<PrivateProfileForm> {
               ),
         ),
         PreferencesExpansionSection(
-          label: 'Male',
+          label: genderToLabel(widget.profile.gender),
           expanded: _expandedSection == 0,
           onPressed: () => setState(() => _expandedSection = 0),
           children: [
@@ -89,10 +89,10 @@ class _PrivateProfileFormState extends State<PrivateProfileForm> {
         ),
         SfSlider(
           value: widget.profile.weight,
-          min: 0,
+          min: 25,
           max: 400,
-          stepSize: 50,
-          interval: 50,
+          stepSize: 25,
+          interval: 25,
           showDividers: true,
           thumbIcon: Center(
             child: Text(
@@ -118,7 +118,7 @@ class _PrivateProfileFormState extends State<PrivateProfileForm> {
         ),
         SfSlider(
           value: widget.profile.height,
-          min: 0,
+          min: 24,
           max: 120,
           stepSize: 6,
           interval: 6,

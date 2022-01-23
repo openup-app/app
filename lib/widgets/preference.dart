@@ -75,43 +75,51 @@ class _PreferencesExpansionSectionState
             Theming.of(context).boxShadow,
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            if (!widget.expanded)
-              Button(
-                onPressed: widget.onPressed,
+            SizeTransition(
+              sizeFactor: _controller,
+              child: FadeTransition(
+                opacity: _controller,
+                child: ListView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shrinkWrap: true,
+                  children: widget.children,
+                ),
+              ),
+            ),
+            IgnorePointer(
+              child: SizedBox(
+                height: 44,
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 32,
-                      vertical: 6.0,
                     ),
-                    child: Text(
-                      widget.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theming.of(context).text.body.copyWith(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white),
+                    child: FadeTransition(
+                      opacity: Tween(begin: 1.0, end: 0.0).animate(_controller),
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theming.of(context).text.body.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white),
+                      ),
                     ),
                   ),
                 ),
-              )
-            else
-              SizeTransition(
-                sizeFactor: _controller,
-                child: FadeTransition(
-                  opacity: _controller,
-                  child: ListView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shrinkWrap: true,
-                    children: widget.children,
-                  ),
+              ),
+            ),
+            if (!widget.expanded)
+              Button(
+                onPressed: widget.onPressed,
+                child: Container(
+                  color: Colors.transparent,
+                  height: 44,
                 ),
               ),
           ],

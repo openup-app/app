@@ -9,11 +9,11 @@ class Preferences with _$Preferences {
     @RangeJsonConverter() @Default({}) Set<Gender> gender,
     @Default({}) Set<SkinColor> skinColor,
     @RangeJsonConverter()
-    @Default(Range(min: 1, max: 10))
+    @Default(Range(min: 25, max: 400))
     @JsonKey()
         Range weight,
     @RangeJsonConverter()
-    @Default(Range(min: 1, max: 10))
+    @Default(Range(min: 24, max: 120))
     @JsonKey()
         Range height,
     @Default({}) Set<String> ethnicity,
