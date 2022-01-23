@@ -1,12 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart' hide UserMetadata;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 
-class SignUpWelcomeInfoScreen extends StatelessWidget {
+import 'api/users/user_metadata.dart';
+
+class SignUpWelcomeInfoScreen extends ConsumerWidget {
   const SignUpWelcomeInfoScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -34,10 +40,7 @@ class SignUpWelcomeInfoScreen extends StatelessWidget {
             width: 57,
             height: 57,
             child: Button(
-              onPressed: () {
-                Navigator.of(context).popUntil((route) => route.isFirst);
-                Navigator.of(context).pushReplacementNamed('home');
-              },
+              onPressed: () => _setOnBoardedTrueAndNavigateHome(context, ref),
               child: Image.asset('assets/images/close_circle.png'),
             ),
           ),
@@ -80,5 +83,30 @@ class SignUpWelcomeInfoScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _setOnBoardedTrueAndNavigateHome(
+      BuildContext context, WidgetRef ref) async {
+    await Firebase.initializeApp();
+    final auth = FirebaseAuth.instance;
+    final user = auth.currentUser;
+    final uid = user?.uid;
+
+    if (uid == null) {
+      throw 'No user is logged in';
+    }
+
+    final usersApi = ref.read(usersApiProvider);
+
+    final userMetadata = usersApi.userMetadata?.copyWith(onboarded: true) ??
+        const UserMetadata(onboarded: true);
+
+    usersApi.updateUserMetadata(
+      uid,
+      userMetadata,
+    );
+
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    Navigator.of(context).pushReplacementNamed('home');
   }
 }

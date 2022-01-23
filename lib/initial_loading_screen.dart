@@ -1,7 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide UserMetadata;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users/user_metadata.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/theming.dart';
@@ -15,6 +16,8 @@ class InitialLoadingScreen extends ConsumerStatefulWidget {
 }
 
 class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
+  bool _onboarded = false;
+
   @override
   void initState() {
     super.initState();
@@ -48,11 +51,10 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       usersApi: usersApi,
     );
 
-    // Stardand app entry
+    // Standard app entry
     if (!deepLinked) {
       // TODO: Check if onboarded
-      final onboarded = false;
-      if (onboarded) {
+      if (_onboarded) {
         Navigator.of(context).pushReplacementNamed('home');
       } else {
         Navigator.of(context).pushReplacementNamed('sign-up-info');
@@ -61,13 +63,24 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
   }
 
   Future<void> _cacheData(UsersApi api, String uid) async {
-    await Future.wait([
+    final result = await Future.wait([
+      api.getUserMetadata(uid),
       api.getPublicProfile(uid),
       api.getPrivateProfile(uid),
       api.getFriendsPreferences(uid),
       api.getDatingPreferences(uid),
       api.getAllChatroomUnreadCounts(uid),
     ]);
+
+    final userMetadata = result[0] as UserMetadata;
+
+    if (mounted) {
+      if (mounted) {
+        setState(() {
+          _onboarded = userMetadata.onboarded;
+        });
+      }
+    }
   }
 
   @override

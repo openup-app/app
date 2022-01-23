@@ -7,6 +7,7 @@ import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/api/users/user_metadata.dart';
 
 class RawUsersApi {
   static const _headers = {
@@ -120,6 +121,39 @@ class RawUsersApi {
       print('Error ${response.statusCode}: ${response.body}');
       return Future.error('Failure');
     }
+  }
+
+  Future<void> updateUserMetadata(String uid, UserMetadata userMetadata) async {
+    final response = await http.post(
+      Uri.parse('$_urlBase/users/$uid/metadata'),
+      headers: _headers,
+      body: jsonEncode(userMetadata.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to update user metadata');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+  }
+
+  Future<UserMetadata> getUserMetadata(String uid) async {
+    final response = await http.get(
+      Uri.parse('$_urlBase/users/$uid/metadata'),
+      headers: _headers,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to get user metadata');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+
+    return UserMetadata.fromJson(jsonDecode(response.body));
   }
 
   Future<PublicProfile> getPublicProfile(String uid) async {

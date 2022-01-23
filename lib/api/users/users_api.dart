@@ -8,6 +8,7 @@ import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/raw_users_api.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/api/users/user_metadata.dart';
 import 'package:rxdart/subjects.dart';
 
 late final Provider<UsersApi> usersApiProvider;
@@ -35,6 +36,7 @@ class UsersApi implements RawUsersApi {
   final RawUsersApi _rawUsersApi;
   String? _uid;
   Account? _account;
+  UserMetadata? _userMetadata;
   PublicProfile? _publicProfile;
   PrivateProfile? _privateProfile;
   Preferences? _friendsPreferences;
@@ -108,6 +110,27 @@ class UsersApi implements RawUsersApi {
       _account = account;
     }
     return _rawUsersApi.updateAccount(uid, account);
+  }
+
+  @override
+  Future<void> updateUserMetadata(String uid, UserMetadata userMetadata) {
+    if (uid == _uid) {
+      _userMetadata = userMetadata;
+    }
+    return _rawUsersApi.updateUserMetadata(uid, userMetadata);
+  }
+
+  @override
+  Future<UserMetadata> getUserMetadata(String uid) async {
+    if (uid == _uid && _userMetadata != null) {
+      return _userMetadata!;
+    }
+
+    final userMetadata = await _rawUsersApi.getUserMetadata(uid);
+    if (uid == _uid) {
+      _userMetadata = userMetadata;
+    }
+    return userMetadata;
   }
 
   @override
@@ -286,6 +309,8 @@ class UsersApi implements RawUsersApi {
   @override
   Future<void> updateNotificationToken(String uid, String notificationToken) =>
       _rawUsersApi.updateNotificationToken(uid, notificationToken);
+
+  UserMetadata? get userMetadata => _userMetadata;
 
   PublicProfile? get publicProfile => _publicProfile;
 
