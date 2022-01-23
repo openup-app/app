@@ -36,7 +36,6 @@ class ChatApi {
           .setTimeout(1500)
           .setTransports(['websocket'])
           .enableForceNew()
-          .disableReconnection()
           .setQuery({'uid': uid, 'chatroomId': chatroomId})
           .build(),
     );

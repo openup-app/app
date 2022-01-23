@@ -21,16 +21,10 @@ class SocketIoSignalingChannel implements SignalingChannel {
           .setTimeout(1500)
           .setTransports(['websocket'])
           .enableForceNew()
-          .disableReconnection()
           .setQuery({'uid': uid, 'rid': rid})
           .build(),
     );
-    _socket.onConnectError((_) {
-      print('Connection error');
-    });
-    _socket.onDisconnect((_) {
-      print('Disconnect');
-    });
+
     _socket.on('message', (message) {
       final payload = message as String;
       _handleSignal(payload);

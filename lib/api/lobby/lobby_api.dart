@@ -33,7 +33,6 @@ class LobbyApi {
           .setTimeout(1500)
           .setTransports(['websocket'])
           .enableForceNew()
-          .disableReconnection()
           .setQuery({
             'uid': uid,
             'lobby_type': purpose == Purpose.friends ? 'friends' : 'dating',
