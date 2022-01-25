@@ -56,16 +56,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
 
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
+    _init();
+  }
+
+  void _init() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
       throw 'No user is logged in';
     }
-    _uid = uid;
+    _uid = user.uid;
     _chatApi = ChatApi(
       host: widget.host,
       webPort: widget.webPort,
       socketPort: widget.socketPort,
-      uid: uid,
+      authToken: await user.getIdToken(),
+      uid: _uid,
       chatroomId: widget.chatroomId,
       onMessage: (message) {
         setState(() => _messages[message.messageId!] = message);
@@ -78,7 +83,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
 
     final usersApi = ref.read(usersApiProvider);
-    usersApi.getPublicProfile(uid).then((profile) {
+    usersApi.getPublicProfile(_uid).then((profile) {
       if (mounted) {
         setState(() => _myAvatar = profile.photo);
       }

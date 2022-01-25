@@ -10,7 +10,7 @@ import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/user_metadata.dart';
 
 class RawUsersApi {
-  static const _headers = {
+  final _headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
@@ -20,7 +20,10 @@ class RawUsersApi {
   RawUsersApi({
     required String host,
     required int port,
-  }) : _urlBase = 'http://$host:$port';
+    required String authToken,
+  }) : _urlBase = 'http://$host:$port' {
+    _headers['Authorization'] = 'Bearer $authToken';
+  }
 
   Future<void> createUserWithEmail({
     required String email,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/user_metadata.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/main.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -30,11 +31,17 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     final user = auth.currentUser;
 
     // Verify user sign-in (will be navigated back here on success)
-    final usersApi = ref.read(usersApiProvider);
     if (user == null) {
       Navigator.of(context).pushReplacementNamed('sign-up');
       return;
     }
+
+    initUsersApi(
+      host: host,
+      port: webPort,
+      authToken: await user.getIdToken(),
+    );
+    final usersApi = ref.read(usersApiProvider);
     usersApi.uid = user.uid;
 
     // Begin caching

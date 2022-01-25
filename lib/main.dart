@@ -63,11 +63,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   @override
   void initState() {
     super.initState();
-    initUsersApi(
-      host: host,
-      port: webPort,
-    );
-
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,

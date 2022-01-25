@@ -19,6 +19,7 @@ late final StateController<PublicProfile?> _profileStateController;
 void initUsersApi({
   required String host,
   required int port,
+  required String authToken,
 }) {
   profileProvider = StateProvider<PublicProfile?>((ref) {
     return null;
@@ -28,6 +29,7 @@ void initUsersApi({
     return UsersApi(
       host: host,
       port: port,
+      authToken: authToken,
     );
   });
 }
@@ -49,9 +51,11 @@ class UsersApi implements RawUsersApi {
   UsersApi({
     required String host,
     required int port,
+    required String authToken,
   }) : _rawUsersApi = RawUsersApi(
           host: host,
           port: port,
+          authToken: authToken,
         );
 
   Future<void> dispose() {

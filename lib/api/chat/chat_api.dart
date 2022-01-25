@@ -11,7 +11,7 @@ part 'chat_api.g.dart';
 
 /// Handle chatrooms, dispose to leave the chatroom.
 class ChatApi {
-  static const _headers = {
+  final _headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
@@ -25,11 +25,14 @@ class ChatApi {
     required String host,
     required int webPort,
     required int socketPort,
+    required String authToken,
     required String uid,
     required String chatroomId,
     required this.onMessage,
     required this.onConnectionError,
   }) : _urlBase = 'http://$host:$webPort' {
+    _headers['Authorization'] = 'Bearer $authToken';
+
     _socket = io(
       'http://$host:$socketPort/chats',
       OptionBuilder()
