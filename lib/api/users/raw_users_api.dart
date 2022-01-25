@@ -476,10 +476,10 @@ class RawUsersApi {
     required bool group,
   }) async {
     final response = await http.post(
-      Uri.parse('$_urlBase/users/$calleeUid/call'),
+      Uri.parse('$_urlBase/users/$uid/call'),
       headers: _headers,
       body: jsonEncode({
-        'callerUid': uid,
+        'calleeUid': calleeUid,
         'video': video,
         'group': group,
       }),
