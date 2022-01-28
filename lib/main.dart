@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
+import 'package:openup/api/online_users/online_users_api.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
@@ -60,6 +63,10 @@ class OpenupApp extends ConsumerStatefulWidget {
 }
 
 class _OpenupAppState extends ConsumerState<OpenupApp> {
+  bool _loggedIn = false;
+  StreamSubscription? _authStateSubscription;
+  OnlineUsersApi? _onlineUsersApi;
+
   @override
   void initState() {
     super.initState();
@@ -71,6 +78,32 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       ),
     );
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+    Firebase.initializeApp().whenComplete(() {
+      _authStateSubscription =
+          FirebaseAuth.instance.authStateChanges().listen((user) {
+        final loggedIn = user != null;
+        if (_loggedIn != loggedIn) {
+          setState(() => _loggedIn = loggedIn);
+          if (loggedIn && user != null) {
+            _onlineUsersApi?.dispose();
+            _onlineUsersApi = OnlineUsersApi(
+              host: host,
+              port: socketPort,
+              uid: user.uid,
+              onConnectionError: () {},
+            );
+          }
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _authStateSubscription?.cancel();
+    _onlineUsersApi?.dispose();
+    super.dispose();
   }
 
   @override

@@ -6,6 +6,7 @@ import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/util/emoji.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/matching_users_online.dart';
 import 'package:openup/widgets/preference.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
@@ -70,6 +71,13 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                     fontWeight: FontWeight.w400,
                     fontSize: 30,
                   ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.center,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 0.0),
+              child: MatchingUsersOnline(preferences: _preferences),
             ),
           ),
           const SizedBox(height: 12),
@@ -189,7 +197,6 @@ class _PreferencesSelectionState extends State<PreferencesSelection> {
     final ethnicityLabel = ethnicityLabelElements.isEmpty
         ? 'Any'
         : ethnicityLabelElements.join(', ');
-    print(widget.preferences);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
