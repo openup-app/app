@@ -23,6 +23,7 @@ class LobbyApi {
     required int socketPort,
     required String uid,
     required bool video,
+    required bool serious,
     required Purpose purpose,
     required this.onJoinCall,
     required this.onConnectionError,
@@ -37,6 +38,7 @@ class LobbyApi {
             'uid': uid,
             'lobby_type': purpose == Purpose.friends ? 'friends' : 'dating',
             'video': video,
+            'serious': serious,
           })
           .build(),
     );

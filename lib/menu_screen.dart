@@ -9,12 +9,12 @@ import 'package:openup/widgets/toggle_button.dart';
 
 part 'menu_screen.freezed.dart';
 
-class MenuScreen extends StatelessWidget {
+class MenuScreen extends StatefulWidget {
   final String label;
   final Widget image;
   final bool groupCalling;
-  final VoidCallback onPressedVoiceCall;
-  final VoidCallback onPressedVideoCall;
+  final void Function(bool serious) onPressedVoiceCall;
+  final void Function(bool serious) onPressedVideoCall;
   final VoidCallback onPressedPreferences;
 
   const MenuScreen({
@@ -26,6 +26,13 @@ class MenuScreen extends StatelessWidget {
     required this.onPressedVideoCall,
     required this.onPressedPreferences,
   }) : super(key: key);
+
+  @override
+  State<MenuScreen> createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
+  bool _serious = false;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +74,7 @@ class MenuScreen extends StatelessWidget {
               children: [
                 const Spacer(),
                 Text(
-                  label,
+                  widget.label,
                   style: Theming.of(context).text.headline.copyWith(
                     color: MenuScreenTheme.of(context).titleColor,
                     shadows: [
@@ -84,22 +91,31 @@ class MenuScreen extends StatelessWidget {
                 Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
-                    image,
-                    if (!groupCalling)
+                    widget.image,
+                    if (!widget.groupCalling)
                       Align(
                         alignment: Alignment.centerRight,
                         child: Column(
                           children: [
                             ToggleButton(
-                              value: true,
-                              onChanged: (_) {},
+                              value: _serious,
+                              color: _serious
+                                  ? const Color.fromRGBO(0xFF, 0x86, 0x86, 1.0)
+                                  : const Color.fromRGBO(0x8B, 0xC0, 0xFF, 1.0),
+                              onChanged: (value) {
+                                setState(() => _serious = value);
+                              },
                             ),
                             const SizedBox(height: 8),
-                            const Text(
-                              'casual',
+                            Text(
+                              _serious ? 'serious' : 'casual',
                               style: TextStyle(
-                                color: Color.fromARGB(0xFF, 0x8B, 0xC0, 0xFF),
-                                fontSize: 15,
+                                color: _serious
+                                    ? const Color.fromRGBO(
+                                        0xFF, 0x86, 0x86, 1.0)
+                                    : const Color.fromRGBO(
+                                        0x8B, 0xC0, 0xFF, 1.0),
+                                fontSize: 14,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -109,7 +125,7 @@ class MenuScreen extends StatelessWidget {
                   ],
                 ),
                 _MenuButton(
-                  onPressed: onPressedVoiceCall,
+                  onPressed: () => widget.onPressedVoiceCall(_serious),
                   icon: Image.asset('assets/images/voice_call.png'),
                   color: MenuScreenTheme.of(context).buttonColorTop,
                   child: Text(
@@ -119,7 +135,7 @@ class MenuScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 _MenuButton(
-                  onPressed: onPressedVideoCall,
+                  onPressed: () => widget.onPressedVideoCall(_serious),
                   icon: Image.asset('assets/images/video_call.png'),
                   color: MenuScreenTheme.of(context).buttonColorMiddle,
                   child: Text(
@@ -129,7 +145,7 @@ class MenuScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 _MenuButton(
-                  onPressed: onPressedPreferences,
+                  onPressed: widget.onPressedPreferences,
                   icon: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Image.asset('assets/images/preferences.png'),

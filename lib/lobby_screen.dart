@@ -17,6 +17,7 @@ class LobbyScreen extends StatefulWidget {
   final String host;
   final int socketPort;
   final bool video;
+  final bool serious;
   final Purpose purpose;
   final void Function({
     required String rid,
@@ -29,6 +30,7 @@ class LobbyScreen extends StatefulWidget {
     required this.host,
     required this.socketPort,
     required this.video,
+    required this.serious,
     required this.purpose,
     required this.onJoinCall,
   }) : super(key: key);
@@ -62,6 +64,7 @@ class _LobbyScreenState extends State<LobbyScreen>
       socketPort: widget.socketPort,
       uid: FirebaseAuth.instance.currentUser!.uid,
       video: widget.video,
+      serious: widget.serious,
       purpose: widget.purpose,
       onJoinCall: (rid, profiles, rekindles) => widget.onJoinCall(
         rid: rid,
@@ -171,8 +174,10 @@ class _LobbyScreenState extends State<LobbyScreen>
 
 class LobbyScreenArguments {
   final bool video;
+  final bool serious;
   LobbyScreenArguments({
     required this.video,
+    required this.serious,
   });
 }
 
