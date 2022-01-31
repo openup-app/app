@@ -290,6 +290,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
           rid: rid,
           profiles: [profile],
           rekindles: [],
+          serious: false,
         ),
       );
     }

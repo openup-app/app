@@ -530,6 +530,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         rid: rid,
         profiles: [profile],
         rekindles: [],
+        serious: false,
       ),
     );
   }

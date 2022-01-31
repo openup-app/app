@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/rendering.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 part 'lobby_api.freezed.dart';
@@ -13,10 +13,7 @@ part 'lobby_api.g.dart';
 /// Handle callbacks to participate in a call, dispose to leave the lobby.
 class LobbyApi {
   late final Socket _socket;
-  final void Function(
-          String rid, List<PublicProfile> public, List<Rekindle> rekindles)
-      onJoinCall;
-  final VoidCallback onConnectionError;
+  final _eventController = BehaviorSubject<LobbyEvent>();
 
   LobbyApi({
     required String host,
@@ -25,8 +22,6 @@ class LobbyApi {
     required bool video,
     required bool serious,
     required Purpose purpose,
-    required this.onJoinCall,
-    required this.onConnectionError,
   }) {
     _socket = io(
       'http://$host:$socketPort/lobby',
@@ -34,6 +29,7 @@ class LobbyApi {
           .setTimeout(1500)
           .setTransports(['websocket'])
           .enableForceNew()
+          .disableAutoConnect()
           .setQuery({
             'uid': uid,
             'lobby_type': purpose == Purpose.friends ? 'friends' : 'dating',
@@ -42,8 +38,13 @@ class LobbyApi {
           })
           .build(),
     );
+
     _socket.onConnectError((_) {
-      onConnectionError();
+      _eventController.add(const _ConnectionError());
+    });
+
+    _socket.onDisconnect((_) {
+      _eventController.add(const _Disconnected());
     });
 
     _socket.on('message', (message) {
@@ -53,31 +54,41 @@ class LobbyApi {
     });
   }
 
+  void connect() {
+    _socket.connect();
+  }
+
   Future<void> dispose() {
     _socket.dispose();
+    _eventController.close();
     return Future.value();
   }
 
+  Stream<LobbyEvent> get eventStream => _eventController.stream;
+
   void _handleMessage(String message) {
     final json = jsonDecode(message);
-    final lobbyEvent = _LobbyEvent.fromJson(json);
-    lobbyEvent.map(
-      joinCall: (event) =>
-          onJoinCall(event.rid, event.profiles, event.rekindles),
-    );
+    final lobbyEvent = LobbyEvent.fromJson(json);
+    _eventController.add(lobbyEvent);
   }
 }
 
 @freezed
-class _LobbyEvent with _$_LobbyEvent {
-  const factory _LobbyEvent.joinCall({
+class LobbyEvent with _$LobbyEvent {
+  const factory LobbyEvent.connectionError() = _ConnectionError;
+
+  const factory LobbyEvent.disconnected() = _Disconnected;
+
+  const factory LobbyEvent.penalized() = _Penalized;
+
+  const factory LobbyEvent.joinCall({
     required String rid,
     required List<PublicProfile> profiles,
     required List<Rekindle> rekindles,
   }) = _JoinCall;
 
-  factory _LobbyEvent.fromJson(Map<String, dynamic> json) =>
-      _$_LobbyEventFromJson(json);
+  factory LobbyEvent.fromJson(Map<String, dynamic> json) =>
+      _$LobbyEventFromJson(json);
 }
 
 enum Purpose {

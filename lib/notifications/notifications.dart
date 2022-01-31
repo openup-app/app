@@ -63,6 +63,7 @@ Future<bool> _handleLaunchNotification({
         rid: rid,
         profiles: [profile],
         rekindles: [],
+        serious: false,
         groupLobby: group,
       ),
     );
@@ -117,6 +118,7 @@ void _onForegroundNotification(RemoteMessage message, UsersApi usersApi) async {
               rid: call.rid,
               profiles: [profile],
               rekindles: [],
+              serious: false,
               groupLobby: call.group,
             ),
           );

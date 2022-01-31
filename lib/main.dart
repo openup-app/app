@@ -289,16 +289,24 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                               height: 90,
                             ),
                           ),
-                          onPressedVoiceCall: () =>
-                              Navigator.of(context).pushNamed(
-                            'friends-lobby',
-                            arguments: LobbyScreenArguments(video: false),
-                          ),
-                          onPressedVideoCall: () =>
-                              Navigator.of(context).pushNamed(
-                            'friends-lobby',
-                            arguments: LobbyScreenArguments(video: true),
-                          ),
+                          onPressedVoiceCall: (serious) {
+                            Navigator.of(context).pushNamed(
+                              'friends-lobby',
+                              arguments: LobbyScreenArguments(
+                                video: false,
+                                serious: serious,
+                              ),
+                            );
+                          },
+                          onPressedVideoCall: (serious) {
+                            Navigator.of(context).pushNamed(
+                              'friends-lobby',
+                              arguments: LobbyScreenArguments(
+                                video: true,
+                                serious: serious,
+                              ),
+                            );
+                          },
                           onPressedPreferences: () =>
                               _navigateToPreferences(context, Purpose.friends),
                         ),
@@ -335,9 +343,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             ),
                           ),
                           groupCalling: true,
-                          onPressedVoiceCall: () =>
+                          onPressedVoiceCall: (_) =>
                               _displayConnections(context, video: false),
-                          onPressedVideoCall: () =>
+                          onPressedVideoCall: (_) =>
                               _displayConnections(context, video: true),
                           onPressedPreferences: () =>
                               _navigateToPreferences(context, Purpose.friends),
@@ -404,6 +412,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           host: host,
                           socketPort: socketPort,
                           video: args.video,
+                          serious: args.serious,
                           purpose: Purpose.friends,
                           onJoinCall: ({
                             required String rid,
@@ -419,6 +428,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 rid: rid,
                                 profiles: profiles,
                                 rekindles: rekindles,
+                                serious: args.serious,
                               ),
                             );
                           },
@@ -466,6 +476,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           host: host,
                           socketPort: socketPort,
                           video: false,
+                          serious: args.serious,
                           profiles: args.profiles,
                           rekindles: args.rekindles,
                           groupLobby: args.groupLobby,
@@ -484,6 +495,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         host: host,
                         socketPort: socketPort,
                         video: true,
+                        serious: args.serious,
                         profiles: args.profiles,
                         rekindles: args.rekindles,
                         groupLobby: args.groupLobby,
@@ -603,16 +615,24 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                               fit: BoxFit.fitHeight,
                             ),
                           ),
-                          onPressedVoiceCall: () =>
-                              Navigator.of(context).pushNamed(
-                            'dating-lobby',
-                            arguments: LobbyScreenArguments(video: false),
-                          ),
-                          onPressedVideoCall: () =>
-                              Navigator.of(context).pushNamed(
-                            'dating-lobby',
-                            arguments: LobbyScreenArguments(video: true),
-                          ),
+                          onPressedVoiceCall: (serious) {
+                            Navigator.of(context).pushNamed(
+                              'dating-lobby',
+                              arguments: LobbyScreenArguments(
+                                video: false,
+                                serious: serious,
+                              ),
+                            );
+                          },
+                          onPressedVideoCall: (serious) {
+                            Navigator.of(context).pushNamed(
+                              'dating-lobby',
+                              arguments: LobbyScreenArguments(
+                                video: true,
+                                serious: serious,
+                              ),
+                            );
+                          },
                           onPressedPreferences: () =>
                               _navigateToPreferences(context, Purpose.dating),
                         ),
@@ -651,9 +671,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             ),
                           ),
                           groupCalling: true,
-                          onPressedVoiceCall: () =>
+                          onPressedVoiceCall: (_) =>
                               _displayConnections(context, video: false),
-                          onPressedVideoCall: () =>
+                          onPressedVideoCall: (_) =>
                               _displayConnections(context, video: true),
                           onPressedPreferences: () =>
                               _navigateToPreferences(context, Purpose.dating),
@@ -724,6 +744,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           host: host,
                           socketPort: socketPort,
                           video: args.video,
+                          serious: args.serious,
                           purpose: Purpose.dating,
                           onJoinCall: ({
                             required String rid,
@@ -740,6 +761,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 rid: rid,
                                 profiles: profiles,
                                 rekindles: rekindles,
+                                serious: args.serious,
                               ),
                             );
                           },
@@ -787,6 +809,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           host: host,
                           socketPort: socketPort,
                           video: false,
+                          serious: args.serious,
                           profiles: args.profiles,
                           rekindles: args.rekindles,
                           groupLobby: args.groupLobby,
@@ -805,6 +828,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         host: host,
                         socketPort: socketPort,
                         video: true,
+                        serious: args.serious,
                         profiles: args.profiles,
                         rekindles: args.rekindles,
                         groupLobby: args.groupLobby,
@@ -964,6 +988,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     rid: rid,
                     profiles: [profile],
                     rekindles: [],
+                    serious: false,
                     groupLobby: true,
                   ),
                 );

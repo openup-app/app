@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -43,7 +45,9 @@ class _LobbyScreenState extends State<LobbyScreen>
     with SingleTickerProviderStateMixin {
   late final LobbyApi _lobbyApi;
 
+  late final StreamSubscription _subscription;
   late final AnimationController _animationController;
+  bool _shouldHandleDisconnection = true;
 
   @override
   void initState() {
@@ -66,12 +70,14 @@ class _LobbyScreenState extends State<LobbyScreen>
       video: widget.video,
       serious: widget.serious,
       purpose: widget.purpose,
-      onJoinCall: (rid, profiles, rekindles) => widget.onJoinCall(
-        rid: rid,
-        profiles: profiles,
-        rekindles: rekindles,
-      ),
-      onConnectionError: () {
+    );
+    _subscription = _lobbyApi.eventStream.listen(_onLobbyEvent);
+    _lobbyApi.connect();
+  }
+
+  void _onLobbyEvent(LobbyEvent event) {
+    event.when(
+      connectionError: () {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Unable to connect to server'),
@@ -79,11 +85,39 @@ class _LobbyScreenState extends State<LobbyScreen>
         );
         Navigator.of(context).pop();
       },
+      disconnected: () {
+        if (_shouldHandleDisconnection) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Lost connection to server'),
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+      },
+      penalized: () {
+        setState(() => _shouldHandleDisconnection = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'You have been penalized from serious mode for a few minutes'),
+          ),
+        );
+        Navigator.of(context).pop();
+      },
+      joinCall: (rid, profiles, rekindles) {
+        widget.onJoinCall(
+          rid: rid,
+          profiles: profiles,
+          rekindles: rekindles,
+        );
+      },
     );
   }
 
   @override
   void dispose() {
+    _subscription.cancel();
     _animationController.dispose();
     _lobbyApi.dispose();
     super.dispose();

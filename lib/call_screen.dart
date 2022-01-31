@@ -24,6 +24,7 @@ class CallScreen extends ConsumerStatefulWidget {
   final String host;
   final int socketPort;
   final bool video;
+  final bool serious;
   final List<PublicProfile> profiles;
   final List<Rekindle> rekindles;
   final bool groupLobby;
@@ -34,6 +35,7 @@ class CallScreen extends ConsumerStatefulWidget {
     required this.host,
     required this.socketPort,
     required this.video,
+    required this.serious,
     required this.profiles,
     required this.rekindles,
     required this.groupLobby,
@@ -72,6 +74,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       port: widget.socketPort,
       uid: uid,
       rid: widget.rid,
+      serious: widget.serious,
     );
 
     for (var i = 0; i < widget.profiles.length; i++) {
@@ -139,6 +142,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                 rid: rid,
                 profiles: profiles,
                 rekindles: rekindles,
+                serious: widget.serious,
                 groupLobby: false,
               ),
             );
@@ -344,12 +348,14 @@ class CallPageArguments {
   final String rid;
   final List<PublicProfile> profiles;
   final List<Rekindle> rekindles;
+  final bool serious;
   final bool groupLobby;
 
   CallPageArguments({
     required this.rid,
     required this.profiles,
     required this.rekindles,
+    required this.serious,
     this.groupLobby = false,
   });
 }

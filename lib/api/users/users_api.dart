@@ -11,10 +11,10 @@ import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/user_metadata.dart';
 import 'package:rxdart/subjects.dart';
 
-late final Provider<UsersApi> usersApiProvider;
-late final StateProvider<PublicProfile?> profileProvider;
+late Provider<UsersApi> usersApiProvider;
+late StateProvider<PublicProfile?> profileProvider;
 
-late final StateController<PublicProfile?> _profileStateController;
+late StateController<PublicProfile?> _profileStateController;
 
 void initUsersApi({
   required String host,
