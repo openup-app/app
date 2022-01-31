@@ -297,7 +297,7 @@ class Phone {
         groupCallLobbyReady: (_) {},
         groupCallLobbyReadyStates: (states) =>
             onGroupCallLobbyStates(states.readyStates),
-        groupCallJoin: (room) => onJoinGroupCall(
+        joinCall: (room) => onJoinGroupCall(
           room.rid,
           room.profiles,
           room.rekindles,

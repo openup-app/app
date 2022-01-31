@@ -42,12 +42,12 @@ class Signal with _$Signal {
     required Map<String, bool> readyStates,
   }) = _GroupCallLobbyReadyStates;
 
-  const factory Signal.groupCallJoin({
+  const factory Signal.joinCall({
     @Default('room') String recipient,
     required String rid,
     required List<PublicProfile> profiles,
     required List<Rekindle> rekindles,
-  }) = _GroupCallJoin;
+  }) = _JoinCall;
 
   factory Signal.fromJson(Map<String, dynamic> json) => _$SignalFromJson(json);
 }
