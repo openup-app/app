@@ -167,8 +167,6 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
     _unrequestedConnections.addAll(widget.rekindles);
 
-    _endTime = DateTime.now().add(const Duration(seconds: 90));
-
     for (var call in _users.entries) {
       final otherUid = call.key;
       _connectionStateSubscriptions
@@ -179,6 +177,11 @@ class _CallScreenState extends ConsumerState<CallScreen> {
             _users[otherUid] =
                 latestData.copyWith.userConnection(connectionState: state);
           });
+        }
+
+        if (state == PhoneConnectionState.connected && _endTime == null) {
+          setState(
+              () => _endTime = DateTime.now().add(const Duration(seconds: 90)));
         }
       }));
     }

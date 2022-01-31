@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
@@ -47,8 +48,8 @@ class VoiceCallScreenContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = users.first;
-    final profile = data.profile;
+    final tempFirstUser = users.first;
+    final profile = tempFirstUser.profile;
     final photo = profile.photo;
     return Stack(
       alignment: Alignment.center,
@@ -76,7 +77,12 @@ class VoiceCallScreenContent extends StatelessWidget {
           ),
           child: Column(
             children: [
-              const SizedBox(height: 40),
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 40,
+                  minHeight: 4,
+                ),
+              ),
               SafeArea(
                 top: true,
                 child: Container(
@@ -101,7 +107,7 @@ class VoiceCallScreenContent extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           if (endTime == null)
-                            const SizedBox(height: 82)
+                            const SizedBox(height: 88)
                           else
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
@@ -129,36 +135,74 @@ class VoiceCallScreenContent extends StatelessWidget {
                               ],
                             ),
                           ),
-                          if (endTime != null)
-                            TimeRemaining(
-                              endTime: endTime!,
-                              onTimeUp: onTimeUp,
-                              builder: (context, remaining) {
-                                return Text(
-                                  remaining,
-                                  style: Theming.of(context)
-                                      .text
-                                      .bodySecondary
-                                      .copyWith(
-                                    fontSize: 24,
-                                    shadows: [
-                                      const Shadow(
-                                        color: Color.fromRGBO(
-                                            0x00, 0x00, 0x00, 0.25),
-                                        blurRadius: 4,
-                                        offset: Offset(0.0, 4.0),
-                                      ),
-                                    ],
+                          SizedBox(
+                            height: 29,
+                            child: endTime == null
+                                ? const SizedBox.shrink()
+                                : TimeRemaining(
+                                    endTime: endTime!,
+                                    onTimeUp: onTimeUp,
+                                    builder: (context, remaining) {
+                                      return Text(
+                                        remaining,
+                                        style: Theming.of(context)
+                                            .text
+                                            .bodySecondary
+                                            .copyWith(
+                                          fontSize: 24,
+                                          shadows: [
+                                            const Shadow(
+                                              color: Color.fromRGBO(
+                                                  0x00, 0x00, 0x00, 0.25),
+                                              blurRadius: 4,
+                                              offset: Offset(0.0, 4.0),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
                                   ),
-                                );
-                              },
-                            ),
+                          ),
+                          Builder(
+                            builder: (context) {
+                              final style =
+                                  Theming.of(context).text.headline.copyWith(
+                                fontSize: 24,
+                                shadows: [
+                                  const Shadow(
+                                    color:
+                                        Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                                    blurRadius: 4,
+                                    offset: Offset(0.0, 4.0),
+                                  ),
+                                ],
+                              );
+                              final text = connectionStateText(
+                                connectionState: tempFirstUser.connectionState,
+                                name: tempFirstUser.profile.name,
+                              );
+                              return AnimatedOpacity(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut,
+                                opacity: tempFirstUser.connectionState ==
+                                        PhoneConnectionState.connected
+                                    ? 0.0
+                                    : 1.0,
+                                child: Text(
+                                  text,
+                                  style: style,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       ),
                       ConstrainedBox(
                         constraints: const BoxConstraints(
-                          maxHeight: 56,
-                          minHeight: 20,
+                          maxHeight: 24,
+                          minHeight: 4,
                         ),
                       ),
                       Row(
@@ -167,7 +211,7 @@ class VoiceCallScreenContent extends StatelessWidget {
                           _ButtonWithText(
                             icon: const IconWithShadow(Icons.person_add),
                             label: 'Connect',
-                            onPressed: data.rekindle != null
+                            onPressed: tempFirstUser.rekindle != null
                                 ? () => onConnect(profile.uid)
                                 : null,
                           ),
