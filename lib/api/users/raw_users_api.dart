@@ -22,7 +22,11 @@ class RawUsersApi {
     required int port,
     required String authToken,
   }) : _urlBase = 'http://$host:$port' {
-    _headers['Authorization'] = 'Bearer $authToken';
+    this.authToken = authToken;
+  }
+
+  set authToken(String value) {
+    _headers['Authorization'] = 'Bearer $value';
   }
 
   Future<void> createUserWithEmail({

@@ -65,6 +65,9 @@ class UsersApi implements RawUsersApi {
   set uid(String value) => _uid = value;
 
   @override
+  set authToken(String value) => _rawUsersApi.authToken = value;
+
+  @override
   Future<void> createUserWithEmail({
     required String email,
     required String password,

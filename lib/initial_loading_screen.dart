@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart' hide UserMetadata;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ class InitialLoadingScreen extends ConsumerStatefulWidget {
 
 class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
   bool _onboarded = false;
+  late final StreamSubscription _idTokenRefreshSubscription;
 
   @override
   void initState() {
@@ -44,6 +47,14 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     final usersApi = ref.read(usersApiProvider);
     usersApi.uid = user.uid;
 
+    // Firebase ID token refresh
+    _idTokenRefreshSubscription =
+        FirebaseAuth.instance.idTokenChanges().listen((user) async {
+      if (user != null) {
+        usersApi.authToken = await user.getIdToken();
+      }
+    });
+
     // Begin caching
     try {
       await _cacheData(usersApi, user.uid);
@@ -60,7 +71,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
     // Standard app entry
     if (!deepLinked) {
-      // TODO: Check if onboarded
       if (_onboarded) {
         Navigator.of(context).pushReplacementNamed('home');
       } else {
@@ -88,6 +98,12 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
         });
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _idTokenRefreshSubscription.cancel();
+    super.dispose();
   }
 
   @override
