@@ -1,8 +1,8 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
@@ -10,7 +10,6 @@ import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
-import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/notification_banner.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/slide_control.dart';
@@ -121,16 +120,70 @@ class RekindleScreenPrecached extends ConsumerWidget {
       children: [
         ImageFiltered(
           imageFilter: ImageFilter.blur(
-            sigmaX: 8.0,
-            sigmaY: 8.0,
+            sigmaX: 4.0,
+            sigmaY: 4.0,
           ),
           child: ProfilePhoto(url: photo),
         ),
-        Container(
-          color: rekindle.purpose == Purpose.friends
-              ? const Color.fromARGB(0x4F, 0x3F, 0xC8, 0xFD)
-              : const Color.fromARGB(0x4F, 0xFF, 0x60, 0x60),
-        ),
+        countdown
+            ? _Countdown(
+                onTimeUp: () {},
+                builder: (context, remaining) {
+                  return DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: rekindle.purpose == Purpose.friends
+                          ? Color.fromRGBO(
+                              0x3F,
+                              0xC8,
+                              0xFD,
+                              1 -
+                                  remaining.inMilliseconds /
+                                      const Duration(seconds: 5).inMilliseconds)
+                          : Color.fromRGBO(
+                              0xFF,
+                              0x60,
+                              0x60,
+                              1 -
+                                  remaining.inMilliseconds /
+                                      const Duration(seconds: 5)
+                                          .inMilliseconds),
+                    ),
+                  );
+                },
+              )
+            : DecoratedBox(
+                decoration: BoxDecoration(
+                  color: rekindle.purpose == Purpose.friends
+                      ? const Color.fromRGBO(0x3F, 0xC8, 0xFD, 0.75)
+                      : const Color.fromRGBO(0xFF, 0x60, 0x60, 0.75),
+                ),
+              ),
+        // Workaround for BlurStyle.inner not being an inner glow
+        for (final ltrbwh in [
+          [-35.0, 0.0, null, 0.0, 50.0, null], // Left
+          [null, 0.0, -35.0, 0.0, 50.0, null], // Right
+          [0.0, -35.0, 0.0, null, null, 50.0], // Top
+          [0.0, null, 0.0, -35.0, null, 50.0], // Bottom
+        ])
+          Positioned(
+            left: ltrbwh[0],
+            top: ltrbwh[1],
+            right: ltrbwh[2],
+            bottom: ltrbwh[3],
+            width: ltrbwh[4],
+            height: ltrbwh[5],
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    blurStyle: BlurStyle.normal,
+                    blurRadius: 139,
+                    color: Color.fromRGBO(0xC7, 0xC7, 0xC7, 1.0),
+                  ),
+                ],
+              ),
+            ),
+          ),
         const Positioned(
           right: 0,
           bottom: 255,
@@ -204,50 +257,13 @@ class RekindleScreenPrecached extends ConsumerWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: SlideControl(
-                  thumbContents: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: countdown
-                          ? _Countdown(
-                              builder: (context, remainingSeconds) {
-                                return Text(
-                                  remainingSeconds.toString(),
-                                  style: Theming.of(context)
-                                      .text
-                                      .headline
-                                      .copyWith(
-                                          fontSize: 42,
-                                          fontWeight: FontWeight.w800,
-                                          color: Colors.grey),
-                                );
-                              },
-                              onTimeUp: () => _moveToNextScreen(context),
-                            )
-                          : const Padding(
-                              padding: EdgeInsets.only(bottom: 4.0),
-                              child: Icon(
-                                Icons.fingerprint,
-                                color: Colors.black12,
-                                size: 44,
-                              ),
-                            ),
-                    ),
-                  ),
-                  trackContents: const Text('slide to connect'),
+                child: ColoredSlider(
+                  countdown: countdown,
+                  onTimeUp: () => _moveToNextScreen(context),
                   onSlideComplete: () {
                     _addRekindle(ref, rekindle);
                     _moveToNextScreen(context);
                   },
-                  trackBorder: true,
-                  trackGradient: const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color.fromARGB(0xBF, 0x86, 0xCA, 0xE7),
-                      Color.fromARGB(0xBF, 0x03, 0x78, 0xA5),
-                    ],
-                  ),
                 ),
               ),
               const SizedBox(
@@ -352,13 +368,88 @@ List<Widget> _backTitleAndHomeButtons(BuildContext context, String title) => [
       ),
     ];
 
+class ColoredSlider extends StatefulWidget {
+  final bool countdown;
+  final VoidCallback onTimeUp;
+  final VoidCallback onSlideComplete;
+  const ColoredSlider({
+    Key? key,
+    required this.countdown,
+    required this.onTimeUp,
+    required this.onSlideComplete,
+  }) : super(key: key);
+
+  @override
+  _ColoredSliderState createState() => _ColoredSliderState();
+}
+
+class _ColoredSliderState extends State<ColoredSlider> {
+  double _value = 0.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return SlideControl(
+      thumbContents: Center(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 4.0),
+          child: widget.countdown
+              ? _Countdown(
+                  builder: (context, remaining) {
+                    return Text(
+                      remaining.inSeconds.toString(),
+                      style: Theming.of(context).text.headline.copyWith(
+                          fontSize: 42,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.grey),
+                    );
+                  },
+                  onTimeUp: widget.onTimeUp,
+                )
+              : const Padding(
+                  padding: EdgeInsets.only(bottom: 4.0),
+                  child: Icon(
+                    Icons.fingerprint,
+                    color: Colors.black12,
+                    size: 44,
+                  ),
+                ),
+        ),
+      ),
+      trackContents: const Text('slide to connect'),
+      onSlideComplete: widget.onSlideComplete,
+      onSlideUpdate: (value) {
+        setState(() => _value = value);
+      },
+      trackBorder: true,
+      trackGradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          ColorTween(
+                  begin: const Color.fromRGBO(0x86, 0xCA, 0xE7, 0.75),
+                  end: const Color.fromRGBO(0x86, 0xE7, 0x95, 0.75))
+              .evaluate(
+            AlwaysStoppedAnimation(_value),
+          )!,
+          ColorTween(
+                  begin: const Color.fromRGBO(0x03, 0x78, 0xA5, 0.75),
+                  end: const Color.fromRGBO(0x03, 0x94, 0x1A, 0.75))
+              .evaluate(
+            AlwaysStoppedAnimation(_value),
+          )!,
+        ],
+      ),
+    );
+  }
+}
+
 class _Countdown extends StatefulWidget {
-  final int startSeconds;
-  final Widget Function(BuildContext context, int remainingSeconds) builder;
+  final Duration duration;
+  final Widget Function(BuildContext context, Duration duration) builder;
   final VoidCallback onTimeUp;
   const _Countdown({
     Key? key,
-    this.startSeconds = 5,
+    this.duration = const Duration(seconds: 5),
     required this.builder,
     required this.onTimeUp,
   }) : super(key: key);
@@ -368,28 +459,28 @@ class _Countdown extends StatefulWidget {
 }
 
 class _CountdownState extends State<_Countdown> {
-  late final Timer _timer;
-  late int _remaining;
+  late Duration _remaining;
+  late final Duration _initialDuration;
 
   @override
   void initState() {
     super.initState();
-    _remaining = widget.startSeconds;
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        if (_remaining > 0) {
-          setState(() => _remaining--);
-        } else {
-          widget.onTimeUp();
-        }
-      }
-    });
+    _remaining = widget.duration;
+    _initialDuration = SchedulerBinding.instance!.currentFrameTimeStamp;
+    SchedulerBinding.instance?.addPostFrameCallback(_update);
   }
 
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
+  void _update(Duration duration) {
+    if (mounted) {
+      if (_remaining > Duration.zero) {
+        final remaining = widget.duration - (duration - _initialDuration);
+        setState(() =>
+            _remaining = remaining < Duration.zero ? Duration.zero : remaining);
+        SchedulerBinding.instance?.addPostFrameCallback(_update);
+      } else {
+        widget.onTimeUp();
+      }
+    }
   }
 
   @override

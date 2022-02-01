@@ -8,6 +8,7 @@ class SlideControl extends StatefulWidget {
   final Gradient? trackGradient;
   final Color? trackColor;
   final VoidCallback onSlideComplete;
+  final void Function(double value)? onSlideUpdate;
 
   const SlideControl({
     Key? key,
@@ -17,6 +18,7 @@ class SlideControl extends StatefulWidget {
     this.trackGradient,
     this.trackColor,
     required this.onSlideComplete,
+    this.onSlideUpdate,
   }) : super(key: key);
 
   @override
@@ -105,6 +107,7 @@ class _SlideControlState extends State<SlideControl>
                       final travelRatio = travel / (trackWidth - thumbSize);
                       final value = _valueStart + travelRatio;
                       setState(() => _value = value.clamp(0.0, 1.0));
+                      widget.onSlideUpdate?.call(_value);
                     },
                     onHorizontalDragEnd: (details) {
                       if (_value == 1.0) {
