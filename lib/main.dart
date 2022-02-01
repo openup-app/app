@@ -751,10 +751,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             required List<PublicProfile> profiles,
                             required List<Rekindle> rekindles,
                           }) {
-                            // TOOD: Proper routes
                             final route = args.video
-                                ? 'friends-video-call'
-                                : 'friends-voice-call';
+                                ? 'dating-video-call'
+                                : 'dating-voice-call';
                             Navigator.of(context).pushNamed(
                               route,
                               arguments: CallPageArguments(
