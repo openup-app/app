@@ -73,26 +73,9 @@ class EndCallReport extends StatelessWidget {
             SizedBox(
               width: 100,
               height: 43,
-              child: Button(
+              child: GradientButton(
                 onPressed: onCancel,
-                child: Container(
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(14.5)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theming.of(context).shadow.withOpacity(0.2),
-                        offset: const Offset(0.0, 4.0),
-                        blurRadius: 4.0,
-                      ),
-                    ],
-                    color: Theming.of(context).datingRed2,
-                  ),
-                  child: Text(
-                    'cancel',
-                    style: Theming.of(context).text.body.copyWith(fontSize: 18),
-                  ),
-                ),
+                child: const Text('cancel'),
               ),
             ),
           ],

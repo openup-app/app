@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/theming.dart';
 
 class HomeButton extends StatelessWidget {
@@ -19,7 +20,7 @@ class HomeButton extends StatelessWidget {
       child: SizedBox(
         width: 48,
         height: 48,
-        child: Icon(
+        child: IconWithShadow(
           Icons.home,
           size: 48.0,
           color: color ?? Theming.of(context).friendBlue4,

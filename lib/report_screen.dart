@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/contact_text_field.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -135,48 +136,9 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                         ),
                         const SizedBox(height: 8),
                         Expanded(
-                          child: Container(
-                            constraints: const BoxConstraints(maxHeight: 242),
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 23,
-                            ),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(18),
-                              ),
-                            ),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextField(
-                                    controller: _textController,
-                                    minLines: 10,
-                                    maxLines: 10,
-                                    decoration: const InputDecoration.collapsed(
-                                      hintText: '',
-                                    ),
-                                  ),
-                                ),
-                                if (_textController.text.isEmpty)
-                                  Align(
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      'Explain what happened',
-                                      style: Theming.of(context)
-                                          .text
-                                          .body
-                                          .copyWith(
-                                            fontWeight: FontWeight.w300,
-                                            color: const Color.fromRGBO(
-                                                0xAD, 0xAD, 0xAD, 1.0),
-                                          ),
-                                    ),
-                                  )
-                              ],
-                            ),
+                          child: ContactTextField(
+                            textController: _textController,
+                            hintText: 'Explain what happened',
                           ),
                         ),
                         Center(
@@ -185,34 +147,9 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                             child: SizedBox(
                               width: 162,
                               height: 43,
-                              child: Button(
+                              child: GradientButton(
                                 onPressed: _uploading ? null : _upload,
-                                child: Container(
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    borderRadius: const BorderRadius.all(
-                                        Radius.circular(14.5)),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Theming.of(context)
-                                            .shadow
-                                            .withOpacity(0.2),
-                                        offset: const Offset(0.0, 4.0),
-                                        blurRadius: 4.0,
-                                      ),
-                                    ],
-                                    color: Theming.of(context).datingRed2,
-                                  ),
-                                  child: _uploading
-                                      ? const CircularProgressIndicator()
-                                      : Text(
-                                          'send',
-                                          style: Theming.of(context)
-                                              .text
-                                              .body
-                                              .copyWith(fontSize: 18),
-                                        ),
-                                ),
+                                child: const Text('send'),
                               ),
                             ),
                           ),

@@ -108,20 +108,17 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 32),
-            Text(
-              'Loading Openup...',
-              style:
-                  Theming.of(context).text.body.copyWith(color: Colors.black),
-            )
-          ],
-        ),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 32),
+          Text(
+            'Loading Openup...',
+            style: Theming.of(context).text.body.copyWith(color: Colors.black),
+          )
+        ],
       ),
     );
   }

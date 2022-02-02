@@ -37,7 +37,9 @@ import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/menu_screen.dart';
 import 'package:openup/voice_call_screen_content.dart';
+import 'package:openup/widgets/account_settings_screen.dart';
 import 'package:openup/widgets/connections_list.dart';
+import 'package:openup/widgets/contact_us_screen.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
@@ -1010,6 +1012,24 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       );
                     },
                   );
+                case 'account-settings':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (_) {
+                      return const CurrentRouteSystemUiStyling.light(
+                        child: AccountSettingsScreen(),
+                      );
+                    },
+                  );
+                case 'contact-us':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (_) {
+                      return const CurrentRouteSystemUiStyling.light(
+                        child: ContactUsScreen(),
+                      );
+                    },
+                  );
                 default:
                   throw 'Route not found ${settings.name}';
               }
@@ -1036,6 +1056,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             routeObserver: _routeObserver,
             child: Builder(builder: builder),
           ),
+          resizeToAvoidBottomInset: false,
           endDrawerEnableOpenDragGesture: false,
           endDrawer: BackdropFilter(
             filter: ImageFilter.blur(
