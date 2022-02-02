@@ -13,7 +13,7 @@ VoidCallback showBlockingModalDialog({
     builder: (context) {
       dialogContext = context;
       return WillPopScope(
-        onWillPop: () => Future.value(true),
+        onWillPop: () => Future.value(false),
         child: builder(context),
       );
     },
