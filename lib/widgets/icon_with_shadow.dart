@@ -18,8 +18,8 @@ class IconWithShadow extends StatelessWidget {
     this.textDirection,
     this.shadows = const [
       BoxShadow(
-        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-        offset: Offset(0.0, 4.0),
+        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.35),
+        offset: Offset(0.0, 1.0),
         blurRadius: 4,
       ),
     ],

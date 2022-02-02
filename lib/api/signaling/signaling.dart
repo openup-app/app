@@ -32,6 +32,11 @@ class Signal with _$Signal {
     @Default('room') String recipient,
   }) = HangUp;
 
+  const factory Signal.hangUpReport({
+    @Default('room') String recipient,
+    required String uidToReport,
+  }) = HangUpReport;
+
   const factory Signal.groupCallLobbyReady({
     @Default('room') String recipient,
     required bool ready,

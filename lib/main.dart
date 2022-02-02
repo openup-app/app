@@ -22,6 +22,7 @@ import 'package:openup/private_profile_screen.dart';
 import 'package:openup/public_profile_edit_screen.dart';
 import 'package:openup/public_profile_screen.dart';
 import 'package:openup/rekindle_screen.dart';
+import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_bio_screen.dart';
 import 'package:openup/sign_up_info_screen.dart';
 import 'package:openup/sign_up_photos_screen.dart';
@@ -921,6 +922,31 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           index: args.index,
                           title: args.title,
                           countdown: args.countdown,
+                        ),
+                      );
+                    },
+                  );
+                case 'call-report':
+                  final args = settings.arguments as ReportScreenArguments;
+                  return _buildPageRoute(
+                    settings: settings,
+                    transitionsBuilder: fadePageTransition,
+                    builder: (_) {
+                      return CurrentRouteSystemUiStyling.light(
+                        child: ReportScreenTheme(
+                          themeData: const ReportScreenThemeData(
+                            backgroundGradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Color.fromRGBO(0xFF, 0x8E, 0x8E, 0.9),
+                                Color.fromRGBO(0xBD, 0x20, 0x20, 0.74),
+                              ],
+                            ),
+                          ),
+                          child: ReportScreen(
+                            uid: args.uid,
+                          ),
                         ),
                       );
                     },

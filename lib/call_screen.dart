@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -12,8 +13,10 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/rekindle_screen.dart';
+import 'package:openup/report_screen.dart';
 import 'package:openup/video_call_screen_content.dart';
 import 'package:openup/voice_call_screen_content.dart';
+import 'package:openup/widgets/end_call_report.dart';
 
 part 'call_screen.freezed.dart';
 
@@ -58,6 +61,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   final _users = <String, CallData>{};
   final _connectionStateSubscriptions = <StreamSubscription>[];
   bool _readyForGroupCall = false;
+
+  String? _showReportOverlayForUid;
 
   @override
   void initState() {
@@ -202,51 +207,93 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.video) {
-      return VideoCallScreenContent(
-        localRenderer: _users.values.first.userConnection.localVideoRenderer,
-        users: _users.values.map((data) => data.userConnection).toList(),
-        hasSentTimeRequest: _hasSentTimeRequest,
-        endTime: widget.rekindles.isEmpty ? null : _endTime,
-        muted: _muted,
-        isGroupLobby: widget.groupLobby,
-        readyForGroupCall: _readyForGroupCall,
-        onTimeUp: _navigateToRekindleOrPop,
-        onHangUp: () {
-          _signalingChannel.send(const HangUp());
-          _navigateToRekindleOrPop();
-        },
-        onConnect: _connect,
-        onReport: _report,
-        onSendTimeRequest: _sendTimeRequest,
-        onToggleMute: () =>
-            _users.values.forEach((element) => element.phone.toggleMute()),
-        onSendReadyForGroupCall: () =>
-            _users.values.first.phone.signalingChannel.send(
-          const GroupCallLobbyReady(ready: true),
+    return Stack(
+      children: [
+        ImageFiltered(
+          imageFilter: ImageFilter.blur(
+            sigmaX: _showReportOverlayForUid == null ? 0.0 : 8.0,
+            sigmaY: _showReportOverlayForUid == null ? 0.0 : 8.0,
+          ),
+          child: Stack(
+            children: [
+              if (widget.video)
+                VideoCallScreenContent(
+                  localRenderer:
+                      _users.values.first.userConnection.localVideoRenderer,
+                  users:
+                      _users.values.map((data) => data.userConnection).toList(),
+                  hasSentTimeRequest: _hasSentTimeRequest,
+                  endTime: widget.rekindles.isEmpty ? null : _endTime,
+                  muted: _muted,
+                  isGroupLobby: widget.groupLobby,
+                  readyForGroupCall: _readyForGroupCall,
+                  onTimeUp: _navigateToRekindleOrPop,
+                  onHangUp: () {
+                    _signalingChannel.send(const HangUp());
+                    _navigateToRekindleOrPop();
+                  },
+                  onConnect: _connect,
+                  onReport: _report,
+                  onSendTimeRequest: _sendTimeRequest,
+                  onToggleMute: () => _users.values
+                      .forEach((element) => element.phone.toggleMute()),
+                  onSendReadyForGroupCall: () =>
+                      _users.values.first.phone.signalingChannel.send(
+                    const GroupCallLobbyReady(ready: true),
+                  ),
+                )
+              else
+                VoiceCallScreenContent(
+                  users:
+                      _users.values.map((data) => data.userConnection).toList(),
+                  hasSentTimeRequest: _hasSentTimeRequest,
+                  endTime: widget.rekindles.isEmpty ? null : _endTime,
+                  muted: _muted,
+                  speakerphone: _speakerphone,
+                  onTimeUp: _navigateToRekindleOrPop,
+                  onHangUp: () {
+                    _signalingChannel.send(const HangUp());
+                    _navigateToRekindleOrPop();
+                  },
+                  onConnect: _connect,
+                  onReport: _report,
+                  onSendTimeRequest: _sendTimeRequest,
+                  onToggleMute: () => _users.values
+                      .forEach((element) => element.phone.toggleMute()),
+                  onToggleSpeakerphone: () => _users.values
+                      .forEach((element) => element.phone.toggleSpeakerphone()),
+                ),
+            ],
+          ),
         ),
-      );
-    } else {
-      return VoiceCallScreenContent(
-        users: _users.values.map((data) => data.userConnection).toList(),
-        hasSentTimeRequest: _hasSentTimeRequest,
-        endTime: widget.rekindles.isEmpty ? null : _endTime,
-        muted: _muted,
-        speakerphone: _speakerphone,
-        onTimeUp: _navigateToRekindleOrPop,
-        onHangUp: () {
-          _signalingChannel.send(const HangUp());
-          _navigateToRekindleOrPop();
-        },
-        onConnect: _connect,
-        onReport: _report,
-        onSendTimeRequest: _sendTimeRequest,
-        onToggleMute: () =>
-            _users.values.forEach((element) => element.phone.toggleMute()),
-        onToggleSpeakerphone: () => _users.values
-            .forEach((element) => element.phone.toggleSpeakerphone()),
-      );
-    }
+        if (_showReportOverlayForUid != null)
+          EndCallReport(
+            backgroundGradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromRGBO(0xFF, 0x8E, 0x8E, 0.9),
+                Color.fromRGBO(0xBD, 0x20, 0x20, 0.66),
+              ],
+            ),
+            thumbIconColor: const Color.fromRGBO(0x9E, 0x00, 0x00, 1.0),
+            onHangUp: () {
+              _signalingChannel
+                  .send(HangUpReport(uidToReport: _showReportOverlayForUid!));
+              Navigator.of(context).pop();
+              Navigator.of(context).pushReplacementNamed(
+                'call-report',
+                arguments: ReportScreenArguments(
+                  uid: _showReportOverlayForUid!,
+                ),
+              );
+            },
+            onCancel: () {
+              setState(() => _showReportOverlayForUid = null);
+            },
+          ),
+      ],
+    );
   }
 
   void _sendTimeRequest() {
@@ -281,7 +328,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   }
 
   void _report(String uid) {
-    // TODO
+    setState(() => _showReportOverlayForUid = uid);
   }
 
   void _navigateToRekindleOrPop() {

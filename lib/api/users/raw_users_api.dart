@@ -518,7 +518,6 @@ class RawUsersApi {
     return Map<String, int>.from(jsonDecode(response.body));
   }
 
-  @override
   Future<void> updateNotificationToken(
     String uid,
     String notificationToken,
@@ -532,6 +531,31 @@ class RawUsersApi {
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
         return Future.error('Failed to update notification token');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+  }
+
+  Future<void> reportUser({
+    required String uid,
+    required String reportedUid,
+    required String reason,
+    String? extra,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_urlBase/users/$uid/report'),
+      headers: _headers,
+      body: jsonEncode({
+        'reportedUid': reportedUid,
+        'reason': reason,
+        'extra': extra,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to report user');
       }
       print('Error ${response.statusCode}: ${response.body}');
       return Future.error('Failure');

@@ -306,6 +306,7 @@ class Phone {
           _connectionStateController.add(PhoneConnectionState.complete);
           onDisconnected();
         },
+        hangUpReport: (_) {},
       );
     });
   }

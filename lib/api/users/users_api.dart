@@ -335,6 +335,20 @@ class UsersApi implements RawUsersApi {
       _unreadChatMessageCountsController.stream
           .map<int>((e) => e.values.fold(0, (p, e) => p + e));
 
+  @override
+  Future<void> reportUser({
+    required String uid,
+    required String reportedUid,
+    required String reason,
+    String? extra,
+  }) =>
+      _rawUsersApi.reportUser(
+        uid: uid,
+        reportedUid: reportedUid,
+        reason: reason,
+        extra: extra,
+      );
+
   void _clearCache() {
     _account = null;
     _publicProfile = null;
