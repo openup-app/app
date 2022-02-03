@@ -1051,33 +1051,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       transitionDuration: const Duration(milliseconds: 500),
       reverseTransitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (_, __, ___) {
-        return Scaffold(
-          body: InheritedRouteObserver(
-            routeObserver: _routeObserver,
-            child: Builder(builder: builder),
-          ),
-          resizeToAvoidBottomInset: false,
-          endDrawerEnableOpenDragGesture: false,
-          endDrawer: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: 6.0,
-              sigmaY: 6.0,
-            ),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.4),
-                    blurRadius: 32,
-                  ),
-                ],
-              ),
-              child: Container(
-                color: Colors.white.withOpacity(0.6),
-                child: const ProfileDrawer(),
-              ),
-            ),
-          ),
+        return _ScaffoldWithAnimatedDrawerBackgroundBlur(
+          builder: (context) {
+            return InheritedRouteObserver(
+              routeObserver: _routeObserver,
+              child: Builder(builder: builder),
+            );
+          },
         );
       },
     );
@@ -1132,6 +1112,109 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           },
         );
       },
+    );
+  }
+}
+
+class _ScaffoldWithAnimatedDrawerBackgroundBlur extends StatefulWidget {
+  final WidgetBuilder builder;
+  const _ScaffoldWithAnimatedDrawerBackgroundBlur({
+    Key? key,
+    required this.builder,
+  }) : super(key: key);
+
+  @override
+  _ScaffoldWithAnimatedDrawerBackgroundBlurState createState() =>
+      _ScaffoldWithAnimatedDrawerBackgroundBlurState();
+}
+
+class _ScaffoldWithAnimatedDrawerBackgroundBlurState
+    extends State<_ScaffoldWithAnimatedDrawerBackgroundBlur>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(
+        milliseconds: 200,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: widget.builder(context),
+      resizeToAvoidBottomInset: false,
+      onEndDrawerChanged: (open) {
+        if (open) {
+          _controller.forward();
+        } else {
+          _controller.reverse();
+        }
+      },
+      endDrawerEnableOpenDragGesture: false,
+      drawerScrimColor: Colors.transparent,
+      endDrawer: AnimatedBuilder(
+        animation: CurvedAnimation(
+          parent: _controller,
+          curve: Curves.easeOut,
+        ),
+        builder: (context, child) {
+          final blurValue = Tween(
+            begin: 0.0,
+            end: 10.0,
+          ).evaluate(_controller);
+          return BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: blurValue,
+              sigmaY: blurValue,
+            ),
+            child: child,
+          );
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Container(
+              width: 36,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.transparent,
+                    Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(
+              width: 300,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.05),
+                  boxShadow: [
+                    BoxShadow(
+                      offset: Offset(5, 4),
+                      blurRadius: 10,
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
+                    ),
+                  ],
+                ),
+                child: ProfileDrawer(),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
