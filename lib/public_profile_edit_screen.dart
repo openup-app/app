@@ -157,15 +157,16 @@ class PhotoGrid extends StatelessWidget {
                                   vertical: 12,
                                 ),
                                 clipBehavior: Clip.hardEdge,
-                                decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(36)),
-                                  color: Colors.black.withOpacity(0.2),
+                                decoration: const BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(36)),
+                                  color: Color.fromRGBO(0xC4, 0xC4, 0xC4, 0.5),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.25),
+                                      color: Color.fromRGBO(
+                                          0x00, 0x00, 0x00, 0.25),
                                       blurRadius: 4,
-                                      offset: const Offset(0.0, 4.0),
+                                      offset: Offset(0.0, 4.0),
                                       blurStyle: BlurStyle.normal,
                                     )
                                   ],

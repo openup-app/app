@@ -168,7 +168,7 @@ class _ProfileBioDisplay extends ConsumerWidget {
         gradient: LinearGradient(
           colors: [
             Colors.red.withOpacity(0.6),
-            Colors.white.withOpacity(0.6),
+            Colors.white.withOpacity(0.5),
           ],
           stops: [progress, progress],
         ),

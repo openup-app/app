@@ -21,11 +21,8 @@ class ProfileDrawer extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            height: MediaQuery.of(context).padding.top,
-          ),
-          const SizedBox(height: 8),
-          Expanded(
+          SizedBox(height: MediaQuery.of(context).padding.top + 16),
+          Flexible(
             flex: 3,
             child: Button(
               onPressed: () {
@@ -38,29 +35,46 @@ class ProfileDrawer extends ConsumerWidget {
                   ),
                 );
               },
-              child: Container(
-                constraints: const BoxConstraints(
-                  minWidth: 60,
-                  minHeight: 60,
-                ),
-                clipBehavior: Clip.hardEdge,
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.all(Radius.circular(40)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theming.of(context).shadow.withOpacity(0.5),
-                      offset: const Offset(0.0, 4.0),
-                      blurRadius: 16,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: AspectRatio(
+                  aspectRatio: 674 / 899,
+                  child: Container(
+                    clipBehavior: Clip.hardEdge,
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.all(Radius.circular(40)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theming.of(context).shadow.withOpacity(0.5),
+                          offset: const Offset(0.0, 4.0),
+                          blurRadius: 16,
+                        ),
+                      ],
+                      color: Colors.white,
                     ),
-                  ],
-                  color: Colors.white,
-                ),
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final photo = ref.watch(profileProvider)?.photo;
-                    return ProfilePhoto(url: photo);
-                  },
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        final photo = ref.watch(profileProvider)?.photo;
+                        if (photo == null) {
+                          return const DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(40)),
+                              color: Color.fromRGBO(0xC4, 0xC4, 0xC4, 0.5),
+                            ),
+                            child: Icon(
+                              Icons.add,
+                              size: 48,
+                            ),
+                          );
+                        }
+                        return ProfilePhoto(
+                          url: photo,
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -70,7 +84,7 @@ class ProfileDrawer extends ConsumerWidget {
             child: Text(
               ref.read(usersApiProvider).publicProfile?.name ?? '',
               style: Theming.of(context).text.bodySecondary.copyWith(
-                fontSize: 26,
+                fontSize: 24,
                 shadows: [
                   Shadow(
                     color: Theming.of(context).shadow,
@@ -259,6 +273,7 @@ class _MenuButton extends StatelessWidget {
             Text(
               title,
               style: Theming.of(context).text.bodySecondary.copyWith(
+                fontSize: 24,
                 shadows: [
                   Shadow(
                     color: Theming.of(context).shadow,

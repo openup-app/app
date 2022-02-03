@@ -94,9 +94,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 child: Container(
                   width: 128,
                   height: 128,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(40)),
-                    color: Colors.black.withOpacity(0.3),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(40)),
+                    color: Color.fromRGBO(0xC4, 0xC4, 0xC4, 0.5),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
