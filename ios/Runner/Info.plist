@@ -20,16 +20,27 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.254565720868-hiu18rfd3ji676pp6thpe0behag7vea3</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Used to make video calls</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Used to match you with users nearby</string>
+	<string>Make video calls and take profile photos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Add profile photos from your gallery</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Used to make calls and make an audio bio</string>
+	<string>Make calls and record an audio bio</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
