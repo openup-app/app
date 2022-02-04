@@ -561,4 +561,23 @@ class RawUsersApi {
       return Future.error('Failure');
     }
   }
+
+  Future<void> contactUs({required String uid, required String message}) async {
+    final response = await http.post(
+      Uri.parse('$_urlBase/users/contactUs'),
+      headers: _headers,
+      body: jsonEncode({
+        'uid': uid,
+        'message': message,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to send message');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+  }
 }

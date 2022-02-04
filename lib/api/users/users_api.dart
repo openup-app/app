@@ -349,6 +349,13 @@ class UsersApi implements RawUsersApi {
         extra: extra,
       );
 
+  @override
+  Future<void> contactUs({required String uid, required String message}) =>
+      _rawUsersApi.contactUs(
+        uid: uid,
+        message: message,
+      );
+
   void _clearCache() {
     _account = null;
     _publicProfile = null;
