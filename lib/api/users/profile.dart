@@ -7,10 +7,9 @@ part 'profile.g.dart';
 @freezed
 class PublicProfile with _$PublicProfile {
   const factory PublicProfile({
-    String? uid,
+    required String uid,
     required String name,
-    required int age,
-    required String description,
+    required DateTime birthday,
     String? audio,
     String? photo,
     required List<String> gallery,
@@ -23,31 +22,13 @@ class PublicProfile with _$PublicProfile {
 @freezed
 class PrivateProfile with _$PrivateProfile {
   const factory PrivateProfile({
-    required int age,
     required Gender gender,
-    required LatLong location,
-    required String religion,
-    required Education education,
-    required Set<String> community,
-    required Set<String> language,
     required SkinColor skinColor,
     required int weight,
     required int height,
-    required String occupation,
-    required HairColor hairColor,
+    required String ethnicity,
   }) = _PrivateProfile;
 
   factory PrivateProfile.fromJson(Map<String, dynamic> json) =>
       _$PrivateProfileFromJson(json);
-}
-
-@freezed
-class LatLong with _$LatLong {
-  const factory LatLong({
-    required double lat,
-    required double long,
-  }) = _LatLong;
-
-  factory LatLong.fromJson(Map<String, dynamic> json) =>
-      _$LatLongFromJson(json);
 }

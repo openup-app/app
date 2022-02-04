@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,119 +47,12 @@ class _PublicProfileEditScreenState extends State<PublicProfileEditScreen> {
           Expanded(
             child: Stack(
               children: [
-                Positioned(
+                const Positioned(
                   top: 0,
                   bottom: 180,
                   left: 0,
                   right: 0,
-                  child: Consumer(
-                    builder: (context, ref, child) {
-                      final gallery = ref.watch(profileProvider
-                          .select((value) => value.state?.gallery ?? []));
-                      return Column(
-                        children: [
-                          for (var i = 0; i < 3; i++)
-                            Expanded(
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  for (var j = 0; j < 2; j++)
-                                    Expanded(
-                                      child: Stack(
-                                        children: [
-                                          Button(
-                                            onPressed: () async {
-                                              _audioBioKey.currentState
-                                                  ?.stopAll();
-                                              final index = i * 2 + j;
-                                              final photo = await _pickPhoto();
-                                              if (photo != null) {
-                                                uploadPhoto(
-                                                  context: context,
-                                                  photo: photo,
-                                                  index: index,
-                                                );
-                                              }
-                                            },
-                                            child: Container(
-                                              margin:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 4,
-                                                      vertical: 8),
-                                              clipBehavior: Clip.hardEdge,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    const BorderRadius.all(
-                                                        Radius.circular(36)),
-                                                color: Colors.white
-                                                    .withOpacity(0.3),
-                                              ),
-                                              child: Stack(
-                                                alignment: Alignment.center,
-                                                fit: StackFit.expand,
-                                                children: [
-                                                  if (gallery.length >
-                                                      i * 2 + j)
-                                                    ColorFiltered(
-                                                      colorFilter:
-                                                          ColorFilter.mode(
-                                                        Colors.black
-                                                            .withOpacity(0.25),
-                                                        BlendMode.darken,
-                                                      ),
-                                                      child: Image.network(
-                                                        gallery[i * 2 + j],
-                                                        fit: BoxFit.cover,
-                                                        frameBuilder:
-                                                            fadeInFrameBuilder,
-                                                        loadingBuilder:
-                                                            circularProgressLoadingBuilder,
-                                                        errorBuilder:
-                                                            iconErrorBuilder,
-                                                        opacity:
-                                                            const AlwaysStoppedAnimation(
-                                                                0.75),
-                                                      ),
-                                                    ),
-                                                  const Icon(
-                                                    Icons.add,
-                                                    size: 48,
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          if (gallery.length > i * 2 + j)
-                                            Positioned(
-                                              right: 20,
-                                              top: 20,
-                                              child: Button(
-                                                onPressed: () {
-                                                  _audioBioKey.currentState
-                                                      ?.stopAll();
-                                                  deletePhoto(
-                                                    context: context,
-                                                    index: i * 2 + j,
-                                                  );
-                                                },
-                                                child: const Icon(
-                                                  Icons.close,
-                                                  size: 21,
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
+                  child: PhotoGrid(),
                 ),
                 const Positioned(
                   right: 0,
@@ -176,20 +68,19 @@ class _PublicProfileEditScreenState extends State<PublicProfileEditScreen> {
                   height: 88,
                   child: Consumer(
                     builder: (context, ref, child) {
-                      final editableProfile = ref.watch(profileProvider).state;
+                      final editableProfile = ref.watch(profileProvider);
                       return ProfileBio(
                         key: _audioBioKey,
                         name: editableProfile?.name,
-                        description: editableProfile?.description,
+                        birthday: editableProfile?.birthday,
                         url: editableProfile?.audio,
                         editable: true,
                         onRecorded: (audio) =>
                             uploadAudio(context: context, audio: audio),
-                        onNameDescriptionUpdated: (name, description) {
-                          updateNameDescription(
+                        onUpdateName: (name) {
+                          updateName(
                             context: context,
                             name: name,
-                            description: description,
                           );
                         },
                       );
@@ -215,8 +106,130 @@ class _PublicProfileEditScreenState extends State<PublicProfileEditScreen> {
       ),
     );
   }
+}
 
-  Future<Uint8List?> _pickPhoto() async {
+class PhotoGrid extends StatelessWidget {
+  final bool horizontal;
+  const PhotoGrid({
+    Key? key,
+    this.horizontal = false,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final gallery =
+            ref.watch(profileProvider.select((value) => value?.gallery ?? []));
+        return Column(
+          children: [
+            for (var i = 0; i < (horizontal ? 2 : 3); i++)
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: horizontal
+                      ? (i == 0
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start)
+                      : CrossAxisAlignment.stretch,
+                  children: [
+                    for (var j = 0; j < (horizontal ? 3 : 2); j++)
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            Button(
+                              onPressed: () async {
+                                final index = i * 2 + j;
+                                final photo = await _pickPhoto(context);
+                                if (photo != null) {
+                                  uploadPhoto(
+                                    context: context,
+                                    photo: photo,
+                                    index: index,
+                                  );
+                                }
+                              },
+                              child: Container(
+                                constraints:
+                                    const BoxConstraints(maxHeight: 145),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 12,
+                                ),
+                                clipBehavior: Clip.hardEdge,
+                                decoration: const BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(36)),
+                                  color: Color.fromRGBO(0xC4, 0xC4, 0xC4, 0.5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color.fromRGBO(
+                                          0x00, 0x00, 0x00, 0.25),
+                                      blurRadius: 4,
+                                      offset: Offset(0.0, 4.0),
+                                      blurStyle: BlurStyle.normal,
+                                    )
+                                  ],
+                                ),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  fit: StackFit.expand,
+                                  children: [
+                                    if (gallery.length > i * 2 + j)
+                                      ColorFiltered(
+                                        colorFilter: ColorFilter.mode(
+                                          Colors.black.withOpacity(0.25),
+                                          BlendMode.darken,
+                                        ),
+                                        child: Image.network(
+                                          gallery[i * 2 + j],
+                                          fit: BoxFit.cover,
+                                          frameBuilder: fadeInFrameBuilder,
+                                          loadingBuilder:
+                                              circularProgressLoadingBuilder,
+                                          errorBuilder: iconErrorBuilder,
+                                          opacity: const AlwaysStoppedAnimation(
+                                              0.75),
+                                        ),
+                                      ),
+                                    const Icon(
+                                      Icons.add,
+                                      size: 48,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            if (gallery.length > i * 2 + j)
+                              Positioned(
+                                right: 20,
+                                top: 20,
+                                child: Button(
+                                  onPressed: () {
+                                    deletePhoto(
+                                      context: context,
+                                      index: i * 2 + j,
+                                    );
+                                  },
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 21,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<Uint8List?> _pickPhoto(BuildContext context) async {
     final useCamera = await showDialog<bool>(
       context: context,
       builder: (context) {

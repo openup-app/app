@@ -4,10 +4,14 @@ import 'package:openup/widgets/theming.dart';
 class Button extends StatefulWidget {
   final Widget child;
   final VoidCallback? onPressed;
+  final VoidCallback? onLongPressStart;
+  final VoidCallback? onLongPressEnd;
   const Button({
     Key? key,
     required this.child,
     required this.onPressed,
+    this.onLongPressStart,
+    this.onLongPressEnd,
   }) : super(key: key);
 
   @override
@@ -57,10 +61,57 @@ class _ButtonState extends State<Button> with SingleTickerProviderStateMixin {
           onTapCancel: () => setState(() {
             _animationController.forward(from: 0.6);
           }),
+          onLongPressStart: widget.onLongPressStart == null
+              ? null
+              : (_) => widget.onLongPressStart?.call(),
+          onLongPressEnd: widget.onLongPressEnd == null
+              ? null
+              : (_) => widget.onLongPressEnd?.call(),
           child: DefaultTextStyle(
             style: Theming.of(context).text.body,
             child: widget.child,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class GradientButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final Widget child;
+
+  const GradientButton({
+    Key? key,
+    required this.onPressed,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onPressed,
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(14.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Theming.of(context).shadow.withOpacity(0.2),
+              offset: const Offset(0.0, 4.0),
+              blurRadius: 4.0,
+            ),
+          ],
+          gradient: const LinearGradient(
+            colors: [
+              Color.fromRGBO(0xFF, 0x94, 0x94, 1.0),
+              Color.fromRGBO(0xFF, 0xBD, 0xBD, 1.0),
+            ],
+          ),
+        ),
+        child: DefaultTextStyle(
+          style: Theming.of(context).text.body.copyWith(fontSize: 18),
+          child: child,
         ),
       ),
     );

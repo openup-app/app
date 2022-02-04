@@ -3,19 +3,31 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:openup/api/users/account.dart';
+import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/api/users/user_metadata.dart';
 
 class RawUsersApi {
-  static const _headers = {
+  final _headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
 
-  final String _host;
+  final String _urlBase;
 
-  RawUsersApi({required String host}) : _host = host;
+  RawUsersApi({
+    required String host,
+    required int port,
+    required String authToken,
+  }) : _urlBase = 'http://$host:$port' {
+    this.authToken = authToken;
+  }
+
+  set authToken(String value) {
+    _headers['Authorization'] = 'Bearer $value';
+  }
 
   Future<void> createUserWithEmail({
     required String email,
@@ -23,7 +35,7 @@ class RawUsersApi {
     required DateTime birthday,
   }) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/'),
+      Uri.parse('$_urlBase/users/'),
       headers: _headers,
       body: jsonEncode({
         'email': email,
@@ -46,7 +58,7 @@ class RawUsersApi {
     required String? notificationToken,
   }) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/create'),
+      Uri.parse('$_urlBase/users/$uid/create'),
       headers: _headers,
       body: jsonEncode({
         'birthday': birthday.toIso8601String(),
@@ -62,9 +74,32 @@ class RawUsersApi {
     }
   }
 
+  Future<bool> checkBirthday({
+    required String phone,
+    required DateTime birthday,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_urlBase/users/check_birthday'),
+      headers: _headers,
+      body: jsonEncode({
+        'phone': phone,
+        'birthday': birthday.toIso8601String(),
+      }),
+    );
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Invalid creation');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+    final resultMap = jsonDecode(response.body);
+    return resultMap['success'];
+  }
+
   Future<Account> getAccount(String uid) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/account'),
+      Uri.parse('$_urlBase/users/$uid/account'),
       headers: _headers,
     );
 
@@ -81,7 +116,7 @@ class RawUsersApi {
 
   Future<void> updateAccount(String uid, Account account) async {
     final response = await http.patch(
-      Uri.parse('http://$_host/users/$uid/account'),
+      Uri.parse('$_urlBase/users/$uid/account'),
       headers: _headers,
       body: jsonEncode(account.toJson()),
     );
@@ -95,9 +130,42 @@ class RawUsersApi {
     }
   }
 
+  Future<void> updateUserMetadata(String uid, UserMetadata userMetadata) async {
+    final response = await http.post(
+      Uri.parse('$_urlBase/users/$uid/metadata'),
+      headers: _headers,
+      body: jsonEncode(userMetadata.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to update user metadata');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+  }
+
+  Future<UserMetadata> getUserMetadata(String uid) async {
+    final response = await http.get(
+      Uri.parse('$_urlBase/users/$uid/metadata'),
+      headers: _headers,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to get user metadata');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+
+    return UserMetadata.fromJson(jsonDecode(response.body));
+  }
+
   Future<PublicProfile> getPublicProfile(String uid) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/profile/public'),
+      Uri.parse('$_urlBase/users/$uid/profile/public'),
       headers: _headers,
     );
 
@@ -114,7 +182,7 @@ class RawUsersApi {
 
   Future<void> updatePublicProfile(String uid, PublicProfile profile) async {
     final response = await http.patch(
-      Uri.parse('http://$_host/users/$uid/profile/public'),
+      Uri.parse('$_urlBase/users/$uid/profile/public'),
       headers: _headers,
       body: jsonEncode(profile.toJson()),
     );
@@ -130,7 +198,7 @@ class RawUsersApi {
 
   Future<PrivateProfile> getPrivateProfile(String uid) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/profile/private'),
+      Uri.parse('$_urlBase/users/$uid/profile/private'),
       headers: _headers,
     );
 
@@ -147,7 +215,7 @@ class RawUsersApi {
 
   Future<void> updatePrivateProfile(String uid, PrivateProfile profile) async {
     final response = await http.patch(
-      Uri.parse('http://$_host/users/$uid/profile/private'),
+      Uri.parse('$_urlBase/users/$uid/profile/private'),
       headers: _headers,
       body: jsonEncode(profile.toJson()),
     );
@@ -167,7 +235,7 @@ class RawUsersApi {
     int index,
   ) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/public/gallery/$index'),
+      Uri.parse('$_urlBase/users/$uid/public/gallery/$index'),
       headers: {
         ..._headers,
         'Content-Type': 'application/octet-stream',
@@ -189,7 +257,7 @@ class RawUsersApi {
 
   Future<void> deleteGalleryPhoto(String uid, int index) async {
     final response = await http.delete(
-      Uri.parse('http://$_host/users/$uid/public/gallery/$index'),
+      Uri.parse('$_urlBase/users/$uid/public/gallery/$index'),
       headers: _headers,
     );
 
@@ -204,7 +272,7 @@ class RawUsersApi {
 
   Future<String> updateAudioBio(String uid, Uint8List audio) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/public/audio'),
+      Uri.parse('$_urlBase/users/$uid/public/audio'),
       headers: {
         ..._headers,
         'Content-Type': 'application/octet-stream',
@@ -226,7 +294,7 @@ class RawUsersApi {
 
   Future<void> deleteAudioBio(String uid) async {
     final response = await http.delete(
-      Uri.parse('http://$_host/users/$uid/public/audio'),
+      Uri.parse('$_urlBase/users/$uid/public/audio'),
       headers: _headers,
     );
 
@@ -241,7 +309,7 @@ class RawUsersApi {
 
   Future<void> deleteUser(String uid) async {
     final response = await http.delete(
-      Uri.parse('http://$_host/users/$uid'),
+      Uri.parse('$_urlBase/users/$uid'),
       headers: _headers,
     );
 
@@ -262,7 +330,7 @@ class RawUsersApi {
 
   Future<Preferences> _getPreferences(String uid, String type) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/preferences/$type'),
+      Uri.parse('$_urlBase/users/$uid/preferences/$type'),
       headers: _headers,
     );
 
@@ -289,7 +357,7 @@ class RawUsersApi {
     String type,
   ) async {
     final response = await http.patch(
-      Uri.parse('http://$_host/users/$uid/preferences/$type'),
+      Uri.parse('$_urlBase/users/$uid/preferences/$type'),
       headers: _headers,
       body: jsonEncode(preferences.toJson()),
     );
@@ -314,7 +382,7 @@ class RawUsersApi {
     String type,
   ) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/possible/$type'),
+      Uri.parse('$_urlBase/users/$uid/possible/$type'),
       headers: _headers,
       body: jsonEncode(preferences.toJson()),
     );
@@ -333,7 +401,7 @@ class RawUsersApi {
 
   Future<List<Rekindle>> getRekindleList(String uid) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/rekindles'),
+      Uri.parse('$_urlBase/users/$uid/rekindles'),
       headers: _headers,
     );
 
@@ -351,7 +419,7 @@ class RawUsersApi {
 
   Future<void> addConnectionRequest(String uid, String otherUid) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/connection_request'),
+      Uri.parse('$_urlBase/users/$uid/connection_request'),
       headers: _headers,
       body: jsonEncode({'uid': otherUid}),
     );
@@ -365,9 +433,9 @@ class RawUsersApi {
     }
   }
 
-  Future<List<PublicProfile>> getConnections(String uid) async {
+  Future<List<Connection>> getConnections(String uid) async {
     final response = await http.get(
-      Uri.parse('http://$_host/users/$uid/connections'),
+      Uri.parse('$_urlBase/users/$uid/connections'),
       headers: _headers,
     );
 
@@ -380,15 +448,15 @@ class RawUsersApi {
     }
 
     final list = jsonDecode(response.body) as List<dynamic>;
-    return List<PublicProfile>.from(list.map((e) => PublicProfile.fromJson(e)));
+    return List<Connection>.from(list.map((e) => Connection.fromJson(e)));
   }
 
-  Future<List<PublicProfile>> deleteConnection(
+  Future<List<Connection>> deleteConnection(
     String uid,
     String deleteUid,
   ) async {
     final response = await http.delete(
-      Uri.parse('http://$_host/users/$uid/connections'),
+      Uri.parse('$_urlBase/users/$uid/connections'),
       headers: _headers,
       body: jsonEncode({'uid': deleteUid}),
     );
@@ -402,14 +470,23 @@ class RawUsersApi {
     }
 
     final list = jsonDecode(response.body) as List<dynamic>;
-    return List<PublicProfile>.from(list.map((e) => PublicProfile.fromJson(e)));
+    return List<Connection>.from(list.map((e) => Connection.fromJson(e)));
   }
 
-  Future<String> call(String uid, String calleeUid, bool video) async {
+  Future<String> call(
+    String uid,
+    String calleeUid,
+    bool video, {
+    required bool group,
+  }) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$calleeUid/call'),
+      Uri.parse('$_urlBase/users/$uid/call'),
       headers: _headers,
-      body: jsonEncode({'uid': uid, 'video': video}),
+      body: jsonEncode({
+        'calleeUid': calleeUid,
+        'video': video,
+        'group': group,
+      }),
     );
 
     if (response.statusCode != 200) {
@@ -424,13 +501,29 @@ class RawUsersApi {
     return json['rid'] as String;
   }
 
-  @override
+  Future<Map<String, int>> getAllChatroomUnreadCounts(String uid) async {
+    final response = await http.get(
+      Uri.parse('$_urlBase/users/$uid/chats/unread'),
+      headers: _headers,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to get unread chat counts');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+
+    return Map<String, int>.from(jsonDecode(response.body));
+  }
+
   Future<void> updateNotificationToken(
     String uid,
     String notificationToken,
   ) async {
     final response = await http.post(
-      Uri.parse('http://$_host/users/$uid/notification_token'),
+      Uri.parse('$_urlBase/users/$uid/notification_token'),
       headers: _headers,
       body: jsonEncode({'notification_token': notificationToken}),
     );
@@ -438,6 +531,50 @@ class RawUsersApi {
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
         return Future.error('Failed to update notification token');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+  }
+
+  Future<void> reportUser({
+    required String uid,
+    required String reportedUid,
+    required String reason,
+    String? extra,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_urlBase/users/$uid/report'),
+      headers: _headers,
+      body: jsonEncode({
+        'reportedUid': reportedUid,
+        'reason': reason,
+        'extra': extra,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to report user');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+  }
+
+  Future<void> contactUs({required String uid, required String message}) async {
+    final response = await http.post(
+      Uri.parse('$_urlBase/users/contactUs'),
+      headers: _headers,
+      body: jsonEncode({
+        'uid': uid,
+        'message': message,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to send message');
       }
       print('Error ${response.statusCode}: ${response.body}');
       return Future.error('Failure');

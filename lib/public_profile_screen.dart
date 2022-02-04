@@ -94,9 +94,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 child: Container(
                   width: 128,
                   height: 128,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(40)),
-                    color: Colors.black.withOpacity(0.3),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(40)),
+                    color: Color.fromRGBO(0xC4, 0xC4, 0xC4, 0.5),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -128,20 +128,19 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 if (widget.editable) {
                   return Consumer(
                     builder: (context, ref, child) {
-                      final editableProfile = ref.watch(profileProvider).state;
+                      final editableProfile = ref.watch(profileProvider);
                       return ProfileBio(
                         key: _audioBioKey,
                         name: editableProfile?.name,
-                        description: editableProfile?.description,
+                        birthday: editableProfile?.birthday,
                         url: editableProfile?.audio,
                         editable: true,
                         onRecorded: (audio) =>
                             uploadAudio(context: context, audio: audio),
-                        onNameDescriptionUpdated: (name, description) {
-                          updateNameDescription(
+                        onUpdateName: (name) {
+                          updateName(
                             context: context,
                             name: name,
-                            description: description,
                           );
                         },
                       );
@@ -150,11 +149,11 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 } else {
                   return ProfileBio(
                     name: widget.publicProfile.name,
-                    description: widget.publicProfile.description,
+                    birthday: widget.publicProfile.birthday,
                     url: widget.publicProfile.audio,
                     editable: false,
                     onRecorded: (_) {},
-                    onNameDescriptionUpdated: (_, __) {},
+                    onUpdateName: (_) {},
                   );
                 }
               },

@@ -25,6 +25,7 @@ class ForgotPasswordScreen extends StatelessWidget {
       child: SafeArea(
         top: true,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 86),
             const TitleAndTagline(),
@@ -71,18 +72,16 @@ class ForgotPasswordScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 22),
-            PrimaryButton.large(
-              onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
+            SignificantButton.pink(
+              onPressed: () =>
+                  Navigator.of(context).pushReplacementNamed('home'),
               child: const Text('Log in'),
             ),
             const SizedBox(
               height: 17 + 22 + 25 + 19,
             ),
             const Expanded(
-              child: Hero(
-                tag: 'male_female_connection',
-                child: MaleFemaleConnectionImageApart(),
-              ),
+              child: MaleFemaleConnectionImageApart(),
             ),
           ],
         ),

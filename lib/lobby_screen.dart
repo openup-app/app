@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
@@ -14,22 +16,25 @@ part 'lobby_screen.freezed.dart';
 
 /// Page on which you wait to be matched with another user.
 class LobbyScreen extends StatefulWidget {
-  final String lobbyHost;
-  final String signalingHost;
+  final String host;
+  final int socketPort;
   final bool video;
+  final bool serious;
   final Purpose purpose;
   final void Function({
-    required bool initiator,
+    required String rid,
+    required List<PublicProfile> profiles,
     required List<Rekindle> rekindles,
-  }) onStartCall;
+  }) onJoinCall;
 
   const LobbyScreen({
     Key? key,
-    required this.lobbyHost,
-    required this.signalingHost,
+    required this.host,
+    required this.socketPort,
     required this.video,
+    required this.serious,
     required this.purpose,
-    required this.onStartCall,
+    required this.onJoinCall,
   }) : super(key: key);
 
   @override
@@ -40,7 +45,9 @@ class _LobbyScreenState extends State<LobbyScreen>
     with SingleTickerProviderStateMixin {
   late final LobbyApi _lobbyApi;
 
+  late final StreamSubscription _subscription;
   late final AnimationController _animationController;
+  bool _shouldHandleDisconnection = true;
 
   @override
   void initState() {
@@ -57,19 +64,20 @@ class _LobbyScreenState extends State<LobbyScreen>
     _animationController.forward();
 
     _lobbyApi = LobbyApi(
-      host: widget.lobbyHost,
+      host: widget.host,
+      socketPort: widget.socketPort,
       uid: FirebaseAuth.instance.currentUser!.uid,
       video: widget.video,
+      serious: widget.serious,
       purpose: widget.purpose,
-      onMakeCall: (rekindles) => widget.onStartCall(
-        initiator: true,
-        rekindles: rekindles,
-      ),
-      onReceiveCall: (rekindles) => widget.onStartCall(
-        initiator: false,
-        rekindles: rekindles,
-      ),
-      onConnectionError: () {
+    );
+    _subscription = _lobbyApi.eventStream.listen(_onLobbyEvent);
+    _lobbyApi.connect();
+  }
+
+  void _onLobbyEvent(LobbyEvent event) {
+    event.when(
+      connectionError: () {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Unable to connect to server'),
@@ -77,11 +85,39 @@ class _LobbyScreenState extends State<LobbyScreen>
         );
         Navigator.of(context).pop();
       },
+      disconnected: () {
+        if (_shouldHandleDisconnection) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Lost connection to server'),
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+      },
+      penalized: () {
+        setState(() => _shouldHandleDisconnection = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'You have been penalized from serious mode for a few minutes'),
+          ),
+        );
+        Navigator.of(context).pop();
+      },
+      joinCall: (rid, profiles, rekindles) {
+        widget.onJoinCall(
+          rid: rid,
+          profiles: profiles,
+          rekindles: rekindles,
+        );
+      },
     );
   }
 
   @override
   void dispose() {
+    _subscription.cancel();
     _animationController.dispose();
     _lobbyApi.dispose();
     super.dispose();
@@ -172,8 +208,10 @@ class _LobbyScreenState extends State<LobbyScreen>
 
 class LobbyScreenArguments {
   final bool video;
+  final bool serious;
   LobbyScreenArguments({
     required this.video,
+    required this.serious,
   });
 }
 

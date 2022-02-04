@@ -12,7 +12,7 @@ import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/title_and_tagline.dart';
 import 'package:openup/widgets/theming.dart';
 
-class PhoneVerificationScreen extends StatefulWidget {
+class PhoneVerificationScreen extends ConsumerStatefulWidget {
   final CredentialVerification credentialVerification;
   const PhoneVerificationScreen({
     Key? key,
@@ -20,11 +20,12 @@ class PhoneVerificationScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<PhoneVerificationScreen> createState() =>
+  _PhoneVerificationScreenState createState() =>
       _PhoneVerificationScreenState();
 }
 
-class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
+class _PhoneVerificationScreenState
+    extends ConsumerState<PhoneVerificationScreen> {
   final _smsCodeController = TextEditingController();
   bool _submitting = false;
 
@@ -55,11 +56,12 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         ),
         child: FlexibleSingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
                 height: MediaQuery.of(context).padding.top,
               ),
-              const SizedBox(height: 86),
+              const Spacer(),
               const TitleAndTagline(),
               const SizedBox(height: 10),
               Text(
@@ -95,21 +97,14 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                 ),
               ),
               const SizedBox(height: 22),
-              PrimaryButton.large(
+              SignificantButton.pink(
                 onPressed: _submitting ? null : _submit,
                 child: _submitting
                     ? const CircularProgressIndicator()
                     : const Text('Verify account'),
               ),
-              const SizedBox(height: 15),
               const Spacer(),
-              const Hero(
-                tag: 'male_female_connection',
-                child: SizedBox(
-                  height: 125,
-                  child: MaleFemaleConnectionImageApart(),
-                ),
-              ),
+              const MaleFemaleConnectionImageApart(),
             ],
           ),
         ),
@@ -126,14 +121,16 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
 
     setState(() => _submitting = true);
 
-    final container = ProviderScope.containerOf(context);
-    final usersApi = container.read(usersApiProvider);
+    final usersApi = ref.read(usersApiProvider);
 
     String? uid;
     try {
       final userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
       uid = userCredential.user?.uid;
+      if (uid != null) {
+        usersApi.uid = uid;
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-verification-code') {
         ScaffoldMessenger.of(context).showSnackBar(

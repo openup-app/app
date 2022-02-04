@@ -1,6 +1,6 @@
 name: openup
 description: Video and voice calling app with strangers
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -18,7 +18,6 @@ dependencies:
   flutter_holo_date_picker: ^1.0.0-nullsafety.4
   http: ^0.13.3
   flutter_riverpod: ^1.0.0-dev.7
-  location: ^4.3.0
   flutter_svg: ^0.22.0
   image_picker: ^0.8.4+2
   just_audio: ^0.9.13
@@ -26,8 +25,16 @@ dependencies:
   intl: ^0.17.0
   firebase_messaging: ^11.1.0
   flutter_local_notifications: ^9.1.4
-  path_provider: ^2.0.7
-  path: ^1.8.0
+  emoji_picker_flutter: ^1.0.8
+  uuid: ^3.0.5
+  rxdart: ^0.27.3
+  connectycube_flutter_call_kit:
+    git: git@github.com:openup-app/connectycube-flutter-call-kit.git
+  shared_preferences: ^2.0.11
+  camera: ^0.9.4+5
+  decorated_icon: ^1.2.1
+  video_player: ^2.2.10
+  syncfusion_flutter_sliders: ^19.4.43
 
 dev_dependencies:
   flutter_test:
@@ -43,8 +50,6 @@ flutter:
     - assets/images/title.png
     - assets/images/connection_female.png
     - assets/images/connection_male.png
-    - assets/images/heart.png
-    - assets/images/friends_with_friends.png
     - assets/images/voice_call.png
     - assets/images/video_call.png
     - assets/images/preferences.png
@@ -55,8 +60,13 @@ flutter:
     - assets/images/support_icon.svg
     - assets/images/play_icon.svg
     - assets/images/pause_icon.svg
-    - assets/images/double_hearts.png
     - assets/images/preferences_back.png
+    - assets/images/friends.gif
+    - assets/images/heart.gif
+    - assets/images/friends_with_friends.gif
+    - assets/images/double_dating.gif
+    - assets/images/chevron_right.png
+    - assets/images/close_circle.png
   fonts:
     - family: Myriad
       fonts:

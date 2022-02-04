@@ -11,25 +11,25 @@ class SocketIoSignalingChannel implements SignalingChannel {
 
   SocketIoSignalingChannel({
     required String host,
+    required int port,
     required String uid,
+    required String rid,
+    required bool serious,
   }) {
     _socket = io(
-      'http://$host',
+      'http://$host:$port/call',
       OptionBuilder()
           .setTimeout(1500)
           .setTransports(['websocket'])
-          .setPath('/call')
           .enableForceNew()
-          .disableReconnection()
-          .setQuery({'uid': uid})
+          .setQuery({
+            'uid': uid,
+            'rid': rid,
+            'serious': serious,
+          })
           .build(),
     );
-    _socket.onConnectError((_) {
-      print('Connection error');
-    });
-    _socket.onDisconnect((_) {
-      print('Disconnect');
-    });
+
     _socket.on('message', (message) {
       final payload = message as String;
       _handleSignal(payload);

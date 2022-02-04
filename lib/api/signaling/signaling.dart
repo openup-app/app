@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/users/rekindle.dart';
 
 part 'signaling.freezed.dart';
 part 'signaling.g.dart';
@@ -7,19 +9,50 @@ part 'signaling.g.dart';
 @freezed
 class Signal with _$Signal {
   const factory Signal.sessionDescription({
+    required String recipient,
     String? sdp,
     String? type,
   }) = SessionDescription;
 
-  const factory Signal.iceCandidates(
-    List<IceCandidate> iceCandidates,
-  ) = IceCandidates;
+  const factory Signal.iceCandidates({
+    required String recipient,
+    required List<IceCandidate> iceCandidates,
+  }) = IceCandidates;
 
-  const factory Signal.addTimeRequest() = AddTimeRequest;
+  const factory Signal.addTimeRequest({
+    @Default('room') String recipient,
+  }) = AddTimeRequest;
 
-  const factory Signal.addTime(int seconds) = AddTime;
+  const factory Signal.addTime({
+    @Default('room') String recipient,
+    required int seconds,
+  }) = AddTime;
 
-  const factory Signal.hangUp() = HangUp;
+  const factory Signal.hangUp({
+    @Default('room') String recipient,
+  }) = HangUp;
+
+  const factory Signal.hangUpReport({
+    @Default('room') String recipient,
+    required String uidToReport,
+  }) = HangUpReport;
+
+  const factory Signal.groupCallLobbyReady({
+    @Default('room') String recipient,
+    required bool ready,
+  }) = GroupCallLobbyReady;
+
+  const factory Signal.groupCallLobbyReadyStates({
+    @Default('room') String recipient,
+    required Map<String, bool> readyStates,
+  }) = _GroupCallLobbyReadyStates;
+
+  const factory Signal.joinCall({
+    @Default('room') String recipient,
+    required String rid,
+    required List<PublicProfile> profiles,
+    required List<Rekindle> rekindles,
+  }) = _JoinCall;
 
   factory Signal.fromJson(Map<String, dynamic> json) => _$SignalFromJson(json);
 }

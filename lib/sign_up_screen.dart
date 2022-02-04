@@ -1,9 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
@@ -15,14 +13,15 @@ import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/widgets/title_and_tagline.dart';
 import 'package:openup/widgets/theming.dart';
 
-class SignUpScreen extends StatefulWidget {
+class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  _SignUpScreenState createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpScreenState extends ConsumerState<SignUpScreen>
+    with SingleTickerProviderStateMixin {
   static final _phoneRegex = RegExp(r'^(?:[+0][1-9])?[0-9]{10,12}$');
 
   final _formKey = GlobalKey<FormState>();
@@ -35,6 +34,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   String? _phoneErrorText;
   String? _birthdayErrorText;
+  late final AnimationController _phoneLabelAnimationController;
 
   bool _submitting = false;
   int? _forceResendingToken;
@@ -42,9 +42,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   void initState() {
     super.initState();
+    _phoneLabelAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
     _phoneFocusNode.addListener(() {
       if (_phoneFocusNode.hasFocus) {
         setState(() => _birthdayFocused = false);
+        _phoneLabelAnimationController.forward();
+      } else if (_phoneController.text.isEmpty) {
+        _phoneLabelAnimationController.reverse();
       }
     });
   }
@@ -53,6 +60,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void dispose() {
     _phoneController.dispose();
     _phoneFocusNode.dispose();
+    _phoneLabelAnimationController.dispose();
     super.dispose();
   }
 
@@ -74,36 +82,68 @@ class _SignUpScreenState extends State<SignUpScreen> {
         autovalidateMode: AutovalidateMode.onUserInteraction,
         child: FlexibleSingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
                 height: MediaQuery.of(context).padding.top,
               ),
-              const SizedBox(height: 86),
+              const Spacer(),
               const TitleAndTagline(),
               const SizedBox(height: 10),
-              InputArea(
-                errorText: _phoneErrorText,
-                child: TextFormField(
-                  controller: _phoneController,
-                  focusNode: _phoneFocusNode,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.done,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.deny(RegExp(r'\s')),
-                  ],
-                  onEditingComplete: () {
-                    setState(() {
-                      _phoneErrorText = _validatePhone(_phoneController.text);
-                    });
-                    FocusScope.of(context).unfocus();
-                  },
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration.collapsed(
-                    hintText: 'Phone number',
-                    hintStyle: Theming.of(context).text.body.copyWith(
-                        fontWeight: FontWeight.w400, color: Colors.grey),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  InputArea(
+                    errorText: _phoneErrorText,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: TextFormField(
+                        controller: _phoneController,
+                        focusNode: _phoneFocusNode,
+                        keyboardType: TextInputType.phone,
+                        textInputAction: TextInputAction.done,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                        ],
+                        onEditingComplete: () {
+                          setState(() {
+                            _phoneErrorText =
+                                _validatePhone(_phoneController.text);
+                          });
+                          FocusScope.of(context).unfocus();
+                        },
+                        textAlign: TextAlign.center,
+                        style: Theming.of(context).text.body.copyWith(
+                            fontWeight: FontWeight.w400,
+                            color: Colors.grey,
+                            fontSize: 18),
+                        decoration:
+                            const InputDecoration.collapsed(hintText: ''),
+                      ),
+                    ),
                   ),
-                ),
+                  AnimatedBuilder(
+                    animation: _phoneLabelAnimationController,
+                    builder: (context, child) {
+                      final animation = CurvedAnimation(
+                        parent: _phoneLabelAnimationController,
+                        curve: Curves.easeOut,
+                      );
+                      return Positioned(
+                        top: 22 - animation.value * 14,
+                        child: IgnorePointer(
+                          child: Text(
+                            'Phone number',
+                            style: Theming.of(context).text.body.copyWith(
+                                fontWeight: FontWeight.w400,
+                                color: Colors.grey,
+                                fontSize: 18 - animation.value * 4),
+                          ),
+                        ),
+                      );
+                    },
+                  )
+                ],
               ),
               const SizedBox(height: 22),
               InputArea(
@@ -170,21 +210,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ),
               const SizedBox(height: 22),
-              PrimaryButton.large(
+              SignificantButton.pink(
                 child: _submitting
                     ? const CircularProgressIndicator()
                     : const Text('Send code'),
                 onPressed: _submitting || !_valid ? null : _submit,
               ),
-              const SizedBox(height: 15),
               const Spacer(),
-              const Hero(
-                tag: 'male_female_connection',
-                child: SizedBox(
-                  height: 125,
-                  child: MaleFemaleConnectionImageApart(),
-                ),
-              ),
+              const MaleFemaleConnectionImageApart(),
             ],
           ),
         ),
@@ -226,12 +259,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     if (_phoneErrorText == null && _birthdayErrorText == null) {
       setState(() => _submitting = true);
+
+      final usersApi = ref.read(usersApiProvider);
+
+      final success = await usersApi.checkBirthday(
+        phone: phone,
+        birthday: _birthday,
+      );
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid details for existing user'),
+          ),
+        );
+        setState(() => _submitting = false);
+        return;
+      }
+
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: phone,
         verificationCompleted: (credential) async {
-          final container = ProviderScope.containerOf(context);
-          final usersApi = container.read(usersApiProvider);
-
           String? uid;
           try {
             final userCredential =
@@ -251,6 +298,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               birthday: _birthday,
               notificationToken: await FirebaseMessaging.instance.getToken(),
             );
+            usersApi.uid = uid;
           }
           setState(() => _submitting = false);
         },

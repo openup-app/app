@@ -1,55 +1,25 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:location/location.dart';
-import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/loading_dialog.dart';
-import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  bool _cachingStarted = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    FirebaseMessaging.onMessage.listen(_onNotification);
-    FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
-  }
-
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_cachingStarted) {
-      return;
-    }
-    _cachingStarted = true;
 
-    VoidCallback? popDialog;
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      popDialog = showBlockingModalDialog(
-        context: context,
-        builder: (_) => const Loading(),
-      );
-    });
-
-    final container = ProviderScope.containerOf(context);
-    final api = container.read(usersApiProvider);
+    final api = ref.read(usersApiProvider);
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       throw 'No user is logged in';
@@ -58,64 +28,10 @@ class _HomeScreenState extends State<HomeScreen> {
     FirebaseMessaging.instance.getToken().then((token) {
       if (token != null) api.updateNotificationToken(uid, token);
     });
-
-    _cacheData(api, uid)
-        .onError((error, stackTrace) {
-          Navigator.of(context).pushReplacementNamed('error');
-        })
-        .then((_) => _updateLocation(api, uid))
-        .then(
-          (_) {
-            if (mounted) {
-              popDialog?.call();
-            }
-          },
-        );
-  }
-
-  Future<void> _cacheData(UsersApi api, String uid) async {
-    Future.wait([
-      api.getPublicProfile(uid),
-      api.getPrivateProfile(uid),
-      api.getFriendsPreferences(uid),
-      api.getDatingPreferences(uid),
-    ]);
-  }
-
-  Future<void> _updateLocation(UsersApi api, String uid) async {
-    final location = Location();
-    try {
-      final result = await location.requestPermission();
-      if (result == PermissionStatus.granted ||
-          result == PermissionStatus.grantedLimited) {
-        final data = await location.getLocation();
-        if (data.latitude != null && data.longitude != null) {
-          final profile = await api.getPrivateProfile(uid);
-          api.updatePrivateProfile(
-            uid,
-            profile.copyWith(
-              location: LatLong(
-                lat: data.latitude ?? 0,
-                long: data.longitude ?? 0,
-              ),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      print(e);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarBrightness: Brightness.dark,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
     return Stack(
       children: [
         Row(
@@ -125,13 +41,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () =>
                     Navigator.of(context).pushNamed('dating-solo-double'),
                 child: DecoratedBox(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        const Color.fromARGB(0xFF, 0xFF, 0x83, 0x83),
-                        Theming.of(context).datingRed1,
+                        Color.fromRGBO(0xFF, 0x83, 0x83, 1.0),
+                        Color.fromRGBO(0xFF, 0xC8, 0xC8, 1.0),
                       ],
                     ),
                   ),
@@ -149,9 +65,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 24),
                       SizedBox(
-                        height: 120,
+                        height: 140,
                         child: Image.asset(
-                          'assets/images/heart.png',
+                          'assets/images/heart.gif',
                           fit: BoxFit.fitHeight,
                         ),
                       ),
@@ -167,13 +83,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () =>
                     Navigator.of(context).pushNamed('friends-solo-double'),
                 child: DecoratedBox(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Theming.of(context).friendBlue1,
-                        Theming.of(context).friendBlue2,
+                        Color.fromRGBO(0xB7, 0xF2, 0xFF, 1.0),
+                        Color.fromRGBO(0x00, 0xB9, 0xE2, 1.0),
                       ],
                     ),
                   ),
@@ -181,9 +97,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       const Spacer(),
                       const SizedBox(height: 120),
-                      const SizedBox(
+                      Image.asset(
+                        'assets/images/friends.gif',
                         height: 120,
-                        child: MaleFemaleConnectionImage(),
                       ),
                       const SizedBox(height: 24),
                       Container(
@@ -213,42 +129,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-}
-
-void _onNotification(RemoteMessage message) => _handleNotification(message);
-
-Future<void> _onBackgroundNotification(RemoteMessage message) =>
-    _handleNotification(message);
-
-Future<void> _handleNotification(RemoteMessage message) async {
-  print(message.data);
-  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-  const initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-
-  const initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-  );
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-
-  const androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    'your channel id',
-    'your channel name',
-    ongoing: true,
-    channelDescription: 'your channel description',
-    importance: Importance.max,
-    priority: Priority.high,
-    ticker: 'ticker',
-  );
-  const platformChannelSpecifics =
-      NotificationDetails(android: androidPlatformChannelSpecifics);
-
-  await flutterLocalNotificationsPlugin.show(
-    0,
-    'Incoming call from Openup',
-    'Openup',
-    platformChannelSpecifics,
-    payload: 'item x',
-  );
 }

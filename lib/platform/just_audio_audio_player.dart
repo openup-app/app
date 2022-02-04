@@ -73,8 +73,6 @@ class JustAudioAudioPlayer {
 
   Stream<PlaybackInfo> get playbackInfoStream => _playbackInfoController.stream;
 
-  Stream<Duration> get recordingDurationStream => const Stream.empty();
-
   Future<void> setUrl(String url) => _player.setUrl(url);
 
   Future<void> play() => _player.play();
@@ -82,6 +80,8 @@ class JustAudioAudioPlayer {
   Future<void> pause() => _player.pause();
 
   Future<void> stop() => _player.stop();
+
+  Future<void> seek(Duration position) => _player.seek(position);
 }
 
 @freezed

@@ -3,10 +3,12 @@ import 'package:openup/widgets/theming.dart';
 
 class ToggleButton extends StatefulWidget {
   final bool value;
+  final Color color;
   final ValueChanged onChanged;
   const ToggleButton({
     Key? key,
     required this.value,
+    required this.color,
     required this.onChanged,
   }) : super(key: key);
 
@@ -16,6 +18,8 @@ class ToggleButton extends StatefulWidget {
 
 class _ToggleButtonState extends State<ToggleButton> {
   late bool _value;
+  bool _dragging = false;
+  double _left = 4.0;
 
   @override
   void initState() {
@@ -38,17 +42,35 @@ class _ToggleButtonState extends State<ToggleButton> {
         });
         widget.onChanged(_value);
       },
+      onPanStart: (s) {
+        setState(() {
+          _dragging = true;
+          _left = !widget.value ? 4.0 : 35.0;
+        });
+      },
+      onPanUpdate: (s) {
+        setState(() {
+          _left += s.delta.dx;
+          _left = _left.clamp(4.0, 35.0);
+        });
+      },
+      onPanEnd: (_) {
+        setState(() => _dragging = false);
+        widget.onChanged(_left >= 17);
+      },
       child: SizedBox(
         width: 60,
         height: 30,
         child: Stack(
           fit: StackFit.passthrough,
           children: [
-            DecoratedBox(
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white, width: 1),
                 borderRadius: const BorderRadius.all(Radius.circular(15)),
-                color: const Color.fromARGB(0xFF, 0x8B, 0xC0, 0xFF),
+                color: widget.color,
                 boxShadow: [
                   BoxShadow(
                     color: Theming.of(context).shadow,
@@ -59,9 +81,9 @@ class _ToggleButtonState extends State<ToggleButton> {
               ),
             ),
             AnimatedPositioned(
-              duration: const Duration(milliseconds: 200),
-              left: !_value ? 4 : null,
-              right: _value ? 4 : null,
+              duration:
+                  _dragging ? Duration.zero : const Duration(milliseconds: 150),
+              left: _dragging ? _left : (!_value ? 4 : 35),
               top: 4,
               child: Container(
                 width: 21,

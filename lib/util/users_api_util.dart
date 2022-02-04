@@ -101,10 +101,9 @@ Future<List<String>?> deleteAudio({required BuildContext context}) async {
   }
 }
 
-Future<void> updateNameDescription({
+Future<void> updateName({
   required BuildContext context,
   required String name,
-  required String description,
 }) async {
   try {
     await _updateData(
@@ -115,10 +114,7 @@ Future<void> updateNameDescription({
         if (profile != null) {
           return usersApi.updatePublicProfile(
             uid,
-            profile.copyWith(
-              name: name,
-              description: description,
-            ),
+            profile.copyWith(name: name),
           );
         } else {
           return Future.value();
