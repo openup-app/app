@@ -1,26 +1,32 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/users/users_api.dart';
+import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/theming.dart';
 
-class AccountSettingsScreen extends StatelessWidget {
+class AccountSettingsScreen extends ConsumerWidget {
   const AccountSettingsScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color.fromRGBO(0xFF, 0x8E, 0x8E, 1.0),
-            Color.fromRGBO(0x20, 0x84, 0xBD, 0.74),
-          ],
+      decoration: const BoxDecoration(color: Colors.black),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(0xFF, 0x8E, 0x8E, 1.0),
+              Color.fromRGBO(0x20, 0x84, 0xBD, 0.74),
+            ],
+          ),
         ),
-      ),
-      child: SizedBox.expand(
         child: Stack(
+          fit: StackFit.loose,
           children: [
             Positioned(
               top: MediaQuery.of(context).padding.top + 24,
@@ -140,6 +146,49 @@ class AccountSettingsScreen extends StatelessWidget {
                           ),
                         ),
                         const Spacer(flex: 2),
+                        Container(
+                          color: Colors.white,
+                          margin: const EdgeInsets.symmetric(horizontal: 40.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  OutlinedButton(
+                                    onPressed: () async {
+                                      final usersApi =
+                                          ref.read(usersApiProvider);
+                                      final uid = FirebaseAuth
+                                          .instance.currentUser?.uid;
+                                      if (uid != null) {
+                                        await dismissAllNotifications();
+                                        await usersApi.deleteUser(uid);
+                                        await FirebaseAuth.instance.signOut();
+                                        Navigator.of(context)
+                                            .pushReplacementNamed('/');
+                                      }
+                                    },
+                                    child: const Text('Delete account'),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  OutlinedButton(
+                                    onPressed: () async {
+                                      await dismissAllNotifications();
+                                      await FirebaseAuth.instance.signOut();
+                                      Navigator.of(context)
+                                          .pushReplacementNamed('/');
+                                    },
+                                    child: const Text('Sign-out'),
+                                  ),
+                                ],
+                              ),
+                              Text('${FirebaseAuth.instance.currentUser?.uid}'),
+                              Text(
+                                  '${FirebaseAuth.instance.currentUser?.phoneNumber}'),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
