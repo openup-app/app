@@ -26,24 +26,23 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          padding: MediaQuery.of(context).viewInsets,
-          child: DecoratedBox(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color.fromRGBO(0xFF, 0x8E, 0x8E, 1.0),
-                  Color.fromRGBO(0x20, 0x84, 0xBD, 0.74),
-                ],
-              ),
-            ),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(0xFF, 0x8E, 0x8E, 1.0),
+            Color.fromRGBO(0x20, 0x84, 0xBD, 0.74),
+          ],
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: MediaQuery.of(context).viewInsets,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: 362,
                 maxHeight: constraints.maxHeight,
               ),
               child: Stack(
@@ -54,50 +53,55 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
                     right: 16,
                     top: MediaQuery.of(context).padding.top + 72,
                     bottom: MediaQuery.of(context).viewPadding.bottom + 72,
-                    child: _Sheet(
-                      child: Column(
-                        children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Transform.scale(
-                              scale: 1.3,
-                              child: const Padding(
-                                padding: EdgeInsets.only(
-                                  left: 4.0,
-                                  top: 4.0,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: 362,
+                      ),
+                      child: _Sheet(
+                        child: Column(
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Transform.scale(
+                                scale: 1.3,
+                                child: const Padding(
+                                  padding: EdgeInsets.only(
+                                    left: 4.0,
+                                    top: 4.0,
+                                  ),
+                                  child: BackButton(),
                                 ),
-                                child: BackButton(),
                               ),
                             ),
-                          ),
-                          Text(
-                            'Contact us anytime,\nabout anything.',
-                            textAlign: TextAlign.center,
-                            style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                          const SizedBox(height: 20),
-                          Expanded(
-                            child: ContactTextField(
-                              textController: _textController,
-                              hintText: 'Questions and concerns',
+                            Text(
+                              'Contact us anytime,\nabout anything.',
+                              textAlign: TextAlign.center,
+                              style: Theming.of(context).text.body.copyWith(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                          SizedBox(
-                            width: 162,
-                            height: 43,
-                            child: GradientButton(
-                              onPressed: _uploading ? null : _upload,
-                              child: _uploading
-                                  ? const CircularProgressIndicator()
-                                  : const Text('send'),
+                            const SizedBox(height: 20),
+                            Expanded(
+                              child: ContactTextField(
+                                textController: _textController,
+                                hintText: 'Questions and concerns',
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              width: 162,
+                              height: 43,
+                              child: GradientButton(
+                                onPressed: _uploading ? null : _upload,
+                                child: _uploading
+                                    ? const CircularProgressIndicator()
+                                    : const Text('send'),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -111,9 +115,9 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
                 ],
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
