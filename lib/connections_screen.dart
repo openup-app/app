@@ -7,6 +7,7 @@ import 'package:openup/api/users/users_api.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/public_profile_screen.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
@@ -67,7 +68,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
           Positioned(
             left: MediaQuery.of(context).padding.left,
             top: MediaQuery.of(context).padding.top + 16,
-            child: const BackButton(),
+            child: const BackIconButton(),
           ),
           Align(
             alignment: Alignment.topCenter,

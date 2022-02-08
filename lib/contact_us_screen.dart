@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/contact_text_field.dart';
 import 'package:openup/widgets/home_button.dart';
@@ -69,7 +70,7 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
                                     left: 4.0,
                                     top: 4.0,
                                   ),
-                                  child: BackButton(),
+                                  child: BackIconButton(),
                                 ),
                               ),
                             ),

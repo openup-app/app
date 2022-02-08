@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/notifications/notifications.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -33,7 +34,7 @@ class AccountSettingsScreen extends ConsumerWidget {
               left: 8,
               child: Transform.scale(
                 scale: 1.3,
-                child: const BackButton(),
+                child: const BackIconButton(),
               ),
             ),
             Align(

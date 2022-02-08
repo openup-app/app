@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/platform/photo_picker.dart';
 import 'package:openup/util/users_api_util.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/notification_banner.dart';
@@ -90,7 +91,7 @@ class _PublicProfileEditScreenState extends State<PublicProfileEditScreen> {
                 Positioned(
                   left: MediaQuery.of(context).padding.left + 16,
                   bottom: MediaQuery.of(context).padding.bottom + 16,
-                  child: const BackButton(),
+                  child: const BackIconButton(),
                 ),
                 Positioned(
                   right: MediaQuery.of(context).padding.right + 16,
