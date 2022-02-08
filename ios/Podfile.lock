@@ -1,6 +1,12 @@
 PODS:
   - audio_session (0.0.1):
     - Flutter
+  - camera (0.0.1):
+    - Flutter
+  - connectycube_flutter_call_kit (0.0.1):
+    - Flutter
+  - emoji_picker_flutter (0.0.1):
+    - Flutter
   - Firebase/Auth (8.9.0):
     - Firebase/CoreOnly
     - FirebaseAuth (~> 8.9.0)
@@ -9,14 +15,14 @@ PODS:
   - Firebase/Messaging (8.9.0):
     - Firebase/CoreOnly
     - FirebaseMessaging (~> 8.9.0)
-  - firebase_auth (3.3.0):
+  - firebase_auth (3.3.4):
     - Firebase/Auth (= 8.9.0)
     - firebase_core
     - Flutter
-  - firebase_core (1.10.1):
+  - firebase_core (1.10.6):
     - Firebase/CoreOnly (= 8.9.0)
     - Flutter
-  - firebase_messaging (11.1.0):
+  - firebase_messaging (11.2.4):
     - Firebase/Messaging (= 8.9.0)
     - firebase_core
     - Flutter
@@ -53,8 +59,8 @@ PODS:
     - Flutter
   - flutter_webrtc (0.2.2):
     - Flutter
-    - GoogleWebRTC (= 1.1.31999)
     - Libyuv (= 1703)
+    - WebRTC-SDK (= 92.4515.07)
   - GoogleDataTransport (9.1.2):
     - GoogleUtilities/Environment (~> 7.2)
     - nanopb (~> 2.30908.0)
@@ -76,15 +82,12 @@ PODS:
     - GoogleUtilities/Logger
   - GoogleUtilities/UserDefaults (7.6.0):
     - GoogleUtilities/Logger
-  - GoogleWebRTC (1.1.31999)
   - GTMSessionFetcher/Core (1.7.0)
   - image_picker (0.0.1):
     - Flutter
   - just_audio (0.0.1):
     - Flutter
   - Libyuv (1703)
-  - location (0.0.1):
-    - Flutter
   - nanopb (2.30908.0):
     - nanopb/decode (= 2.30908.0)
     - nanopb/encode (= 2.30908.0)
@@ -95,9 +98,17 @@ PODS:
   - PromisesObjC (2.0.0)
   - record (0.0.1):
     - Flutter
+  - shared_preferences_ios (0.0.1):
+    - Flutter
+  - video_player (0.0.1):
+    - Flutter
+  - WebRTC-SDK (92.4515.07)
 
 DEPENDENCIES:
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
+  - camera (from `.symlinks/plugins/camera/ios`)
+  - connectycube_flutter_call_kit (from `.symlinks/plugins/connectycube_flutter_call_kit/ios`)
+  - emoji_picker_flutter (from `.symlinks/plugins/emoji_picker_flutter/ios`)
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
@@ -106,9 +117,10 @@ DEPENDENCIES:
   - flutter_webrtc (from `.symlinks/plugins/flutter_webrtc/ios`)
   - image_picker (from `.symlinks/plugins/image_picker/ios`)
   - just_audio (from `.symlinks/plugins/just_audio/ios`)
-  - location (from `.symlinks/plugins/location/ios`)
   - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
   - record (from `.symlinks/plugins/record/ios`)
+  - shared_preferences_ios (from `.symlinks/plugins/shared_preferences_ios/ios`)
+  - video_player (from `.symlinks/plugins/video_player/ios`)
 
 SPEC REPOS:
   trunk:
@@ -120,15 +132,21 @@ SPEC REPOS:
     - FirebaseMessaging
     - GoogleDataTransport
     - GoogleUtilities
-    - GoogleWebRTC
     - GTMSessionFetcher
     - Libyuv
     - nanopb
     - PromisesObjC
+    - WebRTC-SDK
 
 EXTERNAL SOURCES:
   audio_session:
     :path: ".symlinks/plugins/audio_session/ios"
+  camera:
+    :path: ".symlinks/plugins/camera/ios"
+  connectycube_flutter_call_kit:
+    :path: ".symlinks/plugins/connectycube_flutter_call_kit/ios"
+  emoji_picker_flutter:
+    :path: ".symlinks/plugins/emoji_picker_flutter/ios"
   firebase_auth:
     :path: ".symlinks/plugins/firebase_auth/ios"
   firebase_core:
@@ -145,19 +163,24 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/image_picker/ios"
   just_audio:
     :path: ".symlinks/plugins/just_audio/ios"
-  location:
-    :path: ".symlinks/plugins/location/ios"
   path_provider_ios:
     :path: ".symlinks/plugins/path_provider_ios/ios"
   record:
     :path: ".symlinks/plugins/record/ios"
+  shared_preferences_ios:
+    :path: ".symlinks/plugins/shared_preferences_ios/ios"
+  video_player:
+    :path: ".symlinks/plugins/video_player/ios"
 
 SPEC CHECKSUMS:
   audio_session: 4f3e461722055d21515cf3261b64c973c062f345
+  camera: fe33292aff715a981eb34d7ce7b35b54337ff34c
+  connectycube_flutter_call_kit: 3f5730ee17df32194fe1072f197bb1f87fb18955
+  emoji_picker_flutter: 4f9a1ac31d355e1bf9622a1e821a809149130127
   Firebase: 13d8d96499e2635428d5bf0ec675df21f95d9a95
-  firebase_auth: 9b2e9b08f1d64fcf861f0409ac909a5cf9aa52dc
-  firebase_core: a54a31c48d516674649f419aea823585c4652ae0
-  firebase_messaging: 0c8d1a1732487db7f332fb65232053e93201e2fb
+  firebase_auth: e875a50b81aefb20f305dfede425647e9675c19e
+  firebase_core: c263d7daf1dc92fcd9895e6abdc04872b0ee07ff
+  firebase_messaging: dff5cd08781ee1de988565a83c977e435405cd7e
   FirebaseAuth: 2b78b2a32c07b3ecfa4970bdf1d3632b8304099b
   FirebaseCore: 599ee609343eaf4941bd188f85e3aa077ffe325b
   FirebaseCoreDiagnostics: 56fb7216d87e0e6ec2feddefa9d8a392fe8b2c18
@@ -165,19 +188,20 @@ SPEC CHECKSUMS:
   FirebaseMessaging: 82c4a48638f53f7b184f3cc9f6cd2cbe533ab316
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
-  flutter_webrtc: 39898454258b54ba51996850d5da8d5d53bf1524
+  flutter_webrtc: 6b71a1fc1d931a3dfe879e578ea10e2e6cd84f53
   GoogleDataTransport: 629c20a4d363167143f30ea78320d5a7eb8bd940
   GoogleUtilities: 684ee790a24f73ebb2d1d966e9711c203f2a4237
-  GoogleWebRTC: b39a78c4f5cc6b0323415b9233db03a2faa7b0f0
   GTMSessionFetcher: 43748f93435c2aa068b1cbe39655aaf600652e91
   image_picker: 9aa50e1d8cdacdbed739e925b7eea16d014367e6
   just_audio: baa7252489dbcf47a4c7cc9ca663e9661c99aafa
   Libyuv: 5f79ced0ee66e60a612ca97de1e6ccacd187a437
-  location: 3a2eed4dd2fab25e7b7baf2a9efefe82b512d740
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
   path_provider_ios: 7d7ce634493af4477d156294792024ec3485acd5
   PromisesObjC: 68159ce6952d93e17b2dfe273b8c40907db5ba58
   record: 7ee2393532f8553bbb09fa19e95478323b7c0a99
+  shared_preferences_ios: aef470a42dc4675a1cdd50e3158b42e3d1232b32
+  video_player: ecd305f42e9044793efd34846e1ce64c31ea6fcb
+  WebRTC-SDK: 540a44f2e30e89c75e331d5c4a372253ba668233
 
 PODFILE CHECKSUM: dfca28d30b9cc771e848a18b00f553926d158751
 

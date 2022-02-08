@@ -37,10 +37,10 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Make video calls and take profile photos</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Add profile photos from your gallery</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Make calls and record an audio bio</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Add profile photos from your gallery</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
