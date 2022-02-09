@@ -157,6 +157,7 @@ Future<PublicProfile?> _updateData({
   try {
     await request(usersApi, uid);
   } catch (e) {
+    popDialog();
     rethrow;
   }
   popDialog();

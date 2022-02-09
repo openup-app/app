@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ class ProfileBio extends StatefulWidget {
 class ProfileBioState extends State<ProfileBio> {
   final _audio = JustAudioAudioPlayer();
   final _recorder = RecordAudioRecorder();
+  Timer? _recordingLimitTimer;
 
   PlaybackInfo _playbackInfo = const PlaybackInfo();
   bool _recording = false;
@@ -92,13 +94,25 @@ class ProfileBioState extends State<ProfileBio> {
         onPlay: () => _audio.play(),
         onPause: () => _audio.pause(),
         onRecord: () async {
+          setState(() {
+            _recordingLimitTimer?.cancel();
+            _recordingLimitTimer = Timer(const Duration(seconds: 10), () {
+              if (mounted) {
+                setState(() => _recording = false);
+                _recorder.stop();
+              }
+            });
+          });
           if (await _recorder.start()) {
             setState(() => _recording = true);
           }
         },
         onRecordComplete: () async {
+          setState(() => _recordingLimitTimer?.cancel());
           final output = await _recorder.stop();
-          setState(() => _recording = false);
+          if (mounted) {
+            setState(() => _recording = false);
+          }
           if (output != null) {
             widget.onRecorded(output);
           }
