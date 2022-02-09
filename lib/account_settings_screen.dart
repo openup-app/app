@@ -8,11 +8,27 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/theming.dart';
 
-class AccountSettingsScreen extends ConsumerWidget {
+class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  _AccountSettingsScreenState createState() => _AccountSettingsScreenState();
+}
+
+class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
+  static final _phoneRegex = RegExp(r'^(?:[+0][1-9])?[0-9]{10,12}$');
+  final _phoneNumberController = TextEditingController();
+  bool _submitting = false;
+  int? _forceResendingToken;
+
+  @override
+  void dispose() {
+    _phoneNumberController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.black),
       child: DecoratedBox(
@@ -58,28 +74,16 @@ class AccountSettingsScreen extends ConsumerWidget {
                         const Spacer(),
                         Center(
                           child: Text(
-                            'Enter old information',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 18, fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const _InputArea(
-                          child: _TextField(
-                            hintText: 'enter old phone number',
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Center(
-                          child: Text(
                             'Update login information',
                             style: Theming.of(context).text.body.copyWith(
                                 fontSize: 18, fontWeight: FontWeight.w500),
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const _InputArea(
+                        _InputArea(
                           child: _TextField(
+                            controller: _phoneNumberController,
+                            keyboardType: TextInputType.phone,
                             hintText: 'phone number',
                           ),
                         ),
@@ -87,7 +91,7 @@ class AccountSettingsScreen extends ConsumerWidget {
                         SizedBox(
                           width: 237,
                           child: Button(
-                            onPressed: () {},
+                            onPressed: _submitting ? null : _updateInformation,
                             child: _InputArea(
                               childNeedsOpacity: false,
                               opacity: 0.8,
@@ -96,12 +100,17 @@ class AccountSettingsScreen extends ConsumerWidget {
                                 Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
                               ],
                               child: Center(
-                                child: Text(
-                                  'Update Information',
-                                  style: Theming.of(context).text.body.copyWith(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w500),
-                                ),
+                                child: _submitting
+                                    ? const CircularProgressIndicator()
+                                    : Text(
+                                        'Update Information',
+                                        style: Theming.of(context)
+                                            .text
+                                            .body
+                                            .copyWith(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.w500),
+                                      ),
                               ),
                             ),
                           ),
@@ -208,6 +217,89 @@ class AccountSettingsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  void _updateInformation() async {
+    FocusScope.of(context).unfocus();
+    setState(() => _submitting = true);
+    final value = _phoneNumberController.text;
+    if (value.isEmpty) {
+      return;
+    }
+
+    final validation = _validatePhone(value);
+    if (validation != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(validation),
+        ),
+      );
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw 'No user is logged in';
+    }
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: value,
+      verificationCompleted: (credential) async {
+        try {
+          await user.updatePhoneNumber(credential);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Successfully updated phone number'),
+            ),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Something went wrong'),
+            ),
+          );
+        }
+
+        setState(() => _submitting = false);
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        print(e);
+        String message;
+        if (e.code == 'network-request-failed') {
+          message = 'Network error';
+        } else {
+          message = 'Failed to send verification code';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        setState(() => _submitting = false);
+      },
+      codeSent: (verificationId, forceResendingToken) async {
+        setState(() => _forceResendingToken = forceResendingToken);
+        await Navigator.of(context).pushNamed(
+          'account-settings-phone-verification',
+          arguments: verificationId,
+        );
+        setState(() => _submitting = false);
+      },
+      forceResendingToken: _forceResendingToken,
+      codeAutoRetrievalTimeout: (verificationId) {
+        // Android SMS auto-fill failed, nothing to do
+      },
+    );
+  }
+
+  String? _validatePhone(String? value) {
+    if (value == null) {
+      return 'Enter a phone number';
+    }
+
+    if (_phoneRegex.stringMatch(value) == value) {
+      return null;
+    } else {
+      return 'Invalid phone number';
+    }
+  }
 }
 
 class _InputArea extends StatelessWidget {
@@ -262,9 +354,14 @@ class _InputArea extends StatelessWidget {
 }
 
 class _TextField extends StatelessWidget {
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
   final String hintText;
+
   const _TextField({
     Key? key,
+    required this.controller,
+    this.keyboardType,
     required this.hintText,
   }) : super(key: key);
 
@@ -273,7 +370,9 @@ class _TextField extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.only(left: 24.0),
-        child: TextField(
+        child: TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
           decoration: InputDecoration.collapsed(
             hintText: hintText,
             hintStyle: Theming.of(context).text.body.copyWith(

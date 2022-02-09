@@ -247,6 +247,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     if (age < ageLimit) {
       return 'You must be 18 years old or older';
     }
+    return null;
   }
 
   void _submit() async {

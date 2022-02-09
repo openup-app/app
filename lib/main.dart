@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/account_settings_phone_verification_screen.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/online_users/online_users_api.dart';
@@ -46,6 +47,7 @@ import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:openup/widgets/theming.dart';
 
 const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
+// const host = '192.168.1.111';
 const webPort = 8080;
 const socketPort = 8081;
 
@@ -1018,6 +1020,18 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     builder: (_) {
                       return const CurrentRouteSystemUiStyling.light(
                         child: AccountSettingsScreen(),
+                      );
+                    },
+                  );
+                case 'account-settings-phone-verification':
+                  final args = settings.arguments as String;
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (_) {
+                      return CurrentRouteSystemUiStyling.light(
+                        child: AccountSettingsPhoneVerificationScreen(
+                          verificationId: args,
+                        ),
                       );
                     },
                   );
