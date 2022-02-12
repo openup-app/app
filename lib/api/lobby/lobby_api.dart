@@ -79,7 +79,9 @@ class LobbyEvent with _$LobbyEvent {
 
   const factory LobbyEvent.disconnected() = _Disconnected;
 
-  const factory LobbyEvent.penalized() = _Penalized;
+  const factory LobbyEvent.penalized({
+    required int minutes,
+  }) = _Penalized;
 
   const factory LobbyEvent.joinCall({
     required String rid,

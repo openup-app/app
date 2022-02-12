@@ -95,12 +95,15 @@ class _LobbyScreenState extends State<LobbyScreen>
           Navigator.of(context).pop();
         }
       },
-      penalized: () {
+      penalized: (minutes) {
         setState(() => _shouldHandleDisconnection = false);
+        final plural = minutes != 1;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
+            duration: const Duration(seconds: 5),
+            backgroundColor: Colors.red,
             content: Text(
-                'You have been penalized from serious mode for a few minutes'),
+                'You have been penalized from serious mode for $minutes more minute${plural ? 's' : ''}'),
           ),
         );
         Navigator.of(context).pop();
