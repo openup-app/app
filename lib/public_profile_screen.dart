@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/profile.dart';
@@ -28,6 +30,7 @@ class PublicProfileScreen extends ConsumerStatefulWidget {
 class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   final _audioBioKey = GlobalKey<ProfileBioState>();
   PageController? _pageController;
+  Timer? _slideshowTimer;
 
   @override
   void initState() {
@@ -38,6 +41,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   @override
   void dispose() {
     _pageController?.dispose();
+    _slideshowTimer?.cancel();
     super.dispose();
   }
 
@@ -47,6 +51,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     setState(() {
       _pageController = PageController(initialPage: gallery.length * 100000);
     });
+    _maybeStartSlideshowTimer();
   }
 
   @override
@@ -63,22 +68,26 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   style: Theming.of(context).text.subheading),
             ),
           Positioned.fill(
-            child: PageView.builder(
-              controller: _pageController,
-              itemBuilder: (context, index) {
-                final gallery = widget.publicProfile.gallery;
-                if (gallery.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-                final i = index % gallery.length;
-                return Image.network(
-                  gallery[i],
-                  fit: BoxFit.cover,
-                  frameBuilder: fadeInFrameBuilder,
-                  loadingBuilder: circularProgressLoadingBuilder,
-                  errorBuilder: iconErrorBuilder,
-                );
-              },
+            child: Listener(
+              onPointerDown: (_) => _slideshowTimer?.cancel(),
+              onPointerUp: (_) => _maybeStartSlideshowTimer(),
+              child: PageView.builder(
+                controller: _pageController,
+                itemBuilder: (context, index) {
+                  final gallery = widget.publicProfile.gallery;
+                  if (gallery.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  final i = index % gallery.length;
+                  return Image.network(
+                    gallery[i],
+                    fit: BoxFit.cover,
+                    frameBuilder: fadeInFrameBuilder,
+                    loadingBuilder: circularProgressLoadingBuilder,
+                    errorBuilder: iconErrorBuilder,
+                  );
+                },
+              ),
             ),
           ),
           if (widget.editable)
@@ -175,6 +184,25 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
         ],
       ),
     );
+  }
+
+  void _maybeStartSlideshowTimer() {
+    if (widget.editable) {
+      return;
+    }
+    _slideshowTimer?.cancel();
+    _slideshowTimer = Timer(const Duration(seconds: 3), () {
+      final pageController = _pageController;
+      final page = pageController?.page;
+      if (pageController != null && page != null) {
+        pageController.animateToPage(
+          page.toInt() + 1,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+      _maybeStartSlideshowTimer();
+    });
   }
 }
 
