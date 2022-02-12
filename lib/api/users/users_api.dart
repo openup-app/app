@@ -19,7 +19,7 @@ late StateController<PublicProfile?> _profileStateController;
 void initUsersApi({
   required String host,
   required int port,
-  required String authToken,
+  String? authToken,
 }) {
   profileProvider = StateProvider<PublicProfile?>((ref) {
     return null;
@@ -51,7 +51,7 @@ class UsersApi implements RawUsersApi {
   UsersApi({
     required String host,
     required int port,
-    required String authToken,
+    String? authToken,
   }) : _rawUsersApi = RawUsersApi(
           host: host,
           port: port,

@@ -20,7 +20,7 @@ class InitialLoadingScreen extends ConsumerStatefulWidget {
 
 class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
   bool _onboarded = false;
-  late final StreamSubscription _idTokenRefreshSubscription;
+  StreamSubscription? _idTokenRefreshSubscription;
 
   @override
   void initState() {
@@ -35,16 +35,22 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
     // Verify user sign-in (will be navigated back here on success)
     if (user == null) {
+      initUsersApi(
+        host: host,
+        port: webPort,
+      );
       Navigator.of(context).pushReplacementNamed('sign-up');
       return;
+    } else {
+      initUsersApi(
+        host: host,
+        port: webPort,
+        authToken: await user.getIdToken(),
+      );
     }
 
-    initUsersApi(
-      host: host,
-      port: webPort,
-      authToken: await user.getIdToken(),
-    );
     final usersApi = ref.read(usersApiProvider);
+    usersApi.authToken = await user.getIdToken();
     usersApi.uid = user.uid;
 
     // Firebase ID token refresh
@@ -102,7 +108,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
   @override
   void dispose() {
-    _idTokenRefreshSubscription.cancel();
+    _idTokenRefreshSubscription?.cancel();
     super.dispose();
   }
 

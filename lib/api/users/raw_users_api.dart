@@ -20,9 +20,11 @@ class RawUsersApi {
   RawUsersApi({
     required String host,
     required int port,
-    required String authToken,
+    String? authToken,
   }) : _urlBase = 'http://$host:$port' {
-    this.authToken = authToken;
+    if (authToken != null) {
+      this.authToken = authToken;
+    }
   }
 
   set authToken(String value) {
