@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -197,12 +198,14 @@ class _ProfileBioDisplay extends ConsumerWidget {
                 onPressed: () => _showNameDialog(context),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
+                  child: AutoSizeText(
                     name == null ? '' : '$name, $age',
                     maxLines: 1,
+                    minFontSize: 20,
+                    maxFontSize: 36,
                     overflow: TextOverflow.ellipsis,
                     style: Theming.of(context).text.headline.copyWith(
-                      fontSize: 34,
+                      fontSize: 36,
                       shadows: [
                         Shadow(
                           color: Theming.of(context).shadow,
@@ -216,6 +219,7 @@ class _ProfileBioDisplay extends ConsumerWidget {
               ),
             ),
           ),
+          const SizedBox(width: 4),
           if (editable)
             Button(
               onPressed: playButton == PlayButtonState.playing
