@@ -47,7 +47,6 @@ import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:openup/widgets/theming.dart';
 
 const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
-// const host = '192.168.1.111';
 const webPort = 8080;
 const socketPort = 8081;
 
@@ -283,8 +282,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 Color.fromARGB(0xFF, 0x11, 0x8E, 0xDD),
                           ),
                           child: SoloDoubleScreen(
-                            labelUpper: 'meet\npeople',
-                            labelLower: 'meet people\nwith friends',
+                            labelUpper: 'make\nfriends',
+                            labelLower: 'make friends\nwith friends',
                             imageUpper: Image.asset(
                               'assets/images/friends.gif',
                               height: 115,
@@ -327,7 +326,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 Color.fromARGB(0xFF, 0x1C, 0xC1, 0xE4),
                           ),
                           child: MenuScreen(
-                            label: 'meet people',
+                            label: 'make friends',
                             image: Transform.translate(
                               offset: const Offset(0.0, 12.0),
                               child: Image.asset(
@@ -382,7 +381,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 Color.fromARGB(0xFF, 0x1C, 0xC1, 0xE4),
                           ),
                           child: MenuScreen(
-                            label: 'meet people\nwith friends',
+                            label: 'make friends\nwith friends',
                             image: SizedBox(
                               height: 120,
                               child: Image.asset(
@@ -433,7 +432,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           ),
                           child: PreferencesScreen(
                             initialPreferences: args,
-                            title: 'Meet People',
+                            title: 'Make Friends',
                             image: const MaleFemaleConnectionImageApart(),
                             updatePreferences: (usersApi, uid, preferences) =>
                                 usersApi.updateFriendsPreferences(
@@ -562,6 +561,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 case 'dating-solo-double':
                   return _buildPageRoute(
                     settings: settings,
+                    transitionsBuilder: slideLeftToRightPageTransition,
                     builder: (context) {
                       return CurrentRouteSystemUiStyling.light(
                         child: SoloDoubleScreenTheme(
@@ -646,6 +646,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 case 'dating-solo':
                   return _buildPageRoute(
                     settings: settings,
+                    transitionsBuilder: slideLeftToRightPageTransition,
                     builder: (context) {
                       return CurrentRouteSystemUiStyling.dark(
                         child: MenuScreenTheme(
@@ -703,6 +704,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 case 'dating-double':
                   return _buildPageRoute(
                     settings: settings,
+                    transitionsBuilder: slideLeftToRightPageTransition,
                     builder: (context) {
                       return CurrentRouteSystemUiStyling.dark(
                         child: MenuScreenTheme(
@@ -792,6 +794,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   final args = settings.arguments as LobbyScreenArguments;
                   return _buildPageRoute(
                     settings: settings,
+                    transitionsBuilder: slideLeftToRightPageTransition,
                     builder: (context) {
                       return CurrentRouteSystemUiStyling.light(
                         child: LobbyScreenTheme(
@@ -917,14 +920,19 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 case 'precached-rekindle':
                   final args =
                       settings.arguments as PrecachedRekindleScreenArguments;
+                  final rekindles = args.rekindles;
+                  final rekindle =
+                      rekindles.isNotEmpty ? rekindles.first : null;
                   return _buildPageRoute(
                     settings: settings,
+                    transitionsBuilder: rekindle?.purpose == Purpose.dating
+                        ? slideLeftToRightPageTransition
+                        : null,
                     builder: (context) {
                       return CurrentRouteSystemUiStyling.light(
                         child: RekindleScreenPrecached(
                           rekindles: args.rekindles,
                           index: args.index,
-                          title: args.title,
                           countdown: args.countdown,
                         ),
                       );
@@ -1061,7 +1069,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   }) {
     return PageRouteBuilder<T>(
       settings: settings,
-      transitionsBuilder: transitionsBuilder ?? sideAnticipatePageTransition,
+      transitionsBuilder: transitionsBuilder ?? slideRightToLeftPageTransition,
       transitionDuration: const Duration(milliseconds: 500),
       reverseTransitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (_, __, ___) {

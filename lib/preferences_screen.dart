@@ -9,6 +9,7 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/matching_users_online.dart';
 import 'package:openup/widgets/preference.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 
 part 'preferences_screen.freezed.dart';
@@ -36,6 +37,7 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
   late Preferences _preferences;
 
   bool _uploading = false;
+  int? _expandedSection;
 
   @override
   void initState() {
@@ -45,139 +47,147 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.white,
-            PreferencesScreenTheme.of(context).backgroundGradientBottom,
-          ],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).padding.top + 32,
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              widget.title,
-              style: Theming.of(context).text.body.copyWith(
-                    color: PreferencesScreenTheme.of(context).titleColor,
-                    fontWeight: FontWeight.w400,
-                    fontSize: 30,
-                  ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 0.0),
-              child: MatchingUsersOnline(preferences: _preferences),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              'Who are you interested in talking to?\nYou can change these settings at any time',
-              textAlign: TextAlign.center,
-              style: Theming.of(context).text.body.copyWith(
-                    color: const Color.fromRGBO(0x99, 0x99, 0x99, 1.0),
-                    fontWeight: FontWeight.w400,
-                    fontSize: 18,
-                  ),
-            ),
-          ),
-          Expanded(
-            child: Align(
-              alignment: Alignment.center,
-              child: ListView(
-                children: [
-                  Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 300),
-                      child: PreferencesSelection(
-                        preferences: _preferences,
-                        onChanged: (profile) {
-                          setState(() => _preferences = profile);
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SignificantButton(
-                onPressed: () async {
-                  if (_preferences == widget.initialPreferences) {
-                    return Navigator.of(context).pop();
-                  }
-                  setState(() => _uploading = true);
-                  final user = FirebaseAuth.instance.currentUser;
-                  final uid = user?.uid;
-                  if (uid != null) {
-                    final usersApi = ref.read(usersApiProvider);
-                    await widget.updatePreferences(usersApi, uid, _preferences);
-                    if (mounted) {
-                      setState(() => _uploading = false);
-                      Navigator.of(context).pop();
-                    }
-                  }
-                },
-                gradient: PreferencesScreenTheme.of(context).doneButtonGradient,
-                child: _uploading
-                    ? const CircularProgressIndicator()
-                    : const Text('Complete'),
-              ),
-              widget.image,
+    return GestureDetector(
+      onTap: () {
+        if (_expandedSection != null) {
+          setState(() => _expandedSection = null);
+        }
+      },
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white,
+              PreferencesScreenTheme.of(context).backgroundGradientBottom,
             ],
           ),
-        ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).padding.top + 32,
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: Text(
+                widget.title,
+                style: Theming.of(context).text.body.copyWith(
+                      color: PreferencesScreenTheme.of(context).titleColor,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 30,
+                    ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 0.0),
+                child: MatchingUsersOnline(preferences: _preferences),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.center,
+              child: Text(
+                'Who are you interested in talking to?\nYou can change these settings at any time',
+                textAlign: TextAlign.center,
+                style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0x99, 0x99, 0x99, 1.0),
+                      fontWeight: FontWeight.w400,
+                      fontSize: 18,
+                    ),
+              ),
+            ),
+            Expanded(
+              child: Align(
+                alignment: Alignment.center,
+                child: ListView(
+                  children: [
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 300),
+                        child: PreferencesSelection(
+                          preferences: _preferences,
+                          onChanged: (profile) =>
+                              setState(() => _preferences = profile),
+                          expandedSection: _expandedSection,
+                          onExpansion: (index) =>
+                              setState(() => _expandedSection = index),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SignificantButton(
+                  onPressed: () async {
+                    if (_preferences == widget.initialPreferences) {
+                      return Navigator.of(context).pop();
+                    }
+                    setState(() => _uploading = true);
+                    final user = FirebaseAuth.instance.currentUser;
+                    final uid = user?.uid;
+                    if (uid != null) {
+                      final usersApi = ref.read(usersApiProvider);
+                      await widget.updatePreferences(
+                          usersApi, uid, _preferences);
+                      if (mounted) {
+                        setState(() => _uploading = false);
+                        Navigator.of(context).pop();
+                      }
+                    }
+                  },
+                  gradient:
+                      PreferencesScreenTheme.of(context).doneButtonGradient,
+                  child: _uploading
+                      ? const CircularProgressIndicator()
+                      : const Text('Complete'),
+                ),
+                widget.image,
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class PreferencesSelection extends StatefulWidget {
+class PreferencesSelection extends StatelessWidget {
   final Preferences preferences;
   final void Function(Preferences preferences) onChanged;
+  final int? expandedSection;
+  final void Function(int index) onExpansion;
 
   const PreferencesSelection({
     Key? key,
     required this.preferences,
     required this.onChanged,
+    required this.expandedSection,
+    required this.onExpansion(int index),
   }) : super(key: key);
 
   @override
-  _PreferencesSelectionState createState() => _PreferencesSelectionState();
-}
-
-class _PreferencesSelectionState extends State<PreferencesSelection> {
-  int? _expandedSection;
-
-  @override
   Widget build(BuildContext context) {
-    final genderLabelElements = [...widget.preferences.gender];
+    final genderLabelElements = [...preferences.gender];
     genderLabelElements.sort((a, b) => a.index.compareTo(b.index));
     final genderLabel = genderLabelElements.isEmpty
         ? 'Any'
         : genderLabelElements.map(genderToLabel).join(', ');
 
-    final skinColorLabel = widget.preferences.skinColor.isEmpty
+    final skinColorLabel = preferences.skinColor.isEmpty
         ? 'Any'
-        : widget.preferences.skinColor
+        : preferences.skinColor
             .map((s) => genderToEmoji(
-                genderForPreferredGenders(widget.preferences.gender))[s.index])
+                genderForPreferredGenders(preferences.gender))[s.index])
             .join(' ');
 
     final ethnicityList = [
@@ -191,186 +201,193 @@ class _PreferencesSelectionState extends State<PreferencesSelection> {
       'Lebanese',
       'Other',
     ];
-    final ethnicityLabelElements = [...widget.preferences.ethnicity];
+    final ethnicityLabelElements = [...preferences.ethnicity];
     ethnicityLabelElements.sort(
         (a, b) => ethnicityList.indexOf(a).compareTo(ethnicityList.indexOf(b)));
     final ethnicityLabel = ethnicityLabelElements.isEmpty
         ? 'Any'
         : ethnicityLabelElements.join(', ');
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Genders I am interested in ...',
-          style: Theming.of(context).text.body.copyWith(
-                color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                fontWeight: FontWeight.w400,
-                fontSize: 18,
-              ),
-        ),
-        PreferencesExpansionSection(
-          label: genderLabel,
-          expanded: _expandedSection == 0,
-          onPressed: () => setState(() => _expandedSection = 0),
-          gradient: PreferencesScreenTheme.of(context).expansionButtonGradient,
-          children: [
-            for (final gender in Gender.values)
-              PreferencesSetTile<Gender>(
-                title: Text(genderToLabel(gender)),
-                value: gender,
-                set: widget.preferences.gender,
-                onChanged: (value) {
-                  widget.onChanged(widget.preferences.copyWith(gender: value));
-                },
-              ),
-          ],
-        ),
-        Text(
-          'Skin color ...',
-          style: Theming.of(context).text.body.copyWith(
-                color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                fontWeight: FontWeight.w400,
-                fontSize: 18,
-              ),
-        ),
-        PreferencesExpansionSection(
-          label: skinColorLabel,
-          expanded: _expandedSection == 1,
-          onPressed: () => setState(() => _expandedSection = 1),
-          gradient: PreferencesScreenTheme.of(context).expansionButtonGradient,
-          children: [
-            for (var skinColor in SkinColor.values)
-              PreferencesSetTile<SkinColor>(
-                title: Text(genderToEmoji(
-                        genderForPreferredGenders(widget.preferences.gender))[
-                    SkinColor.values.indexOf(skinColor)]),
-                value: skinColor,
-                set: widget.preferences.skinColor,
-                onChanged: (value) {
-                  widget
-                      .onChanged(widget.preferences.copyWith(skinColor: value));
-                },
-              ),
-          ],
-        ),
-        Text(
-          'Weight ...',
-          style: Theming.of(context).text.body.copyWith(
-                color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                fontWeight: FontWeight.w400,
-                fontSize: 18,
-              ),
-        ),
-        SfRangeSlider(
-          values: SfRangeValues(
-            widget.preferences.weight.min.toDouble(),
-            widget.preferences.weight.max.toDouble(),
+    return SfRangeSliderTheme(
+      data: SfRangeSliderThemeData(
+        thumbRadius: 16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Genders I am interested in ...',
+            style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
+                  fontWeight: FontWeight.w400,
+                  fontSize: 18,
+                ),
           ),
-          min: 25,
-          max: 400,
-          stepSize: 25,
-          interval: 25,
-          showDividers: true,
-          startThumbIcon: Center(
-            child: Text(
-              widget.preferences.weight.min.toString(),
-              textAlign: TextAlign.center,
-              style: Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontSize: 11, fontWeight: FontWeight.w300),
+          PreferencesExpansionSection(
+            label: genderLabel,
+            expanded: expandedSection == 0,
+            onPressed: () => onExpansion(0),
+            gradient:
+                PreferencesScreenTheme.of(context).expansionButtonGradient,
+            children: [
+              for (final gender in Gender.values)
+                PreferencesSetTile<Gender>(
+                  title: Text(genderToLabel(gender)),
+                  value: gender,
+                  set: preferences.gender,
+                  onChanged: (value) {
+                    onChanged(preferences.copyWith(gender: value));
+                  },
+                ),
+            ],
+          ),
+          Text(
+            'Skin color ...',
+            style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
+                  fontWeight: FontWeight.w400,
+                  fontSize: 18,
+                ),
+          ),
+          PreferencesExpansionSection(
+            label: skinColorLabel,
+            expanded: expandedSection == 1,
+            onPressed: () => onExpansion(1),
+            gradient:
+                PreferencesScreenTheme.of(context).expansionButtonGradient,
+            children: [
+              for (var skinColor in SkinColor.values)
+                PreferencesSetTile<SkinColor>(
+                  title: Text(genderToEmoji(
+                          genderForPreferredGenders(preferences.gender))[
+                      SkinColor.values.indexOf(skinColor)]),
+                  value: skinColor,
+                  set: preferences.skinColor,
+                  onChanged: (value) {
+                    onChanged(preferences.copyWith(skinColor: value));
+                  },
+                ),
+            ],
+          ),
+          Text(
+            'Weight ...',
+            style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
+                  fontWeight: FontWeight.w400,
+                  fontSize: 18,
+                ),
+          ),
+          SfRangeSlider(
+            values: SfRangeValues(
+              preferences.weight.min.toDouble(),
+              preferences.weight.max.toDouble(),
             ),
-          ),
-          endThumbIcon: Center(
-            child: Text(
-              widget.preferences.weight.max.toString(),
-              textAlign: TextAlign.center,
-              style: Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontSize: 11, fontWeight: FontWeight.w300),
-            ),
-          ),
-          onChanged: (v) {
-            if (v.start < v.end - 25) {
-              widget.onChanged(widget.preferences.copyWith(
-                  weight: Range(min: v.start.toInt(), max: v.end.toInt())));
-            }
-          },
-        ),
-        Text(
-          'Height ...',
-          style: Theming.of(context).text.body.copyWith(
-                color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                fontWeight: FontWeight.w400,
-                fontSize: 18,
+            min: 25,
+            max: 400,
+            stepSize: 25,
+            interval: 25,
+            showDividers: true,
+            startThumbIcon: Center(
+              child: Text(
+                preferences.weight.min.toString(),
+                textAlign: TextAlign.center,
+                style: Theming.of(context)
+                    .text
+                    .body
+                    .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
               ),
-        ),
-        SfRangeSlider(
-          values: SfRangeValues(
-            widget.preferences.height.min.toDouble(),
-            widget.preferences.height.max.toDouble(),
-          ),
-          min: 24,
-          max: 120,
-          stepSize: 6,
-          interval: 6,
-          showDividers: true,
-          startThumbIcon: Center(
-            child: Text(
-              _inchToFtIn(widget.preferences.height.min),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              style: Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontSize: 11, fontWeight: FontWeight.w300),
             ),
-          ),
-          endThumbIcon: Center(
-            child: Text(
-              _inchToFtIn(widget.preferences.height.max),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              style: Theming.of(context).text.body.copyWith(
-                  fontSize: widget.preferences.height.max >= 120 ? 9 : 11,
-                  fontWeight: FontWeight.w300),
+            endThumbIcon: Center(
+              child: Text(
+                preferences.weight.max.toString(),
+                textAlign: TextAlign.center,
+                style: Theming.of(context)
+                    .text
+                    .body
+                    .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
+              ),
             ),
+            onChanged: (v) {
+              if (v.start < v.end - 25) {
+                onChanged(preferences.copyWith(
+                    weight: Range(min: v.start.toInt(), max: v.end.toInt())));
+              }
+            },
           ),
-          onChanged: (v) {
-            if (v.start < v.end - 6) {
-              widget.onChanged(widget.preferences.copyWith(
-                  height: Range(min: v.start.toInt(), max: v.end.toInt())));
-            }
-          },
-        ),
-        Text(
-          'Ethnicity ...',
-          style: Theming.of(context).text.body.copyWith(
-                color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                fontWeight: FontWeight.w400,
-                fontSize: 18,
+          Text(
+            'Height ...',
+            style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
+                  fontWeight: FontWeight.w400,
+                  fontSize: 18,
+                ),
+          ),
+          SfRangeSlider(
+            values: SfRangeValues(
+              preferences.height.min.toDouble(),
+              preferences.height.max.toDouble(),
+            ),
+            min: 24,
+            max: 120,
+            stepSize: 6,
+            interval: 6,
+            showDividers: true,
+            startThumbIcon: Center(
+              child: Text(
+                _inchToFtIn(preferences.height.min),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: Theming.of(context)
+                    .text
+                    .body
+                    .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
               ),
-        ),
-        PreferencesExpansionSection(
-          label: ethnicityLabel,
-          expanded: _expandedSection == 3,
-          onPressed: () => setState(() => _expandedSection = 3),
-          gradient: PreferencesScreenTheme.of(context).expansionButtonGradient,
-          children: [
-            for (var ethnicity in ethnicityList)
-              PreferencesSetTile<String>(
-                title: Text(ethnicity),
-                value: ethnicity,
-                set: widget.preferences.ethnicity,
-                onChanged: (value) {
-                  widget
-                      .onChanged(widget.preferences.copyWith(ethnicity: value));
-                },
+            ),
+            endThumbIcon: Center(
+              child: Text(
+                _inchToFtIn(preferences.height.max),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: Theming.of(context)
+                    .text
+                    .body
+                    .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
               ),
-          ],
-        ),
-      ],
+            ),
+            onChanged: (v) {
+              if (v.start < v.end - 6) {
+                onChanged(preferences.copyWith(
+                    height: Range(min: v.start.toInt(), max: v.end.toInt())));
+              }
+            },
+          ),
+          Text(
+            'Ethnicity ...',
+            style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
+                  fontWeight: FontWeight.w400,
+                  fontSize: 18,
+                ),
+          ),
+          PreferencesExpansionSection(
+            label: ethnicityLabel,
+            expanded: expandedSection == 3,
+            onPressed: () => onExpansion(3),
+            gradient:
+                PreferencesScreenTheme.of(context).expansionButtonGradient,
+            children: [
+              for (var ethnicity in ethnicityList)
+                PreferencesSetTile<String>(
+                  title: Text(ethnicity),
+                  value: ethnicity,
+                  set: preferences.ethnicity,
+                  onChanged: (value) {
+                    onChanged(preferences.copyWith(ethnicity: value));
+                  },
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

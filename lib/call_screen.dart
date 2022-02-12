@@ -186,7 +186,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
         if (state == PhoneConnectionState.connected && _endTime == null) {
           setState(
-              () => _endTime = DateTime.now().add(const Duration(seconds: 90)));
+              () => _endTime = DateTime.now().add(const Duration(minutes: 5)));
         }
       }));
     }
@@ -339,7 +339,6 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         'precached-rekindle',
         arguments: PrecachedRekindleScreenArguments(
           rekindles: _unrequestedConnections.toList(),
-          title: 'meet people',
         ),
       );
     }

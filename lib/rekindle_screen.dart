@@ -10,7 +10,6 @@ import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
-import 'package:openup/widgets/notification_banner.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/slide_control.dart';
 import 'package:openup/widgets/theming.dart';
@@ -43,7 +42,6 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const title = 'rekindle';
     final rekindles = _rekindles;
     return AnimatedCrossFade(
       duration: const Duration(milliseconds: 500),
@@ -55,7 +53,7 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
             const Center(
               child: CircularProgressIndicator(),
             ),
-            ..._backTitleAndHomeButtons(context, title),
+            ..._backTitleAndHomeButtons(context, 'rekindle'),
           ],
         ),
       ),
@@ -68,7 +66,6 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
           : RekindleScreenPrecached(
               rekindles: rekindles,
               index: 0,
-              title: title,
               countdown: false,
             ),
       crossFadeState: _rekindles == null
@@ -83,14 +80,12 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
 class RekindleScreenPrecached extends ConsumerWidget {
   final List<Rekindle> rekindles;
   final int index;
-  final String title;
   final bool countdown;
 
   const RekindleScreenPrecached({
     Key? key,
     required this.rekindles,
     required this.index,
-    required this.title,
     required this.countdown,
   }) : super(key: key);
 
@@ -105,7 +100,7 @@ class RekindleScreenPrecached extends ConsumerWidget {
               child: Text('No one to rekindle with',
                   style: Theming.of(context).text.headline),
             ),
-            ..._backTitleAndHomeButtons(context, title),
+            ..._backTitleAndHomeButtons(context, 'rekindle'),
           ],
         ),
       );
@@ -184,15 +179,6 @@ class RekindleScreenPrecached extends ConsumerWidget {
               ),
             ),
           ),
-        const Positioned(
-          right: 0,
-          bottom: 255,
-          width: 250,
-          child: NotificationBanner(
-            contents:
-                'You will still have 48 hours to connect with this person in the Rekindle section if you decide not to now.',
-          ),
-        ),
         Positioned(
           bottom: 370,
           child: Column(
@@ -296,7 +282,8 @@ class RekindleScreenPrecached extends ConsumerWidget {
             ],
           ),
         ),
-        ..._backTitleAndHomeButtons(context, title),
+        ..._backTitleAndHomeButtons(context,
+            rekindle.purpose == Purpose.friends ? 'make friends' : 'dating'),
       ],
     );
   }
@@ -318,7 +305,6 @@ class RekindleScreenPrecached extends ConsumerWidget {
         arguments: PrecachedRekindleScreenArguments(
           rekindles: rekindles,
           index: index + 1,
-          title: 'rekindle',
           countdown: countdown,
         ),
       );
@@ -490,13 +476,11 @@ class _CountdownState extends State<_Countdown> {
 class PrecachedRekindleScreenArguments {
   final List<Rekindle> rekindles;
   final int index;
-  final String title;
   final bool countdown;
 
   PrecachedRekindleScreenArguments({
     required this.rekindles,
     this.index = 0,
-    required this.title,
     this.countdown = true,
   });
 }

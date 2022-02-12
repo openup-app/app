@@ -38,8 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             Expanded(
               child: Button(
-                onPressed: () =>
-                    Navigator.of(context).pushNamed('dating-solo-double'),
+                onPressed: () => Navigator.of(context).pushNamed('dating-solo'),
                 child: DecoratedBox(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
@@ -81,7 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Expanded(
               child: Button(
                 onPressed: () =>
-                    Navigator.of(context).pushNamed('friends-solo-double'),
+                    Navigator.of(context).pushNamed('friends-solo'),
                 child: DecoratedBox(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
