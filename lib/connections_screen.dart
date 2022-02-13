@@ -32,23 +32,30 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
   void initState() {
     super.initState();
 
-    final api = ref.read(usersApiProvider);
+    final usersApi = ref.read(usersApiProvider);
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       throw 'No user is logged in';
     }
 
-    api.getConnections(uid).then((connections) {
-      if (mounted) {
-        setState(() => _connections = connections);
-      }
-    });
+    _reloadConnections(usersApi, uid);
   }
 
   @override
   void dispose() {
     _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _reloadConnections(UsersApi api, String uid) async {
+    setState(() => _connections = null);
+    final connections = await api.getConnections(uid);
+    if (mounted) {
+      setState(() {
+        _connections = connections;
+        _showSearchBox = false;
+      });
+    }
   }
 
   @override
@@ -158,6 +165,27 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                           },
                           onCall: () => _onCall(profile, video: false),
                           onVideoCall: () => _onCall(profile, video: true),
+                          onDeleteConnection: () async {
+                            final uid = FirebaseAuth.instance.currentUser?.uid;
+                            if (uid == null) {
+                              throw 'No user is logged in';
+                            }
+                            final result = await showDialog<bool>(
+                              context: context,
+                              builder: (context) {
+                                return RemoveConnectionAlertDialog(
+                                  usersApi: usersApi,
+                                  uid: uid,
+                                  profile: profile,
+                                );
+                              },
+                            );
+
+                            if (mounted && result == true) {
+                              _dismissSearch();
+                              _reloadConnections(usersApi, uid);
+                            }
+                          },
                         );
                       },
                     );
@@ -225,13 +253,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                             ),
                           ),
                           TextButton(
-                            onPressed: () {
-                              setState(() {
-                                FocusScope.of(context).unfocus();
-                                _search = null;
-                                _showSearchBox = false;
-                              });
-                            },
+                            onPressed: _dismissSearch,
                             child: Text('Done',
                                 style: Theming.of(context).text.button),
                           ),
@@ -275,6 +297,14 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
     );
   }
 
+  void _dismissSearch() {
+    setState(() {
+      FocusScope.of(context).unfocus();
+      _search = null;
+      _showSearchBox = false;
+    });
+  }
+
   void _onCall(PublicProfile profile, {required bool video}) async {
     final api = ref.read(usersApiProvider);
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -307,6 +337,7 @@ class ConnectionTile extends StatefulWidget {
   final VoidCallback onChat;
   final VoidCallback onCall;
   final VoidCallback onVideoCall;
+  final VoidCallback onDeleteConnection;
 
   const ConnectionTile({
     Key? key,
@@ -318,6 +349,7 @@ class ConnectionTile extends StatefulWidget {
     required this.onChat,
     required this.onCall,
     required this.onVideoCall,
+    required this.onDeleteConnection,
   }) : super(key: key);
 
   @override
@@ -480,6 +512,15 @@ class _ConnectionTileState extends State<ConnectionTile>
                           ),
                         ),
                       ),
+                      Button(
+                        onPressed: widget.onDeleteConnection,
+                        child: const Padding(
+                          padding: EdgeInsets.all(10.0),
+                          child: Icon(
+                            Icons.person_remove,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -501,6 +542,68 @@ class _ConnectionTileState extends State<ConnectionTile>
               count: widget.unreadCount,
             ),
           ),
+      ],
+    );
+  }
+}
+
+class RemoveConnectionAlertDialog extends StatefulWidget {
+  final UsersApi usersApi;
+  final String uid;
+  final PublicProfile profile;
+  const RemoveConnectionAlertDialog({
+    Key? key,
+    required this.usersApi,
+    required this.uid,
+    required this.profile,
+  }) : super(key: key);
+
+  @override
+  _RemoveConnectionAlertDialogState createState() =>
+      _RemoveConnectionAlertDialogState();
+}
+
+class _RemoveConnectionAlertDialogState
+    extends State<RemoveConnectionAlertDialog> {
+  bool _deleting = false;
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Remove connection with ${widget.profile.name}?'),
+      actions: [
+        TextButton(
+          onPressed: () async {
+            setState(() => _deleting = true);
+            await widget.usersApi
+                .deleteConnection(widget.uid, widget.profile.uid);
+            if (mounted) {
+              Navigator.of(context).pop(true);
+            }
+          },
+          child: _deleting
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : Text(
+                  'Remove',
+                  style: Theming.of(context).text.body.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w300,
+                      color: Colors.red),
+                ),
+        ),
+        TextButton(
+          onPressed: Navigator.of(context).pop,
+          child: Text(
+            'Cancel',
+            style: Theming.of(context).text.body.copyWith(
+                fontSize: 14, fontWeight: FontWeight.w300, color: Colors.black),
+          ),
+        ),
       ],
     );
   }

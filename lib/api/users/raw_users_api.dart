@@ -458,7 +458,7 @@ class RawUsersApi {
     String deleteUid,
   ) async {
     final response = await http.delete(
-      Uri.parse('$_urlBase/users/$uid/connections'),
+      Uri.parse('$_urlBase/users/$uid/connection'),
       headers: _headers,
       body: jsonEncode({'uid': deleteUid}),
     );
