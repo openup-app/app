@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -263,10 +265,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
 
       final usersApi = ref.read(usersApiProvider);
 
-      final success = await usersApi.checkBirthday(
-        phone: phone,
-        birthday: _birthday,
-      );
+      final bool success;
+      try {
+        success = await usersApi.checkBirthday(
+          phone: phone,
+          birthday: _birthday,
+        );
+      } on SocketException {
+        setState(() => _submitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to connect to server'),
+          ),
+        );
+        return;
+      } catch (_) {
+        setState(() => _submitting = false);
+        rethrow;
+      }
       if (!success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
