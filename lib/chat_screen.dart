@@ -9,6 +9,7 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/public_profile_screen.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_input_box.dart';
 import 'package:openup/widgets/chat_message.dart';
@@ -366,7 +367,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Positioned(
               left: 0,
               top: 16 + MediaQuery.of(context).padding.top,
-              child: const BackButton(),
+              child: const BackIconButton(),
             ),
             Positioned(
               top: 16 + MediaQuery.of(context).padding.top,
