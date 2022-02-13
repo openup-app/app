@@ -20,7 +20,7 @@ class ChatScreen extends ConsumerStatefulWidget {
   final String host;
   final int webPort;
   final int socketPort;
-  final PublicProfile profile;
+  final String uid;
   final String chatroomId;
 
   const ChatScreen({
@@ -28,7 +28,7 @@ class ChatScreen extends ConsumerStatefulWidget {
     required this.host,
     required this.webPort,
     required this.socketPort,
-    required this.profile,
+    required this.uid,
     required this.chatroomId,
   }) : super(key: key);
 
@@ -41,6 +41,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   ChatApi? _chatApi;
   _InputType _inputType = _InputType.none;
+
   final _messages = <String, ChatMessage>{};
 
   final _scrollController = ScrollController();
@@ -50,6 +51,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   bool _loading = true;
 
+  PublicProfile? _profile;
   String? _myAvatar;
 
   @override
@@ -86,6 +88,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     usersApi.getPublicProfile(_uid).then((profile) {
       if (mounted) {
         setState(() => _myAvatar = profile.photo);
+      }
+    });
+
+    usersApi.getPublicProfile(widget.uid).then((profile) {
+      if (mounted) {
+        setState(() => _profile = profile);
       }
     });
 
@@ -210,7 +218,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                             audioUrl: message.content,
                                             photoUrl: fromMe
                                                 ? _myAvatar
-                                                : widget.profile.photo,
+                                                : _profile?.photo ?? '',
                                             date: _buildDateText(message.date),
                                             fromMe: fromMe,
                                           );
@@ -229,7 +237,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             padding:
                                 const EdgeInsets.symmetric(horizontal: 16.0),
                             child: Text(
-                              'Send your first message to ${widget.profile.name}!',
+                              'Send your first message to ${_profile != null ? _profile!.name : ''}',
                               style: Theming.of(context).text.bodySecondary,
                               textAlign: TextAlign.center,
                             ),
@@ -281,13 +289,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.phone),
-                                  onPressed: () =>
-                                      _call(widget.profile, video: false),
+                                  onPressed: () {
+                                    final profile = _profile;
+                                    if (profile != null) {
+                                      _call(profile, video: false);
+                                    }
+                                  },
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.video_camera_front),
-                                  onPressed: () =>
-                                      _call(widget.profile, video: true),
+                                  onPressed: () {
+                                    final profile = _profile;
+                                    if (profile != null) {
+                                      _call(profile, video: true);
+                                    }
+                                  },
                                 ),
                                 IconButton(
                                   icon: Icon(Icons.emoji_emotions,
@@ -356,13 +372,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               top: 16 + MediaQuery.of(context).padding.top,
               child: Button(
                 onPressed: () {
-                  Navigator.of(context).pushNamed(
-                    'public-profile',
-                    arguments: PublicProfileArguments(
-                      publicProfile: widget.profile,
-                      editable: false,
-                    ),
-                  );
+                  final profile = _profile;
+                  if (profile != null) {
+                    Navigator.of(context).pushNamed(
+                      'public-profile',
+                      arguments: PublicProfileArguments(
+                        publicProfile: profile,
+                        editable: false,
+                      ),
+                    );
+                  }
                 },
                 child: Container(
                   padding:
@@ -378,7 +397,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   ),
                   child: Text(
-                    widget.profile.name,
+                    _profile?.name ?? '',
                     style: Theming.of(context).text.body,
                   ),
                 ),
@@ -513,6 +532,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     PublicProfile profile, {
     required bool video,
   }) async {
+    final profile = _profile;
+    if (profile == null) {
+      return;
+    }
+
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       return;
@@ -522,8 +546,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final purpose = Purpose.friends.name;
     final route = video ? '$purpose-video-call' : '$purpose-voice-call';
     final usersApi = ref.read(usersApiProvider);
-    final profile = await usersApi.getPublicProfile(widget.profile.uid);
-    final rid = await usersApi.call(_uid, widget.profile.uid, video);
+    final rid = await usersApi.call(_uid, profile.uid, video);
     Navigator.of(context).pushNamed(
       route,
       arguments: CallPageArguments(
@@ -542,11 +565,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 enum _InputType { emoji, imageVideo, audio, none }
 
 class ChatArguments {
-  final PublicProfile profile;
+  final String uid;
   final String chatroomId;
 
   ChatArguments({
-    required this.profile,
+    required this.uid,
     required this.chatroomId,
   });
 }

@@ -93,7 +93,7 @@ Future<bool> _handleLaunchNotification({
         Navigator.of(context).pushNamed(
           'chat',
           arguments: ChatArguments(
-            profile: profile,
+            uid: profile.uid,
             chatroomId: chat.chatroomId,
           ),
         );
@@ -104,7 +104,7 @@ Future<bool> _handleLaunchNotification({
         Navigator.of(context).pushNamed(
           'chat',
           arguments: ChatArguments(
-            profile: profile,
+            uid: profile.uid,
             chatroomId: newConnection.chatroomId,
           ),
         );
@@ -161,7 +161,13 @@ void _onForegroundNotification(
           action: SnackBarAction(
             label: 'Chat',
             onPressed: () {
-              Navigator.of(context).pushNamed('account-settings');
+              Navigator.of(context).pushNamed(
+                'chat',
+                arguments: ChatArguments(
+                  uid: newConnection.uid,
+                  chatroomId: newConnection.chatroomId,
+                ),
+              );
             },
           ),
         ),

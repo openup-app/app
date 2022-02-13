@@ -158,7 +158,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                             Navigator.of(context).pushNamed(
                               'chat',
                               arguments: ChatArguments(
-                                profile: profile,
+                                uid: profile.uid,
                                 chatroomId: connection.chatroomId,
                               ),
                             );

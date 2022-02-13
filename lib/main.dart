@@ -1022,7 +1022,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           host: host,
                           webPort: webPort,
                           socketPort: socketPort,
-                          profile: args.profile,
+                          uid: args.uid,
                           chatroomId: args.chatroomId,
                         ),
                       );
