@@ -283,9 +283,8 @@ class PreferencesSelection extends StatelessWidget {
             ),
             min: 25,
             max: 400,
-            stepSize: 25,
-            interval: 25,
-            showDividers: true,
+            stepSize: 5,
+            interval: 5,
             startThumbIcon: Center(
               child: Text(
                 preferences.weight.min.toString(),
@@ -307,7 +306,7 @@ class PreferencesSelection extends StatelessWidget {
               ),
             ),
             onChanged: (v) {
-              if (v.start < v.end - 25) {
+              if (v.start < v.end - 50) {
                 onChanged(preferences.copyWith(
                     weight: Range(min: v.start.toInt(), max: v.end.toInt())));
               }
@@ -328,9 +327,6 @@ class PreferencesSelection extends StatelessWidget {
             ),
             min: 24,
             max: 120,
-            stepSize: 6,
-            interval: 6,
-            showDividers: true,
             startThumbIcon: Center(
               child: Text(
                 _inchToFtIn(preferences.height.min),
@@ -354,7 +350,7 @@ class PreferencesSelection extends StatelessWidget {
               ),
             ),
             onChanged: (v) {
-              if (v.start < v.end - 6) {
+              if (v.start < v.end - 14) {
                 onChanged(preferences.copyWith(
                     height: Range(min: v.start.toInt(), max: v.end.toInt())));
               }

@@ -91,9 +91,8 @@ class PrivateProfileForm extends StatelessWidget {
             value: profile.weight,
             min: 25,
             max: 400,
-            stepSize: 25,
-            interval: 25,
-            showDividers: true,
+            stepSize: 5,
+            interval: 5,
             thumbIcon: Center(
               child: Text(
                 profile.weight.toString(),
@@ -120,9 +119,6 @@ class PrivateProfileForm extends StatelessWidget {
             value: profile.height,
             min: 24,
             max: 120,
-            stepSize: 6,
-            interval: 6,
-            showDividers: true,
             thumbIcon: Center(
               child: Text(
                 _inchToFtIn(profile.height),
