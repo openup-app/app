@@ -36,7 +36,7 @@ class _MenuScreenState extends State<MenuScreen> {
   @override
   Widget build(BuildContext context) {
     final buttonStyle = Theming.of(context).text.bodySecondary.copyWith(
-      fontSize: 24,
+      fontSize: 20,
       shadows: [
         BoxShadow(
           color: Colors.black.withOpacity(0.5),

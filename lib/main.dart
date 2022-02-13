@@ -1076,8 +1076,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     return PageRouteBuilder<T>(
       settings: settings,
       transitionsBuilder: transitionsBuilder ?? slideRightToLeftPageTransition,
-      transitionDuration: const Duration(milliseconds: 500),
-      reverseTransitionDuration: const Duration(milliseconds: 400),
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (_, __, ___) {
         return _ScaffoldWithAnimatedDrawerBackgroundBlur(
           builder: (context) {
