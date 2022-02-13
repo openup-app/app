@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -19,17 +18,18 @@ part 'notifications.freezed.dart';
 part 'notifications.g.dart';
 
 /// Returns [true] if the app navigated to a deep link.
+/// [key] is used to access a context with a Scaffold ancestor.
 Future<bool> initializeNotifications({
-  required BuildContext context,
+  required GlobalKey key,
   required UsersApi usersApi,
 }) {
   FirebaseMessaging.onMessage.listen((remoteMessage) {
-    _onForegroundNotification(remoteMessage, usersApi);
+    _onForegroundNotification(key, remoteMessage, usersApi);
   });
   FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
 
   return _handleLaunchNotification(
-    context: context,
+    key: key,
     usersApi: usersApi,
   );
 }
@@ -39,13 +39,19 @@ Future<void> dismissAllNotifications() =>
 
 /// Returns [true] if this notification did deep link, false otherwise.
 Future<bool> _handleLaunchNotification({
-  required BuildContext context,
+  required GlobalKey key,
   required UsersApi usersApi,
 }) async {
   // Calls that don't go through the standard FirebaseMessaging app launch method
   final backgroundCallNotification =
       await deserializeBackgroundCallNotification();
   await removeBackgroundCallNotification();
+
+  final context = key.currentContext;
+  if (context == null) {
+    return false;
+  }
+
   if (backgroundCallNotification != null) {
     final rid = backgroundCallNotification.rid;
     final video = backgroundCallNotification.video;
@@ -80,7 +86,7 @@ Future<bool> _handleLaunchNotification({
   if (payloadJson != null) {
     final payload = _NotificationPayload.fromJson(jsonDecode(payloadJson));
     payload.map(
-      call: (call) async {},
+      call: (call) {},
       chat: (chat) async {
         final profile = await usersApi.getPublicProfile(chat.uid);
         Navigator.of(context).pushReplacementNamed('home');
@@ -92,13 +98,28 @@ Future<bool> _handleLaunchNotification({
           ),
         );
       },
+      newConnection: (newConnection) async {
+        final profile = await usersApi.getPublicProfile(newConnection.uid);
+        Navigator.of(context).pushReplacementNamed('home');
+        Navigator.of(context).pushNamed(
+          'chat',
+          arguments: ChatArguments(
+            profile: profile,
+            chatroomId: newConnection.chatroomId,
+          ),
+        );
+      },
     );
     return true;
   }
   return false;
 }
 
-void _onForegroundNotification(RemoteMessage message, UsersApi usersApi) async {
+void _onForegroundNotification(
+  GlobalKey key,
+  RemoteMessage message,
+  UsersApi usersApi,
+) async {
   final parsed = await _parseRemoteMessage(message);
   parsed.payload?.map(
     call: (call) {
@@ -129,6 +150,23 @@ void _onForegroundNotification(RemoteMessage message, UsersApi usersApi) async {
     chat: (chat) {
       usersApi.updateUnreadChatMessagesCount(chat.uid, chat.chatroomUnread);
     },
+    newConnection: (newConnection) {
+      final context = key.currentContext;
+      if (context == null) {
+        return false;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${newConnection.name} has accepted your connection!'),
+          action: SnackBarAction(
+            label: 'Chat',
+            onPressed: () {
+              Navigator.of(context).pushNamed('account-settings');
+            },
+          ),
+        ),
+      );
+    },
   );
 }
 
@@ -156,6 +194,7 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
       );
     },
     chat: (_) {},
+    newConnection: (_) {},
   );
   if (shouldDisplay) {
     return _displayNotification(parsed);
@@ -226,6 +265,18 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
         notificationBody = '$senderName sent a voice memo';
         break;
     }
+  } else if (type == 'new_connection') {
+    channelName = 'New connections';
+    channelDescription = 'When you make a new connection';
+    final name = message.data['name'];
+    notificationPayload = _NewConnectionPayload(
+      uid: message.data['uid'],
+      chatroomId: message.data['chatroomId'],
+      name: name,
+      photo: message.data['photo'],
+    );
+    notificationTitle = '$name accepted your connection!';
+    notificationBody = 'Tap to chat';
   } else {
     throw 'Unknown notification type $type';
   }
@@ -313,6 +364,13 @@ class _NotificationPayload with _$_NotificationPayload {
     required String chatroomId,
     required int chatroomUnread,
   }) = _ChatPayload;
+
+  const factory _NotificationPayload.newConnection({
+    required String uid,
+    required String chatroomId,
+    required String name,
+    required String? photo,
+  }) = _NewConnectionPayload;
 
   factory _NotificationPayload.fromJson(Map<String, dynamic> json) =>
       _$_NotificationPayloadFromJson(json);

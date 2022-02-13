@@ -51,6 +51,7 @@ const webPort = 8080;
 const socketPort = 8081;
 
 final navigatorKey = GlobalKey<NavigatorState>();
+final _notificationKey = GlobalKey();
 
 void main() {
   runApp(
@@ -131,8 +132,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
                     builder: (_) {
-                      return const CurrentRouteSystemUiStyling.dark(
-                        child: InitialLoadingScreen(),
+                      return CurrentRouteSystemUiStyling.dark(
+                        child: InitialLoadingScreen(
+                          notificationKey: _notificationKey,
+                        ),
                       );
                     },
                   );
@@ -225,9 +228,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
-                    builder: (_) => const CurrentRouteSystemUiStyling.light(
-                      child: HomeScreen(),
-                    ),
+                    builder: (_) {
+                      return CurrentRouteSystemUiStyling.light(
+                        key: _notificationKey,
+                        child: const HomeScreen(),
+                      );
+                    },
                   );
                 case 'friends-solo-double':
                   return _buildPageRoute(

@@ -11,8 +11,14 @@ import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/theming.dart';
 
 /// Page used for asynchronous initialization.
+///
+/// [notificationKey] is needed to access a context with a [Scaffold] ancestor.
 class InitialLoadingScreen extends ConsumerStatefulWidget {
-  const InitialLoadingScreen({Key? key}) : super(key: key);
+  final GlobalKey notificationKey;
+  const InitialLoadingScreen({
+    GlobalKey? key,
+    required this.notificationKey,
+  }) : super(key: key);
 
   @override
   _InitialLoadingScreenState createState() => _InitialLoadingScreenState();
@@ -71,7 +77,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
     // Perform deep linking
     final deepLinked = await initializeNotifications(
-      context: context,
+      key: widget.notificationKey,
       usersApi: usersApi,
     );
 
