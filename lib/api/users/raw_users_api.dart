@@ -57,14 +57,12 @@ class RawUsersApi {
   Future<void> createUserWithUid({
     required String uid,
     required DateTime birthday,
-    required String? notificationToken,
   }) async {
     final response = await http.post(
       Uri.parse('$_urlBase/users/$uid/create'),
       headers: _headers,
       body: jsonEncode({
         'birthday': birthday.toIso8601String(),
-        'notificationToken': notificationToken,
       }),
     );
     if (response.statusCode != 200) {
@@ -520,14 +518,18 @@ class RawUsersApi {
     return Map<String, int>.from(jsonDecode(response.body));
   }
 
-  Future<void> updateNotificationToken(
-    String uid,
-    String notificationToken,
-  ) async {
+  Future<void> addNotificationTokens(
+    String uid, {
+    String? messagingToken,
+    String? voipToken,
+  }) async {
     final response = await http.post(
-      Uri.parse('$_urlBase/users/$uid/notification_token'),
+      Uri.parse('$_urlBase/users/$uid/notification_tokens'),
       headers: _headers,
-      body: jsonEncode({'notification_token': notificationToken}),
+      body: jsonEncode({
+        if (messagingToken != null) ...{'messaging_token': messagingToken},
+        if (voipToken != null) ...{'voip_token': voipToken},
+      }),
     );
 
     if (response.statusCode != 200) {

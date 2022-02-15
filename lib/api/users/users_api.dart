@@ -85,12 +85,10 @@ class UsersApi implements RawUsersApi {
   Future<void> createUserWithUid({
     required String uid,
     required DateTime birthday,
-    required String? notificationToken,
   }) async {
     await _rawUsersApi.createUserWithUid(
       uid: uid,
       birthday: birthday,
-      notificationToken: notificationToken,
     );
     _clearCache();
   }
@@ -314,8 +312,16 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
-  Future<void> updateNotificationToken(String uid, String notificationToken) =>
-      _rawUsersApi.updateNotificationToken(uid, notificationToken);
+  Future<void> addNotificationTokens(
+    String uid, {
+    String? messagingToken,
+    String? voipToken,
+  }) =>
+      _rawUsersApi.addNotificationTokens(
+        uid,
+        messagingToken: messagingToken,
+        voipToken: voipToken,
+      );
 
   UserMetadata? get userMetadata => _userMetadata;
 

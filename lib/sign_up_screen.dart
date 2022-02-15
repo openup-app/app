@@ -313,7 +313,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
             await usersApi.createUserWithUid(
               uid: uid,
               birthday: _birthday,
-              notificationToken: await FirebaseMessaging.instance.getToken(),
             );
             usersApi.uid = uid;
           }
@@ -325,6 +324,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
           if (e.code == 'network-request-failed') {
             message = 'Network error';
           } else {
+            print(e.code);
             message = 'Failed to send verification code';
           }
           ScaffoldMessenger.of(context).showSnackBar(

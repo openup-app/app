@@ -147,7 +147,6 @@ class _PhoneVerificationScreenState
         await usersApi.createUserWithUid(
           uid: uid,
           birthday: widget.credentialVerification.birthday,
-          notificationToken: await FirebaseMessaging.instance.getToken(),
         );
       }
 
