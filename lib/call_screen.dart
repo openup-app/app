@@ -12,6 +12,7 @@ import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/rekindle_screen.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/video_call_screen_content.dart';
@@ -28,7 +29,7 @@ class CallScreen extends ConsumerStatefulWidget {
   final int socketPort;
   final bool video;
   final bool serious;
-  final List<PublicProfile> profiles;
+  final List<SimpleProfile> profiles;
   final List<Rekindle> rekindles;
   final bool groupLobby;
 
@@ -196,11 +197,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
   @override
   void dispose() {
+    reportCallEnded(widget.rid);
     _signalingChannel.dispose();
     _connectionStateSubscriptions.map((s) => s.cancel()).toList();
-    _users.values.map((e) {
-      e.phone.dispose();
-    }).toList();
+    _users.values.map((e) => e.phone.dispose()).toList();
 
     super.dispose();
   }
@@ -384,7 +384,7 @@ class CallData with _$CallData {
 @freezed
 class UserConnection with _$UserConnection {
   const factory UserConnection({
-    required PublicProfile profile,
+    required SimpleProfile profile,
     required Rekindle? rekindle,
     required RTCVideoRenderer? localVideoRenderer,
     required RTCVideoRenderer? videoRenderer,
@@ -395,7 +395,7 @@ class UserConnection with _$UserConnection {
 
 class CallPageArguments {
   final String rid;
-  final List<PublicProfile> profiles;
+  final List<SimpleProfile> profiles;
   final List<Rekindle> rekindles;
   final bool serious;
   final bool groupLobby;

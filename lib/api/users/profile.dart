@@ -15,8 +15,31 @@ class PublicProfile with _$PublicProfile {
     required List<String> gallery,
   }) = _PublicProfile;
 
+  // Private constructor required for adding methods
+  const PublicProfile._();
+
+  SimpleProfile toSimpleProfile() {
+    return SimpleProfile(
+      uid: uid,
+      name: name,
+      photo: photo,
+    );
+  }
+
   factory PublicProfile.fromJson(Map<String, dynamic> json) =>
       _$PublicProfileFromJson(json);
+}
+
+@freezed
+class SimpleProfile with _$SimpleProfile {
+  const factory SimpleProfile({
+    required String uid,
+    required String name,
+    String? photo,
+  }) = _SimpleProfile;
+
+  factory SimpleProfile.fromJson(Map<String, dynamic> json) =>
+      _$SimpleProfileFromJson(json);
 }
 
 @freezed

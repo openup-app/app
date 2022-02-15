@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -16,8 +17,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
 
     final api = ref.read(usersApiProvider);
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -25,8 +26,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       throw 'No user is logged in';
     }
 
-    FirebaseMessaging.instance.getToken().then((token) {
-      if (token != null) api.updateNotificationToken(uid, token);
+    Future.wait([
+      FirebaseMessaging.instance.getToken(),
+      getVoidPushNotificationToken(),
+    ]).then((tokens) {
+      api.addNotificationTokens(
+        uid,
+        messagingToken: tokens[0],
+        voipToken: tokens[1],
+      );
     });
   }
 

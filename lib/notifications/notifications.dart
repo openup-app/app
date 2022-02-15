@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
@@ -22,16 +24,20 @@ part 'notifications.g.dart';
 Future<bool> initializeNotifications({
   required GlobalKey key,
   required UsersApi usersApi,
-}) {
+}) async {
   FirebaseMessaging.onMessage.listen((remoteMessage) {
     _onForegroundNotification(key, remoteMessage, usersApi);
   });
   FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
 
-  return _handleLaunchNotification(
+  final deepLinked = await _handleLaunchNotification(
     key: key,
     usersApi: usersApi,
   );
+
+  initIncomingCallHandlers(key: key);
+
+  return deepLinked;
 }
 
 Future<void> dismissAllNotifications() =>
@@ -53,24 +59,20 @@ Future<bool> _handleLaunchNotification({
   }
 
   if (backgroundCallNotification != null) {
-    final rid = backgroundCallNotification.rid;
     final video = backgroundCallNotification.video;
-    final group = backgroundCallNotification.group;
     final purpose = backgroundCallNotification.purpose == Purpose.friends
         ? 'friends'
         : 'dating';
     final route = video ? '$purpose-video-call' : '$purpose-voice-call';
-    final profile =
-        await usersApi.getPublicProfile(backgroundCallNotification.callerUid);
     Navigator.of(context).pushReplacementNamed('home');
     Navigator.of(context).pushNamed(
       route,
       arguments: CallPageArguments(
-        rid: rid,
-        profiles: [profile],
+        rid: backgroundCallNotification.rid,
+        profiles: [backgroundCallNotification.profile],
         rekindles: [],
         serious: false,
-        groupLobby: group,
+        groupLobby: backgroundCallNotification.group,
       ),
     );
     return true;
@@ -125,14 +127,20 @@ void _onForegroundNotification(
     call: (call) {
       displayIncomingCall(
         rid: call.rid,
+        callerUid: call.callerUid,
         callerName: call.name,
+        callerPhoto: call.photo,
         video: call.video,
         onCallAccepted: () async {
           final purpose =
               call.purpose == Purpose.friends ? 'friends' : 'dating';
           final route =
               call.video ? '$purpose-video-call' : '$purpose-voice-call';
-          final profile = await usersApi.getPublicProfile(call.callerUid);
+          final profile = SimpleProfile(
+            uid: call.callerUid,
+            name: call.name,
+            photo: call.photo,
+          );
           Navigator.of(navigatorKey.currentContext!).pushNamed(
             route,
             arguments: CallPageArguments(
@@ -181,23 +189,32 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
   final parsed = await _parseRemoteMessage(message);
   parsed.payload?.map(
     call: (call) {
-      shouldDisplay = false;
-      displayIncomingCall(
-        rid: call.rid,
-        callerName: call.name,
-        video: call.video,
-        onCallAccepted: () async {
-          final backgroundCallNotification = BackgroundCallNotification(
-            callerUid: call.callerUid,
-            rid: call.rid,
-            video: call.video,
-            purpose: Purpose.friends,
-            group: call.group,
-          );
-          await serializeBackgroundCallNotification(backgroundCallNotification);
-        },
-        onCallRejected: () {},
-      );
+      if (!Platform.isIOS) {
+        shouldDisplay = false;
+        displayIncomingCall(
+          rid: call.rid,
+          callerUid: call.callerUid,
+          callerName: call.name,
+          callerPhoto: call.photo,
+          video: call.video,
+          onCallAccepted: () async {
+            final backgroundCallNotification = BackgroundCallNotification(
+              rid: call.rid,
+              profile: SimpleProfile(
+                uid: call.callerUid,
+                name: call.name,
+                photo: call.photo,
+              ),
+              video: call.video,
+              purpose: Purpose.friends,
+              group: call.group,
+            );
+            await serializeBackgroundCallNotification(
+                backgroundCallNotification);
+          },
+          onCallRejected: () {},
+        );
+      }
     },
     chat: (_) {},
     newConnection: (_) {},
@@ -228,17 +245,16 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
     notificationTitle = group
         ? ('Incoming ${purpose == Purpose.friends ? 'friends with friends' : 'double date'} ${video ? 'video call' : 'call'} from $callerName')
         : ('Incoming ${video ? 'video call' : 'call'} from $callerName');
-    print('Received ${message.data} $group, title $notificationTitle');
     notificationBody = callerName;
     channelName = 'Calls';
     channelDescription = 'Calls from your connections';
     notificationPayload = _CallPayload(
+      callerUid: callerUid,
       name: callerName,
       photo: callerPhoto,
       video: video,
       group: group,
       rid: rid,
-      callerUid: callerUid,
       purpose: purpose,
     );
   } else if (type == 'chat') {

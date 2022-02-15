@@ -28,8 +28,7 @@ dependencies:
   emoji_picker_flutter: ^1.0.8
   uuid: ^3.0.5
   rxdart: ^0.27.3
-  connectycube_flutter_call_kit:
-    git: git@github.com:openup-app/connectycube-flutter-call-kit.git
+  connectycube_flutter_call_kit: ^2.0.2
   shared_preferences: ^2.0.11
   camera: ^0.9.4+5
   decorated_icon: ^1.2.1
