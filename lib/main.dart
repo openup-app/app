@@ -334,10 +334,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           child: MenuScreen(
                             label: 'make friends',
                             image: Transform.translate(
-                              offset: const Offset(0.0, 12.0),
+                              offset: const Offset(0.0, 26.0),
                               child: Image.asset(
                                 'assets/images/friends.gif',
-                                height: 90,
+                                fit: BoxFit.fitHeight,
                               ),
                             ),
                             onPressedVoiceCall: (serious) {

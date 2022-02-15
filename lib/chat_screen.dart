@@ -411,11 +411,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildEmojiMessage(ChatMessage message) {
-    return Text(
-      message.content,
-      style: const TextStyle(
-        fontSize: 100,
-        color: Colors.white,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Text(
+        message.content,
+        style: const TextStyle(
+          fontSize: 60,
+          color: Colors.white,
+        ),
       ),
     );
   }

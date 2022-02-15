@@ -78,40 +78,42 @@ class _MenuScreenState extends State<MenuScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 40),
+                const Spacer(),
                 Stack(
-                  alignment: Alignment.bottomCenter,
+                  alignment: Alignment.bottomRight,
                   children: [
-                    widget.image,
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: SizedBox(
+                        height: 185,
+                        child: widget.image,
+                      ),
+                    ),
                     if (!widget.groupCalling)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Column(
-                          children: [
-                            ToggleButton(
-                              value: _serious,
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ToggleButton(
+                            value: _serious,
+                            color: _serious
+                                ? const Color.fromRGBO(0xFF, 0x86, 0x86, 1.0)
+                                : const Color.fromRGBO(0x8B, 0xC0, 0xFF, 1.0),
+                            onChanged: (value) {
+                              setState(() => _serious = value);
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _serious ? 'serious' : 'casual',
+                            style: TextStyle(
                               color: _serious
                                   ? const Color.fromRGBO(0xFF, 0x86, 0x86, 1.0)
                                   : const Color.fromRGBO(0x8B, 0xC0, 0xFF, 1.0),
-                              onChanged: (value) {
-                                setState(() => _serious = value);
-                              },
+                              fontSize: 14,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _serious ? 'serious' : 'casual',
-                              style: TextStyle(
-                                color: _serious
-                                    ? const Color.fromRGBO(
-                                        0xFF, 0x86, 0x86, 1.0)
-                                    : const Color.fromRGBO(
-                                        0x8B, 0xC0, 0xFF, 1.0),
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
                       ),
                   ],
                 ),
@@ -124,7 +126,12 @@ class _MenuScreenState extends State<MenuScreen> {
                     style: buttonStyle,
                   ),
                 ),
-                const SizedBox(height: 20),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: 16,
+                    maxHeight: 28,
+                  ),
+                ),
                 _MenuButton(
                   onPressed: () => widget.onPressedVideoCall(_serious),
                   icon: Image.asset('assets/images/video_call.png'),
@@ -134,7 +141,12 @@ class _MenuScreenState extends State<MenuScreen> {
                     style: buttonStyle,
                   ),
                 ),
-                const SizedBox(height: 20),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: 16,
+                    maxHeight: 28,
+                  ),
+                ),
                 _MenuButton(
                   onPressed: widget.onPressedPreferences,
                   icon: Padding(
@@ -190,7 +202,8 @@ class _MenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Button(
       child: Container(
-        height: 116,
+        alignment: Alignment.center,
+        constraints: const BoxConstraints(maxHeight: 116),
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(58)),
           boxShadow: const [
@@ -208,7 +221,8 @@ class _MenuButton extends StatelessWidget {
             children: [
               const SizedBox(width: 16),
               SizedBox(
-                width: 80,
+                width: 78,
+                height: 78,
                 child: icon,
               ),
               const SizedBox(width: 8),

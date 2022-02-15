@@ -13,6 +13,8 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.read(usersApiProvider).publicProfile;
+    final name = profile?.name;
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -61,7 +63,7 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 357),
                     child: Text(
-                      'Hey “user” on openup there are two things we focused on, creating online blind dating and making friends online!  You can do either a phone call or video call, give it a try! Thank you for joining our app :)',
+                      'Hey ${name == null ? '' : '“$name”'} on openup there are two things we focused on, creating online blind dating and making friends online! You can do either a phone call or video call, give it a try! Thank you for joining our app :)',
                       style: Theming.of(context).text.body.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
