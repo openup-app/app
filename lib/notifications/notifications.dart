@@ -67,7 +67,7 @@ Future<bool> _handleLaunchNotification({
       route,
       arguments: CallPageArguments(
         rid: rid,
-        profiles: [profile],
+        profiles: [profile.toSimpleProfile()],
         rekindles: [],
         serious: false,
         groupLobby: group,
@@ -125,6 +125,7 @@ void _onForegroundNotification(
     call: (call) {
       displayIncomingCall(
         rid: call.rid,
+        callerUid: call.callerUid,
         callerName: call.name,
         video: call.video,
         onCallAccepted: () async {
@@ -137,7 +138,7 @@ void _onForegroundNotification(
             route,
             arguments: CallPageArguments(
               rid: call.rid,
-              profiles: [profile],
+              profiles: [profile.toSimpleProfile()],
               rekindles: [],
               serious: false,
               groupLobby: call.group,
@@ -184,6 +185,7 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
       shouldDisplay = false;
       displayIncomingCall(
         rid: call.rid,
+        callerUid: call.callerUid,
         callerName: call.name,
         video: call.video,
         onCallAccepted: () async {
@@ -233,12 +235,12 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
     channelName = 'Calls';
     channelDescription = 'Calls from your connections';
     notificationPayload = _CallPayload(
+      callerUid: callerUid,
       name: callerName,
       photo: callerPhoto,
       video: video,
       group: group,
       rid: rid,
-      callerUid: callerUid,
       purpose: purpose,
     );
   } else if (type == 'chat') {

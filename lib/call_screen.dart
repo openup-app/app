@@ -28,7 +28,7 @@ class CallScreen extends ConsumerStatefulWidget {
   final int socketPort;
   final bool video;
   final bool serious;
-  final List<PublicProfile> profiles;
+  final List<SimpleProfile> profiles;
   final List<Rekindle> rekindles;
   final bool groupLobby;
 
@@ -384,7 +384,7 @@ class CallData with _$CallData {
 @freezed
 class UserConnection with _$UserConnection {
   const factory UserConnection({
-    required PublicProfile profile,
+    required SimpleProfile profile,
     required Rekindle? rekindle,
     required RTCVideoRenderer? localVideoRenderer,
     required RTCVideoRenderer? videoRenderer,
@@ -395,7 +395,7 @@ class UserConnection with _$UserConnection {
 
 class CallPageArguments {
   final String rid;
-  final List<PublicProfile> profiles;
+  final List<SimpleProfile> profiles;
   final List<Rekindle> rekindles;
   final bool serious;
   final bool groupLobby;

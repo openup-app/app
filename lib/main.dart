@@ -483,7 +483,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 route,
                                 arguments: CallPageArguments(
                                   rid: rid,
-                                  profiles: profiles,
+                                  profiles: profiles
+                                      .map((e) => e.toSimpleProfile())
+                                      .toList(),
                                   rekindles: rekindles,
                                   serious: args.serious,
                                 ),
@@ -833,7 +835,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 route,
                                 arguments: CallPageArguments(
                                   rid: rid,
-                                  profiles: profiles,
+                                  profiles: profiles
+                                      .map((e) => e.toSimpleProfile())
+                                      .toList(),
                                   rekindles: rekindles,
                                   serious: args.serious,
                                 ),
@@ -1129,7 +1133,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   route,
                   arguments: CallPageArguments(
                     rid: rid,
-                    profiles: [profile],
+                    profiles: [profile.toSimpleProfile()],
                     rekindles: [],
                     serious: false,
                     groupLobby: true,

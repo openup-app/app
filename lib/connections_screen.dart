@@ -319,7 +319,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
         route,
         arguments: CallPageArguments(
           rid: rid,
-          profiles: [profile],
+          profiles: [profile.toSimpleProfile()],
           rekindles: [],
           serious: false,
         ),

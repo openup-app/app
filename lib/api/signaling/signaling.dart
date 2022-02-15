@@ -50,7 +50,7 @@ class Signal with _$Signal {
   const factory Signal.joinCall({
     @Default('room') String recipient,
     required String rid,
-    required List<PublicProfile> profiles,
+    required List<SimpleProfile> profiles,
     required List<Rekindle> rekindles,
   }) = _JoinCall;
 

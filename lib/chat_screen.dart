@@ -552,7 +552,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       route,
       arguments: CallPageArguments(
         rid: rid,
-        profiles: [profile],
+        profiles: [profile.toSimpleProfile()],
         rekindles: [],
         serious: false,
       ),

@@ -38,7 +38,7 @@ class Phone {
   final void Function(Map<String, bool> states) onGroupCallLobbyStates;
   final void Function(
     String rid,
-    List<PublicProfile> profiles,
+    List<SimpleProfile> profiles,
     List<Rekindle> rekindles,
   ) onJoinGroupCall;
 
