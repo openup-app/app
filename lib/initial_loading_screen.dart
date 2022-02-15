@@ -48,11 +48,27 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       Navigator.of(context).pushReplacementNamed('sign-up');
       return;
     } else {
-      initUsersApi(
-        host: host,
-        port: webPort,
-        authToken: await user.getIdToken(),
-      );
+      try {
+        final token = await user.getIdToken();
+        initUsersApi(
+          host: host,
+          port: webPort,
+          authToken: token,
+        );
+      } on FirebaseAuthException catch (e) {
+        print('code is ${e.code}');
+        if (e.code == 'firebase_auth/user-not-found') {
+          // Sign up instead
+          initUsersApi(
+            host: host,
+            port: webPort,
+          );
+          Navigator.of(context).pushReplacementNamed('sign-up');
+          return;
+        } else {
+          rethrow;
+        }
+      }
     }
 
     final usersApi = ref.read(usersApiProvider);
@@ -70,7 +86,9 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     // Begin caching
     try {
       await _cacheData(usersApi, user.uid);
-    } catch (e) {
+    } catch (e, s) {
+      print(e);
+      print(s);
       Navigator.of(context).pushReplacementNamed('error');
       return;
     }
