@@ -43,7 +43,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.openup.app"
+        applicationId "com.openupdating"
         minSdkVersion 21
         targetSdkVersion 30
         versionCode flutterVersionCode.toInteger()
