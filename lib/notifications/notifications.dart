@@ -94,7 +94,27 @@ Future<bool> _handleLaunchNotification({
   if (payloadJson != null) {
     final payload = _NotificationPayload.fromJson(jsonDecode(payloadJson));
     payload.map(
-      call: (call) {},
+      call: (call) {
+        final context = key.currentContext;
+        if (context != null) {
+          final route =
+              call.video ? 'friends-video-call' : 'friends-voice-call';
+          final profile = SimpleProfile(
+            uid: call.callerUid,
+            name: call.name,
+            photo: call.photo,
+          );
+          Navigator.of(context).pushNamed(
+            route,
+            arguments: CallPageArguments(
+              rid: call.rid,
+              profiles: [profile],
+              rekindles: [],
+              serious: false,
+            ),
+          );
+        }
+      },
       chat: (chat) async {
         final profile = await usersApi.getPublicProfile(chat.uid);
         Navigator.of(context).pushReplacementNamed('home');
@@ -191,6 +211,7 @@ void _onForegroundNotification(
 }
 
 Future<void> _onBackgroundNotification(RemoteMessage message) async {
+  print('background notifaciton!');
   bool shouldDisplay = true;
   final parsed = await _parseRemoteMessage(message);
   parsed.payload?.map(
