@@ -179,12 +179,10 @@ packages:
   connectycube_flutter_call_kit:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: c5b14062867993115fe50c9e259700a959fd71c6
-      url: "git@github.com:openup-app/connectycube-flutter-call-kit.git"
-    source: git
-    version: "0.1.0-dev.2"
+      name: connectycube_flutter_call_kit
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.2"
   convert:
     dependency: transitive
     description:

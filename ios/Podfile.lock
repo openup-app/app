@@ -3,7 +3,7 @@ PODS:
     - Flutter
   - camera (0.0.1):
     - Flutter
-  - connectycube_flutter_call_kit (0.0.1):
+  - connectycube_flutter_call_kit (2.0.2):
     - Flutter
   - emoji_picker_flutter (0.0.1):
     - Flutter
@@ -175,7 +175,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   audio_session: 4f3e461722055d21515cf3261b64c973c062f345
   camera: fe33292aff715a981eb34d7ce7b35b54337ff34c
-  connectycube_flutter_call_kit: 3f5730ee17df32194fe1072f197bb1f87fb18955
+  connectycube_flutter_call_kit: 401db1dd3c1984ed754b0b14e957a6700f95067e
   emoji_picker_flutter: 4f9a1ac31d355e1bf9622a1e821a809149130127
   Firebase: 13d8d96499e2635428d5bf0ec675df21f95d9a95
   firebase_auth: e875a50b81aefb20f305dfede425647e9675c19e
