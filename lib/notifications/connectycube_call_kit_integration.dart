@@ -79,7 +79,7 @@ Future<void> displayIncomingCall({
   await ConnectycubeFlutterCallKit.setOnLockScreenVisibility(isVisible: true);
 }
 
-Future<void> reportOutgoingCallAccepted(String rid, bool video) {
+Future<void> reportCallStarted(String rid, bool video) {
   return ConnectycubeFlutterCallKit.reportCallAccepted(
     sessionId: rid,
     callType: video ? 1 : 0,

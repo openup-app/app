@@ -6,7 +6,6 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
-import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/public_profile_screen.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
@@ -315,7 +314,6 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
 
     final rid = await api.call(uid, profile.uid, video);
     if (mounted) {
-      reportOutgoingCallAccepted(rid, video);
       final route = video ? 'friends-video-call' : 'friends-voice-call';
       Navigator.of(context).pushNamed(
         route,

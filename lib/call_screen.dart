@@ -193,6 +193,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     }
     _users.values.first.phone
         .join(initiator: _isInitiator(uid, _users.keys.first));
+
+    reportCallStarted(widget.rid, widget.video);
   }
 
   @override
