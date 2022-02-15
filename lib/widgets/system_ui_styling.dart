@@ -17,7 +17,7 @@ class CurrentRouteSystemUiStyling extends StatefulWidget {
     required this.child,
   })  : style = const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
           statusBarIconBrightness: Brightness.dark,
         ),
         super(key: key);
@@ -27,7 +27,7 @@ class CurrentRouteSystemUiStyling extends StatefulWidget {
     required this.child,
   })  : style = const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
           statusBarIconBrightness: Brightness.light,
         ),
         super(key: key);
