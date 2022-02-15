@@ -401,7 +401,7 @@ class _NotificationPayload with _$_NotificationPayload {
   const factory _NotificationPayload.call({
     required String callerUid,
     required String name,
-    required String photo,
+    required String? photo,
     required String rid,
     required Purpose purpose,
     required bool video,

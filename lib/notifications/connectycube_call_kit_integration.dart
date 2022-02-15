@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:connectycube_flutter_call_kit/connectycube_flutter_call_kit.dart';
 import 'package:flutter/widgets.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
@@ -20,8 +22,8 @@ void initIncomingCallHandlers({required GlobalKey key}) {
   if (!_callKitInit) {
     _callKitInit = true;
     ConnectycubeFlutterCallKit.instance.init(
-      ringtone: "Apex",
-      icon: "AppIcon",
+      ringtone: Platform.isIOS ? "Apex" : null,
+      icon: Platform.isIOS ? "AppIcon" : null,
       onCallAccepted: (callEvent) async {
         final context = key.currentContext;
         final uid = callEvent.userInfo?['uid'];
@@ -68,7 +70,7 @@ Future<void> displayIncomingCall({
     callType: video ? 1 : 0,
     callerId: 1,
     callerName: callerName,
-    opponentsIds: const {},
+    opponentsIds: const {0, 1},
     userInfo: {
       'uid': callerUid,
       ...{if (callerPhoto != null) 'photo': callerPhoto},

@@ -26,6 +26,7 @@ Future<BackgroundCallNotification?>
   if (json != null) {
     return BackgroundCallNotification.fromJson(jsonDecode(json));
   }
+  return null;
 }
 
 Future<void> removeBackgroundCallNotification() async {
