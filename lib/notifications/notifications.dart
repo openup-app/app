@@ -49,8 +49,14 @@ Future<bool> _handleLaunchNotification({
   required UsersApi usersApi,
 }) async {
   // Calls that don't go through the standard FirebaseMessaging app launch method
-  final backgroundCallNotification =
-      await deserializeBackgroundCallNotification();
+  BackgroundCallNotification? backgroundCallNotification;
+  try {
+    backgroundCallNotification = await deserializeBackgroundCallNotification();
+  } catch (e, s) {
+    // TODO: Log error
+    print(e);
+    print(s);
+  }
   await removeBackgroundCallNotification();
 
   final context = key.currentContext;
