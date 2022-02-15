@@ -60,9 +60,6 @@ class SignificantButton extends StatelessWidget {
         height: height,
         decoration: BoxDecoration(
           borderRadius: borderRadius,
-          boxShadow: [
-            Theming.of(context).boxShadow,
-          ],
           gradient: gradient,
         ),
         child: Padding(

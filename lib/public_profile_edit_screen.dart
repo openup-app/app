@@ -162,15 +162,6 @@ class PhotoGrid extends StatelessWidget {
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(36)),
                                   color: Color.fromRGBO(0xC4, 0xC4, 0xC4, 0.5),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Color.fromRGBO(
-                                          0x00, 0x00, 0x00, 0.25),
-                                      blurRadius: 4,
-                                      offset: Offset(0.0, 4.0),
-                                      blurStyle: BlurStyle.normal,
-                                    )
-                                  ],
                                 ),
                                 child: Stack(
                                   alignment: Alignment.center,

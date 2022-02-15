@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:openup/widgets/theming.dart';
 
 class NotificationBanner extends StatelessWidget {
@@ -15,12 +14,6 @@ class NotificationBanner extends StatelessWidget {
     return Container(
       width: 170,
       decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-              color: Theming.of(context).shadow,
-              offset: const Offset(0, 4),
-              blurRadius: 4),
-        ],
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           bottomLeft: Radius.circular(24),

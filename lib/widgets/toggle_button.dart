@@ -4,11 +4,13 @@ import 'package:openup/widgets/theming.dart';
 class ToggleButton extends StatefulWidget {
   final bool value;
   final Color color;
+  final bool useShadow;
   final ValueChanged onChanged;
   const ToggleButton({
     Key? key,
     required this.value,
     required this.color,
+    this.useShadow = false,
     required this.onChanged,
   }) : super(key: key);
 
@@ -72,11 +74,12 @@ class _ToggleButtonState extends State<ToggleButton> {
                 borderRadius: const BorderRadius.all(Radius.circular(15)),
                 color: widget.color,
                 boxShadow: [
-                  BoxShadow(
-                    color: Theming.of(context).shadow,
-                    blurRadius: 4.0,
-                    offset: const Offset(0.0, 4.0),
-                  )
+                  if (widget.useShadow == true)
+                    BoxShadow(
+                      color: Theming.of(context).shadow,
+                      blurRadius: 4.0,
+                      offset: const Offset(0.0, 4.0),
+                    )
                 ],
               ),
             ),

@@ -170,110 +170,111 @@ class _ProfileBioDisplay extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final age =
         DateTime.now().difference(birthday ?? DateTime.now()).inDays ~/ 365;
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Theming.of(context).shadow,
-            blurRadius: 4,
-            offset: const Offset(0.0, 2.0),
-          ),
-        ],
-        gradient: LinearGradient(
-          colors: [
-            Colors.red.withOpacity(0.6),
-            Colors.white.withOpacity(0.5),
-          ],
-          stops: [progress, progress],
-        ),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+        color: Color.fromRGBO(0xBB, 0xBB, 0xBB, 0.7),
       ),
-      child: Row(
-        children: [
-          const SizedBox(width: 24),
-          Expanded(
-            child: IgnorePointer(
-              ignoring: !editable,
-              child: Button(
-                onPressed: () => _showNameDialog(context),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: AutoSizeText(
-                    name == null ? '' : '$name, $age',
-                    maxLines: 1,
-                    minFontSize: 20,
-                    maxFontSize: 36,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theming.of(context).text.headline.copyWith(
-                      fontSize: 36,
-                      shadows: [
-                        Shadow(
-                          color: Theming.of(context).shadow,
-                          blurRadius: 4,
-                          offset: const Offset(0.0, 2.0),
-                        ),
-                      ],
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
+          gradient: LinearGradient(
+            colors: [
+              Colors.red.withOpacity(0.6),
+              Colors.white.withOpacity(0.5),
+            ],
+            stops: [progress, progress],
+          ),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 24),
+            Expanded(
+              child: IgnorePointer(
+                ignoring: !editable,
+                child: Button(
+                  onPressed: () => _showNameDialog(context),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: AutoSizeText(
+                      name == null ? '' : '$name, $age',
+                      maxLines: 1,
+                      minFontSize: 20,
+                      maxFontSize: 36,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theming.of(context).text.headline.copyWith(
+                        fontSize: 36,
+                        shadows: [
+                          Shadow(
+                            color: Theming.of(context).shadow,
+                            blurRadius: 4,
+                            offset: const Offset(0.0, 2.0),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 4),
-          if (editable)
-            Button(
-              onPressed: playButton == PlayButtonState.playing
-                  ? null
-                  : (recording ? onRecordComplete : onRecord),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(0xFF, 0xFF, 0x00, 0x00),
-                  shape: recording ? BoxShape.rectangle : BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theming.of(context).shadow,
-                      blurRadius: 4,
-                      offset: const Offset(0.0, 2.0),
-                    ),
-                  ],
+            const SizedBox(width: 4),
+            if (editable)
+              Button(
+                onPressed: playButton == PlayButtonState.playing
+                    ? null
+                    : (recording ? onRecordComplete : onRecord),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(0xFF, 0xFF, 0x00, 0x00),
+                    shape: recording ? BoxShape.rectangle : BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theming.of(context).shadow,
+                        blurRadius: 4,
+                        offset: const Offset(0.0, 2.0),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(width: 28),
+            IgnorePointer(
+              ignoring: recording,
+              child: Button(
+                onPressed: (recording ||
+                        playButton == PlayButtonState.loading ||
+                        playButton == PlayButtonState.none)
+                    ? null
+                    : (playButton == PlayButtonState.playing
+                        ? onPause
+                        : onPlay),
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: playButton == PlayButtonState.loading
+                      ? const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(),
+                        )
+                      : (playButton == PlayButtonState.playing
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: SvgPicture.asset(
+                                  'assets/images/pause_icon.svg'),
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: SvgPicture.asset(
+                                  'assets/images/play_icon.svg'),
+                            )),
                 ),
               ),
             ),
-          const SizedBox(width: 28),
-          IgnorePointer(
-            ignoring: recording,
-            child: Button(
-              onPressed: (recording ||
-                      playButton == PlayButtonState.loading ||
-                      playButton == PlayButtonState.none)
-                  ? null
-                  : (playButton == PlayButtonState.playing ? onPause : onPlay),
-              child: SizedBox(
-                width: 48,
-                height: 48,
-                child: playButton == PlayButtonState.loading
-                    ? const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(),
-                      )
-                    : (playButton == PlayButtonState.playing
-                        ? Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: SvgPicture.asset(
-                                'assets/images/pause_icon.svg'),
-                          )
-                        : Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child:
-                                SvgPicture.asset('assets/images/play_icon.svg'),
-                          )),
-              ),
-            ),
-          ),
-          const SizedBox(width: 20),
-        ],
+            const SizedBox(width: 20),
+          ],
+        ),
       ),
     );
   }

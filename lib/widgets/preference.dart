@@ -71,9 +71,6 @@ class _PreferencesExpansionSectionState
           borderRadius: const BorderRadius.all(Radius.circular(32)),
           color: Colors.pink,
           gradient: widget.gradient,
-          boxShadow: [
-            Theming.of(context).boxShadow,
-          ],
         ),
         child: Stack(
           children: [

@@ -206,13 +206,6 @@ class _MenuButton extends StatelessWidget {
         constraints: const BoxConstraints(maxHeight: 116),
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(58)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-              offset: Offset(0.0, 4.0),
-              blurRadius: 20.0,
-            ),
-          ],
           color: color,
         ),
         child: Padding(
