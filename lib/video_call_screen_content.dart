@@ -278,13 +278,15 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
                         size: 40,
                       ),
                     ),
-                    _CallControlButton(
-                      onPressed: tempFirstUser.rekindle != null
-                          ? () => widget.onConnect(tempFirstUser.profile.uid)
-                          : null,
-                      size: 56,
-                      child: const Icon(Icons.person_add),
-                    ),
+                    if (tempFirstUser.rekindle != null)
+                      _CallControlButton(
+                        onPressed: () =>
+                            widget.onConnect(tempFirstUser.profile.uid),
+                        size: 56,
+                        child: const Icon(Icons.person_add),
+                      )
+                    else
+                      const SizedBox(width: 56),
                   ],
                 ),
               )

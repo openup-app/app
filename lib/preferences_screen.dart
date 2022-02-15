@@ -5,7 +5,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/util/emoji.dart';
-import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/matching_users_online.dart';
 import 'package:openup/widgets/preference.dart';
 import 'package:openup/widgets/theming.dart';
@@ -47,87 +47,96 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        if (_expandedSection != null) {
-          setState(() => _expandedSection = null);
-        }
-      },
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,
-              PreferencesScreenTheme.of(context).backgroundGradientBottom,
-            ],
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.white,
+            PreferencesScreenTheme.of(context).backgroundGradientBottom,
+          ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).padding.top + 32,
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            left: 16,
+            top: MediaQuery.of(context).padding.top + 24,
+            child: const CloseButton(
+              color: Colors.black,
             ),
-            Align(
-              alignment: Alignment.center,
-              child: Text(
-                widget.title,
-                style: Theming.of(context).text.body.copyWith(
-                      color: PreferencesScreenTheme.of(context).titleColor,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 30,
-                    ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: MediaQuery.of(context).padding.top + 32,
               ),
-            ),
-            Align(
-              alignment: Alignment.center,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 0.0),
-                child: MatchingUsersOnline(preferences: _preferences),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.center,
-              child: Text(
-                'Who are you interested in talking to?\nYou can change these settings at any time',
-                textAlign: TextAlign.center,
-                style: Theming.of(context).text.body.copyWith(
-                      color: const Color.fromRGBO(0x99, 0x99, 0x99, 1.0),
-                      fontWeight: FontWeight.w400,
-                      fontSize: 18,
-                    ),
-              ),
-            ),
-            Expanded(
-              child: Align(
+              Align(
                 alignment: Alignment.center,
-                child: ListView(
-                  children: [
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        child: PreferencesSelection(
-                          preferences: _preferences,
-                          onChanged: (profile) =>
-                              setState(() => _preferences = profile),
-                          expandedSection: _expandedSection,
-                          onExpansion: (index) =>
-                              setState(() => _expandedSection = index),
-                        ),
+                child: Text(
+                  widget.title,
+                  style: Theming.of(context).text.body.copyWith(
+                        color: PreferencesScreenTheme.of(context).titleColor,
+                        fontWeight: FontWeight.w400,
+                        fontSize: 30,
                       ),
-                    ),
-                  ],
                 ),
               ),
-            ),
-            Column(
+              Align(
+                alignment: Alignment.center,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 0.0),
+                  child: MatchingUsersOnline(preferences: _preferences),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.center,
+                child: Text(
+                  'Who are you interested in talking to?\nYou can change these settings at any time',
+                  textAlign: TextAlign.center,
+                  style: Theming.of(context).text.body.copyWith(
+                        color: const Color.fromRGBO(0x99, 0x99, 0x99, 1.0),
+                        fontWeight: FontWeight.w400,
+                        fontSize: 18,
+                      ),
+                ),
+              ),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.center,
+                  child: ListView(
+                    children: [
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: PreferencesSelection(
+                            preferences: _preferences,
+                            onChanged: (profile) =>
+                                setState(() => _preferences = profile),
+                            expandedSection: _expandedSection,
+                            onExpansion: (index) =>
+                                setState(() => _expandedSection = index),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 100),
+            ],
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SignificantButton(
+                widget.image,
+                Button(
                   onPressed: () async {
                     if (_preferences == widget.initialPreferences) {
                       return Navigator.of(context).pop();
@@ -145,17 +154,28 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                       }
                     }
                   },
-                  gradient:
-                      PreferencesScreenTheme.of(context).doneButtonGradient,
-                  child: _uploading
-                      ? const CircularProgressIndicator()
-                      : const Text('Complete'),
+                  child: Container(
+                    height: 100,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color.fromRGBO(0xFF, 0xA1, 0xA1, 1.0),
+                          Color.fromRGBO(0xFF, 0xCC, 0xCC, 1.0),
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                    ),
+                    child: _uploading
+                        ? const CircularProgressIndicator()
+                        : const Text('Complete'),
+                  ),
                 ),
-                widget.image,
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -382,6 +402,7 @@ class PreferencesSelection extends StatelessWidget {
                 ),
             ],
           ),
+          const SizedBox(height: 150),
         ],
       ),
     );

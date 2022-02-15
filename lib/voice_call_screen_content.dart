@@ -208,13 +208,14 @@ class VoiceCallScreenContent extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _ButtonWithText(
-                            icon: const IconWithShadow(Icons.person_add),
-                            label: 'Connect',
-                            onPressed: tempFirstUser.rekindle != null
-                                ? () => onConnect(profile.uid)
-                                : null,
-                          ),
+                          if (tempFirstUser.rekindle != null)
+                            _ButtonWithText(
+                              icon: const IconWithShadow(Icons.person_add),
+                              label: 'Connect',
+                              onPressed: () => onConnect(profile.uid),
+                            )
+                          else
+                            const SizedBox(width: 90),
                           _ButtonWithText(
                             icon: Padding(
                               padding: const EdgeInsets.all(4.0),

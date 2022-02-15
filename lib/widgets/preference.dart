@@ -37,7 +37,7 @@ class _PreferencesExpansionSectionState
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 75),
       vsync: this,
     );
   }
@@ -95,19 +95,26 @@ class _PreferencesExpansionSectionState
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
+                    padding: const EdgeInsets.only(
+                      left: 32,
+                      right: 20,
                     ),
                     child: FadeTransition(
                       opacity: Tween(begin: 1.0, end: 0.0).animate(_controller),
-                      child: Text(
-                        widget.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white),
+                      child: Row(
+                        children: [
+                          Text(
+                            widget.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white),
+                          ),
+                          const Spacer(),
+                          const Icon(Icons.chevron_right, size: 40),
+                        ],
                       ),
                     ),
                   ),

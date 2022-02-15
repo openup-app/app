@@ -168,6 +168,7 @@ class PrivateProfileForm extends StatelessWidget {
                 ),
             ],
           ),
+          const SizedBox(height: 150),
         ],
       ),
     );
