@@ -7,7 +7,6 @@ import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
-import 'package:openup/api/users/user_metadata.dart';
 
 class RawUsersApi {
   final _headers = {
@@ -130,25 +129,25 @@ class RawUsersApi {
     }
   }
 
-  Future<void> updateUserMetadata(String uid, UserMetadata userMetadata) async {
+  Future<void> updateOnboarded(String uid, bool onboarded) async {
     final response = await http.post(
-      Uri.parse('$_urlBase/users/$uid/metadata'),
+      Uri.parse('$_urlBase/users/$uid/onboarded'),
       headers: _headers,
-      body: jsonEncode(userMetadata.toJson()),
+      body: jsonEncode({onboarded: onboarded}),
     );
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        return Future.error('Failed to update user metadata');
+        return Future.error('Failed to update user onboarded');
       }
       print('Error ${response.statusCode}: ${response.body}');
       return Future.error('Failure');
     }
   }
 
-  Future<UserMetadata> getUserMetadata(String uid) async {
+  Future<bool> getOnboarded(String uid) async {
     final response = await http.get(
-      Uri.parse('$_urlBase/users/$uid/metadata'),
+      Uri.parse('$_urlBase/users/$uid/onboarded'),
       headers: _headers,
     );
 
@@ -160,7 +159,7 @@ class RawUsersApi {
       return Future.error('Failure');
     }
 
-    return UserMetadata.fromJson(jsonDecode(response.body));
+    return jsonDecode(response.body)['onboarded'] == true;
   }
 
   Future<PublicProfile> getPublicProfile(String uid) async {

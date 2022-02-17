@@ -1,10 +1,9 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart' hide UserMetadata;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/user_metadata.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/main.dart';
 import 'package:openup/notifications/notifications.dart';
@@ -111,7 +110,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
   Future<void> _cacheData(UsersApi api, String uid) async {
     final result = await Future.wait([
-      api.getUserMetadata(uid),
+      api.getOnboarded(uid),
       api.getPublicProfile(uid),
       api.getPrivateProfile(uid),
       api.getFriendsPreferences(uid),
@@ -119,14 +118,9 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       api.getAllChatroomUnreadCounts(uid),
     ]);
 
-    final userMetadata = result[0] as UserMetadata;
-
+    final onboarded = result[0] as bool;
     if (mounted) {
-      if (mounted) {
-        setState(() {
-          _onboarded = userMetadata.onboarded;
-        });
-      }
+      setState(() => _onboarded = onboarded);
     }
   }
 

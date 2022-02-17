@@ -8,7 +8,6 @@ import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/raw_users_api.dart';
 import 'package:openup/api/users/rekindle.dart';
-import 'package:openup/api/users/user_metadata.dart';
 import 'package:rxdart/subjects.dart';
 
 late Provider<UsersApi> usersApiProvider;
@@ -38,7 +37,7 @@ class UsersApi implements RawUsersApi {
   final RawUsersApi _rawUsersApi;
   String? _uid;
   Account? _account;
-  UserMetadata? _userMetadata;
+  bool? _onboarded;
   PublicProfile? _publicProfile;
   PrivateProfile? _privateProfile;
   Preferences? _friendsPreferences;
@@ -118,24 +117,24 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
-  Future<void> updateUserMetadata(String uid, UserMetadata userMetadata) {
+  Future<void> updateOnboarded(String uid, bool onboarded) {
     if (uid == _uid) {
-      _userMetadata = userMetadata;
+      _onboarded = onboarded;
     }
-    return _rawUsersApi.updateUserMetadata(uid, userMetadata);
+    return _rawUsersApi.updateOnboarded(uid, onboarded);
   }
 
   @override
-  Future<UserMetadata> getUserMetadata(String uid) async {
-    if (uid == _uid && _userMetadata != null) {
-      return _userMetadata!;
+  Future<bool> getOnboarded(String uid) async {
+    if (uid == _uid && _onboarded != null) {
+      return _onboarded!;
     }
 
-    final userMetadata = await _rawUsersApi.getUserMetadata(uid);
+    final onboarded = await _rawUsersApi.getOnboarded(uid);
     if (uid == _uid) {
-      _userMetadata = userMetadata;
+      _onboarded = onboarded;
     }
-    return userMetadata;
+    return onboarded;
   }
 
   @override
@@ -323,7 +322,7 @@ class UsersApi implements RawUsersApi {
         voipToken: voipToken,
       );
 
-  UserMetadata? get userMetadata => _userMetadata;
+  bool? get onboarded => _onboarded;
 
   PublicProfile? get publicProfile => _publicProfile;
 

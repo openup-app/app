@@ -6,8 +6,6 @@ import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 
-import 'api/users/user_metadata.dart';
-
 class SignUpWelcomeInfoScreen extends ConsumerWidget {
   const SignUpWelcomeInfoScreen({Key? key}) : super(key: key);
 
@@ -99,14 +97,7 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
     }
 
     final usersApi = ref.read(usersApiProvider);
-
-    final userMetadata = usersApi.userMetadata?.copyWith(onboarded: true) ??
-        const UserMetadata(onboarded: true);
-
-    usersApi.updateUserMetadata(
-      uid,
-      userMetadata,
-    );
+    usersApi.updateOnboarded(uid, true);
 
     Navigator.of(context).popUntil((route) => route.isFirst);
     Navigator.of(context).pushReplacementNamed('home');
