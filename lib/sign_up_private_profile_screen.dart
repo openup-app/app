@@ -19,7 +19,7 @@ class SignUpPrivateProfileScreen extends ConsumerStatefulWidget {
 
 class _SignUpPrivateProfileScreenState
     extends ConsumerState<SignUpPrivateProfileScreen> {
-  PrivateProfile _profile = const PrivateProfile(
+  PrivateProfile _attributes = const PrivateProfile(
     gender: Gender.male,
     skinColor: SkinColor.light,
     weight: 200,
@@ -77,9 +77,9 @@ class _SignUpPrivateProfileScreenState
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 300),
                       child: PrivateProfileForm(
-                        profile: _profile,
-                        onChanged: (profile) {
-                          setState(() => _profile = profile);
+                        attributes: _attributes,
+                        onChanged: (attributes) {
+                          setState(() => _attributes = attributes);
                         },
                         expandedSection: _expandedSection,
                         onExpansion: (index) =>
@@ -101,7 +101,7 @@ class _SignUpPrivateProfileScreenState
                   final uid = user?.uid;
                   if (uid != null) {
                     final usersApi = ref.read(usersApiProvider);
-                    await usersApi.updatePrivateProfile(uid, _profile);
+                    await usersApi.updateAttributes(uid, _attributes);
                     if (mounted) {
                       setState(() => _uploading = false);
                       Navigator.of(context).pushNamed('sign-up-photos');

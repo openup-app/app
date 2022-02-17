@@ -307,12 +307,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
 
   void _onCall(PublicProfile profile, {required bool video}) async {
     final api = ref.read(usersApiProvider);
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      throw 'No user is logged in';
-    }
-
-    final rid = await api.call(uid, profile.uid, video);
+    final rid = await api.call(profile.uid, video);
     if (mounted) {
       final route = video ? 'friends-video-call' : 'friends-voice-call';
       Navigator.of(context).pushNamed(

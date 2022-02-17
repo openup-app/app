@@ -176,8 +176,8 @@ class ProfileDrawer extends ConsumerWidget {
     final usersApi = container.read(usersApiProvider);
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
-      final profile = await usersApi.getPrivateProfile(uid);
-      Navigator.of(context).pushNamed('private-profile', arguments: profile);
+      final attributes = await usersApi.getAttributes(uid);
+      Navigator.of(context).pushNamed('private-profile', arguments: attributes);
     }
   }
 }

@@ -32,7 +32,7 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
     final usersApi = ref.read(usersApiProvider);
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
-      usersApi.getRekindleList(uid).then((rekindles) {
+      usersApi.getRekindles(uid).then((rekindles) {
         if (mounted) {
           setState(() => _rekindles = rekindles);
         }

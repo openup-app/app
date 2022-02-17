@@ -86,13 +86,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
 
     final usersApi = ref.read(usersApiProvider);
-    usersApi.getPublicProfile(_uid).then((profile) {
+    usersApi.getProfile(_uid).then((profile) {
       if (mounted) {
         setState(() => _myAvatar = profile.photo);
       }
     });
 
-    usersApi.getPublicProfile(widget.uid).then((profile) {
+    usersApi.getProfile(widget.uid).then((profile) {
       if (mounted) {
         setState(() => _profile = profile);
       }
@@ -541,15 +541,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       return;
     }
 
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      return;
-    }
-
     final purpose = Purpose.friends.name;
     final route = video ? '$purpose-video-call' : '$purpose-voice-call';
     final usersApi = ref.read(usersApiProvider);
-    final rid = await usersApi.call(_uid, profile.uid, video);
+    final rid = await usersApi.call(profile.uid, video);
 
     Navigator.of(context).pushNamed(
       route,

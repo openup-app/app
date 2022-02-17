@@ -144,7 +144,7 @@ class _PhoneVerificationScreenState
 
     try {
       if (uid != null) {
-        await usersApi.createUserWithUid(
+        await usersApi.createUser(
           uid: uid,
           birthday: widget.credentialVerification.birthday,
         );

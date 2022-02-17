@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
-import 'package:openup/api/users/account.dart';
 import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
@@ -30,35 +29,12 @@ class RawUsersApi {
     _headers['Authorization'] = 'Bearer $value';
   }
 
-  Future<void> createUserWithEmail({
-    required String email,
-    required String password,
-    required DateTime birthday,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$_urlBase/users/'),
-      headers: _headers,
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-        'birthday': birthday.toIso8601String(),
-      }),
-    );
-    if (response.statusCode != 200) {
-      if (response.statusCode == 400) {
-        return Future.error('Invalid sign-up');
-      }
-      print('Error ${response.statusCode}: ${response.body}');
-      return Future.error('Failure');
-    }
-  }
-
-  Future<void> createUserWithUid({
+  Future<void> createUser({
     required String uid,
     required DateTime birthday,
   }) async {
     final response = await http.post(
-      Uri.parse('$_urlBase/users/$uid/create'),
+      Uri.parse('$_urlBase/users/$uid'),
       headers: _headers,
       body: jsonEncode({
         'birthday': birthday.toIso8601String(),
@@ -73,12 +49,27 @@ class RawUsersApi {
     }
   }
 
+  Future<void> deleteUser(String uid) async {
+    final response = await http.delete(
+      Uri.parse('$_urlBase/users/$uid'),
+      headers: _headers,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to delete user');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+  }
+
   Future<bool> checkBirthday({
     required String phone,
     required DateTime birthday,
   }) async {
     final response = await http.post(
-      Uri.parse('$_urlBase/users/check_birthday'),
+      Uri.parse('$_urlBase/users/any/check_birthday'),
       headers: _headers,
       body: jsonEncode({
         'phone': phone,
@@ -96,55 +87,6 @@ class RawUsersApi {
     return resultMap['success'];
   }
 
-  Future<Account> getAccount(String uid) async {
-    final response = await http.get(
-      Uri.parse('$_urlBase/users/$uid/account'),
-      headers: _headers,
-    );
-
-    if (response.statusCode != 200) {
-      if (response.statusCode == 400) {
-        return Future.error('Failed to get account');
-      }
-      print('Error ${response.statusCode}: ${response.body}');
-      return Future.error('Failure');
-    }
-
-    return Account.fromJson(jsonDecode(response.body));
-  }
-
-  Future<void> updateAccount(String uid, Account account) async {
-    final response = await http.patch(
-      Uri.parse('$_urlBase/users/$uid/account'),
-      headers: _headers,
-      body: jsonEncode(account.toJson()),
-    );
-
-    if (response.statusCode != 200) {
-      if (response.statusCode == 400) {
-        return Future.error('Failed to update preferences');
-      }
-      print('Error ${response.statusCode}: ${response.body}');
-      return Future.error('Failure');
-    }
-  }
-
-  Future<void> updateOnboarded(String uid, bool onboarded) async {
-    final response = await http.post(
-      Uri.parse('$_urlBase/users/$uid/onboarded'),
-      headers: _headers,
-      body: jsonEncode({onboarded: onboarded}),
-    );
-
-    if (response.statusCode != 200) {
-      if (response.statusCode == 400) {
-        return Future.error('Failed to update user onboarded');
-      }
-      print('Error ${response.statusCode}: ${response.body}');
-      return Future.error('Failure');
-    }
-  }
-
   Future<bool> getOnboarded(String uid) async {
     final response = await http.get(
       Uri.parse('$_urlBase/users/$uid/onboarded'),
@@ -153,7 +95,7 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        return Future.error('Failed to get user metadata');
+        return Future.error('Failed to get onboarded');
       }
       print('Error ${response.statusCode}: ${response.body}');
       return Future.error('Failure');
@@ -162,9 +104,25 @@ class RawUsersApi {
     return jsonDecode(response.body)['onboarded'] == true;
   }
 
-  Future<PublicProfile> getPublicProfile(String uid) async {
+  Future<void> updateOnboarded(String uid, bool onboarded) async {
+    final response = await http.put(
+      Uri.parse('$_urlBase/users/$uid/onboarded'),
+      headers: _headers,
+      body: jsonEncode({onboarded: onboarded}),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to update onboarded');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+  }
+
+  Future<PublicProfile> getProfile(String uid) async {
     final response = await http.get(
-      Uri.parse('$_urlBase/users/$uid/profile/public'),
+      Uri.parse('$_urlBase/users/$uid/profile'),
       headers: _headers,
     );
 
@@ -179,9 +137,9 @@ class RawUsersApi {
     return PublicProfile.fromJson(jsonDecode(response.body));
   }
 
-  Future<void> updatePublicProfile(String uid, PublicProfile profile) async {
-    final response = await http.patch(
-      Uri.parse('$_urlBase/users/$uid/profile/public'),
+  Future<void> updateProfile(String uid, PublicProfile profile) async {
+    final response = await http.put(
+      Uri.parse('$_urlBase/users/$uid/profile'),
       headers: _headers,
       body: jsonEncode(profile.toJson()),
     );
@@ -195,46 +153,13 @@ class RawUsersApi {
     }
   }
 
-  Future<PrivateProfile> getPrivateProfile(String uid) async {
-    final response = await http.get(
-      Uri.parse('$_urlBase/users/$uid/profile/private'),
-      headers: _headers,
-    );
-
-    if (response.statusCode != 200) {
-      if (response.statusCode == 400) {
-        return Future.error('Failed to get profile');
-      }
-      print('Error ${response.statusCode}: ${response.body}');
-      return Future.error('Failure');
-    }
-
-    return PrivateProfile.fromJson(jsonDecode(response.body));
-  }
-
-  Future<void> updatePrivateProfile(String uid, PrivateProfile profile) async {
-    final response = await http.patch(
-      Uri.parse('$_urlBase/users/$uid/profile/private'),
-      headers: _headers,
-      body: jsonEncode(profile.toJson()),
-    );
-
-    if (response.statusCode != 200) {
-      if (response.statusCode == 400) {
-        return Future.error('Failed to update profile');
-      }
-      print('Error ${response.statusCode}: ${response.body}');
-      return Future.error('Failure');
-    }
-  }
-
-  Future<String> updateGalleryPhoto(
+  Future<String> updateProfileGalleryPhoto(
     String uid,
     Uint8List photo,
     int index,
   ) async {
-    final response = await http.post(
-      Uri.parse('$_urlBase/users/$uid/public/gallery/$index'),
+    final response = await http.put(
+      Uri.parse('$_urlBase/users/$uid/profile/gallery/$index'),
       headers: {
         ..._headers,
         'Content-Type': 'application/octet-stream',
@@ -244,7 +169,7 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        return Future.error('Failed to upload photo');
+        return Future.error('Failed to update profile gallery photo');
       }
       print('Error ${response.statusCode}: ${response.body}');
       return Future.error('Failure');
@@ -254,24 +179,24 @@ class RawUsersApi {
     return json['url'] as String;
   }
 
-  Future<void> deleteGalleryPhoto(String uid, int index) async {
+  Future<void> deleteProfileGalleryPhoto(String uid, int index) async {
     final response = await http.delete(
-      Uri.parse('$_urlBase/users/$uid/public/gallery/$index'),
+      Uri.parse('$_urlBase/users/$uid/profile/gallery/$index'),
       headers: _headers,
     );
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        return Future.error('Failed to delete photo');
+        return Future.error('Failed to delete profile gallery photo');
       }
       print('Error ${response.statusCode}: ${response.body}');
       return Future.error('Failure');
     }
   }
 
-  Future<String> updateAudioBio(String uid, Uint8List audio) async {
-    final response = await http.post(
-      Uri.parse('$_urlBase/users/$uid/public/audio'),
+  Future<String> updateProfileAudio(String uid, Uint8List audio) async {
+    final response = await http.put(
+      Uri.parse('$_urlBase/users/$uid/profile/audio'),
       headers: {
         ..._headers,
         'Content-Type': 'application/octet-stream',
@@ -281,7 +206,7 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        return Future.error('Failed to upload audio');
+        return Future.error('Failed to update profile audio');
       }
       print('Error ${response.statusCode}: ${response.body}');
       return Future.error('Failure');
@@ -291,30 +216,15 @@ class RawUsersApi {
     return json['url'] as String;
   }
 
-  Future<void> deleteAudioBio(String uid) async {
+  Future<void> deleteProfileAudio(String uid) async {
     final response = await http.delete(
-      Uri.parse('$_urlBase/users/$uid/public/audio'),
+      Uri.parse('$_urlBase/users/$uid/profile/audio'),
       headers: _headers,
     );
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        return Future.error('Failed to delete audio');
-      }
-      print('Error ${response.statusCode}: ${response.body}');
-      return Future.error('Failure');
-    }
-  }
-
-  Future<void> deleteUser(String uid) async {
-    final response = await http.delete(
-      Uri.parse('$_urlBase/users/$uid'),
-      headers: _headers,
-    );
-
-    if (response.statusCode != 200) {
-      if (response.statusCode == 400) {
-        return Future.error('Failed to delete user');
+        return Future.error('Failed to delete profile audio');
       }
       print('Error ${response.statusCode}: ${response.body}');
       return Future.error('Failure');
@@ -344,6 +254,39 @@ class RawUsersApi {
     return Preferences.fromJson(jsonDecode(response.body));
   }
 
+  Future<PrivateProfile> getAttributes(String uid) async {
+    final response = await http.get(
+      Uri.parse('$_urlBase/users/$uid/attributes'),
+      headers: _headers,
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to get attributes');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+
+    return PrivateProfile.fromJson(jsonDecode(response.body));
+  }
+
+  Future<void> updateAttributes(String uid, PrivateProfile attributes) async {
+    final response = await http.put(
+      Uri.parse('$_urlBase/users/$uid/attributes'),
+      headers: _headers,
+      body: jsonEncode(attributes.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to update attributes');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+  }
+
   Future<void> updateFriendsPreferences(String uid, Preferences preferences) =>
       _updatePreferences(uid, preferences, 'friends');
 
@@ -355,7 +298,7 @@ class RawUsersApi {
     Preferences preferences,
     String type,
   ) async {
-    final response = await http.patch(
+    final response = await http.put(
       Uri.parse('$_urlBase/users/$uid/preferences/$type'),
       headers: _headers,
       body: jsonEncode(preferences.toJson()),
@@ -363,42 +306,13 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        return Future.error('Failed to update preferences');
+        return Future.error('Failed to update $type preferences');
       }
       return Future.error('Failure');
     }
   }
 
-  Future<int> getPossibleFriendCount(String uid, Preferences preferences) =>
-      _getPossibleCount(uid, preferences, 'friends');
-
-  Future<int> getPossibleDateCount(String uid, Preferences preferences) =>
-      _getPossibleCount(uid, preferences, 'dating');
-
-  Future<int> _getPossibleCount(
-    String uid,
-    Preferences preferences,
-    String type,
-  ) async {
-    final response = await http.post(
-      Uri.parse('$_urlBase/users/$uid/possible/$type'),
-      headers: _headers,
-      body: jsonEncode(preferences.toJson()),
-    );
-
-    if (response.statusCode != 200) {
-      if (response.statusCode == 400) {
-        return Future.error('Failed to get possible matches');
-      }
-      print('Error ${response.statusCode}: ${response.body}');
-      return Future.error('Failure');
-    }
-
-    final json = jsonDecode(response.body) as Map<String, dynamic>;
-    return json['matches'] as int;
-  }
-
-  Future<List<Rekindle>> getRekindleList(String uid) async {
+  Future<List<Rekindle>> getRekindles(String uid) async {
     final response = await http.get(
       Uri.parse('$_urlBase/users/$uid/rekindles'),
       headers: _headers,
@@ -406,7 +320,7 @@ class RawUsersApi {
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        return Future.error('Failed to get rekindle list');
+        return Future.error('Failed to get rekindles');
       }
       print('Error ${response.statusCode}: ${response.body}');
       return Future.error('Failure');
@@ -418,9 +332,9 @@ class RawUsersApi {
 
   Future<void> addConnectionRequest(String uid, String otherUid) async {
     final response = await http.post(
-      Uri.parse('$_urlBase/users/$uid/connection_request'),
+      Uri.parse('$_urlBase/users/$otherUid/connection_requests'),
       headers: _headers,
-      body: jsonEncode({'uid': otherUid}),
+      body: jsonEncode({'uid': uid}),
     );
 
     if (response.statusCode != 200) {
@@ -455,9 +369,8 @@ class RawUsersApi {
     String deleteUid,
   ) async {
     final response = await http.delete(
-      Uri.parse('$_urlBase/users/$uid/connection'),
+      Uri.parse('$_urlBase/users/$uid/connections/$deleteUid'),
       headers: _headers,
-      body: jsonEncode({'uid': deleteUid}),
     );
 
     if (response.statusCode != 200) {
@@ -472,43 +385,15 @@ class RawUsersApi {
     return List<Connection>.from(list.map((e) => Connection.fromJson(e)));
   }
 
-  Future<String> call(
-    String uid,
-    String calleeUid,
-    bool video, {
-    required bool group,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$_urlBase/users/$uid/call'),
-      headers: _headers,
-      body: jsonEncode({
-        'calleeUid': calleeUid,
-        'video': video,
-        'group': group,
-      }),
-    );
-
-    if (response.statusCode != 200) {
-      if (response.statusCode == 400) {
-        return Future.error('Failed to call user');
-      }
-      print('Error ${response.statusCode}: ${response.body}');
-      return Future.error('Failure');
-    }
-
-    final json = jsonDecode(response.body) as Map<String, dynamic>;
-    return json['rid'] as String;
-  }
-
-  Future<Map<String, int>> getAllChatroomUnreadCounts(String uid) async {
+  Future<Map<String, int>> getUnreadMessageCount(String uid) async {
     final response = await http.get(
-      Uri.parse('$_urlBase/users/$uid/chats/unread'),
+      Uri.parse('$_urlBase/users/$uid/unread_message_count'),
       headers: _headers,
     );
 
     if (response.statusCode != 200) {
       if (response.statusCode == 400) {
-        return Future.error('Failed to get unread chat counts');
+        return Future.error('Failed to get unread message count');
       }
       print('Error ${response.statusCode}: ${response.body}');
       return Future.error('Failure');
@@ -547,10 +432,10 @@ class RawUsersApi {
     String? extra,
   }) async {
     final response = await http.post(
-      Uri.parse('$_urlBase/users/$uid/report'),
+      Uri.parse('$_urlBase/users/$reportedUid/reports'),
       headers: _headers,
       body: jsonEncode({
-        'reportedUid': reportedUid,
+        'reporterUid': uid,
         'reason': reason,
         'extra': extra,
       }),
@@ -565,9 +450,36 @@ class RawUsersApi {
     }
   }
 
+  Future<String> call(
+    String calleeUid,
+    bool video, {
+    required bool group,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_urlBase/calls/'),
+      headers: _headers,
+      body: jsonEncode({
+        'calleeUid': calleeUid,
+        'video': video,
+        'group': group,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 400) {
+        return Future.error('Failed to call user');
+      }
+      print('Error ${response.statusCode}: ${response.body}');
+      return Future.error('Failure');
+    }
+
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    return json['rid'] as String;
+  }
+
   Future<void> contactUs({required String uid, required String message}) async {
     final response = await http.post(
-      Uri.parse('$_urlBase/users/contactUs'),
+      Uri.parse('$_urlBase/support/contact_us'),
       headers: _headers,
       body: jsonEncode({
         'uid': uid,

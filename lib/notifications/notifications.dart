@@ -116,7 +116,7 @@ Future<bool> _handleLaunchNotification({
         }
       },
       chat: (chat) async {
-        final profile = await usersApi.getPublicProfile(chat.uid);
+        final profile = await usersApi.getProfile(chat.uid);
         Navigator.of(context).pushReplacementNamed('home');
         Navigator.of(context).pushNamed(
           'chat',
@@ -127,7 +127,7 @@ Future<bool> _handleLaunchNotification({
         );
       },
       newConnection: (newConnection) async {
-        final profile = await usersApi.getPublicProfile(newConnection.uid);
+        final profile = await usersApi.getProfile(newConnection.uid);
         Navigator.of(context).pushReplacementNamed('home');
         Navigator.of(context).pushNamed(
           'chat',

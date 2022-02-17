@@ -9,11 +9,11 @@ import 'package:openup/widgets/profile_form.dart';
 import 'package:openup/widgets/theming.dart';
 
 class PrivateProfileScreen extends ConsumerStatefulWidget {
-  final PrivateProfile initialProfile;
+  final PrivateProfile initialAttributes;
 
   const PrivateProfileScreen({
     Key? key,
-    required this.initialProfile,
+    required this.initialAttributes,
   }) : super(key: key);
 
   @override
@@ -21,7 +21,7 @@ class PrivateProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _PrivateProfileScreenState extends ConsumerState<PrivateProfileScreen> {
-  late PrivateProfile _profile;
+  late PrivateProfile _attributes;
 
   bool _uploading = false;
   int? _expandedSection;
@@ -29,7 +29,7 @@ class _PrivateProfileScreenState extends ConsumerState<PrivateProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _profile = widget.initialProfile;
+    _attributes = widget.initialAttributes;
   }
 
   @override
@@ -88,9 +88,9 @@ class _PrivateProfileScreenState extends ConsumerState<PrivateProfileScreen> {
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 300),
                           child: PrivateProfileForm(
-                            profile: _profile,
-                            onChanged: (profile) {
-                              setState(() => _profile = profile);
+                            attributes: _attributes,
+                            onChanged: (attributes) {
+                              setState(() => _attributes = attributes);
                             },
                             expandedSection: _expandedSection,
                             onExpansion: (index) =>
@@ -119,7 +119,7 @@ class _PrivateProfileScreenState extends ConsumerState<PrivateProfileScreen> {
                     final uid = user?.uid;
                     if (uid != null) {
                       final usersApi = ref.read(usersApiProvider);
-                      await usersApi.updatePrivateProfile(uid, _profile);
+                      await usersApi.updateAttributes(uid, _attributes);
                       if (mounted) {
                         setState(() => _uploading = false);
                         Navigator.of(context).pop();

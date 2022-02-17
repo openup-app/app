@@ -8,14 +8,14 @@ import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 
 class PrivateProfileForm extends StatelessWidget {
-  final PrivateProfile profile;
+  final PrivateProfile attributes;
   final void Function(PrivateProfile profile) onChanged;
   final int? expandedSection;
   final void Function(int index) onExpansion;
 
   const PrivateProfileForm({
     Key? key,
-    required this.profile,
+    required this.attributes,
     required this.onChanged,
     required this.expandedSection,
     required this.onExpansion,
@@ -39,7 +39,7 @@ class PrivateProfileForm extends StatelessWidget {
                 ),
           ),
           PreferencesExpansionSection(
-            label: genderToLabel(profile.gender),
+            label: genderToLabel(attributes.gender),
             expanded: expandedSection == 0,
             onPressed: () => onExpansion(0),
             children: [
@@ -47,9 +47,9 @@ class PrivateProfileForm extends StatelessWidget {
                 PreferencesRadioTile(
                   title: Text(genderToLabel(gender)),
                   value: gender,
-                  groupValue: profile.gender,
+                  groupValue: attributes.gender,
                   onSelected: () {
-                    onChanged(profile.copyWith(gender: gender));
+                    onChanged(attributes.copyWith(gender: gender));
                   },
                 ),
             ],
@@ -63,18 +63,18 @@ class PrivateProfileForm extends StatelessWidget {
                 ),
           ),
           PreferencesExpansionSection(
-            label: genderToEmoji(profile.gender)[profile.skinColor.index],
+            label: genderToEmoji(attributes.gender)[attributes.skinColor.index],
             expanded: expandedSection == 1,
             onPressed: () => onExpansion(1),
             children: [
               for (var skinColor in SkinColor.values)
                 PreferencesRadioTile(
                   title: Text(genderToEmoji(
-                      profile.gender)[SkinColor.values.indexOf(skinColor)]),
+                      attributes.gender)[SkinColor.values.indexOf(skinColor)]),
                   value: skinColor,
-                  groupValue: profile.skinColor,
+                  groupValue: attributes.skinColor,
                   onSelected: () {
-                    onChanged(profile.copyWith(skinColor: skinColor));
+                    onChanged(attributes.copyWith(skinColor: skinColor));
                   },
                 ),
             ],
@@ -88,14 +88,14 @@ class PrivateProfileForm extends StatelessWidget {
                 ),
           ),
           SfSlider(
-            value: profile.weight,
+            value: attributes.weight,
             min: 25,
             max: 400,
             stepSize: 5,
             interval: 5,
             thumbIcon: Center(
               child: Text(
-                profile.weight.toString(),
+                attributes.weight.toString(),
                 textAlign: TextAlign.center,
                 style: Theming.of(context)
                     .text
@@ -104,7 +104,7 @@ class PrivateProfileForm extends StatelessWidget {
               ),
             ),
             onChanged: (v) {
-              onChanged(profile.copyWith(weight: v.toInt()));
+              onChanged(attributes.copyWith(weight: v.toInt()));
             },
           ),
           Text(
@@ -116,12 +116,12 @@ class PrivateProfileForm extends StatelessWidget {
                 ),
           ),
           SfSlider(
-            value: profile.height,
+            value: attributes.height,
             min: 24,
             max: 120,
             thumbIcon: Center(
               child: Text(
-                _inchToFtIn(profile.height),
+                _inchToFtIn(attributes.height),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 style: Theming.of(context)
@@ -131,7 +131,7 @@ class PrivateProfileForm extends StatelessWidget {
               ),
             ),
             onChanged: (v) {
-              onChanged(profile.copyWith(height: v.toInt()));
+              onChanged(attributes.copyWith(height: v.toInt()));
             },
           ),
           Text(
@@ -143,7 +143,7 @@ class PrivateProfileForm extends StatelessWidget {
                 ),
           ),
           PreferencesExpansionSection(
-            label: profile.ethnicity,
+            label: attributes.ethnicity,
             expanded: expandedSection == 3,
             onPressed: () => onExpansion(3),
             children: [
@@ -161,9 +161,9 @@ class PrivateProfileForm extends StatelessWidget {
                 PreferencesRadioTile(
                   title: Text(ethnicity),
                   value: ethnicity,
-                  groupValue: profile.ethnicity,
+                  groupValue: attributes.ethnicity,
                   onSelected: () {
-                    onChanged(profile.copyWith(ethnicity: ethnicity));
+                    onChanged(attributes.copyWith(ethnicity: ethnicity));
                   },
                 ),
             ],

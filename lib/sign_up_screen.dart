@@ -310,7 +310,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
           }
 
           if (uid != null) {
-            await usersApi.createUserWithUid(
+            await usersApi.createUser(
               uid: uid,
               birthday: _birthday,
             );

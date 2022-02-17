@@ -1002,7 +1002,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     builder: (_) {
                       return CurrentRouteSystemUiStyling.dark(
                         child: PrivateProfileScreen(
-                          initialProfile: args,
+                          initialAttributes: args,
                         ),
                       );
                     },
@@ -1118,28 +1118,23 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         return ConnectionsBottomSheet(
           onSelected: (profile) async {
             final usersApi = ref.read(usersApiProvider);
-            final uid = FirebaseAuth.instance.currentUser?.uid;
-            if (uid != null) {
-              final rid = await usersApi.call(
-                uid,
-                profile.uid,
-                video,
-                group: true,
+            final rid = await usersApi.call(
+              profile.uid,
+              video,
+              group: true,
+            );
+            if (mounted) {
+              final route = video ? 'friends-video-call' : 'friends-voice-call';
+              Navigator.of(context).pushNamed(
+                route,
+                arguments: CallPageArguments(
+                  rid: rid,
+                  profiles: [profile.toSimpleProfile()],
+                  rekindles: [],
+                  serious: false,
+                  groupLobby: true,
+                ),
               );
-              if (mounted) {
-                final route =
-                    video ? 'friends-video-call' : 'friends-voice-call';
-                Navigator.of(context).pushNamed(
-                  route,
-                  arguments: CallPageArguments(
-                    rid: rid,
-                    profiles: [profile.toSimpleProfile()],
-                    rekindles: [],
-                    serious: false,
-                    groupLobby: true,
-                  ),
-                );
-              }
             }
           },
         );

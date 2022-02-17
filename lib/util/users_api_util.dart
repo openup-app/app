@@ -17,7 +17,7 @@ Future<List<String>?> uploadPhoto({
       context: context,
       label: 'Uploading photo',
       request: (usersApi, uid) {
-        return usersApi.updateGalleryPhoto(uid, photo, index);
+        return usersApi.updateProfileGalleryPhoto(uid, photo, index);
       },
     );
     return profile?.gallery;
@@ -41,7 +41,7 @@ Future<List<String>?> deletePhoto({
       context: context,
       label: 'Deleting photo',
       request: (usersApi, uid) {
-        return usersApi.deleteGalleryPhoto(uid, index);
+        return usersApi.deleteProfileGalleryPhoto(uid, index);
       },
     );
     return profile?.gallery;
@@ -65,7 +65,7 @@ Future<String?> uploadAudio({
       context: context,
       label: 'Uploading audio',
       request: (usersApi, uid) {
-        return usersApi.updateAudioBio(uid, audio);
+        return usersApi.updateProfileAudio(uid, audio);
       },
     );
     return profile?.audio;
@@ -86,7 +86,7 @@ Future<List<String>?> deleteAudio({required BuildContext context}) async {
       context: context,
       label: 'Deleting audio',
       request: (usersApi, uid) {
-        return usersApi.deleteAudioBio(uid);
+        return usersApi.deleteProfileAudio(uid);
       },
     );
     return profile?.gallery;
@@ -112,7 +112,7 @@ Future<void> updateName({
       request: (usersApi, uid) {
         final profile = usersApi.publicProfile;
         if (profile != null) {
-          return usersApi.updatePublicProfile(
+          return usersApi.updateProfile(
             uid,
             profile.copyWith(name: name),
           );

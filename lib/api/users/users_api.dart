@@ -1,8 +1,6 @@
-import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/account.dart';
 import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
@@ -36,13 +34,11 @@ void initUsersApi({
 class UsersApi implements RawUsersApi {
   final RawUsersApi _rawUsersApi;
   String? _uid;
-  Account? _account;
   bool? _onboarded;
   PublicProfile? _publicProfile;
   PrivateProfile? _privateProfile;
   Preferences? _friendsPreferences;
   Preferences? _datingPreferences;
-  Timer? _countRequestDebounce;
   Map<String, int> _unreadChatMessageCounts = {};
   final _unreadChatMessageCountsController =
       BehaviorSubject<Map<String, int>>();
@@ -67,28 +63,20 @@ class UsersApi implements RawUsersApi {
   set authToken(String value) => _rawUsersApi.authToken = value;
 
   @override
-  Future<void> createUserWithEmail({
-    required String email,
-    required String password,
+  Future<void> createUser({
+    required String uid,
     required DateTime birthday,
   }) async {
-    await _rawUsersApi.createUserWithEmail(
-      email: email,
-      password: password,
+    await _rawUsersApi.createUser(
+      uid: uid,
       birthday: birthday,
     );
     _clearCache();
   }
 
   @override
-  Future<void> createUserWithUid({
-    required String uid,
-    required DateTime birthday,
-  }) async {
-    await _rawUsersApi.createUserWithUid(
-      uid: uid,
-      birthday: birthday,
-    );
+  Future<void> deleteUser(String uid) async {
+    await _rawUsersApi.deleteUser(uid);
     _clearCache();
   }
 
@@ -98,23 +86,6 @@ class UsersApi implements RawUsersApi {
     required DateTime birthday,
   }) =>
       _rawUsersApi.checkBirthday(phone: phone, birthday: birthday);
-
-  @override
-  Future<Account> getAccount(String uid) async {
-    final account = await _rawUsersApi.getAccount(uid);
-    if (uid == _uid) {
-      _account = account;
-    }
-    return account;
-  }
-
-  @override
-  Future<void> updateAccount(String uid, Account account) {
-    if (uid == _uid) {
-      _account = account;
-    }
-    return _rawUsersApi.updateAccount(uid, account);
-  }
 
   @override
   Future<void> updateOnboarded(String uid, bool onboarded) {
@@ -138,12 +109,12 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
-  Future<PublicProfile> getPublicProfile(String uid) async {
+  Future<PublicProfile> getProfile(String uid) async {
     if (uid == _uid && _publicProfile != null) {
       return _publicProfile!;
     }
 
-    final publicProfile = await _rawUsersApi.getPublicProfile(uid);
+    final publicProfile = await _rawUsersApi.getProfile(uid);
     if (uid == _uid) {
       _publicProfile = publicProfile;
       _profileStateController.state = _publicProfile;
@@ -152,40 +123,21 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
-  Future<void> updatePublicProfile(String uid, PublicProfile profile) {
+  Future<void> updateProfile(String uid, PublicProfile profile) {
     if (uid == _uid) {
       _publicProfile = profile;
       _profileStateController.state = _publicProfile;
     }
-    return _rawUsersApi.updatePublicProfile(uid, profile);
+    return _rawUsersApi.updateProfile(uid, profile);
   }
 
   @override
-  Future<PrivateProfile> getPrivateProfile(String uid) async {
-    if (uid == _uid && _privateProfile != null) {
-      return _privateProfile!;
-    }
-
-    final privateProfile = await _rawUsersApi.getPrivateProfile(uid);
-    if (uid == _uid) {
-      _privateProfile = privateProfile;
-    }
-    return privateProfile;
-  }
-
-  @override
-  Future<void> updatePrivateProfile(String uid, PrivateProfile profile) {
-    _privateProfile = profile;
-    return _rawUsersApi.updatePrivateProfile(uid, profile);
-  }
-
-  @override
-  Future<String> updateGalleryPhoto(
+  Future<String> updateProfileGalleryPhoto(
     String uid,
     Uint8List photo,
     int index,
   ) async {
-    final url = await _rawUsersApi.updateGalleryPhoto(uid, photo, index);
+    final url = await _rawUsersApi.updateProfileGalleryPhoto(uid, photo, index);
     final gallery = List<String>.of(_publicProfile?.gallery ?? []);
     if (index < gallery.length) {
       gallery[index] = url;
@@ -199,8 +151,8 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
-  Future<void> deleteGalleryPhoto(String uid, int index) async {
-    await _rawUsersApi.deleteGalleryPhoto(uid, index);
+  Future<void> deleteProfileGalleryPhoto(String uid, int index) async {
+    await _rawUsersApi.deleteProfileGalleryPhoto(uid, index);
     final gallery = List<String>.of(_publicProfile?.gallery ?? []);
     gallery.removeAt(index);
     _publicProfile = _publicProfile?.copyWith(gallery: gallery);
@@ -208,24 +160,37 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
-  Future<String> updateAudioBio(String uid, Uint8List audio) async {
-    final url = await _rawUsersApi.updateAudioBio(uid, audio);
+  Future<String> updateProfileAudio(String uid, Uint8List audio) async {
+    final url = await _rawUsersApi.updateProfileAudio(uid, audio);
     _publicProfile = _publicProfile?.copyWith(audio: url);
     _profileStateController.state = _publicProfile;
     return url;
   }
 
   @override
-  Future<void> deleteAudioBio(String uid) async {
-    await _rawUsersApi.deleteAudioBio(uid);
+  Future<void> deleteProfileAudio(String uid) async {
+    await _rawUsersApi.deleteProfileAudio(uid);
     _publicProfile = _publicProfile?.copyWith(audio: null);
     _profileStateController.state = _publicProfile;
   }
 
   @override
-  Future<void> deleteUser(String uid) async {
-    await _rawUsersApi.deleteUser(uid);
-    _clearCache();
+  Future<PrivateProfile> getAttributes(String uid) async {
+    if (uid == _uid && _privateProfile != null) {
+      return _privateProfile!;
+    }
+
+    final privateProfile = await _rawUsersApi.getAttributes(uid);
+    if (uid == _uid) {
+      _privateProfile = privateProfile;
+    }
+    return privateProfile;
+  }
+
+  @override
+  Future<void> updateAttributes(String uid, PrivateProfile profile) {
+    _privateProfile = profile;
+    return _rawUsersApi.updateAttributes(uid, profile);
   }
 
   @override
@@ -253,33 +218,8 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
-  Future<int> getPossibleFriendCount(
-    String uid,
-    Preferences preferences,
-  ) async {
-    final completer = Completer<int>();
-    _countRequestDebounce?.cancel();
-    _countRequestDebounce = Timer(const Duration(seconds: 2), () async {
-      final count = await _rawUsersApi.getPossibleFriendCount(uid, preferences);
-      completer.complete(count);
-    });
-    return completer.future;
-  }
-
-  @override
-  Future<int> getPossibleDateCount(String uid, Preferences preferences) async {
-    final completer = Completer<int>();
-    _countRequestDebounce?.cancel();
-    _countRequestDebounce = Timer(const Duration(seconds: 2), () async {
-      final count = await _rawUsersApi.getPossibleDateCount(uid, preferences);
-      completer.complete(count);
-    });
-    return completer.future;
-  }
-
-  @override
-  Future<List<Rekindle>> getRekindleList(String uid) =>
-      _rawUsersApi.getRekindleList(uid);
+  Future<List<Rekindle>> getRekindles(String uid) =>
+      _rawUsersApi.getRekindles(uid);
 
   @override
   Future<void> addConnectionRequest(String uid, String otherUid) =>
@@ -295,16 +235,15 @@ class UsersApi implements RawUsersApi {
 
   @override
   Future<String> call(
-    String uid,
     String calleeUid,
     bool video, {
     bool group = false,
   }) =>
-      _rawUsersApi.call(uid, calleeUid, video, group: group);
+      _rawUsersApi.call(calleeUid, video, group: group);
 
   @override
-  Future<Map<String, int>> getAllChatroomUnreadCounts(String uid) async {
-    final counts = await _rawUsersApi.getAllChatroomUnreadCounts(uid);
+  Future<Map<String, int>> getUnreadMessageCount(String uid) async {
+    final counts = await _rawUsersApi.getUnreadMessageCount(uid);
     _unreadChatMessageCounts = counts;
     _unreadChatMessageCountsController.add(_unreadChatMessageCounts);
     return counts;
@@ -362,7 +301,6 @@ class UsersApi implements RawUsersApi {
       );
 
   void _clearCache() {
-    _account = null;
     _publicProfile = null;
     _privateProfile = null;
     _friendsPreferences = null;

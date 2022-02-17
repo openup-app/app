@@ -111,11 +111,11 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
   Future<void> _cacheData(UsersApi api, String uid) async {
     final result = await Future.wait([
       api.getOnboarded(uid),
-      api.getPublicProfile(uid),
-      api.getPrivateProfile(uid),
+      api.getProfile(uid),
+      api.getAttributes(uid),
       api.getFriendsPreferences(uid),
       api.getDatingPreferences(uid),
-      api.getAllChatroomUnreadCounts(uid),
+      api.getUnreadMessageCount(uid),
     ]);
 
     final onboarded = result[0] as bool;
