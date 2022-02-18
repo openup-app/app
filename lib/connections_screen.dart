@@ -6,7 +6,7 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
-import 'package:openup/public_profile_screen.dart';
+import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_photo.dart';
@@ -143,9 +143,9 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                           expanded: _openIndex == index,
                           onShowProfile: () {
                             Navigator.of(context).pushNamed(
-                              'public-profile',
-                              arguments: PublicProfileArguments(
-                                publicProfile: profile,
+                              'profile',
+                              arguments: ProfileArguments(
+                                profile: profile,
                                 editable: false,
                               ),
                             );
@@ -305,7 +305,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
     });
   }
 
-  void _onCall(PublicProfile profile, {required bool video}) async {
+  void _onCall(Profile profile, {required bool video}) async {
     final api = ref.read(usersApiProvider);
     final rid = await api.call(profile.uid, video);
     if (mounted) {
@@ -325,7 +325,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
 
 class ConnectionTile extends StatefulWidget {
   final VoidCallback? onPressed;
-  final PublicProfile profile;
+  final Profile profile;
   final int unreadCount;
   final bool expanded;
   final VoidCallback onShowProfile;
@@ -545,7 +545,7 @@ class _ConnectionTileState extends State<ConnectionTile>
 class RemoveConnectionAlertDialog extends StatefulWidget {
   final UsersApi usersApi;
   final String uid;
-  final PublicProfile profile;
+  final Profile profile;
   const RemoveConnectionAlertDialog({
     Key? key,
     required this.usersApi,

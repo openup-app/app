@@ -21,15 +21,15 @@ import 'package:openup/contact_us_screen.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/preferences_screen.dart';
-import 'package:openup/private_profile_screen.dart';
-import 'package:openup/public_profile_edit_screen.dart';
-import 'package:openup/public_profile_screen.dart';
+import 'package:openup/attributes_screen.dart';
+import 'package:openup/profile_edit_screen.dart';
+import 'package:openup/profile_screen.dart';
 import 'package:openup/rekindle_screen.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_bio_screen.dart';
 import 'package:openup/sign_up_info_screen.dart';
 import 'package:openup/sign_up_photos_screen.dart';
-import 'package:openup/sign_up_private_profile_screen.dart';
+import 'package:openup/sign_up_attributes_screen.dart';
 import 'package:openup/sign_up_welcome_info.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/solo_double_screen.dart';
@@ -188,12 +188,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       );
                     },
                   );
-                case 'sign-up-private-profile':
+                case 'sign-up-attributes':
                   return _buildPageRoute(
                     settings: settings,
                     builder: (_) {
                       return const CurrentRouteSystemUiStyling.dark(
-                        child: SignUpPrivateProfileScreen(),
+                        child: SignUpAttributesScreen(),
                       );
                     },
                   );
@@ -473,7 +473,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             purpose: Purpose.friends,
                             onJoinCall: ({
                               required String rid,
-                              required List<PublicProfile> profiles,
+                              required List<Profile> profiles,
                               required List<Rekindle> rekindles,
                             }) {
                               final route = args.video
@@ -825,7 +825,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             purpose: Purpose.dating,
                             onJoinCall: ({
                               required String rid,
-                              required List<PublicProfile> profiles,
+                              required List<Profile> profiles,
                               required List<Rekindle> rekindles,
                             }) {
                               final route = args.video
@@ -973,35 +973,35 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       );
                     },
                   );
-                case 'public-profile':
-                  final args = settings.arguments as PublicProfileArguments;
+                case 'profile':
+                  final args = settings.arguments as ProfileArguments;
                   return _buildPageRoute(
                     settings: settings,
                     builder: (_) {
                       return CurrentRouteSystemUiStyling.light(
-                        child: PublicProfileScreen(
-                          publicProfile: args.publicProfile,
+                        child: ProfileScreen(
+                          profile: args.profile,
                           editable: args.editable,
                         ),
                       );
                     },
                   );
-                case 'public-profile-edit':
+                case 'profile-edit':
                   return _buildPageRoute(
                     settings: settings,
                     builder: (_) {
                       return const CurrentRouteSystemUiStyling.light(
-                        child: PublicProfileEditScreen(),
+                        child: ProfileEditScreen(),
                       );
                     },
                   );
-                case 'private-profile':
-                  final args = settings.arguments as PrivateProfile;
+                case 'attributes':
+                  final args = settings.arguments as Attributes;
                   return _buildPageRoute(
                     settings: settings,
                     builder: (_) {
                       return CurrentRouteSystemUiStyling.dark(
-                        child: PrivateProfileScreen(
+                        child: AttributesScreen(
                           initialAttributes: args,
                         ),
                       );

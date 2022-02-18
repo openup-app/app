@@ -5,18 +5,18 @@ part 'profile.freezed.dart';
 part 'profile.g.dart';
 
 @freezed
-class PublicProfile with _$PublicProfile {
-  const factory PublicProfile({
+class Profile with _$Profile {
+  const factory Profile({
     required String uid,
     required String name,
     required DateTime birthday,
     String? audio,
     String? photo,
     required List<String> gallery,
-  }) = _PublicProfile;
+  }) = _Profile;
 
   // Private constructor required for adding methods
-  const PublicProfile._();
+  const Profile._();
 
   SimpleProfile toSimpleProfile() {
     return SimpleProfile(
@@ -26,8 +26,8 @@ class PublicProfile with _$PublicProfile {
     );
   }
 
-  factory PublicProfile.fromJson(Map<String, dynamic> json) =>
-      _$PublicProfileFromJson(json);
+  factory Profile.fromJson(Map<String, dynamic> json) =>
+      _$ProfileFromJson(json);
 }
 
 @freezed
@@ -43,15 +43,15 @@ class SimpleProfile with _$SimpleProfile {
 }
 
 @freezed
-class PrivateProfile with _$PrivateProfile {
-  const factory PrivateProfile({
+class Attributes with _$Attributes {
+  const factory Attributes({
     required Gender gender,
     required SkinColor skinColor,
     required int weight,
     required int height,
     required String ethnicity,
-  }) = _PrivateProfile;
+  }) = _Attributes;
 
-  factory PrivateProfile.fromJson(Map<String, dynamic> json) =>
-      _$PrivateProfileFromJson(json);
+  factory Attributes.fromJson(Map<String, dynamic> json) =>
+      _$AttributesFromJson(json);
 }

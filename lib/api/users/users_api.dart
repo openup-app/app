@@ -9,16 +9,16 @@ import 'package:openup/api/users/rekindle.dart';
 import 'package:rxdart/subjects.dart';
 
 late Provider<UsersApi> usersApiProvider;
-late StateProvider<PublicProfile?> profileProvider;
+late StateProvider<Profile?> profileProvider;
 
-late StateController<PublicProfile?> _profileStateController;
+late StateController<Profile?> _profileStateController;
 
 void initUsersApi({
   required String host,
   required int port,
   String? authToken,
 }) {
-  profileProvider = StateProvider<PublicProfile?>((ref) {
+  profileProvider = StateProvider<Profile?>((ref) {
     return null;
   });
   usersApiProvider = Provider<UsersApi>((ref) {
@@ -35,8 +35,8 @@ class UsersApi implements RawUsersApi {
   final RawUsersApi _rawUsersApi;
   String? _uid;
   bool? _onboarded;
-  PublicProfile? _publicProfile;
-  PrivateProfile? _privateProfile;
+  Profile? _profile;
+  Attributes? _attributes;
   Preferences? _friendsPreferences;
   Preferences? _datingPreferences;
   Map<String, int> _unreadChatMessageCounts = {};
@@ -109,24 +109,24 @@ class UsersApi implements RawUsersApi {
   }
 
   @override
-  Future<PublicProfile> getProfile(String uid) async {
-    if (uid == _uid && _publicProfile != null) {
-      return _publicProfile!;
+  Future<Profile> getProfile(String uid) async {
+    if (uid == _uid && _profile != null) {
+      return _profile!;
     }
 
-    final publicProfile = await _rawUsersApi.getProfile(uid);
+    final profile = await _rawUsersApi.getProfile(uid);
     if (uid == _uid) {
-      _publicProfile = publicProfile;
-      _profileStateController.state = _publicProfile;
+      _profile = profile;
+      _profileStateController.state = _profile;
     }
-    return publicProfile;
+    return profile;
   }
 
   @override
-  Future<void> updateProfile(String uid, PublicProfile profile) {
+  Future<void> updateProfile(String uid, Profile profile) {
     if (uid == _uid) {
-      _publicProfile = profile;
-      _profileStateController.state = _publicProfile;
+      _profile = profile;
+      _profileStateController.state = _profile;
     }
     return _rawUsersApi.updateProfile(uid, profile);
   }
@@ -138,58 +138,58 @@ class UsersApi implements RawUsersApi {
     int index,
   ) async {
     final url = await _rawUsersApi.updateProfileGalleryPhoto(uid, photo, index);
-    final gallery = List<String>.of(_publicProfile?.gallery ?? []);
+    final gallery = List<String>.of(_profile?.gallery ?? []);
     if (index < gallery.length) {
       gallery[index] = url;
     } else {
       gallery.add(url);
     }
 
-    _publicProfile = _publicProfile?.copyWith(gallery: gallery);
-    _profileStateController.state = _publicProfile;
+    _profile = _profile?.copyWith(gallery: gallery);
+    _profileStateController.state = _profile;
     return url;
   }
 
   @override
   Future<void> deleteProfileGalleryPhoto(String uid, int index) async {
     await _rawUsersApi.deleteProfileGalleryPhoto(uid, index);
-    final gallery = List<String>.of(_publicProfile?.gallery ?? []);
+    final gallery = List<String>.of(_profile?.gallery ?? []);
     gallery.removeAt(index);
-    _publicProfile = _publicProfile?.copyWith(gallery: gallery);
-    _profileStateController.state = _publicProfile;
+    _profile = _profile?.copyWith(gallery: gallery);
+    _profileStateController.state = _profile;
   }
 
   @override
   Future<String> updateProfileAudio(String uid, Uint8List audio) async {
     final url = await _rawUsersApi.updateProfileAudio(uid, audio);
-    _publicProfile = _publicProfile?.copyWith(audio: url);
-    _profileStateController.state = _publicProfile;
+    _profile = _profile?.copyWith(audio: url);
+    _profileStateController.state = _profile;
     return url;
   }
 
   @override
   Future<void> deleteProfileAudio(String uid) async {
     await _rawUsersApi.deleteProfileAudio(uid);
-    _publicProfile = _publicProfile?.copyWith(audio: null);
-    _profileStateController.state = _publicProfile;
+    _profile = _profile?.copyWith(audio: null);
+    _profileStateController.state = _profile;
   }
 
   @override
-  Future<PrivateProfile> getAttributes(String uid) async {
-    if (uid == _uid && _privateProfile != null) {
-      return _privateProfile!;
+  Future<Attributes> getAttributes(String uid) async {
+    if (uid == _uid && _attributes != null) {
+      return _attributes!;
     }
 
-    final privateProfile = await _rawUsersApi.getAttributes(uid);
+    final attributes = await _rawUsersApi.getAttributes(uid);
     if (uid == _uid) {
-      _privateProfile = privateProfile;
+      _attributes = attributes;
     }
-    return privateProfile;
+    return attributes;
   }
 
   @override
-  Future<void> updateAttributes(String uid, PrivateProfile profile) {
-    _privateProfile = profile;
+  Future<void> updateAttributes(String uid, Attributes profile) {
+    _attributes = profile;
     return _rawUsersApi.updateAttributes(uid, profile);
   }
 
@@ -263,7 +263,7 @@ class UsersApi implements RawUsersApi {
 
   bool? get onboarded => _onboarded;
 
-  PublicProfile? get publicProfile => _publicProfile;
+  Profile? get profile => _profile;
 
   Map<String, int> get unreadChatMessageCounts => _unreadChatMessageCounts;
 
@@ -301,8 +301,8 @@ class UsersApi implements RawUsersApi {
       );
 
   void _clearCache() {
-    _publicProfile = null;
-    _privateProfile = null;
+    _profile = null;
+    _attributes = null;
     _friendsPreferences = null;
     _datingPreferences = null;
     _profileStateController.state = null;

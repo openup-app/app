@@ -85,7 +85,7 @@ class LobbyEvent with _$LobbyEvent {
 
   const factory LobbyEvent.joinCall({
     required String rid,
-    required List<PublicProfile> profiles,
+    required List<Profile> profiles,
     required List<Rekindle> rekindles,
   }) = _JoinCall;
 

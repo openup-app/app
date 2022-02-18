@@ -11,7 +11,7 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.read(usersApiProvider).publicProfile;
+    final profile = ref.read(usersApiProvider).profile;
     final name = profile?.name;
     return Container(
       decoration: BoxDecoration(

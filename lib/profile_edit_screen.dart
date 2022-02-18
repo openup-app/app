@@ -13,15 +13,14 @@ import 'package:openup/widgets/profile_bio.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
-class PublicProfileEditScreen extends StatefulWidget {
-  const PublicProfileEditScreen({Key? key}) : super(key: key);
+class ProfileEditScreen extends StatefulWidget {
+  const ProfileEditScreen({Key? key}) : super(key: key);
 
   @override
-  State<PublicProfileEditScreen> createState() =>
-      _PublicProfileEditScreenState();
+  State<ProfileEditScreen> createState() => _ProfileEditScreenState();
 }
 
-class _PublicProfileEditScreenState extends State<PublicProfileEditScreen> {
+class _ProfileEditScreenState extends State<ProfileEditScreen> {
   final _audioBioKey = GlobalKey<ProfileBioState>();
   final _pageController = PageController(initialPage: 10000);
 

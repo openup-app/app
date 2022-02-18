@@ -9,17 +9,16 @@ import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_form.dart';
 import 'package:openup/widgets/theming.dart';
 
-class SignUpPrivateProfileScreen extends ConsumerStatefulWidget {
-  const SignUpPrivateProfileScreen({Key? key}) : super(key: key);
+class SignUpAttributesScreen extends ConsumerStatefulWidget {
+  const SignUpAttributesScreen({Key? key}) : super(key: key);
 
   @override
-  _SignUpPrivateProfileScreenState createState() =>
-      _SignUpPrivateProfileScreenState();
+  _SignUpAttributesScreenState createState() => _SignUpAttributesScreenState();
 }
 
-class _SignUpPrivateProfileScreenState
-    extends ConsumerState<SignUpPrivateProfileScreen> {
-  PrivateProfile _attributes = const PrivateProfile(
+class _SignUpAttributesScreenState
+    extends ConsumerState<SignUpAttributesScreen> {
+  Attributes _attributes = const Attributes(
     gender: Gender.male,
     skinColor: SkinColor.light,
     weight: 200,
@@ -76,7 +75,7 @@ class _SignUpPrivateProfileScreenState
                   Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 300),
-                      child: PrivateProfileForm(
+                      child: AttributesForm(
                         attributes: _attributes,
                         onChanged: (attributes) {
                           setState(() => _attributes = attributes);

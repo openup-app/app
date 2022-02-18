@@ -11,7 +11,7 @@ import 'package:openup/widgets/theming.dart';
 /// Displays a list of [Connections] to invite to group calling.
 class ConnectionsBottomSheet extends ConsumerStatefulWidget {
   final ScrollController? controller;
-  final void Function(PublicProfile profile) onSelected;
+  final void Function(Profile profile) onSelected;
   const ConnectionsBottomSheet({
     Key? key,
     this.controller,

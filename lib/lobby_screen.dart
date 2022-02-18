@@ -9,6 +9,8 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/widgets/notification_banner.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 import 'widgets/home_button.dart';
 
@@ -23,7 +25,7 @@ class LobbyScreen extends StatefulWidget {
   final Purpose purpose;
   final void Function({
     required String rid,
-    required List<PublicProfile> profiles,
+    required List<Profile> profiles,
     required List<Rekindle> rekindles,
   }) onJoinCall;
 
@@ -98,12 +100,15 @@ class _LobbyScreenState extends State<LobbyScreen>
       penalized: (minutes) {
         setState(() => _shouldHandleDisconnection = false);
         final plural = minutes != 1;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            duration: const Duration(seconds: 5),
-            backgroundColor: Colors.red,
-            content: Text(
-                'You have been penalized from serious mode for $minutes more minute${plural ? 's' : ''}'),
+        showTopSnackBar(
+          context,
+          IgnorePointer(
+            child: CustomSnackBar.error(
+              message:
+                  'You have been penalized from serious mode for $minutes more minute${plural ? 's' : ''}',
+              boxShadow: const [],
+              textStyle: Theming.of(context).text.body.copyWith(fontSize: 18),
+            ),
           ),
         );
         Navigator.of(context).pop();

@@ -7,13 +7,13 @@ import 'package:openup/widgets/theming.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 
-class PrivateProfileForm extends StatelessWidget {
-  final PrivateProfile attributes;
-  final void Function(PrivateProfile profile) onChanged;
+class AttributesForm extends StatelessWidget {
+  final Attributes attributes;
+  final void Function(Attributes profile) onChanged;
   final int? expandedSection;
   final void Function(int index) onExpansion;
 
-  const PrivateProfileForm({
+  const AttributesForm({
     Key? key,
     required this.attributes,
     required this.onChanged,

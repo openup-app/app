@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/users/users_api.dart';
-import 'package:openup/public_profile_screen.dart';
+import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
@@ -33,9 +33,9 @@ class ProfileDrawer extends ConsumerWidget {
                 onPressed: () {
                   final usersApi = ref.watch(usersApiProvider);
                   Navigator.of(context).pushNamed(
-                    'public-profile',
-                    arguments: PublicProfileArguments(
-                      publicProfile: usersApi.publicProfile!,
+                    'profile',
+                    arguments: ProfileArguments(
+                      profile: usersApi.profile!,
                       editable: true,
                     ),
                   );
@@ -87,7 +87,7 @@ class ProfileDrawer extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: Text(
-                ref.read(usersApiProvider).publicProfile?.name ?? '',
+                ref.read(usersApiProvider).profile?.name ?? '',
                 style: Theming.of(context).text.bodySecondary.copyWith(
                   fontSize: 24,
                   shadows: [
@@ -134,7 +134,7 @@ class ProfileDrawer extends ConsumerWidget {
                     ),
                   ),
                   title: 'my profile',
-                  onPressed: () => _showPrivateProfileDialog(context),
+                  onPressed: () => _navigateToAttributesPage(context),
                 ),
                 _MenuButton(
                   icon: SvgPicture.asset(
@@ -171,13 +171,13 @@ class ProfileDrawer extends ConsumerWidget {
     );
   }
 
-  void _showPrivateProfileDialog(BuildContext context) async {
+  void _navigateToAttributesPage(BuildContext context) async {
     final container = ProviderScope.containerOf(context);
     final usersApi = container.read(usersApiProvider);
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       final attributes = await usersApi.getAttributes(uid);
-      Navigator.of(context).pushNamed('private-profile', arguments: attributes);
+      Navigator.of(context).pushNamed('attributes', arguments: attributes);
     }
   }
 }

@@ -12,22 +12,21 @@ import 'package:openup/widgets/profile_bio.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
-class PublicProfileScreen extends ConsumerStatefulWidget {
-  final PublicProfile publicProfile;
+class ProfileScreen extends ConsumerStatefulWidget {
+  final Profile profile;
   final bool editable;
 
-  const PublicProfileScreen({
+  const ProfileScreen({
     Key? key,
-    required this.publicProfile,
+    required this.profile,
     required this.editable,
   }) : super(key: key);
 
   @override
-  ConsumerState<PublicProfileScreen> createState() =>
-      _PublicProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _audioBioKey = GlobalKey<ProfileBioState>();
   PageController? _pageController;
   Timer? _slideshowTimer;
@@ -46,7 +45,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   }
 
   void _resetPage() {
-    final gallery = widget.publicProfile.gallery;
+    final gallery = widget.profile.gallery;
     _pageController?.dispose();
     setState(() {
       _pageController = PageController(initialPage: gallery.length * 100000);
@@ -56,7 +55,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final gallery = widget.publicProfile.gallery;
+    final gallery = widget.profile.gallery;
     return Container(
       color: Colors.black,
       child: Stack(
@@ -74,7 +73,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
               child: PageView.builder(
                 controller: _pageController,
                 itemBuilder: (context, index) {
-                  final gallery = widget.publicProfile.gallery;
+                  final gallery = widget.profile.gallery;
                   if (gallery.isEmpty) {
                     return const SizedBox.shrink();
                   }
@@ -98,7 +97,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                 onPressed: () async {
                   final state = _audioBioKey.currentState;
                   state?.stopAll();
-                  await Navigator.of(context).pushNamed('public-profile-edit');
+                  await Navigator.of(context).pushNamed('profile-edit');
                   _resetPage();
                 },
                 child: Container(
@@ -158,9 +157,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   );
                 } else {
                   return ProfileBio(
-                    name: widget.publicProfile.name,
-                    birthday: widget.publicProfile.birthday,
-                    url: widget.publicProfile.audio,
+                    name: widget.profile.name,
+                    birthday: widget.profile.birthday,
+                    url: widget.profile.audio,
                     editable: false,
                     onRecorded: (_) {},
                     onUpdateName: (_) {},
@@ -206,12 +205,12 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   }
 }
 
-class PublicProfileArguments {
-  final PublicProfile publicProfile;
+class ProfileArguments {
+  final Profile profile;
   final bool editable;
 
-  PublicProfileArguments({
-    required this.publicProfile,
+  ProfileArguments({
+    required this.profile,
     required this.editable,
   });
 }

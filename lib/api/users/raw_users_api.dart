@@ -108,7 +108,7 @@ class RawUsersApi {
     final response = await http.put(
       Uri.parse('$_urlBase/users/$uid/onboarded'),
       headers: _headers,
-      body: jsonEncode({onboarded: onboarded}),
+      body: jsonEncode({'onboarded': onboarded}),
     );
 
     if (response.statusCode != 200) {
@@ -120,7 +120,7 @@ class RawUsersApi {
     }
   }
 
-  Future<PublicProfile> getProfile(String uid) async {
+  Future<Profile> getProfile(String uid) async {
     final response = await http.get(
       Uri.parse('$_urlBase/users/$uid/profile'),
       headers: _headers,
@@ -134,10 +134,10 @@ class RawUsersApi {
       return Future.error('Failure');
     }
 
-    return PublicProfile.fromJson(jsonDecode(response.body));
+    return Profile.fromJson(jsonDecode(response.body));
   }
 
-  Future<void> updateProfile(String uid, PublicProfile profile) async {
+  Future<void> updateProfile(String uid, Profile profile) async {
     final response = await http.put(
       Uri.parse('$_urlBase/users/$uid/profile'),
       headers: _headers,
@@ -254,7 +254,7 @@ class RawUsersApi {
     return Preferences.fromJson(jsonDecode(response.body));
   }
 
-  Future<PrivateProfile> getAttributes(String uid) async {
+  Future<Attributes> getAttributes(String uid) async {
     final response = await http.get(
       Uri.parse('$_urlBase/users/$uid/attributes'),
       headers: _headers,
@@ -268,10 +268,10 @@ class RawUsersApi {
       return Future.error('Failure');
     }
 
-    return PrivateProfile.fromJson(jsonDecode(response.body));
+    return Attributes.fromJson(jsonDecode(response.body));
   }
 
-  Future<void> updateAttributes(String uid, PrivateProfile attributes) async {
+  Future<void> updateAttributes(String uid, Attributes attributes) async {
     final response = await http.put(
       Uri.parse('$_urlBase/users/$uid/attributes'),
       headers: _headers,

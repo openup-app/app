@@ -39,7 +39,7 @@ class SignUpInfoScreen extends StatelessWidget {
             const SizedBox(height: 24),
             SignificantButton.blue(
               onPressed: () =>
-                  Navigator.of(context).pushNamed('sign-up-private-profile'),
+                  Navigator.of(context).pushNamed('sign-up-attributes'),
               child: const Text('Continue'),
             ),
           ],

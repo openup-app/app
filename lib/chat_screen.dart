@@ -8,7 +8,7 @@ import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/call_screen.dart';
-import 'package:openup/public_profile_screen.dart';
+import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_input_box.dart';
@@ -52,7 +52,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   bool _loading = true;
 
-  PublicProfile? _profile;
+  Profile? _profile;
   String? _myAvatar;
 
   @override
@@ -376,9 +376,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   final profile = _profile;
                   if (profile != null) {
                     Navigator.of(context).pushNamed(
-                      'public-profile',
-                      arguments: PublicProfileArguments(
-                        publicProfile: profile,
+                      'profile',
+                      arguments: ProfileArguments(
+                        profile: profile,
                         editable: false,
                       ),
                     );
@@ -533,7 +533,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _call(
-    PublicProfile profile, {
+    Profile profile, {
     required bool video,
   }) async {
     final profile = _profile;

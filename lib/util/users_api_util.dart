@@ -110,7 +110,7 @@ Future<void> updateName({
       context: context,
       label: 'Updating profile',
       request: (usersApi, uid) {
-        final profile = usersApi.publicProfile;
+        final profile = usersApi.profile;
         if (profile != null) {
           return usersApi.updateProfile(
             uid,
@@ -131,7 +131,7 @@ Future<void> updateName({
   }
 }
 
-Future<PublicProfile?> _updateData({
+Future<Profile?> _updateData({
   required BuildContext context,
   required String label,
   required Future<void> Function(UsersApi usersApi, String uid) request,
@@ -162,5 +162,5 @@ Future<PublicProfile?> _updateData({
   }
   popDialog();
 
-  return usersApi.publicProfile;
+  return usersApi.profile;
 }

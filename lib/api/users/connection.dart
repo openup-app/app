@@ -7,7 +7,7 @@ part 'connection.g.dart';
 @freezed
 class Connection with _$Connection {
   const factory Connection({
-    required PublicProfile profile,
+    required Profile profile,
     required String chatroomId,
     required int chatroomUnread,
   }) = _Connection;
