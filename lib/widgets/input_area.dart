@@ -3,11 +3,13 @@ import 'package:openup/widgets/theming.dart';
 
 class InputArea extends StatelessWidget {
   final String? errorText;
+  final Color color;
   final Widget child;
 
   const InputArea({
     Key? key,
     this.errorText,
+    this.color = Colors.white,
     required this.child,
   }) : super(key: key);
 
@@ -19,14 +21,7 @@ class InputArea extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 32),
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.all(Radius.circular(32)),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Theming.of(context).shadow,
-            offset: const Offset(0.0, 4.0),
-            blurRadius: 1.0,
-          ),
-        ],
+        color: color,
       ),
       child: Stack(
         alignment: Alignment.center,

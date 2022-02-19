@@ -274,7 +274,7 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
         : ('Incoming ${video ? 'video call' : 'call'} from $callerName');
     notificationBody = callerName;
     channelName = 'Calls';
-    channelDescription = 'Calls from your connections';
+    channelDescription = 'Calls from your friends';
     notificationPayload = _CallPayload(
       callerUid: callerUid,
       name: callerName,
@@ -293,7 +293,7 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
     final chatroomUnread = int.parse(message.data['chatroomUnread']);
     final chatMessage = ChatMessage.fromJson(jsonDecode(messageJson));
     channelName = 'Chat messages';
-    channelDescription = 'Messages from your connections';
+    channelDescription = 'Messages from your friends';
     notificationPayload = _ChatPayload(
       uid: chatMessage.uid,
       chatroomId: chatroomId!,
@@ -315,8 +315,8 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
         break;
     }
   } else if (type == 'new_connection') {
-    channelName = 'New connections';
-    channelDescription = 'When you make a new connection';
+    channelName = 'New friends';
+    channelDescription = 'When you make a new friend';
     final name = message.data['name'];
     notificationPayload = _NewConnectionPayload(
       uid: message.data['uid'],
@@ -324,7 +324,7 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
       name: name,
       photo: message.data['photo'],
     );
-    notificationTitle = '$name accepted your connection!';
+    notificationTitle = '$name accepted your friend request!';
     notificationBody = 'Tap to chat';
   } else {
     throw 'Unknown notification type $type';
@@ -401,7 +401,7 @@ class _NotificationPayload with _$_NotificationPayload {
   const factory _NotificationPayload.call({
     required String callerUid,
     required String name,
-    required String? photo,
+    required String photo,
     required String rid,
     required Purpose purpose,
     required bool video,
@@ -418,7 +418,7 @@ class _NotificationPayload with _$_NotificationPayload {
     required String uid,
     required String chatroomId,
     required String name,
-    required String? photo,
+    required String photo,
   }) = _NewConnectionPayload;
 
   factory _NotificationPayload.fromJson(Map<String, dynamic> json) =>

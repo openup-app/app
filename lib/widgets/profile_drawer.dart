@@ -59,8 +59,11 @@ class ProfileDrawer extends ConsumerWidget {
                       ),
                       child: Consumer(
                         builder: (context, ref, child) {
+                          final gallery = ref.watch(profileProvider)?.gallery;
                           final photo = ref.watch(profileProvider)?.photo;
-                          if (photo == null) {
+                          if (photo == null ||
+                              gallery == null ||
+                              gallery.isEmpty) {
                             return const DecoratedBox(
                               decoration: BoxDecoration(
                                 borderRadius:
@@ -115,7 +118,7 @@ class ProfileDrawer extends ConsumerWidget {
                         height: 32,
                         fit: BoxFit.scaleDown,
                       ),
-                      title: 'connections',
+                      title: 'friends',
                       badgeNumber: sum,
                       onPressed: () =>
                           Navigator.of(context).pushNamed('connections'),
@@ -133,7 +136,7 @@ class ProfileDrawer extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  title: 'my profile',
+                  title: 'profile preferences',
                   onPressed: () => _navigateToAttributesPage(context),
                 ),
                 _MenuButton(

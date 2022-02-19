@@ -6,27 +6,29 @@ class MaleFemaleConnectionImageApart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Hero(
-      tag: 'male_female_connection',
-      child: SizedBox(
-        height: 180,
-        child: Stack(
-          clipBehavior: Clip.hardEdge,
-          fit: StackFit.loose,
-          children: [
-            Positioned(
-              height: 210,
-              left: -115,
-              bottom: -25,
-              child: Image.asset('assets/images/friends.gif'),
-            ),
-            Positioned(
-              height: 210,
-              right: -132,
-              bottom: -25,
-              child: Image.asset('assets/images/friends.gif'),
-            ),
-          ],
+    return IgnorePointer(
+      child: Hero(
+        tag: 'male_female_connection',
+        child: SizedBox(
+          height: 180,
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            fit: StackFit.loose,
+            children: [
+              Positioned(
+                height: 210,
+                left: -115,
+                bottom: -25,
+                child: Image.asset('assets/images/friends.gif'),
+              ),
+              Positioned(
+                height: 210,
+                right: -132,
+                bottom: -25,
+                child: Image.asset('assets/images/friends.gif'),
+              ),
+            ],
+          ),
         ),
       ),
     );

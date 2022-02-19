@@ -37,11 +37,13 @@ class ChatScreen extends ConsumerStatefulWidget {
   _ChatScreenState createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen>
+    with SingleTickerProviderStateMixin {
   final _kDateFormat = DateFormat('EEEE h:mm');
 
   ChatApi? _chatApi;
-  _InputType _inputType = _InputType.none;
+  _InputType _inputType = _InputType.audio;
+  bool _showInput = false;
 
   final _messages = <String, ChatMessage>{};
 
@@ -55,10 +57,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Profile? _profile;
   String? _myAvatar;
 
+  late final AnimationController _animationController;
+
   @override
   void initState() {
     super.initState();
-
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
     _init();
   }
 
@@ -107,6 +114,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void dispose() {
     _chatApi?.dispose();
     _scrollController.removeListener(_scrollListener);
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -114,10 +122,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () {
-        if (_inputType == _InputType.none) {
+        if (!_showInput) {
           return Future.value(true);
         }
-        setState(() => _inputType = _InputType.none);
+        setState(() => _showInput = false);
+        _animationController.reverse();
         return Future.value(false);
       },
       child: DecoratedBox(
@@ -140,96 +149,110 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Scrollbar(
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          reverse: true,
-                          padding: EdgeInsets.only(
-                            top: MediaQuery.of(context).padding.top + 64,
-                            bottom: 80,
-                          ),
-                          itemCount: _messages.length + (_loading ? 1 : 0),
-                          itemBuilder: (context, forwardIndex) {
-                            var index =
-                                _messages.values.length - forwardIndex - 1;
-                            if (_loading && forwardIndex == _messages.length) {
-                              return const Center(
-                                child: CircularProgressIndicator(),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() => _showInput = !_showInput);
+                          if (_showInput) {
+                            _animationController.forward();
+                          } else {
+                            _animationController.reverse();
+                          }
+                        },
+                        child: Scrollbar(
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            reverse: true,
+                            padding: EdgeInsets.only(
+                              top: MediaQuery.of(context).padding.top + 64,
+                              bottom: 80,
+                            ),
+                            itemCount: _messages.length + (_loading ? 1 : 0),
+                            itemBuilder: (context, forwardIndex) {
+                              var index =
+                                  _messages.values.length - forwardIndex - 1;
+                              if (_loading &&
+                                  forwardIndex == _messages.length) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+                              final message = _messages.values.toList()[index];
+                              final fromMe = message.uid == _uid;
+
+                              const ColorFilter defaultColorMatrix =
+                                  ColorFilter.matrix(
+                                <double>[
+                                  1, 0, 0, 0, 0, // Comments to stop dart format
+                                  0, 1, 0, 0, 0, //
+                                  0, 0, 1, 0, 0, //
+                                  0, 0, 0, 1, 0, //
+                                ],
                               );
-                            }
-                            final message = _messages.values.toList()[index];
-                            final fromMe = message.uid == _uid;
 
-                            const ColorFilter defaultColorMatrix =
-                                ColorFilter.matrix(
-                              <double>[
-                                1, 0, 0, 0, 0, // Comments to stop dart format
-                                0, 1, 0, 0, 0, //
-                                0, 0, 1, 0, 0, //
-                                0, 0, 0, 1, 0, //
-                              ],
-                            );
+                              // Based on Lomski's answer at https://stackoverflow.com/a/62078847/1702627
+                              const ColorFilter greyscaleColorMatrix =
+                                  ColorFilter.matrix(
+                                <double>[
+                                  0.2126, 0.7152, 0.0722, 0,
+                                  0, // Comments to stop dart format
+                                  0.2126, 0.7152, 0.0722, 0, 0, //
+                                  0.2126, 0.7152, 0.0722, 0, 0, //
+                                  0, 0, 0, 1, 0, //
+                                ],
+                              );
 
-                            // Based on Lomski's answer at https://stackoverflow.com/a/62078847/1702627
-                            const ColorFilter greyscaleColorMatrix =
-                                ColorFilter.matrix(
-                              <double>[
-                                0.2126, 0.7152, 0.0722, 0,
-                                0, // Comments to stop dart format
-                                0.2126, 0.7152, 0.0722, 0, 0, //
-                                0.2126, 0.7152, 0.0722, 0, 0, //
-                                0, 0, 0, 1, 0, //
-                              ],
-                            );
+                              final messageReady = message.messageId != null;
 
-                            final messageReady = message.messageId != null;
-
-                            return Container(
-                              key:
-                                  messageReady ? Key(message.messageId!) : null,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 4,
-                              ),
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              alignment: fromMe
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
-                              child: IgnorePointer(
-                                ignoring: !messageReady,
-                                child: ColorFiltered(
-                                  colorFilter: messageReady
-                                      ? defaultColorMatrix
-                                      : greyscaleColorMatrix,
-                                  child: Builder(
-                                    builder: (context) {
-                                      switch (message.type) {
-                                        case ChatType.emoji:
-                                          return _buildEmojiMessage(message);
-                                        case ChatType.image:
-                                          return _buildImageMessage(message);
-                                        case ChatType.video:
-                                          return VideoChatMessage(
-                                            videoUrl: message.content,
-                                            date: _buildDateText(message.date),
-                                            fromMe: fromMe,
-                                          );
-                                        case ChatType.audio:
-                                          return AudioChatMessage(
-                                            audioUrl: message.content,
-                                            photoUrl: fromMe
-                                                ? _myAvatar
-                                                : _profile?.photo ?? '',
-                                            date: _buildDateText(message.date),
-                                            fromMe: fromMe,
-                                          );
-                                      }
-                                    },
+                              return Container(
+                                key: messageReady
+                                    ? Key(message.messageId!)
+                                    : null,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 4,
+                                ),
+                                margin: const EdgeInsets.symmetric(vertical: 4),
+                                alignment: fromMe
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: IgnorePointer(
+                                  ignoring: !messageReady,
+                                  child: ColorFiltered(
+                                    colorFilter: messageReady
+                                        ? defaultColorMatrix
+                                        : greyscaleColorMatrix,
+                                    child: Builder(
+                                      builder: (context) {
+                                        switch (message.type) {
+                                          case ChatType.emoji:
+                                            return _buildEmojiMessage(message);
+                                          case ChatType.image:
+                                            return _buildImageMessage(message);
+                                          case ChatType.video:
+                                            return VideoChatMessage(
+                                              videoUrl: message.content,
+                                              date:
+                                                  _buildDateText(message.date),
+                                              fromMe: fromMe,
+                                            );
+                                          case ChatType.audio:
+                                            return AudioChatMessage(
+                                              audioUrl: message.content,
+                                              photoUrl: fromMe
+                                                  ? _myAvatar
+                                                  : _profile?.photo ?? '',
+                                              date:
+                                                  _buildDateText(message.date),
+                                              fromMe: fromMe,
+                                            );
+                                        }
+                                      },
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
                       ),
                       if (!_loading && _messages.isEmpty)
@@ -289,32 +312,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                   },
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.phone),
-                                  onPressed: () {
-                                    final profile = _profile;
-                                    if (profile != null) {
-                                      _call(profile, video: false);
-                                    }
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.video_camera_front),
-                                  onPressed: () {
-                                    final profile = _profile;
-                                    if (profile != null) {
-                                      _call(profile, video: true);
-                                    }
-                                  },
-                                ),
-                                IconButton(
                                   icon: Icon(Icons.emoji_emotions,
                                       color: _inputType == _InputType.emoji
                                           ? Theming.of(context).friendBlue3
                                           : null),
                                   onPressed: () {
-                                    setState(() => _inputType =
-                                        _switchToInputTypeOrNone(
-                                            _InputType.emoji));
+                                    _switchToInputTypeOrHide(_InputType.emoji);
                                   },
                                 ),
                                 IconButton(
@@ -323,9 +326,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                           ? Theming.of(context).friendBlue3
                                           : null),
                                   onPressed: () {
-                                    setState(() => _inputType =
-                                        _switchToInputTypeOrNone(
-                                            _InputType.audio));
+                                    _switchToInputTypeOrHide(_InputType.audio);
                                   },
                                 ),
                               ],
@@ -336,12 +337,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ],
                   ),
                 ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
+                SizeTransition(
+                  sizeFactor: _animationController,
                   child: SizedBox(
                     width: double.infinity,
-                    height: _inputType == _InputType.none ? 0 : 300,
+                    height: 300,
                     child: Builder(
                       builder: (context) {
                         switch (_inputType) {
@@ -355,8 +355,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             return AudioInputBox(
                               onRecord: (path) => _send(ChatType.audio, path),
                             );
-                          case _InputType.none:
-                            return const SizedBox.shrink();
                         }
                       },
                     ),
@@ -370,7 +368,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: const BackIconButton(),
             ),
             Positioned(
-              top: 16 + MediaQuery.of(context).padding.top,
+              top: 20 + MediaQuery.of(context).padding.top,
+              width: MediaQuery.of(context).size.width - 250,
               child: Button(
                 onPressed: () {
                   final profile = _profile;
@@ -385,8 +384,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   }
                 },
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  height: 42,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: const Color.fromRGBO(0x42, 0x42, 0x42, 1.0),
                     border: Border.all(
@@ -397,10 +397,55 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       Radius.circular(36),
                     ),
                   ),
-                  child: Text(
-                    _profile?.name ?? '',
-                    style: Theming.of(context).text.body,
+                  child: _profile?.name == null
+                      ? const SizedBox.shrink()
+                      : Text(
+                          _profile?.name ?? '',
+                          overflow: TextOverflow.ellipsis,
+                          style: Theming.of(context).text.body,
+                        ),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 16,
+              top: 20 + MediaQuery.of(context).padding.top,
+              child: Container(
+                height: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(0x42, 0x42, 0x42, 1.0),
+                  border: Border.all(
+                    color: const Color.fromRGBO(0x60, 0x5E, 0x5E, 1.0),
+                    width: 2,
                   ),
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(36),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.phone),
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        final profile = _profile;
+                        if (profile != null) {
+                          _call(profile, video: false);
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.video_camera_front),
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        final profile = _profile;
+                        if (profile != null) {
+                          _call(profile, video: true);
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -557,11 +602,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  _InputType _switchToInputTypeOrNone(_InputType type) =>
-      _inputType == type ? _InputType.none : type;
+  void _switchToInputTypeOrHide(_InputType type) {
+    if (_showInput && _inputType == type) {
+      setState(() => _showInput = false);
+      _animationController.reverse();
+    } else {
+      setState(() {
+        _inputType = type;
+        _showInput = true;
+      });
+      _animationController.forward();
+    }
+  }
 }
 
-enum _InputType { emoji, imageVideo, audio, none }
+enum _InputType { emoji, imageVideo, audio }
 
 class ChatArguments {
   final String uid;

@@ -27,13 +27,14 @@ void initIncomingCallHandlers({required GlobalKey key}) {
       onCallAccepted: (callEvent) async {
         final context = key.currentContext;
         final uid = callEvent.userInfo?['uid'];
-        if (context != null && uid != null) {
+        final photo = callEvent.userInfo?['photo'];
+        if (context != null && uid != null && photo != null) {
           final video = callEvent.callType == 1;
           final route = video ? 'friends-video-call' : 'friends-voice-call';
           final profile = SimpleProfile(
             uid: uid,
             name: callEvent.callerName,
-            photo: callEvent.userInfo?['photo'],
+            photo: photo,
           );
           Navigator.of(context).pushNamed(
             route,
@@ -59,7 +60,7 @@ Future<void> displayIncomingCall({
   required String rid,
   required String callerUid,
   required String callerName,
-  required String? callerPhoto,
+  required String callerPhoto,
   required bool video,
   bool appIsBackgrounded = false,
   required void Function() onCallAccepted,
@@ -73,7 +74,7 @@ Future<void> displayIncomingCall({
     opponentsIds: const {0, 1},
     userInfo: {
       'uid': callerUid,
-      ...{if (callerPhoto != null) 'photo': callerPhoto},
+      'photo': callerPhoto,
     },
   );
   ConnectycubeFlutterCallKit.showCallNotification(callEvent);
@@ -95,14 +96,15 @@ void reportCallEnded(String rid) {
 
 Future<void> _onCallAcceptedWhenTerminated(CallEvent callEvent) async {
   final uid = callEvent.userInfo?['uid'];
-  if (uid != null) {
+  final photo = callEvent.userInfo?['photo'];
+  if (uid != null && photo != null) {
     final video = callEvent.callType == 1;
     final backgroundCallNotification = BackgroundCallNotification(
       rid: callEvent.sessionId,
       profile: SimpleProfile(
         uid: uid,
         name: callEvent.callerName,
-        photo: callEvent.userInfo?['photo'],
+        photo: photo,
       ),
       video: video,
       purpose: Purpose.friends,

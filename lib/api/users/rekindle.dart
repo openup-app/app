@@ -11,7 +11,7 @@ class Rekindle with _$Rekindle {
     required int date,
     required Purpose purpose,
     required String name,
-    String? photo,
+    required String photo,
   }) = _Rekindle;
 
   factory Rekindle.fromJson(Map<String, dynamic> json) =>

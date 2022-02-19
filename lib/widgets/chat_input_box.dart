@@ -63,8 +63,7 @@ class _AudioInputBoxState extends State<AudioInputBox> {
     return Center(
       child: Button(
         onPressed: _recording ? _endRecording : _startRecording,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 80),
+        child: Container(
           width: size,
           height: size,
           decoration: BoxDecoration(

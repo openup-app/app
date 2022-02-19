@@ -83,7 +83,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
               padding:
                   EdgeInsets.only(top: MediaQuery.of(context).padding.top + 28),
               child: Text(
-                'connections',
+                'friends',
                 style: Theming.of(context).text.bodySecondary,
               ),
             ),
@@ -115,9 +115,15 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                 }
                 if (filteredConnections.isEmpty) {
                   return Center(
-                    child: Text(
-                      'No Connections',
-                      style: Theming.of(context).text.body,
+                    child: Container(
+                      alignment: Alignment.center,
+                      constraints: const BoxConstraints(maxWidth: 300),
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'Your friends will show up here when you have added each other',
+                        textAlign: TextAlign.center,
+                        style: Theming.of(context).text.body,
+                      ),
                     ),
                   );
                 }
@@ -414,7 +420,7 @@ class _ConnectionTileState extends State<ConnectionTile>
                         borderRadius: const BorderRadius.all(
                           Radius.circular(8),
                         ),
-                        color: Colors.blue,
+                        color: Colors.white,
                         boxShadow: [
                           BoxShadow(
                             color: Theming.of(context).shadow,

@@ -182,10 +182,13 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
   }
 
   Widget _buildAvatar(String? photoUrl) {
+    if (photoUrl == null) {
+      return Container();
+    }
     return CircleAvatar(
       radius: 26,
       backgroundImage: NetworkImage(
-        widget.photoUrl!,
+        photoUrl,
       ),
     );
   }

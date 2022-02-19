@@ -24,12 +24,12 @@ class ProfileButton extends ConsumerWidget {
           fromHeroContext,
           toHeroContext,
         ) {
+          final from = _ProfileButtonTheme.of(fromHeroContext)?.color;
+          final to = _ProfileButtonTheme.of(toHeroContext)?.color;
           return AnimatedBuilder(
             animation: animation,
             builder: (context, child) {
               final push = flightDirection == HeroFlightDirection.push;
-              final from = _ProfileButtonTheme.of(fromHeroContext)?.color;
-              final to = _ProfileButtonTheme.of(toHeroContext)?.color;
               final tweenColor = ColorTween(
                 begin: push ? from : to,
                 end: push ? to : from,

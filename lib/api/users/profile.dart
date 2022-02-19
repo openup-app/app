@@ -11,7 +11,7 @@ class Profile with _$Profile {
     required String name,
     required DateTime birthday,
     String? audio,
-    String? photo,
+    required String photo,
     required List<String> gallery,
   }) = _Profile;
 
@@ -35,7 +35,7 @@ class SimpleProfile with _$SimpleProfile {
   const factory SimpleProfile({
     required String uid,
     required String name,
-    String? photo,
+    required String photo,
   }) = _SimpleProfile;
 
   factory SimpleProfile.fromJson(Map<String, dynamic> json) =>

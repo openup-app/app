@@ -95,6 +95,7 @@ class ChatApi {
       case ChatType.video:
       case ChatType.audio:
         final request = http.MultipartRequest('POST', uri);
+        request.headers.addAll(_headers);
         request.fields['uid'] = uid;
         request.fields['type'] = type.name;
         request.files.add(
