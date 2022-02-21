@@ -369,7 +369,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             ),
             Positioned(
               top: 20 + MediaQuery.of(context).padding.top,
-              width: MediaQuery.of(context).size.width - 250,
               child: Button(
                 onPressed: () {
                   final profile = _profile;
@@ -386,7 +385,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 child: Container(
                   height: 42,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  alignment: Alignment.center,
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width - 250,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color.fromRGBO(0x42, 0x42, 0x42, 1.0),
                     border: Border.all(
@@ -399,10 +400,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   ),
                   child: _profile?.name == null
                       ? const SizedBox.shrink()
-                      : Text(
-                          _profile?.name ?? '',
-                          overflow: TextOverflow.ellipsis,
-                          style: Theming.of(context).text.body,
+                      : Center(
+                          widthFactor: 1,
+                          child: Text(
+                            _profile?.name ?? '',
+                            overflow: TextOverflow.ellipsis,
+                            style: Theming.of(context).text.body,
+                          ),
                         ),
                 ),
               ),
