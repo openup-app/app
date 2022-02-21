@@ -151,6 +151,10 @@ void _onForegroundNotification(
   final parsed = await _parseRemoteMessage(message);
   parsed.payload?.map(
     call: (call) {
+      final context = key.currentContext;
+      if (context == null) {
+        return false;
+      }
       displayIncomingCall(
         rid: call.rid,
         callerUid: call.callerUid,
@@ -167,7 +171,7 @@ void _onForegroundNotification(
             name: call.name,
             photo: call.photo,
           );
-          Navigator.of(navigatorKey.currentContext!).pushNamed(
+          Navigator.of(context).pushNamed(
             route,
             arguments: CallPageArguments(
               rid: call.rid,

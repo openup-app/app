@@ -50,7 +50,6 @@ const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
 const webPort = 8080;
 const socketPort = 8081;
 
-final navigatorKey = GlobalKey<NavigatorState>();
 final _notificationKey = GlobalKey();
 
 void main() {
@@ -112,7 +111,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       child: Builder(
         builder: (context) {
           return MaterialApp(
-            navigatorKey: navigatorKey,
             theme: ThemeData(
               colorScheme: const ColorScheme.light(
                 primary: Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
@@ -334,7 +332,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           child: MenuScreen(
                             label: 'make friends',
                             image: Transform.translate(
-                              offset: const Offset(0.0, 26.0),
+                              offset: const Offset(0.0, 21.0),
                               child: Image.asset(
                                 'assets/images/friends.gif',
                                 fit: BoxFit.fitHeight,
@@ -1082,7 +1080,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       transitionsBuilder: transitionsBuilder ?? slideRightToLeftPageTransition,
       transitionDuration: const Duration(milliseconds: 300),
       reverseTransitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (_, __, ___) {
+      pageBuilder: (_, animation, secondaryAnimation) {
         return _ScaffoldWithAnimatedDrawerBackgroundBlur(
           builder: (context) {
             return InheritedRouteObserver(
