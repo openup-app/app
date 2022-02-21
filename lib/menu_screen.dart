@@ -163,15 +163,6 @@ class _MenuScreenState extends State<MenuScreen> {
                         maxHeight: 28,
                       ),
                     ),
-                    _MenuButton(
-                      onPressed: () => widget.onPressedVideoCall(_serious),
-                      icon: Image.asset('assets/images/video_call.png'),
-                      color: MenuScreenTheme.of(context).buttonColorMiddle,
-                      child: Text(
-                        'Video call someone new',
-                        style: buttonStyle,
-                      ),
-                    ),
                     ConstrainedBox(
                       constraints: const BoxConstraints(
                         minHeight: 16,
