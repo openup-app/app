@@ -13,6 +13,7 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_input_box.dart';
 import 'package:openup/widgets/chat_message.dart';
+import 'package:openup/widgets/disable.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:uuid/uuid.dart';
@@ -179,28 +180,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                               final message = _messages.values.toList()[index];
                               final fromMe = message.uid == _uid;
 
-                              const ColorFilter defaultColorMatrix =
-                                  ColorFilter.matrix(
-                                <double>[
-                                  1, 0, 0, 0, 0, // Comments to stop dart format
-                                  0, 1, 0, 0, 0, //
-                                  0, 0, 1, 0, 0, //
-                                  0, 0, 0, 1, 0, //
-                                ],
-                              );
-
-                              // Based on Lomski's answer at https://stackoverflow.com/a/62078847/1702627
-                              const ColorFilter greyscaleColorMatrix =
-                                  ColorFilter.matrix(
-                                <double>[
-                                  0.2126, 0.7152, 0.0722, 0,
-                                  0, // Comments to stop dart format
-                                  0.2126, 0.7152, 0.0722, 0, 0, //
-                                  0.2126, 0.7152, 0.0722, 0, 0, //
-                                  0, 0, 0, 1, 0, //
-                                ],
-                              );
-
                               final messageReady = message.messageId != null;
 
                               return Container(
@@ -215,39 +194,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                 alignment: fromMe
                                     ? Alignment.centerRight
                                     : Alignment.centerLeft,
-                                child: IgnorePointer(
-                                  ignoring: !messageReady,
-                                  child: ColorFiltered(
-                                    colorFilter: messageReady
-                                        ? defaultColorMatrix
-                                        : greyscaleColorMatrix,
-                                    child: Builder(
-                                      builder: (context) {
-                                        switch (message.type) {
-                                          case ChatType.emoji:
-                                            return _buildEmojiMessage(message);
-                                          case ChatType.image:
-                                            return _buildImageMessage(message);
-                                          case ChatType.video:
-                                            return VideoChatMessage(
-                                              videoUrl: message.content,
-                                              date:
-                                                  _buildDateText(message.date),
-                                              fromMe: fromMe,
-                                            );
-                                          case ChatType.audio:
-                                            return AudioChatMessage(
-                                              audioUrl: message.content,
-                                              photoUrl: fromMe
-                                                  ? _myAvatar
-                                                  : _profile?.photo ?? '',
-                                              date:
-                                                  _buildDateText(message.date),
-                                              fromMe: fromMe,
-                                            );
-                                        }
-                                      },
-                                    ),
+                                child: Disable(
+                                  disabling: !messageReady,
+                                  child: Builder(
+                                    builder: (context) {
+                                      switch (message.type) {
+                                        case ChatType.emoji:
+                                          return _buildEmojiMessage(message);
+                                        case ChatType.image:
+                                          return _buildImageMessage(message);
+                                        case ChatType.video:
+                                          return VideoChatMessage(
+                                            videoUrl: message.content,
+                                            date: _buildDateText(message.date),
+                                            fromMe: fromMe,
+                                          );
+                                        case ChatType.audio:
+                                          return AudioChatMessage(
+                                            audioUrl: message.content,
+                                            photoUrl: fromMe
+                                                ? _myAvatar
+                                                : _profile?.photo ?? '',
+                                            date: _buildDateText(message.date),
+                                            fromMe: fromMe,
+                                          );
+                                      }
+                                    },
                                   ),
                                 ),
                               );

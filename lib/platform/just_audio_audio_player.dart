@@ -11,7 +11,10 @@ class JustAudioAudioPlayer {
   final _player = AudioPlayer(
     audioLoadConfiguration: AudioLoadConfiguration(
       androidLoadControl: AndroidLoadControl(
-        backBufferDuration: const Duration(seconds: 50),
+        backBufferDuration: const Duration(seconds: 10),
+      ),
+      darwinLoadControl: DarwinLoadControl(
+        preferredForwardBufferDuration: const Duration(seconds: 10),
       ),
     ),
   );

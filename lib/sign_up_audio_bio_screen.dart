@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/util/users_api_util.dart';
+import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
-import 'package:openup/widgets/profile_bio.dart';
 import 'package:openup/widgets/theming.dart';
 
 class SignUpAudioBioScreen extends StatefulWidget {
@@ -15,6 +15,24 @@ class SignUpAudioBioScreen extends StatefulWidget {
 }
 
 class _SignUpAudioBioScreenState extends State<SignUpAudioBioScreen> {
+  late final AudioBioController _audioBioController;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioBioController = AudioBioController(
+      onRecordingComplete: (bytes) {
+        uploadAudio(context: context, audio: bytes);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _audioBioController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -34,13 +52,13 @@ class _SignUpAudioBioScreenState extends State<SignUpAudioBioScreen> {
                 ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 24),
         Align(
           alignment: Alignment.center,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
-              'Our bio design is different than any other on the internet. Record your bio for up to 10 seconds, say anything you want and have fun!\n\n(Fill in your name by simply tapping on name)',
+              'Instead of typing out your bio, lets say it! Tap the record button below to record your own audio bio, this recording will only be heard by your friends.',
               textAlign: TextAlign.left,
               style: Theming.of(context).text.body.copyWith(
                     color: const Color.fromRGBO(0x99, 0x99, 0x99, 1.0),
@@ -52,34 +70,21 @@ class _SignUpAudioBioScreenState extends State<SignUpAudioBioScreen> {
         ),
         Expanded(
           child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 371,
-                maxHeight: 88,
-              ),
-              child: Consumer(
-                builder: (context, ref, child) {
-                  final editableProfile = ref.watch(profileProvider);
-                  return ProfileBio(
-                    key: const Key('audio_bio'),
-                    name: editableProfile?.name,
-                    birthday: editableProfile?.birthday,
-                    url: editableProfile?.audio,
-                    editable: true,
-                    onRecorded: (audio) =>
-                        uploadAudio(context: context, audio: audio),
-                    onUpdateName: (name) {
-                      updateName(
-                        context: context,
-                        name: name,
-                      );
-                    },
-                  );
-                },
-              ),
+            child: AudioBioRecordButton(
+              controller: _audioBioController,
             ),
           ),
         ),
+        Consumer(
+          builder: (context, ref, child) {
+            final url = ref.watch(profileProvider)?.audio;
+            return AudioBioPlaybackControls(
+              playbackUrl: url,
+              audioBioController: _audioBioController,
+            );
+          },
+        ),
+        const SizedBox(height: 16),
         SignificantButton.blue(
           onPressed: () {
             Navigator.of(context).pushNamed('sign-up-welcome-info');
