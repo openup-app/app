@@ -35,7 +35,7 @@ class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
         Align(
           alignment: Alignment.center,
           child: Text(
-            'You can add upto six pictures in your profile section',
+            'You can add upto six pictures in your profile',
             textAlign: TextAlign.center,
             style: Theming.of(context).text.body.copyWith(
                   color: const Color.fromRGBO(0x99, 0x99, 0x99, 1.0),

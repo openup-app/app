@@ -6,6 +6,7 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/contact_text_field.dart';
 import 'package:openup/widgets/home_button.dart';
+import 'package:openup/widgets/keyboard_screen.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ContactUsScreen extends ConsumerStatefulWidget {
@@ -38,86 +39,76 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
           ],
         ),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            padding: MediaQuery.of(context).viewInsets,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: constraints.maxHeight,
-              ),
-              child: Stack(
-                fit: StackFit.loose,
-                children: [
-                  Positioned(
-                    left: 16,
-                    right: 16,
-                    top: MediaQuery.of(context).padding.top + 72,
-                    bottom: MediaQuery.of(context).viewPadding.bottom + 72,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: 362,
-                      ),
-                      child: _Sheet(
-                        child: Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Transform.scale(
-                                scale: 1.3,
-                                child: const Padding(
-                                  padding: EdgeInsets.only(
-                                    left: 4.0,
-                                    top: 4.0,
-                                  ),
-                                  child: BackIconButton(),
-                                ),
-                              ),
+      child: KeyboardScreen(
+        child: Stack(
+          fit: StackFit.loose,
+          children: [
+            Positioned(
+              left: 16,
+              right: 16,
+              top: MediaQuery.of(context).padding.top + 72,
+              bottom: MediaQuery.of(context).viewPadding.bottom + 72,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 362,
+                ),
+                child: _Sheet(
+                  child: Column(
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Transform.scale(
+                          scale: 1.3,
+                          child: const Padding(
+                            padding: EdgeInsets.only(
+                              left: 4.0,
+                              top: 4.0,
                             ),
-                            Text(
-                              'Contact us anytime,\nabout anything.',
-                              textAlign: TextAlign.center,
-                              style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            const SizedBox(height: 20),
-                            Expanded(
-                              child: ContactTextField(
-                                textController: _textController,
-                                hintText: 'Questions and concerns',
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            SizedBox(
-                              width: 162,
-                              height: 43,
-                              child: GradientButton(
-                                onPressed: _uploading ? null : _upload,
-                                child: _uploading
-                                    ? const CircularProgressIndicator()
-                                    : const Text('send'),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                          ],
+                            child: BackIconButton(),
+                          ),
                         ),
                       ),
-                    ),
+                      Text(
+                        'Contact us anytime,\nabout anything.',
+                        textAlign: TextAlign.center,
+                        style: Theming.of(context).text.body.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(height: 20),
+                      Expanded(
+                        child: ContactTextField(
+                          textController: _textController,
+                          hintText: 'Questions and concerns',
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: 162,
+                        height: 43,
+                        child: GradientButton(
+                          onPressed: _uploading ? null : _upload,
+                          child: _uploading
+                              ? const CircularProgressIndicator()
+                              : const Text('send'),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                   ),
-                  Positioned(
-                    right: MediaQuery.of(context).padding.right + 16,
-                    bottom: MediaQuery.of(context).padding.bottom + 16,
-                    child: const HomeButton(
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          );
-        },
+            Positioned(
+              right: MediaQuery.of(context).padding.right + 16,
+              bottom: MediaQuery.of(context).padding.bottom + 16,
+              child: const HomeButton(
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

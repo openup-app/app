@@ -108,7 +108,7 @@ Future<void> updateName({
   try {
     await _updateData(
       context: context,
-      label: 'Updating profile',
+      label: 'Updating name',
       request: (usersApi, uid) {
         final profile = usersApi.profile;
         if (profile != null) {
@@ -125,7 +125,7 @@ Future<void> updateName({
     print(e);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Failed to update profile'),
+        content: Text('Failed to update name'),
       ),
     );
   }
