@@ -58,8 +58,6 @@ class EndCallReport extends StatelessWidget {
                   size: 40,
                 ),
               ),
-              thumbInnerShadow: false,
-              thumbDropShadow: true,
               trackContents: const Text('slide to end call'),
               trackGradient: const LinearGradient(
                 colors: [

@@ -523,8 +523,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-                                Color.fromRGBO(0x00, 0x92, 0xB2, 0.5),
+                                Color.fromRGBO(0xFF, 0xFF, 0xFF, 1.0),
+                                Color.fromRGBO(0x00, 0x92, 0xB2, 1.0),
                               ],
                             ),
                             endCallSymbolColor:

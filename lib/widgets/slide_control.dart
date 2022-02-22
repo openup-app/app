@@ -5,8 +5,6 @@ class SlideControl extends StatefulWidget {
   final Widget thumbContents;
   final Widget trackContents;
   final bool trackBorder;
-  final bool thumbInnerShadow;
-  final bool thumbDropShadow;
   final Gradient? trackGradient;
   final Color? trackColor;
   final VoidCallback onSlideComplete;
@@ -17,8 +15,6 @@ class SlideControl extends StatefulWidget {
     required this.thumbContents,
     required this.trackContents,
     this.trackBorder = false,
-    this.thumbInnerShadow = true,
-    this.thumbDropShadow = false,
     this.trackGradient,
     this.trackColor,
     required this.onSlideComplete,
@@ -74,13 +70,6 @@ class _SlideControlState extends State<SlideControl>
                   border: widget.trackBorder
                       ? Border.all(color: Colors.white, width: 4)
                       : null,
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                      offset: Offset(0.0, 4.0),
-                      blurRadius: 10,
-                    ),
-                  ],
                   gradient: widget.trackGradient,
                   color: widget.trackColor,
                 ),
@@ -134,33 +123,10 @@ class _SlideControlState extends State<SlideControl>
                         child: Container(
                           width: thumbSize,
                           height: thumbSize,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: widget.thumbInnerShadow
-                                  ? const RadialGradient(
-                                      colors: [
-                                        Colors.white,
-                                        Color.fromARGB(0xFF, 0xDD, 0xDD, 0xDD),
-                                        Colors.white,
-                                      ],
-                                      stops: [
-                                        0.7,
-                                        0.85,
-                                        0.9,
-                                      ],
-                                    )
-                                  : null,
-                              color: Colors.white,
-                              boxShadow: widget.thumbDropShadow
-                                  ? const [
-                                      BoxShadow(
-                                        color: Color.fromRGBO(
-                                            0x00, 0x00, 0x00, 0.25),
-                                        offset: Offset(0.0, 4.0),
-                                        blurRadius: 4.0,
-                                      ),
-                                    ]
-                                  : null),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                          ),
                           child: widget.thumbContents,
                         ),
                       ),

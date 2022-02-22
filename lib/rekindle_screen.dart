@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/users_api.dart';
@@ -107,184 +106,176 @@ class RekindleScreenPrecached extends ConsumerWidget {
     }
     final rekindle = rekindles[index];
     final photo = rekindle.photo;
-    final dateFormat = DateFormat('MM / dd / yyyy');
 
-    return Stack(
-      alignment: Alignment.center,
-      fit: StackFit.expand,
-      children: [
-        ImageFiltered(
-          imageFilter: ImageFilter.blur(
-            sigmaX: 4.0,
-            sigmaY: 4.0,
-          ),
-          child: ProfilePhoto(url: photo),
+    final myProfile = ref.read(profileProvider);
+    final myPhoto = myProfile?.photo;
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(0x2E, 0x2E, 0x2E, 1.0),
+            Color.fromRGBO(0x0D, 0x6D, 0x84, 1.0),
+          ],
         ),
-        countdown
-            ? _Countdown(
-                onTimeUp: () {},
-                builder: (context, remaining) {
-                  return DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: rekindle.purpose == Purpose.friends
-                          ? Color.fromRGBO(
-                              0x3F,
-                              0xC8,
-                              0xFD,
-                              1 -
-                                  remaining.inMilliseconds /
-                                      const Duration(seconds: 5).inMilliseconds)
-                          : Color.fromRGBO(
-                              0xFF,
-                              0x60,
-                              0x60,
-                              1 -
-                                  remaining.inMilliseconds /
-                                      const Duration(seconds: 5)
-                                          .inMilliseconds),
-                    ),
-                  );
-                },
-              )
-            : DecoratedBox(
-                decoration: BoxDecoration(
-                  color: rekindle.purpose == Purpose.friends
-                      ? const Color.fromRGBO(0x3F, 0xC8, 0xFD, 0.75)
-                      : const Color.fromRGBO(0xFF, 0x60, 0x60, 0.75),
-                ),
-              ),
-        // Workaround for BlurStyle.inner not being an inner glow
-        for (final ltrbwh in [
-          [-35.0, 0.0, null, 0.0, 50.0, null], // Left
-          [null, 0.0, -35.0, 0.0, 50.0, null], // Right
-          [0.0, -35.0, 0.0, null, null, 50.0], // Top
-          [0.0, null, 0.0, -35.0, null, 50.0], // Bottom
-        ])
-          Positioned(
-            left: ltrbwh[0],
-            top: ltrbwh[1],
-            right: ltrbwh[2],
-            bottom: ltrbwh[3],
-            width: ltrbwh[4],
-            height: ltrbwh[5],
-            child: const DecoratedBox(
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    blurStyle: BlurStyle.normal,
-                    blurRadius: 139,
-                    color: Color.fromRGBO(0xC7, 0xC7, 0xC7, 1.0),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        Positioned(
-          bottom: 370,
+      ),
+      child: SafeArea(
+        top: true,
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(height: 80),
+              Text(
+                'Want to chat more?',
+                textAlign: TextAlign.center,
+                style: Theming.of(context)
+                    .text
+                    .body
+                    .copyWith(fontSize: 36, fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              Flexible(
+                flex: 6,
+                fit: FlexFit.loose,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: 100,
+                    maxHeight: 160,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 160,
+                        height: 160,
+                        clipBehavior: Clip.hardEdge,
+                        decoration: const BoxDecoration(shape: BoxShape.circle),
+                        child: myPhoto != null
+                            ? ProfilePhoto(
+                                url: myPhoto,
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 28),
+                      Container(
+                        width: 160,
+                        height: 160,
+                        clipBehavior: Clip.hardEdge,
+                        decoration: const BoxDecoration(shape: BoxShape.circle),
+                        child: ImageFiltered(
+                          imageFilter: ImageFilter.blur(
+                            sigmaX: 12.0,
+                            sigmaY: 12.0,
+                          ),
+                          child: ProfilePhoto(
+                            url: photo,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               if (rekindle.purpose == Purpose.friends)
-                SizedBox(
-                  height: 50,
+                Flexible(
+                  flex: 3,
+                  fit: FlexFit.loose,
                   child: Image.asset(
                     'assets/images/friends.gif',
                     color: const Color.fromARGB(0xFF, 0xAA, 0xDD, 0xED),
                   ),
                 )
               else
-                SizedBox(
-                  height: 50,
+                ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(minHeight: 40, maxHeight: 126),
                   child: Image.asset('assets/images/heart.gif'),
                 ),
-              Text(rekindle.name, style: Theming.of(context).text.headline),
-              const SizedBox(height: 4),
               Text(
-                dateFormat.format(DateTime.now()),
-                style: Theming.of(context).text.subheading.copyWith(
-                      fontWeight: FontWeight.w300,
-                    ),
+                'Tap connect in order to become friends,\nsee each others profiles and chat more.\n\n(if you don’t connect now, there is a\nchance you might meet again in the future)',
+                textAlign: TextAlign.center,
+                style: Theming.of(context)
+                    .text
+                    .body
+                    .copyWith(fontSize: 18, fontWeight: FontWeight.w300),
               ),
-              const SizedBox(height: 4),
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'expires ',
-                      style: Theming.of(context)
-                          .text
-                          .subheading
-                          .copyWith(fontWeight: FontWeight.w300),
+              const Spacer(),
+              Button(
+                onPressed: () {
+                  _addRekindle(ref, rekindle);
+                  _moveToNextScreen(context);
+                },
+                child: Container(
+                  width: 256,
+                  height: 60,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [
+                      Color.fromRGBO(0xFF, 0x71, 0x71, 1.0),
+                      Color.fromRGBO(0xFF, 0x3A, 0x42, 1.0),
+                    ]),
+                    border: Border.all(color: Colors.white),
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(76),
                     ),
-                    TextSpan(
-                      text: '2',
-                      style: Theming.of(context).text.subheading.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    TextSpan(
-                      text: ' days',
-                      style: Theming.of(context)
-                          .text
-                          .subheading
-                          .copyWith(fontWeight: FontWeight.w300),
-                    ),
-                  ],
+                  ),
+                  child: Text(
+                    'Connect',
+                    style: Theming.of(context).text.body.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w300,
+                        ),
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: ColoredSlider(
-                  countdown: countdown,
-                  onTimeUp: () => _moveToNextScreen(context),
-                  onSlideComplete: () {
-                    _addRekindle(ref, rekindle);
-                    _moveToNextScreen(context);
-                  },
-                ),
-              ),
-              const SizedBox(
-                height: 16,
-              ),
+              const SizedBox(height: 20),
               Button(
                 onPressed: () => _moveToNextScreen(context),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 2),
-                  margin: const EdgeInsets.symmetric(vertical: 16),
+                  width: 256,
+                  height: 60,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(30)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theming.of(context).shadow.withOpacity(0.2),
-                        offset: const Offset(0.0, 4.0),
-                        blurRadius: 4.0,
+                    gradient: const LinearGradient(colors: [
+                      Color.fromRGBO(0x27, 0x76, 0x89, 1.0),
+                      Color.fromRGBO(0x03, 0xAC, 0xD4, 1.0),
+                    ]),
+                    border: Border.all(color: Colors.white),
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(76),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/voice_call.png',
+                        width: 44,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Meet new people',
+                        style: Theming.of(context).text.body.copyWith(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w300,
+                            ),
                       ),
                     ],
-                    color: Theming.of(context).datingRed2,
-                  ),
-                  child: Text(
-                    'skip',
-                    style: Theming.of(context).text.body.copyWith(fontSize: 16),
                   ),
                 ),
               ),
-              const SizedBox(height: 80),
+              const SizedBox(height: 50),
             ],
           ),
         ),
-        ..._backTitleAndHomeButtons(context,
-            rekindle.purpose == Purpose.friends ? 'make friends' : 'dating'),
-      ],
+      ),
     );
   }
 
@@ -356,11 +347,13 @@ List<Widget> _backTitleAndHomeButtons(BuildContext context, String title) => [
 
 class ColoredSlider extends StatefulWidget {
   final bool countdown;
+  final Duration duration;
   final VoidCallback onTimeUp;
   final VoidCallback onSlideComplete;
   const ColoredSlider({
     Key? key,
     required this.countdown,
+    required this.duration,
     required this.onTimeUp,
     required this.onSlideComplete,
   }) : super(key: key);
@@ -380,6 +373,7 @@ class _ColoredSliderState extends State<ColoredSlider> {
           padding: const EdgeInsets.only(top: 4.0),
           child: widget.countdown
               ? _Countdown(
+                  duration: widget.duration,
                   builder: (context, remaining) {
                     return Text(
                       remaining.inSeconds.toString(),
@@ -435,7 +429,7 @@ class _Countdown extends StatefulWidget {
   final VoidCallback onTimeUp;
   const _Countdown({
     Key? key,
-    this.duration = const Duration(seconds: 5),
+    required this.duration,
     required this.builder,
     required this.onTimeUp,
   }) : super(key: key);
