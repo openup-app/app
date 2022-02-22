@@ -31,12 +31,12 @@ Widget slideRightToLeftPageTransition(
   Animation<double> secondaryAnimation,
   Widget child,
 ) {
-  const begin = Offset(1.0, 0.0);
-  const end = Offset.zero;
   final tween = Tween(
-    begin: begin,
-    end: end,
-  ).chain(CurveTween(curve: Curves.easeOut));
+    begin: const Offset(1.0, 0.0),
+    end: Offset.zero,
+  ).chain(
+    CurveTween(curve: Curves.easeInOutBack),
+  );
   return SlideTransition(
     position: animation.drive(tween),
     child: child,
@@ -49,12 +49,12 @@ Widget slideLeftToRightPageTransition(
   Animation<double> secondaryAnimation,
   Widget child,
 ) {
-  const begin = Offset(-1.0, 0.0);
-  const end = Offset.zero;
   final tween = Tween(
-    begin: begin,
-    end: end,
-  ).chain(CurveTween(curve: Curves.easeOut));
+    begin: const Offset(-1.0, 0.0),
+    end: Offset.zero,
+  ).chain(
+    CurveTween(curve: Curves.easeInOutBack),
+  );
   return SlideTransition(
     position: animation.drive(tween),
     child: child,
