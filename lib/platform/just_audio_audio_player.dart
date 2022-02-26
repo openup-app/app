@@ -76,7 +76,13 @@ class JustAudioAudioPlayer {
 
   Stream<PlaybackInfo> get playbackInfoStream => _playbackInfoController.stream;
 
-  Future<void> setUrl(String url) => _player.setUrl(url);
+  Future<void> setUrl(String url) async {
+    try {
+      await _player.setUrl(url);
+    } on PlayerInterruptedException {
+      // Ignore
+    }
+  }
 
   Future<void> play() => _player.play();
 

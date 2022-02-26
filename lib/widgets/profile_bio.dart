@@ -123,13 +123,7 @@ class ProfileBioState extends State<ProfileBio> {
     );
   }
 
-  void _setAudioUrl(String url) {
-    try {
-      _audio.setUrl(url);
-    } on PlayerInterruptedException {
-      // Nothing to do
-    }
-  }
+  void _setAudioUrl(String url) => _audio.setUrl(url);
 
   void stopAll() {
     _audio.pause();
