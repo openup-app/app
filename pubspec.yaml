@@ -35,6 +35,7 @@ dependencies:
   video_player: ^2.2.10
   syncfusion_flutter_sliders: ^19.4.43
   auto_size_text: ^3.0.0
+  dartz: ^0.10.1
 
 dev_dependencies:
   flutter_test:
