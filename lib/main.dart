@@ -3,10 +3,12 @@ import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/account_settings_phone_verification_screen.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
@@ -106,6 +108,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         }
       });
     });
+
+    const mixpanelToken = String.fromEnvironment('MIXPANEL_TOKEN');
+    Mixpanel.init(
+      mixpanelToken,
+      optOutTrackingDefault: !kReleaseMode,
+    );
   }
 
   @override
@@ -995,7 +1003,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     builder: (_) {
                       return CurrentRouteSystemUiStyling.light(
                         child: ProfileScreen(
-                          profile: args.profile,
                           editable: args.editable,
                         ),
                       );
