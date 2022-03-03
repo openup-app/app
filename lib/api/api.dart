@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -142,7 +143,7 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, String>> updateProfileGalleryPhoto(
+  Future<Either<ApiError, Profile>> updateProfileGalleryPhoto(
     String uid,
     Uint8List photo,
     int index,
@@ -160,12 +161,12 @@ class Api {
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return Right(json['url']);
+        return Right(Profile.fromJson(json['profile']));
       },
     );
   }
 
-  Future<Either<ApiError, void>> deleteProfileGalleryPhoto(
+  Future<Either<ApiError, Profile>> deleteProfileGalleryPhoto(
     String uid,
     int index,
   ) {
@@ -176,7 +177,10 @@ class Api {
           headers: _headers,
         );
       },
-      handleSuccess: (response) => const Right(null),
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        return Right(Profile.fromJson(json['profile']));
+      },
     );
   }
 
@@ -441,8 +445,10 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> contactUs(
-      {required String uid, required String message}) {
+  Future<Either<ApiError, void>> contactUs({
+    required String uid,
+    required String message,
+  }) {
     return _request(
       makeRequest: () {
         return http.post(
@@ -464,22 +470,34 @@ class Api {
   }) async {
     try {
       final response = await makeRequest();
+      if (response.statusCode != 200) {
+        log(
+          '${response.request?.method} ${response.request?.url}',
+          name: 'API',
+        );
+      }
       if (response.statusCode == 200) {
         return handleSuccess(response);
       } else if (response.statusCode == 400) {
+        log('400 Bad request', name: 'API', error: response.body);
         return const Left(_ApiClientError(_BadRequest()));
       } else if (response.statusCode == 401) {
+        log('401 Unauthorized', name: 'API', error: response.body);
         return const Left(_ApiClientError(_Unauthorized()));
       } else if (response.statusCode == 403) {
+        log('403 Forbidden', name: 'API', error: response.body);
         return const Left(_ApiClientError(_Forbidden()));
       } else if (response.statusCode == 404) {
+        log('404 Not found', name: 'API', error: response.body);
         return const Left(_ApiClientError(_NotFound()));
       } else if (response.statusCode == 500) {
+        log('500 Internal server error', name: 'API', error: response.body);
         return const Left(_ApiServerError(_ServerError()));
       } else {
         throw response;
       }
-    } on SocketException {
+    } on SocketException catch (e) {
+      log('SocketException', name: 'API', error: e);
       return const Left(_ApiNetworkError(_ConnectionFailed()));
     } catch (e) {
       rethrow;

@@ -1,29 +1,29 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/users_api.dart';
-import 'package:openup/util/users_api_util.dart';
+import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/theming.dart';
 
-class SignUpAudioBioScreen extends StatefulWidget {
+class SignUpAudioBioScreen extends ConsumerStatefulWidget {
   const SignUpAudioBioScreen({Key? key}) : super(key: key);
 
   @override
-  State<SignUpAudioBioScreen> createState() => _SignUpAudioBioScreenState();
+  _SignUpAudioBioScreenState createState() => _SignUpAudioBioScreenState();
 }
 
-class _SignUpAudioBioScreenState extends State<SignUpAudioBioScreen> {
+class _SignUpAudioBioScreenState extends ConsumerState<SignUpAudioBioScreen> {
   late final AudioBioController _audioBioController;
 
   @override
   void initState() {
     super.initState();
     _audioBioController = AudioBioController(
-      onRecordingComplete: (bytes) {
-        uploadAudio(context: context, audio: bytes);
-      },
+      onRecordingComplete: _upload,
     );
   }
 
@@ -77,7 +77,7 @@ class _SignUpAudioBioScreenState extends State<SignUpAudioBioScreen> {
         ),
         Consumer(
           builder: (context, ref, child) {
-            final url = ref.watch(profileProvider)?.audio;
+            final url = ref.watch(userProvider).profile!.audio;
             return AudioBioPlaybackControls(
               playbackUrl: url,
               audioBioController: _audioBioController,
@@ -93,6 +93,23 @@ class _SignUpAudioBioScreenState extends State<SignUpAudioBioScreen> {
         ),
         const MaleFemaleConnectionImageApart(),
       ],
+    );
+  }
+
+  void _upload(Uint8List bytes) async {
+    final result = await withBlockingModal(
+      context: context,
+      label: 'Uploading audio',
+      future: updateAudio(context: context, ref: ref, bytes: bytes),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (l) => displayError(context, l),
+      (r) {},
     );
   }
 }

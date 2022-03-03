@@ -2,9 +2,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/platform/photo_picker.dart';
-import 'package:openup/util/users_api_util.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
@@ -68,18 +69,25 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   height: 88,
                   child: Consumer(
                     builder: (context, ref, child) {
-                      final editableProfile = ref.watch(profileProvider);
+                      final editableProfile =
+                          ref.watch(userProvider.select((p) => p.profile));
                       return ProfileBio(
                         key: _audioBioKey,
                         name: editableProfile?.name,
                         birthday: editableProfile?.birthday,
                         url: editableProfile?.audio,
                         editable: true,
-                        onRecorded: (audio) =>
-                            uploadAudio(context: context, audio: audio),
-                        onUpdateName: (name) {
-                          updateName(
+                        onRecorded: (audio) {
+                          _uploadAudio(
                             context: context,
+                            ref: ref,
+                            bytes: audio,
+                          );
+                        },
+                        onUpdateName: (name) {
+                          _updateName(
+                            context: context,
+                            ref: ref,
                             name: name,
                           );
                         },
@@ -108,7 +116,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   }
 }
 
-class PhotoGrid extends StatelessWidget {
+class PhotoGrid extends ConsumerWidget {
   final bool horizontal;
   const PhotoGrid({
     Key? key,
@@ -116,37 +124,31 @@ class PhotoGrid extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer(
-      builder: (context, ref, child) {
-        final gallery =
-            ref.watch(profileProvider.select((value) => value?.gallery ?? []));
-        return Column(
-          children: [
-            for (var i = 0; i < (horizontal ? 2 : 3); i++)
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: horizontal
-                      ? (i == 0
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start)
-                      : CrossAxisAlignment.stretch,
-                  children: [
-                    for (var j = 0; j < (horizontal ? 3 : 2); j++)
-                      Expanded(
-                        child: Stack(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      children: [
+        for (var i = 0; i < (horizontal ? 2 : 3); i++)
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: horizontal
+                  ? (i == 0 ? CrossAxisAlignment.end : CrossAxisAlignment.start)
+                  : CrossAxisAlignment.stretch,
+              children: [
+                for (var j = 0; j < (horizontal ? 3 : 2); j++)
+                  Expanded(
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final gallery = ref.watch(userProvider
+                            .select((p) => p.profile?.gallery ?? []));
+                        return Stack(
                           children: [
                             Button(
                               onPressed: () async {
                                 final index = i * 2 + j;
                                 final photo = await _pickPhoto(context);
                                 if (photo != null) {
-                                  uploadPhoto(
-                                    context: context,
-                                    photo: photo,
-                                    index: index,
-                                  );
+                                  _uploadPhoto(context, ref, photo, index);
                                 }
                               },
                               child: Container(
@@ -197,8 +199,9 @@ class PhotoGrid extends StatelessWidget {
                                 top: 20,
                                 child: Button(
                                   onPressed: () {
-                                    deletePhoto(
+                                    _deletePhoto(
                                       context: context,
+                                      ref: ref,
                                       index: i * 2 + j,
                                     );
                                   },
@@ -209,14 +212,14 @@ class PhotoGrid extends StatelessWidget {
                                 ),
                               ),
                           ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-          ],
-        );
-      },
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
@@ -247,5 +250,92 @@ class PhotoGrid extends StatelessWidget {
     if (useCamera != null) {
       return PhotoPicker().pickPhoto(useCamera);
     }
+    return null;
   }
+}
+
+void _uploadPhoto(
+  BuildContext context,
+  WidgetRef ref,
+  Uint8List bytes,
+  int index,
+) async {
+  final result = await withBlockingModal(
+    context: context,
+    label: 'Uploading photo',
+    future: updatePhoto(
+      context: context,
+      ref: ref,
+      bytes: bytes,
+      index: index,
+    ),
+  );
+
+  result.fold(
+    (l) => displayError(context, l),
+    (r) {},
+  );
+}
+
+void _deletePhoto({
+  required BuildContext context,
+  required WidgetRef ref,
+  required int index,
+}) async {
+  final result = await withBlockingModal(
+    context: context,
+    label: 'Deleting photo',
+    future: deletePhoto(
+      context: context,
+      ref: ref,
+      index: index,
+    ),
+  );
+
+  result.fold(
+    (l) => displayError(context, l),
+    (r) {},
+  );
+}
+
+void _uploadAudio({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Uint8List bytes,
+}) async {
+  final result = await withBlockingModal(
+    context: context,
+    label: 'Uploading audio',
+    future: updateAudio(
+      context: context,
+      ref: ref,
+      bytes: bytes,
+    ),
+  );
+
+  result.fold(
+    (l) => displayError(context, l),
+    (r) {},
+  );
+}
+
+void _updateName({
+  required BuildContext context,
+  required WidgetRef ref,
+  required String name,
+}) async {
+  final result = await withBlockingModal(
+    context: context,
+    label: 'Updating name',
+    future: updateName(
+      context: context,
+      ref: ref,
+      name: name,
+    ),
+  );
+
+  result.fold(
+    (l) => displayError(context, l),
+    (r) {},
+  );
 }

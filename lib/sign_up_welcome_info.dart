@@ -1,8 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart' hide UserMetadata;
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/users_api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -11,8 +9,8 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.read(usersApiProvider).profile;
-    final name = profile?.name;
+    final profile = ref.watch(userProvider).profile!;
+    final name = profile.name;
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -40,7 +38,10 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
             width: 57,
             height: 57,
             child: Button(
-              onPressed: () => _setOnBoardedTrueAndNavigateHome(context, ref),
+              onPressed: () {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+                Navigator.of(context).pushReplacementNamed('home');
+              },
               child: Image.asset('assets/images/close_circle.png'),
             ),
           ),
@@ -61,7 +62,7 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 357),
                     child: Text(
-                      'Hey ${name == null ? '' : '“$name”'} on openup there are two things we focused on, creating online blind dating and making friends online! You can do either a phone call or video call, give it a try! Thank you for joining our app :)',
+                      'Hey $name, on openup there are two things we focused on, creating online blind dating and making friends online! You can do either a phone call or video call, give it a try! Thank you for joining our app :)',
                       style: Theming.of(context).text.body.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -83,23 +84,5 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  void _setOnBoardedTrueAndNavigateHome(
-      BuildContext context, WidgetRef ref) async {
-    await Firebase.initializeApp();
-    final auth = FirebaseAuth.instance;
-    final user = auth.currentUser;
-    final uid = user?.uid;
-
-    if (uid == null) {
-      throw 'No user is logged in';
-    }
-
-    final usersApi = ref.read(usersApiProvider);
-    usersApi.updateOnboarded(uid, true);
-
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    Navigator.of(context).pushReplacementNamed('home');
   }
 }

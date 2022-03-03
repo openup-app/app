@@ -1,7 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/users_api.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/keyboard_screen.dart';
@@ -18,16 +20,14 @@ class SignUpInfoScreen extends ConsumerStatefulWidget {
 class _SignUpInfoScreenState extends ConsumerState<SignUpInfoScreen> {
   final _nameController = TextEditingController();
   bool _uploading = false;
-  bool _nameSetOnce = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final profile = ref.read(profileProvider);
-    if (profile != null && !_nameSetOnce) {
-      _nameSetOnce = true;
-      _nameController.text = profile.name;
-    }
+  void initState() {
+    super.initState();
+
+    // Guaranteed to be non-null before onboarding
+    final profile = ref.read(userProvider).profile!;
+    _nameController.text = profile.name;
   }
 
   @override
@@ -86,24 +86,7 @@ class _SignUpInfoScreenState extends ConsumerState<SignUpInfoScreen> {
               ),
               const SizedBox(height: 24),
               SignificantButton.blue(
-                onPressed: () async {
-                  final newName = _nameController.text;
-                  if (newName.isNotEmpty) {
-                    final user = FirebaseAuth.instance.currentUser;
-                    final uid = user?.uid;
-                    final usersApi = ref.read(usersApiProvider);
-                    final profile = ref.read(profileProvider);
-                    if (uid != null && profile != null) {
-                      setState(() => _uploading = true);
-                      await usersApi.updateProfile(
-                          uid, profile.copyWith(name: newName));
-                      if (mounted) {
-                        setState(() => _uploading = false);
-                      }
-                    }
-                  }
-                  Navigator.of(context).pushNamed('sign-up-attributes');
-                },
+                onPressed: _submit,
                 child: _uploading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text('Continue'),
@@ -117,5 +100,31 @@ class _SignUpInfoScreenState extends ConsumerState<SignUpInfoScreen> {
         ],
       ),
     );
+  }
+
+  void _submit() async {
+    final newName = _nameController.text;
+    if (newName.isEmpty) {
+      return;
+    }
+
+    setState(() => _uploading = true);
+
+    final result = await updateName(
+      context: context,
+      ref: ref,
+      name: newName,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (l) => displayError(context, l),
+      (r) => Navigator.of(context).pushNamed('sign-up-attributes'),
+    );
+
+    setState(() => _uploading = false);
   }
 }

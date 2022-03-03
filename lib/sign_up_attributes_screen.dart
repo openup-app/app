@@ -1,6 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
@@ -102,19 +106,7 @@ class _SignUpAttributesScreenState
               children: [
                 const MaleFemaleConnectionImageApart(),
                 Button(
-                  onPressed: () async {
-                    setState(() => _uploading = true);
-                    final user = FirebaseAuth.instance.currentUser;
-                    final uid = user?.uid;
-                    if (uid != null) {
-                      final usersApi = ref.read(usersApiProvider);
-                      await usersApi.updateAttributes(uid, _attributes);
-                      if (mounted) {
-                        setState(() => _uploading = false);
-                        Navigator.of(context).pushNamed('sign-up-photos');
-                      }
-                    }
-                  },
+                  onPressed: _submit,
                   child: Container(
                     height: 100,
                     alignment: Alignment.center,
@@ -139,5 +131,29 @@ class _SignUpAttributesScreenState
         ],
       ),
     );
+  }
+
+  void _submit() async {
+    setState(() => _uploading = true);
+
+    final userState = ref.read(userProvider);
+    final api = GetIt.instance.get<Api>();
+
+    final result = await api.updateAttributes(userState.uid, _attributes);
+
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (l) => displayError(context, l),
+      (r) {
+        final newUserState = userState.copyWith(attributes: _attributes);
+        ref.read(userProvider.notifier).update(newUserState);
+        Navigator.of(context).pushNamed('sign-up-photos');
+      },
+    );
+
+    setState(() => _uploading = false);
   }
 }

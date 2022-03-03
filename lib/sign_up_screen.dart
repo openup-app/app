@@ -7,6 +7,7 @@ import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/widgets/common.dart';
@@ -301,16 +302,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     );
     return result.fold(
       (l) {
-        final message = l.map(
-          network: (_) => 'Unable to connect to server',
-          client: (_) => 'Failed to sign in',
-          server: (_) => 'Something went wrong on our end, please try again',
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-          ),
-        );
+        if (mounted) {
+          displayError(context, l);
+        }
         return false;
       },
       (success) {

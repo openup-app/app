@@ -88,7 +88,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
     // Standard app entry
     if (!deepLinked) {
-      if (!widget.needsOnboarding) {
+      if (widget.needsOnboarding) {
         Navigator.of(context).pushReplacementNamed('home');
       } else {
         try {
@@ -109,37 +109,51 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
   Future<void> _cacheData(String uid) {
     final api = GetIt.instance.get<Api>();
-    final state = ref.read(userProvider);
     final notifier = ref.read(userProvider.notifier);
     return Future.wait([
       api.getProfile(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to cache profile',
-          (r) => notifier.update(state.copyWith(profile: r)),
+          (r) {
+            final state = ref.read(userProvider);
+            notifier.update(state.copyWith(profile: r));
+          },
         );
       }),
       api.getAttributes(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to cache attributes',
-          (r) => notifier.update(state.copyWith(attributes: r)),
+          (r) {
+            final state = ref.read(userProvider);
+            notifier.update(state.copyWith(attributes: r));
+          },
         );
       }),
       api.getFriendsPreferences(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to cache friends preferences',
-          (r) => notifier.update(state.copyWith(friendsPreferences: r)),
+          (r) {
+            final state = ref.read(userProvider);
+            notifier.update(state.copyWith(friendsPreferences: r));
+          },
         );
       }),
       api.getDatingPreferences(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to dating preferences',
-          (r) => notifier.update(state.copyWith(datingPreferences: r)),
+          (r) {
+            final state = ref.read(userProvider);
+            notifier.update(state.copyWith(datingPreferences: r));
+          },
         );
       }),
       api.getUnreadMessageCount(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to cache unread message count',
-          (r) => notifier.update(state.copyWith(unreadMessageCount: r)),
+          (r) {
+            final state = ref.read(userProvider);
+            notifier.update(state.copyWith(unreadMessageCount: r));
+          },
         );
       }),
     ]);
