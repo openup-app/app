@@ -86,11 +86,9 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       usersApi: tempUsersApi,
     );
 
-    // Standard app entry
+    // Standard app entry or sign up onboarding
     if (!deepLinked) {
       if (widget.needsOnboarding) {
-        Navigator.of(context).pushReplacementNamed('home');
-      } else {
         try {
           await cacheFuture;
         } catch (e) {
@@ -103,6 +101,8 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
           return;
         }
         Navigator.of(context).pushReplacementNamed('sign-up-info');
+      } else {
+        Navigator.of(context).pushReplacementNamed('home');
       }
     }
   }
