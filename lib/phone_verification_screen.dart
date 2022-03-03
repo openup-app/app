@@ -1,9 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/flexible_single_child_scroll_view.dart';
 import 'package:openup/widgets/input_area.dart';
@@ -38,8 +36,8 @@ class _PhoneVerificationScreenState
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () {
-        // True means we are canceling the verification
-        Navigator.of(context).pop(true);
+        // No user verified, null UID
+        Navigator.of(context).pop(null);
         return Future.value(false);
       },
       child: DecoratedBox(
@@ -119,49 +117,30 @@ class _PhoneVerificationScreenState
     );
 
     setState(() => _submitting = true);
+    final uid = await _validateCredential(credential);
+    if (mounted) {
+      setState(() => _submitting = false);
+    }
+    if (uid != null) {
+      Navigator.of(context).pop(uid);
+    }
+  }
 
-    final usersApi = ref.read(usersApiProvider);
-
-    String? uid;
+  Future<String?> _validateCredential(PhoneAuthCredential credential) async {
     try {
       final userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
-      uid = userCredential.user?.uid;
-      if (uid != null) {
-        usersApi.uid = uid;
-      }
+      return userCredential.user?.uid;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'invalid-verification-code') {
+      if (e.code == 'invalid-verification-code' && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Invalid code'),
           ),
         );
-        setState(() => _submitting = false);
-        return;
       }
     }
-
-    try {
-      if (uid != null) {
-        await usersApi.createUser(
-          uid: uid,
-          birthday: widget.credentialVerification.birthday,
-        );
-      }
-
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      Navigator.of(context).pushReplacementNamed('/');
-    } catch (e) {
-      print(e);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Something went wrong'),
-        ),
-      );
-    } finally {
-      setState(() => _submitting = false);
-    }
+    return null;
   }
 }
 

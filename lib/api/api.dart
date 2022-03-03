@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
@@ -34,7 +35,7 @@ class Api {
     _headers['Authorization'] = 'Bearer $value';
   }
 
-  Future<Either<ApiError, void>> createUser({
+  Future<Either<ApiError, bool>> createUser({
     required String uid,
     required DateTime birthday,
   }) {
@@ -48,7 +49,9 @@ class Api {
           }),
         );
       },
-      handleSuccess: (response) => const Right(null),
+      handleSuccess: (response) {
+        return Right(jsonDecode(response.body)['created'] == true);
+      },
     );
   }
 
@@ -476,6 +479,8 @@ class Api {
       } else {
         throw response;
       }
+    } on SocketException {
+      return const Left(_ApiNetworkError(_ConnectionFailed()));
     } catch (e) {
       rethrow;
     }

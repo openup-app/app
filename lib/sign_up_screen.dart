@@ -1,12 +1,14 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/users_api.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/user_state.dart';
+import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/flexible_single_child_scroll_view.dart';
 import 'package:openup/widgets/input_area.dart';
@@ -263,91 +265,147 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     if (_phoneErrorText == null && _birthdayErrorText == null) {
       setState(() => _submitting = true);
 
-      final usersApi = ref.read(usersApiProvider);
-
-      final bool success;
-      try {
-        success = await usersApi.checkBirthday(
-          phone: phone,
-          birthday: _birthday,
-        );
-      } on SocketException {
-        setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to connect to server'),
-          ),
-        );
-        return;
-      } catch (_) {
-        setState(() => _submitting = false);
-        rethrow;
-      }
-      if (!success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid details for existing user'),
-          ),
-        );
-        setState(() => _submitting = false);
+      if (!await _checkBirthday(phone, _birthday)) {
+        if (mounted) {
+          setState(() => _submitting = false);
+        }
         return;
       }
 
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: phone,
-        verificationCompleted: (credential) async {
-          String? uid;
-          try {
-            final userCredential =
-                await FirebaseAuth.instance.signInWithCredential(credential);
-            uid = userCredential.user?.uid;
-          } catch (e) {
+      final uid = await _verifyPhoneNumber(phone);
+      if (uid != null && mounted) {
+        final userCreated = await _createUser(uid, _birthday);
+        if (userCreated && mounted) {
+          final userState = ref.read(userProvider);
+          ref.read(userProvider.notifier).update(userState.copyWith(uid: uid));
+        }
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        Navigator.of(context).pushReplacementNamed(
+          '/',
+          arguments:
+              InitialLoadingScreenArguments(needsOnboarding: userCreated),
+        );
+      }
+
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
+    }
+  }
+
+  Future<bool> _checkBirthday(String phone, DateTime birthday) async {
+    final api = GetIt.instance.get<Api>();
+    final result = await api.checkBirthday(
+      phone: phone,
+      birthday: _birthday,
+    );
+    return result.fold(
+      (l) {
+        final message = l.map(
+          network: (_) => 'Unable to connect to server',
+          client: (_) => 'Failed to sign in',
+          server: (_) => 'Something went wrong on our end, please try again',
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+          ),
+        );
+        return false;
+      },
+      (success) {
+        if (!success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid details for existing user'),
+            ),
+          );
+        }
+        return success;
+      },
+    );
+  }
+
+  Future<bool> _createUser(String uid, DateTime birthday) async {
+    final api = GetIt.instance.get<Api>();
+    final result = await api.createUser(
+      uid: uid,
+      birthday: _birthday,
+    );
+    return result.fold(
+      (l) {
+        final message = l.map(
+          network: (_) => 'Network error',
+          client: (_) => 'Failed to create account',
+          server: (_) => 'Something went wrong on our end, please try again',
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+            ),
+          );
+        }
+        return false;
+      },
+      (r) => r,
+    );
+  }
+
+  Future<String?> _verifyPhoneNumber(String phone) async {
+    final completer = Completer<String?>();
+    FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phone,
+      verificationCompleted: (credential) async {
+        try {
+          final userCredential =
+              await FirebaseAuth.instance.signInWithCredential(credential);
+          completer.complete(userCredential.user?.uid);
+        } catch (e) {
+          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Something went wrong'),
               ),
             );
           }
-
-          if (uid != null) {
-            await usersApi.createUser(
-              uid: uid,
-              birthday: _birthday,
-            );
-            usersApi.uid = uid;
-          }
-          setState(() => _submitting = false);
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          print(e);
-          String message;
-          if (e.code == 'network-request-failed') {
-            message = 'Network error';
-          } else {
-            print(e.code);
-            message = 'Failed to send verification code';
-          }
+        }
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        print(e);
+        final String message;
+        if (e.code == 'network-request-failed') {
+          message = 'Network error';
+        } else {
+          print(e.code);
+          message = 'Failed to send verification code';
+        }
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(message)),
           );
-          setState(() => _submitting = false);
-        },
-        codeSent: (verificationId, forceResendingToken) async {
-          setState(() => _forceResendingToken = forceResendingToken);
-          await Navigator.of(context).pushNamed<bool>(
-            'phone-verification',
-            arguments: CredentialVerification(
-              verificationId: verificationId,
-              birthday: _birthday,
-            ),
-          );
-          setState(() => _submitting = false);
-        },
-        forceResendingToken: _forceResendingToken,
-        codeAutoRetrievalTimeout: (verificationId) {
-          // Android SMS auto-fill failed, nothing to do
-        },
-      );
-    }
+        }
+        completer.complete(null);
+      },
+      codeSent: (verificationId, forceResendingToken) async {
+        if (!mounted) {
+          return;
+        }
+        setState(() => _forceResendingToken = forceResendingToken);
+        final uid = await Navigator.of(context).pushNamed<String?>(
+          'phone-verification',
+          arguments: CredentialVerification(
+            verificationId: verificationId,
+            birthday: _birthday,
+          ),
+        );
+        completer.complete(uid);
+      },
+      forceResendingToken: _forceResendingToken,
+      codeAutoRetrievalTimeout: (verificationId) {
+        // Android SMS auto-fill failed, nothing to do
+      },
+    );
+    return completer.future;
   }
 }

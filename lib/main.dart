@@ -6,8 +6,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
 import 'package:openup/account_settings_phone_verification_screen.dart';
 import 'package:openup/account_settings_screen.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/online_users/online_users_api.dart';
 import 'package:openup/api/users/preferences.dart';
@@ -78,6 +80,14 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
+    // TODO: Remove this temp usersApi
+    initUsersApi(host: host, port: webPort);
+    final api = Api(
+      host: host,
+      port: webPort,
+    );
+    GetIt.instance.registerSingleton<Api>(api);
+
     Firebase.initializeApp().whenComplete(() {
       _authStateSubscription =
           FirebaseAuth.instance.authStateChanges().listen((user) {
@@ -130,9 +140,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
                     builder: (_) {
+                      final args =
+                          settings.arguments as InitialLoadingScreenArguments?;
                       return CurrentRouteSystemUiStyling.dark(
                         child: InitialLoadingScreen(
                           notificationKey: _notificationKey,
+                          needsOnboarding: args?.needsOnboarding ?? false,
                         ),
                       );
                     },
@@ -142,8 +155,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     settings: settings,
                     transitionsBuilder: fadePageTransition,
                     builder: (_) {
-                      return const CurrentRouteSystemUiStyling.dark(
-                        child: ErrorScreen(),
+                      final args =
+                          settings.arguments as InitialLoadingScreenArguments?;
+                      return CurrentRouteSystemUiStyling.dark(
+                        child: ErrorScreen(
+                          needsOnboarding: args?.needsOnboarding ?? false,
+                        ),
                       );
                     },
                   );
@@ -158,7 +175,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   );
                 case 'phone-verification':
                   final args = settings.arguments as CredentialVerification;
-                  return _buildPageRoute<bool>(
+                  return _buildPageRoute<String?>(
                     settings: settings,
                     builder: (_) {
                       return CurrentRouteSystemUiStyling.dark(

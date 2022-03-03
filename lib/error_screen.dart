@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ErrorScreen extends StatelessWidget {
-  const ErrorScreen({Key? key}) : super(key: key);
+  final bool needsOnboarding;
+  const ErrorScreen({
+    Key? key,
+    this.needsOnboarding = false,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +30,12 @@ class ErrorScreen extends StatelessWidget {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
-              Navigator.of(context).pushNamed('/');
+              Navigator.of(context).pushNamed(
+                '/',
+                arguments: InitialLoadingScreenArguments(
+                  needsOnboarding: needsOnboarding,
+                ),
+              );
             },
             child: const Text('Retry'),
           ),
