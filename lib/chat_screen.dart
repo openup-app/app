@@ -358,7 +358,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   height: 42,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width - 150,
+                    maxWidth: MediaQuery.of(context).size.width - 250,
                   ),
                   decoration: BoxDecoration(
                     color: const Color.fromRGBO(0x42, 0x42, 0x42, 1.0),
@@ -408,6 +408,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         final profile = _profile;
                         if (profile != null) {
                           _call(profile, video: false);
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.video_camera_front),
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        final profile = _profile;
+                        if (profile != null) {
+                          _call(profile, video: true);
                         }
                       },
                     ),
