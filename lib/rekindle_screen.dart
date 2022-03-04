@@ -52,41 +52,46 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
       decoration: const BoxDecoration(
         color: Colors.black,
       ),
-      child: AnimatedCrossFade(
-        duration: const Duration(milliseconds: 500),
-        firstChild: Stack(
-          children: [
-            if (error == null)
-              const Center(
-                child: CircularProgressIndicator(),
-              )
-            else
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    error,
-                    textAlign: TextAlign.center,
-                    style: Theming.of(context)
-                        .text
-                        .headline
-                        .copyWith(color: Colors.red),
+      child: Stack(
+        children: [
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 500),
+            firstChild: error == null
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        error,
+                        textAlign: TextAlign.center,
+                        style: Theming.of(context)
+                            .text
+                            .headline
+                            .copyWith(color: Colors.red),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ..._backTitleAndHomeButtons(context, 'rekindle'),
-          ],
-        ),
-        secondChild: rekindles == null
-            ? const SizedBox.shrink()
-            : RekindleScreenPrecached(
-                rekindles: rekindles,
-                index: 0,
-                countdown: false,
-              ),
-        crossFadeState: _rekindles == null
-            ? CrossFadeState.showFirst
-            : CrossFadeState.showSecond,
+            secondChild: rekindles == null
+                ? const SizedBox.shrink()
+                : RekindleScreenPrecached(
+                    rekindles: rekindles,
+                    index: 0,
+                    countdown: false,
+                  ),
+            crossFadeState: _rekindles == null
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
+          ),
+          Positioned(
+            right: MediaQuery.of(context).padding.right + 16,
+            bottom: MediaQuery.of(context).padding.bottom + 16,
+            child: const HomeButton(
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -111,16 +116,10 @@ class RekindleScreenPrecached extends ConsumerWidget {
     if (rekindles.isEmpty) {
       return Container(
         color: Colors.black,
-        child: Stack(
-          children: [
-            Center(
-              child: Text(
-                'No one to rekindle with',
-                style: Theming.of(context).text.headline,
-              ),
-            ),
-            ..._backTitleAndHomeButtons(context, 'rekindle'),
-          ],
+        alignment: Alignment.center,
+        child: Text(
+          'No one to rekindle with',
+          style: Theming.of(context).text.headline,
         ),
       );
     }
@@ -215,7 +214,7 @@ class RekindleScreenPrecached extends ConsumerWidget {
                   child: Image.asset('assets/images/heart.gif'),
                 ),
               Text(
-                'Tap connect in order to become friends,\nsee each others profiles and chat more.\n\n(if you don’t connect now, there is a\nchance you might meet again in the future)',
+                'When you both connect, you get to see\neach other\'s profiles and chat more',
                 textAlign: TextAlign.center,
                 style: Theming.of(context)
                     .text
@@ -272,13 +271,8 @@ class RekindleScreenPrecached extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Image.asset(
-                        'assets/images/voice_call.png',
-                        width: 44,
-                      ),
-                      const SizedBox(width: 8),
                       Text(
-                        'Meet new people',
+                        'Next',
                         style: Theming.of(context).text.body.copyWith(
                               fontSize: 18,
                               fontWeight: FontWeight.w300,
@@ -317,46 +311,6 @@ class RekindleScreenPrecached extends ConsumerWidget {
     }
   }
 }
-
-List<Widget> _backTitleAndHomeButtons(BuildContext context, String title) => [
-      Positioned(
-        top: MediaQuery.of(context).padding.top,
-        left: 0,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: IconButton(
-            onPressed: Navigator.of(context).pop,
-            icon: const Icon(Icons.arrow_back, size: 32),
-          ),
-        ),
-      ),
-      Positioned(
-        right: MediaQuery.of(context).padding.right + 16,
-        bottom: MediaQuery.of(context).padding.bottom + 16,
-        child: const HomeButton(
-          color: Colors.white,
-        ),
-      ),
-      Align(
-        alignment: Alignment.topCenter,
-        child: Padding(
-          padding:
-              EdgeInsets.only(top: MediaQuery.of(context).padding.top + 20),
-          child: Text(
-            title,
-            style: Theming.of(context).text.bodySecondary.copyWith(
-              shadows: [
-                BoxShadow(
-                  color: Theming.of(context).shadow,
-                  spreadRadius: 0.0,
-                  blurRadius: 32.0,
-                )
-              ],
-            ),
-          ),
-        ),
-      ),
-    ];
 
 class ColoredSlider extends StatefulWidget {
   final bool countdown;

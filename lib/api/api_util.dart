@@ -10,7 +10,15 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/widgets/loading_dialog.dart';
 
 void displayError(BuildContext context, ApiError error) {
-  final message = error.map(
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(errorToMessage(error)),
+    ),
+  );
+}
+
+String errorToMessage(ApiError error) {
+  return error.map(
     network: (_) => 'Unable to connect to server',
     client: (client) {
       return client.error.map(
@@ -21,11 +29,6 @@ void displayError(BuildContext context, ApiError error) {
       );
     },
     server: (_) => 'Something went wrong on our end, please try again',
-  );
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-    ),
   );
 }
 
