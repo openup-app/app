@@ -211,15 +211,17 @@ class PreferencesSelection extends StatelessWidget {
             .join(' ');
 
     final ethnicityList = [
-      'Black',
       'White',
+      'Black',
       'Indian',
-      'Gujarati',
-      'Armenian',
+      'Punjabi',
+      'Hindu',
       'Chinese',
       'Japanese',
-      'Lebanese',
-      'Other',
+      'Korean',
+      'Hispanic',
+      'Native American',
+      'Asian',
     ];
     final ethnicityLabelElements = [...preferences.ethnicity];
     ethnicityLabelElements.sort(

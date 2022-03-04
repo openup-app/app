@@ -148,15 +148,17 @@ class AttributesForm extends StatelessWidget {
             onPressed: () => onExpansion(3),
             children: [
               for (var ethnicity in [
-                'Black',
                 'White',
+                'Black',
                 'Indian',
-                'Gujarati',
-                'Armenian',
+                'Punjabi',
+                'Hindu',
                 'Chinese',
                 'Japanese',
-                'Lebanese',
-                'Other',
+                'Korean',
+                'Hispanic',
+                'Native American',
+                'Asian',
               ])
                 PreferencesRadioTile(
                   title: Text(ethnicity),
