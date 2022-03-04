@@ -60,7 +60,7 @@ class _MatchingUsersOnlineState extends State<MatchingUsersOnline> {
         }
         final count = snapshot.requireData;
         return Text(
-          '$count',
+          '$count match${count == 1 ? '' : 'es'} online',
           style: Theming.of(context).text.body.copyWith(color: Colors.black),
         );
       },
