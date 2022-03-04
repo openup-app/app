@@ -16,7 +16,6 @@ import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/online_users/online_users_api.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
@@ -494,26 +493,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             video: args.video,
                             serious: args.serious,
                             purpose: Purpose.friends,
-                            onJoinCall: ({
-                              required String rid,
-                              required List<Profile> profiles,
-                              required List<Rekindle> rekindles,
-                            }) {
-                              final route = args.video
-                                  ? 'friends-video-call'
-                                  : 'friends-voice-call';
-                              Navigator.of(context).pushNamed(
-                                route,
-                                arguments: CallPageArguments(
-                                  rid: rid,
-                                  profiles: profiles
-                                      .map((e) => e.toSimpleProfile())
-                                      .toList(),
-                                  rekindles: rekindles,
-                                  serious: args.serious,
-                                ),
-                              );
-                            },
                           ),
                         ),
                       );
@@ -846,26 +825,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             video: args.video,
                             serious: args.serious,
                             purpose: Purpose.dating,
-                            onJoinCall: ({
-                              required String rid,
-                              required List<Profile> profiles,
-                              required List<Rekindle> rekindles,
-                            }) {
-                              final route = args.video
-                                  ? 'dating-video-call'
-                                  : 'dating-voice-call';
-                              Navigator.of(context).pushNamed(
-                                route,
-                                arguments: CallPageArguments(
-                                  rid: rid,
-                                  profiles: profiles
-                                      .map((e) => e.toSimpleProfile())
-                                      .toList(),
-                                  rekindles: rekindles,
-                                  serious: args.serious,
-                                ),
-                              );
-                            },
                           ),
                         ),
                       );

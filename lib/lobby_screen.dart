@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:math';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/call_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/widgets/notification_banner.dart';
@@ -17,17 +20,12 @@ import 'widgets/home_button.dart';
 part 'lobby_screen.freezed.dart';
 
 /// Page on which you wait to be matched with another user.
-class LobbyScreen extends StatefulWidget {
+class LobbyScreen extends ConsumerStatefulWidget {
   final String host;
   final int socketPort;
   final bool video;
   final bool serious;
   final Purpose purpose;
-  final void Function({
-    required String rid,
-    required List<Profile> profiles,
-    required List<Rekindle> rekindles,
-  }) onJoinCall;
 
   const LobbyScreen({
     Key? key,
@@ -36,18 +34,17 @@ class LobbyScreen extends StatefulWidget {
     required this.video,
     required this.serious,
     required this.purpose,
-    required this.onJoinCall,
   }) : super(key: key);
 
   @override
   _LobbyScreenState createState() => _LobbyScreenState();
 }
 
-class _LobbyScreenState extends State<LobbyScreen>
+class _LobbyScreenState extends ConsumerState<LobbyScreen>
     with SingleTickerProviderStateMixin {
-  late final LobbyApi _lobbyApi;
+  LobbyApi? _lobbyApi;
+  StreamSubscription? _subscription;
 
-  late final StreamSubscription _subscription;
   late final AnimationController _animationController;
   bool _shouldHandleDisconnection = true;
 
@@ -65,16 +62,33 @@ class _LobbyScreenState extends State<LobbyScreen>
     });
     _animationController.forward();
 
+    _joinLobby();
+  }
+
+  void _joinLobby() async {
+    if (_lobbyApi != null) {
+      _subscription?.cancel();
+      _lobbyApi?.dispose();
+
+      // Delay to let the user breathe
+      final random = Random();
+      final seconds = random.nextInt(3) + 4;
+      await Future.delayed(Duration(seconds: seconds));
+      if (!mounted) {
+        return;
+      }
+    }
+
     _lobbyApi = LobbyApi(
       host: widget.host,
       socketPort: widget.socketPort,
-      uid: FirebaseAuth.instance.currentUser!.uid,
+      uid: ref.read(userProvider).uid,
       video: widget.video,
       serious: widget.serious,
       purpose: widget.purpose,
     );
-    _subscription = _lobbyApi.eventStream.listen(_onLobbyEvent);
-    _lobbyApi.connect();
+    _subscription = _lobbyApi?.eventStream.listen(_onLobbyEvent);
+    _lobbyApi?.connect();
   }
 
   void _onLobbyEvent(LobbyEvent event) {
@@ -105,7 +119,7 @@ class _LobbyScreenState extends State<LobbyScreen>
           IgnorePointer(
             child: CustomSnackBar.error(
               message:
-                  'You have been penalized from serious mode for $minutes more minute${plural ? 's' : ''}',
+                  'You have been penalized from serious mode ($minutes minute${plural ? 's' : ''} left)',
               boxShadow: const [],
               textStyle: Theming.of(context).text.body.copyWith(fontSize: 18),
             ),
@@ -113,21 +127,15 @@ class _LobbyScreenState extends State<LobbyScreen>
         );
         Navigator.of(context).pop();
       },
-      joinCall: (rid, profiles, rekindles) {
-        widget.onJoinCall(
-          rid: rid,
-          profiles: profiles,
-          rekindles: rekindles,
-        );
-      },
+      joinCall: _joinCall,
     );
   }
 
   @override
   void dispose() {
-    _subscription.cancel();
+    _subscription?.cancel();
+    _lobbyApi?.dispose();
     _animationController.dispose();
-    _lobbyApi.dispose();
     super.dispose();
   }
 
@@ -211,6 +219,27 @@ class _LobbyScreenState extends State<LobbyScreen>
         );
       },
     );
+  }
+
+  void _joinCall(
+    String rid,
+    List<Profile> profiles,
+    List<Rekindle> rekindles,
+  ) async {
+    final purpose = widget.purpose.name;
+    final route = widget.video ? '$purpose-video-call' : '$purpose-voice-call';
+    await Navigator.of(context).pushNamed(
+      route,
+      arguments: CallPageArguments(
+        rid: rid,
+        profiles: profiles.map((e) => e.toSimpleProfile()).toList(),
+        rekindles: rekindles,
+        serious: widget.serious,
+      ),
+    );
+    if (mounted) {
+      _joinLobby();
+    }
   }
 }
 
