@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/button.dart';
@@ -31,11 +32,10 @@ class ProfileDrawer extends ConsumerWidget {
               flex: 3,
               child: Button(
                 onPressed: () {
-                  final usersApi = ref.watch(usersApiProvider);
                   Navigator.of(context).pushNamed(
                     'profile',
                     arguments: ProfileArguments(
-                      profile: usersApi.profile!,
+                      profile: ref.read(userProvider).profile,
                       editable: true,
                     ),
                   );
@@ -59,11 +59,11 @@ class ProfileDrawer extends ConsumerWidget {
                       ),
                       child: Consumer(
                         builder: (context, ref, child) {
-                          final gallery = ref.watch(profileProvider)?.gallery;
-                          final photo = ref.watch(profileProvider)?.photo;
-                          if (photo == null ||
-                              gallery == null ||
-                              gallery.isEmpty) {
+                          final gallery =
+                              ref.watch(userProvider).profile?.gallery ?? [];
+                          final photo =
+                              ref.watch(userProvider).profile?.photo ?? '';
+                          if (gallery.isEmpty) {
                             return const DecoratedBox(
                               decoration: BoxDecoration(
                                 borderRadius:
@@ -90,7 +90,7 @@ class ProfileDrawer extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: Text(
-                ref.read(usersApiProvider).profile?.name ?? '',
+                ref.watch(userProvider).profile?.name ?? '',
                 style: Theming.of(context).text.bodySecondary.copyWith(
                   fontSize: 24,
                   shadows: [

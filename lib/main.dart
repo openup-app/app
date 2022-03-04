@@ -962,6 +962,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     builder: (_) {
                       return CurrentRouteSystemUiStyling.light(
                         child: ProfileScreen(
+                          profile: args.profile,
                           editable: args.editable,
                         ),
                       );
