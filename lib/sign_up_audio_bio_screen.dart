@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/audio_bio.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/theming.dart';
@@ -41,16 +42,24 @@ class _SignUpAudioBioScreenState extends ConsumerState<SignUpAudioBioScreen> {
         SizedBox(
           height: MediaQuery.of(context).padding.top + 32,
         ),
-        Align(
+        Stack(
           alignment: Alignment.center,
-          child: Text(
-            'Record your bio',
-            style: Theming.of(context).text.body.copyWith(
-                  color: const Color.fromRGBO(0x62, 0xCD, 0xE3, 1.0),
-                  fontWeight: FontWeight.w400,
-                  fontSize: 30,
-                ),
-          ),
+          children: [
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: BackIconButton(
+                color: Colors.black,
+              ),
+            ),
+            Text(
+              'Record your bio',
+              style: Theming.of(context).text.body.copyWith(
+                    color: const Color.fromRGBO(0x62, 0xCD, 0xE3, 1.0),
+                    fontWeight: FontWeight.w400,
+                    fontSize: 30,
+                  ),
+            ),
+          ],
         ),
         const SizedBox(height: 24),
         Align(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/photo_grid.dart';
@@ -20,16 +21,24 @@ class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
         SizedBox(
           height: MediaQuery.of(context).padding.top + 32,
         ),
-        Align(
+        Stack(
           alignment: Alignment.center,
-          child: Text(
-            'Add a photo',
-            style: Theming.of(context).text.body.copyWith(
-                  color: const Color.fromRGBO(0x62, 0xCD, 0xE3, 1.0),
-                  fontWeight: FontWeight.w400,
-                  fontSize: 30,
-                ),
-          ),
+          children: [
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: BackIconButton(
+                color: Colors.black,
+              ),
+            ),
+            Text(
+              'Add a photo',
+              style: Theming.of(context).text.body.copyWith(
+                    color: const Color.fromRGBO(0x62, 0xCD, 0xE3, 1.0),
+                    fontWeight: FontWeight.w400,
+                    fontSize: 30,
+                  ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         Align(

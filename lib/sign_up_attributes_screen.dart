@@ -8,6 +8,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_form.dart';
@@ -49,16 +50,24 @@ class _SignUpAttributesScreenState
               SizedBox(
                 height: MediaQuery.of(context).padding.top + 32,
               ),
-              Align(
+              Stack(
                 alignment: Alignment.center,
-                child: Text(
-                  'Introduce yourself',
-                  style: Theming.of(context).text.body.copyWith(
-                        color: const Color.fromRGBO(0x62, 0xCD, 0xE3, 1.0),
-                        fontWeight: FontWeight.w400,
-                        fontSize: 30,
-                      ),
-                ),
+                children: [
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: BackIconButton(
+                      color: Colors.black,
+                    ),
+                  ),
+                  Text(
+                    'Introduce yourself',
+                    style: Theming.of(context).text.body.copyWith(
+                          color: const Color.fromRGBO(0x62, 0xCD, 0xE3, 1.0),
+                          fontWeight: FontWeight.w400,
+                          fontSize: 30,
+                        ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Align(
