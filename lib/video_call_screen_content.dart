@@ -164,7 +164,7 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
         AnimatedPositioned(
           left: _showingControls ? 16.0 : -(56.0 + 16.0),
           top: MediaQuery.of(context).padding.top + 32.0,
-          duration: const Duration(milliseconds: 500),
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
           child: _CallControlButton(
             onPressed: () => widget.onReport(tempFirstUser.profile.uid),
@@ -223,7 +223,7 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
           bottom: _showingControls
               ? MediaQuery.of(context).padding.bottom + 16.0
               : -(60.0 + 16),
-          duration: const Duration(milliseconds: 500),
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
           child: Column(
             mainAxisSize: MainAxisSize.min,
