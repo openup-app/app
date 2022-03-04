@@ -10,7 +10,6 @@ import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
-import 'package:openup/widgets/notification_banner.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
@@ -190,14 +189,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen>
                     style: Theming.of(context).text.body.copyWith(fontSize: 16),
                   ),
                 ],
-              ),
-              const Positioned(
-                right: 0,
-                bottom: 100,
-                child: NotificationBanner(
-                  contents:
-                      'Helpful Tip: Adjust preferences to find your perfect match',
-                ),
               ),
               Positioned(
                 top: MediaQuery.of(context).padding.top + 16,

@@ -6,7 +6,6 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/home_button.dart';
-import 'package:openup/widgets/notification_banner.dart';
 import 'package:openup/widgets/photo_grid.dart';
 import 'package:openup/widgets/profile_bio.dart';
 import 'package:openup/widgets/theming.dart';
@@ -51,13 +50,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   left: 0,
                   right: 0,
                   child: PhotoGrid(),
-                ),
-                const Positioned(
-                  right: 0,
-                  bottom: 172,
-                  child: NotificationBanner(
-                    contents: 'Record an audio bio for your connects to hear',
-                  ),
                 ),
                 Positioned(
                   left: 16,
