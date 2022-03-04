@@ -366,7 +366,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
         }
       },
       verificationFailed: (FirebaseAuthException e) {
-        print(e);
         final String message;
         if (e.code == 'network-request-failed') {
           message = 'Network error';

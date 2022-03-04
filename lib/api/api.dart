@@ -89,33 +89,6 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, bool>> getOnboarded(String uid) {
-    return _request(
-      makeRequest: () {
-        return http.get(
-          Uri.parse('$_urlBase/users/$uid/onboarded'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        return Right(jsonDecode(response.body)['onboarded'] == true);
-      },
-    );
-  }
-
-  Future<Either<ApiError, void>> updateOnboarded(String uid, bool onboarded) {
-    return _request(
-      makeRequest: () {
-        return http.put(
-          Uri.parse('$_urlBase/users/$uid/onboarded'),
-          headers: _headers,
-          body: jsonEncode({'onboarded': onboarded}),
-        );
-      },
-      handleSuccess: (response) => const Right(null),
-    );
-  }
-
   Future<Either<ApiError, Profile>> getProfile(String uid) {
     return _request(
       makeRequest: () {
