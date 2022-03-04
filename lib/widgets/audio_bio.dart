@@ -208,7 +208,7 @@ class _AudioBioPlaybackControlsState extends State<AudioBioPlaybackControls> {
                   ),
                 ),
                 Text(
-                  _formatTimeSecondsMilliseconds(
+                  _formatTimeSeconds(
                       playbackInfo.state == PlaybackState.playing ||
                               playbackInfo.state == PlaybackState.paused
                           ? playbackInfo.position
@@ -229,11 +229,9 @@ class _AudioBioPlaybackControlsState extends State<AudioBioPlaybackControls> {
   }
 }
 
-String _formatTimeSecondsMilliseconds(Duration duration) {
+String _formatTimeSeconds(Duration duration) {
   final seconds = duration.inSeconds;
-  final totalMillis = duration.inMilliseconds;
-  final millis = totalMillis - seconds * 1000;
-  return '${seconds.toString().padLeft(2, '0')}:${millis.toString().padRight(2, '0').substring(0, 2)}';
+  return seconds.toString().padLeft(2, '0');
 }
 
 class AudioBioController {
