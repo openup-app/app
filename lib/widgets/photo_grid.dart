@@ -1,10 +1,12 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_crop/image_crop.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/platform/photo_picker.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/image_builder.dart';
 
@@ -17,30 +19,35 @@ class PhotoGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final rowCount = horizontal ? 2 : 3;
+    final colCount = horizontal ? 3 : 2;
     return Column(
       children: [
-        for (var i = 0; i < (horizontal ? 2 : 3); i++)
+        for (var row = 0; row < rowCount; row++)
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: horizontal
-                  ? (i == 0 ? CrossAxisAlignment.end : CrossAxisAlignment.start)
+                  ? (row == 0
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start)
                   : CrossAxisAlignment.stretch,
               children: [
-                for (var j = 0; j < (horizontal ? 3 : 2); j++)
+                for (var col = 0; col < colCount; col++)
                   Expanded(
                     child: Consumer(
                       builder: (context, ref, _) {
                         final gallery = ref.watch(userProvider
                             .select((p) => p.profile?.gallery ?? []));
+
+                        final index = row * colCount + col;
                         return Stack(
                           children: [
                             Button(
                               onPressed: () async {
-                                final index = i * 2 + j;
-                                final photo = await _pickPhoto(context);
-                                if (photo != null) {
-                                  _uploadPhoto(context, ref, photo, index);
+                                final bytes = await _pickAndCropPhoto(context);
+                                if (bytes != null) {
+                                  _uploadPhoto(context, ref, bytes, index);
                                 }
                               },
                               child: Container(
@@ -60,14 +67,14 @@ class PhotoGrid extends ConsumerWidget {
                                   alignment: Alignment.center,
                                   fit: StackFit.expand,
                                   children: [
-                                    if (gallery.length > i * 2 + j)
+                                    if (index < gallery.length)
                                       ColorFiltered(
                                         colorFilter: ColorFilter.mode(
                                           Colors.black.withOpacity(0.25),
                                           BlendMode.darken,
                                         ),
                                         child: Image.network(
-                                          gallery[i * 2 + j],
+                                          gallery[index],
                                           fit: BoxFit.cover,
                                           frameBuilder: fadeInFrameBuilder,
                                           loadingBuilder:
@@ -85,7 +92,7 @@ class PhotoGrid extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                            if (gallery.length > i * 2 + j)
+                            if (index < gallery.length)
                               Positioned(
                                 right: 20,
                                 top: 20,
@@ -94,7 +101,7 @@ class PhotoGrid extends ConsumerWidget {
                                     _deletePhoto(
                                       context: context,
                                       ref: ref,
-                                      index: i * 2 + j,
+                                      index: index,
                                     );
                                   },
                                   child: const Icon(
@@ -115,34 +122,111 @@ class PhotoGrid extends ConsumerWidget {
     );
   }
 
-  Future<Uint8List?> _pickPhoto(BuildContext context) async {
-    final useCamera = await showDialog<bool>(
+  Future<Uint8List?> _pickAndCropPhoto(BuildContext context) async {
+    final path = await _showPickPhotoInterface(context);
+    if (path == null) {
+      return null;
+    }
+
+    final cropKey = GlobalKey<CropState>();
+    final file = File(path);
+    return showDialog<Uint8List?>(
       context: context,
       builder: (context) {
-        return Dialog(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Camera'),
-                onTap: () => Navigator.of(context).pop(true),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo),
-                title: const Text('Gallery'),
-                onTap: () => Navigator.of(context).pop(false),
-              ),
-            ],
+        return AlertDialog(
+          contentPadding: EdgeInsets.zero,
+          actions: [
+            TextButton(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final area = cropKey.currentState?.area;
+                if (area != null) {
+                  final result = await ImageCrop.cropImage(
+                    file: file,
+                    area: area,
+                  );
+                  Navigator.of(context).pop(await result.readAsBytes());
+                } else {
+                  Navigator.of(context).pop(await file.readAsBytes());
+                }
+              },
+              child: const Text('Done'),
+            ),
+          ],
+          content: _ImageCropper(
+            cropKey: cropKey,
+            file: file,
           ),
         );
       },
     );
+  }
+}
 
-    if (useCamera != null) {
-      return PhotoPicker().pickPhoto(useCamera);
-    }
-    return null;
+Future<String?> _showPickPhotoInterface(BuildContext context) async {
+  final useCamera = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Camera'),
+              onTap: () => Navigator.of(context).pop(true),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo),
+              title: const Text('Gallery'),
+              onTap: () => Navigator.of(context).pop(false),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+
+  if (useCamera != null) {
+    final imagePicker = ImagePicker();
+    final image = await imagePicker.pickImage(
+      maxWidth: 800,
+      maxHeight: 800,
+      source: useCamera ? ImageSource.camera : ImageSource.gallery,
+    );
+    return image?.path;
+  }
+
+  return null;
+}
+
+class _ImageCropper extends StatefulWidget {
+  final GlobalKey<CropState> cropKey;
+  final File file;
+
+  const _ImageCropper({
+    Key? key,
+    required this.cropKey,
+    required this.file,
+  }) : super(key: key);
+
+  @override
+  State<_ImageCropper> createState() => __ImageCropperState();
+}
+
+class __ImageCropperState extends State<_ImageCropper> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black,
+      child: Crop(
+        key: widget.cropKey,
+        image: FileImage(widget.file),
+      ),
+    );
   }
 }
 
