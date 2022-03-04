@@ -78,7 +78,18 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     });
 
     // Begin caching
-    final cacheFuture = _cacheData(notifier.userState.uid);
+    try {
+      await _cacheData(notifier.userState.uid);
+    } catch (e) {
+      print(e);
+      Navigator.of(context).pushReplacementNamed(
+        'error',
+        arguments: InitialLoadingScreenArguments(
+          needsOnboarding: widget.needsOnboarding,
+        ),
+      );
+      return;
+    }
 
     // Perform deep linking
     final deepLinked = await initializeNotifications(
@@ -89,17 +100,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     // Standard app entry or sign up onboarding
     if (!deepLinked) {
       if (widget.needsOnboarding) {
-        try {
-          await cacheFuture;
-        } catch (e) {
-          Navigator.of(context).pushReplacementNamed(
-            'error',
-            arguments: InitialLoadingScreenArguments(
-              needsOnboarding: widget.needsOnboarding,
-            ),
-          );
-          return;
-        }
         Navigator.of(context).pushReplacementNamed('sign-up-info');
       } else {
         Navigator.of(context).pushReplacementNamed('home');
