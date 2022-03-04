@@ -141,17 +141,6 @@ class ProfileDrawer extends ConsumerWidget {
                 ),
                 _MenuButton(
                   icon: SvgPicture.asset(
-                    'assets/images/rekindle_icon.svg',
-                    color: iconColor,
-                    width: 32,
-                    height: 32,
-                    fit: BoxFit.scaleDown,
-                  ),
-                  title: 'rekindle',
-                  onPressed: () => Navigator.of(context).pushNamed('rekindle'),
-                ),
-                _MenuButton(
-                  icon: SvgPicture.asset(
                     'assets/images/support_icon.svg',
                     color: iconColor,
                     width: 32,
