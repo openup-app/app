@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:openup/profile_edit_screen.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
+import 'package:openup/widgets/photo_grid.dart';
 import 'package:openup/widgets/theming.dart';
 
 class SignUpPhotosScreen extends StatefulWidget {
