@@ -1,12 +1,14 @@
 import 'dart:ui';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/rekindle.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/profile_photo.dart';
@@ -24,52 +26,68 @@ class RekindleScreen extends ConsumerStatefulWidget {
 
 class _RekindleScreenState extends ConsumerState<RekindleScreen> {
   List<Rekindle>? _rekindles;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    final usersApi = ref.read(usersApiProvider);
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) {
-      usersApi.getRekindles(uid).then((rekindles) {
-        if (mounted) {
-          setState(() => _rekindles = rekindles);
-        }
-      });
+    final userState = ref.read(userProvider);
+    final api = GetIt.instance.get<Api>();
+    if (!mounted) {
+      return;
     }
+    api.getRekindles(userState.uid).then((result) {
+      result.fold(
+        (l) => setState(() => _error = errorToMessage(l)),
+        (r) => setState(() => _rekindles = r),
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final rekindles = _rekindles;
-    return AnimatedCrossFade(
-      duration: const Duration(milliseconds: 500),
-      firstChild: Container(
+    final error = _error;
+    return DecoratedBox(
+      decoration: const BoxDecoration(
         color: Colors.black,
-        child: Stack(
-          fit: StackFit.expand,
+      ),
+      child: AnimatedCrossFade(
+        duration: const Duration(milliseconds: 500),
+        firstChild: Stack(
           children: [
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
+            if (error == null)
+              const Center(
+                child: CircularProgressIndicator(),
+              )
+            else
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    error,
+                    textAlign: TextAlign.center,
+                    style: Theming.of(context)
+                        .text
+                        .headline
+                        .copyWith(color: Colors.red),
+                  ),
+                ),
+              ),
             ..._backTitleAndHomeButtons(context, 'rekindle'),
           ],
         ),
-      ),
-      secondChild: rekindles == null
-          ? const DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.black,
+        secondChild: rekindles == null
+            ? const SizedBox.shrink()
+            : RekindleScreenPrecached(
+                rekindles: rekindles,
+                index: 0,
+                countdown: false,
               ),
-            )
-          : RekindleScreenPrecached(
-              rekindles: rekindles,
-              index: 0,
-              countdown: false,
-            ),
-      crossFadeState: _rekindles == null
-          ? CrossFadeState.showFirst
-          : CrossFadeState.showSecond,
+        crossFadeState: _rekindles == null
+            ? CrossFadeState.showFirst
+            : CrossFadeState.showSecond,
+      ),
     );
   }
 }
@@ -96,8 +114,10 @@ class RekindleScreenPrecached extends ConsumerWidget {
         child: Stack(
           children: [
             Center(
-              child: Text('No one to rekindle with',
-                  style: Theming.of(context).text.headline),
+              child: Text(
+                'No one to rekindle with',
+                style: Theming.of(context).text.headline,
+              ),
             ),
             ..._backTitleAndHomeButtons(context, 'rekindle'),
           ],
@@ -107,8 +127,7 @@ class RekindleScreenPrecached extends ConsumerWidget {
     final rekindle = rekindles[index];
     final photo = rekindle.photo;
 
-    final myProfile = ref.read(profileProvider);
-    final myPhoto = myProfile?.photo;
+    final myPhoto = ref.watch(userProvider.select((p) => p.profile!.photo));
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -154,12 +173,10 @@ class RekindleScreenPrecached extends ConsumerWidget {
                         height: 160,
                         clipBehavior: Clip.hardEdge,
                         decoration: const BoxDecoration(shape: BoxShape.circle),
-                        child: myPhoto != null
-                            ? ProfilePhoto(
-                                url: myPhoto,
-                                fit: BoxFit.cover,
-                              )
-                            : null,
+                        child: ProfilePhoto(
+                          url: myPhoto,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                       const SizedBox(width: 28),
                       Container(
@@ -280,13 +297,9 @@ class RekindleScreenPrecached extends ConsumerWidget {
   }
 
   void _addRekindle(WidgetRef ref, Rekindle rekindle) {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      return;
-    }
-
-    final usersApi = ref.read(usersApiProvider);
-    usersApi.addConnectionRequest(uid, rekindle.uid);
+    final uid = ref.read(userProvider).uid;
+    final api = GetIt.instance.get<Api>();
+    api.addConnectionRequest(uid, rekindle.uid);
   }
 
   void _moveToNextScreen(BuildContext context) {
