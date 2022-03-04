@@ -100,16 +100,17 @@ class _PreferencesExpansionSectionState
                       opacity: Tween(begin: 1.0, end: 0.0).animate(_controller),
                       child: Row(
                         children: [
-                          Text(
-                            widget.label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white),
+                          Expanded(
+                            child: Text(
+                              widget.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white),
+                            ),
                           ),
-                          const Spacer(),
                           const Icon(Icons.chevron_right, size: 40),
                         ],
                       ),
