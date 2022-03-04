@@ -79,7 +79,8 @@ class _MenuScreenState extends State<MenuScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Spacer(),
+                    SizedBox(height: MediaQuery.of(context).padding.top),
+                    const Spacer(flex: 1),
                     Text(
                       widget.label,
                       style: Theming.of(context).text.headline.copyWith(
@@ -94,7 +95,7 @@ class _MenuScreenState extends State<MenuScreen> {
                         ],
                       ),
                     ),
-                    const Spacer(),
+                    const Spacer(flex: 1),
                     Stack(
                       alignment: Alignment.bottomRight,
                       children: [
@@ -190,7 +191,7 @@ class _MenuScreenState extends State<MenuScreen> {
                         style: buttonStyle,
                       ),
                     ),
-                    const Spacer(),
+                    const Spacer(flex: 4),
                   ],
                 ),
               ),
