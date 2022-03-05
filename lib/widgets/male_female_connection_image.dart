@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:lottie/lottie.dart';
 
 class MaleFemaleConnectionImageApart extends StatelessWidget {
   const MaleFemaleConnectionImageApart({Key? key}) : super(key: key);
@@ -16,16 +17,16 @@ class MaleFemaleConnectionImageApart extends StatelessWidget {
             fit: StackFit.loose,
             children: [
               Positioned(
-                height: 210,
-                left: -115,
-                bottom: -25,
-                child: Image.asset('assets/images/friends.gif'),
+                height: 250,
+                left: -148,
+                bottom: -44,
+                child: Lottie.asset('assets/images/friends.json'),
               ),
               Positioned(
-                height: 210,
-                right: -132,
-                bottom: -25,
-                child: Image.asset('assets/images/friends.gif'),
+                height: 250,
+                right: -170,
+                bottom: -44,
+                child: Lottie.asset('assets/images/friends.json'),
               ),
             ],
           ),

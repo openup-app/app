@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
@@ -204,10 +205,7 @@ class RekindleScreenPrecached extends ConsumerWidget {
                     Flexible(
                       flex: 3,
                       fit: FlexFit.loose,
-                      child: Image.asset(
-                        'assets/images/friends.gif',
-                        color: const Color.fromARGB(0xFF, 0xAA, 0xDD, 0xED),
-                      ),
+                      child: Lottie.asset('assets/images/friends.json'),
                     )
                   else
                     ConstrainedBox(

@@ -40,6 +40,7 @@ dependencies:
   get_it: ^7.2.0
   mixpanel_flutter: ^1.4.5
   image_crop: ^0.4.0
+  lottie: ^1.2.2
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +66,7 @@ flutter:
     - assets/images/play_icon.svg
     - assets/images/pause_icon.svg
     - assets/images/preferences_back.png
+    - assets/images/friends.json
     - assets/images/heart.gif
     - assets/images/friends_with_friends.gif
     - assets/images/double_dating.gif

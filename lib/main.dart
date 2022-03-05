@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:lottie/lottie.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/account_settings_phone_verification_screen.dart';
 import 'package:openup/account_settings_screen.dart';
@@ -312,9 +313,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           child: SoloDoubleScreen(
                             labelUpper: 'make\nfriends',
                             labelLower: 'make friends\nwith friends',
-                            imageUpper: Image.asset(
-                              'assets/images/friends.gif',
-                              height: 115,
+                            imageUpper: Lottie.asset(
+                              'assets/images/friends.json',
+                              height: 135,
                             ),
                             imageLower: SizedBox(
                               height: 100,
@@ -356,11 +357,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           child: MenuScreen(
                             label: 'make friends',
                             image: Transform.translate(
-                              offset: const Offset(0.0, 21.0),
-                              child: Image.asset(
-                                'assets/images/friends.gif',
-                                fit: BoxFit.fitHeight,
-                              ),
+                              offset: const Offset(0.0, 33.0),
+                              child: Lottie.asset('assets/images/friends.json'),
                             ),
                             onPressedVoiceCall: (serious) {
                               Navigator.of(context).pushNamed(

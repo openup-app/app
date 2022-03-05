@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
 import 'package:openup/api/users/users_api.dart';
 import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/widgets/button.dart';
@@ -103,12 +104,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     children: [
                       const Spacer(),
-                      const SizedBox(height: 120),
-                      Image.asset(
-                        'assets/images/friends.gif',
-                        height: 120,
+                      const SizedBox(height: 100),
+                      Lottie.asset(
+                        'assets/images/friends.json',
+                        height: 140,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.only(left: 40),
                         alignment: Alignment.centerLeft,
