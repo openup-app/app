@@ -378,7 +378,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
             SnackBar(content: Text(message)),
           );
         }
-        completer.complete(null);
+        if (!completer.isCompleted) {
+          completer.complete(null);
+        }
       },
       codeSent: (verificationId, forceResendingToken) async {
         if (!mounted) {
@@ -392,7 +394,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
             birthday: _birthday,
           ),
         );
-        completer.complete(uid);
+        if (!completer.isCompleted) {
+          completer.complete(uid);
+        }
       },
       forceResendingToken: _forceResendingToken,
       codeAutoRetrievalTimeout: (verificationId) {
