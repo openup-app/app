@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -7,6 +8,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/dialog.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -78,10 +80,12 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                           child: Text(
                             'Update login information',
                             style: Theming.of(context).text.body.copyWith(
-                                fontSize: 18, fontWeight: FontWeight.w500),
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
                         _InputArea(
                           child: _TextField(
                             controller: _phoneNumberController,
@@ -123,26 +127,30 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                               Navigator.of(context).pushNamed('contact-us'),
                           child: _InputArea(
                             childNeedsOpacity: false,
-                            child: Row(
+                            child: Stack(
+                              alignment: Alignment.center,
                               children: [
-                                const SizedBox(width: 16),
-                                DecoratedBox(
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color:
-                                        Color.fromRGBO(0xC4, 0xC4, 0xC4, 1.0),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(10.0),
-                                    child: Text(
-                                      '?',
-                                      textAlign: TextAlign.center,
-                                      style: Theming.of(context)
-                                          .text
-                                          .body
-                                          .copyWith(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w500),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Container(
+                                    margin: const EdgeInsets.only(left: 16),
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color:
+                                          Color.fromRGBO(0xC4, 0xC4, 0xC4, 1.0),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: Text(
+                                        '?',
+                                        textAlign: TextAlign.center,
+                                        style: Theming.of(context)
+                                            .text
+                                            .body
+                                            .copyWith(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w500),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -157,38 +165,58 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                             ),
                           ),
                         ),
-                        const Spacer(flex: 2),
-                        Container(
-                          color: Colors.white,
-                          margin: const EdgeInsets.symmetric(horizontal: 40.0),
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  OutlinedButton(
-                                    onPressed: _showDeleteAccountDialog,
-                                    child: const Text('Delete account'),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  OutlinedButton(
-                                    onPressed: () async {
-                                      await dismissAllNotifications();
-                                      await FirebaseAuth.instance.signOut();
-                                      Navigator.of(context)
-                                          .pushReplacementNamed('/');
-                                    },
-                                    child: const Text('Sign-out'),
-                                  ),
-                                ],
+                        const SizedBox(height: 30),
+                        Button(
+                          onPressed: _signOut,
+                          child: _InputArea(
+                            childNeedsOpacity: false,
+                            child: Center(
+                              child: Text(
+                                'Sign Out',
+                                style: Theming.of(context).text.body.copyWith(
+                                    fontSize: 24, fontWeight: FontWeight.w500),
                               ),
-                              Text('${FirebaseAuth.instance.currentUser?.uid}'),
-                              Text(
-                                  '${FirebaseAuth.instance.currentUser?.phoneNumber}'),
-                            ],
+                            ),
                           ),
                         ),
+                        const SizedBox(height: 30),
+                        Button(
+                          onPressed: _showDeleteAccountDialog,
+                          child: _InputArea(
+                            opacity: 0.5,
+                            gradientColors: const [
+                              Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                              Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                            ],
+                            childNeedsOpacity: false,
+                            child: Center(
+                              child: Text(
+                                'Delete Account',
+                                style: Theming.of(context).text.body.copyWith(
+                                    fontSize: 24, fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Spacer(flex: 2),
+                        if (kDebugMode)
+                          Container(
+                            color: Colors.white,
+                            margin:
+                                const EdgeInsets.symmetric(horizontal: 40.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    '${FirebaseAuth.instance.currentUser?.uid}'),
+                                const Divider(),
+                                Text(
+                                    '${FirebaseAuth.instance.currentUser?.phoneNumber}'),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -291,12 +319,26 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     }
   }
 
+  void _signOut() async {
+    await dismissAllNotifications();
+    await FirebaseAuth.instance.signOut();
+    Navigator.of(context).pushReplacementNamed('/');
+  }
+
   void _showDeleteAccountDialog() {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Delete account?'),
+        return OpenupDialog(
+          title: Text(
+            'Are you sure you want to delete your account?',
+            textAlign: TextAlign.center,
+            style: Theming.of(context).text.body.copyWith(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
+          ),
           actions: [
             TextButton(
               onPressed: () async {
@@ -310,9 +352,10 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               child: Text(
                 'Delete',
                 style: Theming.of(context).text.body.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w300,
-                    color: Colors.red),
+                      fontSize: 28,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.red,
+                    ),
               ),
             ),
             TextButton(
@@ -320,9 +363,10 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               child: Text(
                 'Cancel',
                 style: Theming.of(context).text.body.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w300,
-                    color: Colors.black),
+                      fontSize: 28,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                    ),
               ),
             ),
           ],
