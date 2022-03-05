@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/users_api.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
@@ -166,19 +168,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                               Row(
                                 children: [
                                   OutlinedButton(
-                                    onPressed: () async {
-                                      final usersApi =
-                                          ref.read(usersApiProvider);
-                                      final uid = FirebaseAuth
-                                          .instance.currentUser?.uid;
-                                      if (uid != null) {
-                                        await dismissAllNotifications();
-                                        await usersApi.deleteUser(uid);
-                                        await FirebaseAuth.instance.signOut();
-                                        Navigator.of(context)
-                                            .pushReplacementNamed('/');
-                                      }
-                                    },
+                                    onPressed: _showDeleteAccountDialog,
                                     child: const Text('Delete account'),
                                   ),
                                   const SizedBox(width: 8),
@@ -299,6 +289,46 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     } else {
       return 'Invalid phone number';
     }
+  }
+
+  void _showDeleteAccountDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete account?'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                final uid = ref.read(userProvider).uid;
+                await dismissAllNotifications();
+                GetIt.instance.get<Api>().deleteUser(uid);
+                await FirebaseAuth.instance.signOut();
+                Navigator.of(context).popUntil((route) => route.isFirst);
+                Navigator.of(context).pushReplacementNamed('/');
+              },
+              child: Text(
+                'Delete',
+                style: Theming.of(context).text.body.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.red),
+              ),
+            ),
+            TextButton(
+              onPressed: Navigator.of(context).pop,
+              child: Text(
+                'Cancel',
+                style: Theming.of(context).text.body.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.black),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
