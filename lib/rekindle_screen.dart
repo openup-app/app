@@ -52,46 +52,35 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
       decoration: const BoxDecoration(
         color: Colors.black,
       ),
-      child: Stack(
-        children: [
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 500),
-            firstChild: error == null
-                ? const Center(
-                    child: CircularProgressIndicator(),
-                  )
-                : Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        error,
-                        textAlign: TextAlign.center,
-                        style: Theming.of(context)
-                            .text
-                            .headline
-                            .copyWith(color: Colors.red),
-                      ),
-                    ),
+      child: AnimatedCrossFade(
+        duration: const Duration(milliseconds: 500),
+        firstChild: error == null
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
+            : Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    error,
+                    textAlign: TextAlign.center,
+                    style: Theming.of(context)
+                        .text
+                        .headline
+                        .copyWith(color: Colors.red),
                   ),
-            secondChild: rekindles == null
-                ? const SizedBox.shrink()
-                : RekindleScreenPrecached(
-                    rekindles: rekindles,
-                    index: 0,
-                    countdown: false,
-                  ),
-            crossFadeState: _rekindles == null
-                ? CrossFadeState.showFirst
-                : CrossFadeState.showSecond,
-          ),
-          Positioned(
-            right: MediaQuery.of(context).padding.right + 16,
-            bottom: MediaQuery.of(context).padding.bottom + 16,
-            child: const HomeButton(
-              color: Colors.white,
-            ),
-          ),
-        ],
+                ),
+              ),
+        secondChild: rekindles == null
+            ? const SizedBox.shrink()
+            : RekindleScreenPrecached(
+                rekindles: rekindles,
+                index: 0,
+                countdown: false,
+              ),
+        crossFadeState: _rekindles == null
+            ? CrossFadeState.showFirst
+            : CrossFadeState.showSecond,
       ),
     );
   }
@@ -129,163 +118,192 @@ class RekindleScreenPrecached extends ConsumerWidget {
     final myPhoto = ref.watch(userProvider.select((p) => p.profile!.photo));
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color.fromRGBO(0x2E, 0x2E, 0x2E, 1.0),
-            Color.fromRGBO(0x0D, 0x6D, 0x84, 1.0),
-          ],
-        ),
+      decoration: BoxDecoration(
+        gradient: rekindle.purpose == Purpose.friends
+            ? const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color.fromRGBO(0x2E, 0x2E, 0x2E, 1.0),
+                  Color.fromRGBO(0x0D, 0x6D, 0x84, 1.0),
+                ],
+              )
+            : const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color.fromRGBO(0x2E, 0x2E, 0x2E, 1.0),
+                  Color.fromRGBO(0x65, 0x03, 0x07, 1.0),
+                ],
+              ),
       ),
-      child: SafeArea(
-        top: true,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 80),
-              Text(
-                'Want to chat more?',
-                textAlign: TextAlign.center,
-                style: Theming.of(context)
-                    .text
-                    .body
-                    .copyWith(fontSize: 36, fontWeight: FontWeight.w700),
-              ),
-              const Spacer(),
-              Flexible(
-                flex: 6,
-                fit: FlexFit.loose,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minHeight: 100,
-                    maxHeight: 160,
+      child: Stack(
+        children: [
+          SafeArea(
+            top: true,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 80),
+                  Text(
+                    'Want to chat more?',
+                    textAlign: TextAlign.center,
+                    style: Theming.of(context)
+                        .text
+                        .body
+                        .copyWith(fontSize: 36, fontWeight: FontWeight.w700),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 160,
-                        height: 160,
-                        clipBehavior: Clip.hardEdge,
-                        decoration: const BoxDecoration(shape: BoxShape.circle),
-                        child: ProfilePhoto(
-                          url: myPhoto,
-                          fit: BoxFit.cover,
-                        ),
+                  const Spacer(),
+                  Flexible(
+                    flex: 6,
+                    fit: FlexFit.loose,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minHeight: 100,
+                        maxHeight: 160,
                       ),
-                      const SizedBox(width: 28),
-                      Container(
-                        width: 160,
-                        height: 160,
-                        clipBehavior: Clip.hardEdge,
-                        decoration: const BoxDecoration(shape: BoxShape.circle),
-                        child: ImageFiltered(
-                          imageFilter: ImageFilter.blur(
-                            sigmaX: 12.0,
-                            sigmaY: 12.0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 160,
+                            height: 160,
+                            clipBehavior: Clip.hardEdge,
+                            decoration:
+                                const BoxDecoration(shape: BoxShape.circle),
+                            child: ProfilePhoto(
+                              url: myPhoto,
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                          child: ProfilePhoto(
-                            url: photo,
-                            fit: BoxFit.cover,
+                          const SizedBox(width: 28),
+                          Container(
+                            width: 160,
+                            height: 160,
+                            clipBehavior: Clip.hardEdge,
+                            decoration:
+                                const BoxDecoration(shape: BoxShape.circle),
+                            child: ImageFiltered(
+                              imageFilter: ImageFilter.blur(
+                                sigmaX: 12.0,
+                                sigmaY: 12.0,
+                              ),
+                              child: ProfilePhoto(
+                                url: photo,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              if (rekindle.purpose == Purpose.friends)
-                Flexible(
-                  flex: 3,
-                  fit: FlexFit.loose,
-                  child: Image.asset(
-                    'assets/images/friends.gif',
-                    color: const Color.fromARGB(0xFF, 0xAA, 0xDD, 0xED),
-                  ),
-                )
-              else
-                ConstrainedBox(
-                  constraints:
-                      const BoxConstraints(minHeight: 40, maxHeight: 126),
-                  child: Image.asset('assets/images/heart.gif'),
-                ),
-              Text(
-                'When you both connect, you get to see\neach other\'s profiles and chat more',
-                textAlign: TextAlign.center,
-                style: Theming.of(context)
-                    .text
-                    .body
-                    .copyWith(fontSize: 18, fontWeight: FontWeight.w300),
-              ),
-              const Spacer(),
-              Button(
-                onPressed: () {
-                  _addRekindle(ref, rekindle);
-                  _moveToNextScreen(context);
-                },
-                child: Container(
-                  width: 256,
-                  height: 60,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [
-                      Color.fromRGBO(0xFF, 0x71, 0x71, 1.0),
-                      Color.fromRGBO(0xFF, 0x3A, 0x42, 1.0),
-                    ]),
-                    border: Border.all(color: Colors.white),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(76),
                     ),
                   ),
-                  child: Text(
-                    'Connect',
-                    style: Theming.of(context).text.body.copyWith(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w300,
-                        ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Button(
-                onPressed: () => _moveToNextScreen(context),
-                child: Container(
-                  width: 256,
-                  height: 60,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [
-                      Color.fromRGBO(0x27, 0x76, 0x89, 1.0),
-                      Color.fromRGBO(0x03, 0xAC, 0xD4, 1.0),
-                    ]),
-                    border: Border.all(color: Colors.white),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(76),
+                  if (rekindle.purpose == Purpose.friends)
+                    Flexible(
+                      flex: 3,
+                      fit: FlexFit.loose,
+                      child: Image.asset(
+                        'assets/images/friends.gif',
+                        color: const Color.fromARGB(0xFF, 0xAA, 0xDD, 0xED),
+                      ),
+                    )
+                  else
+                    ConstrainedBox(
+                      constraints:
+                          const BoxConstraints(minHeight: 40, maxHeight: 126),
+                      child: Image.asset('assets/images/heart.gif'),
                     ),
+                  Text(
+                    'To become friends and see each others\nprofiles, tap connect below!',
+                    textAlign: TextAlign.center,
+                    style: Theming.of(context)
+                        .text
+                        .body
+                        .copyWith(fontSize: 18, fontWeight: FontWeight.w300),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Next',
+                  const Spacer(),
+                  Button(
+                    onPressed: () {
+                      _addRekindle(ref, rekindle);
+                      _moveToNextScreen(context);
+                    },
+                    child: Container(
+                      width: 256,
+                      height: 60,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [
+                          Color.fromRGBO(0xFF, 0x71, 0x71, 1.0),
+                          Color.fromRGBO(0xFF, 0x3A, 0x42, 1.0),
+                        ]),
+                        border: Border.all(color: Colors.white),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(76),
+                        ),
+                      ),
+                      child: Text(
+                        'Connect',
                         style: Theming.of(context).text.body.copyWith(
                               fontSize: 18,
                               fontWeight: FontWeight.w300,
                             ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+                  Button(
+                    onPressed: () => _moveToNextScreen(context),
+                    child: Container(
+                      width: 256,
+                      height: 60,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [
+                          Color.fromRGBO(0x27, 0x76, 0x89, 1.0),
+                          Color.fromRGBO(0x03, 0xAC, 0xD4, 1.0),
+                        ]),
+                        border: Border.all(color: Colors.white),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(76),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/images/voice_call.png',
+                            height: 40,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Talk to someone else',
+                            style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 50),
+                ],
               ),
-              const SizedBox(height: 50),
-            ],
+            ),
           ),
-        ),
+          Positioned(
+            right: MediaQuery.of(context).padding.right + 16,
+            bottom: MediaQuery.of(context).padding.bottom + 16,
+            child: HomeButton(
+              color: rekindle.purpose == Purpose.friends
+                  ? const Color.fromRGBO(0x00, 0xA0, 0xD1, 1.0)
+                  : Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
