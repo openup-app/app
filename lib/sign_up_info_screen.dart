@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
-import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/keyboard_screen.dart';
@@ -20,15 +17,6 @@ class SignUpInfoScreen extends ConsumerStatefulWidget {
 class _SignUpInfoScreenState extends ConsumerState<SignUpInfoScreen> {
   final _nameController = TextEditingController();
   bool _uploading = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Guaranteed to be non-null before onboarding
-    final profile = ref.read(userProvider).profile!;
-    _nameController.text = profile.name;
-  }
 
   @override
   void dispose() {
@@ -75,7 +63,7 @@ class _SignUpInfoScreenState extends ConsumerState<SignUpInfoScreen> {
                   controller: _nameController,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration.collapsed(
-                    hintText: 'Name',
+                    hintText: 'Username',
                     hintStyle: Theming.of(context).text.body.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
@@ -105,6 +93,7 @@ class _SignUpInfoScreenState extends ConsumerState<SignUpInfoScreen> {
   void _submit() async {
     final newName = _nameController.text;
     if (newName.isEmpty) {
+      Navigator.of(context).pushNamed('sign-up-attributes');
       return;
     }
 
