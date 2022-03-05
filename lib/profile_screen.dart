@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -279,12 +280,35 @@ class __GalleryState extends State<_Gallery> {
             return const SizedBox.shrink();
           }
           final i = index % widget.gallery.length;
-          return Image.network(
-            widget.gallery[i],
-            fit: BoxFit.cover,
-            frameBuilder: fadeInFrameBuilder,
-            loadingBuilder: circularProgressLoadingBuilder,
-            errorBuilder: iconErrorBuilder,
+          return Stack(
+            clipBehavior: Clip.hardEdge,
+            fit: StackFit.expand,
+            alignment: Alignment.center,
+            children: [
+              ClipRect(
+                clipBehavior: Clip.hardEdge,
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(
+                    sigmaX: 16,
+                    sigmaY: 16,
+                  ),
+                  child: Image.network(
+                    widget.gallery[i],
+                    fit: BoxFit.cover,
+                    frameBuilder: fadeInFrameBuilder,
+                    loadingBuilder: circularProgressLoadingBuilder,
+                    errorBuilder: iconErrorBuilder,
+                  ),
+                ),
+              ),
+              Image.network(
+                widget.gallery[i],
+                fit: BoxFit.contain,
+                frameBuilder: fadeInFrameBuilder,
+                loadingBuilder: circularProgressLoadingBuilder,
+                errorBuilder: iconErrorBuilder,
+              ),
+            ],
           );
         },
       ),
