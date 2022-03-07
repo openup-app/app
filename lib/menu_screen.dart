@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:lottie/lottie.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/profile_button.dart';
@@ -151,7 +152,11 @@ class _MenuScreenState extends State<MenuScreen> {
                     ),
                     _MenuButton(
                       onPressed: () => widget.onPressedVoiceCall(_serious),
-                      icon: Image.asset('assets/images/voice_call.png'),
+                      icon: Lottie.asset(
+                        'assets/images/call.json',
+                        fit: BoxFit.contain,
+                        width: 70,
+                      ),
                       color: MenuScreenTheme.of(context).buttonColorTop,
                       child: Text(
                         'Talk to someone new',
@@ -166,7 +171,10 @@ class _MenuScreenState extends State<MenuScreen> {
                     ),
                     _MenuButton(
                       onPressed: () => widget.onPressedVideoCall(_serious),
-                      icon: Image.asset('assets/images/video_call.png'),
+                      icon: Lottie.asset(
+                        'assets/images/video_call.json',
+                        width: 90,
+                      ),
                       color: MenuScreenTheme.of(context).buttonColorMiddle,
                       child: Text(
                         'Video call someone new',
@@ -183,7 +191,10 @@ class _MenuScreenState extends State<MenuScreen> {
                       onPressed: widget.onPressedPreferences,
                       icon: Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: Image.asset('assets/images/preferences.png'),
+                        child: Image.asset(
+                          'assets/images/preferences.png',
+                          width: 44,
+                        ),
                       ),
                       color: MenuScreenTheme.of(context).buttonColorBottom,
                       child: Text(
@@ -250,17 +261,23 @@ class _MenuButton extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.only(top: 4.0),
-          child: Row(
+          child: Stack(
             children: [
               const SizedBox(width: 16),
-              SizedBox(
-                width: 78,
-                height: 78,
-                child: icon,
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: icon,
+                ),
               ),
-              const SizedBox(width: 8),
-              Expanded(child: child),
-              const SizedBox(width: 4),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 86.0 + 8.0, right: 16.0),
+                  child: child,
+                ),
+              ),
             ],
           ),
         ),

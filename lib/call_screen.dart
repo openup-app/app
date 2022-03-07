@@ -341,6 +341,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         'precached-rekindle',
         arguments: PrecachedRekindleScreenArguments(
           rekindles: _unrequestedConnections.toList(),
+          video: widget.video,
         ),
       );
     }

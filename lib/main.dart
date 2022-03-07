@@ -315,7 +315,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             labelLower: 'make friends\nwith friends',
                             imageUpper: Lottie.asset(
                               'assets/images/friends.json',
-                              height: 135,
+                              height: 115,
                             ),
                             imageLower: SizedBox(
                               height: 100,
@@ -630,8 +630,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             labelLower: 'double\ndate',
                             imageUpper: SizedBox(
                               height: 120,
-                              child: Image.asset(
-                                'assets/images/heart.gif',
+                              child: Lottie.asset(
+                                'assets/images/heart.json',
                                 fit: BoxFit.fitHeight,
                               ),
                             ),
@@ -679,8 +679,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             label: 'blind date',
                             image: SizedBox(
                               height: 120,
-                              child: Image.asset(
-                                'assets/images/heart.gif',
+                              child: Lottie.asset(
+                                'assets/images/heart.json',
                                 fit: BoxFit.fitHeight,
                               ),
                             ),
@@ -922,6 +922,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       return CurrentRouteSystemUiStyling.light(
                         child: RekindleScreenPrecached(
                           rekindles: args.rekindles,
+                          video: args.video,
                           index: args.index,
                           countdown: args.countdown,
                         ),

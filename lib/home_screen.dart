@@ -74,8 +74,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(height: 24),
                       SizedBox(
                         height: 140,
-                        child: Image.asset(
-                          'assets/images/heart.gif',
+                        child: Lottie.asset(
+                          'assets/images/heart.json',
                           fit: BoxFit.fitHeight,
                         ),
                       ),

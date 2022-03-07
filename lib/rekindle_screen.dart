@@ -76,6 +76,7 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
             ? const SizedBox.shrink()
             : RekindleScreenPrecached(
                 rekindles: rekindles,
+                video: true,
                 index: 0,
                 countdown: false,
               ),
@@ -91,12 +92,14 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
 /// instead they must be passed in.
 class RekindleScreenPrecached extends ConsumerWidget {
   final List<Rekindle> rekindles;
+  final bool video;
   final int index;
   final bool countdown;
 
   const RekindleScreenPrecached({
     Key? key,
     required this.rekindles,
+    required this.video,
     required this.index,
     required this.countdown,
   }) : super(key: key);
@@ -203,15 +206,17 @@ class RekindleScreenPrecached extends ConsumerWidget {
                   ),
                   if (rekindle.purpose == Purpose.friends)
                     Flexible(
-                      flex: 3,
+                      flex: 4,
                       fit: FlexFit.loose,
-                      child: Lottie.asset('assets/images/friends.json'),
+                      child: Lottie.asset(
+                        'assets/images/friends.json',
+                      ),
                     )
                   else
                     ConstrainedBox(
                       constraints:
                           const BoxConstraints(minHeight: 40, maxHeight: 126),
-                      child: Image.asset('assets/images/heart.gif'),
+                      child: Lottie.asset('assets/images/heart.json'),
                     ),
                   Text(
                     'To become friends and see each others\nprofiles, tap connect below!',
@@ -271,10 +276,16 @@ class RekindleScreenPrecached extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Image.asset(
-                            'assets/images/voice_call.png',
-                            height: 40,
-                          ),
+                          if (video)
+                            Lottie.asset(
+                              'assets/images/video_call.json',
+                              width: 50,
+                            )
+                          else
+                            Lottie.asset(
+                              'assets/images/call.json',
+                              width: 36,
+                            ),
                           const SizedBox(width: 8),
                           Text(
                             'Talk to someone else',
@@ -318,6 +329,7 @@ class RekindleScreenPrecached extends ConsumerWidget {
         'precached-rekindle',
         arguments: PrecachedRekindleScreenArguments(
           rekindles: rekindles,
+          video: video,
           index: index + 1,
           countdown: countdown,
         ),
@@ -452,11 +464,13 @@ class _CountdownState extends State<_Countdown> {
 
 class PrecachedRekindleScreenArguments {
   final List<Rekindle> rekindles;
+  final bool video;
   final int index;
   final bool countdown;
 
   PrecachedRekindleScreenArguments({
     required this.rekindles,
+    required this.video,
     this.index = 0,
     this.countdown = true,
   });

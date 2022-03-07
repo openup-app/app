@@ -55,8 +55,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/title.png
-    - assets/images/voice_call.png
-    - assets/images/video_call.png
+    - assets/images/call.json
+    - assets/images/video_call.json
     - assets/images/preferences.png
     - assets/images/report.png
     - assets/images/profile.png
@@ -67,7 +67,7 @@ flutter:
     - assets/images/pause_icon.svg
     - assets/images/preferences_back.png
     - assets/images/friends.json
-    - assets/images/heart.gif
+    - assets/images/heart.json
     - assets/images/friends_with_friends.gif
     - assets/images/double_dating.gif
     - assets/images/chevron_right.png
