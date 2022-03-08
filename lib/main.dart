@@ -19,7 +19,6 @@ import 'package:openup/api/online_users/online_users_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/connections_screen.dart';
@@ -84,8 +83,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-    // TODO: Remove this temp usersApi
-    initUsersApi(host: host, port: webPort);
     final api = Api(
       host: host,
       port: webPort,
