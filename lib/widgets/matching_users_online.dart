@@ -30,6 +30,7 @@ class _MatchingUsersOnlineState extends State<MatchingUsersOnline> {
       preferences: widget.preferences,
       onConnectionError: () {},
     );
+    _api.sendPreferences(widget.preferences);
   }
 
   @override
