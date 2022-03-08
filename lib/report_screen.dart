@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -185,10 +184,6 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
   }
 
   void _upload() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw 'No user is logged in';
-    }
     setState(() => _uploading = true);
 
     final api = GetIt.instance.get<Api>();
