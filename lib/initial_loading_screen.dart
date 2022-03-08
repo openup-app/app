@@ -65,13 +65,13 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     final notifier = ref.read(userProvider.notifier);
     api.authToken = await user.getIdToken();
     tempUsersApi.authToken = await user.getIdToken();
-    notifier.update(notifier.userState.copyWith(uid: user.uid));
+    notifier.uid(user.uid);
 
     // Firebase ID token refresh
     _idTokenRefreshSubscription =
         FirebaseAuth.instance.idTokenChanges().listen((user) async {
       if (user != null) {
-        notifier.update(notifier.userState.copyWith(uid: user.uid));
+        notifier.uid(user.uid);
         api.authToken = await user.getIdToken();
         tempUsersApi.authToken = await user.getIdToken();
       }
@@ -114,46 +114,31 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       api.getProfile(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to cache profile',
-          (r) {
-            final state = ref.read(userProvider);
-            notifier.update(state.copyWith(profile: r));
-          },
+          (r) => notifier.profile(r),
         );
       }),
       api.getAttributes(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to cache attributes',
-          (r) {
-            final state = ref.read(userProvider);
-            notifier.update(state.copyWith(attributes: r));
-          },
+          (r) => notifier.attributes(r),
         );
       }),
       api.getFriendsPreferences(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to cache friends preferences',
-          (r) {
-            final state = ref.read(userProvider);
-            notifier.update(state.copyWith(friendsPreferences: r));
-          },
+          (r) => notifier.friendsPreferences(r),
         );
       }),
       api.getDatingPreferences(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to dating preferences',
-          (r) {
-            final state = ref.read(userProvider);
-            notifier.update(state.copyWith(datingPreferences: r));
-          },
+          (r) => notifier.datingPreferences(r),
         );
       }),
       api.getUnreadMessageCount(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to cache unread message count',
-          (r) {
-            final state = ref.read(userProvider);
-            notifier.update(state.copyWith(unreadMessageCount: r));
-          },
+          (r) => notifier.unreadMessageCount(r),
         );
       }),
     ]);

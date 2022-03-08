@@ -277,8 +277,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
       if (uid != null && mounted) {
         final userCreated = await _createUser(uid, _birthday);
         if (userCreated && mounted) {
-          final userState = ref.read(userProvider);
-          ref.read(userProvider.notifier).update(userState.copyWith(uid: uid));
+          ref.read(userProvider.notifier).uid(uid);
         }
         Navigator.of(context).popUntil((route) => route.isFirst);
         Navigator.of(context).pushReplacementNamed(

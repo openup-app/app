@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -7,7 +6,6 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
@@ -148,7 +146,8 @@ class _SignUpAttributesScreenState
     final userState = ref.read(userProvider);
     final api = GetIt.instance.get<Api>();
 
-    final result = await api.updateAttributes(userState.uid, _attributes);
+    final attributes = _attributes;
+    final result = await api.updateAttributes(userState.uid, attributes);
 
     if (!mounted) {
       return;
@@ -157,8 +156,7 @@ class _SignUpAttributesScreenState
     result.fold(
       (l) => displayError(context, l),
       (r) {
-        final newUserState = userState.copyWith(attributes: _attributes);
-        ref.read(userProvider.notifier).update(newUserState);
+        ref.read(userProvider.notifier).attributes(attributes);
         Navigator.of(context).pushNamed('sign-up-photos');
       },
     );

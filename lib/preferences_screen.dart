@@ -186,11 +186,12 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
     result.fold(
       (l) => displayError(context, l),
       (r) {
-        final newUserState = userState.copyWith(
-          friendsPreferences: friends ? preferences : null,
-          datingPreferences: !friends ? preferences : null,
-        );
-        ref.read(userProvider.notifier).update(newUserState);
+        final notifier = ref.read(userProvider.notifier);
+        if (friends) {
+          notifier.friendsPreferences(preferences);
+        } else {
+          notifier.datingPreferences(preferences);
+        }
         Navigator.of(context).pop();
       },
     );

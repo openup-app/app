@@ -155,9 +155,7 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
     result.fold(
       (l) => displayError(context, l),
       (r) {
-        ref
-            .read(userProvider.notifier)
-            .update(userState.copyWith(attributes: attributes));
+        ref.read(userProvider.notifier).attributes(attributes);
         Navigator.of(context).pop();
       },
     );

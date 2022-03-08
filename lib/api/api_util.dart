@@ -43,9 +43,7 @@ Future<Either<ApiError, void>> updateName({
   final result = await api.updateProfile(userState.uid, newProfile);
 
   if (result.isRight()) {
-    ref
-        .read(userProvider.notifier)
-        .update(userState.copyWith(profile: newProfile));
+    ref.read(userProvider.notifier).profile(newProfile);
   }
 
   return result;
@@ -64,9 +62,7 @@ Future<Either<ApiError, void>> updateAudio({
     (l) {},
     (url) {
       final profile = userState.profile!.copyWith(audio: url);
-      ref
-          .read(userProvider.notifier)
-          .update(userState.copyWith(profile: profile));
+      ref.read(userProvider.notifier).profile(profile);
     },
   );
 
@@ -86,11 +82,7 @@ Future<Either<ApiError, Profile>> updatePhoto({
 
   result.fold(
     (l) {},
-    (profile) {
-      ref
-          .read(userProvider.notifier)
-          .update(userState.copyWith(profile: profile));
-    },
+    (profile) => ref.read(userProvider.notifier).profile(profile),
   );
 
   return result;
@@ -107,11 +99,7 @@ Future<Either<ApiError, Profile>> deletePhoto({
 
   result.fold(
     (l) {},
-    (profile) {
-      ref
-          .read(userProvider.notifier)
-          .update(userState.copyWith(profile: profile));
-    },
+    (profile) => ref.read(userProvider.notifier).profile(profile),
   );
 
   return result;
