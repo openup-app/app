@@ -12,21 +12,21 @@ final userProvider = StateNotifierProvider<UserStateNotifier, UserState>((ref) {
 class UserStateNotifier extends StateNotifier<UserState> {
   UserStateNotifier() : super(const UserState());
 
-  void uid(String uid) => state.copyWith(uid: uid);
+  void uid(String uid) => state = state.copyWith(uid: uid);
 
-  void profile(Profile profile) => state.copyWith(profile: profile);
+  void profile(Profile profile) => state = state.copyWith(profile: profile);
 
   void attributes(Attributes attributes) =>
-      state.copyWith(attributes: attributes);
+      state = state.copyWith(attributes: attributes);
 
   void friendsPreferences(Preferences preferences) =>
-      state.copyWith(friendsPreferences: preferences);
+      state = state.copyWith(friendsPreferences: preferences);
 
   void datingPreferences(Preferences preferences) =>
-      state.copyWith(datingPreferences: preferences);
+      state = state.copyWith(datingPreferences: preferences);
 
   void unreadMessageCount(Map<String, int> unreadMessageCount) =>
-      state.copyWith(unreadMessageCount: unreadMessageCount);
+      state = state.copyWith(unreadMessageCount: unreadMessageCount);
 
   UserState get userState => state;
 }
