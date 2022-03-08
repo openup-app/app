@@ -7,7 +7,6 @@ import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/profile_screen.dart';
@@ -139,62 +138,56 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                   itemBuilder: (context, index) {
                     final connection = filteredConnections[index];
                     final profile = connection.profile;
-                    final usersApi = ref.read(usersApiProvider);
-                    final countStream = usersApi.unreadChatMessageCountsStream
-                        .map((event) => event[profile.uid] ?? 0);
-                    return StreamBuilder<int>(
-                      stream: countStream,
-                      initialData: 0,
-                      builder: (context, snapshot) {
-                        final count = snapshot.requireData;
-                        return ConnectionTile(
-                          onPressed: () => setState(() =>
-                              _openIndex = _openIndex == index ? -1 : index),
-                          profile: profile,
-                          unreadCount: count,
-                          expanded: _openIndex == index,
-                          onShowProfile: () {
-                            Navigator.of(context).pushNamed(
-                              'profile',
-                              arguments: ProfileArguments(
-                                profile: profile,
-                                editable: false,
-                              ),
+                    final unreadMessageCount = ref.watch(
+                        userProvider.select((p) => p.unreadMessageCount));
+                    final count = unreadMessageCount[profile.uid] ?? 0;
+                    return ConnectionTile(
+                      onPressed: () => setState(
+                          () => _openIndex = _openIndex == index ? -1 : index),
+                      profile: profile,
+                      unreadCount: count,
+                      expanded: _openIndex == index,
+                      onShowProfile: () {
+                        Navigator.of(context).pushNamed(
+                          'profile',
+                          arguments: ProfileArguments(
+                            profile: profile,
+                            editable: false,
+                          ),
+                        );
+                      },
+                      onChat: () {
+                        final unreadMessageCount =
+                            Map.of(ref.read(userProvider).unreadMessageCount);
+                        unreadMessageCount[profile.uid] = 0;
+                        ref
+                            .read(userProvider.notifier)
+                            .unreadMessageCount(unreadMessageCount);
+                        Navigator.of(context).pushNamed(
+                          'chat',
+                          arguments: ChatArguments(
+                            uid: profile.uid,
+                            chatroomId: connection.chatroomId,
+                          ),
+                        );
+                      },
+                      onCall: () => _onCall(profile, video: false),
+                      onVideoCall: () => _onCall(profile, video: true),
+                      onDeleteConnection: () async {
+                        final connections = await showDialog<List<Connection>>(
+                          context: context,
+                          builder: (context) {
+                            return RemoveConnectionAlertDialog(
+                              uid: ref.read(userProvider).uid,
+                              profile: profile,
                             );
-                          },
-                          onChat: () {
-                            usersApi.updateUnreadChatMessagesCount(
-                              profile.uid,
-                              0,
-                            );
-                            Navigator.of(context).pushNamed(
-                              'chat',
-                              arguments: ChatArguments(
-                                uid: profile.uid,
-                                chatroomId: connection.chatroomId,
-                              ),
-                            );
-                          },
-                          onCall: () => _onCall(profile, video: false),
-                          onVideoCall: () => _onCall(profile, video: true),
-                          onDeleteConnection: () async {
-                            final connections =
-                                await showDialog<List<Connection>>(
-                              context: context,
-                              builder: (context) {
-                                return RemoveConnectionAlertDialog(
-                                  uid: ref.read(userProvider).uid,
-                                  profile: profile,
-                                );
-                              },
-                            );
-
-                            if (mounted && connections != null) {
-                              _dismissSearch();
-                              setState(() => _connections = connections);
-                            }
                           },
                         );
+
+                        if (mounted && connections != null) {
+                          _dismissSearch();
+                          setState(() => _connections = connections);
+                        }
                       },
                     );
                   },

@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -42,7 +41,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     final auth = FirebaseAuth.instance;
     final user = auth.currentUser;
     final api = GetIt.instance.get<Api>();
-    final tempUsersApi = ref.read(usersApiProvider);
 
     // Verify user sign-in (will be navigated back here on success)
     if (user == null) {
@@ -51,7 +49,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     } else {
       try {
         api.authToken = await user.getIdToken();
-        tempUsersApi.authToken = await user.getIdToken();
       } on FirebaseAuthException catch (e) {
         if (e.code == 'firebase_auth/user-not-found') {
           Navigator.of(context).pushReplacementNamed('sign-up');
@@ -64,7 +61,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
     final notifier = ref.read(userProvider.notifier);
     api.authToken = await user.getIdToken();
-    tempUsersApi.authToken = await user.getIdToken();
     notifier.uid(user.uid);
 
     // Firebase ID token refresh
@@ -73,7 +69,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       if (user != null) {
         notifier.uid(user.uid);
         api.authToken = await user.getIdToken();
-        tempUsersApi.authToken = await user.getIdToken();
       }
     });
 
@@ -94,7 +89,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     // Perform deep linking
     final deepLinked = await initializeNotifications(
       key: widget.notificationKey,
-      usersApi: tempUsersApi,
+      userStateNotifier: notifier,
     );
 
     // Standard app entry or sign up onboarding

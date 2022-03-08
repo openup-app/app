@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/users_api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -101,11 +101,12 @@ class _ProfileButton extends ConsumerWidget {
           Positioned(
             top: 0,
             right: 0,
-            child: StreamBuilder<int>(
-              stream: ref.read(usersApiProvider).unreadChatMessageSumStream,
-              initialData: 0,
-              builder: (context, snapshot) {
-                final sum = snapshot.requireData;
+            child: Consumer(
+              builder: (context, ref, _) {
+                final unreadMessageCount =
+                    ref.watch(userProvider.select((p) => p.unreadMessageCount));
+                final sum =
+                    unreadMessageCount.values.fold<int>(0, (p, e) => p + e);
                 if (sum == 0) {
                   return const SizedBox.shrink();
                 }

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_photo.dart';
@@ -104,11 +103,12 @@ class ProfileDrawer extends ConsumerWidget {
             ),
             Column(
               children: [
-                StreamBuilder<int>(
-                  stream: ref.read(usersApiProvider).unreadChatMessageSumStream,
-                  initialData: 0,
-                  builder: (context, snapshot) {
-                    final sum = snapshot.requireData;
+                Consumer(
+                  builder: (context, ref, _) {
+                    final unreadMessageCount = ref.watch(
+                        userProvider.select((p) => p.unreadMessageCount));
+                    final sum =
+                        unreadMessageCount.values.fold<int>(0, (p, e) => p + e);
                     return _MenuButton(
                       icon: SvgPicture.asset(
                         'assets/images/connections_icon.svg',

@@ -5,13 +5,15 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
-import 'package:openup/main.dart';
 import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/notifications/notification_comms.dart';
 import 'package:openup/util/string.dart';
@@ -23,17 +25,14 @@ part 'notifications.g.dart';
 /// [key] is used to access a context with a Scaffold ancestor.
 Future<bool> initializeNotifications({
   required GlobalKey key,
-  required UsersApi usersApi,
+  required UserStateNotifier userStateNotifier,
 }) async {
   FirebaseMessaging.onMessage.listen((remoteMessage) {
-    _onForegroundNotification(key, remoteMessage, usersApi);
+    _onForegroundNotification(key, remoteMessage, userStateNotifier);
   });
   FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
 
-  final deepLinked = await _handleLaunchNotification(
-    key: key,
-    usersApi: usersApi,
-  );
+  final deepLinked = await _handleLaunchNotification(key: key);
 
   initIncomingCallHandlers(key: key);
 
@@ -44,10 +43,7 @@ Future<void> dismissAllNotifications() =>
     FlutterLocalNotificationsPlugin().cancelAll();
 
 /// Returns [true] if this notification did deep link, false otherwise.
-Future<bool> _handleLaunchNotification({
-  required GlobalKey key,
-  required UsersApi usersApi,
-}) async {
+Future<bool> _handleLaunchNotification({required GlobalKey key}) async {
   // Calls that don't go through the standard FirebaseMessaging app launch method
   BackgroundCallNotification? backgroundCallNotification;
   try {
@@ -93,6 +89,7 @@ Future<bool> _handleLaunchNotification({
   final payloadJson = launchDetails.payload;
   if (payloadJson != null) {
     final payload = _NotificationPayload.fromJson(jsonDecode(payloadJson));
+    final api = GetIt.instance.get<Api>();
     payload.map(
       call: (call) {
         final context = key.currentContext;
@@ -116,25 +113,35 @@ Future<bool> _handleLaunchNotification({
         }
       },
       chat: (chat) async {
-        final profile = await usersApi.getProfile(chat.uid);
-        Navigator.of(context).pushReplacementNamed('home');
-        Navigator.of(context).pushNamed(
-          'chat',
-          arguments: ChatArguments(
-            uid: profile.uid,
-            chatroomId: chat.chatroomId,
-          ),
+        final result = await api.getProfile(chat.uid);
+        result.fold(
+          (l) => displayError(context, l),
+          (profile) {
+            Navigator.of(context).pushReplacementNamed('home');
+            Navigator.of(context).pushNamed(
+              'chat',
+              arguments: ChatArguments(
+                uid: profile.uid,
+                chatroomId: chat.chatroomId,
+              ),
+            );
+          },
         );
       },
       newConnection: (newConnection) async {
-        final profile = await usersApi.getProfile(newConnection.uid);
-        Navigator.of(context).pushReplacementNamed('home');
-        Navigator.of(context).pushNamed(
-          'chat',
-          arguments: ChatArguments(
-            uid: profile.uid,
-            chatroomId: newConnection.chatroomId,
-          ),
+        final result = await api.getProfile(newConnection.uid);
+        result.fold(
+          (l) => displayError(context, l),
+          (profile) {
+            Navigator.of(context).pushReplacementNamed('home');
+            Navigator.of(context).pushNamed(
+              'chat',
+              arguments: ChatArguments(
+                uid: profile.uid,
+                chatroomId: newConnection.chatroomId,
+              ),
+            );
+          },
         );
       },
     );
@@ -146,7 +153,7 @@ Future<bool> _handleLaunchNotification({
 void _onForegroundNotification(
   GlobalKey key,
   RemoteMessage message,
-  UsersApi usersApi,
+  UserStateNotifier userStateNotifier,
 ) async {
   final parsed = await _parseRemoteMessage(message);
   parsed.payload?.map(
@@ -186,7 +193,10 @@ void _onForegroundNotification(
       );
     },
     chat: (chat) {
-      usersApi.updateUnreadChatMessagesCount(chat.uid, chat.chatroomUnread);
+      final unreadMessageCount =
+          Map.of(userStateNotifier.userState.unreadMessageCount);
+      unreadMessageCount[chat.uid] = chat.chatroomUnread;
+      userStateNotifier.unreadMessageCount(unreadMessageCount);
     },
     newConnection: (newConnection) {
       final context = key.currentContext;
@@ -215,7 +225,6 @@ void _onForegroundNotification(
 }
 
 Future<void> _onBackgroundNotification(RemoteMessage message) async {
-  print('background notifaciton!');
   bool shouldDisplay = true;
   final parsed = await _parseRemoteMessage(message);
   parsed.payload?.map(
