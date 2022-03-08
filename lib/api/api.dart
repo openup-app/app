@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
+import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/preferences.dart';
@@ -434,6 +435,84 @@ class Api {
         );
       },
       handleSuccess: (response) => const Right(null),
+    );
+  }
+
+  Future<Either<ApiError, List<ChatMessage>>> getMessages(
+    String chatroomId, {
+    DateTime? startDate,
+    int limit = 10,
+  }) async {
+    return _request(
+      makeRequest: () {
+        final query =
+            '${startDate == null ? '' : 'startDate=${startDate.toIso8601String()}&'}limit=$limit';
+        return http.get(
+          Uri.parse('$_urlBase/chats/$chatroomId?$query'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        return Right(
+            List<ChatMessage>.from(list.map((e) => ChatMessage.fromJson(e))));
+      },
+    );
+  }
+
+  Future<Either<ApiError, ChatMessage>> sendMessage(
+    String uid,
+    String chatroomId,
+    ChatType type,
+    String content,
+  ) async {
+    final uri = Uri.parse('$_urlBase/chats/$chatroomId');
+    switch (type) {
+      case ChatType.emoji:
+        return _request(
+          makeRequest: () {
+            return http.post(
+              uri,
+              headers: _headers,
+              body: jsonEncode({
+                'uid': uid,
+                'type': type.name,
+                'content': content,
+              }),
+            );
+          },
+          handleSuccess: (response) {
+            return Right(ChatMessage.fromJson(jsonDecode(response.body)));
+          },
+        );
+      case ChatType.image:
+      case ChatType.video:
+      case ChatType.audio:
+        return _requestStreamedResponse(
+          makeRequest: () async {
+            final request = http.MultipartRequest('POST', uri);
+            request.headers.addAll(_headers);
+            request.fields['uid'] = uid;
+            request.fields['type'] = type.name;
+            request.files.add(
+              await http.MultipartFile.fromPath('media', content),
+            );
+            return request.send();
+          },
+          handleSuccess: (response) {
+            return Right(ChatMessage.fromJson(jsonDecode(response.body)));
+          },
+        );
+    }
+  }
+
+  Future<Either<ApiError, T>> _requestStreamedResponse<T>({
+    required Future<http.StreamedResponse> Function() makeRequest,
+    required Either<ApiError, T> Function(http.Response response) handleSuccess,
+  }) async {
+    return _request(
+      makeRequest: () async => http.Response.fromStream(await makeRequest()),
+      handleSuccess: handleSuccess,
     );
   }
 

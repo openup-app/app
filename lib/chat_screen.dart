@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,7 +44,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     with SingleTickerProviderStateMixin {
   final _kDateFormat = DateFormat('EEEE h:mm');
 
-  ChatApi? _chatApi;
+  late final ChatApi _chatApi;
   _InputType _inputType = _InputType.audio;
   bool _showInput = false;
 
@@ -54,7 +53,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   final _scrollController = ScrollController();
 
   bool _connectionError = false;
-  late final String _uid;
 
   bool _loading = true;
 
@@ -70,21 +68,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _init();
-  }
 
-  void _init() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw 'No user is logged in';
-    }
-    _uid = user.uid;
     _chatApi = ChatApi(
       host: widget.host,
-      webPort: widget.webPort,
       socketPort: widget.socketPort,
-      authToken: await user.getIdToken(),
-      uid: _uid,
+      uid: ref.read(userProvider).uid,
       chatroomId: widget.chatroomId,
       onMessage: (message) {
         setState(() => _messages[message.messageId!] = message);
@@ -117,7 +105,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   @override
   void dispose() {
-    _chatApi?.dispose();
+    _chatApi.dispose();
     _scrollController.removeListener(_scrollListener);
     _animationController.dispose();
     super.dispose();
@@ -182,7 +170,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                 );
                               }
                               final message = _messages.values.toList()[index];
-                              final fromMe = message.uid == _uid;
+                              final uid = ref.read(userProvider).uid;
+                              final fromMe = message.uid == uid;
 
                               final messageReady = message.messageId != null;
 
@@ -505,28 +494,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   void _send(ChatType type, String content) async {
     const uuid = Uuid();
     final pendingId = uuid.v4();
+    final uid = ref.read(userProvider).uid;
     setState(() {
       _messages[pendingId] = ChatMessage(
-        uid: _uid,
+        uid: uid,
         date: DateTime.now().toUtc(),
         type: type,
         content: content,
       );
     });
-    final message =
-        await _chatApi?.sendMessage(_uid, widget.chatroomId, type, content);
 
-    if (message == null) {
+    final api = GetIt.instance.get<Api>();
+    final result = await api.sendMessage(uid, widget.chatroomId, type, content);
+
+    if (!mounted) {
       return;
     }
 
-    if (mounted) {
-      setState(() {
-        _messages[pendingId] = message;
-      });
-    }
-
-    _scrollController.jumpTo(0);
+    result.fold((l) {
+      // TODO;
+    }, (r) {
+      setState(() => _messages[pendingId] = r);
+      _scrollController.jumpTo(0);
+    });
   }
 
   void _scrollListener() {
@@ -541,20 +531,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     }
   }
 
-  void _fetchHistory({DateTime? startDate}) {
-    _chatApi
-        ?.getMessages(widget.chatroomId, startDate: startDate)
-        .then((messages) {
-      if (mounted) {
+  void _fetchHistory({DateTime? startDate}) async {
+    final api = GetIt.instance.get<Api>();
+    final result =
+        await api.getMessages(widget.chatroomId, startDate: startDate);
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (l) => displayError(context, l),
+      (messages) {
         final entries = _messages.entries.toList();
-        entries.insertAll(0, messages.map((e) => MapEntry(e.messageId!, e)));
         setState(() {
-          _loading = false;
+          entries.insertAll(0, messages.map((e) => MapEntry(e.messageId!, e)));
           _messages.clear();
           _messages.addEntries(entries);
         });
-      }
-    });
+      },
+    );
+
+    setState(() => _loading = false);
   }
 
   void _call(
