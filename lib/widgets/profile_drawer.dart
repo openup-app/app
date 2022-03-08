@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -137,7 +136,7 @@ class ProfileDrawer extends ConsumerWidget {
                     ),
                   ),
                   title: 'profile preferences',
-                  onPressed: () => _navigateToAttributesPage(context),
+                  onPressed: () => _navigateToAttributesPage(context, ref),
                 ),
                 _MenuButton(
                   icon: SvgPicture.asset(
@@ -163,14 +162,9 @@ class ProfileDrawer extends ConsumerWidget {
     );
   }
 
-  void _navigateToAttributesPage(BuildContext context) async {
-    final container = ProviderScope.containerOf(context);
-    final usersApi = container.read(usersApiProvider);
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) {
-      final attributes = await usersApi.getAttributes(uid);
-      Navigator.of(context).pushNamed('attributes', arguments: attributes);
-    }
+  void _navigateToAttributesPage(BuildContext context, WidgetRef ref) async {
+    final attributes = ref.read(userProvider).attributes;
+    Navigator.of(context).pushNamed('attributes', arguments: attributes);
   }
 }
 

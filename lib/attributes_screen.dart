@@ -1,8 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_form.dart';
@@ -113,19 +115,7 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
               children: [
                 const MaleFemaleConnectionImageApart(),
                 Button(
-                  onPressed: () async {
-                    setState(() => _uploading = true);
-                    final user = FirebaseAuth.instance.currentUser;
-                    final uid = user?.uid;
-                    if (uid != null) {
-                      final usersApi = ref.read(usersApiProvider);
-                      await usersApi.updateAttributes(uid, _attributes);
-                      if (mounted) {
-                        setState(() => _uploading = false);
-                        Navigator.of(context).pop();
-                      }
-                    }
-                  },
+                  onPressed: () => _submit(context, ref),
                   child: Container(
                     height: 100,
                     alignment: Alignment.center,
@@ -149,6 +139,27 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _submit(BuildContext context, WidgetRef ref) async {
+    setState(() => _uploading = true);
+    final userState = ref.read(userProvider);
+    final api = GetIt.instance.get<Api>();
+    final attributes = _attributes;
+    final result = await api.updateAttributes(userState.uid, attributes);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _uploading = false);
+    result.fold(
+      (l) => displayError(context, l),
+      (r) {
+        ref
+            .read(userProvider.notifier)
+            .update(userState.copyWith(attributes: attributes));
+        Navigator.of(context).pop();
+      },
     );
   }
 }

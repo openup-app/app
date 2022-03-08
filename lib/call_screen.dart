@@ -1,17 +1,18 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/rekindle_screen.dart';
 import 'package:openup/report_screen.dart';
@@ -68,13 +69,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   @override
   void initState() {
     super.initState();
-
-    final auth = FirebaseAuth.instance;
-    final uid = auth.currentUser?.uid;
-    if (uid == null) {
-      throw 'User is not logged in';
-    }
-
+    final uid = ref.read(userProvider).uid;
     _signalingChannel = SocketIoSignalingChannel(
       host: widget.host,
       port: widget.socketPort,
@@ -312,21 +307,19 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     });
   }
 
-  void _connect(String uid) {
-    final myUid = FirebaseAuth.instance.currentUser?.uid;
-    if (myUid == null) {
-      return;
-    }
-
-    final usersApi = ref.read(usersApiProvider);
-    usersApi.addConnectionRequest(myUid, uid);
+  void _connect(String uid) async {
+    final myUid = ref.read(userProvider).uid;
+    final api = GetIt.instance.get<Api>();
     final callData = _users[uid];
     if (callData != null) {
       setState(() {
         _users[uid] = callData.copyWith.userConnection(rekindle: null);
       });
     }
-    setState(() => _unrequestedConnections.removeWhere((r) => r.uid == uid));
+    final result = await api.addConnectionRequest(myUid, uid);
+    if (mounted & result.isRight()) {
+      setState(() => _unrequestedConnections.removeWhere((r) => r.uid == uid));
+    }
   }
 
   void _report(String uid) {

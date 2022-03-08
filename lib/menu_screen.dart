@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:lottie/lottie.dart';
+import 'package:openup/api/lobby/lobby_api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/profile_button.dart';
@@ -23,21 +25,21 @@ class _ShouldOverlay extends StateNotifier<bool> {
 }
 
 class MenuScreen extends StatefulWidget {
+  final Purpose purpose;
   final String label;
   final Widget image;
   final bool groupCalling;
   final void Function(bool serious) onPressedVoiceCall;
   final void Function(bool serious) onPressedVideoCall;
-  final VoidCallback onPressedPreferences;
 
   const MenuScreen({
     Key? key,
+    required this.purpose,
     required this.label,
     required this.image,
     this.groupCalling = false,
     required this.onPressedVoiceCall,
     required this.onPressedVideoCall,
-    required this.onPressedPreferences,
   }) : super(key: key);
 
   @override
@@ -187,20 +189,24 @@ class _MenuScreenState extends State<MenuScreen> {
                         maxHeight: 28,
                       ),
                     ),
-                    _MenuButton(
-                      onPressed: widget.onPressedPreferences,
-                      icon: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Image.asset(
-                          'assets/images/preferences.png',
-                          width: 44,
-                        ),
-                      ),
-                      color: MenuScreenTheme.of(context).buttonColorBottom,
-                      child: Text(
-                        'Preferences',
-                        style: buttonStyle,
-                      ),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        return _MenuButton(
+                          onPressed: () => _navigateToPreferences(ref),
+                          icon: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Image.asset(
+                              'assets/images/preferences.png',
+                              width: 44,
+                            ),
+                          ),
+                          color: MenuScreenTheme.of(context).buttonColorBottom,
+                          child: Text(
+                            'Preferences',
+                            style: buttonStyle,
+                          ),
+                        );
+                      },
                     ),
                     const Spacer(flex: 4),
                   ],
@@ -230,6 +236,18 @@ class _MenuScreenState extends State<MenuScreen> {
             }),
           ),
       ],
+    );
+  }
+
+  void _navigateToPreferences(WidgetRef ref) {
+    final userState = ref.read(userProvider);
+    final preferences = widget.purpose == Purpose.friends
+        ? userState.friendsPreferences
+        : userState.datingPreferences;
+    final route = widget.purpose == Purpose.friends ? 'friends' : 'dating';
+    Navigator.of(context).pushNamed(
+      '$route-preferences',
+      arguments: preferences,
     );
   }
 }

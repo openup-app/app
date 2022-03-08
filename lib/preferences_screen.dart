@@ -1,9 +1,12 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
+import 'package:openup/api/lobby/lobby_api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/preferences.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/util/emoji.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/matching_users_online.dart';
@@ -18,15 +21,14 @@ class PreferencesScreen extends ConsumerStatefulWidget {
   final Preferences initialPreferences;
   final String title;
   final Widget image;
-  final Future<void> Function(
-      UsersApi usersApi, String uid, Preferences preferences) updatePreferences;
+  final Purpose purpose;
 
   const PreferencesScreen({
     Key? key,
     required this.initialPreferences,
     required this.title,
     required this.image,
-    required this.updatePreferences,
+    required this.purpose,
   }) : super(key: key);
 
   @override
@@ -137,23 +139,7 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
               children: [
                 widget.image,
                 Button(
-                  onPressed: () async {
-                    if (_preferences == widget.initialPreferences) {
-                      return Navigator.of(context).pop();
-                    }
-                    setState(() => _uploading = true);
-                    final user = FirebaseAuth.instance.currentUser;
-                    final uid = user?.uid;
-                    if (uid != null) {
-                      final usersApi = ref.read(usersApiProvider);
-                      await widget.updatePreferences(
-                          usersApi, uid, _preferences);
-                      if (mounted) {
-                        setState(() => _uploading = false);
-                        Navigator.of(context).pop();
-                      }
-                    }
-                  },
+                  onPressed: () => _submit(context, ref),
                   child: Container(
                     height: 100,
                     alignment: Alignment.center,
@@ -177,6 +163,36 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _submit(BuildContext context, WidgetRef ref) async {
+    if (_preferences == widget.initialPreferences) {
+      return Navigator.of(context).pop();
+    }
+
+    setState(() => _uploading = true);
+    final userState = ref.read(userProvider);
+    final api = GetIt.instance.get<Api>();
+    final preferences = _preferences;
+    final friends = widget.purpose == Purpose.friends;
+    final result = friends
+        ? await api.updateFriendsPreferences(userState.uid, preferences)
+        : await api.updateDatingPreferences(userState.uid, preferences);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _uploading = false);
+    result.fold(
+      (l) => displayError(context, l),
+      (r) {
+        final newUserState = userState.copyWith(
+          friendsPreferences: friends ? preferences : null,
+          datingPreferences: !friends ? preferences : null,
+        );
+        ref.read(userProvider.notifier).update(newUserState);
+        Navigator.of(context).pop();
+      },
     );
   }
 }

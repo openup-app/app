@@ -1,6 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
+import 'package:openup/api/lobby/lobby_api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
@@ -31,14 +35,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
   @override
   void initState() {
     super.initState();
-
-    final usersApi = ref.read(usersApiProvider);
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      throw 'No user is logged in';
-    }
-
-    _reloadConnections(usersApi, uid);
+    _reloadConnections();
   }
 
   @override
@@ -47,15 +44,24 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
     super.dispose();
   }
 
-  Future<void> _reloadConnections(UsersApi api, String uid) async {
+  Future<void> _reloadConnections() async {
     setState(() => _connections = null);
-    final connections = await api.getConnections(uid);
-    if (mounted) {
-      setState(() {
-        _connections = connections;
-        _showSearchBox = false;
-      });
+    final uid = ref.read(userProvider).uid;
+    final api = GetIt.instance.get<Api>();
+    final result = await api.getConnections(uid);
+    if (!mounted) {
+      return;
     }
+
+    result.fold(
+      (l) => displayError(context, l),
+      (r) {
+        setState(() {
+          _connections = r;
+          _showSearchBox = false;
+        });
+      },
+    );
   }
 
   @override
@@ -172,24 +178,20 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                           onCall: () => _onCall(profile, video: false),
                           onVideoCall: () => _onCall(profile, video: true),
                           onDeleteConnection: () async {
-                            final uid = FirebaseAuth.instance.currentUser?.uid;
-                            if (uid == null) {
-                              throw 'No user is logged in';
-                            }
-                            final result = await showDialog<bool>(
+                            final connections =
+                                await showDialog<List<Connection>>(
                               context: context,
                               builder: (context) {
                                 return RemoveConnectionAlertDialog(
-                                  usersApi: usersApi,
-                                  uid: uid,
+                                  uid: ref.read(userProvider).uid,
                                   profile: profile,
                                 );
                               },
                             );
 
-                            if (mounted && result == true) {
+                            if (mounted && connections != null) {
                               _dismissSearch();
-                              _reloadConnections(usersApi, uid);
+                              setState(() => _connections = connections);
                             }
                           },
                         );
@@ -311,20 +313,36 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
     });
   }
 
-  void _onCall(Profile profile, {required bool video}) async {
-    final api = ref.read(usersApiProvider);
-    final rid = await api.call(profile.uid, video);
+  void _onCall(
+    Profile profile, {
+    required bool video,
+  }) async {
+    final purpose = Purpose.friends.name;
+    final route = video ? '$purpose-video-call' : '$purpose-voice-call';
+    final api = GetIt.instance.get<Api>();
+    final result = await api.call(
+      profile.uid,
+      video,
+      group: false,
+    );
     if (mounted) {
-      final route = video ? 'friends-video-call' : 'friends-voice-call';
-      Navigator.of(context).pushNamed(
-        route,
-        arguments: CallPageArguments(
-          rid: rid,
-          profiles: [profile.toSimpleProfile()],
-          rekindles: [],
-          serious: false,
-        ),
-      );
+      result.fold((l) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to call ${profile.name}'),
+          ),
+        );
+      }, (rid) {
+        Navigator.of(context).pushNamed(
+          route,
+          arguments: CallPageArguments(
+            rid: rid,
+            profiles: [profile.toSimpleProfile()],
+            rekindles: [],
+            serious: false,
+          ),
+        );
+      });
     }
   }
 }
@@ -549,12 +567,10 @@ class _ConnectionTileState extends State<ConnectionTile>
 }
 
 class RemoveConnectionAlertDialog extends StatefulWidget {
-  final UsersApi usersApi;
   final String uid;
   final Profile profile;
   const RemoveConnectionAlertDialog({
     Key? key,
-    required this.usersApi,
     required this.uid,
     required this.profile,
   }) : super(key: key);
@@ -575,11 +591,16 @@ class _RemoveConnectionAlertDialogState
         TextButton(
           onPressed: () async {
             setState(() => _deleting = true);
-            await widget.usersApi
-                .deleteConnection(widget.uid, widget.profile.uid);
-            if (mounted) {
-              Navigator.of(context).pop(true);
-            }
+            final api = GetIt.instance.get<Api>();
+            final result =
+                await api.deleteConnection(widget.uid, widget.profile.uid);
+            result.fold(
+              (l) {
+                displayError(context, l);
+                Navigator.of(context).pop();
+              },
+              (r) => Navigator.of(context).pop(r),
+            );
           },
           child: _deleting
               ? const SizedBox(

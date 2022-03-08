@@ -1,7 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/users/users_api.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/contact_text_field.dart';
@@ -114,23 +116,26 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
   }
 
   void _upload() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw 'No user is logged in';
-    }
     setState(() => _uploading = true);
-
     final message = _textController.text;
-    final usersApi = ref.read(usersApiProvider);
-    await usersApi.contactUs(uid: user.uid, message: message);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Successfully sent message'),
-        ),
-      );
-      Navigator.of(context).pop();
+    final uid = ref.read(userProvider).uid;
+    final api = GetIt.instance.get<Api>();
+    final result = await api.contactUs(uid: uid, message: message);
+    if (!mounted) {
+      return;
     }
+    setState(() => _uploading = false);
+    result.fold(
+      (l) => displayError(context, l),
+      (r) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Successfully sent message'),
+          ),
+        );
+        Navigator.of(context).pop();
+      },
+    );
   }
 }
 

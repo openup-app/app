@@ -2,7 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:openup/api/users/users_api.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/contact_text_field.dart';
 import 'package:openup/widgets/home_button.dart';
@@ -188,25 +191,35 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
     }
     setState(() => _uploading = true);
 
-    final usersApi = ref.read(usersApiProvider);
+    final api = GetIt.instance.get<Api>();
     final extraText = _textController.text;
     final extra = _reason == _Reason.other
         ? (extraText.isEmpty ? null : extraText)
         : null;
-    await usersApi.reportUser(
-      uid: user.uid,
+    final result = await api.reportUser(
+      uid: ref.read(userProvider).uid,
       reportedUid: widget.uid,
       reason: _reason.name,
       extra: extra,
     );
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Successfully reported user'),
-        ),
-      );
-      Navigator.of(context).pop();
+
+    if (!mounted) {
+      return;
     }
+
+    setState(() => _uploading = false);
+
+    result.fold(
+      (l) => displayError(context, l),
+      (r) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Successfully reported user'),
+          ),
+        );
+        Navigator.of(context).pop();
+      },
+    );
   }
 }
 

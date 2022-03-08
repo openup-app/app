@@ -1,9 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
@@ -24,28 +26,33 @@ class ConnectionsBottomSheet extends ConsumerStatefulWidget {
 
 class _ConnectionsBottomSheetState extends ConsumerState<ConnectionsBottomSheet>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _animationController;
+  AnimationController? _animationController;
   List<Connection>? _connections;
 
   @override
   void initState() {
     super.initState();
-    final usersApi = ref.read(usersApiProvider);
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) {
-      usersApi.getConnections(uid).then((connections) {
-        if (mounted) {
-          setState(() => _connections = connections);
-        }
-      });
-    }
-    _animationController = BottomSheet.createAnimationController(this);
+    final api = GetIt.instance.get<Api>();
+    final uid = ref.read(userProvider).uid;
+    api.getConnections(uid).then((result) {
+      if (!mounted) {
+        return;
+      }
+
+      result.fold(
+        (l) => displayError(context, l),
+        (r) {
+          _animationController = BottomSheet.createAnimationController(this);
+          setState(() => _connections = r);
+        },
+      );
+    });
   }
 
   @override
   void dispose() {
     super.dispose();
-    _animationController.dispose();
+    _animationController?.dispose();
   }
 
   @override

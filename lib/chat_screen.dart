@@ -2,11 +2,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/users_api.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -93,17 +96,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       },
     );
 
-    final usersApi = ref.read(usersApiProvider);
-    usersApi.getProfile(_uid).then((profile) {
-      if (mounted) {
-        setState(() => _myAvatar = profile.photo);
-      }
-    });
+    final profile = ref.read(userProvider).profile!;
+    setState(() => _myAvatar = profile.photo);
 
-    usersApi.getProfile(widget.uid).then((profile) {
-      if (mounted) {
-        setState(() => _profile = profile);
+    final api = GetIt.instance.get<Api>();
+    api.getProfile(widget.uid).then((result) {
+      if (!mounted) {
+        return;
       }
+      result.fold(
+        (l) => displayError(context, l),
+        (r) => setState(() => _profile = r),
+      );
     });
 
     _fetchHistory();
@@ -564,18 +568,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
     final purpose = Purpose.friends.name;
     final route = video ? '$purpose-video-call' : '$purpose-voice-call';
-    final usersApi = ref.read(usersApiProvider);
-    final rid = await usersApi.call(profile.uid, video);
-
-    Navigator.of(context).pushNamed(
-      route,
-      arguments: CallPageArguments(
-        rid: rid,
-        profiles: [profile.toSimpleProfile()],
-        rekindles: [],
-        serious: false,
-      ),
+    final api = GetIt.instance.get<Api>();
+    final result = await api.call(
+      profile.uid,
+      video,
+      group: false,
     );
+    if (mounted) {
+      result.fold((l) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to call ${profile.name}'),
+          ),
+        );
+      }, (rid) {
+        Navigator.of(context).pushNamed(
+          route,
+          arguments: CallPageArguments(
+            rid: rid,
+            profiles: [profile.toSimpleProfile()],
+            rekindles: [],
+            serious: false,
+          ),
+        );
+      });
+    }
   }
 
   void _switchToInputTypeOrHide(_InputType type) {

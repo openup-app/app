@@ -13,8 +13,10 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/account_settings_phone_verification_screen.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/online_users/online_users_api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/users_api.dart';
@@ -355,6 +357,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 Color.fromARGB(0xFF, 0x1C, 0xC1, 0xE4),
                           ),
                           child: MenuScreen(
+                            purpose: Purpose.friends,
                             label: 'make friends',
                             image: Transform.translate(
                               offset: const Offset(0.0, 33.0),
@@ -378,8 +381,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 ),
                               );
                             },
-                            onPressedPreferences: () => _navigateToPreferences(
-                                context, Purpose.friends),
                           ),
                         ),
                       );
@@ -407,6 +408,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 Color.fromARGB(0xFF, 0x1C, 0xC1, 0xE4),
                           ),
                           child: MenuScreen(
+                            purpose: Purpose.friends,
                             label: 'make friends\nwith friends',
                             image: SizedBox(
                               height: 120,
@@ -420,8 +422,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 _displayConnections(context, video: false),
                             onPressedVideoCall: (_) =>
                                 _displayConnections(context, video: true),
-                            onPressedPreferences: () => _navigateToPreferences(
-                                context, Purpose.friends),
                           ),
                         ),
                       );
@@ -460,9 +460,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             initialPreferences: args,
                             title: 'Make Friends',
                             image: const MaleFemaleConnectionImageApart(),
-                            updatePreferences: (usersApi, uid, preferences) =>
-                                usersApi.updateFriendsPreferences(
-                                    uid, preferences),
+                            purpose: Purpose.friends,
                           ),
                         ),
                       );
@@ -676,6 +674,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 Color.fromARGB(0xFF, 0xDD, 0x0F, 0x0F),
                           ),
                           child: MenuScreen(
+                            purpose: Purpose.dating,
                             label: 'blind date',
                             image: SizedBox(
                               height: 120,
@@ -702,8 +701,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 ),
                               );
                             },
-                            onPressedPreferences: () =>
-                                _navigateToPreferences(context, Purpose.dating),
                           ),
                         ),
                       );
@@ -734,6 +731,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 Color.fromARGB(0xFF, 0xDD, 0x0F, 0x0F),
                           ),
                           child: MenuScreen(
+                            purpose: Purpose.dating,
                             label: 'double dating',
                             image: SizedBox(
                               height: 120,
@@ -747,8 +745,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                                 _displayConnections(context, video: false),
                             onPressedVideoCall: (_) =>
                                 _displayConnections(context, video: true),
-                            onPressedPreferences: () =>
-                                _navigateToPreferences(context, Purpose.dating),
                           ),
                         ),
                       );
@@ -790,9 +786,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                               'assets/images/double_dating.gif',
                               height: 197,
                             ),
-                            updatePreferences: (usersApi, uid, preferences) =>
-                                usersApi.updateDatingPreferences(
-                                    uid, preferences),
+                            purpose: Purpose.dating,
                           ),
                         ),
                       );
@@ -1076,21 +1070,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     );
   }
 
-  void _navigateToPreferences(BuildContext context, Purpose purpose) async {
-    final usersApi = ref.read(usersApiProvider);
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) {
-      final preferences = purpose == Purpose.friends
-          ? await usersApi.getFriendsPreferences(uid)
-          : await usersApi.getDatingPreferences(uid);
-      final route = purpose == Purpose.friends ? 'friends' : 'dating';
-      Navigator.of(context).pushNamed(
-        '$route-preferences',
-        arguments: preferences,
-      );
-    }
-  }
-
   void _displayConnections(BuildContext context, {required bool video}) async {
     showModalBottomSheet(
       backgroundColor: Colors.transparent,
@@ -1098,25 +1077,34 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       builder: (context) {
         return ConnectionsBottomSheet(
           onSelected: (profile) async {
-            final usersApi = ref.read(usersApiProvider);
-            final rid = await usersApi.call(
-              profile.uid,
+            final api = GetIt.instance.get<Api>();
+            final result = await api.call(
+              ref.read(userProvider).uid,
               video,
               group: true,
             );
-            if (mounted) {
-              final route = video ? 'friends-video-call' : 'friends-voice-call';
-              Navigator.of(context).pushNamed(
-                route,
-                arguments: CallPageArguments(
-                  rid: rid,
-                  profiles: [profile.toSimpleProfile()],
-                  rekindles: [],
-                  serious: false,
-                  groupLobby: true,
-                ),
-              );
+
+            if (!mounted) {
+              return;
             }
+
+            result.fold(
+              (l) => displayError(context, l),
+              (rid) {
+                final route =
+                    video ? 'friends-video-call' : 'friends-voice-call';
+                Navigator.of(context).pushNamed(
+                  route,
+                  arguments: CallPageArguments(
+                    rid: rid,
+                    profiles: [profile.toSimpleProfile()],
+                    rekindles: [],
+                    serious: false,
+                    groupLobby: true,
+                  ),
+                );
+              },
+            );
           },
         );
       },
