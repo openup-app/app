@@ -74,7 +74,7 @@ class OpenupApp extends ConsumerStatefulWidget {
 
 class _OpenupAppState extends ConsumerState<OpenupApp> {
   bool _loggedIn = false;
-  StreamSubscription? _authStateSubscription;
+  StreamSubscription? _idTokenChangesSubscription;
   OnlineUsersApi? _onlineUsersApi;
   final _routeObserver = RouteObserver<PageRoute>();
 
@@ -90,8 +90,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     GetIt.instance.registerSingleton<Api>(api);
 
     Firebase.initializeApp().whenComplete(() {
-      _authStateSubscription =
-          FirebaseAuth.instance.authStateChanges().listen((user) {
+      _idTokenChangesSubscription =
+          FirebaseAuth.instance.idTokenChanges().listen((user) async {
         final loggedIn = user != null;
         if (_loggedIn != loggedIn) {
           setState(() => _loggedIn = loggedIn);
@@ -105,6 +105,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             );
           }
         }
+
+        // Firebase ID token refresh
+        if (user != null) {
+          final token = await user.getIdToken();
+          ref.read(userProvider.notifier).uid(user.uid);
+          api.authToken = token;
+        }
       });
     });
 
@@ -117,7 +124,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   @override
   void dispose() {
-    _authStateSubscription?.cancel();
+    _idTokenChangesSubscription?.cancel();
     _onlineUsersApi?.dispose();
     super.dispose();
   }

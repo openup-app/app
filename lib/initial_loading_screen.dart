@@ -28,8 +28,6 @@ class InitialLoadingScreen extends ConsumerStatefulWidget {
 }
 
 class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
-  StreamSubscription? _idTokenRefreshSubscription;
-
   @override
   void initState() {
     super.initState();
@@ -62,15 +60,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     final notifier = ref.read(userProvider.notifier);
     api.authToken = await user.getIdToken();
     notifier.uid(user.uid);
-
-    // Firebase ID token refresh
-    _idTokenRefreshSubscription =
-        FirebaseAuth.instance.idTokenChanges().listen((user) async {
-      if (user != null) {
-        notifier.uid(user.uid);
-        api.authToken = await user.getIdToken();
-      }
-    });
 
     // Begin caching
     try {
@@ -137,12 +126,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
         );
       }),
     ]);
-  }
-
-  @override
-  void dispose() {
-    _idTokenRefreshSubscription?.cancel();
-    super.dispose();
   }
 
   @override

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 import 'package:openup/api/chat/chat_api.dart';
@@ -521,6 +522,14 @@ class Api {
     required Either<ApiError, T> Function(http.Response response) handleSuccess,
   }) async {
     try {
+      // FirebaseAuth.instance.idTokenChanges does not seem to fire without calling User.getIdToken() first
+      // TODO: Can we be notified of an expired token without using it first?
+      //  this class should not be tied to Firebase
+      final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+      if (idToken != null) {
+        authToken = idToken;
+      }
+
       final response = await makeRequest();
       if (response.statusCode != 200) {
         log(
