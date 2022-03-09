@@ -42,7 +42,7 @@ class LobbyScreen extends ConsumerStatefulWidget {
 class _LobbyScreenState extends ConsumerState<LobbyScreen>
     with SingleTickerProviderStateMixin {
   LobbyApi? _lobbyApi;
-  StreamSubscription? _subscription;
+  StreamSubscription? _lobbyEventSubscription;
 
   late final AnimationController _animationController;
   bool _shouldHandleDisconnection = true;
@@ -65,19 +65,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen>
   }
 
   void _joinLobby() async {
-    if (_lobbyApi != null) {
-      _subscription?.cancel();
-      _lobbyApi?.dispose();
-
-      // Delay to let the user breathe
-      final random = Random();
-      final seconds = random.nextInt(3) + 4;
-      await Future.delayed(Duration(seconds: seconds));
-      if (!mounted) {
-        return;
-      }
-    }
-
     _lobbyApi = LobbyApi(
       host: widget.host,
       socketPort: widget.socketPort,
@@ -86,8 +73,31 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen>
       serious: widget.serious,
       purpose: widget.purpose,
     );
-    _subscription = _lobbyApi?.eventStream.listen(_onLobbyEvent);
+    _lobbyEventSubscription = _lobbyApi?.eventStream.listen(_onLobbyEvent);
     _lobbyApi?.connect();
+  }
+
+  void _leaveLobby() {
+    _lobbyEventSubscription?.cancel();
+    _lobbyApi?.dispose();
+  }
+
+  Future<void> _joinCall(
+    String rid,
+    List<Profile> profiles,
+    List<Rekindle> rekindles,
+  ) async {
+    final purpose = widget.purpose.name;
+    final route = widget.video ? '$purpose-video-call' : '$purpose-voice-call';
+    return Navigator.of(context).pushNamed<void>(
+      route,
+      arguments: CallPageArguments(
+        rid: rid,
+        profiles: profiles.map((e) => e.toSimpleProfile()).toList(),
+        rekindles: rekindles,
+        serious: widget.serious,
+      ),
+    );
   }
 
   void _onLobbyEvent(LobbyEvent event) {
@@ -126,13 +136,31 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen>
         );
         Navigator.of(context).pop();
       },
-      joinCall: _joinCall,
+      joinCall: (rid, profiles, rekindles) async {
+        _leaveLobby();
+        await _joinCall(rid, profiles, rekindles);
+
+        if (mounted) {
+          // Lets the user breathe
+          await _delayTheUser();
+        }
+
+        if (mounted) {
+          _joinLobby();
+        }
+      },
     );
+  }
+
+  Future<void> _delayTheUser() {
+    final random = Random();
+    final seconds = random.nextInt(3) + 4;
+    return Future.delayed(Duration(seconds: seconds));
   }
 
   @override
   void dispose() {
-    _subscription?.cancel();
+    _lobbyEventSubscription?.cancel();
     _lobbyApi?.dispose();
     _animationController.dispose();
     super.dispose();
@@ -210,27 +238,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen>
         );
       },
     );
-  }
-
-  void _joinCall(
-    String rid,
-    List<Profile> profiles,
-    List<Rekindle> rekindles,
-  ) async {
-    final purpose = widget.purpose.name;
-    final route = widget.video ? '$purpose-video-call' : '$purpose-voice-call';
-    await Navigator.of(context).pushNamed(
-      route,
-      arguments: CallPageArguments(
-        rid: rid,
-        profiles: profiles.map((e) => e.toSimpleProfile()).toList(),
-        rekindles: rekindles,
-        serious: widget.serious,
-      ),
-    );
-    if (mounted) {
-      _joinLobby();
-    }
   }
 }
 
