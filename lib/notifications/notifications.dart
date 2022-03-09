@@ -209,6 +209,7 @@ void _onForegroundNotification(
           action: SnackBarAction(
             label: 'Chat',
             onPressed: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
               Navigator.of(context).pushNamed(
                 'chat',
                 arguments: ChatArguments(
