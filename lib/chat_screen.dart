@@ -259,21 +259,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                       color: _inputType == _InputType.imageVideo
                                           ? Theming.of(context).friendBlue3
                                           : null),
-                                  onPressed: () {
-                                    Navigator.of(context).push(
+                                  onPressed: () async {
+                                    final path =
+                                        await Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (context) {
-                                          return Scaffold(
-                                            body: ImageVideoInputBox(
-                                              onCapture: (chatType, path) {
-                                                _send(chatType, path);
-                                                Navigator.of(context).pop();
-                                              },
-                                            ),
-                                          );
+                                          return const ImageVideoInputBox();
                                         },
                                       ),
                                     );
+                                    if (mounted && path != null) {
+                                      _send(ChatType.image, path);
+                                    }
                                   },
                                 ),
                                 IconButton(
