@@ -801,9 +801,11 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           child: PreferencesScreen(
                             initialPreferences: args,
                             title: 'Blind Dating',
-                            image: Image.asset(
-                              'assets/images/double_dating.gif',
-                              height: 197,
+                            image: IgnorePointer(
+                              child: Image.asset(
+                                'assets/images/double_dating.gif',
+                                height: 197,
+                              ),
                             ),
                             purpose: Purpose.dating,
                           ),
