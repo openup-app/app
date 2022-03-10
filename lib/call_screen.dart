@@ -344,19 +344,18 @@ class _CallScreenState extends ConsumerState<CallScreen> {
       myUid.compareTo(theirUid) < 0;
 }
 
-String connectionStateText({
-  required PhoneConnectionState connectionState,
-  required String name,
-}) {
+String connectionStateText(
+  PhoneConnectionState connectionState,
+) {
   switch (connectionState) {
     case PhoneConnectionState.none:
       return '';
 
     case PhoneConnectionState.waiting:
-      return 'Waiting for $name';
+      return 'Waiting for your match';
 
     case PhoneConnectionState.declined:
-      return '$name did not join';
+      return 'Your match did not join';
 
     case PhoneConnectionState.connecting:
       return 'Connecting';

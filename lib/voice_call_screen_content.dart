@@ -117,10 +117,8 @@ class VoiceCallScreenContent extends StatelessWidget {
                     final style = Theming.of(context).text.headline.copyWith(
                           fontSize: 24,
                         );
-                    final text = connectionStateText(
-                      connectionState: tempFirstUser.connectionState,
-                      name: tempFirstUser.profile.name,
-                    );
+                    final text =
+                        connectionStateText(tempFirstUser.connectionState);
                     return AnimatedOpacity(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOut,

@@ -297,10 +297,7 @@ class _VideoCallScreenContentState extends State<VideoCallScreenContent> {
           child: Builder(
             builder: (context) {
               final style = Theming.of(context).text.headline;
-              final text = connectionStateText(
-                connectionState: tempFirstUser.connectionState,
-                name: tempFirstUser.profile.name,
-              );
+              final text = connectionStateText(tempFirstUser.connectionState);
               if (tempFirstUser.connectionState == PhoneConnectionState.none) {
                 return const SizedBox.shrink();
               } else {
