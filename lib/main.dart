@@ -50,6 +50,7 @@ import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
 const webPort = 8080;
@@ -57,12 +58,26 @@ const socketPort = 8081;
 
 final _notificationKey = GlobalKey();
 
-void main() {
-  runApp(
-    const ProviderScope(
-      child: OpenupApp(),
-    ),
-  );
+void main() async {
+  void appRunner() {
+    runApp(
+      const ProviderScope(
+        child: OpenupApp(),
+      ),
+    );
+  }
+
+  if (kDebugMode) {
+    appRunner();
+  } else {
+    const sentryDsn = String.fromEnvironment('SENTRY_DSN');
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = sentryDsn;
+      },
+      appRunner: appRunner,
+    );
+  }
 }
 
 class OpenupApp extends ConsumerStatefulWidget {
