@@ -1,9 +1,8 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_crop/image_crop.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -128,41 +127,24 @@ class PhotoGrid extends ConsumerWidget {
       return null;
     }
 
-    final cropKey = GlobalKey<CropState>();
-    final file = File(path);
-    return showDialog<Uint8List?>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          contentPadding: EdgeInsets.zero,
-          actions: [
-            TextButton(
-              onPressed: Navigator.of(context).pop,
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                final area = cropKey.currentState?.area;
-                if (area != null) {
-                  final result = await ImageCrop.cropImage(
-                    file: file,
-                    area: area,
-                  );
-                  Navigator.of(context).pop(await result.readAsBytes());
-                } else {
-                  Navigator.of(context).pop(await file.readAsBytes());
-                }
-              },
-              child: const Text('Done'),
-            ),
-          ],
-          content: _ImageCropper(
-            cropKey: cropKey,
-            file: file,
-          ),
-        );
-      },
+    final cropped = await ImageCropper().cropImage(
+      sourcePath: path,
+      androidUiSettings: const AndroidUiSettings(
+        hideBottomControls: true,
+        statusBarColor: Colors.black,
+      ),
+      iosUiSettings: const IOSUiSettings(
+        resetButtonHidden: true,
+        rotateButtonsHidden: true,
+        rotateClockwiseButtonHidden: true,
+        aspectRatioPickerButtonHidden: true,
+      ),
     );
+
+    if (cropped != null) {
+      return cropped.readAsBytes();
+    }
+    return null;
   }
 }
 
@@ -201,33 +183,6 @@ Future<String?> _showPickPhotoInterface(BuildContext context) async {
   }
 
   return null;
-}
-
-class _ImageCropper extends StatefulWidget {
-  final GlobalKey<CropState> cropKey;
-  final File file;
-
-  const _ImageCropper({
-    Key? key,
-    required this.cropKey,
-    required this.file,
-  }) : super(key: key);
-
-  @override
-  State<_ImageCropper> createState() => __ImageCropperState();
-}
-
-class __ImageCropperState extends State<_ImageCropper> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      child: Crop(
-        key: widget.cropKey,
-        image: FileImage(widget.file),
-      ),
-    );
-  }
 }
 
 void _uploadPhoto(

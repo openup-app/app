@@ -42,6 +42,7 @@ dependencies:
   image_crop: ^0.4.0
   lottie: ^1.2.2
   sentry_flutter: ^6.3.0
+  image_cropper: ^1.5.0
 
 dev_dependencies:
   flutter_test:
