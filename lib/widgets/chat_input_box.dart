@@ -7,12 +7,13 @@ import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:dartz/dartz.dart' show Tuple2;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
-import 'package:vector_math/vector_math.dart' hide Colors;
+import 'package:vector_math/vector_math.dart' hide Colors, Matrix4;
 
 const _kMaxRecordingDuration = Duration(seconds: 30);
 
@@ -167,27 +168,7 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox> {
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 32),
                 child: Button(
-                  onPressed: () async {
-                    final dir = await getTemporaryDirectory();
-                    final imagePath = path.join(dir.path,
-                        'chat_image_${DateTime.now().toString()}.jpg');
-                    await _photoController.takePicture(imagePath);
-                    if (mounted) {
-                      final send = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return _ImagePreview(
-                              previewPath: imagePath,
-                              flip: _cameraLensNotifier.value == Sensors.FRONT,
-                            );
-                          },
-                        ),
-                      );
-                      if (send == true) {
-                        Navigator.of(context).pop(imagePath);
-                      }
-                    }
-                  },
+                  onPressed: _takePhoto,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 800),
                     curve: Curves.elasticOut,
@@ -232,15 +213,66 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox> {
     list.sort((a, b) => a.value2.compareTo(b.value2));
     return list.firstWhere((element) => element.value2 > 800 * 800).value1;
   }
+
+  void _takePhoto() async {
+    final dir = await getTemporaryDirectory();
+    final imagePath =
+        path.join(dir.path, 'chat_image_${DateTime.now().toString()}.jpg');
+    await _photoController.takePicture(imagePath);
+    final shouldFlip = _cameraLensNotifier.value == Sensors.FRONT;
+
+    if (shouldFlip) {
+      await _performFlip(imagePath);
+    }
+
+    if (mounted) {
+      final send = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (context) {
+            return _ImagePreview(previewPath: imagePath);
+          },
+        ),
+      );
+      if (send == true) {
+        Navigator.of(context).pop(imagePath);
+      }
+    }
+  }
+
+  Future<void> _performFlip(String path) async {
+    final file = File(path);
+
+    final bytes = await file.readAsBytes();
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    final image = frame.image;
+    final pictureRecorder = ui.PictureRecorder();
+    final canvas = Canvas(pictureRecorder);
+    final matrix = Matrix4.identity().scaled(-1.0, 1.0);
+    canvas.translate(image.width.toDouble(), 0.0);
+    canvas.transform(matrix.storage);
+    canvas.drawImage(image, Offset.zero, Paint());
+    final picture = pictureRecorder.endRecording();
+    final flippedImage = await picture.toImage(image.width, image.height);
+    final flippedImageBytes =
+        (await flippedImage.toByteData())?.buffer.asUint8List();
+
+    if (flippedImageBytes != null) {
+      final pngImage = img.Image.fromBytes(
+        image.width,
+        image.height,
+        flippedImageBytes,
+      );
+      await file.writeAsBytes(img.encodeJpg(pngImage));
+    }
+  }
 }
 
 class _ImagePreview extends StatelessWidget {
   final String previewPath;
-  final bool flip;
   const _ImagePreview({
     Key? key,
     required this.previewPath,
-    required this.flip,
   }) : super(key: key);
 
   @override
@@ -256,12 +288,9 @@ class _ImagePreview extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Transform.scale(
-                scaleX: flip ? -1 : 1,
-                child: Image.file(
-                  File(previewPath),
-                  fit: BoxFit.cover,
-                ),
+              Image.file(
+                File(previewPath),
+                fit: BoxFit.cover,
               ),
               Align(
                 alignment: Alignment.topLeft,
