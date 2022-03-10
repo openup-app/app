@@ -61,7 +61,10 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen>
     });
     _animationController.forward();
 
-    _joinLobby();
+    // Lets the user breathe
+    _delayTheUser().whenComplete(() {
+      _joinLobby();
+    });
   }
 
   void _joinLobby() async {
@@ -77,19 +80,14 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen>
     _lobbyApi?.connect();
   }
 
-  void _leaveLobby() {
-    _lobbyEventSubscription?.cancel();
-    _lobbyApi?.dispose();
-  }
-
-  Future<void> _joinCall(
+  void _joinCall(
     String rid,
     List<Profile> profiles,
     List<Rekindle> rekindles,
   ) async {
     final purpose = widget.purpose.name;
     final route = widget.video ? '$purpose-video-call' : '$purpose-voice-call';
-    return Navigator.of(context).pushNamed<void>(
+    Navigator.of(context).pushReplacementNamed(
       route,
       arguments: CallPageArguments(
         rid: rid,
@@ -136,25 +134,13 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen>
         );
         Navigator.of(context).pop();
       },
-      joinCall: (rid, profiles, rekindles) async {
-        _leaveLobby();
-        await _joinCall(rid, profiles, rekindles);
-
-        if (mounted) {
-          // Lets the user breathe
-          await _delayTheUser();
-        }
-
-        if (mounted) {
-          _joinLobby();
-        }
-      },
+      joinCall: _joinCall,
     );
   }
 
   Future<void> _delayTheUser() {
     final random = Random();
-    final seconds = random.nextInt(3) + 4;
+    final seconds = random.nextInt(2) + 2;
     return Future.delayed(Duration(seconds: seconds));
   }
 
@@ -223,7 +209,10 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen>
                 left: MediaQuery.of(context).padding.left + 16,
                 child: Button(
                   onPressed: Navigator.of(context).pop,
-                  child: const Icon(Icons.close),
+                  child: const Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: Icon(Icons.close),
+                  ),
                 ),
               ),
               Positioned(

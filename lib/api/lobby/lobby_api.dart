@@ -60,8 +60,7 @@ class LobbyApi {
 
   Future<void> dispose() {
     _socket.dispose();
-    _eventController.close();
-    return Future.value();
+    return _eventController.close();
   }
 
   Stream<LobbyEvent> get eventStream => _eventController.stream;

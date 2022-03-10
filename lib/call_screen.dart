@@ -13,6 +13,7 @@ import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/lobby_screen.dart';
 import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/rekindle_screen.dart';
 import 'package:openup/report_screen.dart';
@@ -106,7 +107,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           setState(() => _hasSentTimeRequest = false);
         },
         onAddTime: _addTime,
-        onDisconnected: _navigateToRekindleOrPop,
+        onDisconnected: _navigateToRekindleOrLobby,
         onToggleMute: (muted) {
           if (_muted != muted) {
             setState(() => _muted = muted);
@@ -137,7 +138,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
         onJoinGroupCall: (rid, profiles, rekindles) {
           final route = ModalRoute.of(context)?.settings.name;
           if (route != null) {
-            Navigator.of(context).popAndPushNamed(
+            Navigator.of(context).pushNamed(
               route,
               arguments: CallPageArguments(
                 rid: rid,
@@ -224,10 +225,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   muted: _muted,
                   isGroupLobby: widget.groupLobby,
                   readyForGroupCall: _readyForGroupCall,
-                  onTimeUp: _navigateToRekindleOrPop,
+                  onTimeUp: _navigateToRekindleOrLobby,
                   onHangUp: () {
                     _signalingChannel.send(const HangUp());
-                    _navigateToRekindleOrPop();
+                    _navigateToRekindleOrLobby();
                   },
                   onConnect: _connect,
                   onReport: _report,
@@ -247,10 +248,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   endTime: widget.rekindles.isEmpty ? null : _endTime,
                   muted: _muted,
                   speakerphone: _speakerphone,
-                  onTimeUp: _navigateToRekindleOrPop,
+                  onTimeUp: _navigateToRekindleOrLobby,
                   onHangUp: () {
                     _signalingChannel.send(const HangUp());
-                    _navigateToRekindleOrPop();
+                    _navigateToRekindleOrLobby();
                   },
                   onConnect: _connect,
                   onReport: _report,
@@ -326,15 +327,22 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     setState(() => _showReportOverlayForUid = uid);
   }
 
-  void _navigateToRekindleOrPop() {
+  void _navigateToRekindleOrLobby() {
     if (_unrequestedConnections.isEmpty) {
-      Navigator.pop(context);
+      Navigator.of(context).popAndPushNamed(
+        'lobby',
+        arguments: LobbyScreenArguments(
+          video: widget.video,
+          serious: widget.serious,
+        ),
+      );
     } else {
       Navigator.of(context).pushReplacementNamed(
         'precached-rekindle',
         arguments: PrecachedRekindleScreenArguments(
           rekindles: _unrequestedConnections.toList(),
           video: widget.video,
+          serious: widget.serious,
         ),
       );
     }

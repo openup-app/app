@@ -10,6 +10,7 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/lobby_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/profile_photo.dart';
@@ -19,7 +20,14 @@ import 'package:openup/widgets/theming.dart';
 /// Screen to re-connect with matches. This screen will fetch rekindles, then
 /// pass them onto [PrecachedRekindleScreen].
 class RekindleScreen extends ConsumerStatefulWidget {
-  const RekindleScreen({Key? key}) : super(key: key);
+  final bool video;
+  final bool serious;
+
+  const RekindleScreen({
+    Key? key,
+    required this.video,
+    required this.serious,
+  }) : super(key: key);
 
   @override
   _RekindleScreenState createState() => _RekindleScreenState();
@@ -76,7 +84,8 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
             ? const SizedBox.shrink()
             : RekindleScreenPrecached(
                 rekindles: rekindles,
-                video: true,
+                video: widget.video,
+                serious: widget.serious,
                 index: 0,
                 countdown: false,
               ),
@@ -93,6 +102,7 @@ class _RekindleScreenState extends ConsumerState<RekindleScreen> {
 class RekindleScreenPrecached extends ConsumerWidget {
   final List<Rekindle> rekindles;
   final bool video;
+  final bool serious;
   final int index;
   final bool countdown;
 
@@ -100,6 +110,7 @@ class RekindleScreenPrecached extends ConsumerWidget {
     Key? key,
     required this.rekindles,
     required this.video,
+    required this.serious,
     required this.index,
     required this.countdown,
   }) : super(key: key);
@@ -330,12 +341,22 @@ class RekindleScreenPrecached extends ConsumerWidget {
         arguments: PrecachedRekindleScreenArguments(
           rekindles: rekindles,
           video: video,
+          serious: serious,
           index: index + 1,
           countdown: countdown,
         ),
       );
     } else {
-      Navigator.of(context).pop();
+      final purpose = rekindles.first.purpose;
+      final route =
+          purpose == Purpose.friends ? 'friends-lobby' : 'dating-lobby';
+      Navigator.of(context).popAndPushNamed(
+        route,
+        arguments: LobbyScreenArguments(
+          video: video,
+          serious: serious,
+        ),
+      );
     }
   }
 }
@@ -462,15 +483,27 @@ class _CountdownState extends State<_Countdown> {
   Widget build(BuildContext context) => widget.builder(context, _remaining);
 }
 
+class RekindleScreenArguments {
+  final bool video;
+  final bool serious;
+
+  RekindleScreenArguments({
+    required this.video,
+    required this.serious,
+  });
+}
+
 class PrecachedRekindleScreenArguments {
   final List<Rekindle> rekindles;
   final bool video;
+  final bool serious;
   final int index;
   final bool countdown;
 
   PrecachedRekindleScreenArguments({
     required this.rekindles,
     required this.video,
+    required this.serious,
     this.index = 0,
     this.countdown = true,
   });

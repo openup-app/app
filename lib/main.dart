@@ -917,8 +917,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     builder: (context) {
-                      return const CurrentRouteSystemUiStyling.light(
-                        child: RekindleScreen(),
+                      final args =
+                          settings.arguments as RekindleScreenArguments;
+                      return CurrentRouteSystemUiStyling.light(
+                        child: RekindleScreen(
+                          video: args.video,
+                          serious: args.serious,
+                        ),
                       );
                     },
                   );
@@ -938,6 +943,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         child: RekindleScreenPrecached(
                           rekindles: args.rekindles,
                           video: args.video,
+                          serious: args.serious,
                           index: args.index,
                           countdown: args.countdown,
                         ),
