@@ -6,17 +6,11 @@ part 'preferences.g.dart';
 @freezed
 class Preferences with _$Preferences {
   const factory Preferences({
-    @RangeJsonConverter() @Default({}) Set<Gender> gender,
-    @Default({}) Set<SkinColor> skinColor,
-    @RangeJsonConverter()
-    @Default(Range(min: 25, max: 400))
-    @JsonKey()
-        Range weight,
-    @RangeJsonConverter()
-    @Default(Range(min: 24, max: 120))
-    @JsonKey()
-        Range height,
-    @Default({}) Set<String> ethnicity,
+    @RangeJsonConverter() required Set<Gender> gender,
+    required Set<SkinColor> skinColor,
+    @RangeJsonConverter() @JsonKey() required Range weight,
+    @RangeJsonConverter() @JsonKey() required Range height,
+    required Set<String> ethnicity,
   }) = _Preferences;
 
   factory Preferences.fromJson(Map<String, dynamic> json) =>
