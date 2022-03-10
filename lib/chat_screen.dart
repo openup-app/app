@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -195,7 +197,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                         case ChatType.emoji:
                                           return _buildEmojiMessage(message);
                                         case ChatType.image:
-                                          return _buildImageMessage(message);
+                                          return _buildImageMessage(
+                                            message,
+                                            messageReady,
+                                          );
                                         case ChatType.video:
                                           return VideoChatMessage(
                                             videoUrl: message.content,
@@ -434,7 +439,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     );
   }
 
-  Widget _buildImageMessage(ChatMessage message) {
+  Widget _buildImageMessage(ChatMessage message, bool messageReady) {
     return Container(
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
@@ -456,12 +461,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               borderRadius: const BorderRadius.all(
                 Radius.circular(34),
               ),
-              child: Image.network(
-                message.content,
-                fit: BoxFit.cover,
-                frameBuilder: fadeInFrameBuilder,
-                loadingBuilder: circularProgressLoadingBuilder,
-                errorBuilder: iconErrorBuilder,
+              child: Builder(
+                builder: (context) {
+                  if (!messageReady) {
+                    return Image.file(
+                      File(message.content),
+                      fit: BoxFit.cover,
+                      frameBuilder: fadeInFrameBuilder,
+                      errorBuilder: iconErrorBuilder,
+                    );
+                  }
+                  return Image.network(
+                    message.content,
+                    fit: BoxFit.cover,
+                    frameBuilder: fadeInFrameBuilder,
+                    loadingBuilder: circularProgressLoadingBuilder,
+                    errorBuilder: iconErrorBuilder,
+                  );
+                },
               ),
             ),
             Positioned(
