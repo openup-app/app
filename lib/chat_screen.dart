@@ -154,6 +154,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           }
                         },
                         child: Scrollbar(
+                          controller: _scrollController,
                           child: ListView.builder(
                             controller: _scrollController,
                             reverse: true,
@@ -530,7 +531,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       // TODO;
     }, (r) {
       setState(() => _messages[pendingId] = r);
-      _scrollController.jumpTo(0);
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
     });
   }
 
