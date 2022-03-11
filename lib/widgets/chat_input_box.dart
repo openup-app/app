@@ -54,9 +54,10 @@ class _AudioInputBoxState extends State<AudioInputBox> {
   double _amplitude = 0.0;
 
   @override
-  void initState() {
-    super.initState();
+  void dispose() {
+    _timer?.cancel();
     _recorder.dispose();
+    super.dispose();
   }
 
   @override
@@ -88,7 +89,15 @@ class _AudioInputBoxState extends State<AudioInputBox> {
   }
 
   void _startRecording() async {
-    await _recorder.start();
+    if (!await _recorder.hasPermission() || await _recorder.isRecording()) {
+      return;
+    }
+
+    final filePath = path.join(
+      (await getTemporaryDirectory()).path,
+      'chat_audio_${DateTime.now().toIso8601String()}.m4a',
+    );
+    _recorder.start(path: filePath);
     if (mounted) {
       setState(() => _recording = true);
       _timer = Timer.periodic(const Duration(milliseconds: 50), (_) async {
