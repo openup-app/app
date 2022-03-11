@@ -1,7 +1,7 @@
 PODS:
   - audio_session (0.0.1):
     - Flutter
-  - camera (0.0.1):
+  - camerawesome (0.0.1):
     - Flutter
   - connectycube_flutter_call_kit (2.0.2):
     - Flutter
@@ -83,30 +83,51 @@ PODS:
   - GoogleUtilities/UserDefaults (7.6.0):
     - GoogleUtilities/Logger
   - GTMSessionFetcher/Core (1.7.0)
+  - image_crop (0.0.1):
+    - Flutter
+  - image_cropper (0.0.4):
+    - Flutter
+    - TOCropViewController (~> 2.6.1)
   - image_picker (0.0.1):
     - Flutter
   - just_audio (0.0.1):
     - Flutter
   - Libyuv (1703)
+  - Mixpanel-swift (3.1.4):
+    - Mixpanel-swift/Complete (= 3.1.4)
+  - Mixpanel-swift/Complete (3.1.4)
+  - mixpanel_flutter (1.4.5):
+    - Flutter
+    - Mixpanel-swift (= 3.1.4)
   - nanopb (2.30908.0):
     - nanopb/decode (= 2.30908.0)
     - nanopb/encode (= 2.30908.0)
   - nanopb/decode (2.30908.0)
   - nanopb/encode (2.30908.0)
+  - package_info_plus (0.4.5):
+    - Flutter
   - path_provider_ios (0.0.1):
     - Flutter
   - PromisesObjC (2.0.0)
   - record (0.0.1):
     - Flutter
+  - Sentry (7.9.0):
+    - Sentry/Core (= 7.9.0)
+  - Sentry/Core (7.9.0)
+  - sentry_flutter (0.0.1):
+    - Flutter
+    - FlutterMacOS
+    - Sentry (~> 7.9.0)
   - shared_preferences_ios (0.0.1):
     - Flutter
+  - TOCropViewController (2.6.1)
   - video_player (0.0.1):
     - Flutter
   - WebRTC-SDK (92.4515.07)
 
 DEPENDENCIES:
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
-  - camera (from `.symlinks/plugins/camera/ios`)
+  - camerawesome (from `.symlinks/plugins/camerawesome/ios`)
   - connectycube_flutter_call_kit (from `.symlinks/plugins/connectycube_flutter_call_kit/ios`)
   - emoji_picker_flutter (from `.symlinks/plugins/emoji_picker_flutter/ios`)
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
@@ -115,10 +136,15 @@ DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_webrtc (from `.symlinks/plugins/flutter_webrtc/ios`)
+  - image_crop (from `.symlinks/plugins/image_crop/ios`)
+  - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
   - image_picker (from `.symlinks/plugins/image_picker/ios`)
   - just_audio (from `.symlinks/plugins/just_audio/ios`)
+  - mixpanel_flutter (from `.symlinks/plugins/mixpanel_flutter/ios`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
   - record (from `.symlinks/plugins/record/ios`)
+  - sentry_flutter (from `.symlinks/plugins/sentry_flutter/ios`)
   - shared_preferences_ios (from `.symlinks/plugins/shared_preferences_ios/ios`)
   - video_player (from `.symlinks/plugins/video_player/ios`)
 
@@ -134,15 +160,18 @@ SPEC REPOS:
     - GoogleUtilities
     - GTMSessionFetcher
     - Libyuv
+    - Mixpanel-swift
     - nanopb
     - PromisesObjC
+    - Sentry
+    - TOCropViewController
     - WebRTC-SDK
 
 EXTERNAL SOURCES:
   audio_session:
     :path: ".symlinks/plugins/audio_session/ios"
-  camera:
-    :path: ".symlinks/plugins/camera/ios"
+  camerawesome:
+    :path: ".symlinks/plugins/camerawesome/ios"
   connectycube_flutter_call_kit:
     :path: ".symlinks/plugins/connectycube_flutter_call_kit/ios"
   emoji_picker_flutter:
@@ -159,14 +188,24 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
   flutter_webrtc:
     :path: ".symlinks/plugins/flutter_webrtc/ios"
+  image_crop:
+    :path: ".symlinks/plugins/image_crop/ios"
+  image_cropper:
+    :path: ".symlinks/plugins/image_cropper/ios"
   image_picker:
     :path: ".symlinks/plugins/image_picker/ios"
   just_audio:
     :path: ".symlinks/plugins/just_audio/ios"
+  mixpanel_flutter:
+    :path: ".symlinks/plugins/mixpanel_flutter/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider_ios:
     :path: ".symlinks/plugins/path_provider_ios/ios"
   record:
     :path: ".symlinks/plugins/record/ios"
+  sentry_flutter:
+    :path: ".symlinks/plugins/sentry_flutter/ios"
   shared_preferences_ios:
     :path: ".symlinks/plugins/shared_preferences_ios/ios"
   video_player:
@@ -174,7 +213,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   audio_session: 4f3e461722055d21515cf3261b64c973c062f345
-  camera: fe33292aff715a981eb34d7ce7b35b54337ff34c
+  camerawesome: 0f8628efae993cb064ec4f36322e89c237e1064f
   connectycube_flutter_call_kit: 401db1dd3c1984ed754b0b14e957a6700f95067e
   emoji_picker_flutter: 4f9a1ac31d355e1bf9622a1e821a809149130127
   Firebase: 13d8d96499e2635428d5bf0ec675df21f95d9a95
@@ -192,14 +231,22 @@ SPEC CHECKSUMS:
   GoogleDataTransport: 629c20a4d363167143f30ea78320d5a7eb8bd940
   GoogleUtilities: 684ee790a24f73ebb2d1d966e9711c203f2a4237
   GTMSessionFetcher: 43748f93435c2aa068b1cbe39655aaf600652e91
+  image_crop: e0a67085d3ebf3cf46ca46d61c53a082507b0bc3
+  image_cropper: 60c2789d1f1a78c873235d4319ca0c34a69f2d98
   image_picker: 9aa50e1d8cdacdbed739e925b7eea16d014367e6
   just_audio: baa7252489dbcf47a4c7cc9ca663e9661c99aafa
   Libyuv: 5f79ced0ee66e60a612ca97de1e6ccacd187a437
+  Mixpanel-swift: 3ce40d07c05e437bf9258fc0dee9f214c4d5ed8d
+  mixpanel_flutter: 98a17cc746ec60947b71f92a7cd70a8a036d2df6
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
+  package_info_plus: 6c92f08e1f853dc01228d6f553146438dafcd14e
   path_provider_ios: 7d7ce634493af4477d156294792024ec3485acd5
   PromisesObjC: 68159ce6952d93e17b2dfe273b8c40907db5ba58
   record: 7ee2393532f8553bbb09fa19e95478323b7c0a99
+  Sentry: 2f7e91f247cfb05b05bd01e0b5d0692557a7687b
+  sentry_flutter: 7c3cb050dc23563a4ea5db438c83afdb460a2ae6
   shared_preferences_ios: aef470a42dc4675a1cdd50e3158b42e3d1232b32
+  TOCropViewController: edfd4f25713d56905ad1e0b9f5be3fbe0f59c863
   video_player: ecd305f42e9044793efd34846e1ce64c31ea6fcb
   WebRTC-SDK: 540a44f2e30e89c75e331d5c4a372253ba668233
 
