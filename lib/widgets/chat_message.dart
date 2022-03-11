@@ -9,6 +9,7 @@ import 'package:openup/widgets/theming.dart';
 import 'package:video_player/video_player.dart';
 
 class AudioChatMessage extends StatefulWidget {
+  final bool ready;
   final String audioUrl;
   final String? photoUrl;
   final Widget date;
@@ -16,6 +17,7 @@ class AudioChatMessage extends StatefulWidget {
 
   const AudioChatMessage({
     Key? key,
+    required this.ready,
     required this.audioUrl,
     this.photoUrl,
     required this.date,
@@ -39,8 +41,20 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
   @override
   void initState() {
     super.initState();
-    _audio.setUrl(widget.audioUrl);
+    if (!widget.ready) {
+      _audio.setPath(widget.audioUrl);
+    } else {
+      _audio.setUrl(widget.audioUrl);
+    }
     _subscription = _audio.playbackInfoStream.listen(_onPlaybackInfo);
+  }
+
+  @override
+  void didUpdateWidget(covariant AudioChatMessage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.ready && widget.ready) {
+      _audio.setUrl(widget.audioUrl);
+    }
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:just_audio/just_audio.dart';
@@ -76,11 +77,19 @@ class JustAudioAudioPlayer {
 
   Stream<PlaybackInfo> get playbackInfoStream => _playbackInfoController.stream;
 
-  Future<void> setUrl(String url) async {
+  Future<void> setUrl(String url) =>
+      _setAudioHandleErrors(() => _player.setUrl(url));
+
+  Future<void> setPath(String path) =>
+      _setAudioHandleErrors(() => _player.setFilePath(path));
+
+  Future<void> _setAudioHandleErrors(Future<void> Function() setAudio) async {
     try {
-      await _player.setUrl(url);
+      await setAudio();
     } on PlayerInterruptedException {
-      // Ignore
+      // Player disposed before audio loaded, safe to ignore
+    } on PlayerException {
+      // Audio unplayable, ignore
     }
   }
 

@@ -209,6 +209,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                           );
                                         case ChatType.audio:
                                           return AudioChatMessage(
+                                            ready: messageReady,
                                             audioUrl: message.content,
                                             photoUrl: fromMe
                                                 ? _myAvatar
