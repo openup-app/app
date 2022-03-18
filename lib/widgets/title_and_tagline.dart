@@ -39,7 +39,6 @@ class TitleAndTagline extends StatelessWidget {
                 style: Theming.of(context).text.body.copyWith(fontSize: 16),
               ),
             ),
-            const SizedBox(height: 48),
           ],
         ),
       ),
