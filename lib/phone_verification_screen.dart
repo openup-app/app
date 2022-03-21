@@ -144,7 +144,7 @@ class _PhoneVerificationScreenState
                         text: 'Privacy Policy',
                         style: Theming.of(context).text.body.copyWith(
                             color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                            fontSize: 13,
+                            fontSize: 16,
                             fontWeight: FontWeight.w700),
                         recognizer: _privacyPolicyRecognizer,
                       ),
@@ -153,7 +153,7 @@ class _PhoneVerificationScreenState
                         text: 'Terms of Service',
                         style: Theming.of(context).text.body.copyWith(
                             color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                            fontSize: 13,
+                            fontSize: 16,
                             fontWeight: FontWeight.w700),
                         recognizer: _tosRecognizer,
                       ),
