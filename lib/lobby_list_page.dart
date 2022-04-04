@@ -1,5 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -222,13 +223,12 @@ class _OnlineUserTile extends StatelessWidget {
                           height: 48,
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: AutoSizeText(
-                              'Name',
-                              minFontSize: 16,
-                              maxFontSize: 36,
+                            child: Text(
+                              'Johnny, 34',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theming.of(context).text.body.copyWith(
+                                fontSize: 36,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
                                 shadows: [
@@ -478,6 +478,397 @@ class __TopicSelectorState extends State<_TopicSelector>
           ),
         ],
       ),
+    );
+  }
+}
+
+class _StatusBox extends StatelessWidget {
+  const _StatusBox({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 28),
+        Text(
+          'Create your status',
+          style: Theming.of(context).text.body.copyWith(
+                color: Colors.black,
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        Padding(
+          padding:
+              const EdgeInsets.only(left: 27, right: 27, bottom: 26, top: 10),
+          child: Text(
+            'Your status will be up for an hour only, during that time anyone can call you.',
+            style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0x9E, 0x9E, 0x9E, 1.0),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                height: 44,
+                margin: const EdgeInsets.only(left: 19),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(23)),
+                  color: Color.fromRGBO(0xE6, 0xE6, 0xE6, 1.0),
+                ),
+                child: TextField(
+                  decoration: InputDecoration.collapsed(
+                    hintText: 'Why are you here today?',
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 12.0, right: 23),
+              child: Button(
+                onPressed: () {},
+                child: const Icon(
+                  Icons.delete,
+                  color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 34),
+        Button(
+          onPressed: () {},
+          child: Container(
+            width: 153,
+            height: 46,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(23)),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color.fromRGBO(0x00, 0xB0, 0xD5, 1.0),
+                  Color.fromRGBO(0x06, 0x5E, 0x71, 1.0),
+                ],
+              ),
+            ),
+            child: Text(
+              'Post your Status',
+              textAlign: TextAlign.center,
+              style: Theming.of(context).text.body.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CallBox extends StatelessWidget {
+  const _CallBox({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(0x23, 0xE5, 0x36, 1.0),
+            Color.fromRGBO(0x0F, 0xA7, 0x1E, 1.0),
+          ],
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            top: 12,
+            right: 12,
+            child: Button(
+              onPressed: () {},
+              child: Container(
+                margin: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 4.0,
+                      offset: Offset(0.0, 4.0),
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.close,
+                  color: Color.fromRGBO(0xAE, 0xAE, 0xAE, 1.0),
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Lottie.asset(
+                'assets/images/call.json',
+                fit: BoxFit.contain,
+                width: 90,
+              ),
+              const SizedBox(width: 16),
+              Text(
+                'Calling Johnny',
+                style: Theming.of(context).text.body.copyWith(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VoiceCallBox extends StatelessWidget {
+  const _VoiceCallBox({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 16, right: 24.0),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Button(
+                onPressed: () {},
+                child: Text(
+                  'Leave',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ),
+        ),
+        RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: 'You are talking to ',
+                style: Theming.of(context).text.body.copyWith(
+                    color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700),
+              ),
+              TextSpan(
+                text: 'Johnny',
+                style: Theming.of(context).text.body.copyWith(
+                    color: const Color.fromRGBO(0x7B, 0x79, 0x79, 1.0),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 11),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: BoxDecoration(shape: BoxShape.circle),
+              child: Image.network(
+                'https://picsum.photos/200/300',
+                width: 69,
+                height: 69,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 33),
+            Column(
+              children: [
+                const Icon(
+                  Icons.access_time_filled,
+                  color: Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '04:58',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+            const SizedBox(width: 33),
+            Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: BoxDecoration(shape: BoxShape.circle),
+              child: Image.network(
+                'https://picsum.photos/200/300',
+                width: 69,
+                height: 69,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 19),
+        const Divider(
+          color: Color.fromRGBO(0xCA, 0xCA, 0xCA, 1.0),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Button(
+              onPressed: () {},
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: const Icon(
+                  Icons.person_add,
+                  color: Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Button(
+              onPressed: () {},
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  'R',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
+                      fontSize: 27,
+                      fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Button(
+              onPressed: () {},
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: const Icon(
+                  Icons.volume_up,
+                  color: Colors.green,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Button(
+              onPressed: () {},
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: const Icon(
+                  Icons.mic,
+                  color: Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _LeaveCallBox extends StatelessWidget {
+  const _LeaveCallBox({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 12, top: 16),
+            child: Button(
+              onPressed: () {},
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Icon(
+                  Icons.arrow_back,
+                  color: Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                  size: 32,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text:
+                      'Leaving this call will prevent you from making or taking any calls for',
+                  style: Theming.of(context).text.body.copyWith(
+                        color: const Color.fromRGBO(0x66, 0x64, 0x64, 1.0),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                TextSpan(
+                  text: ' 5 minutes.\n',
+                  style: Theming.of(context).text.body.copyWith(
+                        color: const Color.fromRGBO(0xF5, 0x5A, 0x5A, 1.0),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                TextSpan(
+                  text: 'Do you wish to proceed?',
+                  style: Theming.of(context).text.body.copyWith(
+                        color: const Color.fromRGBO(0x66, 0x64, 0x64, 1.0),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 31),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Button(
+            onPressed: () {},
+            child: Text(
+              'Leave',
+              style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
