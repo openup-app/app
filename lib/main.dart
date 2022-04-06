@@ -25,6 +25,7 @@ import 'package:openup/connections_screen.dart';
 import 'package:openup/contact_us_screen.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
+import 'package:openup/lobby_list_page.dart';
 import 'package:openup/preferences_screen.dart';
 import 'package:openup/attributes_screen.dart';
 import 'package:openup/profile_edit_screen.dart';
@@ -265,6 +266,16 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     builder: (_) {
                       return const CurrentRouteSystemUiStyling.light(
                         child: SignUpWelcomeInfoScreen(),
+                      );
+                    },
+                  );
+                case 'lobby-list':
+                  return _buildPageRoute(
+                    settings: settings,
+                    builder: (_) {
+                      return CurrentRouteSystemUiStyling.dark(
+                        key: _notificationKey,
+                        child: const LobbyListPage(),
                       );
                     },
                   );

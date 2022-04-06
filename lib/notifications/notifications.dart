@@ -66,7 +66,7 @@ Future<bool> _handleLaunchNotification({required GlobalKey key}) async {
         ? 'friends'
         : 'dating';
     final route = video ? '$purpose-video-call' : '$purpose-voice-call';
-    Navigator.of(context).pushReplacementNamed('home');
+    Navigator.of(context).pushReplacementNamed('lobby-list');
     Navigator.of(context).pushNamed(
       route,
       arguments: CallPageArguments(
@@ -117,7 +117,7 @@ Future<bool> _handleLaunchNotification({required GlobalKey key}) async {
         result.fold(
           (l) => displayError(context, l),
           (profile) {
-            Navigator.of(context).pushReplacementNamed('home');
+            Navigator.of(context).pushReplacementNamed('lobby-list');
             Navigator.of(context).pushNamed(
               'chat',
               arguments: ChatArguments(
@@ -133,7 +133,7 @@ Future<bool> _handleLaunchNotification({required GlobalKey key}) async {
         result.fold(
           (l) => displayError(context, l),
           (profile) {
-            Navigator.of(context).pushReplacementNamed('home');
+            Navigator.of(context).pushReplacementNamed('lobby-list');
             Navigator.of(context).pushNamed(
               'chat',
               arguments: ChatArguments(

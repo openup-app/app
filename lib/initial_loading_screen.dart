@@ -86,7 +86,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       if (widget.needsOnboarding) {
         Navigator.of(context).pushReplacementNamed('sign-up-info');
       } else {
-        Navigator.of(context).pushReplacementNamed('home');
+        Navigator.of(context).pushReplacementNamed('lobby-list');
       }
     }
   }

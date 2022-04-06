@@ -15,7 +15,7 @@ class HomeButton extends StatelessWidget {
     return Button(
       onPressed: () => Navigator.popUntil(
         context,
-        ModalRoute.withName('home'),
+        ModalRoute.withName('lobby-list'),
       ),
       child: SizedBox(
         width: 48,

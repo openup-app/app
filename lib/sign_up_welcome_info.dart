@@ -40,7 +40,7 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
             child: Button(
               onPressed: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
-                Navigator.of(context).pushReplacementNamed('home');
+                Navigator.of(context).pushReplacementNamed('lobby-list');
               },
               child: Image.asset('assets/images/close_circle.png'),
             ),
