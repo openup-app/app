@@ -13,6 +13,7 @@ import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/lobby_list_page.dart';
 import 'package:openup/lobby_screen.dart';
 import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/rekindle_screen.dart';
@@ -30,6 +31,7 @@ class CallScreen extends ConsumerStatefulWidget {
   final String host;
   final int socketPort;
   final bool video;
+  final bool mini;
   final bool serious;
   final List<SimpleProfile> profiles;
   final List<Rekindle> rekindles;
@@ -41,6 +43,7 @@ class CallScreen extends ConsumerStatefulWidget {
     required this.host,
     required this.socketPort,
     required this.video,
+    this.mini = false,
     required this.serious,
     required this.profiles,
     required this.rekindles,
@@ -214,7 +217,28 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           ),
           child: Stack(
             children: [
-              if (widget.video)
+              if (widget.mini)
+                MiniVoiceCallScreenContent(
+                  users:
+                      _users.values.map((data) => data.userConnection).toList(),
+                  hasSentTimeRequest: _hasSentTimeRequest,
+                  endTime: widget.rekindles.isEmpty ? null : _endTime,
+                  muted: _muted,
+                  speakerphone: _speakerphone,
+                  onTimeUp: () => Navigator.of(context).pop(),
+                  onHangUp: () {
+                    _signalingChannel.send(const HangUp());
+                    Navigator.of(context).pop();
+                  },
+                  onConnect: _connect,
+                  onReport: _report,
+                  onSendTimeRequest: _sendTimeRequest,
+                  onToggleMute: () => _users.values
+                      .forEach((element) => element.phone.toggleMute()),
+                  onToggleSpeakerphone: () => _users.values
+                      .forEach((element) => element.phone.toggleSpeakerphone()),
+                )
+              else if (widget.video)
                 VideoCallScreenContent(
                   localRenderer:
                       _users.values.first.userConnection.localVideoRenderer,

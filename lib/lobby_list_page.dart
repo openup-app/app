@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -10,6 +11,9 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/call_screen.dart';
+import 'package:openup/main.dart';
+import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -40,6 +44,22 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
   void initState() {
     super.initState();
     setState(() => _loading = true);
+
+    Future.wait([
+      FirebaseMessaging.instance.getToken(),
+      getVoidPushNotificationToken(),
+    ]).then((tokens) {
+      if (!mounted) {
+        return;
+      }
+      final api = GetIt.instance.get<Api>();
+      api.addNotificationTokens(
+        ref.read(userProvider).uid,
+        messagingToken: tokens[0],
+        voipToken: tokens[1],
+      );
+    });
+
     Future.wait([
       _fetchParticipants(),
       _getStatus(),
@@ -51,6 +71,7 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
   }
 
   Future<void> _fetchParticipants() async {
+    final myUid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
     final participants = await api.getTopicList(_topic);
     if (mounted) {
@@ -62,7 +83,8 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
             ),
           );
         },
-        (r) => setState(() => _participants = r),
+        (r) => setState(
+            () => _participants = r.where((p) => p.uid != myUid).toList()),
       );
     }
   }
@@ -102,7 +124,7 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
                       ),
                       const Spacer(),
                       Text(
-                        '25,120',
+                        _loading ? '' : _participants.length.toString(),
                         style: Theming.of(context).text.body.copyWith(
                             fontSize: 18,
                             fontWeight: FontWeight.w300,
@@ -707,7 +729,11 @@ class __TopicSelectorState extends State<_TopicSelector>
                     ),
                     child: Button(
                       onPressed: () {
-                        widget.onSelected(topic);
+                        if (widget.selected == topic) {
+                          widget.onSelected(Topic.all);
+                        } else {
+                          widget.onSelected(topic);
+                        }
                         _controller.reverse();
                         widget.onOpen?.call(false);
                       },
@@ -936,7 +962,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
   }
 }
 
-class _CallBox extends StatelessWidget {
+class _CallBox extends StatefulWidget {
   final TopicParticipant participant;
   const _CallBox({
     Key? key,
@@ -944,7 +970,56 @@ class _CallBox extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<_CallBox> createState() => _CallBoxState();
+}
+
+class _CallBoxState extends State<_CallBox> {
+  String? _rid;
+
+  @override
+  void initState() {
+    super.initState();
+    final api = GetIt.instance.get<Api>();
+    final resultFuture = api.call(
+      widget.participant.uid,
+      false,
+      group: false,
+    );
+    resultFuture.then((result) {
+      if (!mounted) {
+        return;
+      }
+      result.fold(
+        (l) {
+          displayError(context, l);
+          Navigator.of(context).pop();
+        },
+        (r) => setState(() => _rid = r),
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_rid != null) {
+      return CallScreen(
+        rid: _rid!,
+        host: host,
+        socketPort: socketPort,
+        video: false,
+        mini: true,
+        serious: true,
+        profiles: [
+          SimpleProfile(
+            uid: widget.participant.uid,
+            name: widget.participant.name,
+            photo: widget.participant.photo,
+          ),
+        ],
+        rekindles: const [],
+        groupLobby: false,
+      );
+    }
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -996,7 +1071,7 @@ class _CallBox extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               AutoSizeText(
-                'Calling ${participant.name}',
+                'Calling ${widget.participant.name}',
                 minFontSize: 16,
                 style: Theming.of(context).text.body.copyWith(
                       fontSize: 24,
@@ -1151,6 +1226,188 @@ class _VoiceCallBox extends StatelessWidget {
                 child: const Icon(
                   Icons.mic,
                   color: Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class MiniVoiceCallScreenContent extends StatelessWidget {
+  final List<UserConnection> users;
+  final bool hasSentTimeRequest;
+  final DateTime? endTime;
+  final bool muted;
+  final bool speakerphone;
+  final VoidCallback onTimeUp;
+  final VoidCallback onHangUp;
+  final VoidCallback onSendTimeRequest;
+  final void Function(String uid) onConnect;
+  final void Function(String uid) onReport;
+  final VoidCallback onToggleMute;
+  final VoidCallback onToggleSpeakerphone;
+
+  const MiniVoiceCallScreenContent({
+    Key? key,
+    required this.users,
+    required this.hasSentTimeRequest,
+    required this.endTime,
+    required this.muted,
+    required this.speakerphone,
+    required this.onTimeUp,
+    required this.onHangUp,
+    required this.onSendTimeRequest,
+    required this.onConnect,
+    required this.onReport,
+    required this.onToggleMute,
+    required this.onToggleSpeakerphone,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final tempFirstUser = users.first;
+    final profile = tempFirstUser.profile;
+    final photo = profile.photo;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 16, right: 24.0),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Button(
+                onPressed: onHangUp,
+                child: Text(
+                  'Leave',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ),
+        ),
+        RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: 'You are talking to ',
+                style: Theming.of(context).text.body.copyWith(
+                    color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700),
+              ),
+              TextSpan(
+                text: profile.name,
+                style: Theming.of(context).text.body.copyWith(
+                    color: const Color.fromRGBO(0x7B, 0x79, 0x79, 1.0),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 11),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(shape: BoxShape.circle),
+              child: Image.network(
+                photo,
+                width: 69,
+                height: 69,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 33),
+            Column(
+              children: [
+                const Icon(
+                  Icons.access_time_filled,
+                  color: Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '04:58',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+            const SizedBox(width: 33),
+            Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(shape: BoxShape.circle),
+              child: Image.network(
+                profile.photo,
+                width: 69,
+                height: 69,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 19),
+        const Divider(
+          color: Color.fromRGBO(0xCA, 0xCA, 0xCA, 1.0),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Button(
+              onPressed: () => onConnect(profile.uid),
+              child: const Padding(
+                padding: EdgeInsets.all(12.0),
+                child: Icon(
+                  Icons.person_add,
+                  color: Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Button(
+              onPressed: () {},
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  'R',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
+                      fontSize: 27,
+                      fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Button(
+              onPressed: onToggleSpeakerphone,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Icon(
+                  Icons.volume_up,
+                  color: speakerphone
+                      ? const Color.fromRGBO(0x19, 0xC6, 0x2A, 1.0)
+                      : const Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Button(
+              onPressed: onToggleMute,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Icon(
+                  muted ? Icons.mic_off : Icons.mic,
+                  color: const Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
                 ),
               ),
             ),
