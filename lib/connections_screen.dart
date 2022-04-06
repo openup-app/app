@@ -198,100 +198,102 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
           Positioned(
             left: _showSearchBox ? 16 : null,
             right: 16,
-            bottom: 16,
-            child: Builder(builder: (context) {
-              final textStyle = Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontWeight: FontWeight.w500, fontSize: 20);
-              final dropShadow = BoxShadow(
-                color: Theming.of(context).shadow,
-                offset: const Offset(0, 4),
-                blurRadius: 2.0,
-              );
-              if (_showSearchBox) {
-                return Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(Radius.circular(24)),
-                    boxShadow: [dropShadow],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(24)),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(24)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color.fromARGB(0xFF, 0xF2, 0xC5, 0xC5),
-                            blurRadius: 0,
-                          ),
-                          BoxShadow(
-                            color: Color.fromARGB(0xFF, 0xE2, 0x55, 0x55),
-                            blurRadius: 10,
-                            spreadRadius: -2,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              style: textStyle,
-                              focusNode: _searchFocusNode,
-                              textCapitalization: TextCapitalization.words,
-                              onChanged: (text) =>
-                                  setState(() => _search = text),
-                              decoration: InputDecoration(
-                                icon: const Icon(
-                                  Icons.person_search,
-                                  color: Colors.white,
+            bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
+            child: Builder(
+              builder: (context) {
+                final textStyle = Theming.of(context)
+                    .text
+                    .body
+                    .copyWith(fontWeight: FontWeight.w500, fontSize: 20);
+                final dropShadow = BoxShadow(
+                  color: Theming.of(context).shadow,
+                  offset: const Offset(0, 4),
+                  blurRadius: 2.0,
+                );
+                if (_showSearchBox) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.all(Radius.circular(24)),
+                      boxShadow: [dropShadow],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.all(Radius.circular(24)),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(24)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color.fromARGB(0xFF, 0xF2, 0xC5, 0xC5),
+                              blurRadius: 0,
+                            ),
+                            BoxShadow(
+                              color: Color.fromARGB(0xFF, 0xE2, 0x55, 0x55),
+                              blurRadius: 10,
+                              spreadRadius: -2,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                style: textStyle,
+                                focusNode: _searchFocusNode,
+                                textCapitalization: TextCapitalization.words,
+                                onChanged: (text) =>
+                                    setState(() => _search = text),
+                                decoration: InputDecoration(
+                                  icon: const Icon(
+                                    Icons.person_search,
+                                    color: Colors.white,
+                                  ),
+                                  border: InputBorder.none,
+                                  hintText: 'Search',
+                                  hintStyle: textStyle,
                                 ),
-                                border: InputBorder.none,
-                                hintText: 'Search',
-                                hintStyle: textStyle,
                               ),
                             ),
-                          ),
-                          TextButton(
-                            onPressed: _dismissSearch,
-                            child: Text('Done',
-                                style: Theming.of(context).text.button),
-                          ),
-                        ],
+                            TextButton(
+                              onPressed: _dismissSearch,
+                              child: Text('Done',
+                                  style: Theming.of(context).text.button),
+                            ),
+                          ],
+                        ),
                       ),
+                    ),
+                  );
+                }
+                return Button(
+                  onPressed: _connections == null
+                      ? null
+                      : () {
+                          setState(() => _showSearchBox = true);
+                          _searchFocusNode.requestFocus();
+                        },
+                  child: Container(
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      boxShadow: [dropShadow],
+                      borderRadius: const BorderRadius.all(Radius.circular(24)),
+                      color: const Color.fromARGB(0xFF, 0xE2, 0x55, 0x55),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.person_search),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Search',
+                          style: textStyle,
+                        ),
+                      ],
                     ),
                   ),
                 );
-              }
-              return Button(
-                onPressed: _connections == null
-                    ? null
-                    : () {
-                        setState(() => _showSearchBox = true);
-                        _searchFocusNode.requestFocus();
-                      },
-                child: Container(
-                  height: 48,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    boxShadow: [dropShadow],
-                    borderRadius: const BorderRadius.all(Radius.circular(24)),
-                    color: const Color.fromARGB(0xFF, 0xE2, 0x55, 0x55),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.person_search),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Search',
-                        style: textStyle,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
+              },
+            ),
           )
         ],
       ),
