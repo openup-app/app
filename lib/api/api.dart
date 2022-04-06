@@ -15,6 +15,7 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 
 part 'api.freezed.dart';
+part 'api.g.dart';
 
 class Api {
   final _headers = {
@@ -507,6 +508,78 @@ class Api {
     }
   }
 
+  Future<Either<ApiError, List<TopicParticipant>>> getTopicList(Topic topic) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/users/any/topics/${topic.name}/participants'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final list = List.from(jsonDecode(response.body));
+        return Right(List<TopicParticipant>.from(
+            list.map((e) => TopicParticipant.fromJson(e))));
+      },
+    );
+  }
+
+  Future<Either<ApiError, Status?>> getStatus(String uid) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/users/$uid/status'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        final status = json['status'];
+        if (status != null) {
+          return Right(Status.fromJson(status));
+        }
+        return const Right(null);
+      },
+    );
+  }
+
+  Future<Either<ApiError, Status?>> updateStatus(
+    String uid,
+    Topic topic,
+    String status,
+  ) {
+    return _request(
+      makeRequest: () {
+        return http.put(
+          Uri.parse(
+              '$_urlBase/users/any/topics/${topic.name}/participants/$uid'),
+          headers: _headers,
+          body: jsonEncode({'status': status}),
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        final status = json['status'];
+        if (status != null) {
+          return Right(Status.fromJson(status));
+        }
+        return const Right(null);
+      },
+    );
+  }
+
+  Future<Either<ApiError, void>> deleteStatus(String uid) {
+    return _request(
+      makeRequest: () {
+        return http.delete(
+          Uri.parse('$_urlBase/users/$uid/status'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
   Future<Either<ApiError, T>> _requestStreamedResponse<T>({
     required Future<http.StreamedResponse> Function() makeRequest,
     required Either<ApiError, T> Function(http.Response response) handleSuccess,
@@ -589,4 +662,24 @@ class ClientError with _$ClientError {
 @freezed
 class ServerError with _$ServerError {
   const factory ServerError.serverError() = _ServerError;
+}
+
+@freezed
+class Status with _$Status {
+  const factory Status({
+    required String text,
+    required String topic,
+    required int remaining,
+  }) = _Status;
+
+  factory Status.fromJson(Map<String, dynamic> json) => _$StatusFromJson(json);
+}
+
+enum Topic {
+  all,
+  moved,
+  outing,
+  lonely,
+  vacation,
+  business,
 }

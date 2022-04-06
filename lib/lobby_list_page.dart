@@ -1,149 +1,237 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
 import 'package:lottie/lottie.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
 
-class LobbyListPage extends StatefulWidget {
+class LobbyListPage extends ConsumerStatefulWidget {
   const LobbyListPage({Key? key}) : super(key: key);
 
   @override
-  State<LobbyListPage> createState() => _LobbyListPageState();
+  _LobbyListPageState createState() => _LobbyListPageState();
 }
 
-class _LobbyListPageState extends State<LobbyListPage> {
-  final _topics = [
-    'Just moved',
-    'Going out',
-    'Lonely',
-    'On vacation',
-    'Business',
-  ];
-  int? _selectedTopic;
+class _LobbyListPageState extends ConsumerState<LobbyListPage> {
+  final _topics = {
+    Topic.moved: 'Just moved',
+    Topic.outing: 'Going out',
+    Topic.lonely: 'Lonely',
+    Topic.vacation: 'On vacation',
+    Topic.business: 'Business',
+  };
+  Topic _topic = Topic.all;
+  bool _topicsExpanded = false;
+
+  bool _loading = false;
+  Status? _status;
+  var _participants = <TopicParticipant>[];
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() => _loading = true);
+    Future.wait([
+      _fetchParticipants(),
+      _getStatus(),
+    ]).whenComplete(() {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    });
+  }
+
+  Future<void> _fetchParticipants() async {
+    final api = GetIt.instance.get<Api>();
+    final participants = await api.getTopicList(_topic);
+    if (mounted) {
+      participants.fold(
+        (l) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to get users'),
+            ),
+          );
+        },
+        (r) => setState(() => _participants = r),
+      );
+    }
+  }
+
+  Future<void> _getStatus() async {
+    final api = GetIt.instance.get<Api>();
+    final uid = ref.read(userProvider).uid;
+    final result = await api.getStatus(uid);
+    result.fold(
+      (l) => displayError(context, l),
+      (r) => setState(() => _status = r),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Padding(
-              padding:
-                  EdgeInsets.only(top: MediaQuery.of(context).padding.top + 88),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 27.0, vertical: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'People available to talk ...',
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w300,
-                              color:
-                                  const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0)),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '25,120',
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w300,
-                              color:
-                                  const Color.fromRGBO(0x00, 0xD1, 0xFF, 1.0)),
-                        ),
-                      ],
-                    ),
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Padding(
+            padding:
+                EdgeInsets.only(top: MediaQuery.of(context).padding.top + 88),
+            child: Column(
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 27.0, vertical: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'People available to talk ...',
+                        style: Theming.of(context).text.body.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w300,
+                            color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0)),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '25,120',
+                        style: Theming.of(context).text.body.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w300,
+                            color: const Color.fromRGBO(0x00, 0xD1, 0xFF, 1.0)),
+                      ),
+                    ],
                   ),
+                ),
+                if (_loading)
+                  const Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else if (_participants.isEmpty)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Center(
+                        child: Text(
+                          'No one is chatting about this topic',
+                          textAlign: TextAlign.center,
+                          style: Theming.of(context).text.body.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w500,
+                              color:
+                                  const Color.fromRGBO(0xAA, 0xAA, 0xAA, 1.0)),
+                        ),
+                      ),
+                    ),
+                  )
+                else
                   Expanded(
                     child: ListView.builder(
-                      padding: EdgeInsets.zero,
+                      padding: const EdgeInsets.only(bottom: 156),
+                      itemCount: _participants.length,
                       itemBuilder: (context, index) {
-                        return _OnlineUserTile(
-                          onPressed: () {},
+                        final participant = _participants[index];
+                        return _ParticipantTile(
+                          participant: participant,
+                          onPressed: () => _call(participant),
                         );
                       },
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
           ),
-          Positioned(
-            left: 0,
-            top: MediaQuery.of(context).padding.top + 16,
-            child: _TopicSelector(
-              topics: _topics,
-              selected: _selectedTopic,
-              onSelected: (index) => setState(() => _selectedTopic = index),
-            ),
+        ),
+        Positioned(
+          right: 24,
+          top: MediaQuery.of(context).padding.top + 16,
+          child: const ProfileButton(
+            color: Color.fromRGBO(0x89, 0xDE, 0xFF, 1.0),
           ),
-          Positioned(
-            right: 24,
-            top: MediaQuery.of(context).padding.top + 16,
-            child: const ProfileButton(
-              color: Color.fromRGBO(0x89, 0xDE, 0xFF, 1.0),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 18.0, bottom: 12),
-                  child: Button(
-                    onPressed: () {},
-                    child: Container(
-                      width: 140,
-                      height: 61,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(61)),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Color.fromRGBO(0x26, 0xEF, 0x3A, 1.0),
-                            Color.fromRGBO(0x0A, 0x98, 0x18, 1.0),
-                          ],
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 18.0, bottom: 12),
+                child: Button(
+                  onPressed: _participants.isEmpty
+                      ? null
+                      : () {
+                          final index = Random().nextInt(_participants.length);
+                          final participant = _participants[index];
+                          _call(participant);
+                        },
+                  child: Container(
+                    width: 140,
+                    height: 61,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(61)),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color.fromRGBO(0x26, 0xEF, 0x3A, 1.0),
+                          Color.fromRGBO(0x0A, 0x98, 0x18, 1.0),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 4.0,
+                          offset: Offset(0.0, 4.0),
+                          color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            blurRadius: 4.0,
-                            offset: Offset(0.0, 4.0),
-                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.call,
-                            size: 30,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Random',
-                            style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                          ),
-                        ],
-                      ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.call,
+                          size: 30,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Random',
+                          style: Theming.of(context).text.body.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                DecoratedBox(
+              ),
+              GestureDetector(
+                onTap: _loading
+                    ? null
+                    : () {
+                        _showPanel(
+                          builder: (context) {
+                            return _StatusBox(
+                              topic: _topic,
+                              status: null,
+                            );
+                          },
+                        );
+                      },
+                child: DecoratedBox(
                   decoration: const BoxDecoration(color: Colors.white),
                   child: Container(
                     height: 54,
@@ -159,10 +247,14 @@ class _LobbyListPageState extends State<LobbyListPage> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: TextField(
-                            decoration: InputDecoration.collapsed(
-                              hintText: 'Why are you here today?',
-                            ),
+                          child: Text(
+                            _status?.text ?? 'Why are you here today?',
+                            overflow: TextOverflow.ellipsis,
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w300,
+                                color: const Color.fromRGBO(
+                                    0x7B, 0x7B, 0x7B, 1.0)),
                           ),
                         ),
                         const Icon(
@@ -170,31 +262,177 @@ class _LobbyListPageState extends State<LobbyListPage> {
                           color: Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0),
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          '59:08',
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w300,
-                              color:
-                                  const Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0)),
-                        ),
+                        if (_status != null)
+                          _CountdownTimer(
+                            remaining:
+                                Duration(milliseconds: _status!.remaining),
+                            onTimeUp: () => setState(() => _status = null),
+                          ),
                       ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_topicsExpanded)
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () {
+                setState(() => _topicsExpanded = false);
+              },
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+        Positioned(
+          key: const Key('topic_selector'),
+          left: 0,
+          top: MediaQuery.of(context).padding.top + 16,
+          child: _TopicSelector(
+            open: _topicsExpanded,
+            topics: _topics,
+            selected: _topic,
+            onSelected: (topic) {
+              setState(() => _topic = topic);
+              _fetchParticipants();
+            },
+            onOpen: _loading
+                ? null
+                : (open) => setState(() => _topicsExpanded = open),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _call(TopicParticipant participant) {
+    _showPanel(
+      dragIndicatorColor: Colors.white,
+      builder: (context) {
+        return _CallBox(participant: participant);
+      },
+    );
+  }
+
+  void _showPanel({
+    Color dragIndicatorColor = const Color.fromRGBO(0xC4, 0xC4, 0xC4, 1.0),
+    required WidgetBuilder builder,
+  }) {
+    showBottomSheet(
+      context: context,
+      elevation: 8,
+      clipBehavior: Clip.hardEdge,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(41),
+          topRight: Radius.circular(41),
+        ),
+      ),
+      builder: (context) {
+        return Padding(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: SizedBox(
+            height: 274,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: builder(context),
+                ),
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(top: 10),
+                    decoration: BoxDecoration(
+                      color: dragIndicatorColor,
+                      borderRadius: const BorderRadius.all(Radius.circular(2)),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
-class _OnlineUserTile extends StatelessWidget {
-  final VoidCallback onPressed;
-  const _OnlineUserTile({
+class _CountdownTimer extends StatefulWidget {
+  final Duration remaining;
+  final VoidCallback onTimeUp;
+  const _CountdownTimer({
     Key? key,
+    required this.remaining,
+    required this.onTimeUp,
+  }) : super(key: key);
+
+  @override
+  State<_CountdownTimer> createState() => __CountdownTimerState();
+}
+
+class __CountdownTimerState extends State<_CountdownTimer> {
+  DateTime _statusUpdatedTime = DateTime.now();
+  Timer? _timer;
+  late Duration _remaining;
+
+  @override
+  void initState() {
+    super.initState();
+    _update();
+    _startPeriodicTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant _CountdownTimer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.remaining != widget.remaining) {
+      _statusUpdatedTime = DateTime.now();
+      _startPeriodicTimer();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startPeriodicTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _update(),
+    );
+  }
+
+  void _update() {
+    final ellapsed = DateTime.now().difference(_statusUpdatedTime);
+    final remaining = widget.remaining - ellapsed;
+    setState(() => _remaining = remaining);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      '${_remaining.inMinutes.toString().padLeft(2, '0')}:${(_remaining.inSeconds % 60).toString().padLeft(2, '0')}',
+      style: Theming.of(context).text.body.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w300,
+          color: const Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0)),
+    );
+  }
+}
+
+class _ParticipantTile extends StatelessWidget {
+  final TopicParticipant participant;
+  final VoidCallback onPressed;
+  const _ParticipantTile({
+    Key? key,
+    required this.participant,
     required this.onPressed,
   }) : super(key: key);
 
@@ -208,7 +446,7 @@ class _OnlineUserTile extends StatelessWidget {
         borderRadius: BorderRadius.all(Radius.circular(38)),
       ),
       child: Button(
-        onPressed: () {},
+        onPressed: onPressed,
         child: Column(
           children: [
             Padding(
@@ -219,12 +457,14 @@ class _OnlineUserTile extends StatelessWidget {
                   Expanded(
                     child: Column(
                       children: [
-                        SizedBox(
+                        Container(
                           height: 48,
+                          padding: const EdgeInsets.only(right: 8),
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Johnny, 34',
+                            child: AutoSizeText(
+                              '${participant.name}, ${participant.age}',
+                              minFontSize: 16,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theming.of(context).text.body.copyWith(
@@ -243,9 +483,21 @@ class _OnlineUserTile extends StatelessWidget {
                             ),
                           ),
                         ),
-                        _buildSymbolText(context, Icons.people, 'Chinese'),
-                        _buildSymbolText(context, Icons.sick, 'Agnostic'),
-                        _buildSymbolText(context, Icons.work, 'Film/Video'),
+                        _buildSymbolText(
+                          context,
+                          Icons.people,
+                          participant.attributes.ethnicity,
+                        ),
+                        _buildSymbolText(
+                          context,
+                          Icons.sick,
+                          participant.attributes.religion,
+                        ),
+                        _buildSymbolText(
+                          context,
+                          Icons.work,
+                          participant.attributes.interests,
+                        ),
                         const SizedBox(height: 8),
                       ],
                     ),
@@ -263,8 +515,10 @@ class _OnlineUserTile extends StatelessWidget {
                       ],
                     ),
                     child: Image.network(
-                      'https://picsum.photos/200/300',
+                      participant.photo,
+                      width: 105,
                       height: 124,
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ],
@@ -285,7 +539,7 @@ class _OnlineUserTile extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: Text(
-                'I\'m at Varsity, drinks tonight anyone?',
+                participant.statusText,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -323,15 +577,19 @@ class _OnlineUserTile extends StatelessWidget {
 }
 
 class _TopicSelector extends StatefulWidget {
-  final List<String> topics;
-  final int? selected;
-  final void Function(int? index) onSelected;
+  final bool open;
+  final Map<Topic, String> topics;
+  final Topic selected;
+  final void Function(Topic topic) onSelected;
+  final void Function(bool open)? onOpen;
 
   const _TopicSelector({
     Key? key,
+    required this.open,
     required this.topics,
     required this.selected,
     required this.onSelected,
+    required this.onOpen,
   }) : super(key: key);
 
   @override
@@ -341,13 +599,13 @@ class _TopicSelector extends StatefulWidget {
 class __TopicSelectorState extends State<_TopicSelector>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  bool _open = false;
 
   @override
   void initState() {
     super.initState();
+    print('init');
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 75),
+      duration: const Duration(milliseconds: 100),
       vsync: this,
     );
   }
@@ -356,6 +614,19 @@ class __TopicSelectorState extends State<_TopicSelector>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TopicSelector oldWidget) {
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.open != widget.open) {
+      if (widget.open) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
   }
 
   @override
@@ -373,14 +644,11 @@ class __TopicSelectorState extends State<_TopicSelector>
       child: Column(
         children: [
           Button(
-            onPressed: () {
-              setState(() => _open = !_open);
-              if (_open) {
-                _controller.forward();
-              } else {
-                _controller.reverse();
-              }
-            },
+            onPressed: widget.onOpen == null
+                ? null
+                : () {
+                    widget.onOpen?.call(!widget.open);
+                  },
             child: Container(
               height: 60,
               alignment: Alignment.centerLeft,
@@ -390,11 +658,10 @@ class __TopicSelectorState extends State<_TopicSelector>
                   children: [
                     Expanded(
                       child: Text(
-                        _open
+                        (widget.open || widget.selected == Topic.all)
                             ? 'Pick a topic to discuss'
-                            : (widget.selected == null
-                                ? 'Pick a topic to discuss'
-                                : widget.topics[widget.selected!]),
+                            : widget.topics[widget.selected] ??
+                                'Pick a topic to discuss',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theming.of(context).text.body.copyWith(
@@ -426,6 +693,8 @@ class __TopicSelectorState extends State<_TopicSelector>
                 shrinkWrap: true,
                 itemCount: widget.topics.length,
                 itemBuilder: (context, index) {
+                  final entry = widget.topics.entries.elementAt(index);
+                  final topic = Topic.values.firstWhere((t) => t == entry.key);
                   return Container(
                     height: 57,
                     margin: const EdgeInsets.only(top: 4, bottom: 4, right: 20),
@@ -438,9 +707,9 @@ class __TopicSelectorState extends State<_TopicSelector>
                     ),
                     child: Button(
                       onPressed: () {
-                        setState(() => _open = false);
-                        widget.onSelected(index);
+                        widget.onSelected(topic);
                         _controller.reverse();
+                        widget.onOpen?.call(false);
                       },
                       child: Padding(
                         padding: const EdgeInsets.only(left: 40.0, right: 13),
@@ -448,7 +717,7 @@ class __TopicSelectorState extends State<_TopicSelector>
                           children: [
                             Expanded(
                               child: Text(
-                                widget.topics[index],
+                                entry.value,
                                 style: Theming.of(context).text.body.copyWith(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w500,
@@ -456,7 +725,7 @@ class __TopicSelectorState extends State<_TopicSelector>
                                         0xA2, 0xA2, 0xA2, 1.0)),
                               ),
                             ),
-                            if (widget.selected == index)
+                            if (widget.selected == topic)
                               Container(
                                 width: 35,
                                 height: 35,
@@ -482,8 +751,44 @@ class __TopicSelectorState extends State<_TopicSelector>
   }
 }
 
-class _StatusBox extends StatelessWidget {
-  const _StatusBox({Key? key}) : super(key: key);
+class _StatusBox extends ConsumerStatefulWidget {
+  final Topic topic;
+  final String? status;
+
+  const _StatusBox({
+    Key? key,
+    required this.topic,
+    required this.status,
+  }) : super(key: key);
+
+  @override
+  _StatusBoxState createState() => _StatusBoxState();
+}
+
+class _StatusBoxState extends ConsumerState<_StatusBox> {
+  final _statusNode = FocusNode();
+  final _statusController = TextEditingController();
+  bool _posting = false;
+  bool _deleting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final status = widget.status;
+    if (status != null) {
+      _statusController.text = status;
+    }
+    _statusNode.requestFocus();
+
+    _statusController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _statusNode.dispose();
+    _statusController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -523,59 +828,120 @@ class _StatusBox extends StatelessWidget {
                   color: Color.fromRGBO(0xE6, 0xE6, 0xE6, 1.0),
                 ),
                 child: TextField(
+                  controller: _statusController,
+                  focusNode: _statusNode,
+                  keyboardType: TextInputType.text,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _submit(),
                   decoration: InputDecoration.collapsed(
-                    hintText: 'Why are you here today?',
+                    hintText: widget.status == null
+                        ? 'Why are you here today?'
+                        : null,
                   ),
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(left: 12.0, right: 23),
-              child: Button(
-                onPressed: () {},
-                child: const Icon(
-                  Icons.delete,
-                  color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                ),
-              ),
+              padding: const EdgeInsets.only(left: 4.0, right: 11),
+              child: _deleting
+                  ? const SizedBox(
+                      width: 40,
+                      child: CircularProgressIndicator(),
+                    )
+                  : Button(
+                      onPressed: _posting ? null : _delete,
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Icon(
+                          Icons.delete,
+                          color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                        ),
+                      ),
+                    ),
             ),
           ],
         ),
         const SizedBox(height: 34),
         Button(
-          onPressed: () {},
-          child: Container(
-            width: 153,
-            height: 46,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(23)),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color.fromRGBO(0x00, 0xB0, 0xD5, 1.0),
-                  Color.fromRGBO(0x06, 0x5E, 0x71, 1.0),
-                ],
-              ),
-            ),
-            child: Text(
-              'Post your Status',
-              textAlign: TextAlign.center,
-              style: Theming.of(context).text.body.copyWith(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
+          onPressed: _deleting
+              ? null
+              : (_statusController.text.isEmpty ? null : _submit),
+          child: _posting
+              ? const CircularProgressIndicator()
+              : Container(
+                  width: 153,
+                  height: 46,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(23)),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color.fromRGBO(0x00, 0xB0, 0xD5, 1.0),
+                        Color.fromRGBO(0x06, 0x5E, 0x71, 1.0),
+                      ],
+                    ),
                   ),
-            ),
-          ),
+                  child: Text(
+                    'Post your Status',
+                    textAlign: TextAlign.center,
+                    style: Theming.of(context).text.body.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ),
         ),
       ],
+    );
+  }
+
+  void _submit() async {
+    setState(() => _posting = true);
+    final uid = ref.read(userProvider).uid;
+    final status = _statusController.text;
+    final api = GetIt.instance.get<Api>();
+    if (_statusController.text.isNotEmpty) {
+      final result = await api.updateStatus(uid, widget.topic, status);
+      if (!mounted) {
+        return;
+      }
+      result.fold(
+        (l) {
+          displayError(context, l);
+          setState(() => _posting = false);
+        },
+        (_) => Navigator.of(context).pop(),
+      );
+    }
+  }
+
+  void _delete() async {
+    setState(() => _deleting = true);
+    final uid = ref.read(userProvider).uid;
+    final api = GetIt.instance.get<Api>();
+    final result = await api.deleteStatus(uid);
+    if (!mounted) {
+      return;
+    }
+    result.fold(
+      (l) {
+        displayError(context, l);
+        setState(() => _deleting = false);
+      },
+      (_) => Navigator.of(context).pop(),
     );
   }
 }
 
 class _CallBox extends StatelessWidget {
-  const _CallBox({Key? key}) : super(key: key);
+  final TopicParticipant participant;
+  const _CallBox({
+    Key? key,
+    required this.participant,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -597,7 +963,7 @@ class _CallBox extends StatelessWidget {
             top: 12,
             right: 12,
             child: Button(
-              onPressed: () {},
+              onPressed: Navigator.of(context).pop,
               child: Container(
                 margin: const EdgeInsets.all(12),
                 padding: const EdgeInsets.all(4),
@@ -629,8 +995,9 @@ class _CallBox extends StatelessWidget {
                 width: 90,
               ),
               const SizedBox(width: 16),
-              Text(
-                'Calling Johnny',
+              AutoSizeText(
+                'Calling ${participant.name}',
+                minFontSize: 16,
                 style: Theming.of(context).text.body.copyWith(
                       fontSize: 24,
                       fontWeight: FontWeight.w500,

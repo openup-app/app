@@ -43,6 +43,33 @@ class SimpleProfile with _$SimpleProfile {
 }
 
 @freezed
+class TopicParticipant with _$TopicParticipant {
+  const factory TopicParticipant({
+    required String uid,
+    required String name,
+    required String photo,
+    required int age,
+    required ParticipantAttributes attributes,
+    required String statusText,
+  }) = _TopicParticipant;
+
+  factory TopicParticipant.fromJson(Map<String, dynamic> json) =>
+      _$TopicParticipantFromJson(json);
+}
+
+@freezed
+class ParticipantAttributes with _$ParticipantAttributes {
+  const factory ParticipantAttributes({
+    required String ethnicity,
+    required String religion,
+    required String interests,
+  }) = _ParticipantAttributes;
+
+  factory ParticipantAttributes.fromJson(Map<String, dynamic> json) =>
+      _$ParticipantAttributesFromJson(json);
+}
+
+@freezed
 class Attributes with _$Attributes {
   const factory Attributes({
     required Gender gender,
