@@ -19,6 +19,9 @@ class UserStateNotifier extends StateNotifier<UserState> {
   void attributes(Attributes attributes) =>
       state = state.copyWith(attributes: attributes);
 
+  void attributes2(Attributes2 attributes) =>
+      state = state.copyWith(attributes2: attributes);
+
   void friendsPreferences(Preferences preferences) =>
       state = state.copyWith(friendsPreferences: preferences);
 
@@ -37,6 +40,7 @@ class UserState with _$UserState {
     @Default('') String uid,
     @Default(null) Profile? profile,
     @Default(null) Attributes? attributes,
+    @Default(null) Attributes2? attributes2,
     @Default(null) Preferences? friendsPreferences,
     @Default(null) Preferences? datingPreferences,
     @Default({}) Map<String, int> unreadMessageCount,

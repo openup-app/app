@@ -1009,7 +1009,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     },
                   );
                 case 'attributes':
-                  final args = settings.arguments as Attributes;
+                  final args = settings.arguments as Attributes2;
                   return _buildPageRoute(
                     settings: settings,
                     builder: (_) {

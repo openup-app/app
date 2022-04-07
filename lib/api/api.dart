@@ -247,6 +247,36 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, Attributes2>> getAttributes2(String uid) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/users/$uid/attributes2'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        return Right(Attributes2.fromJson(jsonDecode(response.body)));
+      },
+    );
+  }
+
+  Future<Either<ApiError, void>> updateAttributes2(
+    String uid,
+    Attributes2 attributes,
+  ) {
+    return _request(
+      makeRequest: () {
+        return http.put(
+          Uri.parse('$_urlBase/users/$uid/attributes2'),
+          headers: _headers,
+          body: jsonEncode(attributes.toJson()),
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
   Future<Either<ApiError, void>> updateFriendsPreferences(
           String uid, Preferences preferences) =>
       _updatePreferences(uid, preferences, Purpose.friends);

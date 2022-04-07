@@ -4,12 +4,64 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/util/emoji.dart';
 import 'package:openup/widgets/preference.dart';
 import 'package:openup/widgets/theming.dart';
-import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 
+const _religions = [
+  'Bahaist',
+  'Buddhist',
+  'Christian',
+  'Hindu',
+  'Jewish',
+  'Jucheist',
+  'Muslim',
+  'Non-religious',
+  'Shintoist',
+  'Sikh',
+  'Taoist',
+  'Other',
+];
+
+const _interests = [
+  'Building',
+  'Collecting',
+  'Computer Science',
+  'Cooking',
+  'Crafts',
+  'Dancing',
+  'Drawing',
+  'Film/Video',
+  'Food',
+  'Games',
+  'Language',
+  'Music',
+  'Nature',
+  'Photography',
+  'Puzzles',
+  'Reading',
+  'Science',
+  'Sport',
+  'Travel',
+  'Writing',
+  'Other',
+];
+
+const _ethnicities = [
+  'White',
+  'Black',
+  'Indian',
+  'Punjabi',
+  'Hindu',
+  'Chinese',
+  'Japanese',
+  'Korean',
+  'Hispanic',
+  'Native American',
+  'Asian',
+];
+
 class AttributesForm extends StatelessWidget {
-  final Attributes attributes;
-  final void Function(Attributes profile) onChanged;
+  final Attributes2 attributes;
+  final void Function(Attributes2 profile) onChanged;
   final int? expandedSection;
   final void Function(int index) onExpansion;
 
@@ -55,7 +107,7 @@ class AttributesForm extends StatelessWidget {
             ],
           ),
           Text(
-            'My skin color ...',
+            'What do I do ...',
             style: Theming.of(context).text.body.copyWith(
                   color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
                   fontWeight: FontWeight.w400,
@@ -63,76 +115,20 @@ class AttributesForm extends StatelessWidget {
                 ),
           ),
           PreferencesExpansionSection(
-            label: genderToEmoji(attributes.gender)[attributes.skinColor.index],
+            label: attributes.interests,
             expanded: expandedSection == 1,
             onPressed: () => onExpansion(1),
             children: [
-              for (var skinColor in SkinColor.values)
+              for (final interest in _interests)
                 PreferencesRadioTile(
-                  title: Text(genderToEmoji(
-                      attributes.gender)[SkinColor.values.indexOf(skinColor)]),
-                  value: skinColor,
-                  groupValue: attributes.skinColor,
+                  title: Text(interest),
+                  value: interest,
+                  groupValue: attributes.interests,
                   onSelected: () {
-                    onChanged(attributes.copyWith(skinColor: skinColor));
+                    onChanged(attributes.copyWith(interests: interest));
                   },
                 ),
             ],
-          ),
-          Text(
-            'My weight ...',
-            style: Theming.of(context).text.body.copyWith(
-                  color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                  fontWeight: FontWeight.w400,
-                  fontSize: 18,
-                ),
-          ),
-          SfSlider(
-            value: attributes.weight,
-            min: 25,
-            max: 400,
-            stepSize: 5,
-            interval: 5,
-            thumbIcon: Center(
-              child: Text(
-                attributes.weight.toString(),
-                textAlign: TextAlign.center,
-                style: Theming.of(context)
-                    .text
-                    .body
-                    .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
-              ),
-            ),
-            onChanged: (v) {
-              onChanged(attributes.copyWith(weight: v.toInt()));
-            },
-          ),
-          Text(
-            'My height ...',
-            style: Theming.of(context).text.body.copyWith(
-                  color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
-                  fontWeight: FontWeight.w400,
-                  fontSize: 18,
-                ),
-          ),
-          SfSlider(
-            value: attributes.height,
-            min: 24,
-            max: 120,
-            thumbIcon: Center(
-              child: Text(
-                _inchToFtIn(attributes.height),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                style: Theming.of(context)
-                    .text
-                    .body
-                    .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
-              ),
-            ),
-            onChanged: (v) {
-              onChanged(attributes.copyWith(height: v.toInt()));
-            },
           ),
           Text(
             'My ethnicity ...',
@@ -144,28 +140,40 @@ class AttributesForm extends StatelessWidget {
           ),
           PreferencesExpansionSection(
             label: attributes.ethnicity,
-            expanded: expandedSection == 3,
-            onPressed: () => onExpansion(3),
+            expanded: expandedSection == 2,
+            onPressed: () => onExpansion(2),
             children: [
-              for (var ethnicity in [
-                'White',
-                'Black',
-                'Indian',
-                'Punjabi',
-                'Hindu',
-                'Chinese',
-                'Japanese',
-                'Korean',
-                'Hispanic',
-                'Native American',
-                'Asian',
-              ])
+              for (var ethnicity in _ethnicities)
                 PreferencesRadioTile(
                   title: Text(ethnicity),
                   value: ethnicity,
                   groupValue: attributes.ethnicity,
                   onSelected: () {
                     onChanged(attributes.copyWith(ethnicity: ethnicity));
+                  },
+                ),
+            ],
+          ),
+          Text(
+            'My religion   ...',
+            style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0),
+                  fontWeight: FontWeight.w400,
+                  fontSize: 18,
+                ),
+          ),
+          PreferencesExpansionSection(
+            label: attributes.religion,
+            expanded: expandedSection == 3,
+            onPressed: () => onExpansion(3),
+            children: [
+              for (final religion in _religions)
+                PreferencesRadioTile(
+                  title: Text(religion),
+                  value: religion,
+                  groupValue: attributes.religion,
+                  onSelected: () {
+                    onChanged(attributes.copyWith(religion: religion));
                   },
                 ),
             ],

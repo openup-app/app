@@ -11,7 +11,7 @@ import 'package:openup/widgets/profile_form.dart';
 import 'package:openup/widgets/theming.dart';
 
 class AttributesScreen extends ConsumerStatefulWidget {
-  final Attributes initialAttributes;
+  final Attributes2 initialAttributes;
 
   const AttributesScreen({
     Key? key,
@@ -23,7 +23,7 @@ class AttributesScreen extends ConsumerStatefulWidget {
 }
 
 class _AttributesScreenState extends ConsumerState<AttributesScreen> {
-  late Attributes _attributes;
+  late Attributes2 _attributes;
 
   bool _uploading = false;
   int? _expandedSection;
@@ -147,7 +147,7 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
     final userState = ref.read(userProvider);
     final api = GetIt.instance.get<Api>();
     final attributes = _attributes;
-    final result = await api.updateAttributes(userState.uid, attributes);
+    final result = await api.updateAttributes2(userState.uid, attributes);
     if (!mounted) {
       return;
     }
@@ -155,7 +155,7 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
     result.fold(
       (l) => displayError(context, l),
       (r) {
-        ref.read(userProvider.notifier).attributes(attributes);
+        ref.read(userProvider.notifier).attributes2(attributes);
         Navigator.of(context).pop();
       },
     );

@@ -117,7 +117,7 @@ class ProfileDrawer extends ConsumerWidget {
                         height: 32,
                         fit: BoxFit.scaleDown,
                       ),
-                      title: 'friends',
+                      title: 'Friends',
                       badgeNumber: sum,
                       onPressed: () =>
                           Navigator.of(context).pushNamed('connections'),
@@ -135,7 +135,7 @@ class ProfileDrawer extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  title: 'profile preferences',
+                  title: 'My Attributes',
                   onPressed: () => _navigateToAttributesPage(context, ref),
                 ),
                 _MenuButton(
@@ -146,7 +146,7 @@ class ProfileDrawer extends ConsumerWidget {
                     height: 32,
                     fit: BoxFit.scaleDown,
                   ),
-                  title: 'account & support',
+                  title: 'Account & Support',
                   onPressed: () =>
                       Navigator.of(context).pushNamed('account-settings'),
                 ),
@@ -163,7 +163,7 @@ class ProfileDrawer extends ConsumerWidget {
   }
 
   void _navigateToAttributesPage(BuildContext context, WidgetRef ref) async {
-    final attributes = ref.read(userProvider).attributes;
+    final attributes = ref.read(userProvider).attributes2;
     Navigator.of(context).pushNamed('attributes', arguments: attributes);
   }
 }

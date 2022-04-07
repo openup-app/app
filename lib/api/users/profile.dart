@@ -82,3 +82,16 @@ class Attributes with _$Attributes {
   factory Attributes.fromJson(Map<String, dynamic> json) =>
       _$AttributesFromJson(json);
 }
+
+@freezed
+class Attributes2 with _$Attributes2 {
+  const factory Attributes2({
+    required Gender gender,
+    required String interests,
+    required String ethnicity,
+    required String religion,
+  }) = _Attributes2;
+
+  factory Attributes2.fromJson(Map<String, dynamic> json) =>
+      _$Attributes2FromJson(json);
+}

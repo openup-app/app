@@ -21,12 +21,11 @@ class SignUpAttributesScreen extends ConsumerStatefulWidget {
 
 class _SignUpAttributesScreenState
     extends ConsumerState<SignUpAttributesScreen> {
-  Attributes _attributes = const Attributes(
+  Attributes2 _attributes = const Attributes2(
     gender: Gender.male,
-    skinColor: SkinColor.light,
-    weight: 200,
-    height: 60,
+    interests: 'Other',
     ethnicity: 'White',
+    religion: 'Christian',
   );
 
   bool _uploading = false;
@@ -147,7 +146,7 @@ class _SignUpAttributesScreenState
     final api = GetIt.instance.get<Api>();
 
     final attributes = _attributes;
-    final result = await api.updateAttributes(userState.uid, attributes);
+    final result = await api.updateAttributes2(userState.uid, attributes);
 
     if (!mounted) {
       return;
@@ -156,7 +155,7 @@ class _SignUpAttributesScreenState
     result.fold(
       (l) => displayError(context, l),
       (r) {
-        ref.read(userProvider.notifier).attributes(attributes);
+        ref.read(userProvider.notifier).attributes2(attributes);
         Navigator.of(context).pushNamed('sign-up-photos');
       },
     );

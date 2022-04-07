@@ -62,7 +62,7 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 357),
                     child: Text(
-                      'Hey $name, on openup there are two things we focused on, creating online blind dating and making friends online! You can do either a phone call or video call, give it a try! Thank you for joining our app :)',
+                      'Hey $name, moved somewhere new and want to make some friends? Then Openup is the perfect place for you! Openup is all about meeting new people for those who are having a hard time making new friends or connections in new areas.',
                       style: Theming.of(context).text.body.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
