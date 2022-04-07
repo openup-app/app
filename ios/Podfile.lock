@@ -121,6 +121,8 @@ PODS:
   - shared_preferences_ios (0.0.1):
     - Flutter
   - TOCropViewController (2.6.1)
+  - url_launcher_ios (0.0.1):
+    - Flutter
   - video_player (0.0.1):
     - Flutter
   - WebRTC-SDK (92.4515.07)
@@ -146,6 +148,7 @@ DEPENDENCIES:
   - record (from `.symlinks/plugins/record/ios`)
   - sentry_flutter (from `.symlinks/plugins/sentry_flutter/ios`)
   - shared_preferences_ios (from `.symlinks/plugins/shared_preferences_ios/ios`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
   - video_player (from `.symlinks/plugins/video_player/ios`)
 
 SPEC REPOS:
@@ -208,6 +211,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/sentry_flutter/ios"
   shared_preferences_ios:
     :path: ".symlinks/plugins/shared_preferences_ios/ios"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
   video_player:
     :path: ".symlinks/plugins/video_player/ios"
 
@@ -247,6 +252,7 @@ SPEC CHECKSUMS:
   sentry_flutter: 7c3cb050dc23563a4ea5db438c83afdb460a2ae6
   shared_preferences_ios: aef470a42dc4675a1cdd50e3158b42e3d1232b32
   TOCropViewController: edfd4f25713d56905ad1e0b9f5be3fbe0f59c863
+  url_launcher_ios: 839c58cdb4279282219f5e248c3321761ff3c4de
   video_player: ecd305f42e9044793efd34846e1ce64c31ea6fcb
   WebRTC-SDK: 540a44f2e30e89c75e331d5c4a372253ba668233
 
