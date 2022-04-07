@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -16,6 +17,7 @@ import 'package:openup/call_screen.dart';
 import 'package:openup/main.dart';
 import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -570,7 +572,7 @@ class _ParticipantTile extends StatelessWidget {
                         ),
                         _buildSymbolText(
                           context,
-                          Icons.sick,
+                          Icons.self_improvement,
                           participant.attributes.religion,
                         ),
                         _buildSymbolText(
@@ -594,11 +596,20 @@ class _ParticipantTile extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Image.network(
-                      participant.photo,
-                      width: 105,
-                      height: 124,
-                      fit: BoxFit.cover,
+                    child: ImageFiltered(
+                      imageFilter: ImageFilter.blur(
+                        sigmaX: 8.0,
+                        sigmaY: 8.0,
+                      ),
+                      child: Image.network(
+                        participant.photo,
+                        width: 105,
+                        height: 124,
+                        fit: BoxFit.cover,
+                        frameBuilder: fadeInFrameBuilder,
+                        loadingBuilder: circularProgressLoadingBuilder,
+                        errorBuilder: iconErrorBuilder,
+                      ),
                     ),
                   ),
                 ],
@@ -1299,7 +1310,7 @@ class _VoiceCallBox extends StatelessWidget {
   }
 }
 
-class MiniVoiceCallScreenContent extends StatelessWidget {
+class MiniVoiceCallScreenContent extends ConsumerWidget {
   final List<UserConnection> users;
   final bool hasSentTimeRequest;
   final DateTime? endTime;
@@ -1330,10 +1341,10 @@ class MiniVoiceCallScreenContent extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tempFirstUser = users.first;
     final profile = tempFirstUser.profile;
-    final photo = profile.photo;
+    final myProfile = ref.watch(userProvider).profile;
     return Column(
       children: [
         Padding(
@@ -1383,10 +1394,13 @@ class MiniVoiceCallScreenContent extends StatelessWidget {
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(shape: BoxShape.circle),
               child: Image.network(
-                photo,
+                myProfile!.photo,
                 width: 69,
                 height: 69,
                 fit: BoxFit.cover,
+                frameBuilder: fadeInFrameBuilder,
+                loadingBuilder: circularProgressLoadingBuilder,
+                errorBuilder: iconErrorBuilder,
               ),
             ),
             const SizedBox(width: 33),
@@ -1410,11 +1424,20 @@ class MiniVoiceCallScreenContent extends StatelessWidget {
             Container(
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(shape: BoxShape.circle),
-              child: Image.network(
-                profile.photo,
-                width: 69,
-                height: 69,
-                fit: BoxFit.cover,
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(
+                  sigmaX: 8.0,
+                  sigmaY: 8.0,
+                ),
+                child: Image.network(
+                  profile.photo,
+                  width: 69,
+                  height: 69,
+                  fit: BoxFit.cover,
+                  frameBuilder: fadeInFrameBuilder,
+                  loadingBuilder: circularProgressLoadingBuilder,
+                  errorBuilder: iconErrorBuilder,
+                ),
               ),
             ),
           ],
