@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:lottie/lottie.dart';
@@ -39,6 +40,7 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
   bool _loading = false;
   Status? _status;
   var _participants = <TopicParticipant>[];
+  late final Timer _refreshTimer;
 
   @override
   void initState() {
@@ -68,6 +70,25 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
         setState(() => _loading = false);
       }
     });
+
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 20),
+      (_) async {
+        if (mounted) {
+          setState(() => _loading = true);
+          await _fetchParticipants();
+          if (mounted) {
+            setState(() => _loading = false);
+          }
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _refreshTimer.cancel();
   }
 
   Future<void> _fetchParticipants() async {
@@ -243,15 +264,23 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
               GestureDetector(
                 onTap: _loading
                     ? null
-                    : () {
-                        _showPanel(
+                    : () async {
+                        final completer = Completer<_StatusResult?>();
+                        // Bug in Flutter not letting showBottomPanel return a result: https://github.com/flutter/flutter/issues/66837
+                        await _showPanel<_StatusResult>(
                           builder: (context) {
                             return _StatusBox(
                               topic: _topic,
-                              status: null,
+                              status: _status?.text,
+                              resultCompleter: completer,
                             );
                           },
                         );
+
+                        if (completer.isCompleted) {
+                          final result = await completer.future;
+                          setState(() => _status = result?.status);
+                        }
                       },
                 child: DecoratedBox(
                   decoration: const BoxDecoration(color: Colors.white),
@@ -286,9 +315,14 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
                         const SizedBox(width: 4),
                         if (_status != null)
                           _CountdownTimer(
+                            key: Key(_status?.text ?? ''),
                             remaining:
                                 Duration(milliseconds: _status!.remaining),
-                            onTimeUp: () => setState(() => _status = null),
+                            onTimeUp: () {
+                              if (mounted) {
+                                setState(() => _status = null);
+                              }
+                            },
                           ),
                       ],
                     ),
@@ -315,9 +349,15 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
             open: _topicsExpanded,
             topics: _topics,
             selected: _topic,
-            onSelected: (topic) {
-              setState(() => _topic = topic);
-              _fetchParticipants();
+            onSelected: (topic) async {
+              setState(() {
+                _topic = topic;
+                _loading = true;
+              });
+              await _fetchParticipants();
+              if (mounted) {
+                setState(() => _loading = false);
+              }
             },
             onOpen: _loading
                 ? null
@@ -337,11 +377,11 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
     );
   }
 
-  void _showPanel({
+  Future<T?> _showPanel<T>({
     Color dragIndicatorColor = const Color.fromRGBO(0xC4, 0xC4, 0xC4, 1.0),
     required WidgetBuilder builder,
   }) {
-    showBottomSheet(
+    final result = showBottomSheet<T?>(
       context: context,
       elevation: 8,
       clipBehavior: Clip.hardEdge,
@@ -380,6 +420,7 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
         );
       },
     );
+    return result.closed;
   }
 }
 
@@ -397,23 +438,21 @@ class _CountdownTimer extends StatefulWidget {
 }
 
 class __CountdownTimerState extends State<_CountdownTimer> {
-  DateTime _statusUpdatedTime = DateTime.now();
+  late DateTime _statusUpdatedTime;
   Timer? _timer;
-  late Duration _remaining;
+  Duration _remaining = Duration.zero;
 
   @override
   void initState() {
     super.initState();
-    _update();
-    _startPeriodicTimer();
+    _restart();
   }
 
   @override
   void didUpdateWidget(covariant _CountdownTimer oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.remaining != widget.remaining) {
-      _statusUpdatedTime = DateTime.now();
-      _startPeriodicTimer();
+      _restart();
     }
   }
 
@@ -421,6 +460,12 @@ class __CountdownTimerState extends State<_CountdownTimer> {
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  void _restart() {
+    _statusUpdatedTime = DateTime.now();
+    _update();
+    _startPeriodicTimer();
   }
 
   void _startPeriodicTimer() {
@@ -432,15 +477,28 @@ class __CountdownTimerState extends State<_CountdownTimer> {
   }
 
   void _update() {
-    final ellapsed = DateTime.now().difference(_statusUpdatedTime);
+    final ellapsed = DateTime.now().difference(_statusUpdatedTime).abs();
     final remaining = widget.remaining - ellapsed;
-    setState(() => _remaining = remaining);
+    SchedulerBinding.instance?.scheduleFrameCallback((timeStamp) {
+      if (remaining.isNegative) {
+        setState(() {
+          _remaining = Duration.zero;
+          _timer?.cancel();
+          widget.onTimeUp();
+        });
+      } else {
+        setState(() => _remaining = remaining);
+      }
+    });
   }
+
+  String _formatDuration(Duration d) =>
+      '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
     return Text(
-      '${_remaining.inMinutes.toString().padLeft(2, '0')}:${(_remaining.inSeconds % 60).toString().padLeft(2, '0')}',
+      _formatDuration(_remaining),
       style: Theming.of(context).text.body.copyWith(
           fontSize: 18,
           fontWeight: FontWeight.w300,
@@ -625,7 +683,6 @@ class __TopicSelectorState extends State<_TopicSelector>
   @override
   void initState() {
     super.initState();
-    print('init');
     _controller = AnimationController(
       duration: const Duration(milliseconds: 100),
       vsync: this,
@@ -640,7 +697,6 @@ class __TopicSelectorState extends State<_TopicSelector>
 
   @override
   void didUpdateWidget(covariant _TopicSelector oldWidget) {
-    // TODO: implement didUpdateWidget
     super.didUpdateWidget(oldWidget);
     if (oldWidget.open != widget.open) {
       if (widget.open) {
@@ -780,11 +836,13 @@ class __TopicSelectorState extends State<_TopicSelector>
 class _StatusBox extends ConsumerStatefulWidget {
   final Topic topic;
   final String? status;
+  final Completer<_StatusResult?> resultCompleter;
 
   const _StatusBox({
     Key? key,
     required this.topic,
     required this.status,
+    required this.resultCompleter,
   }) : super(key: key);
 
   @override
@@ -873,10 +931,12 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
               child: _deleting
                   ? const SizedBox(
                       width: 40,
+                      height: 40,
                       child: CircularProgressIndicator(),
                     )
                   : Button(
-                      onPressed: _posting ? null : _delete,
+                      onPressed:
+                          (widget.status == null || _posting) ? null : _delete,
                       child: const Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Icon(
@@ -939,7 +999,10 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
           displayError(context, l);
           setState(() => _posting = false);
         },
-        (_) => Navigator.of(context).pop(),
+        (r) {
+          widget.resultCompleter.complete(_StatusResult(r));
+          Navigator.of(context).pop(_StatusResult(r));
+        },
       );
     }
   }
@@ -1495,4 +1558,10 @@ class _LeaveCallBox extends StatelessWidget {
       ],
     );
   }
+}
+
+class _StatusResult {
+  final Status? status;
+
+  _StatusResult(this.status);
 }
