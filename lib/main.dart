@@ -57,7 +57,8 @@ const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
 const webPort = 8080;
 const socketPort = 8081;
 
-final _notificationKey = GlobalKey();
+final _scaffoldKey = GlobalKey();
+final _callPanelKey = GlobalKey<LobbyListPageState>();
 
 void main() async {
   void appRunner() {
@@ -68,7 +69,7 @@ void main() async {
     );
   }
 
-  if (kDebugMode) {
+  if (!kReleaseMode) {
     appRunner();
   } else {
     const sentryDsn = String.fromEnvironment('SENTRY_DSN');
@@ -174,7 +175,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           settings.arguments as InitialLoadingScreenArguments?;
                       return CurrentRouteSystemUiStyling.dark(
                         child: InitialLoadingScreen(
-                          notificationKey: _notificationKey,
+                          key: _scaffoldKey,
+                          scaffoldKey: _scaffoldKey,
+                          callPanelKey: _callPanelKey,
                           needsOnboarding: args?.needsOnboarding ?? false,
                         ),
                       );
@@ -273,9 +276,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     builder: (_) {
+                      final args = settings.arguments as StartWithCall?;
                       return CurrentRouteSystemUiStyling.dark(
-                        key: _notificationKey,
-                        child: const LobbyListPage(),
+                        key: _scaffoldKey,
+                        child: LobbyListPage(
+                          key: _callPanelKey,
+                          startWithCall: args,
+                        ),
                       );
                     },
                   );
@@ -285,7 +292,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     transitionsBuilder: fadePageTransition,
                     builder: (_) {
                       return CurrentRouteSystemUiStyling.light(
-                        key: _notificationKey,
+                        key: _scaffoldKey,
                         child: const HomeScreen(),
                       );
                     },
