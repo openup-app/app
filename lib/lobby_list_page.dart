@@ -1061,7 +1061,10 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
         displayError(context, l);
         setState(() => _deleting = false);
       },
-      (_) => Navigator.of(context).pop(),
+      (_) {
+        widget.resultCompleter.complete(_StatusResult(null));
+        Navigator.of(context).pop(_StatusResult(null));
+      },
     );
   }
 }
