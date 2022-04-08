@@ -21,14 +21,28 @@ import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
 
-class LobbyListPage extends ConsumerStatefulWidget {
-  const LobbyListPage({Key? key}) : super(key: key);
+class StartWithCall {
+  final String rid;
+  final SimpleProfile profile;
 
-  @override
-  _LobbyListPageState createState() => _LobbyListPageState();
+  StartWithCall({
+    required this.rid,
+    required this.profile,
+  });
 }
 
-class _LobbyListPageState extends ConsumerState<LobbyListPage> {
+class LobbyListPage extends ConsumerStatefulWidget {
+  final StartWithCall? startWithCall;
+  const LobbyListPage({
+    Key? key,
+    this.startWithCall,
+  }) : super(key: key);
+
+  @override
+  LobbyListPageState createState() => LobbyListPageState();
+}
+
+class LobbyListPageState extends ConsumerState<LobbyListPage> {
   final _topics = {
     Topic.moved: 'Just moved',
     Topic.outing: 'Going out',
@@ -51,7 +65,7 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
 
     Future.wait([
       FirebaseMessaging.instance.getToken(),
-      getVoidPushNotificationToken(),
+      getVoipPushNotificationToken(),
     ]).then((tokens) {
       if (!mounted) {
         return;
@@ -85,6 +99,22 @@ class _LobbyListPageState extends ConsumerState<LobbyListPage> {
         }
       },
     );
+
+    final startWithCall = widget.startWithCall;
+    if (startWithCall != null) {
+      notificationCall(startWithCall);
+    }
+  }
+
+  void notificationCall(StartWithCall startWithCall) {
+    WidgetsBinding.instance?.scheduleFrameCallback((_) {
+      _showPanel(builder: (context) {
+        return _buildCallScreen(
+          rid: startWithCall.rid,
+          profile: startWithCall.profile,
+        );
+      });
+    });
   }
 
   @override
@@ -1031,7 +1061,10 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
         displayError(context, l);
         setState(() => _deleting = false);
       },
-      (_) => Navigator.of(context).pop(),
+      (_) {
+        widget.resultCompleter.complete(_StatusResult(null));
+        Navigator.of(context).pop(_StatusResult(null));
+      },
     );
   }
 }
@@ -1076,22 +1109,13 @@ class _CallBoxState extends State<_CallBox> {
   @override
   Widget build(BuildContext context) {
     if (_rid != null) {
-      return CallScreen(
+      return _buildCallScreen(
         rid: _rid!,
-        host: host,
-        socketPort: socketPort,
-        video: false,
-        mini: true,
-        serious: true,
-        profiles: [
-          SimpleProfile(
-            uid: widget.participant.uid,
-            name: widget.participant.name,
-            photo: widget.participant.photo,
-          ),
-        ],
-        rekindles: const [],
-        groupLobby: false,
+        profile: SimpleProfile(
+          uid: widget.participant.uid,
+          name: widget.participant.name,
+          photo: widget.participant.photo,
+        ),
       );
     }
     return Container(
@@ -1428,6 +1452,23 @@ class _LeaveCallBox extends StatelessWidget {
       ],
     );
   }
+}
+
+Widget _buildCallScreen({
+  required String rid,
+  required SimpleProfile profile,
+}) {
+  return CallScreen(
+    rid: rid,
+    host: host,
+    socketPort: socketPort,
+    video: false,
+    mini: true,
+    serious: true,
+    profiles: [profile],
+    rekindles: const [],
+    groupLobby: false,
+  );
 }
 
 class _StatusResult {

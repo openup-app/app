@@ -17,6 +17,7 @@ import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/widgets/title_and_tagline.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -365,6 +366,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
         }
       },
       verificationFailed: (FirebaseAuthException e) {
+        Sentry.captureException(e);
+
         final String message;
         if (e.code == 'network-request-failed') {
           message = 'Network error';

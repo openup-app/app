@@ -14,9 +14,11 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
+import 'package:openup/lobby_list_page.dart';
 import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/notifications/notification_comms.dart';
 import 'package:openup/util/string.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 part 'notifications.freezed.dart';
 part 'notifications.g.dart';
@@ -24,17 +26,21 @@ part 'notifications.g.dart';
 /// Returns [true] if the app navigated to a deep link.
 /// [key] is used to access a context with a Scaffold ancestor.
 Future<bool> initializeNotifications({
-  required GlobalKey key,
+  required GlobalKey scaffoldKey,
+  required GlobalKey<LobbyListPageState> callPanelKey,
   required UserStateNotifier userStateNotifier,
 }) async {
   FirebaseMessaging.onMessage.listen((remoteMessage) {
-    _onForegroundNotification(key, remoteMessage, userStateNotifier);
+    _onForegroundNotification(scaffoldKey, remoteMessage, userStateNotifier);
   });
   FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
 
-  final deepLinked = await _handleLaunchNotification(key: key);
+  final deepLinked = await _handleLaunchNotification(scaffoldKey: scaffoldKey);
 
-  initIncomingCallHandlers(key: key);
+  initIncomingCallHandlers(
+    scaffoldKey: scaffoldKey,
+    callPanelKey: callPanelKey,
+  );
 
   return deepLinked;
 }
@@ -43,40 +49,31 @@ Future<void> dismissAllNotifications() =>
     FlutterLocalNotificationsPlugin().cancelAll();
 
 /// Returns [true] if this notification did deep link, false otherwise.
-Future<bool> _handleLaunchNotification({required GlobalKey key}) async {
+Future<bool> _handleLaunchNotification({required GlobalKey scaffoldKey}) async {
   // Calls that don't go through the standard FirebaseMessaging app launch method
   BackgroundCallNotification? backgroundCallNotification;
   try {
     backgroundCallNotification = await deserializeBackgroundCallNotification();
   } catch (e, s) {
-    // TODO: Log error
-    print(e);
-    print(s);
+    Sentry.captureException(e, stackTrace: s);
   }
   await removeBackgroundCallNotification();
 
-  final context = key.currentContext;
+  final context = scaffoldKey.currentContext;
   if (context == null) {
     return false;
   }
 
   if (backgroundCallNotification != null) {
-    final video = backgroundCallNotification.video;
-    final purpose = backgroundCallNotification.purpose == Purpose.friends
-        ? 'friends'
-        : 'dating';
-    final route = video ? '$purpose-video-call' : '$purpose-voice-call';
-    Navigator.of(context).pushReplacementNamed('lobby-list');
-    Navigator.of(context).pushNamed(
-      route,
-      arguments: CallPageArguments(
+    Navigator.of(context).popUntil((r) => r.isFirst);
+    Navigator.of(context).pushReplacementNamed(
+      'lobby-list',
+      arguments: StartWithCall(
         rid: backgroundCallNotification.rid,
-        profiles: [backgroundCallNotification.profile],
-        rekindles: [],
-        serious: false,
-        groupLobby: backgroundCallNotification.group,
+        profile: backgroundCallNotification.profile,
       ),
     );
+
     return true;
   }
 
@@ -92,7 +89,7 @@ Future<bool> _handleLaunchNotification({required GlobalKey key}) async {
     final api = GetIt.instance.get<Api>();
     payload.map(
       call: (call) {
-        final context = key.currentContext;
+        final context = scaffoldKey.currentContext;
         if (context != null) {
           final route =
               call.video ? 'friends-video-call' : 'friends-voice-call';

@@ -198,6 +198,9 @@ class _CallScreenState extends ConsumerState<CallScreen> {
 
   @override
   void dispose() {
+    // Temporary to ensure hiding mini panel hangs up the call on the other end
+    _signalingChannel.send(const HangUp());
+
     reportCallEnded(widget.rid);
     _signalingChannel.dispose();
     _connectionStateSubscriptions.map((s) => s.cancel()).toList();

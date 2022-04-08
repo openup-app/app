@@ -23,7 +23,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     Future.wait([
       FirebaseMessaging.instance.getToken(),
-      getVoidPushNotificationToken(),
+      getVoipPushNotificationToken(),
     ]).then((tokens) {
       if (!mounted) {
         return;

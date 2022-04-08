@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/lobby_list_page.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -14,12 +15,14 @@ import 'package:openup/widgets/theming.dart';
 ///
 /// [notificationKey] is needed to access a context with a [Scaffold] ancestor.
 class InitialLoadingScreen extends ConsumerStatefulWidget {
-  final GlobalKey notificationKey;
+  final GlobalKey scaffoldKey;
+  final GlobalKey<LobbyListPageState> callPanelKey;
   final bool needsOnboarding;
 
   const InitialLoadingScreen({
     GlobalKey? key,
-    required this.notificationKey,
+    required this.scaffoldKey,
+    required this.callPanelKey,
     this.needsOnboarding = false,
   }) : super(key: key);
 
@@ -77,7 +80,8 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
     // Perform deep linking
     final deepLinked = await initializeNotifications(
-      key: widget.notificationKey,
+      scaffoldKey: widget.scaffoldKey,
+      callPanelKey: widget.callPanelKey,
       userStateNotifier: notifier,
     );
 

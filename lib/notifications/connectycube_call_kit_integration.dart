@@ -4,16 +4,19 @@ import 'package:connectycube_flutter_call_kit/connectycube_flutter_call_kit.dart
 import 'package:flutter/widgets.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/call_screen.dart';
+import 'package:openup/lobby_list_page.dart';
 import 'package:openup/notifications/notification_comms.dart';
 
 bool _callKitInit = false;
 
-Future<String?> getVoidPushNotificationToken() {
+Future<String?> getVoipPushNotificationToken() {
   return ConnectycubeFlutterCallKit.getToken();
 }
 
-void initIncomingCallHandlers({required GlobalKey key}) {
+void initIncomingCallHandlers({
+  required GlobalKey scaffoldKey,
+  required GlobalKey<LobbyListPageState> callPanelKey,
+}) {
   ConnectycubeFlutterCallKit.onCallAcceptedWhenTerminated =
       _onCallAcceptedWhenTerminated;
   ConnectycubeFlutterCallKit.onCallRejectedWhenTerminated =
@@ -25,26 +28,26 @@ void initIncomingCallHandlers({required GlobalKey key}) {
       ringtone: Platform.isIOS ? "Apex" : null,
       icon: Platform.isIOS ? "AppIcon" : null,
       onCallAccepted: (callEvent) async {
-        final context = key.currentContext;
+        final context = scaffoldKey.currentContext;
         final uid = callEvent.userInfo?['uid'];
         final photo = callEvent.userInfo?['photo'];
-        if (context != null && uid != null && photo != null) {
-          final video = callEvent.callType == 1;
-          final route = video ? 'friends-video-call' : 'friends-voice-call';
-          final profile = SimpleProfile(
-            uid: uid,
-            name: callEvent.callerName,
-            photo: photo,
-          );
-          Navigator.of(context).pushNamed(
-            route,
-            arguments: CallPageArguments(
-              rid: callEvent.sessionId,
-              profiles: [profile],
-              rekindles: [],
-              serious: false,
+        if (uid != null && photo != null) {
+          final startWithCall = StartWithCall(
+            rid: callEvent.sessionId,
+            profile: SimpleProfile(
+              uid: uid,
+              name: callEvent.callerName,
+              photo: photo,
             ),
           );
+          if (callPanelKey.currentState != null) {
+            callPanelKey.currentState?.notificationCall(startWithCall);
+          } else if (context != null) {
+            Navigator.of(context).pushReplacementNamed(
+              'lobby-list',
+              arguments: startWithCall,
+            );
+          }
         }
       },
       onCallRejected: (callEvent) {
