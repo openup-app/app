@@ -130,9 +130,20 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
     if (mounted) {
       participants.fold(
         (l) {
+          var message = errorToMessage(l);
+          message = l.when(
+            network: (_) => message,
+            client: (client) => client.when(
+              badRequest: () => 'Failed to get users',
+              unauthorized: () => message,
+              notFound: () => 'Unable to find topic participants',
+              forbidden: () => message,
+            ),
+            server: (_) => message,
+          );
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to get users'),
+            SnackBar(
+              content: Text(message),
             ),
           );
         },
