@@ -1195,7 +1195,7 @@ class _CallBoxState extends State<_CallBox> {
   }
 }
 
-class MiniVoiceCallScreenContent extends ConsumerWidget {
+class MiniVoiceCallScreenContent extends ConsumerStatefulWidget {
   final List<UserConnection> users;
   final bool hasSentTimeRequest;
   final DateTime? endTime;
@@ -1226,10 +1226,26 @@ class MiniVoiceCallScreenContent extends ConsumerWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tempFirstUser = users.first;
+  _MiniVoiceCallScreenContentState createState() =>
+      _MiniVoiceCallScreenContentState();
+}
+
+class _MiniVoiceCallScreenContentState
+    extends ConsumerState<MiniVoiceCallScreenContent> {
+  bool _showReportUi = false;
+  @override
+  Widget build(BuildContext context) {
+    final tempFirstUser = widget.users.first;
     final profile = tempFirstUser.profile;
     final myProfile = ref.watch(userProvider).profile;
+
+    if (_showReportUi) {
+      return _ReportCallBox(
+        name: profile.name,
+        onReport: () => widget.onReport(profile.uid),
+        onCancel: () => setState(() => _showReportUi = false),
+      );
+    }
     return Column(
       children: [
         Padding(
@@ -1239,7 +1255,7 @@ class MiniVoiceCallScreenContent extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Button(
-                onPressed: onHangUp,
+                onPressed: widget.onHangUp,
                 child: Text(
                   'Leave',
                   style: Theming.of(context).text.body.copyWith(
@@ -1298,7 +1314,7 @@ class MiniVoiceCallScreenContent extends ConsumerWidget {
                 const SizedBox(height: 6),
                 _CountdownTimer(
                   remaining: const Duration(minutes: 5),
-                  onTimeUp: onHangUp,
+                  onTimeUp: widget.onHangUp,
                 ),
               ],
             ),
@@ -1332,7 +1348,7 @@ class MiniVoiceCallScreenContent extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Button(
-              onPressed: () => onConnect(profile.uid),
+              onPressed: () => widget.onConnect(profile.uid),
               child: const Padding(
                 padding: EdgeInsets.all(12.0),
                 child: Icon(
@@ -1343,7 +1359,9 @@ class MiniVoiceCallScreenContent extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             Button(
-              onPressed: () {},
+              onPressed: () {
+                setState(() => _showReportUi = true);
+              },
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Text(
@@ -1357,12 +1375,12 @@ class MiniVoiceCallScreenContent extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             Button(
-              onPressed: onToggleSpeakerphone,
+              onPressed: widget.onToggleSpeakerphone,
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Icon(
                   Icons.volume_up,
-                  color: speakerphone
+                  color: widget.speakerphone
                       ? const Color.fromRGBO(0x19, 0xC6, 0x2A, 1.0)
                       : const Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
                 ),
@@ -1370,11 +1388,11 @@ class MiniVoiceCallScreenContent extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             Button(
-              onPressed: onToggleMute,
+              onPressed: widget.onToggleMute,
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Icon(
-                  muted ? Icons.mic_off : Icons.mic,
+                  widget.muted ? Icons.mic_off : Icons.mic,
                   color: const Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
                 ),
               ),
@@ -1461,6 +1479,116 @@ class _LeaveCallBox extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ReportCallBox extends StatelessWidget {
+  final String name;
+  final VoidCallback onCancel;
+  final VoidCallback onReport;
+  const _ReportCallBox({
+    Key? key,
+    required this.name,
+    required this.onReport,
+    required this.onCancel,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () {
+        onCancel();
+        return Future.value(false);
+      },
+      child: Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12, top: 16),
+              child: Button(
+                onPressed: onCancel,
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                    size: 32,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'End call and',
+                    style: Theming.of(context).text.body.copyWith(
+                          color: const Color.fromRGBO(0x66, 0x64, 0x64, 1.0),
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  TextSpan(
+                    text: ' report.\n',
+                    style: Theming.of(context).text.body.copyWith(
+                          color: const Color.fromRGBO(0xF5, 0x5A, 0x5A, 1.0),
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  TextSpan(
+                    text: name,
+                    style: Theming.of(context).text.body.copyWith(
+                          color: const Color.fromRGBO(0x66, 0x64, 0x64, 1.0),
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 31),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Button(
+                  onPressed: onCancel,
+                  child: Text(
+                    'No',
+                    style: Theming.of(context).text.body.copyWith(
+                        color: const Color.fromRGBO(0x82, 0x81, 0x81, 1.0),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Button(
+                  onPressed: onReport,
+                  child: Text(
+                    'Yes',
+                    style: Theming.of(context).text.body.copyWith(
+                        color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

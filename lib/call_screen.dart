@@ -234,7 +234,16 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                     Navigator.of(context).pop();
                   },
                   onConnect: _connect,
-                  onReport: _report,
+                  onReport: (uid) {
+                    _signalingChannel.send(HangUpReport(uidToReport: uid));
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pushReplacementNamed(
+                      'call-report',
+                      arguments: ReportScreenArguments(
+                        uid: _showReportOverlayForUid!,
+                      ),
+                    );
+                  },
                   onSendTimeRequest: _sendTimeRequest,
                   onToggleMute: () => _users.values
                       .forEach((element) => element.phone.toggleMute()),
@@ -355,24 +364,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
   }
 
   void _navigateToRekindleOrLobby() {
-    if (_unrequestedConnections.isEmpty) {
-      Navigator.of(context).popAndPushNamed(
-        'lobby',
-        arguments: LobbyScreenArguments(
-          video: widget.video,
-          serious: widget.serious,
-        ),
-      );
-    } else {
-      Navigator.of(context).pushReplacementNamed(
-        'precached-rekindle',
-        arguments: PrecachedRekindleScreenArguments(
-          rekindles: _unrequestedConnections.toList(),
-          video: widget.video,
-          serious: widget.serious,
-        ),
-      );
-    }
+    Navigator.of(context).popAndPushNamed('lobby-list');
   }
 
   bool _isInitiator(String myUid, String theirUid) =>
