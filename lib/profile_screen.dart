@@ -110,7 +110,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         return ProfileBio(
                           key: _audioBioKey,
                           name: profile?.name,
-                          birthday: profile?.birthday,
                           url: profile?.audio,
                           editable: true,
                           onRecorded: (audio) {
@@ -133,7 +132,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   } else {
                     return ProfileBio(
                       name: profile!.name,
-                      birthday: profile.birthday,
                       url: profile.audio,
                       editable: false,
                       onRecorded: (_) {},

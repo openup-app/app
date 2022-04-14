@@ -41,16 +41,12 @@ class Api {
 
   Future<Either<ApiError, bool>> createUser({
     required String uid,
-    required DateTime birthday,
   }) {
     return _request(
       makeRequest: () {
         return http.post(
           Uri.parse('$_urlBase/users/$uid'),
           headers: _headers,
-          body: jsonEncode({
-            'birthday': birthday.toIso8601String(),
-          }),
         );
       },
       handleSuccess: (response) {
@@ -68,27 +64,6 @@ class Api {
         );
       },
       handleSuccess: (response) => const Right(null),
-    );
-  }
-
-  Future<Either<ApiError, bool>> checkBirthday({
-    required String phone,
-    required DateTime birthday,
-  }) async {
-    return _request(
-      makeRequest: () {
-        return http.post(
-          Uri.parse('$_urlBase/users/any/check_birthday'),
-          headers: _headers,
-          body: jsonEncode({
-            'phone': phone,
-            'birthday': birthday.toIso8601String(),
-          }),
-        );
-      },
-      handleSuccess: (response) {
-        return Right(jsonDecode(response.body)['success'] == true);
-      },
     );
   }
 

@@ -5,7 +5,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/platform/record_audio_recorder.dart';
 import 'package:openup/widgets/button.dart';
@@ -13,7 +12,6 @@ import 'package:openup/widgets/theming.dart';
 
 class ProfileBio extends StatefulWidget {
   final String? name;
-  final DateTime? birthday;
   final String? url;
   final bool editable;
   final void Function(Uint8List newBio) onRecorded;
@@ -22,7 +20,6 @@ class ProfileBio extends StatefulWidget {
   const ProfileBio({
     Key? key,
     required this.name,
-    required this.birthday,
     required this.url,
     required this.editable,
     required this.onRecorded,
@@ -84,7 +81,6 @@ class ProfileBioState extends State<ProfileBio> {
       padding: const EdgeInsets.all(8.0),
       child: _ProfileBioDisplay(
         name: widget.name,
-        birthday: widget.birthday,
         playButton: playButtonState,
         recording: _recording,
         editable: widget.editable,
@@ -134,7 +130,6 @@ class ProfileBioState extends State<ProfileBio> {
 
 class _ProfileBioDisplay extends ConsumerWidget {
   final String? name;
-  final DateTime? birthday;
   final PlayButtonState playButton;
   final bool recording;
   final bool editable;
@@ -148,7 +143,6 @@ class _ProfileBioDisplay extends ConsumerWidget {
   const _ProfileBioDisplay({
     Key? key,
     required this.name,
-    required this.birthday,
     required this.playButton,
     required this.recording,
     required this.editable,
@@ -162,8 +156,6 @@ class _ProfileBioDisplay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final age =
-        DateTime.now().difference(birthday ?? DateTime.now()).inDays ~/ 365;
     return DecoratedBox(
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -191,7 +183,7 @@ class _ProfileBioDisplay extends ConsumerWidget {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: AutoSizeText(
-                      name == null ? '' : '$name, $age',
+                      name ?? '',
                       maxLines: 1,
                       minFontSize: 20,
                       maxFontSize: 36,

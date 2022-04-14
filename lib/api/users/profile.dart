@@ -9,7 +9,6 @@ class Profile with _$Profile {
   const factory Profile({
     required String uid,
     required String name,
-    required DateTime birthday,
     String? audio,
     required String photo,
     required List<String> gallery,
@@ -48,7 +47,6 @@ class TopicParticipant with _$TopicParticipant {
     required String uid,
     required String name,
     required String photo,
-    required int age,
     required ParticipantAttributes attributes,
     required String statusText,
   }) = _TopicParticipant;

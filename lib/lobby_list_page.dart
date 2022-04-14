@@ -586,7 +586,7 @@ class _ParticipantTile extends StatelessWidget {
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: AutoSizeText(
-                              '${participant.name}, ${participant.age}',
+                              participant.name,
                               minFontSize: 16,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

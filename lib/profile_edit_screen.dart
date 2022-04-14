@@ -63,7 +63,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       return ProfileBio(
                         key: _audioBioKey,
                         name: editableProfile?.name,
-                        birthday: editableProfile?.birthday,
                         url: editableProfile?.audio,
                         editable: true,
                         onRecorded: (audio) {

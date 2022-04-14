@@ -210,11 +210,7 @@ class CredentialVerification {
   /// Firebase verification ID pending verification
   final String verificationId;
 
-  /// User's birthday, needed to created an account
-  final DateTime birthday;
-
   CredentialVerification({
     required this.verificationId,
-    required this.birthday,
   });
 }
