@@ -7,6 +7,7 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/flexible_single_child_scroll_view.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
+import 'package:openup/widgets/policies.dart';
 import 'package:openup/widgets/title_and_tagline.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,28 +29,9 @@ class _PhoneVerificationScreenState
   final _smsCodeController = TextEditingController();
   bool _submitting = false;
 
-  late final TapGestureRecognizer _privacyPolicyRecognizer;
-  late final TapGestureRecognizer _tosRecognizer;
-
-  @override
-  void initState() {
-    super.initState();
-    _privacyPolicyRecognizer = TapGestureRecognizer()
-      ..onTap = () {
-        launch('https://openup-app.github.io/policies/privacy_policy.html');
-      };
-
-    _tosRecognizer = TapGestureRecognizer()
-      ..onTap = () {
-        launch('https://openup-app.github.io/policies/terms_of_service.html');
-      };
-  }
-
   @override
   void dispose() {
     _smsCodeController.dispose();
-    _privacyPolicyRecognizer.dispose();
-    _tosRecognizer.dispose();
     super.dispose();
   }
 
@@ -126,42 +108,7 @@ class _PhoneVerificationScreenState
                     : const Text('Verify Account & Accept'),
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                width: 280,
-                child: RichText(
-                  textAlign: TextAlign.justify,
-                  text: TextSpan(
-                    style: Theming.of(context).text.body.copyWith(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700),
-                    children: [
-                      const TextSpan(
-                        text:
-                            'By tapping Verify Account & Accept, you acknowledge that you have read the ',
-                      ),
-                      TextSpan(
-                        text: 'Privacy Policy',
-                        style: Theming.of(context).text.body.copyWith(
-                            color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700),
-                        recognizer: _privacyPolicyRecognizer,
-                      ),
-                      const TextSpan(text: ' and agree to the '),
-                      TextSpan(
-                        text: 'Terms of Service',
-                        style: Theming.of(context).text.body.copyWith(
-                            color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700),
-                        recognizer: _tosRecognizer,
-                      ),
-                      const TextSpan(text: '.'),
-                    ],
-                  ),
-                ),
-              ),
+              const Policies(),
               const Spacer(),
               const MaleFemaleConnectionImageApart(),
             ],

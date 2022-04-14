@@ -15,6 +15,7 @@ import 'package:openup/widgets/flexible_single_child_scroll_view.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/phone_verification_screen.dart';
+import 'package:openup/widgets/policies.dart';
 import 'package:openup/widgets/title_and_tagline.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -155,6 +156,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                     : const Text('Send code'),
                 onPressed: _submitting || !_valid ? null : _submit,
               ),
+              const SizedBox(height: 16),
+              const Policies(),
               const Spacer(),
               const MaleFemaleConnectionImageApart(),
             ],
@@ -277,8 +280,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
         setState(() => _forceResendingToken = forceResendingToken);
         final uid = await Navigator.of(context).pushNamed<String?>(
           'phone-verification',
-          arguments: CredentialVerification(verificationId: verificationId
-          ),
+          arguments: CredentialVerification(verificationId: verificationId),
         );
         if (!completer.isCompleted) {
           completer.complete(uid);
