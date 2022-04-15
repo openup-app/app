@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:list_diff/list_diff.dart';
 import 'package:lottie/lottie.dart';
+import 'package:marquee/marquee.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -708,7 +709,6 @@ class _ParticipantTile extends StatelessWidget {
             ),
             Container(
               height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -720,11 +720,9 @@ class _ParticipantTile extends StatelessWidget {
                 ),
               ),
               alignment: Alignment.center,
-              child: Text(
-                participant.statusText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
+              child: Marquee(
+                text: participant.statusText,
+                blankSpace: 48,
                 style: Theming.of(context).text.body.copyWith(
                     fontSize: 16,
                     color: Colors.white,
