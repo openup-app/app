@@ -26,6 +26,7 @@ String errorToMessage(ApiError error) {
         unauthorized: (_) => 'You are not logged in',
         notFound: (_) => 'Not found',
         forbidden: (_) => 'Something went wrong, access denied',
+        conflict: (_) => 'Busy, try again',
       );
     },
     server: (_) => 'Something went wrong on our end, please try again',

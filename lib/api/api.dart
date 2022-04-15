@@ -619,16 +619,19 @@ class Api {
         return handleSuccess(response);
       } else if (response.statusCode == 400) {
         log('400 Bad request', name: 'API', error: response.body);
-        return const Left(_ApiClientError(_BadRequest()));
+        return const Left(ApiClientError(ClientErrorBadRequest()));
       } else if (response.statusCode == 401) {
         log('401 Unauthorized', name: 'API', error: response.body);
-        return const Left(_ApiClientError(_Unauthorized()));
+        return const Left(ApiClientError(ClientErrorUnauthorized()));
       } else if (response.statusCode == 403) {
         log('403 Forbidden', name: 'API', error: response.body);
-        return const Left(_ApiClientError(_Forbidden()));
+        return const Left(ApiClientError(ClientErrorForbidden()));
       } else if (response.statusCode == 404) {
         log('404 Not found', name: 'API', error: response.body);
-        return const Left(_ApiClientError(_NotFound()));
+        return const Left(ApiClientError(ClientErrorNotFound()));
+      } else if (response.statusCode == 409) {
+        log('409 Conflict', name: 'API', error: response.body);
+        return const Left(ApiClientError(ClientErrorConflict()));
       } else if (response.statusCode == 500) {
         log('500 Internal server error', name: 'API', error: response.body);
         return const Left(_ApiServerError(_ServerError()));
@@ -647,7 +650,7 @@ class Api {
 @freezed
 class ApiError with _$ApiError {
   const factory ApiError.network(NetworkError error) = _ApiNetworkError;
-  const factory ApiError.client(ClientError error) = _ApiClientError;
+  const factory ApiError.client(ClientError error) = ApiClientError;
   const factory ApiError.server(ServerError error) = _ApiServerError;
 }
 
@@ -658,10 +661,11 @@ class NetworkError with _$NetworkError {
 
 @freezed
 class ClientError with _$ClientError {
-  const factory ClientError.badRequest() = _BadRequest;
-  const factory ClientError.unauthorized() = _Unauthorized;
-  const factory ClientError.notFound() = _NotFound;
-  const factory ClientError.forbidden() = _Forbidden;
+  const factory ClientError.badRequest() = ClientErrorBadRequest;
+  const factory ClientError.unauthorized() = ClientErrorUnauthorized;
+  const factory ClientError.notFound() = ClientErrorNotFound;
+  const factory ClientError.forbidden() = ClientErrorForbidden;
+  const factory ClientError.conflict() = ClientErrorConflict;
 }
 
 @freezed

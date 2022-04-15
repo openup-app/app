@@ -138,6 +138,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
               unauthorized: () => message,
               notFound: () => 'Unable to find topic participants',
               forbidden: () => message,
+              conflict: () => message,
             ),
             server: (_) => message,
           );
@@ -185,7 +186,9 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                 sizeFactor: CurveTween(curve: Curves.easeIn).animate(animation),
                 child: _ParticipantTile(
                   participant: d.item,
-                  onPressed: () {},
+                  onPressed: () {
+                    // Nothing to do
+                  },
                 ),
               ),
             );
@@ -1141,6 +1144,7 @@ class _CallBox extends StatefulWidget {
 
 class _CallBoxState extends State<_CallBox> {
   String? _rid;
+  bool _callEngaged = false;
 
   @override
   void initState() {
@@ -1157,7 +1161,32 @@ class _CallBoxState extends State<_CallBox> {
       }
       result.fold(
         (l) {
-          displayError(context, l);
+          if (l is ApiClientError && l.error is ClientErrorConflict) {
+            setState(() => _callEngaged = true);
+            Future.delayed(const Duration(seconds: 4)).whenComplete(() {
+              if (mounted) {
+                Navigator.of(context).pop();
+              }
+            });
+            return;
+          }
+          var message = errorToMessage(l);
+          message = l.when(
+            network: (_) => message,
+            client: (client) => client.when(
+              badRequest: () => 'Failed to get users',
+              unauthorized: () => message,
+              notFound: () => 'Unable to find topic participants',
+              forbidden: () => message,
+              conflict: () => message,
+            ),
+            server: (_) => message,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+            ),
+          );
           Navigator.of(context).pop();
         },
         (r) => setState(() => _rid = r),
@@ -1174,6 +1203,42 @@ class _CallBoxState extends State<_CallBox> {
           uid: widget.participant.uid,
           name: widget.participant.name,
           photo: widget.participant.photo,
+        ),
+      );
+    }
+    if (_callEngaged) {
+      return Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(0x23, 0xE5, 0x36, 1.0),
+              Color.fromRGBO(0x0F, 0xA7, 0x1E, 1.0),
+            ],
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Text(
+              '${widget.participant.name} is already in a call',
+              style: Theming.of(context).text.body.copyWith(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700),
+            ),
+            Button(
+              onPressed: Navigator.of(context).pop,
+              child: Text(
+                'OK',
+                style: Theming.of(context).text.body.copyWith(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
         ),
       );
     }
