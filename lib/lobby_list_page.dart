@@ -48,9 +48,9 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
   final _topics = {
     Topic.moved: 'Just moved',
     Topic.outing: 'Going out',
-    Topic.lonely: 'Lonely',
     Topic.vacation: 'On vacation',
-    Topic.business: 'Business',
+    Topic.business: 'Talk business',
+    Topic.job: 'Need job',
   };
   Topic _topic = Topic.all;
   bool _topicsExpanded = false;
@@ -226,19 +226,18 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        'People available to talk ...',
+                        'People Available : ',
                         style: Theming.of(context).text.body.copyWith(
                             fontSize: 18,
-                            fontWeight: FontWeight.w300,
+                            fontWeight: FontWeight.w500,
                             color: const Color.fromRGBO(0x8E, 0x8E, 0x8E, 1.0)),
                       ),
-                      const Spacer(),
                       Text(
                         _loading ? '' : _participants.length.toString(),
                         style: Theming.of(context).text.body.copyWith(
                             fontSize: 18,
-                            fontWeight: FontWeight.w300,
-                            color: const Color.fromRGBO(0x00, 0xD1, 0xFF, 1.0)),
+                            fontWeight: FontWeight.w700,
+                            color: const Color.fromRGBO(0x00, 0xAA, 0x30, 1.0)),
                       ),
                     ],
                   ),
@@ -993,13 +992,33 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
         Padding(
           padding:
               const EdgeInsets.only(left: 27, right: 27, bottom: 26, top: 10),
-          child: Text(
-            'Your status will be up for an hour only, during that time anyone can call you.',
-            style: Theming.of(context).text.body.copyWith(
-                  color: const Color.fromRGBO(0x9E, 0x9E, 0x9E, 1.0),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+          child: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: 'Your status will be up for an',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0x69, 0x69, 0x69, 1.0),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500),
                 ),
+                TextSpan(
+                  text: ' hour ',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500),
+                ),
+                TextSpan(
+                  text:
+                      'only, during that time anyone can call you. Without a status you will not recieve any calls.',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0x69, 0x69, 0x69, 1.0),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
           ),
         ),
         Row(
@@ -1051,7 +1070,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
             ),
           ],
         ),
-        const SizedBox(height: 34),
+        const SizedBox(height: 26),
         Button(
           onPressed: _deleting
               ? null

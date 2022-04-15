@@ -688,7 +688,7 @@ enum Topic {
   all,
   moved,
   outing,
-  lonely,
   vacation,
   business,
+  job,
 }

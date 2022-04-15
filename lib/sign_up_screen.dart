@@ -3,11 +3,9 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_holo_date_picker/flutter_holo_date_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/widgets/common.dart';
@@ -92,7 +90,23 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
               ),
               const Spacer(),
               const TitleAndTagline(),
-              const SizedBox(height: 10),
+              const Spacer(),
+              Text(
+                'You’re in the right spot whether you are creating an account or signing back in!',
+                textAlign: TextAlign.center,
+                style: Theming.of(context).text.body.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    shadows: [
+                      const Shadow(
+                        blurRadius: 3,
+                        offset: Offset(0.0, 1.0),
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                      ),
+                    ],
+                    fontSize: 18),
+              ),
+              const SizedBox(height: 25),
               Stack(
                 alignment: Alignment.center,
                 children: [
