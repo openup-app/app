@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:list_diff/list_diff.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -58,6 +59,8 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
   var _participants = <TopicParticipant>[];
   late final Timer _refreshTimer;
 
+  final _listKey = GlobalKey<AnimatedListState>();
+
   @override
   void initState() {
     super.initState();
@@ -88,14 +91,10 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
     });
 
     _refreshTimer = Timer.periodic(
-      const Duration(seconds: 20),
+      const Duration(seconds: 8),
       (_) async {
         if (mounted) {
-          setState(() => _loading = true);
           await _fetchParticipants();
-          if (mounted) {
-            setState(() => _loading = false);
-          }
         }
       },
     );
@@ -147,9 +146,52 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
             ),
           );
         },
-        (r) => setState(
-            () => _participants = r.where((p) => p.uid != myUid).toList()),
+        (r) async {
+          final participants = r.where((p) => p.uid != myUid).toList()
+            ..sort((a, b) => a.name.compareTo(b.name));
+
+          final differences = await diff(
+            _participants,
+            participants,
+            areEqual: (a, b) {
+              return (a as TopicParticipant).name ==
+                  (b as TopicParticipant).name;
+            },
+            getHashCode: (a) => a.hashCode,
+          );
+          differences.forEach(_performDiff);
+          setState(() => _participants = participants);
+        },
       );
+    }
+  }
+
+  void _performDiff(Operation<TopicParticipant> d) {
+    switch (d.type) {
+      case OperationType.insertion:
+        _listKey.currentState?.insertItem(
+          d.index,
+          duration: const Duration(milliseconds: 800),
+        );
+        break;
+      case OperationType.deletion:
+        _listKey.currentState?.removeItem(
+          d.index,
+          (context, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SizeTransition(
+                sizeFactor: CurveTween(curve: Curves.easeIn).animate(animation),
+                child: _ParticipantTile(
+                  participant: d.item,
+                  onPressed: () {},
+                ),
+              ),
+            );
+          },
+          duration: const Duration(milliseconds: 800),
+        );
+        break;
     }
   }
 
@@ -219,17 +261,25 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                         ),
                       ),
                     ),
-                  )
-                else
+                  ),
+                if (!_loading)
                   Expanded(
-                    child: ListView.builder(
+                    child: AnimatedList(
+                      key: _listKey,
                       padding: const EdgeInsets.only(bottom: 156),
-                      itemCount: _participants.length,
-                      itemBuilder: (context, index) {
+                      initialItemCount: _participants.length,
+                      itemBuilder: (context, index, animation) {
                         final participant = _participants[index];
-                        return _ParticipantTile(
-                          participant: participant,
-                          onPressed: () => _call(participant),
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SizeTransition(
+                            sizeFactor: CurveTween(curve: Curves.easeOut)
+                                .animate(animation),
+                            child: _ParticipantTile(
+                              participant: participant,
+                              onPressed: () => _call(participant),
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -514,7 +564,7 @@ class __CountdownTimerState extends State<_CountdownTimer> {
   void _startPeriodicTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(
-      const Duration(seconds: 1),
+      const Duration(seconds: 20),
       (_) => _update(),
     );
   }
