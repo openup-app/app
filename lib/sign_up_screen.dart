@@ -108,11 +108,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                         inputFormatters: [
                           FilteringTextInputFormatter.deny(RegExp(r'\s')),
                         ],
-                        onEditingComplete: () {
+                        onChanged: (_) {
                           setState(() {
                             _phoneErrorText =
                                 _validatePhone(_phoneController.text);
                           });
+                        },
+                        onEditingComplete: () {
                           FocusScope.of(context).unfocus();
                         },
                         textAlign: TextAlign.center,
