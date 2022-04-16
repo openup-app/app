@@ -307,6 +307,9 @@ class Phone {
           onDisconnected();
         },
         hangUpReport: (_) {},
+        reject: (_) {
+          _connectionStateController.add(PhoneConnectionState.declined);
+        },
       );
     });
   }
@@ -348,6 +351,9 @@ class Phone {
 enum PhoneConnectionState {
   /// Have not yet attempted to join a call.
   none,
+
+  /// No matching call to join
+  missing,
 
   /// Attempting to join a call but have not yet received connection signals.
   waiting,

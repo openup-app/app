@@ -14,9 +14,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/lobby_list_page.dart';
-import 'package:openup/lobby_screen.dart';
 import 'package:openup/notifications/connectycube_call_kit_integration.dart';
-import 'package:openup/rekindle_screen.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/video_call_screen_content.dart';
 import 'package:openup/voice_call_screen_content.dart';
@@ -32,6 +30,7 @@ class CallScreen extends ConsumerStatefulWidget {
   final int socketPort;
   final bool video;
   final bool mini;
+  final bool isInitiator;
   final bool serious;
   final List<SimpleProfile> profiles;
   final List<Rekindle> rekindles;
@@ -44,6 +43,7 @@ class CallScreen extends ConsumerStatefulWidget {
     required this.socketPort,
     required this.video,
     this.mini = false,
+    required this.isInitiator,
     required this.serious,
     required this.profiles,
     required this.rekindles,
@@ -224,6 +224,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                 MiniVoiceCallScreenContent(
                   users:
                       _users.values.map((data) => data.userConnection).toList(),
+                  isInitiator: widget.isInitiator,
                   hasSentTimeRequest: _hasSentTimeRequest,
                   endTime: widget.rekindles.isEmpty ? null : _endTime,
                   muted: _muted,
@@ -377,6 +378,9 @@ String connectionStateText(
   switch (connectionState) {
     case PhoneConnectionState.none:
       return '';
+
+    case PhoneConnectionState.missing:
+      return 'The call has already ended';
 
     case PhoneConnectionState.waiting:
       return 'Waiting for your match';

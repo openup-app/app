@@ -57,6 +57,9 @@ const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
 const webPort = 8080;
 const socketPort = 8081;
 
+// TODO: Should be app constant coming from dart defines (to be used in background call handler too)
+const urlBase = 'http://$host:$webPort';
+
 final _scaffoldKey = GlobalKey();
 final _callPanelKey = GlobalKey<LobbyListPageState>();
 
@@ -572,6 +575,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             host: host,
                             socketPort: socketPort,
                             video: false,
+                            isInitiator: true,
                             serious: args.serious,
                             profiles: args.profiles,
                             rekindles: args.rekindles,
@@ -593,6 +597,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           host: host,
                           socketPort: socketPort,
                           video: true,
+                          isInitiator: true,
                           serious: args.serious,
                           profiles: args.profiles,
                           rekindles: args.rekindles,
@@ -902,6 +907,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             host: host,
                             socketPort: socketPort,
                             video: false,
+                            isInitiator: true,
                             serious: args.serious,
                             profiles: args.profiles,
                             rekindles: args.rekindles,
@@ -923,6 +929,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           host: host,
                           socketPort: socketPort,
                           video: true,
+                          isInitiator: true,
                           serious: args.serious,
                           profiles: args.profiles,
                           rekindles: args.rekindles,

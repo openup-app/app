@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:connectycube_flutter_call_kit/connectycube_flutter_call_kit.dart';
 import 'package:flutter/widgets.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/lobby_list_page.dart';
@@ -51,8 +52,10 @@ void initIncomingCallHandlers({
         }
       },
       onCallRejected: (callEvent) {
-        print('Call rejected ${callEvent.sessionId}');
-        // TODO: Send call rejection API request
+        final uid = callEvent.userInfo?['uid'];
+        if (uid != null) {
+          Api.rejectCall(uid, callEvent.sessionId);
+        }
         return Future.value();
       },
     );
@@ -118,6 +121,9 @@ Future<void> _onCallAcceptedWhenTerminated(CallEvent callEvent) async {
 }
 
 Future<void> _onCallRejectedWhenTerminated(CallEvent event) {
-  // TODO: Send call rejected API request
+  final uid = event.userInfo?['uid'];
+  if (uid != null) {
+    Api.rejectCall(uid, event.sessionId);
+  }
   return Future.value();
 }

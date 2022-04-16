@@ -13,6 +13,7 @@ import 'package:lottie/lottie.dart';
 import 'package:marquee/marquee.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_screen.dart';
@@ -112,6 +113,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
         return _buildCallScreen(
           rid: startWithCall.rid,
           profile: startWithCall.profile,
+          isInitiator: false,
         );
       });
     });
@@ -1223,6 +1225,7 @@ class _CallBoxState extends State<_CallBox> {
           name: widget.participant.name,
           photo: widget.participant.photo,
         ),
+        isInitiator: true,
       );
     }
     if (_callEngaged) {
@@ -1261,6 +1264,25 @@ class _CallBoxState extends State<_CallBox> {
         ),
       );
     }
+    return _RingingUi(
+      name: widget.participant.name,
+      onClose: Navigator.of(context).pop,
+    );
+  }
+}
+
+class _RingingUi extends StatelessWidget {
+  final String name;
+  final VoidCallback onClose;
+
+  const _RingingUi({
+    Key? key,
+    required this.name,
+    required this.onClose,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -1279,7 +1301,7 @@ class _CallBoxState extends State<_CallBox> {
             top: 12,
             right: 12,
             child: Button(
-              onPressed: Navigator.of(context).pop,
+              onPressed: onClose,
               child: Container(
                 margin: const EdgeInsets.all(12),
                 padding: const EdgeInsets.all(4),
@@ -1312,7 +1334,7 @@ class _CallBoxState extends State<_CallBox> {
               ),
               const SizedBox(width: 16),
               AutoSizeText(
-                'Calling ${widget.participant.name}',
+                'Calling $name',
                 minFontSize: 16,
                 style: Theming.of(context).text.body.copyWith(
                       fontSize: 24,
@@ -1329,6 +1351,7 @@ class _CallBoxState extends State<_CallBox> {
 
 class MiniVoiceCallScreenContent extends ConsumerStatefulWidget {
   final List<UserConnection> users;
+  final bool isInitiator;
   final bool hasSentTimeRequest;
   final DateTime? endTime;
   final bool muted;
@@ -1344,6 +1367,7 @@ class MiniVoiceCallScreenContent extends ConsumerStatefulWidget {
   const MiniVoiceCallScreenContent({
     Key? key,
     required this.users,
+    required this.isInitiator,
     required this.hasSentTimeRequest,
     required this.endTime,
     required this.muted,
@@ -1365,10 +1389,48 @@ class MiniVoiceCallScreenContent extends ConsumerStatefulWidget {
 class _MiniVoiceCallScreenContentState
     extends ConsumerState<MiniVoiceCallScreenContent> {
   bool _showReportUi = false;
+
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateConnectionState(widget.users.first.connectionState);
+  }
+
+  @override
+  void didUpdateWidget(covariant MiniVoiceCallScreenContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.users.first.connectionState !=
+        oldWidget.users.first.connectionState) {
+      _updateConnectionState(widget.users.first.connectionState);
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _updateConnectionState(PhoneConnectionState state) {
+    if (state == PhoneConnectionState.declined) {
+      _timer?.cancel();
+      _timer = Timer(
+        const Duration(seconds: 3),
+        () {
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final tempFirstUser = widget.users.first;
-    final profile = tempFirstUser.profile;
+    final firstUser = widget.users.first;
+    final profile = firstUser.profile;
     final myProfile = ref.watch(userProvider).profile;
 
     if (_showReportUi) {
@@ -1378,6 +1440,41 @@ class _MiniVoiceCallScreenContentState
         onCancel: () => setState(() => _showReportUi = false),
       );
     }
+
+    final state = firstUser.connectionState;
+    if (widget.isInitiator &&
+        (state == PhoneConnectionState.none ||
+            state == PhoneConnectionState.waiting)) {
+      return _RingingUi(
+        name: firstUser.profile.name,
+        onClose: Navigator.of(context).pop,
+      );
+    }
+
+    if (state == PhoneConnectionState.declined) {
+      return Center(
+        child: Text(
+          'Declined',
+          style: Theming.of(context).text.body.copyWith(
+              color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+              fontSize: 20,
+              fontWeight: FontWeight.w700),
+        ),
+      );
+    }
+
+    if (state == PhoneConnectionState.missing) {
+      return Center(
+        child: Text('${firstUser.profile.name} did not pick up'),
+      );
+    }
+
+    if (state == PhoneConnectionState.complete) {
+      return Center(
+        child: Text('Call complete'),
+      );
+    }
+
     return Column(
       children: [
         Padding(
@@ -1403,7 +1500,11 @@ class _MiniVoiceCallScreenContentState
           text: TextSpan(
             children: [
               TextSpan(
-                text: 'You are talking to ',
+                text: (state == PhoneConnectionState.none ||
+                        state == PhoneConnectionState.waiting ||
+                        state == PhoneConnectionState.connecting)
+                    ? 'Connecting to '
+                    : 'You are talking to ',
                 style: Theming.of(context).text.body.copyWith(
                     color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
                     fontSize: 20,
@@ -1444,10 +1545,12 @@ class _MiniVoiceCallScreenContentState
                   color: Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0),
                 ),
                 const SizedBox(height: 6),
-                _CountdownTimer(
-                  remaining: const Duration(minutes: 5),
-                  onTimeUp: widget.onHangUp,
-                ),
+                if (state == PhoneConnectionState.connected ||
+                    state == PhoneConnectionState.complete)
+                  _CountdownTimer(
+                    remaining: const Duration(minutes: 5),
+                    onTimeUp: widget.onHangUp,
+                  ),
               ],
             ),
             const SizedBox(width: 33),
@@ -1728,6 +1831,7 @@ class _ReportCallBox extends StatelessWidget {
 Widget _buildCallScreen({
   required String rid,
   required SimpleProfile profile,
+  required bool isInitiator,
 }) {
   return CallScreen(
     rid: rid,
@@ -1735,6 +1839,7 @@ Widget _buildCallScreen({
     socketPort: socketPort,
     video: false,
     mini: true,
+    isInitiator: isInitiator,
     serious: true,
     profiles: [profile],
     rekindles: const [],

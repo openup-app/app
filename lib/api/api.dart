@@ -13,12 +13,13 @@ import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
+import 'package:openup/main.dart';
 
 part 'api.freezed.dart';
 part 'api.g.dart';
 
 class Api {
-  final _headers = {
+  static final _headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
@@ -585,6 +586,38 @@ class Api {
     );
   }
 
+  static Future<Either<ApiError, void>> answerCall(String uid, String rid) {
+    return _staticRequest(
+      makeRequest: () {
+        return http.post(
+          // TODO: This imports from main.dart, this class should not be tied to main.dart
+          Uri.parse('$urlBase/calls/$rid/answer'),
+          headers: _headers,
+          body: jsonEncode({
+            'uid': uid,
+          }),
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
+  static Future<Either<ApiError, void>> rejectCall(String uid, String rid) {
+    return _staticRequest(
+      makeRequest: () {
+        return http.post(
+          // TODO: This imports from main.dart, this class should not be tied to main.dart
+          Uri.parse('$urlBase/calls/$rid/reject'),
+          headers: _headers,
+          body: jsonEncode({
+            'uid': uid,
+          }),
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
   Future<Either<ApiError, T>> _requestStreamedResponse<T>({
     required Future<http.StreamedResponse> Function() makeRequest,
     required Either<ApiError, T> Function(http.Response response) handleSuccess,
@@ -599,15 +632,23 @@ class Api {
     required Future<http.Response> Function() makeRequest,
     required Either<ApiError, T> Function(http.Response response) handleSuccess,
   }) async {
-    try {
-      // FirebaseAuth.instance.idTokenChanges does not seem to fire without calling User.getIdToken() first
-      // TODO: Can we be notified of an expired token without using it first?
-      //  this class should not be tied to Firebase
-      final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
-      if (idToken != null) {
-        authToken = idToken;
-      }
+    // FirebaseAuth.instance.idTokenChanges does not seem to fire without calling User.getIdToken() first
+    // TODO: Can we be notified of an expired token without using it first?
+    //  this class should not be tied to Firebase
+    final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+    if (idToken != null) {
+      authToken = idToken;
+    }
 
+    return _staticRequest<T>(
+        makeRequest: makeRequest, handleSuccess: handleSuccess);
+  }
+
+  static Future<Either<ApiError, T>> _staticRequest<T>({
+    required Future<http.Response> Function() makeRequest,
+    required Either<ApiError, T> Function(http.Response response) handleSuccess,
+  }) async {
+    try {
       final response = await makeRequest();
       if (response.statusCode != 200) {
         log(
