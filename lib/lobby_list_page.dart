@@ -726,7 +726,8 @@ class _ParticipantTile extends StatelessWidget {
               alignment: Alignment.center,
               child: Marquee(
                 text: participant.statusText,
-                blankSpace: 48,
+                blankSpace: 80,
+                velocity: 30,
                 style: Theming.of(context).text.body.copyWith(
                     fontSize: 16,
                     color: Colors.white,
