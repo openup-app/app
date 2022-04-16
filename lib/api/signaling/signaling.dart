@@ -42,6 +42,11 @@ class Signal with _$Signal {
     required String rid,
   }) = Reject;
 
+  const factory Signal.roomNotFound({
+    @Default('room') String recipient,
+    required String rid,
+  }) = RoomNotFound;
+
   const factory Signal.groupCallLobbyReady({
     @Default('room') String recipient,
     required bool ready,

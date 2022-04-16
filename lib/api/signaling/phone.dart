@@ -310,6 +310,9 @@ class Phone {
         reject: (_) {
           _connectionStateController.add(PhoneConnectionState.declined);
         },
+        roomNotFound: (_) {
+          _connectionStateController.add(PhoneConnectionState.missing);
+        },
       );
     });
   }

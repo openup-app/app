@@ -1414,10 +1414,12 @@ class _MiniVoiceCallScreenContentState
   }
 
   void _updateConnectionState(PhoneConnectionState state) {
-    if (state == PhoneConnectionState.declined) {
+    if (state == PhoneConnectionState.declined ||
+        state == PhoneConnectionState.complete ||
+        state == PhoneConnectionState.missing) {
       _timer?.cancel();
       _timer = Timer(
-        const Duration(seconds: 3),
+        const Duration(seconds: 4),
         () {
           if (mounted) {
             Navigator.of(context).pop();
@@ -1465,13 +1467,25 @@ class _MiniVoiceCallScreenContentState
 
     if (state == PhoneConnectionState.missing) {
       return Center(
-        child: Text('${firstUser.profile.name} did not pick up'),
+        child: Text(
+          'The call has already ended',
+          style: Theming.of(context).text.body.copyWith(
+              color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+              fontSize: 20,
+              fontWeight: FontWeight.w700),
+        ),
       );
     }
 
     if (state == PhoneConnectionState.complete) {
       return Center(
-        child: Text('Call complete'),
+        child: Text(
+          'Call complete',
+          style: Theming.of(context).text.body.copyWith(
+              color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+              fontSize: 20,
+              fontWeight: FontWeight.w700),
+        ),
       );
     }
 
