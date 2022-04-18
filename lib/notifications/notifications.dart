@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -233,32 +232,29 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
   final parsed = await _parseRemoteMessage(message);
   parsed.payload?.map(
     call: (call) {
-      if (!Platform.isIOS) {
-        shouldDisplay = false;
-        displayIncomingCall(
-          rid: call.rid,
-          callerUid: call.callerUid,
-          callerName: call.name,
-          callerPhoto: call.photo,
-          video: call.video,
-          onCallAccepted: () async {
-            final backgroundCallNotification = BackgroundCallNotification(
-              rid: call.rid,
-              profile: SimpleProfile(
-                uid: call.callerUid,
-                name: call.name,
-                photo: call.photo,
-              ),
-              video: call.video,
-              purpose: Purpose.friends,
-              group: call.group,
-            );
-            await serializeBackgroundCallNotification(
-                backgroundCallNotification);
-          },
-          onCallRejected: () {},
-        );
-      }
+      shouldDisplay = false;
+      displayIncomingCall(
+        rid: call.rid,
+        callerUid: call.callerUid,
+        callerName: call.name,
+        callerPhoto: call.photo,
+        video: call.video,
+        onCallAccepted: () async {
+          final backgroundCallNotification = BackgroundCallNotification(
+            rid: call.rid,
+            profile: SimpleProfile(
+              uid: call.callerUid,
+              name: call.name,
+              photo: call.photo,
+            ),
+            video: call.video,
+            purpose: Purpose.friends,
+            group: call.group,
+          );
+          await serializeBackgroundCallNotification(backgroundCallNotification);
+        },
+        onCallRejected: () {},
+      );
     },
     callEnded: (callEnded) {
       reportCallEnded(callEnded.rid);
