@@ -93,7 +93,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
     });
 
     _refreshTimer = Timer.periodic(
-      const Duration(seconds: 8),
+      const Duration(seconds: 15),
       (_) async {
         if (mounted) {
           await _fetchParticipants();
@@ -590,7 +590,7 @@ class __CountdownTimerState extends State<_CountdownTimer> {
   void _startPeriodicTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(
-      const Duration(seconds: 20),
+      const Duration(seconds: 1),
       (_) => _update(),
     );
   }
