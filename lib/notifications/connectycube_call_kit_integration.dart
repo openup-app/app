@@ -27,7 +27,7 @@ void initIncomingCallHandlers({
     _callKitInit = true;
     ConnectycubeFlutterCallKit.instance.init(
       ringtone: Platform.isIOS ? "Apex" : null,
-      icon: Platform.isIOS ? "AppIcon" : null,
+      icon: Platform.isIOS ? "AppIcon" : "call_icon",
       onCallAccepted: (event) async {
         final context = scaffoldKey.currentContext;
         final uid = event.userInfo?['uid'];
