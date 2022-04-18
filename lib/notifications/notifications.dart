@@ -87,7 +87,7 @@ Future<bool> _handleLaunchNotification({required GlobalKey scaffoldKey}) async {
   if (payloadJson != null) {
     final payload = _NotificationPayload.fromJson(jsonDecode(payloadJson));
     final api = GetIt.instance.get<Api>();
-    payload.map(
+    return payload.map(
       call: (call) {
         final context = scaffoldKey.currentContext;
         if (context != null) {
@@ -108,7 +108,9 @@ Future<bool> _handleLaunchNotification({required GlobalKey scaffoldKey}) async {
             ),
           );
         }
+        return true;
       },
+      callEnded: (_) => false,
       chat: (chat) async {
         final result = await api.getProfile(chat.uid);
         result.fold(
@@ -124,6 +126,7 @@ Future<bool> _handleLaunchNotification({required GlobalKey scaffoldKey}) async {
             );
           },
         );
+        return true;
       },
       newConnection: (newConnection) async {
         final result = await api.getProfile(newConnection.uid);
@@ -140,9 +143,9 @@ Future<bool> _handleLaunchNotification({required GlobalKey scaffoldKey}) async {
             );
           },
         );
+        return true;
       },
     );
-    return true;
   }
   return false;
 }
@@ -188,6 +191,9 @@ void _onForegroundNotification(
         },
         onCallRejected: () {},
       );
+    },
+    callEnded: (callEnded) {
+      reportCallEnded(callEnded.rid);
     },
     chat: (chat) {
       final unreadMessageCount =
@@ -254,6 +260,9 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
         );
       }
     },
+    callEnded: (callEnded) {
+      reportCallEnded(callEnded.rid);
+    },
     chat: (_) {},
     newConnection: (_) {},
   );
@@ -295,6 +304,13 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
       rid: rid,
       purpose: purpose,
     );
+  } else if (type == 'call_ended') {
+    final rid = message.data['rid'];
+    notificationPayload = _CallEndedPayload(rid: rid);
+    notificationTitle = '';
+    notificationBody = '';
+    channelName = '';
+    channelDescription = '';
   } else if (type == 'chat') {
     final messageJson = message.data['message'];
     final senderName = message.data['senderName'];
@@ -418,6 +434,10 @@ class _NotificationPayload with _$_NotificationPayload {
     required bool video,
     required bool group,
   }) = _CallPayload;
+
+  const factory _NotificationPayload.callEnded({
+    required String rid,
+  }) = _CallEndedPayload;
 
   const factory _NotificationPayload.chat({
     required String uid,

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:connectycube_flutter_call_kit/connectycube_flutter_call_kit.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
@@ -53,7 +54,8 @@ void initIncomingCallHandlers({
         }
       },
       onCallRejected: (callEvent) {
-        final uid = callEvent.userInfo?['uid'];
+        // TODO: This class should not be tied to Firebase
+        final uid = FirebaseAuth.instance.currentUser?.uid;
         if (uid != null) {
           Api.rejectCall(uid, callEvent.sessionId);
         }
@@ -70,8 +72,8 @@ Future<void> displayIncomingCall({
   required String callerPhoto,
   required bool video,
   bool appIsBackgrounded = false,
-  required void Function() onCallAccepted,
-  required void Function() onCallRejected,
+  @Deprecated('Unused by ConnectyCube') required void Function() onCallAccepted,
+  @Deprecated('Unused by ConnectyCube') required void Function() onCallRejected,
 }) async {
   CallEvent callEvent = CallEvent(
     sessionId: rid,
@@ -122,7 +124,8 @@ Future<void> _onCallAcceptedWhenTerminated(CallEvent callEvent) async {
 }
 
 Future<void> _onCallRejectedWhenTerminated(CallEvent event) {
-  final uid = event.userInfo?['uid'];
+  // TODO: This class should not be tied to Firebase
+  final uid = FirebaseAuth.instance.currentUser?.uid;
   if (uid != null) {
     Api.rejectCall(uid, event.sessionId);
   }
