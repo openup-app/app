@@ -322,6 +322,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   void _signOut() async {
     await dismissAllNotifications();
     await FirebaseAuth.instance.signOut();
+    Navigator.of(context).popUntil((route) => route.isFirst);
     Navigator.of(context).pushReplacementNamed('/');
   }
 
