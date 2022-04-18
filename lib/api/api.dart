@@ -586,32 +586,21 @@ class Api {
     );
   }
 
-  static Future<Either<ApiError, void>> answerCall(String uid, String rid) {
-    return _staticRequest(
-      makeRequest: () {
-        return http.post(
-          // TODO: This imports from main.dart, this class should not be tied to main.dart
-          Uri.parse('$urlBase/calls/$rid/answer'),
-          headers: _headers,
-          body: jsonEncode({
-            'uid': uid,
-          }),
-        );
-      },
-      handleSuccess: (response) => const Right(null),
-    );
-  }
-
-  static Future<Either<ApiError, void>> rejectCall(String uid, String rid) {
+  static Future<Either<ApiError, void>> rejectCall(
+    String uid,
+    String rid,
+    String authToken,
+  ) {
     return _staticRequest(
       makeRequest: () {
         return http.post(
           // TODO: This imports from main.dart, this class should not be tied to main.dart
           Uri.parse('$urlBase/calls/$rid/reject'),
-          headers: _headers,
-          body: jsonEncode({
-            'uid': uid,
-          }),
+          headers: {
+            ..._headers,
+            'Authorization': 'Bearer $authToken',
+          },
+          body: jsonEncode({'uid': uid}),
         );
       },
       handleSuccess: (response) => const Right(null),

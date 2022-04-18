@@ -1445,7 +1445,7 @@ class _MiniVoiceCallScreenContentState
         state == PhoneConnectionState.missing) {
       _timer?.cancel();
       _timer = Timer(
-        const Duration(seconds: 4),
+        const Duration(seconds: 2),
         () {
           if (mounted) {
             Navigator.of(context).pop();

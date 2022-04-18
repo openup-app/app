@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:connectycube_flutter_call_kit/connectycube_flutter_call_kit.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
@@ -29,16 +28,16 @@ void initIncomingCallHandlers({
     ConnectycubeFlutterCallKit.instance.init(
       ringtone: Platform.isIOS ? "Apex" : null,
       icon: Platform.isIOS ? "AppIcon" : null,
-      onCallAccepted: (callEvent) async {
+      onCallAccepted: (event) async {
         final context = scaffoldKey.currentContext;
-        final uid = callEvent.userInfo?['uid'];
-        final photo = callEvent.userInfo?['photo'];
+        final uid = event.userInfo?['uid'];
+        final photo = event.userInfo?['photo'];
         if (uid != null && photo != null) {
           final startWithCall = StartWithCall(
-            rid: callEvent.sessionId,
+            rid: event.sessionId,
             profile: SimpleProfile(
               uid: uid,
-              name: callEvent.callerName,
+              name: event.callerName,
               photo: photo,
             ),
           );
@@ -53,12 +52,9 @@ void initIncomingCallHandlers({
           }
         }
       },
-      onCallRejected: (callEvent) {
-        // TODO: This class should not be tied to Firebase
-        final uid = FirebaseAuth.instance.currentUser?.uid;
-        if (uid != null) {
-          Api.rejectCall(uid, callEvent.sessionId);
-        }
+      onCallRejected: (event) {
+        // TODO: Need to pass uid and authToken, but failed to retrieve data from Firebase Auth with no message
+        Api.rejectCall('', event.sessionId, '');
         return Future.value();
       },
     );
@@ -124,10 +120,7 @@ Future<void> _onCallAcceptedWhenTerminated(CallEvent callEvent) async {
 }
 
 Future<void> _onCallRejectedWhenTerminated(CallEvent event) {
-  // TODO: This class should not be tied to Firebase
-  final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid != null) {
-    Api.rejectCall(uid, event.sessionId);
-  }
+  // TODO: Need to pass uid and authToken, but failed to retrieve data from Firebase Auth with no message
+  Api.rejectCall('', event.sessionId, '');
   return Future.value();
 }
