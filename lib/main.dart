@@ -580,6 +580,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             profiles: args.profiles,
                             rekindles: args.rekindles,
                             groupLobby: args.groupLobby,
+                            onCallEnded: Navigator.of(context).pop,
                           ),
                         ),
                       );
@@ -602,6 +603,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           profiles: args.profiles,
                           rekindles: args.rekindles,
                           groupLobby: args.groupLobby,
+                          onCallEnded: Navigator.of(context).pop,
                         ),
                       );
                     },
@@ -912,6 +914,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             profiles: args.profiles,
                             rekindles: args.rekindles,
                             groupLobby: args.groupLobby,
+                            onCallEnded: Navigator.of(context).pop,
                           ),
                         ),
                       );
@@ -934,6 +937,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           profiles: args.profiles,
                           rekindles: args.rekindles,
                           groupLobby: args.groupLobby,
+                          onCallEnded: Navigator.of(context).pop,
                         ),
                       );
                     },

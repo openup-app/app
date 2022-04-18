@@ -103,19 +103,23 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
 
     final startWithCall = widget.startWithCall;
     if (startWithCall != null) {
-      notificationCall(startWithCall);
+      joinCall(startWithCall);
     }
   }
 
-  void notificationCall(StartWithCall startWithCall) {
+  /// Join a call from a notification
+  void joinCall(StartWithCall startWithCall) {
     WidgetsBinding.instance?.scheduleFrameCallback((_) {
-      _showPanel(builder: (context) {
-        return _buildCallScreen(
-          rid: startWithCall.rid,
-          profile: startWithCall.profile,
-          isInitiator: false,
-        );
-      });
+      _showPanel(
+        builder: (context) {
+          return _buildCallScreen(
+            rid: startWithCall.rid,
+            profile: startWithCall.profile,
+            isInitiator: false,
+            onCallEnded: _onCallEnded,
+          );
+        },
+      );
     });
   }
 
@@ -470,9 +474,26 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
     _showPanel(
       dragIndicatorColor: Colors.white,
       builder: (context) {
-        return _CallBox(participant: participant);
+        return _CallBox(
+          participant: participant,
+          onCallEnded: _onCallEnded,
+        );
       },
     );
+  }
+
+  void _onCallEnded(EndCallReason reason) {
+    switch (reason) {
+      case EndCallReason.timeUp:
+        // Panel will pop itself after timer
+        break;
+      case EndCallReason.hangUp:
+        Navigator.of(context).pop();
+        break;
+      case EndCallReason.remoteHangUpOrDisconnect:
+        // Panel will pop itself after timer
+        break;
+    }
   }
 
   Future<T?> _showPanel<T>({
@@ -1155,9 +1176,12 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
 
 class _CallBox extends StatefulWidget {
   final TopicParticipant participant;
+  final void Function(EndCallReason reason) onCallEnded;
+
   const _CallBox({
     Key? key,
     required this.participant,
+    required this.onCallEnded,
   }) : super(key: key);
 
   @override
@@ -1227,6 +1251,7 @@ class _CallBoxState extends State<_CallBox> {
           photo: widget.participant.photo,
         ),
         isInitiator: true,
+        onCallEnded: widget.onCallEnded,
       );
     }
     if (_callEngaged) {
@@ -1847,6 +1872,7 @@ Widget _buildCallScreen({
   required String rid,
   required SimpleProfile profile,
   required bool isInitiator,
+  required void Function(EndCallReason reason) onCallEnded,
 }) {
   return CallScreen(
     rid: rid,
@@ -1859,6 +1885,7 @@ Widget _buildCallScreen({
     profiles: [profile],
     rekindles: const [],
     groupLobby: false,
+    onCallEnded: onCallEnded,
   );
 }
 

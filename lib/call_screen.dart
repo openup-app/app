@@ -22,6 +22,12 @@ import 'package:openup/widgets/end_call_report.dart';
 
 part 'call_screen.freezed.dart';
 
+enum EndCallReason {
+  timeUp,
+  hangUp,
+  remoteHangUpOrDisconnect,
+}
+
 /// Page on which the [Phone] is used to do voice and video calls. Calls
 /// start, proceed and end here.
 class CallScreen extends ConsumerStatefulWidget {
@@ -35,6 +41,7 @@ class CallScreen extends ConsumerStatefulWidget {
   final List<SimpleProfile> profiles;
   final List<Rekindle> rekindles;
   final bool groupLobby;
+  final void Function(EndCallReason reason) onCallEnded;
 
   const CallScreen({
     Key? key,
@@ -48,6 +55,7 @@ class CallScreen extends ConsumerStatefulWidget {
     required this.profiles,
     required this.rekindles,
     required this.groupLobby,
+    required this.onCallEnded,
   }) : super(key: key);
 
   @override
@@ -110,7 +118,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           setState(() => _hasSentTimeRequest = false);
         },
         onAddTime: _addTime,
-        onDisconnected: _navigateToRekindleOrLobby,
+        onDisconnected: () =>
+            widget.onCallEnded(EndCallReason.remoteHangUpOrDisconnect),
         onToggleMute: (muted) {
           if (_muted != muted) {
             setState(() => _muted = muted);
@@ -229,10 +238,10 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   endTime: widget.rekindles.isEmpty ? null : _endTime,
                   muted: _muted,
                   speakerphone: _speakerphone,
-                  onTimeUp: () => Navigator.of(context).pop(),
+                  onTimeUp: () => widget.onCallEnded(EndCallReason.timeUp),
                   onHangUp: () {
                     _signalingChannel.send(const HangUp());
-                    Navigator.of(context).pop();
+                    widget.onCallEnded(EndCallReason.hangUp);
                   },
                   onConnect: _connect,
                   onReport: (uid) {

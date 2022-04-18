@@ -42,8 +42,9 @@ void initIncomingCallHandlers({
             ),
           );
           if (callPanelKey.currentState != null) {
-            callPanelKey.currentState?.notificationCall(startWithCall);
+            callPanelKey.currentState?.joinCall(startWithCall);
           } else if (context != null) {
+            Navigator.of(context).popUntil((p) => p.isFirst);
             Navigator.of(context).pushReplacementNamed(
               'lobby-list',
               arguments: startWithCall,
