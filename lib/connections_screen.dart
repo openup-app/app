@@ -498,15 +498,15 @@ class _ConnectionTileState extends State<ConnectionTile>
                           ),
                         ),
                       ),
-                      Button(
-                        onPressed: widget.onCall,
-                        child: const Padding(
-                          padding: EdgeInsets.all(10.0),
-                          child: Icon(
-                            Icons.phone,
-                          ),
-                        ),
-                      ),
+                      // Button(
+                      //   onPressed: widget.onCall,
+                      //   child: const Padding(
+                      //     padding: EdgeInsets.all(10.0),
+                      //     child: Icon(
+                      //       Icons.phone,
+                      //     ),
+                      //   ),
+                      // ),
                       Button(
                         onPressed: widget.onChat,
                         child: Padding(
@@ -517,15 +517,15 @@ class _ConnectionTileState extends State<ConnectionTile>
                           ),
                         ),
                       ),
-                      Button(
-                        onPressed: widget.onVideoCall,
-                        child: const Padding(
-                          padding: EdgeInsets.all(10.0),
-                          child: Icon(
-                            Icons.videocam_sharp,
-                          ),
-                        ),
-                      ),
+                      // Button(
+                      //   onPressed: widget.onVideoCall,
+                      //   child: const Padding(
+                      //     padding: EdgeInsets.all(10.0),
+                      //     child: Icon(
+                      //       Icons.videocam_sharp,
+                      //     ),
+                      //   ),
+                      // ),
                       Button(
                         onPressed: widget.onDeleteConnection,
                         child: const Padding(

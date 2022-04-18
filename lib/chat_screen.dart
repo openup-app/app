@@ -380,48 +380,48 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 ),
               ),
             ),
-            Positioned(
-              right: 16,
-              top: 20 + MediaQuery.of(context).padding.top,
-              child: Container(
-                height: 42,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(0x42, 0x42, 0x42, 1.0),
-                  border: Border.all(
-                    color: const Color.fromRGBO(0x60, 0x5E, 0x5E, 1.0),
-                    width: 2,
-                  ),
-                  borderRadius: const BorderRadius.all(
-                    Radius.circular(36),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.phone),
-                      padding: EdgeInsets.zero,
-                      onPressed: () {
-                        final profile = _profile;
-                        if (profile != null) {
-                          _call(profile, video: false);
-                        }
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.video_camera_front),
-                      padding: EdgeInsets.zero,
-                      onPressed: () {
-                        final profile = _profile;
-                        if (profile != null) {
-                          _call(profile, video: true);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // Positioned(
+            //   right: 16,
+            //   top: 20 + MediaQuery.of(context).padding.top,
+            //   child: Container(
+            //     height: 42,
+            //     alignment: Alignment.center,
+            //     decoration: BoxDecoration(
+            //       color: const Color.fromRGBO(0x42, 0x42, 0x42, 1.0),
+            //       border: Border.all(
+            //         color: const Color.fromRGBO(0x60, 0x5E, 0x5E, 1.0),
+            //         width: 2,
+            //       ),
+            //       borderRadius: const BorderRadius.all(
+            //         Radius.circular(36),
+            //       ),
+            //     ),
+            //     child: Row(
+            //       children: [
+            //         IconButton(
+            //           icon: const Icon(Icons.phone),
+            //           padding: EdgeInsets.zero,
+            //           onPressed: () {
+            //             final profile = _profile;
+            //             if (profile != null) {
+            //               _call(profile, video: false);
+            //             }
+            //           },
+            //         ),
+            //         IconButton(
+            //           icon: const Icon(Icons.video_camera_front),
+            //           padding: EdgeInsets.zero,
+            //           onPressed: () {
+            //             final profile = _profile;
+            //             if (profile != null) {
+            //               _call(profile, video: true);
+            //             }
+            //           },
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),
