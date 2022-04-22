@@ -202,7 +202,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 26),
                         Button(
                           onPressed: _showDeleteAccountDialog,
                           child: _InputArea(

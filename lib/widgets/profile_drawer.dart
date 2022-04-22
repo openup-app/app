@@ -125,17 +125,10 @@ class ProfileDrawer extends ConsumerWidget {
                   },
                 ),
                 _MenuButton(
-                  icon: Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: Image.asset(
-                        'assets/images/preferences.png',
-                        color: iconColor,
-                      ),
-                    ),
+                  icon: const Center(
+                    child: Icon(Icons.interests, color: iconColor),
                   ),
-                  title: 'My Attributes',
+                  title: 'My Interests',
                   onPressed: () => _navigateToAttributesPage(context, ref),
                 ),
                 _MenuButton(

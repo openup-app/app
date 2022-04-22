@@ -289,24 +289,25 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                           child: CircularProgressIndicator(),
                         ),
                       ),
-                    // else if (_topicStatuses.)
-                    //   Expanded(
-                    //     child: Padding(
-                    //       padding: const EdgeInsets.all(16.0),
-                    //       child: Center(
-                    //         child: Text(
-                    //           'No one is chatting about this topic',
-                    //           textAlign: TextAlign.center,
-                    //           style: Theming.of(context).text.body.copyWith(
-                    //               fontSize: 24,
-                    //               fontWeight: FontWeight.w500,
-                    //               color: const Color.fromRGBO(
-                    //                   0xAA, 0xAA, 0xAA, 1.0)),
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ),
-                    if (!_loading)
+                    if (!_loading && _topicStatuses.isEmpty)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                              left: 16.0, top: 16, right: 16, bottom: 72),
+                          child: Center(
+                            child: Text(
+                              'No one is available to chat,\ncreate a status to be the first!',
+                              textAlign: TextAlign.center,
+                              style: Theming.of(context).text.body.copyWith(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (!_loading && _topicStatuses.isNotEmpty)
                       Expanded(
                         child: ListView.builder(
                           itemCount: _topicStatuses.length,
@@ -314,6 +315,10 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                           itemBuilder: (context, index) {
                             final topic = _topicStatuses[index].item1;
                             final participants = _topicStatuses[index].item2;
+                            // Only possible to occur when just blocked a user
+                            if (participants.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1278,6 +1283,7 @@ class _Selector extends StatefulWidget {
 class _SelectorState extends State<_Selector>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -1363,62 +1369,77 @@ class _SelectorState extends State<_Selector>
               opacity: _controller,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 224),
-                child: Scrollbar(
-                  isAlwaysShown: true,
-                  trackVisibility: true,
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemCount: widget.items.length,
-                    itemBuilder: (context, index) {
-                      final item = widget.items[index];
-                      return Container(
-                        height: 32,
-                        margin: const EdgeInsets.only(right: 20),
-                        child: Button(
-                          onPressed: () {
-                            widget.onSelected(index);
-                            _controller.reverse();
-                            widget.onOpen?.call(false);
-                          },
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(left: 40.0, right: 13),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    item,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theming.of(context)
-                                        .text
-                                        .body
-                                        .copyWith(
-                                            fontSize: 18,
-                                            fontWeight: widget.selected == item
-                                                ? FontWeight.w700
-                                                : FontWeight.w500,
-                                            color: widget.selected == item
-                                                ? Colors.black
-                                                : const Color.fromRGBO(
-                                                    0x7B, 0x7B, 0x7B, 1.0)),
-                                  ),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: MediaQuery.removePadding(
+                    context: context,
+                    removeTop: true,
+                    child: Scrollbar(
+                      controller: _scrollController,
+                      isAlwaysShown: true,
+                      trackVisibility: true,
+                      thickness: 8,
+                      radius: const Radius.circular(4),
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        itemCount: widget.items.length,
+                        itemBuilder: (context, index) {
+                          final item = widget.items[index];
+                          return Container(
+                            height: 32,
+                            margin: const EdgeInsets.only(right: 20),
+                            child: Button(
+                              onPressed: () {
+                                widget.onSelected(index);
+                                _controller.reverse();
+                                widget.onOpen?.call(false);
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 40.0, right: 13),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        item,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theming.of(context)
+                                            .text
+                                            .body
+                                            .copyWith(
+                                                fontSize: 18,
+                                                fontWeight:
+                                                    widget.selected == item
+                                                        ? FontWeight.w700
+                                                        : FontWeight.w500,
+                                                color: widget.selected == item
+                                                    ? Colors.black
+                                                    : const Color.fromRGBO(
+                                                        0x7B, 0x7B, 0x7B, 1.0)),
+                                      ),
+                                    ),
+                                    Text(
+                                      '',
+                                      textAlign: TextAlign.right,
+                                      style: Theming.of(context)
+                                          .text
+                                          .body
+                                          .copyWith(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w500,
+                                              color: const Color.fromRGBO(
+                                                  0x00, 0xC2, 0x36, 1.0)),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  '',
-                                  textAlign: TextAlign.right,
-                                  style: Theming.of(context).text.body.copyWith(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500,
-                                      color: const Color.fromRGBO(
-                                          0x00, 0xC2, 0x36, 1.0)),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ),
-                      );
-                    },
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1546,7 +1567,9 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                     keyboardType: TextInputType.text,
                     textCapitalization: TextCapitalization.sentences,
                     textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _submit(),
+                    onSubmitted: _statusController.text.isEmpty || _deleting
+                        ? null
+                        : (_) => setState(() => _page2 = true),
                     decoration: InputDecoration.collapsed(
                       hintText: widget.status == null
                           ? 'Why are you here today?'
@@ -2324,20 +2347,14 @@ class _MiniVoiceCallScreenContentState
             Container(
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(shape: BoxShape.circle),
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(
-                  sigmaX: 8.0,
-                  sigmaY: 8.0,
-                ),
-                child: Image.network(
-                  profile.photo,
-                  width: 69,
-                  height: 69,
-                  fit: BoxFit.cover,
-                  frameBuilder: fadeInFrameBuilder,
-                  loadingBuilder: circularProgressLoadingBuilder,
-                  errorBuilder: iconErrorBuilder,
-                ),
+              child: Image.network(
+                profile.photo,
+                width: 69,
+                height: 69,
+                fit: BoxFit.cover,
+                frameBuilder: fadeInFrameBuilder,
+                loadingBuilder: circularProgressLoadingBuilder,
+                errorBuilder: iconErrorBuilder,
               ),
             ),
           ],

@@ -83,10 +83,6 @@ class PhotoGrid extends ConsumerWidget {
                                               0.75),
                                         ),
                                       ),
-                                    const Icon(
-                                      Icons.add,
-                                      size: 48,
-                                    ),
                                   ],
                                 ),
                               ),
