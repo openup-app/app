@@ -25,6 +25,7 @@ part 'call_screen.freezed.dart';
 enum EndCallReason {
   timeUp,
   hangUp,
+  report,
   remoteHangUpOrDisconnect,
 }
 
@@ -246,13 +247,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                   onConnect: _connect,
                   onReport: (uid) {
                     _signalingChannel.send(HangUpReport(uidToReport: uid));
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pushReplacementNamed(
-                      'call-report',
-                      arguments: ReportScreenArguments(
-                        uid: _showReportOverlayForUid!,
-                      ),
-                    );
+                    widget.onCallEnded(EndCallReason.report);
                   },
                   onSendTimeRequest: _sendTimeRequest,
                   onToggleMute: () => _users.values

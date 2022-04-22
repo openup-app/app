@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,8 +18,10 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/main.dart';
 import 'package:openup/notifications/connectycube_call_kit_integration.dart';
+import 'package:openup/report_screen.dart';
 import 'package:openup/util/us_locations.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -113,7 +116,8 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
             rid: startWithCall.rid,
             profile: startWithCall.profile,
             isInitiator: false,
-            onCallEnded: _onCallEnded,
+            onCallEnded: (reason) =>
+                _onCallEnded(startWithCall.profile.uid, reason),
           );
         },
       );
@@ -129,7 +133,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
   Future<void> _fetchParticipants() async {
     final myUid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
-    final topicParticipants = await api.getStatuses(_state, _city);
+    final topicParticipants = await api.getStatuses(myUid, _state, _city);
     if (mounted) {
       topicParticipants.fold(
         (l) {
@@ -214,11 +218,13 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                 axis: Axis.horizontal,
                 sizeFactor: CurveTween(curve: Curves.easeIn).animate(animation),
                 child: _ParticipantTile(
-                  participant: d.item,
-                  onPressed: () {
-                    // Nothing to do
-                  },
-                ),
+                    participant: d.item,
+                    onPressed: () {
+                      // Nothing to do
+                    },
+                    onBlock: () {
+                      // Nothing to do
+                    }),
               ),
             );
           },
@@ -240,360 +246,380 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color.fromRGBO(0x2B, 0x86, 0xA2, 1.0),
-            Color.fromRGBO(0xA3, 0xCB, 0xD8, 1.0),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+    return WillPopScope(
+      onWillPop: () {
+        if (_stateExpanded || _cityExpanded) {
+          setState(() {
+            _stateExpanded = false;
+            _cityExpanded = false;
+          });
+          return Future.value(false);
+        }
+        return Future.value(true);
+      },
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromRGBO(0x2B, 0x86, 0xA2, 1.0),
+              Color.fromRGBO(0xA3, 0xCB, 0xD8, 1.0),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Padding(
-              padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 152),
-              child: Column(
-                children: [
-                  if (_loading)
-                    const Expanded(
-                      child: Center(
-                        child: CircularProgressIndicator(),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Padding(
+                padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 152),
+                child: Column(
+                  children: [
+                    if (_loading)
+                      const Expanded(
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
                       ),
-                    ),
-                  // else if (_topicStatuses.)
-                  //   Expanded(
-                  //     child: Padding(
-                  //       padding: const EdgeInsets.all(16.0),
-                  //       child: Center(
-                  //         child: Text(
-                  //           'No one is chatting about this topic',
-                  //           textAlign: TextAlign.center,
-                  //           style: Theming.of(context).text.body.copyWith(
-                  //               fontSize: 24,
-                  //               fontWeight: FontWeight.w500,
-                  //               color: const Color.fromRGBO(
-                  //                   0xAA, 0xAA, 0xAA, 1.0)),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
-                  if (!_loading)
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: _topicStatuses.length,
-                        padding: const EdgeInsets.only(top: 16, bottom: 76),
-                        itemBuilder: (context, index) {
-                          final topic = _topicStatuses[index].item1;
-                          final participants = _topicStatuses[index].item2;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    left: 16.0, bottom: 8),
-                                child: Text(
-                                  _topicToTitle(topic),
-                                  style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 26,
-                                    shadows: [
-                                      const Shadow(
-                                        blurRadius: 8,
-                                        color: Color.fromRGBO(
-                                            0x00, 0x00, 0x00, 0.25),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 16.0),
-                                child: Text(
-                                  _topicToDescription(topic),
-                                  style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 18,
-                                    shadows: [
-                                      const Shadow(
-                                        blurRadius: 8,
-                                        color: Color.fromRGBO(
-                                            0x00, 0x00, 0x00, 0.25),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                height: 300,
-                                child: AnimatedList(
-                                  key: _listKeys[topic],
-                                  padding: const EdgeInsets.only(left: 8),
-                                  scrollDirection: Axis.horizontal,
-                                  initialItemCount: participants.length,
-                                  itemBuilder: (context, index, animation) {
-                                    final participant = participants[index];
-                                    return FadeTransition(
-                                      opacity: animation,
-                                      child: SizeTransition(
-                                        axis: Axis.horizontal,
-                                        sizeFactor:
-                                            CurveTween(curve: Curves.easeOut)
-                                                .animate(animation),
-                                        child: _ParticipantTile(
-                                          participant: participant,
-                                          onPressed: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return Dialog(
-                                                  clipBehavior: Clip.none,
-                                                  backgroundColor:
-                                                      Colors.transparent,
-                                                  insetPadding: EdgeInsets.zero,
-                                                  child: SizedBox(
-                                                    width: 355,
-                                                    height: 491,
-                                                    child: _ParticipantCallTile(
-                                                      participant: participant,
-                                                      onCall: () {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                        _call(participant);
-                                                      },
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            );
-                                          },
+                    // else if (_topicStatuses.)
+                    //   Expanded(
+                    //     child: Padding(
+                    //       padding: const EdgeInsets.all(16.0),
+                    //       child: Center(
+                    //         child: Text(
+                    //           'No one is chatting about this topic',
+                    //           textAlign: TextAlign.center,
+                    //           style: Theming.of(context).text.body.copyWith(
+                    //               fontSize: 24,
+                    //               fontWeight: FontWeight.w500,
+                    //               color: const Color.fromRGBO(
+                    //                   0xAA, 0xAA, 0xAA, 1.0)),
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ),
+                    if (!_loading)
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: _topicStatuses.length,
+                          padding: const EdgeInsets.only(top: 16, bottom: 76),
+                          itemBuilder: (context, index) {
+                            final topic = _topicStatuses[index].item1;
+                            final participants = _topicStatuses[index].item2;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 16.0, bottom: 8),
+                                  child: Text(
+                                    _topicToTitle(topic),
+                                    style:
+                                        Theming.of(context).text.body.copyWith(
+                                      fontSize: 26,
+                                      shadows: [
+                                        const Shadow(
+                                          blurRadius: 8,
+                                          color: Color.fromRGBO(
+                                              0x00, 0x00, 0x00, 0.25),
                                         ),
-                                      ),
-                                    );
-                                  },
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          );
-                        },
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 16.0),
+                                  child: Text(
+                                    _topicToDescription(topic),
+                                    style:
+                                        Theming.of(context).text.body.copyWith(
+                                      fontSize: 18,
+                                      shadows: [
+                                        const Shadow(
+                                          blurRadius: 8,
+                                          color: Color.fromRGBO(
+                                              0x00, 0x00, 0x00, 0.25),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 300,
+                                  child: AnimatedList(
+                                    key: _listKeys[topic],
+                                    padding: const EdgeInsets.only(left: 8),
+                                    scrollDirection: Axis.horizontal,
+                                    initialItemCount: participants.length,
+                                    itemBuilder: (context, index, animation) {
+                                      final participant = participants[index];
+                                      return FadeTransition(
+                                        opacity: animation,
+                                        child: SizeTransition(
+                                          axis: Axis.horizontal,
+                                          sizeFactor:
+                                              CurveTween(curve: Curves.easeOut)
+                                                  .animate(animation),
+                                          child: _ParticipantTile(
+                                            participant: participant,
+                                            onPressed: () {
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) {
+                                                  return Dialog(
+                                                    clipBehavior: Clip.none,
+                                                    backgroundColor:
+                                                        Colors.transparent,
+                                                    insetPadding:
+                                                        EdgeInsets.zero,
+                                                    child: SizedBox(
+                                                      width: 355,
+                                                      height: 491,
+                                                      child:
+                                                          _ParticipantCallTile(
+                                                        participant:
+                                                            participant,
+                                                        onCall: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          _call(participant);
+                                                        },
+                                                        onBlock: () =>
+                                                            _fetchParticipants(),
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            },
+                                            onBlock: () => _fetchParticipants(),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          Positioned(
-            right: 24,
-            top: MediaQuery.of(context).padding.top + 16,
-            child: const ProfileButton(
-              color: Color.fromRGBO(0x89, 0xDE, 0xFF, 1.0),
+            Positioned(
+              right: 24,
+              top: MediaQuery.of(context).padding.top + 16,
+              child: const ProfileButton(
+                color: Color.fromRGBO(0x89, 0xDE, 0xFF, 1.0),
+              ),
             ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                GestureDetector(
-                  onTap: _loading
-                      ? null
-                      : () async {
-                          final completer = Completer<_StatusResult?>();
-                          // Bug in Flutter not letting showBottomPanel return a result: https://github.com/flutter/flutter/issues/66837
-                          await _showPanel<_StatusResult>(
-                            builder: (context) {
-                              return _StatusBox(
-                                state: _state,
-                                city: _city,
-                                status: _status?.text,
-                                topic: _status?.topic,
-                                resultCompleter: completer,
-                              );
-                            },
-                          );
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: _loading
+                        ? null
+                        : () async {
+                            final completer = Completer<_StatusResult?>();
+                            // Bug in Flutter not letting showBottomPanel return a result: https://github.com/flutter/flutter/issues/66837
+                            await _showPanel<_StatusResult>(
+                              builder: (context) {
+                                return _StatusBox(
+                                  state: _state,
+                                  city: _city,
+                                  status: _status?.text,
+                                  topic: _status?.topic,
+                                  resultCompleter: completer,
+                                );
+                              },
+                            );
 
-                          if (completer.isCompleted) {
-                            final result = await completer.future;
-                            setState(() => _status = result?.status);
-                          }
-                        },
-                  child: Container(
-                    height: 54,
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 14),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(34.5),
-                      ),
-                      color: Color.fromRGBO(0xE6, 0xE6, 0xE6, 1.0),
-                      boxShadow: [
-                        BoxShadow(
-                          blurRadius: 7,
-                          offset: Offset(0.0, 2.0),
-                          color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                            if (completer.isCompleted) {
+                              final result = await completer.future;
+                              setState(() => _status = result?.status);
+                            }
+                          },
+                    child: Container(
+                      height: 54,
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(34.5),
                         ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _status?.text ?? 'Why are you here today?',
-                            textAlign: _status == null
-                                ? TextAlign.center
-                                : TextAlign.start,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w300,
-                                color: const Color.fromRGBO(
-                                    0x7B, 0x7B, 0x7B, 1.0)),
-                          ),
-                        ),
-                        if (_status != null) ...[
-                          const Icon(
-                            Icons.access_time_filled,
-                            color: Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0),
-                          ),
-                          const SizedBox(width: 4),
-                          _CountdownTimer(
-                            key: Key(_status?.text ?? ''),
-                            endTime: _status!.endTime,
-                            onTimeUp: () {
-                              if (mounted) {
-                                setState(() => _status = null);
-                              }
-                            },
+                        color: Color.fromRGBO(0xE6, 0xE6, 0xE6, 1.0),
+                        boxShadow: [
+                          BoxShadow(
+                            blurRadius: 7,
+                            offset: Offset(0.0, 2.0),
+                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
                           ),
                         ],
-                      ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _status?.text ?? 'Why are you here today?',
+                              textAlign: _status == null
+                                  ? TextAlign.center
+                                  : TextAlign.start,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w300,
+                                  color: const Color.fromRGBO(
+                                      0x7B, 0x7B, 0x7B, 1.0)),
+                            ),
+                          ),
+                          if (_status != null) ...[
+                            const Icon(
+                              Icons.access_time_filled,
+                              color: Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0),
+                            ),
+                            const SizedBox(width: 4),
+                            _CountdownTimer(
+                              key: Key(_status?.text ?? ''),
+                              endTime: _status!.endTime,
+                              onTimeUp: () {
+                                if (mounted) {
+                                  setState(() => _status = null);
+                                }
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-          if (_stateExpanded || _cityExpanded)
-            Positioned.fill(
-              child: GestureDetector(
-                onPanDown: (_) {
-                  setState(() {
-                    _stateExpanded = false;
-                    _cityExpanded = false;
-                  });
-                },
-                child: Container(color: Colors.transparent),
-              ),
-            ),
-          Positioned(
-            right: 16,
-            height: 50,
-            top: MediaQuery.of(context).padding.top + 16 + 8 + 68,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 210),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$_city, $_state',
-                    overflow: TextOverflow.ellipsis,
-                    style: Theming.of(context)
-                        .text
-                        .body
-                        .copyWith(fontSize: 17, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'People Available : ',
-                          style: Theming.of(context).text.body.copyWith(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w500,
-                              ),
-                        ),
-                        TextSpan(
-                          text: _loading ? '' : _userCount.toString(),
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w500,
-                              color:
-                                  const Color.fromRGBO(0x00, 0xFF, 0x47, 1.0)),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
-          ),
-          Positioned(
-            key: const Key('city_selector'),
-            left: 0,
-            top: MediaQuery.of(context).padding.top + 16 + 8 + 60,
-            child: _Selector(
-              label: 'Which City?',
-              width: !_cityExpanded ? 164 : null,
-              open: _cityExpanded,
-              items: usLocations[_state]!,
-              selected: _city,
-              onSelected: (index) async {
-                setState(() {
-                  _city = usLocations[_state]![index];
-                  _loading = true;
-                });
-                await _fetchParticipants();
-                if (mounted) {
-                  setState(() => _loading = false);
-                }
-              },
-              onOpen: _loading
-                  ? null
-                  : (open) {
-                      setState(() {
-                        _cityExpanded = open;
-                        _stateExpanded = false;
-                      });
-                    },
+            if (_stateExpanded || _cityExpanded)
+              Positioned.fill(
+                child: GestureDetector(
+                  onPanDown: (_) {
+                    setState(() {
+                      _stateExpanded = false;
+                      _cityExpanded = false;
+                    });
+                  },
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+            Positioned(
+              right: 16,
+              height: 50,
+              top: MediaQuery.of(context).padding.top + 16 + 8 + 68,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 210),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$_city, $_state',
+                      overflow: TextOverflow.ellipsis,
+                      style: Theming.of(context)
+                          .text
+                          .body
+                          .copyWith(fontSize: 17, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'People Available : ',
+                            style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                          TextSpan(
+                            text: _loading ? '' : _userCount.toString(),
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w500,
+                                color: const Color.fromRGBO(
+                                    0x00, 0xFF, 0x47, 1.0)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          Positioned(
-            key: const Key('state_selector'),
-            left: 0,
-            top: MediaQuery.of(context).padding.top + 16,
-            child: _Selector(
-              label: 'Which State would you like to see and be at?',
-              open: _stateExpanded,
-              items: usLocations.keys.toList(),
-              selected: _state,
-              onSelected: (index) async {
-                setState(() {
-                  _state = usLocations.keys.toList()[index];
-                  _city = usLocations[_state]!.first;
-                  _loading = true;
-                });
-                await _fetchParticipants();
-                if (mounted) {
-                  setState(() => _loading = false);
-                }
-              },
-              onOpen: _loading
-                  ? null
-                  : (open) {
-                      setState(() {
-                        _stateExpanded = open;
-                        _cityExpanded = false;
-                      });
-                    },
+            Positioned(
+              key: const Key('city_selector'),
+              left: 0,
+              top: MediaQuery.of(context).padding.top + 16 + 8 + 60,
+              child: _Selector(
+                label: 'Which City?',
+                width: !_cityExpanded ? 164 : null,
+                open: _cityExpanded,
+                items: usLocations[_state]!,
+                selected: _city,
+                onSelected: (index) async {
+                  setState(() {
+                    _city = usLocations[_state]![index];
+                    _loading = true;
+                  });
+                  await _fetchParticipants();
+                  if (mounted) {
+                    setState(() => _loading = false);
+                  }
+                },
+                onOpen: _loading
+                    ? null
+                    : (open) {
+                        setState(() {
+                          _cityExpanded = open;
+                          _stateExpanded = false;
+                        });
+                      },
+              ),
             ),
-          ),
-        ],
+            Positioned(
+              key: const Key('state_selector'),
+              left: 0,
+              top: MediaQuery.of(context).padding.top + 16,
+              child: _Selector(
+                label: 'Which State would you like to see and be at?',
+                open: _stateExpanded,
+                items: usLocations.keys.toList(),
+                selected: _state,
+                onSelected: (index) async {
+                  setState(() {
+                    _state = usLocations.keys.toList()[index];
+                    _city = usLocations[_state]!.first;
+                    _loading = true;
+                  });
+                  await _fetchParticipants();
+                  if (mounted) {
+                    setState(() => _loading = false);
+                  }
+                },
+                onOpen: _loading
+                    ? null
+                    : (open) {
+                        setState(() {
+                          _stateExpanded = open;
+                          _cityExpanded = false;
+                        });
+                      },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -604,19 +630,26 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
       builder: (context) {
         return _CallBox(
           participant: participant,
-          onCallEnded: _onCallEnded,
+          onCallEnded: (reason) => _onCallEnded(participant.uid, reason),
         );
       },
     );
   }
 
-  void _onCallEnded(EndCallReason reason) {
+  void _onCallEnded(String uid, EndCallReason reason) {
     switch (reason) {
       case EndCallReason.timeUp:
         // Panel will pop itself after timer
         break;
       case EndCallReason.hangUp:
         Navigator.of(context).pop();
+        break;
+      case EndCallReason.report:
+        Navigator.of(context).pop();
+        Navigator.of(context).pushNamed(
+          'call-report',
+          arguments: ReportScreenArguments(uid: uid),
+        );
         break;
       case EndCallReason.remoteHangUpOrDisconnect:
         // Panel will pop itself after timer
@@ -740,7 +773,7 @@ class __CountdownTimerState extends State<_CountdownTimer> {
 
   String _formatDuration(Duration d) {
     if (d.inHours > 1) {
-      return '${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 24).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+      return '${(d.inHours % 24).toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
     }
     return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
   }
@@ -761,10 +794,12 @@ class __CountdownTimerState extends State<_CountdownTimer> {
 class _ParticipantTile extends StatelessWidget {
   final TopicParticipant participant;
   final VoidCallback onPressed;
+  final VoidCallback onBlock;
   const _ParticipantTile({
     Key? key,
     required this.participant,
     required this.onPressed,
+    required this.onBlock,
   }) : super(key: key);
 
   @override
@@ -817,6 +852,15 @@ class _ParticipantTile extends StatelessWidget {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 8,
+                    top: 0,
+                    child: _ReportBlockPopupMenu(
+                      uid: participant.uid,
+                      name: participant.name,
+                      onBlock: onBlock,
                     ),
                   ),
                   Positioned(
@@ -886,10 +930,12 @@ class _ParticipantTile extends StatelessWidget {
 class _ParticipantCallTile extends StatelessWidget {
   final TopicParticipant participant;
   final VoidCallback onCall;
+  final VoidCallback onBlock;
   const _ParticipantCallTile({
     Key? key,
     required this.participant,
     required this.onCall,
+    required this.onBlock,
   }) : super(key: key);
 
   @override
@@ -948,6 +994,17 @@ class _ParticipantCallTile extends StatelessWidget {
                       ],
                     ),
                   ),
+                ),
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: _ReportBlockPopupMenu(
+                      uid: participant.uid,
+                      name: participant.name,
+                      onBlock: () {
+                        Navigator.of(context).pop();
+                        onBlock();
+                      }),
                 ),
                 Positioned(
                   right: 17,
@@ -1048,6 +1105,83 @@ class _ParticipantCallTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ReportBlockPopupMenu extends ConsumerWidget {
+  final String uid;
+  final String name;
+  final VoidCallback onBlock;
+  const _ReportBlockPopupMenu({
+    Key? key,
+    required this.uid,
+    required this.name,
+    required this.onBlock,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton(
+      icon: const IconWithShadow(Icons.more_horiz),
+      onSelected: (value) {
+        if (value == 'block') {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return CupertinoTheme(
+                data: const CupertinoThemeData(brightness: Brightness.dark),
+                child: CupertinoAlertDialog(
+                  title: Text('Block $name?'),
+                  content: Text(
+                      '$name will be unable to see or call you, and you will not be able to see or call $name.'),
+                  actions: [
+                    CupertinoDialogAction(
+                      onPressed: Navigator.of(context).pop,
+                      child: const Text('Cancel'),
+                    ),
+                    CupertinoDialogAction(
+                      onPressed: () async {
+                        final myUid = ref.read(userProvider).uid;
+                        final api = GetIt.instance.get<Api>();
+                        await api.blockUser(myUid, uid);
+                        Navigator.of(context).pop();
+                      },
+                      isDestructiveAction: true,
+                      child: const Text('Block'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        } else if (value == 'report') {
+          Navigator.of(context).pushNamed(
+            'call-report',
+            arguments: ReportScreenArguments(uid: uid),
+          );
+        }
+      },
+      itemBuilder: (context) {
+        return [
+          const PopupMenuItem(
+            child: ListTile(
+              title: Text('Block user'),
+              trailing: Icon(Icons.block),
+              contentPadding: EdgeInsets.zero,
+            ),
+            value: 'block',
+          ),
+          const PopupMenuItem(
+            child: ListTile(
+              title: Text('Report user'),
+              trailing: Icon(Icons.flag_outlined),
+              contentPadding: EdgeInsets.zero,
+            ),
+            value: 'report',
+          ),
+        ];
+      },
     );
   }
 }

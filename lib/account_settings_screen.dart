@@ -1,10 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
@@ -162,6 +165,26 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                                       fontWeight: FontWeight.w500),
                                 ),
                               ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        Button(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) {
+                                return const _BlockedList();
+                              }),
+                            );
+                          },
+                          child: _InputArea(
+                            childNeedsOpacity: false,
+                            child: Center(
+                              child: Text(
+                                'Blocked users',
+                                style: Theming.of(context).text.body.copyWith(
+                                    fontSize: 24, fontWeight: FontWeight.w500),
+                              ),
                             ),
                           ),
                         ),
@@ -373,6 +396,119 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           ],
         );
       },
+    );
+  }
+}
+
+class _BlockedList extends ConsumerStatefulWidget {
+  const _BlockedList({Key? key}) : super(key: key);
+
+  @override
+  _BlockedListState createState() => _BlockedListState();
+}
+
+class _BlockedListState extends ConsumerState<_BlockedList> {
+  List<SimpleProfile> _blockedUsers = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _getBlockedUsers();
+  }
+
+  void _getBlockedUsers() {
+    final uid = ref.read(userProvider).uid;
+    final api = GetIt.instance.get<Api>();
+    api.getBlockedUsers(uid).then((value) {
+      if (mounted) {
+        value.fold(
+          (l) => displayError(context, l),
+          (r) {
+            setState(() {
+              _blockedUsers = r..sort((a, b) => a.name.compareTo(b.name));
+              _loading = false;
+            });
+          },
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Blocked users'),
+        elevation: 0.0,
+        centerTitle: true,
+      ),
+      body: StatefulBuilder(builder: (context, setState) {
+        if (_loading) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+        if (_blockedUsers.isEmpty) {
+          return Center(
+            child: Text(
+              'You have no blocked users!',
+              style: Theming.of(context)
+                  .text
+                  .body
+                  .copyWith(fontSize: 20, color: Colors.grey),
+            ),
+          );
+        }
+        return ListView.builder(
+          itemCount: _blockedUsers.length,
+          itemBuilder: (context, index) {
+            final user = _blockedUsers[index];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundImage: NetworkImage(user.photo),
+              ),
+              title: Text(user.name),
+              trailing: TextButton(
+                child: const Text('Unblock'),
+                onPressed: () async {
+                  final result = await showDialog(
+                    context: context,
+                    builder: (context) {
+                      return CupertinoTheme(
+                        data: const CupertinoThemeData(
+                            brightness: Brightness.dark),
+                        child: CupertinoAlertDialog(
+                          title: Text('Unblock ${user.name}?'),
+                          actions: [
+                            CupertinoDialogAction(
+                              onPressed: Navigator.of(context).pop,
+                              child: const Text('Cancel'),
+                            ),
+                            CupertinoDialogAction(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text('Unblock'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                  if (result == true) {
+                    final myUid = ref.read(userProvider).uid;
+                    final api = GetIt.instance.get<Api>();
+                    setState(() => _loading = true);
+                    await api.unblockUser(myUid, user.uid);
+                    if (mounted) {
+                      _getBlockedUsers();
+                    }
+                  }
+                },
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 }

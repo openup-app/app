@@ -515,11 +515,14 @@ class Api {
   }
 
   Future<Either<ApiError, Map<Topic, List<TopicParticipant>>>> getStatuses(
-      String state, String city) {
+    String uid,
+    String state,
+    String city,
+  ) {
     return _request(
       makeRequest: () {
         return http.get(
-          Uri.parse('$_urlBase/users/any/statuses/US/$state/$city'),
+          Uri.parse('$_urlBase/users/$uid/statuses/US/$state/$city'),
           headers: _headers,
         );
       },
@@ -607,6 +610,49 @@ class Api {
       makeRequest: () {
         return http.delete(
           Uri.parse('$_urlBase/users/$uid/status'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
+  Future<Either<ApiError, List<SimpleProfile>>> getBlockedUsers(String uid) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/users/$uid/block'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        return Right(List<SimpleProfile>.from(
+            list.map((e) => SimpleProfile.fromJson(e))));
+      },
+    );
+  }
+
+  Future<Either<ApiError, void>> blockUser(String uid, String blockUid) {
+    return _request(
+      makeRequest: () {
+        return http.post(
+          Uri.parse('$_urlBase/users/$uid/block'),
+          headers: _headers,
+          body: jsonEncode({
+            'blockUid': blockUid,
+          }),
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
+  Future<Either<ApiError, void>> unblockUser(String uid, String unblockUid) {
+    return _request(
+      makeRequest: () {
+        return http.delete(
+          Uri.parse('$_urlBase/users/$uid/block/$unblockUid'),
           headers: _headers,
         );
       },
