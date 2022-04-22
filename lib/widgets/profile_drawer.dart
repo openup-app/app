@@ -163,8 +163,8 @@ class ProfileDrawer extends ConsumerWidget {
   }
 
   void _navigateToAttributesPage(BuildContext context, WidgetRef ref) async {
-    final attributes = ref.read(userProvider).attributes2;
-    Navigator.of(context).pushNamed('attributes', arguments: attributes);
+    final interests = ref.read(userProvider).interests;
+    Navigator.of(context).pushNamed('attributes', arguments: interests);
   }
 }
 

@@ -111,10 +111,10 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
           (r) => notifier.attributes(r),
         );
       }),
-      api.getAttributes2(uid).then((value) {
+      api.getInterests(uid).then((value) {
         value.fold(
-          (l) => throw 'Unable to cache attributes2',
-          (r) => notifier.attributes2(r),
+          (l) => throw 'Unable to cache interests',
+          (r) => notifier.interests(r),
         );
       }),
       api.getFriendsPreferences(uid).then((value) {

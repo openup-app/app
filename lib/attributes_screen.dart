@@ -11,11 +11,11 @@ import 'package:openup/widgets/profile_form.dart';
 import 'package:openup/widgets/theming.dart';
 
 class AttributesScreen extends ConsumerStatefulWidget {
-  final Attributes2 initialAttributes;
+  final Interests initialInterests;
 
   const AttributesScreen({
     Key? key,
-    required this.initialAttributes,
+    required this.initialInterests,
   }) : super(key: key);
 
   @override
@@ -23,7 +23,7 @@ class AttributesScreen extends ConsumerStatefulWidget {
 }
 
 class _AttributesScreenState extends ConsumerState<AttributesScreen> {
-  late Attributes2 _attributes;
+  late Interests _interests;
 
   bool _uploading = false;
   int? _expandedSection;
@@ -31,7 +31,7 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
   @override
   void initState() {
     super.initState();
-    _attributes = widget.initialAttributes;
+    _interests = widget.initialInterests;
   }
 
   @override
@@ -55,12 +55,12 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                height: MediaQuery.of(context).padding.top + 32,
+                height: MediaQuery.of(context).padding.top + 72,
               ),
               Align(
                 alignment: Alignment.center,
                 child: Text(
-                  'Introduce yourself',
+                  'What are you interested in?',
                   style: Theming.of(context).text.body.copyWith(
                         color: const Color.fromRGBO(0x62, 0xCD, 0xE3, 1.0),
                         fontWeight: FontWeight.w400,
@@ -72,7 +72,7 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
               Align(
                 alignment: Alignment.center,
                 child: Text(
-                  'Fill out the following information so others can find the real you',
+                  'Pick up to three things that interest you',
                   textAlign: TextAlign.center,
                   style: Theming.of(context).text.body.copyWith(
                         color: const Color.fromRGBO(0x99, 0x99, 0x99, 1.0),
@@ -81,18 +81,20 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
                       ),
                 ),
               ),
+              const SizedBox(height: 16),
               Expanded(
                 child: Align(
                   alignment: Alignment.center,
                   child: ListView(
+                    padding: EdgeInsets.zero,
                     children: [
                       Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 300),
                           child: AttributesForm(
-                            attributes: _attributes,
+                            interests: _interests,
                             onChanged: (attributes) {
-                              setState(() => _attributes = attributes);
+                              setState(() => _interests = attributes);
                             },
                             expandedSection: _expandedSection,
                             onExpansion: (index) =>
@@ -104,37 +106,29 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 100),
             ],
           ),
           Align(
             alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const MaleFemaleConnectionImageApart(),
-                Button(
-                  onPressed: () => _submit(context, ref),
-                  child: Container(
-                    height: 100,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color.fromRGBO(0xFF, 0xA1, 0xA1, 1.0),
-                          Color.fromRGBO(0xFF, 0xCC, 0xCC, 1.0),
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                    ),
-                    child: _uploading
-                        ? const CircularProgressIndicator()
-                        : const Text('Complete'),
+            child: Button(
+              onPressed: () => _submit(context, ref),
+              child: Container(
+                height: 100,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color.fromRGBO(0xFF, 0xA1, 0xA1, 1.0),
+                      Color.fromRGBO(0xFF, 0xCC, 0xCC, 1.0),
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
                   ),
                 ),
-              ],
+                child: _uploading
+                    ? const CircularProgressIndicator()
+                    : const Text('Complete'),
+              ),
             ),
           ),
         ],
@@ -146,8 +140,8 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
     setState(() => _uploading = true);
     final userState = ref.read(userProvider);
     final api = GetIt.instance.get<Api>();
-    final attributes = _attributes;
-    final result = await api.updateAttributes2(userState.uid, attributes);
+    final attributes = _interests;
+    final result = await api.updateInterests(userState.uid, attributes);
     if (!mounted) {
       return;
     }
@@ -155,7 +149,7 @@ class _AttributesScreenState extends ConsumerState<AttributesScreen> {
     result.fold(
       (l) => displayError(context, l),
       (r) {
-        ref.read(userProvider.notifier).attributes2(attributes);
+        ref.read(userProvider.notifier).interests(attributes);
         Navigator.of(context).pop();
       },
     );

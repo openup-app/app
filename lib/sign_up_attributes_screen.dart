@@ -4,11 +4,9 @@ import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_form.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -21,12 +19,7 @@ class SignUpAttributesScreen extends ConsumerStatefulWidget {
 
 class _SignUpAttributesScreenState
     extends ConsumerState<SignUpAttributesScreen> {
-  Attributes2 _attributes = const Attributes2(
-    gender: Gender.male,
-    interests: 'Other',
-    ethnicity: 'White',
-    religion: 'Christian',
-  );
+  Interests _interests = const Interests(interests: []);
 
   bool _uploading = false;
   int? _expandedSection;
@@ -89,9 +82,9 @@ class _SignUpAttributesScreenState
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 300),
                           child: AttributesForm(
-                            attributes: _attributes,
+                            interests: _interests,
                             onChanged: (attributes) {
-                              setState(() => _attributes = attributes);
+                              setState(() => _interests = attributes);
                             },
                             expandedSection: _expandedSection,
                             onExpansion: (index) =>
@@ -107,31 +100,25 @@ class _SignUpAttributesScreenState
           ),
           Align(
             alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const MaleFemaleConnectionImageApart(),
-                Button(
-                  onPressed: _submit,
-                  child: Container(
-                    height: 100,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color.fromRGBO(0xFF, 0xA1, 0xA1, 1.0),
-                          Color.fromRGBO(0xFF, 0xCC, 0xCC, 1.0),
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                    ),
-                    child: _uploading
-                        ? const CircularProgressIndicator()
-                        : const Text('Continue'),
+            child: Button(
+              onPressed: _submit,
+              child: Container(
+                height: 100,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color.fromRGBO(0xFF, 0xA1, 0xA1, 1.0),
+                      Color.fromRGBO(0xFF, 0xCC, 0xCC, 1.0),
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
                   ),
                 ),
-              ],
+                child: _uploading
+                    ? const CircularProgressIndicator()
+                    : const Text('Continue'),
+              ),
             ),
           ),
         ],
@@ -145,8 +132,8 @@ class _SignUpAttributesScreenState
     final userState = ref.read(userProvider);
     final api = GetIt.instance.get<Api>();
 
-    final attributes = _attributes;
-    final result = await api.updateAttributes2(userState.uid, attributes);
+    final interests = _interests;
+    final result = await api.updateInterests(userState.uid, interests);
 
     if (!mounted) {
       return;
@@ -155,7 +142,7 @@ class _SignUpAttributesScreenState
     result.fold(
       (l) => displayError(context, l),
       (r) {
-        ref.read(userProvider.notifier).attributes2(attributes);
+        ref.read(userProvider.notifier).interests(interests);
         Navigator.of(context).pushNamed('sign-up-photos');
       },
     );

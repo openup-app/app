@@ -934,15 +934,6 @@ class _ParticipantTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Positioned(
-                    left: 11,
-                    bottom: 8,
-                    child: _buildSymbolText(
-                      context,
-                      Icons.people,
-                      participant.attributes.ethnicity,
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -1011,31 +1002,41 @@ class _ParticipantCallTile extends StatelessWidget {
                   errorBuilder: iconErrorBuilder,
                 ),
                 Positioned(
-                  left: 4,
-                  top: 4,
-                  child: Button(
-                    onPressed: Navigator.of(context).pop,
-                    child: const Padding(
-                      padding: EdgeInsets.all(12.0),
-                      child: Icon(Icons.close),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 52,
+                  left: 16,
                   top: 10,
-                  child: AutoSizeText(
-                    participant.name,
-                    style: Theming.of(context).text.body.copyWith(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w300,
-                      shadows: [
-                        const Shadow(
-                          blurRadius: 8,
-                          color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AutoSizeText(
+                        participant.name,
+                        style: Theming.of(context).text.body.copyWith(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w300,
+                          shadows: [
+                            const Shadow(
+                              blurRadius: 8,
+                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      for (var interest
+                          in participant.interests
+                            ..sort((a, b) => a.compareTo(b)))
+                        Text(
+                          interest,
+                          style: Theming.of(context).text.body.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300,
+                            shadows: [
+                              const Shadow(
+                                blurRadius: 8,
+                                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 Positioned(
@@ -1065,30 +1066,6 @@ class _ParticipantCallTile extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
-                ),
-                Positioned(
-                  left: 11,
-                  bottom: 8,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSymbolText(
-                        context,
-                        Icons.people,
-                        participant.attributes.ethnicity,
-                      ),
-                      _buildSymbolText(
-                        context,
-                        Icons.self_improvement,
-                        participant.attributes.religion,
-                      ),
-                      _buildSymbolText(
-                        context,
-                        Icons.work,
-                        participant.attributes.interests,
-                      ),
-                    ],
                   ),
                 ),
               ],

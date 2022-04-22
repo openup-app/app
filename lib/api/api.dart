@@ -223,30 +223,32 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, Attributes2>> getAttributes2(String uid) {
+  Future<Either<ApiError, Interests>> getInterests(String uid) {
     return _request(
       makeRequest: () {
         return http.get(
-          Uri.parse('$_urlBase/users/$uid/attributes2'),
+          Uri.parse('$_urlBase/users/$uid/interests'),
           headers: _headers,
         );
       },
       handleSuccess: (response) {
-        return Right(Attributes2.fromJson(jsonDecode(response.body)));
+        final list = jsonDecode(response.body) as List<dynamic>;
+        final interests = List<String>.from(list);
+        return Right(Interests(interests: interests));
       },
     );
   }
 
-  Future<Either<ApiError, void>> updateAttributes2(
+  Future<Either<ApiError, void>> updateInterests(
     String uid,
-    Attributes2 attributes,
+    Interests interests,
   ) {
     return _request(
       makeRequest: () {
         return http.put(
-          Uri.parse('$_urlBase/users/$uid/attributes2'),
+          Uri.parse('$_urlBase/users/$uid/interests'),
           headers: _headers,
-          body: jsonEncode(attributes.toJson()),
+          body: jsonEncode(interests.toJson()),
         );
       },
       handleSuccess: (response) => const Right(null),

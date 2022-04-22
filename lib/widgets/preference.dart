@@ -39,6 +39,7 @@ class _PreferencesExpansionSectionState
     _controller = AnimationController(
       duration: const Duration(milliseconds: 75),
       vsync: this,
+      value: 1.0,
     );
   }
 

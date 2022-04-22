@@ -47,7 +47,7 @@ class TopicParticipant with _$TopicParticipant {
     required String uid,
     required String name,
     required String photo,
-    required ParticipantAttributes attributes,
+    required List<String> interests,
     required String topic,
     required String statusText,
     required DateTime endTime,
@@ -55,18 +55,6 @@ class TopicParticipant with _$TopicParticipant {
 
   factory TopicParticipant.fromJson(Map<String, dynamic> json) =>
       _$TopicParticipantFromJson(json);
-}
-
-@freezed
-class ParticipantAttributes with _$ParticipantAttributes {
-  const factory ParticipantAttributes({
-    required String ethnicity,
-    required String religion,
-    required String interests,
-  }) = _ParticipantAttributes;
-
-  factory ParticipantAttributes.fromJson(Map<String, dynamic> json) =>
-      _$ParticipantAttributesFromJson(json);
 }
 
 @freezed
@@ -84,14 +72,11 @@ class Attributes with _$Attributes {
 }
 
 @freezed
-class Attributes2 with _$Attributes2 {
-  const factory Attributes2({
-    required Gender gender,
-    required String interests,
-    required String ethnicity,
-    required String religion,
-  }) = _Attributes2;
+class Interests with _$Interests {
+  const factory Interests({
+    required List<String> interests,
+  }) = _Interests;
 
-  factory Attributes2.fromJson(Map<String, dynamic> json) =>
-      _$Attributes2FromJson(json);
+  factory Interests.fromJson(Map<String, dynamic> json) =>
+      _$InterestsFromJson(json);
 }
