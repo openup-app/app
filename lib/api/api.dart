@@ -514,18 +514,35 @@ class Api {
     }
   }
 
-  Future<Either<ApiError, List<TopicParticipant>>> getTopicList(Topic topic) {
+  Future<Either<ApiError, Map<Topic, List<TopicParticipant>>>> getStatuses(
+      String state, String city) {
     return _request(
       makeRequest: () {
         return http.get(
-          Uri.parse('$_urlBase/users/any/topics/${topic.name}/participants'),
+          Uri.parse('$_urlBase/users/any/statuses/US/$state/$city'),
           headers: _headers,
         );
       },
       handleSuccess: (response) {
+        final time = DateTime.now();
         final list = List.from(jsonDecode(response.body));
-        return Right(List<TopicParticipant>.from(
-            list.map((e) => TopicParticipant.fromJson(e))));
+        final parsed = List<TopicParticipant>.from(list.map((e) {
+          final remaining = e['remaining'] as int;
+          e['endTime'] =
+              time.add(Duration(milliseconds: remaining)).toIso8601String();
+          return TopicParticipant.fromJson(e);
+        }));
+        final map = Map.fromEntries(
+            Topic.values.map((e) => MapEntry(e, <TopicParticipant>[])));
+        final topics =
+            Map.fromEntries(Topic.values.map((e) => MapEntry(e.name, e)));
+        for (final participant in parsed) {
+          final topic = topics[participant.topic];
+          if (topic != null) {
+            map[topic]?.add(participant);
+          }
+        }
+        return Right(map);
       },
     );
   }
@@ -540,38 +557,49 @@ class Api {
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final status = json['status'];
-        if (status != null) {
-          return Right(Status.fromJson(status));
-        }
-        return const Right(null);
+        final status = _parseStatus(json);
+        return Right(status);
       },
     );
   }
 
   Future<Either<ApiError, Status?>> updateStatus(
     String uid,
+    String state,
+    String city,
     Topic topic,
     String status,
   ) {
     return _request(
       makeRequest: () {
         return http.put(
-          Uri.parse(
-              '$_urlBase/users/any/topics/${topic.name}/participants/$uid'),
+          Uri.parse('$_urlBase/users/$uid/status'),
           headers: _headers,
-          body: jsonEncode({'status': status}),
+          body: jsonEncode({
+            'state': state,
+            'city': city,
+            'topic': topic.name,
+            'text': status,
+          }),
         );
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final status = json['status'];
-        if (status != null) {
-          return Right(Status.fromJson(status));
-        }
-        return const Right(null);
+        final status = _parseStatus(json);
+        return Right(status);
       },
     );
+  }
+
+  Status? _parseStatus(Map<String, dynamic> json) {
+    final status = json['status'];
+    if (status == null) {
+      return null;
+    }
+    status['endTime'] = DateTime.now()
+        .add(Duration(milliseconds: status['remaining']))
+        .toIso8601String();
+    return Status.fromJson(status);
   }
 
   Future<Either<ApiError, void>> deleteStatus(String uid) {
@@ -707,18 +735,11 @@ class ServerError with _$ServerError {
 class Status with _$Status {
   const factory Status({
     required String text,
-    required String topic,
-    required int remaining,
+    required Topic topic,
+    required DateTime endTime,
   }) = _Status;
 
   factory Status.fromJson(Map<String, dynamic> json) => _$StatusFromJson(json);
 }
 
-enum Topic {
-  all,
-  moved,
-  outing,
-  vacation,
-  business,
-  job,
-}
+enum Topic { moved, outing, vacation, business, school, friends }

@@ -48,7 +48,9 @@ class TopicParticipant with _$TopicParticipant {
     required String name,
     required String photo,
     required ParticipantAttributes attributes,
+    required String topic,
     required String statusText,
+    required DateTime endTime,
   }) = _TopicParticipant;
 
   factory TopicParticipant.fromJson(Map<String, dynamic> json) =>
