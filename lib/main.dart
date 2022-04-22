@@ -1027,13 +1027,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     },
                   );
                 case 'attributes':
-                  final args = settings.arguments as Attributes2;
+                  final args = settings.arguments as Interests;
                   return _buildPageRoute(
                     settings: settings,
                     builder: (_) {
                       return CurrentRouteSystemUiStyling.dark(
                         child: AttributesScreen(
-                          initialAttributes: args,
+                          initialInterests: args,
                         ),
                       );
                     },
