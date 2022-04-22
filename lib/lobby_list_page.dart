@@ -210,28 +210,35 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
         break;
       case OperationType.deletion:
         _listKeys[topic]?.currentState?.removeItem(
-          d.index,
-          (context, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: SizeTransition(
-                axis: Axis.horizontal,
-                sizeFactor: CurveTween(curve: Curves.easeIn).animate(animation),
-                child: _ParticipantTile(
-                    participant: d.item,
-                    onPressed: () {
-                      // Nothing to do
-                    },
-                    onBlock: () {
-                      // Nothing to do
-                    }),
-              ),
+              d.index,
+              (c, a) => _animatedRemoveBuilder(c, a, d.item),
+              duration: const Duration(milliseconds: 400),
             );
-          },
-          duration: const Duration(milliseconds: 400),
-        );
         break;
     }
+  }
+
+  Widget _animatedRemoveBuilder(
+    BuildContext context,
+    Animation<double> animation,
+    TopicParticipant participant,
+  ) {
+    return FadeTransition(
+      opacity: animation,
+      child: SizeTransition(
+        axis: Axis.horizontal,
+        sizeFactor: CurveTween(curve: Curves.easeIn).animate(animation),
+        child: _ParticipantTile(
+          participant: participant,
+          onPressed: () {
+            // Nothing to do
+          },
+          onBlock: () {
+            // Nothing to do
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _getStatus() async {
@@ -385,15 +392,51 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                                                               .pop();
                                                           _call(participant);
                                                         },
-                                                        onBlock: () =>
-                                                            _fetchParticipants(),
+                                                        onBlock: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          final item =
+                                                              participants
+                                                                  .removeAt(
+                                                                      index);
+                                                          setState(() {});
+                                                          _listKeys[topic]
+                                                              ?.currentState
+                                                              ?.removeItem(
+                                                                index,
+                                                                (c, a) =>
+                                                                    _animatedRemoveBuilder(
+                                                                        c,
+                                                                        a,
+                                                                        item),
+                                                                duration:
+                                                                    const Duration(
+                                                                        milliseconds:
+                                                                            400),
+                                                              );
+                                                        },
                                                       ),
                                                     ),
                                                   );
                                                 },
                                               );
                                             },
-                                            onBlock: () => _fetchParticipants(),
+                                            onBlock: () {
+                                              Navigator.of(context).pop();
+                                              final item =
+                                                  participants.removeAt(index);
+                                              setState(() {});
+                                              _listKeys[topic]
+                                                  ?.currentState
+                                                  ?.removeItem(
+                                                    index,
+                                                    (c, a) =>
+                                                        _animatedRemoveBuilder(
+                                                            c, a, item),
+                                                    duration: const Duration(
+                                                        milliseconds: 400),
+                                                  );
+                                            },
                                           ),
                                         ),
                                       );
@@ -1145,7 +1188,7 @@ class _ReportBlockPopupMenu extends ConsumerWidget {
                         final myUid = ref.read(userProvider).uid;
                         final api = GetIt.instance.get<Api>();
                         await api.blockUser(myUid, uid);
-                        Navigator.of(context).pop();
+                        onBlock();
                       },
                       isDestructiveAction: true,
                       child: const Text('Block'),
