@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:ui';
+import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -68,9 +68,10 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
     super.initState();
     setState(() => _loading = true);
 
+    final isIOS = Platform.isIOS;
     Future.wait([
       FirebaseMessaging.instance.getToken(),
-      getVoipPushNotificationToken(),
+      if (isIOS) getVoipPushNotificationToken(),
     ]).then((tokens) {
       if (!mounted) {
         return;
@@ -78,8 +79,9 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
       final api = GetIt.instance.get<Api>();
       api.addNotificationTokens(
         ref.read(userProvider).uid,
-        messagingToken: tokens[0],
-        voipToken: tokens[1],
+        fcmMessagingAndVoipToken: isIOS ? null : tokens[0],
+        fcmMessagingToken: isIOS ? tokens[0] : null,
+        apnVoipToken: isIOS ? tokens[1] : null,
       );
     });
 

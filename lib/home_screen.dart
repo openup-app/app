@@ -31,8 +31,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final api = GetIt.instance.get<Api>();
       api.addNotificationTokens(
         ref.read(userProvider).uid,
-        messagingToken: tokens[0],
-        voipToken: tokens[1],
+        fcmMessagingAndVoipToken: tokens[0],
       );
     });
   }

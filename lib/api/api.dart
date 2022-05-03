@@ -365,8 +365,9 @@ class Api {
 
   Future<Either<ApiError, void>> addNotificationTokens(
     String uid, {
-    String? messagingToken,
-    String? voipToken,
+    String? fcmMessagingAndVoipToken,
+    String? fcmMessagingToken,
+    String? apnVoipToken,
   }) {
     return _request(
       makeRequest: () {
@@ -374,8 +375,29 @@ class Api {
           Uri.parse('$_urlBase/users/$uid/notification_tokens'),
           headers: _headers,
           body: jsonEncode({
-            if (messagingToken != null) ...{'messaging_token': messagingToken},
-            if (voipToken != null) ...{'voip_token': voipToken},
+            'tokens': [
+              if (fcmMessagingAndVoipToken != null)
+                {
+                  'token': fcmMessagingAndVoipToken,
+                  'messaging': true,
+                  'voip': true,
+                  'service': 'fcm',
+                },
+              if (fcmMessagingToken != null)
+                {
+                  'token': fcmMessagingToken,
+                  'messaging': true,
+                  'voip': false,
+                  'service': 'fcm',
+                },
+              if (apnVoipToken != null)
+                {
+                  'token': apnVoipToken,
+                  'messaging': false,
+                  'voip': true,
+                  'service': 'apn',
+                },
+            ]
           }),
         );
       },
