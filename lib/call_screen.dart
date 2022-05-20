@@ -14,11 +14,12 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/lobby_list_page.dart';
-import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/video_call_screen_content.dart';
 import 'package:openup/voice_call_screen_content.dart';
 import 'package:openup/widgets/end_call_report.dart';
+
+import 'notifications/notifications.dart';
 
 part 'call_screen.freezed.dart';
 
@@ -203,7 +204,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     _users.values.first.phone
         .join(initiator: _isInitiator(uid, _users.keys.first));
 
-    reportCallStarted(widget.rid, widget.video);
+    reportCallStarted(widget.rid);
   }
 
   @override

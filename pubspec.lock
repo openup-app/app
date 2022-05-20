@@ -342,6 +342,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_callkit_voximplant:
+    dependency: "direct main"
+    description:
+      name: flutter_callkit_voximplant
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.2+2"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -403,6 +410,15 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_voip_push_notification:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "3eed802a26a221bed8c01e4105b64c94f02a2a2b"
+      url: "git@github.com:openup-app/flutter_voip_push_notification.git"
+    source: git
+    version: "0.0.3"
   flutter_web_plugins:
     dependency: transitive
     description: flutter

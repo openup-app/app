@@ -1,11 +1,6 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:lottie/lottie.dart';
-import 'package:openup/api/api.dart';
-import 'package:openup/api/user_state.dart';
-import 'package:openup/notifications/connectycube_call_kit_integration.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -21,19 +16,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Future.wait([
-      FirebaseMessaging.instance.getToken(),
-      getVoipPushNotificationToken(),
-    ]).then((tokens) {
-      if (!mounted) {
-        return;
-      }
-      final api = GetIt.instance.get<Api>();
-      api.addNotificationTokens(
-        ref.read(userProvider).uid,
-        fcmMessagingAndVoipToken: tokens[0],
-      );
-    });
   }
 
   @override

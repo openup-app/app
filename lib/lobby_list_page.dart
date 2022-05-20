@@ -17,7 +17,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/main.dart';
-import 'package:openup/notifications/connectycube_call_kit_integration.dart';
+import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/report_screen.dart';
 import 'package:openup/util/us_locations.dart';
 import 'package:openup/widgets/button.dart';
@@ -67,11 +67,10 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
   void initState() {
     super.initState();
     setState(() => _loading = true);
-
     final isIOS = Platform.isIOS;
     Future.wait([
       FirebaseMessaging.instance.getToken(),
-      if (isIOS) getVoipPushNotificationToken(),
+      if (isIOS) ios_voip.getVoipPushNotificationToken(),
     ]).then((tokens) {
       if (!mounted) {
         return;

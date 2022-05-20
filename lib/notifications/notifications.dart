@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,9 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_screen.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/lobby_list_page.dart';
-import 'package:openup/notifications/connectycube_call_kit_integration.dart';
+import 'package:openup/notifications/android_voip_handlers.dart'
+    as android_voip;
+import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notification_comms.dart';
 import 'package:openup/util/string.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -23,7 +26,6 @@ part 'notifications.freezed.dart';
 part 'notifications.g.dart';
 
 /// Returns [true] if the app navigated to a deep link.
-/// [key] is used to access a context with a Scaffold ancestor.
 Future<bool> initializeNotifications({
   required GlobalKey scaffoldKey,
   required GlobalKey<LobbyListPageState> callPanelKey,
@@ -34,12 +36,32 @@ Future<bool> initializeNotifications({
   });
   FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
 
-  final deepLinked = await _handleLaunchNotification(scaffoldKey: scaffoldKey);
+  bool deepLinked = false;
+  final temporaryContext = scaffoldKey.currentContext;
+  if (temporaryContext != null) {
+    deepLinked = await _handleLaunchNotification(temporaryContext);
+  }
 
-  initIncomingCallHandlers(
-    scaffoldKey: scaffoldKey,
-    callPanelKey: callPanelKey,
-  );
+  joinCallFunction(call) {
+    final state = callPanelKey.currentState;
+    if (state != null) {
+      state.joinCall(call);
+      return true;
+    }
+    return false;
+  }
+
+  if (Platform.isAndroid) {
+    android_voip.initAndroidVoipHandlers(
+      key: scaffoldKey,
+      joinCall: joinCallFunction,
+    );
+  } else if (Platform.isIOS) {
+    ios_voip.initIosVoipHandlers(
+      key: scaffoldKey,
+      joinCall: joinCallFunction,
+    );
+  }
 
   return deepLinked;
 }
@@ -47,20 +69,38 @@ Future<bool> initializeNotifications({
 Future<void> dismissAllNotifications() =>
     FlutterLocalNotificationsPlugin().cancelAll();
 
+bool checkAndClearCallHandledFlag() {
+  if (Platform.isIOS) {
+    return ios_voip.checkAndClearCallHandledFlag();
+  }
+  return false;
+}
+
+void reportCallStarted(String rid) {
+  if (Platform.isAndroid) {
+    android_voip.reportCallStarted(rid, false);
+  } else {
+    ios_voip.reportCallStarted(rid, false);
+  }
+}
+
+void reportCallEnded(String rid) {
+  if (Platform.isAndroid) {
+    android_voip.reportCallEnded(rid);
+  } else {
+    ios_voip.reportCallEnded(rid);
+  }
+}
+
 /// Returns [true] if this notification did deep link, false otherwise.
-Future<bool> _handleLaunchNotification({required GlobalKey scaffoldKey}) async {
+Future<bool> _handleLaunchNotification(BuildContext context) async {
   // Calls that don't go through the standard FirebaseMessaging app launch method
   BackgroundCallNotification? backgroundCallNotification;
   try {
-    backgroundCallNotification = await deserializeBackgroundCallNotification();
+    backgroundCallNotification =
+        await deserializeAndRemoveBackgroundCallNotification();
   } catch (e, s) {
     Sentry.captureException(e, stackTrace: s);
-  }
-  await removeBackgroundCallNotification();
-
-  final context = scaffoldKey.currentContext;
-  if (context == null) {
-    return false;
   }
 
   if (backgroundCallNotification != null) {
@@ -88,25 +128,21 @@ Future<bool> _handleLaunchNotification({required GlobalKey scaffoldKey}) async {
     final api = GetIt.instance.get<Api>();
     return payload.map(
       call: (call) {
-        final context = scaffoldKey.currentContext;
-        if (context != null) {
-          final route =
-              call.video ? 'friends-video-call' : 'friends-voice-call';
-          final profile = SimpleProfile(
-            uid: call.callerUid,
-            name: call.name,
-            photo: call.photo,
-          );
-          Navigator.of(context).pushNamed(
-            route,
-            arguments: CallPageArguments(
-              rid: call.rid,
-              profiles: [profile],
-              rekindles: [],
-              serious: false,
-            ),
-          );
-        }
+        final route = call.video ? 'friends-video-call' : 'friends-voice-call';
+        final profile = SimpleProfile(
+          uid: call.callerUid,
+          name: call.name,
+          photo: call.photo,
+        );
+        Navigator.of(context).pushNamed(
+          route,
+          arguments: CallPageArguments(
+            rid: call.rid,
+            profiles: [profile],
+            rekindles: [],
+            serious: false,
+          ),
+        );
         return true;
       },
       callEnded: (_) => false,
@@ -157,39 +193,18 @@ void _onForegroundNotification(
   final parsed = await _parseRemoteMessage(message);
   parsed.payload?.map(
     call: (call) {
-      final context = key.currentContext;
-      if (context == null) {
-        return false;
-      }
-      displayIncomingCall(
-        rid: call.rid,
-        callerUid: call.callerUid,
-        callerName: call.name,
-        callerPhoto: call.photo,
-        video: call.video,
-        onCallAccepted: () async {
-          final purpose =
-              call.purpose == Purpose.friends ? 'friends' : 'dating';
-          final route =
-              call.video ? '$purpose-video-call' : '$purpose-voice-call';
-          final profile = SimpleProfile(
-            uid: call.callerUid,
-            name: call.name,
-            photo: call.photo,
-          );
-          Navigator.of(context).pushNamed(
-            route,
-            arguments: CallPageArguments(
-              rid: call.rid,
-              profiles: [profile],
-              rekindles: [],
-              serious: false,
-              groupLobby: call.group,
-            ),
-          );
-        },
-        onCallRejected: () {},
+      final profile = SimpleProfile(
+        uid: call.callerUid,
+        name: call.name,
+        photo: call.photo,
       );
+      if (Platform.isAndroid) {
+        android_voip.displayIncomingCall(
+          rid: call.rid,
+          profile: profile,
+          video: call.video,
+        );
+      }
     },
     callEnded: (callEnded) {
       reportCallEnded(callEnded.rid);
@@ -233,28 +248,18 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
   parsed.payload?.map(
     call: (call) {
       shouldDisplay = false;
-      displayIncomingCall(
-        rid: call.rid,
-        callerUid: call.callerUid,
-        callerName: call.name,
-        callerPhoto: call.photo,
-        video: call.video,
-        onCallAccepted: () async {
-          final backgroundCallNotification = BackgroundCallNotification(
-            rid: call.rid,
-            profile: SimpleProfile(
-              uid: call.callerUid,
-              name: call.name,
-              photo: call.photo,
-            ),
-            video: call.video,
-            purpose: Purpose.friends,
-            group: call.group,
-          );
-          await serializeBackgroundCallNotification(backgroundCallNotification);
-        },
-        onCallRejected: () {},
+      final profile = SimpleProfile(
+        uid: call.callerUid,
+        name: call.name,
+        photo: call.photo,
       );
+      if (Platform.isAndroid) {
+        android_voip.displayIncomingCall(
+          rid: call.rid,
+          profile: profile,
+          video: call.video,
+        );
+      }
     },
     callEnded: (callEnded) {
       reportCallEnded(callEnded.rid);

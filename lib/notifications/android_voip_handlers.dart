@@ -14,9 +14,9 @@ Future<String?> getVoipPushNotificationToken() {
   return ConnectycubeFlutterCallKit.getToken();
 }
 
-void initIncomingCallHandlers({
-  required GlobalKey scaffoldKey,
-  required GlobalKey<LobbyListPageState> callPanelKey,
+void initAndroidVoipHandlers({
+  required GlobalKey key,
+  required bool Function(StartWithCall call) joinCall,
 }) {
   ConnectycubeFlutterCallKit.onCallAcceptedWhenTerminated =
       _onCallAcceptedWhenTerminated;
@@ -29,7 +29,6 @@ void initIncomingCallHandlers({
       ringtone: Platform.isIOS ? "Apex" : null,
       icon: Platform.isIOS ? "AppIcon" : "call_icon",
       onCallAccepted: (event) async {
-        final context = scaffoldKey.currentContext;
         final uid = event.userInfo?['uid'];
         final photo = event.userInfo?['photo'];
         if (uid != null && photo != null) {
@@ -41,8 +40,10 @@ void initIncomingCallHandlers({
               photo: photo,
             ),
           );
-          if (callPanelKey.currentState != null) {
-            callPanelKey.currentState?.joinCall(startWithCall);
+          final context = key.currentContext;
+          final joined = joinCall(startWithCall);
+          if (joined) {
+            // Nothing to do
           } else if (context != null) {
             Navigator.of(context).popUntil((p) => p.isFirst);
             Navigator.of(context).pushReplacementNamed(
@@ -63,23 +64,19 @@ void initIncomingCallHandlers({
 
 Future<void> displayIncomingCall({
   required String rid,
-  required String callerUid,
-  required String callerName,
-  required String callerPhoto,
+  required SimpleProfile profile,
   required bool video,
   bool appIsBackgrounded = false,
-  @Deprecated('Unused by ConnectyCube') required void Function() onCallAccepted,
-  @Deprecated('Unused by ConnectyCube') required void Function() onCallRejected,
 }) async {
   CallEvent callEvent = CallEvent(
     sessionId: rid,
     callType: video ? 1 : 0,
     callerId: 1,
-    callerName: callerName,
+    callerName: profile.name,
     opponentsIds: const {0, 1},
     userInfo: {
-      'uid': callerUid,
-      'photo': callerPhoto,
+      'uid': profile.uid,
+      'photo': profile.photo,
     },
   );
   ConnectycubeFlutterCallKit.showCallNotification(callEvent);

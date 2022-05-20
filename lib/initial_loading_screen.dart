@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -9,6 +10,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/lobby_list_page.dart';
 import 'package:openup/notifications/notifications.dart';
+import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/theming.dart';
 
 /// Page used for asynchronous initialization.
@@ -31,6 +33,8 @@ class InitialLoadingScreen extends ConsumerStatefulWidget {
 }
 
 class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
+  bool _navigationHandled = false;
+
   @override
   void initState() {
     super.initState();
@@ -79,20 +83,30 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     }
 
     // Perform deep linking
-    final deepLinked = await initializeNotifications(
+    final navigationHandled = await initializeNotifications(
       scaffoldKey: widget.scaffoldKey,
       callPanelKey: widget.callPanelKey,
       userStateNotifier: notifier,
     );
+    setState(() => _navigationHandled = navigationHandled);
 
-    // Standard app entry or sign up onboarding
-    if (!deepLinked) {
-      if (widget.needsOnboarding) {
-        Navigator.of(context).pushReplacementNamed('sign-up-info');
-      } else {
-        Navigator.of(context).pushReplacementNamed('lobby-list');
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      if (kProfileMode) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Post frame: Nav handled? $_navigationHandled'),
+          ),
+        );
       }
-    }
+      if (!_navigationHandled) {
+        // Standard app entry or sign up onboarding
+        if (widget.needsOnboarding) {
+          Navigator.of(context).pushReplacementNamed('sign-up-info');
+        } else {
+          Navigator.of(context).pushReplacementNamed('lobby-list');
+        }
+      }
+    });
   }
 
   Future<void> _cacheData(String uid) {
@@ -140,17 +154,31 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 32),
-          Text(
-            'Loading Openup...',
-            style: Theming.of(context).text.body.copyWith(color: Colors.black),
-          )
-        ],
+    return AppLifecycle(
+      onResumed: () async {
+        final navigationHandled = checkAndClearCallHandledFlag();
+        setState(() => _navigationHandled = navigationHandled);
+        if (kProfileMode) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Resume: Nav handled? $_navigationHandled'),
+            ),
+          );
+        }
+      },
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 32),
+            Text(
+              'Loading Openup...',
+              style:
+                  Theming.of(context).text.body.copyWith(color: Colors.black),
+            )
+          ],
+        ),
       ),
     );
   }

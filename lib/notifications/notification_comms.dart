@@ -20,9 +20,10 @@ Future<void> serializeBackgroundCallNotification(
 }
 
 Future<BackgroundCallNotification?>
-    deserializeBackgroundCallNotification() async {
+    deserializeAndRemoveBackgroundCallNotification() async {
   final preferences = await SharedPreferences.getInstance();
   final json = preferences.getString(_kBackgroundCallKey);
+  await removeBackgroundCallNotification();
   if (json != null) {
     return BackgroundCallNotification.fromJson(jsonDecode(json));
   }
