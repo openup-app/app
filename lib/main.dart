@@ -45,7 +45,6 @@ import 'package:openup/forgot_password_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/menu_screen.dart';
-import 'package:openup/voice_call_screen_content.dart';
 import 'package:openup/widgets/connections_list.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/profile_drawer.dart';
@@ -534,80 +533,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       );
                     },
                   );
-                case 'friends-voice-call':
-                  final args = settings.arguments as CallPageArguments;
-                  return _buildPageRoute(
-                    settings: settings,
-                    transitionsBuilder: fadePageTransition,
-                    builder: (_) {
-                      return CurrentRouteSystemUiStyling.light(
-                        child: VoiceCallScreenTheme(
-                          themeData: const VoiceCallScreenThemeData(
-                            backgroundGradient: LinearGradient(
-                              colors: [
-                                Color.fromRGBO(0x02, 0x4A, 0x5A, 0.4),
-                                Color.fromRGBO(0x01, 0x43, 0x52, 0.9),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
-                            panelGradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-                                Color.fromRGBO(0x00, 0xAA, 0xCF, 0.5),
-                              ],
-                            ),
-                            endCallGradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color.fromRGBO(0xFF, 0xFF, 0xFF, 1.0),
-                                Color.fromRGBO(0x00, 0x92, 0xB2, 1.0),
-                              ],
-                            ),
-                            endCallSymbolColor:
-                                Color.fromRGBO(0x00, 0x6C, 0xA1, 1.0),
-                          ),
-                          child: CallScreen(
-                            rid: args.rid,
-                            host: host,
-                            socketPort: socketPort,
-                            video: false,
-                            isInitiator: true,
-                            serious: args.serious,
-                            profiles: args.profiles,
-                            rekindles: args.rekindles,
-                            groupLobby: args.groupLobby,
-                            onCallEnded: Navigator.of(context).pop,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                case 'friends-video-call':
-                  final args = settings.arguments as CallPageArguments;
-                  return _buildPageRoute(
-                    settings: settings,
-                    transitionsBuilder: fadePageTransition,
-                    builder: (_) {
-                      return CurrentRouteSystemUiStyling.light(
-                        child: CallScreen(
-                          rid: args.rid,
-                          host: host,
-                          socketPort: socketPort,
-                          video: true,
-                          isInitiator: true,
-                          serious: args.serious,
-                          profiles: args.profiles,
-                          rekindles: args.rekindles,
-                          groupLobby: args.groupLobby,
-                          onCallEnded: Navigator.of(context).pop,
-                        ),
-                      );
-                    },
-                  );
                 case 'dating-solo-double':
                   return _buildPageRoute(
                     settings: settings,
@@ -864,80 +789,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             serious: args.serious,
                             purpose: Purpose.dating,
                           ),
-                        ),
-                      );
-                    },
-                  );
-                case 'dating-voice-call':
-                  final args = settings.arguments as CallPageArguments;
-                  return _buildPageRoute(
-                    settings: settings,
-                    transitionsBuilder: fadePageTransition,
-                    builder: (_) {
-                      return CurrentRouteSystemUiStyling.light(
-                        child: VoiceCallScreenTheme(
-                          themeData: const VoiceCallScreenThemeData(
-                            backgroundGradient: LinearGradient(
-                              colors: [
-                                Color.fromRGBO(0x53, 0x01, 0x01, 0.4),
-                                Color.fromRGBO(0x25, 0x00, 0x01, 0.9),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
-                            panelGradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-                                Color.fromRGBO(0xFF, 0x00, 0x00, 0.5),
-                              ],
-                            ),
-                            endCallGradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-                                Color.fromRGBO(0xFF, 0x4A, 0x4A, 0.5),
-                              ],
-                            ),
-                            endCallSymbolColor:
-                                Color.fromRGBO(0x9E, 0x00, 0x00, 1.0),
-                          ),
-                          child: CallScreen(
-                            rid: args.rid,
-                            host: host,
-                            socketPort: socketPort,
-                            video: false,
-                            isInitiator: true,
-                            serious: args.serious,
-                            profiles: args.profiles,
-                            rekindles: args.rekindles,
-                            groupLobby: args.groupLobby,
-                            onCallEnded: Navigator.of(context).pop,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                case 'dating-video-call':
-                  final args = settings.arguments as CallPageArguments;
-                  return _buildPageRoute(
-                    settings: settings,
-                    transitionsBuilder: fadePageTransition,
-                    builder: (_) {
-                      return CurrentRouteSystemUiStyling.light(
-                        child: CallScreen(
-                          rid: args.rid,
-                          host: host,
-                          socketPort: socketPort,
-                          video: true,
-                          isInitiator: true,
-                          serious: args.serious,
-                          profiles: args.profiles,
-                          rekindles: args.rekindles,
-                          groupLobby: args.groupLobby,
-                          onCallEnded: Navigator.of(context).pop,
                         ),
                       );
                     },
