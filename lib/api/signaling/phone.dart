@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/users/profile.dart';
@@ -22,6 +23,7 @@ class Phone {
     ]
   };
 
+  final PhoneController? controller;
   final SignalingChannel signalingChannel;
   final String partnerUid;
   final bool useVideo;
@@ -33,7 +35,7 @@ class Phone {
   final void Function() onAddTimeRequest;
   final void Function(Duration duration) onAddTime;
   final void Function() onDisconnected;
-  final void Function(bool muted)? onToggleMute;
+  final void Function(bool muted)? onMuteChanged;
   final void Function(bool enabled)? onToggleSpeakerphone;
   final void Function(Map<String, bool> states) onGroupCallLobbyStates;
   final void Function(
@@ -61,6 +63,7 @@ class Phone {
       BehaviorSubject<PhoneConnectionState>.seeded(PhoneConnectionState.none);
 
   Phone({
+    this.controller,
     required this.signalingChannel,
     required this.partnerUid,
     required this.useVideo,
@@ -69,7 +72,7 @@ class Phone {
     required this.onAddTimeRequest,
     required this.onAddTime,
     required this.onDisconnected,
-    this.onToggleMute,
+    this.onMuteChanged,
     this.onToggleSpeakerphone,
     required this.onGroupCallLobbyStates,
     required this.onJoinGroupCall,
@@ -92,21 +95,21 @@ class Phone {
   Stream<PhoneConnectionState> get connectionStateStream =>
       _connectionStateController;
 
-  void toggleMute() {
+  set mute(bool value) {
     final track = _firstAudioTrack(_localMediaStream);
-    if (track != null) {
-      track.enabled = !track.enabled;
-      onToggleMute?.call(!track.enabled);
+    if (track != null && track.enabled == value) {
+      track.enabled = !value;
+      controller?._mute = value;
     }
   }
 
-  void toggleSpeakerphone() {
+  set speakerphone(bool value) {
     final track = _firstAudioTrack(_localMediaStream);
-    if (track != null) {
-      _speakerphone = !_speakerphone;
-      track.enableSpeakerphone(_speakerphone);
-      onToggleSpeakerphone?.call(_speakerphone);
+    if (track != null && _speakerphone != value) {
+      track.enableSpeakerphone(value);
+      controller?._speakerphone = value;
     }
+    _speakerphone = value;
   }
 
   set videoEnabled(bool value) {
@@ -372,4 +375,42 @@ enum PhoneConnectionState {
 
   /// The call has been completed.
   complete
+}
+
+class PhoneController with ChangeNotifier {
+  bool _muteValue = false;
+  bool _speakerphoneValue = false;
+  DateTime? _endTimeValue;
+
+  PhoneController() : super();
+
+  set _mute(bool value) {
+    final old = _muteValue;
+    _muteValue = value;
+    if (old != value) {
+      notifyListeners();
+    }
+  }
+
+  set _speakerphone(bool value) {
+    final old = _speakerphoneValue;
+    _speakerphoneValue = value;
+    if (old != value) {
+      notifyListeners();
+    }
+  }
+
+  set endTime(DateTime? value) {
+    final old = _endTimeValue;
+    _endTimeValue = value;
+    if (old != value) {
+      notifyListeners();
+    }
+  }
+
+  bool get muted => _muteValue;
+
+  bool get speakerphone => _speakerphoneValue;
+
+  DateTime? get endTime => _endTimeValue;
 }

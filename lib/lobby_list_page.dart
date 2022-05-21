@@ -12,11 +12,11 @@ import 'package:list_diff/list_diff.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/call_state.dart';
 import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_screen.dart';
-import 'package:openup/main.dart';
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/report_screen.dart';
 import 'package:openup/util/us_locations.dart';
@@ -63,6 +63,8 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
   final _listKeys = Map.fromEntries(
       Topic.values.map((e) => MapEntry(e, GlobalKey<AnimatedListState>())));
 
+  StreamSubscription? _phoneStateSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -102,32 +104,56 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
       },
     );
 
-    final startWithCall = widget.startWithCall;
-    if (startWithCall != null) {
-      joinCall(startWithCall);
-    }
+    final callInfoStream = GetIt.instance.get<CallState>().callInfoStream;
+    callInfoStream.listen(_onCallInfo);
+  }
+
+  void _onCallInfo(CallInfo callInfo) {
+    callInfo.map(
+      active: (activeCall) {
+        WidgetsBinding.instance?.scheduleFrameCallback((_) {
+          _showPanel(
+            builder: (context) {
+              return CallPanel(
+                activeCall: activeCall,
+                onCallEnded: (reason) =>
+                    _onCallEnded(activeCall.profile.uid, reason),
+                rekindles: const [],
+              );
+            },
+          );
+        });
+      },
+      none: (_) {},
+    );
   }
 
   /// Join a call from a notification
   void joinCall(StartWithCall startWithCall) {
-    WidgetsBinding.instance?.scheduleFrameCallback((_) {
-      _showPanel(
-        builder: (context) {
-          return _buildCallScreen(
-            rid: startWithCall.rid,
-            profile: startWithCall.profile,
-            isInitiator: false,
-            onCallEnded: (reason) =>
-                _onCallEnded(startWithCall.profile.uid, reason),
-          );
-        },
-      );
-    });
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   SnackBar(
+    //     content: Text('Joining: ${startWithCall.rid}'),
+    //   ),
+    // );
+    // WidgetsBinding.instance?.scheduleFrameCallback((_) {
+    //   _showPanel(
+    //     builder: (context) {
+    //       return _buildCallScreen(
+    //         rid: startWithCall.rid,
+    //         profile: startWithCall.profile,
+    //         isInitiator: false,
+    //         onCallEnded: (reason) =>
+    //             _onCallEnded(startWithCall.profile.uid, reason),
+    //       );
+    //     },
+    //   );
+    // });
   }
 
   @override
   void dispose() {
     super.dispose();
+    _phoneStateSubscription?.cancel();
     _refreshTimer.cancel();
   }
 
@@ -677,7 +703,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
     _showPanel(
       dragIndicatorColor: Colors.white,
       builder: (context) {
-        return _CallBox(
+        return _RingingBox(
           participant: participant,
           onCallEnded: (reason) => _onCallEnded(participant.uid, reason),
         );
@@ -1892,22 +1918,22 @@ class _CheckboxPainter extends CustomPainter {
   bool shouldRebuildSemantics(_CheckboxPainter oldDelegate) => false;
 }
 
-class _CallBox extends StatefulWidget {
+class _RingingBox extends ConsumerStatefulWidget {
   final TopicParticipant participant;
   final void Function(EndCallReason reason) onCallEnded;
 
-  const _CallBox({
+  const _RingingBox({
     Key? key,
     required this.participant,
     required this.onCallEnded,
   }) : super(key: key);
 
   @override
-  State<_CallBox> createState() => _CallBoxState();
+  _RingingBoxState createState() => _RingingBoxState();
 }
 
-class _CallBoxState extends State<_CallBox> {
-  String? _rid;
+class _RingingBoxState extends ConsumerState<_RingingBox> {
+  ActiveCall? _activeCall;
   bool _callEngaged = false;
 
   @override
@@ -1953,23 +1979,38 @@ class _CallBoxState extends State<_CallBox> {
           );
           Navigator.of(context).pop();
         },
-        (r) => setState(() => _rid = r),
+        (rid) {
+          final uid = ref.read(userProvider).uid;
+          ActiveCall? activeCall;
+          if (Platform.isAndroid) {
+            throw UnimplementedError();
+          } else if (Platform.isIOS) {
+            activeCall = ios_voip.createActiveCall(
+              uid,
+              rid,
+              SimpleProfile(
+                uid: widget.participant.uid,
+                name: widget.participant.name,
+                photo: widget.participant.photo,
+              ),
+            );
+          }
+          if (activeCall != null) {
+            setState(() => _activeCall = activeCall);
+          }
+        },
       );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_rid != null) {
-      return _buildCallScreen(
-        rid: _rid!,
-        profile: SimpleProfile(
-          uid: widget.participant.uid,
-          name: widget.participant.name,
-          photo: widget.participant.photo,
-        ),
-        isInitiator: true,
+    final activeCall = _activeCall;
+    if (activeCall != null) {
+      return CallPanel(
+        activeCall: activeCall,
         onCallEnded: widget.onCallEnded,
+        rekindles: const [],
       );
     }
     if (_callEngaged) {
@@ -2109,8 +2150,8 @@ class MiniVoiceCallScreenContent extends ConsumerStatefulWidget {
   final VoidCallback onSendTimeRequest;
   final void Function(String uid) onConnect;
   final void Function(String uid) onReport;
-  final VoidCallback onToggleMute;
-  final VoidCallback onToggleSpeakerphone;
+  final ValueChanged onMuteChanged;
+  final ValueChanged onSpeakerphoneChanged;
 
   const MiniVoiceCallScreenContent({
     Key? key,
@@ -2125,8 +2166,8 @@ class MiniVoiceCallScreenContent extends ConsumerStatefulWidget {
     required this.onSendTimeRequest,
     required this.onConnect,
     required this.onReport,
-    required this.onToggleMute,
-    required this.onToggleSpeakerphone,
+    required this.onMuteChanged,
+    required this.onSpeakerphoneChanged,
   }) : super(key: key);
 
   @override
@@ -2395,7 +2436,8 @@ class _MiniVoiceCallScreenContentState
             ),
             const SizedBox(width: 8),
             Button(
-              onPressed: widget.onToggleSpeakerphone,
+              onPressed: () =>
+                  widget.onSpeakerphoneChanged(!widget.speakerphone),
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Icon(
@@ -2408,7 +2450,7 @@ class _MiniVoiceCallScreenContentState
             ),
             const SizedBox(width: 8),
             Button(
-              onPressed: widget.onToggleMute,
+              onPressed: () => widget.onMuteChanged(!widget.muted),
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Icon(
@@ -2611,27 +2653,6 @@ class _ReportCallBox extends StatelessWidget {
       ),
     );
   }
-}
-
-Widget _buildCallScreen({
-  required String rid,
-  required SimpleProfile profile,
-  required bool isInitiator,
-  required void Function(EndCallReason reason) onCallEnded,
-}) {
-  return CallScreen(
-    rid: rid,
-    host: host,
-    socketPort: socketPort,
-    video: false,
-    mini: true,
-    isInitiator: isInitiator,
-    serious: true,
-    profiles: [profile],
-    rekindles: const [],
-    groupLobby: false,
-    onCallEnded: onCallEnded,
-  );
 }
 
 class _StatusResult {
