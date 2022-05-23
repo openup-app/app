@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -49,18 +48,11 @@ class _CallPanelState extends ConsumerState<CallPanel> {
 
   bool _friendRequested = false;
 
-  StreamSubscription? _connectionStateSubscription;
-  var _connectionState = PhoneConnectionState.waiting;
-
   String? _showReportOverlayForUid;
 
   @override
   void initState() {
     super.initState();
-    _connectionStateSubscription =
-        widget.activeCall.phone.connectionStateStream.listen((state) {
-      setState(() => _connectionState = state);
-    });
 
     widget.activeCall.controller.addListener(_onPhoneControllerChanged);
   }
@@ -70,7 +62,6 @@ class _CallPanelState extends ConsumerState<CallPanel> {
     // Temporary to ensure hiding mini panel hangs up the call on the other end
     widget.activeCall.signalingChannel.send(const HangUp());
     reportCallEnded(widget.activeCall.rid);
-    _connectionStateSubscription?.cancel();
     widget.activeCall.controller.removeListener(_onPhoneControllerChanged);
 
     super.dispose();
@@ -88,17 +79,7 @@ class _CallPanelState extends ConsumerState<CallPanel> {
             sigmaY: _showReportOverlayForUid == null ? 0.0 : 8.0,
           ),
           child: MiniVoiceCallScreenContent(
-            users: [
-              UserConnection(
-                connectionState: _connectionState,
-                rekindle: null,
-                localVideoRenderer: null,
-                videoRenderer: null,
-                profile: widget.activeCall.profile,
-                readyForGroupCall: false,
-              ),
-            ],
-            isInitiator: false,
+            activeCall: widget.activeCall,
             hasSentTimeRequest: _hasSentTimeRequest,
             endTime: widget.rekindles.isEmpty
                 ? null

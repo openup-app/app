@@ -1,11 +1,17 @@
+import 'dart:async';
 import 'dart:io';
 
-import 'package:connectycube_flutter_call_kit/connectycube_flutter_call_kit.dart';
-import 'package:flutter/widgets.dart';
+import 'package:connectycube_flutter_call_kit/connectycube_flutter_call_kit.dart'
+    hide CallState;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/call_state.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
+import 'package:openup/api/signaling/phone.dart';
+import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/lobby_list_page.dart';
+import 'package:openup/main.dart';
 import 'package:openup/notifications/notification_comms.dart';
 
 bool _callKitInit = false;
@@ -14,10 +20,7 @@ Future<String?> getVoipPushNotificationToken() {
   return ConnectycubeFlutterCallKit.getToken();
 }
 
-void initAndroidVoipHandlers({
-  required GlobalKey key,
-  required bool Function(StartWithCall call) joinCall,
-}) {
+void initAndroidVoipHandlers() {
   ConnectycubeFlutterCallKit.onCallAcceptedWhenTerminated =
       _onCallAcceptedWhenTerminated;
   ConnectycubeFlutterCallKit.onCallRejectedWhenTerminated =
@@ -29,28 +32,20 @@ void initAndroidVoipHandlers({
       ringtone: Platform.isIOS ? "Apex" : null,
       icon: Platform.isIOS ? "AppIcon" : "call_icon",
       onCallAccepted: (event) async {
+        final myUid = FirebaseAuth.instance.currentUser?.uid;
+        final rid = event.sessionId;
         final uid = event.userInfo?['uid'];
         final photo = event.userInfo?['photo'];
-        if (uid != null && photo != null) {
-          final startWithCall = StartWithCall(
-            rid: event.sessionId,
-            profile: SimpleProfile(
-              uid: uid,
-              name: event.callerName,
-              photo: photo,
-            ),
+
+        if (myUid != null && uid != null && photo != null) {
+          final profile = SimpleProfile(
+            uid: uid,
+            name: event.callerName,
+            photo: photo,
           );
-          final context = key.currentContext;
-          final joined = joinCall(startWithCall);
-          if (joined) {
-            // Nothing to do
-          } else if (context != null) {
-            Navigator.of(context).popUntil((p) => p.isFirst);
-            Navigator.of(context).pushReplacementNamed(
-              'lobby-list',
-              arguments: startWithCall,
-            );
-          }
+          final activeCall = createActiveCall(myUid, rid, profile);
+          activeCall.phone.join();
+          GetIt.instance.get<CallState>().callInfo = activeCall;
         }
       },
       onCallRejected: (event) {
@@ -120,4 +115,74 @@ Future<void> _onCallRejectedWhenTerminated(CallEvent event) {
   // TODO: Need to pass uid and authToken, but failed to retrieve data from Firebase Auth with no message
   Api.rejectCall('', event.sessionId, '');
   return Future.value();
+}
+
+ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
+  final signalingChannel = SocketIoSignalingChannel(
+    host: host,
+    port: socketPort,
+    uid: myUid,
+    rid: rid,
+    serious: true,
+  );
+
+  Phone? phone;
+  final controller = PhoneController();
+  StreamSubscription? connectionStateSubscription;
+  Timer? timer;
+  phone = Phone(
+    controller: controller,
+    signalingChannel: signalingChannel,
+    uid: myUid,
+    partnerUid: profile.uid,
+    useVideo: false,
+    onMediaRenderers: (localRenderer, remoteRenderer) {
+      // Unused
+    },
+    onRemoteStream: (stream) {
+      // Unused
+    },
+    onAddTimeRequest: () {
+      // Unused
+    },
+    onAddTime: (_) {
+      // Unused
+    },
+    onDisconnected: () {
+      connectionStateSubscription?.cancel();
+      signalingChannel.dispose();
+      phone?.dispose();
+      timer?.cancel();
+    },
+    onMuteChanged: (mute) {
+      // TODO
+    },
+    onToggleSpeakerphone: (enabled) {
+      // Unused
+    },
+    onGroupCallLobbyStates: (_) {
+      // Unused
+    },
+    onJoinGroupCall: (rid, profiles, rekindles) {
+      // Unused
+    },
+  );
+  connectionStateSubscription = phone.connectionStateStream.listen((state) {
+    if (state == PhoneConnectionState.connected) {
+      const duration = Duration(minutes: 5);
+      final endTime = DateTime.now().add(duration);
+      timer = Timer(
+        duration,
+        () {},
+      );
+      controller.endTime = endTime;
+    }
+  });
+  return ActiveCall(
+    rid: rid,
+    profile: profile,
+    signalingChannel: signalingChannel,
+    phone: phone,
+    controller: controller,
+  );
 }

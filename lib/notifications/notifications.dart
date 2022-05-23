@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -8,6 +9,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/call_state.dart';
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/user_state.dart';
@@ -28,7 +30,6 @@ part 'notifications.g.dart';
 /// Returns [true] if the app navigated to a deep link.
 Future<bool> initializeNotifications({
   required GlobalKey scaffoldKey,
-  required GlobalKey<LobbyListPageState> callPanelKey,
   required UserStateNotifier userStateNotifier,
 }) async {
   FirebaseMessaging.onMessage.listen((remoteMessage) {
@@ -42,25 +43,10 @@ Future<bool> initializeNotifications({
     deepLinked = await _handleLaunchNotification(temporaryContext);
   }
 
-  joinCallFunction(call) {
-    final state = callPanelKey.currentState;
-    if (state != null) {
-      state.joinCall(call);
-      return true;
-    }
-    return false;
-  }
-
   if (Platform.isAndroid) {
-    android_voip.initAndroidVoipHandlers(
-      key: scaffoldKey,
-      joinCall: joinCallFunction,
-    );
+    android_voip.initAndroidVoipHandlers();
   } else if (Platform.isIOS) {
-    ios_voip.initIosVoipHandlers(
-      key: scaffoldKey,
-      joinCall: joinCallFunction,
-    );
+    ios_voip.initIosVoipHandlers();
   }
 
   return deepLinked;
@@ -68,13 +54,6 @@ Future<bool> initializeNotifications({
 
 Future<void> dismissAllNotifications() =>
     FlutterLocalNotificationsPlugin().cancelAll();
-
-bool checkAndClearCallHandledFlag() {
-  if (Platform.isIOS) {
-    return ios_voip.checkAndClearCallHandledFlag();
-  }
-  return false;
-}
 
 void reportCallStarted(String rid) {
   if (Platform.isAndroid) {
@@ -103,7 +82,17 @@ Future<bool> _handleLaunchNotification(BuildContext context) async {
     Sentry.captureException(e, stackTrace: s);
   }
 
-  if (backgroundCallNotification != null) {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (backgroundCallNotification != null && uid != null) {
+    if (Platform.isAndroid) {
+      final activeCall = android_voip.createActiveCall(
+        uid,
+        backgroundCallNotification.rid,
+        backgroundCallNotification.profile,
+      );
+      activeCall.phone.join();
+      GetIt.instance.get<CallState>().callInfo = activeCall;
+    }
     Navigator.of(context).popUntil((r) => r.isFirst);
     Navigator.of(context).pushReplacementNamed(
       'lobby-list',

@@ -14,9 +14,12 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/call_state.dart';
 import 'package:openup/api/signaling/phone.dart';
+import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_screen.dart';
+import 'package:openup/notifications/android_voip_handlers.dart'
+    as android_voip;
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/report_screen.dart';
 import 'package:openup/util/us_locations.dart';
@@ -703,7 +706,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
     _showPanel(
       dragIndicatorColor: Colors.white,
       builder: (context) {
-        return _RingingBox(
+        return _InitiateCall(
           participant: participant,
           onCallEnded: (reason) => _onCallEnded(participant.uid, reason),
         );
@@ -1918,23 +1921,24 @@ class _CheckboxPainter extends CustomPainter {
   bool shouldRebuildSemantics(_CheckboxPainter oldDelegate) => false;
 }
 
-class _RingingBox extends ConsumerStatefulWidget {
+class _InitiateCall extends ConsumerStatefulWidget {
   final TopicParticipant participant;
   final void Function(EndCallReason reason) onCallEnded;
 
-  const _RingingBox({
+  const _InitiateCall({
     Key? key,
     required this.participant,
     required this.onCallEnded,
   }) : super(key: key);
 
   @override
-  _RingingBoxState createState() => _RingingBoxState();
+  _InitiateCallState createState() => _InitiateCallState();
 }
 
-class _RingingBoxState extends ConsumerState<_RingingBox> {
+class _InitiateCallState extends ConsumerState<_InitiateCall> {
   ActiveCall? _activeCall;
   bool _callEngaged = false;
+  StreamSubscription? _stateSubscription;
 
   @override
   void initState() {
@@ -1947,17 +1951,14 @@ class _RingingBoxState extends ConsumerState<_RingingBox> {
     );
     resultFuture.then((result) {
       if (!mounted) {
+        // TODO: Hang up call in this case
         return;
       }
       result.fold(
         (l) {
           if (l is ApiClientError && l.error is ClientErrorConflict) {
             setState(() => _callEngaged = true);
-            Future.delayed(const Duration(seconds: 4)).whenComplete(() {
-              if (mounted) {
-                Navigator.of(context).pop();
-              }
-            });
+            _popSoon();
             return;
           }
           var message = errorToMessage(l);
@@ -1983,7 +1984,15 @@ class _RingingBoxState extends ConsumerState<_RingingBox> {
           final uid = ref.read(userProvider).uid;
           ActiveCall? activeCall;
           if (Platform.isAndroid) {
-            throw UnimplementedError();
+            activeCall = android_voip.createActiveCall(
+              uid,
+              rid,
+              SimpleProfile(
+                uid: widget.participant.uid,
+                name: widget.participant.name,
+                photo: widget.participant.photo,
+              ),
+            );
           } else if (Platform.isIOS) {
             activeCall = ios_voip.createActiveCall(
               uid,
@@ -1995,65 +2004,135 @@ class _RingingBoxState extends ConsumerState<_RingingBox> {
               ),
             );
           }
-          if (activeCall != null) {
-            setState(() => _activeCall = activeCall);
-          }
+          activeCall?.phone.join();
+          setState(() => _activeCall = activeCall);
+          _stateSubscription =
+              _activeCall?.phone.connectionStateStream.listen((state) {
+            if (state == PhoneConnectionState.declined) {
+              _popSoon();
+            }
+          });
         },
       );
     });
   }
 
   @override
+  void dispose() {
+    _stateSubscription?.cancel();
+    _activeCall?.signalingChannel.send(const HangUp());
+    super.dispose();
+  }
+
+  void _popSoon() {
+    Future.delayed(const Duration(seconds: 2)).whenComplete(() {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final activeCall = _activeCall;
-    if (activeCall != null) {
-      return CallPanel(
-        activeCall: activeCall,
-        onCallEnded: widget.onCallEnded,
-        rekindles: const [],
+
+    if (activeCall == null) {
+      return _RingingUi(
+        name: widget.participant.name,
+        animate: false,
+        onClose: Navigator.of(context).pop,
       );
-    }
-    if (_callEngaged) {
-      return Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromRGBO(0x23, 0xE5, 0x36, 1.0),
-              Color.fromRGBO(0x0F, 0xA7, 0x1E, 1.0),
-            ],
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Text(
-              '${widget.participant.name} is already in a call',
-              style: Theming.of(context).text.body.copyWith(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700),
-            ),
-            Button(
-              onPressed: Navigator.of(context).pop,
-              child: Text(
-                'OK',
-                style: Theming.of(context).text.body.copyWith(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700),
+    } else {
+      return StreamBuilder<PhoneConnectionState>(
+        initialData: PhoneConnectionState.none,
+        stream: activeCall.phone.connectionStateStream,
+        builder: (context, snapshot) {
+          final state = snapshot.requireData;
+          if (state == PhoneConnectionState.none ||
+              state == PhoneConnectionState.waiting) {
+            return _RingingUi(
+              name: widget.participant.name,
+              onClose: Navigator.of(context).pop,
+            );
+          } else if (state == PhoneConnectionState.declined) {
+            return DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color.fromRGBO(0xE4, 0x23, 0x23, 1.0),
+                    Color.fromRGBO(0x7D, 0x00, 0x00, 1.0),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Lottie.asset(
+                      'assets/images/call.json',
+                      animate: false,
+                      fit: BoxFit.contain,
+                      width: 90,
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      'Declined',
+                      style: Theming.of(context).text.body.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else if (_callEngaged) {
+            return Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color.fromRGBO(0x23, 0xE5, 0x36, 1.0),
+                    Color.fromRGBO(0x0F, 0xA7, 0x1E, 1.0),
+                  ],
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text(
+                    '${widget.participant.name} is already in a call',
+                    style: Theming.of(context).text.body.copyWith(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700),
+                  ),
+                  Button(
+                    onPressed: Navigator.of(context).pop,
+                    child: Text(
+                      'OK',
+                      style: Theming.of(context).text.body.copyWith(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            return CallPanel(
+              activeCall: activeCall,
+              onCallEnded: widget.onCallEnded,
+              rekindles: const [],
+            );
+          }
+        },
       );
     }
-    return _RingingUi(
-      name: widget.participant.name,
-      animate: false,
-      onClose: Navigator.of(context).pop,
-    );
   }
 }
 
@@ -2139,8 +2218,7 @@ class _RingingUi extends StatelessWidget {
 }
 
 class MiniVoiceCallScreenContent extends ConsumerStatefulWidget {
-  final List<UserConnection> users;
-  final bool isInitiator;
+  final ActiveCall activeCall;
   final bool hasSentTimeRequest;
   final DateTime? endTime;
   final bool muted;
@@ -2155,8 +2233,7 @@ class MiniVoiceCallScreenContent extends ConsumerStatefulWidget {
 
   const MiniVoiceCallScreenContent({
     Key? key,
-    required this.users,
-    required this.isInitiator,
+    required this.activeCall,
     required this.hasSentTimeRequest,
     required this.endTime,
     required this.muted,
@@ -2178,55 +2255,42 @@ class MiniVoiceCallScreenContent extends ConsumerStatefulWidget {
 class _MiniVoiceCallScreenContentState
     extends ConsumerState<MiniVoiceCallScreenContent> {
   bool _showReportUi = false;
-
+  StreamSubscription? _connectionStateStream;
   DateTime _endTime = DateTime.now().add(const Duration(minutes: 5));
-  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _updateConnectionState(widget.users.first.connectionState);
+    _connectionStateStream =
+        widget.activeCall.phone.connectionStateStream.listen((state) {
+      if (state == PhoneConnectionState.missing ||
+          state == PhoneConnectionState.complete) {
+        _popSoon();
+      }
+
+      if (state == PhoneConnectionState.connected) {
+        _endTime = DateTime.now().add(const Duration(minutes: 5));
+      }
+    });
   }
 
-  @override
-  void didUpdateWidget(covariant MiniVoiceCallScreenContent oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.users.first.connectionState !=
-        oldWidget.users.first.connectionState) {
-      _updateConnectionState(widget.users.first.connectionState);
-    }
+  void _popSoon() {
+    Future.delayed(const Duration(seconds: 2)).whenComplete(() {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _connectionStateStream?.cancel();
     super.dispose();
-  }
-
-  void _updateConnectionState(PhoneConnectionState state) {
-    if (state == PhoneConnectionState.declined ||
-        state == PhoneConnectionState.complete ||
-        state == PhoneConnectionState.missing) {
-      _timer?.cancel();
-      _timer = Timer(
-        const Duration(seconds: 2),
-        () {
-          if (mounted) {
-            Navigator.of(context).pop();
-          }
-        },
-      );
-    }
-
-    if (state == PhoneConnectionState.connected) {
-      _endTime = DateTime.now().add(const Duration(minutes: 5));
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final firstUser = widget.users.first;
-    final profile = firstUser.profile;
+    final profile = widget.activeCall.profile;
     final myProfile = ref.watch(userProvider).profile;
 
     if (_showReportUi) {
@@ -2237,76 +2301,79 @@ class _MiniVoiceCallScreenContentState
       );
     }
 
-    final state = firstUser.connectionState;
-    if (widget.isInitiator &&
-        (state == PhoneConnectionState.none ||
-            state == PhoneConnectionState.waiting)) {
-      return _RingingUi(
-        name: firstUser.profile.name,
-        onClose: Navigator.of(context).pop,
-      );
-    }
+    return StreamBuilder<PhoneConnectionState>(
+      initialData: PhoneConnectionState.none,
+      stream: widget.activeCall.phone.connectionStateStream,
+      builder: (context, snapshot) {
+        final state = snapshot.requireData;
+        if (state == PhoneConnectionState.missing) {
+          return Center(
+            child: Text(
+              'The call has already ended',
+              style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700),
+            ),
+          );
+        } else if (state == PhoneConnectionState.complete) {
+          return Center(
+            child: Text(
+              'Call complete',
+              style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700),
+            ),
+          );
+        }
+        return _InCallBox(
+          profile: profile,
+          myPhoto: myProfile!.photo,
+          state: state,
+          mute: widget.muted,
+          speakerphone: widget.speakerphone,
+          endTime: _endTime,
+          onHangUp: widget.onHangUp,
+          onReport: () => setState(() => _showReportUi = true),
+          onConnect: widget.onConnect,
+          onMuteChanged: widget.onMuteChanged,
+          onSpeakerphoneChanged: widget.onSpeakerphoneChanged,
+        );
+      },
+    );
+  }
+}
 
-    if (state == PhoneConnectionState.declined) {
-      return DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromRGBO(0xE4, 0x23, 0x23, 1.0),
-              Color.fromRGBO(0x7D, 0x00, 0x00, 1.0),
-            ],
-          ),
-        ),
-        child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Lottie.asset(
-                'assets/images/call.json',
-                animate: false,
-                fit: BoxFit.contain,
-                width: 90,
-              ),
-              const SizedBox(width: 16),
-              Text(
-                'Declined',
-                style: Theming.of(context).text.body.copyWith(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+class _InCallBox extends StatelessWidget {
+  final SimpleProfile profile;
+  final String myPhoto;
+  final PhoneConnectionState state;
+  final bool mute;
+  final bool speakerphone;
+  final DateTime? endTime;
+  final VoidCallback onHangUp;
+  final VoidCallback onReport;
+  final ValueChanged<String> onConnect;
+  final ValueChanged<bool> onMuteChanged;
+  final ValueChanged<bool> onSpeakerphoneChanged;
+  const _InCallBox({
+    Key? key,
+    required this.profile,
+    required this.myPhoto,
+    required this.state,
+    required this.mute,
+    required this.speakerphone,
+    required this.endTime,
+    required this.onHangUp,
+    required this.onReport,
+    required this.onConnect,
+    required this.onMuteChanged,
+    required this.onSpeakerphoneChanged,
+  }) : super(key: key);
 
-    if (state == PhoneConnectionState.missing) {
-      return Center(
-        child: Text(
-          'The call has already ended',
-          style: Theming.of(context).text.body.copyWith(
-              color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
-              fontSize: 20,
-              fontWeight: FontWeight.w700),
-        ),
-      );
-    }
-
-    if (state == PhoneConnectionState.complete) {
-      return Center(
-        child: Text(
-          'Call complete',
-          style: Theming.of(context).text.body.copyWith(
-              color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
-              fontSize: 20,
-              fontWeight: FontWeight.w700),
-        ),
-      );
-    }
-
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         Padding(
@@ -2316,7 +2383,7 @@ class _MiniVoiceCallScreenContentState
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Button(
-                onPressed: widget.onHangUp,
+                onPressed: onHangUp,
                 child: Text(
                   'Leave',
                   style: Theming.of(context).text.body.copyWith(
@@ -2360,7 +2427,7 @@ class _MiniVoiceCallScreenContentState
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(shape: BoxShape.circle),
               child: Image.network(
-                myProfile!.photo,
+                myPhoto,
                 width: 69,
                 height: 69,
                 fit: BoxFit.cover,
@@ -2377,11 +2444,12 @@ class _MiniVoiceCallScreenContentState
                   color: Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0),
                 ),
                 const SizedBox(height: 6),
-                if (state == PhoneConnectionState.connected ||
-                    state == PhoneConnectionState.complete)
+                if (endTime != null &&
+                    (state == PhoneConnectionState.connected ||
+                        state == PhoneConnectionState.complete))
                   _CountdownTimer(
-                    endTime: _endTime,
-                    onTimeUp: widget.onHangUp,
+                    endTime: endTime!,
+                    onTimeUp: onHangUp,
                   ),
               ],
             ),
@@ -2409,7 +2477,7 @@ class _MiniVoiceCallScreenContentState
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Button(
-              onPressed: () => widget.onConnect(profile.uid),
+              onPressed: () => onConnect(profile.uid),
               child: const Padding(
                 padding: EdgeInsets.all(12.0),
                 child: Icon(
@@ -2420,9 +2488,7 @@ class _MiniVoiceCallScreenContentState
             ),
             const SizedBox(width: 8),
             Button(
-              onPressed: () {
-                setState(() => _showReportUi = true);
-              },
+              onPressed: onReport,
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Text(
@@ -2436,13 +2502,12 @@ class _MiniVoiceCallScreenContentState
             ),
             const SizedBox(width: 8),
             Button(
-              onPressed: () =>
-                  widget.onSpeakerphoneChanged(!widget.speakerphone),
+              onPressed: () => onSpeakerphoneChanged(!speakerphone),
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Icon(
                   Icons.volume_up,
-                  color: widget.speakerphone
+                  color: speakerphone
                       ? const Color.fromRGBO(0x19, 0xC6, 0x2A, 1.0)
                       : const Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
                 ),
@@ -2450,11 +2515,11 @@ class _MiniVoiceCallScreenContentState
             ),
             const SizedBox(width: 8),
             Button(
-              onPressed: () => widget.onMuteChanged(!widget.muted),
+              onPressed: () => onMuteChanged(!mute),
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Icon(
-                  widget.muted ? Icons.mic_off : Icons.mic,
+                  mute ? Icons.mic_off : Icons.mic,
                   color: const Color.fromRGBO(0xA8, 0xA8, 0xA8, 1.0),
                 ),
               ),

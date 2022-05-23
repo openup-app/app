@@ -50,7 +50,8 @@ dependencies:
   tuple: ^2.0.0
   flutter_voip_push_notification:
     git: git@github.com:openup-app/flutter_voip_push_notification.git
-  flutter_callkit_voximplant: ^2.0.2+2
+  flutter_callkit_voximplant:
+    git: git@github.com:openup-app/flutter_callkit.git
 
 dev_dependencies:
   flutter_test:

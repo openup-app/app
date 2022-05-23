@@ -14,6 +14,7 @@ import 'package:openup/account_settings_phone_verification_screen.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/call_state.dart';
 import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/online_users/online_users_api.dart';
 import 'package:openup/api/user_state.dart';
@@ -60,7 +61,6 @@ const socketPort = 8081;
 const urlBase = 'http://$host:$webPort';
 
 final _scaffoldKey = GlobalKey();
-final _callPanelKey = GlobalKey<LobbyListPageState>();
 
 void main() async {
   void appRunner() {
@@ -107,6 +107,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       port: webPort,
     );
     GetIt.instance.registerSingleton<Api>(api);
+    GetIt.instance.registerSingleton<CallState>(CallState());
 
     Firebase.initializeApp().whenComplete(() {
       _idTokenChangesSubscription =
@@ -179,7 +180,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         child: InitialLoadingScreen(
                           key: _scaffoldKey,
                           scaffoldKey: _scaffoldKey,
-                          callPanelKey: _callPanelKey,
                           needsOnboarding: args?.needsOnboarding ?? false,
                         ),
                       );
@@ -282,7 +282,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       return CurrentRouteSystemUiStyling.dark(
                         key: _scaffoldKey,
                         child: LobbyListPage(
-                          key: _callPanelKey,
                           startWithCall: args,
                         ),
                       );

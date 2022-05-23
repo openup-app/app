@@ -25,6 +25,7 @@ class Phone {
 
   final PhoneController? controller;
   final SignalingChannel signalingChannel;
+  final String uid;
   final String partnerUid;
   final bool useVideo;
   final void Function(
@@ -65,6 +66,7 @@ class Phone {
   Phone({
     this.controller,
     required this.signalingChannel,
+    required this.uid,
     required this.partnerUid,
     required this.useVideo,
     required this.onMediaRenderers,
@@ -119,7 +121,7 @@ class Phone {
     }
   }
 
-  Future<void> join({required bool initiator}) async {
+  Future<void> join() async {
     _usedOnce = !_usedOnce ? true : throw 'Phone has already been used';
     _connectionStateController.add(PhoneConnectionState.waiting);
 
@@ -139,12 +141,14 @@ class Phone {
 
     await _addLocalMedia(peerConnection, mediaStream);
     _emitIceCandidates(peerConnection);
-    if (!initiator) {
+    final shouldBeFirstToCommunicate =
+        _shouldBeFirstToCommunicate(uid, partnerUid);
+    if (!shouldBeFirstToCommunicate) {
       await _receivedAnIceCandidate.future;
     }
 
     _listenForRemoteTracks(peerConnection);
-    final sessionDescription = initiator
+    final sessionDescription = shouldBeFirstToCommunicate
         ? await _setLocalDescriptionOffer(peerConnection)
         : await _setLocalDescriptionAnswer(peerConnection);
     _sendSessionDescription(signalingChannel, sessionDescription);
@@ -352,6 +356,9 @@ class Phone {
       return null;
     }
   }
+
+  bool _shouldBeFirstToCommunicate(String uid, String theirUid) =>
+      uid.compareTo(theirUid) < 0;
 }
 
 enum PhoneConnectionState {

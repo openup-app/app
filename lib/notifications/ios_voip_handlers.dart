@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_callkit_voximplant/flutter_callkit_voximplant.dart';
 import 'package:flutter_voip_push_notification/flutter_voip_push_notification.dart';
 import 'package:get_it/get_it.dart';
@@ -11,7 +10,6 @@ import 'package:openup/api/call_state.dart';
 import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/lobby_list_page.dart';
 import 'package:openup/main.dart';
 import 'package:openup/notifications/notification_comms.dart';
 import 'package:path/path.dart' as path;
@@ -32,11 +30,7 @@ bool checkAndClearCallHandledFlag() {
   return callHandled;
 }
 
-void initIosVoipHandlers({
-  required GlobalKey key,
-  required bool Function(StartWithCall call) joinCall,
-}) async {
-  GetIt.instance.registerSingleton<CallState>(CallState());
+void initIosVoipHandlers() async {
   _plugin = FCXPlugin();
   _provider = FCXProvider();
   _callController = FCXCallController();
@@ -64,7 +58,7 @@ void initIosVoipHandlers({
     if (myUid != null && profile != null) {
       final activeCall = createActiveCall(myUid, rid, profile);
       phone = activeCall.phone;
-      phone?.join(initiator: _isInitiator(myUid, profile.uid));
+      phone?.join();
       GetIt.instance.get<CallState>().callInfo = activeCall;
       action.fulfill();
     } else {
@@ -81,6 +75,7 @@ void initIosVoipHandlers({
 
   _provider?.performSetMutedCallAction = (action) async {
     phone?.mute = action.muted;
+    action.fulfill();
   };
 }
 
@@ -100,6 +95,7 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
   phone = Phone(
     controller: controller,
     signalingChannel: signalingChannel,
+    uid: myUid,
     partnerUid: profile.uid,
     useVideo: false,
     onMediaRenderers: (localRenderer, remoteRenderer) {
@@ -193,6 +189,3 @@ SimpleProfile? _parseProfileIos(String value) {
   }
   return null;
 }
-
-bool _isInitiator(String myUid, String theirUid) =>
-    myUid.compareTo(theirUid) < 0;
