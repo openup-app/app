@@ -11,9 +11,11 @@ import 'package:openup/widgets/image_builder.dart';
 
 class PhotoGrid extends ConsumerWidget {
   final bool horizontal;
+  final Color? itemColor;
   const PhotoGrid({
     Key? key,
     this.horizontal = false,
+    this.itemColor,
   }) : super(key: key);
 
   @override
@@ -57,10 +59,12 @@ class PhotoGrid extends ConsumerWidget {
                                   vertical: 12,
                                 ),
                                 clipBehavior: Clip.hardEdge,
-                                decoration: const BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(36)),
-                                  color: Color.fromRGBO(0xC4, 0xC4, 0xC4, 0.5),
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(21)),
+                                  color: itemColor ??
+                                      const Color.fromRGBO(
+                                          0xC4, 0xC4, 0xC4, 0.5),
                                 ),
                                 child: Stack(
                                   alignment: Alignment.center,
@@ -82,6 +86,11 @@ class PhotoGrid extends ConsumerWidget {
                                           opacity: const AlwaysStoppedAnimation(
                                               0.75),
                                         ),
+                                      ),
+                                    if (index >= gallery.length)
+                                      const Icon(
+                                        Icons.add,
+                                        size: 48,
                                       ),
                                   ],
                                 ),

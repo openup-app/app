@@ -203,7 +203,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     builder: (_) {
-                      return const CurrentRouteSystemUiStyling.dark(
+                      return const CurrentRouteSystemUiStyling.light(
                         child: SignUpScreen(),
                       );
                     },
@@ -233,7 +233,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     builder: (_) {
-                      return const CurrentRouteSystemUiStyling.dark(
+                      return const CurrentRouteSystemUiStyling.light(
                         child: SignUpInfoScreen(),
                       );
                     },
@@ -251,7 +251,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   return _buildPageRoute(
                     settings: settings,
                     builder: (_) {
-                      return const CurrentRouteSystemUiStyling.dark(
+                      return const CurrentRouteSystemUiStyling.light(
                         child: SignUpPhotosScreen(),
                       );
                     },

@@ -44,13 +44,13 @@ class _PhoneVerificationScreenState
         return Future.value(false);
       },
       child: DecoratedBox(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theming.of(context).friendBlue1,
-              Theming.of(context).friendBlue2,
+              Color.fromRGBO(0x00, 0x51, 0x6E, 1.0),
+              Color.fromRGBO(0x00, 0x00, 0x00, 1.0),
             ],
           ),
         ),
@@ -67,15 +67,10 @@ class _PhoneVerificationScreenState
               Text(
                 'Verification code successfully\nsent to your phone!',
                 textAlign: TextAlign.center,
-                style: Theming.of(context).text.subheading.copyWith(
-                  shadows: [
-                    Shadow(
-                      color: Theming.of(context).shadow,
-                      blurRadius: 6,
-                      offset: const Offset(0.0, 3.0),
+                style: Theming.of(context).text.body.copyWith(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w300,
                     ),
-                  ],
-                ),
               ),
               const SizedBox(height: 22),
               SizedBox(
@@ -119,6 +114,7 @@ class _PhoneVerificationScreenState
   }
 
   void _submit() async {
+    FocusScope.of(context).unfocus();
     final smsCode = _smsCodeController.text;
     final credential = PhoneAuthProvider.credential(
       verificationId: widget.credentialVerification.verificationId,

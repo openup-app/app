@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/keyboard_screen.dart';
-import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/theming.dart';
 
 class SignUpInfoScreen extends ConsumerStatefulWidget {
@@ -17,6 +16,7 @@ class SignUpInfoScreen extends ConsumerStatefulWidget {
 class _SignUpInfoScreenState extends ConsumerState<SignUpInfoScreen> {
   final _nameController = TextEditingController();
   bool _uploading = false;
+  CrossFadeState _crossFadeState = CrossFadeState.showFirst;
 
   @override
   void dispose() {
@@ -28,71 +28,87 @@ class _SignUpInfoScreenState extends ConsumerState<SignUpInfoScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () => Future.value(false),
-      child: KeyboardScreen(
-        child: Stack(
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromRGBO(0x02, 0x2D, 0x45, 1.0),
+              Color.fromRGBO(0x00, 0x02, 0x03, 1.0),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: AnimatedCrossFade(
+          duration: const Duration(seconds: 1),
+          crossFadeState: _crossFadeState,
           alignment: Alignment.center,
-          children: [
-            Padding(
+          firstChild: GestureDetector(
+            onTap: () =>
+                setState(() => _crossFadeState = CrossFadeState.showSecond),
+            child: SizedBox.expand(
+              child: Center(
+                child: Text(
+                  'Welcome to openup\na new place to make\nnew friends',
+                  style: Theming.of(context)
+                      .text
+                      .body
+                      .copyWith(fontWeight: FontWeight.w300, fontSize: 32),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+          secondChild: KeyboardScreen(
+            child: Padding(
               padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
+              child: Stack(
                 children: [
-                  Text(
-                    'Who are you?',
-                    style: Theming.of(context).text.body.copyWith(
-                          color: const Color.fromRGBO(0x62, 0xCD, 0xE3, 1.0),
-                          fontWeight: FontWeight.w400,
-                          fontSize: 48,
-                        ),
-                  ),
-                  const SizedBox(height: 28),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 350),
-                    child: Text(
-                      'Openup is about building new connections in a new places. Please respond to the following information and start talking to new people in your area.',
-                      textAlign: TextAlign.center,
-                      style: Theming.of(context).text.body.copyWith(
-                            color: const Color.fromRGBO(0x99, 0x99, 0x99, 1.0),
-                            fontWeight: FontWeight.w400,
-                            fontSize: 18,
-                          ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  InputArea(
-                    color: const Color.fromRGBO(0xED, 0xED, 0xED, 1.0),
-                    child: TextFormField(
-                      textAlign: TextAlign.center,
-                      controller: _nameController,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration.collapsed(
-                        hintText: 'Username',
-                        hintStyle: Theming.of(context).text.body.copyWith(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color:
-                                  const Color.fromRGBO(0x10, 0x10, 0x10, 1.0),
-                            ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'What would you like\nyour name to be here?',
+                        style: Theming.of(context).text.body.copyWith(
+                            fontWeight: FontWeight.w300, fontSize: 32),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
+                      const SizedBox(height: 28),
+                      InputArea(
+                        color: const Color.fromRGBO(0xED, 0xED, 0xED, 1.0),
+                        child: TextFormField(
+                          textAlign: TextAlign.center,
+                          controller: _nameController,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: InputDecoration.collapsed(
+                            hintText: 'Username',
+                            hintStyle: Theming.of(context).text.body.copyWith(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color.fromRGBO(
+                                      0x10, 0x10, 0x10, 1.0),
+                                ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  SignificantButton.blue(
-                    onPressed: _submit,
-                    child: _uploading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Continue'),
+                  Positioned(
+                    right: 24,
+                    bottom: 24,
+                    child: Button(
+                      onPressed: _submit,
+                      child: _uploading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Icon(Icons.chevron_right, size: 48),
+                    ),
                   ),
                 ],
               ),
             ),
-            const Align(
-              alignment: Alignment.bottomCenter,
-              child: MaleFemaleConnectionImageApart(),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -101,7 +117,7 @@ class _SignUpInfoScreenState extends ConsumerState<SignUpInfoScreen> {
   void _submit() async {
     final newName = _nameController.text;
     if (newName.isEmpty) {
-      Navigator.of(context).pushNamed('sign-up-attributes');
+      Navigator.of(context).pushNamed('sign-up-photos');
       return;
     }
 
@@ -119,7 +135,7 @@ class _SignUpInfoScreenState extends ConsumerState<SignUpInfoScreen> {
 
     result.fold(
       (l) => displayError(context, l),
-      (r) => Navigator.of(context).pushNamed('sign-up-attributes'),
+      (r) => Navigator.of(context).pushNamed('sign-up-photos'),
     );
 
     setState(() => _uploading = false);

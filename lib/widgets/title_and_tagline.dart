@@ -13,31 +13,22 @@ class TitleAndTagline extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Image.asset(
-              'assets/images/title.png',
-              height: 80,
-              fit: BoxFit.fitHeight,
+            Text(
+              'openup',
+              style: Theming.of(context)
+                  .text
+                  .body
+                  .copyWith(fontSize: 64, fontWeight: FontWeight.w300),
             ),
             const SizedBox(
               height: 6,
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(Radius.circular(30)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theming.of(context).shadow.withOpacity(0.2),
-                    offset: const Offset(0.0, 4.0),
-                    blurRadius: 4.0,
-                  ),
-                ],
-                color: Theming.of(context).datingRed2,
-              ),
-              child: Text(
-                'a new way to meet people',
-                style: Theming.of(context).text.body.copyWith(fontSize: 16),
-              ),
+            Text(
+              'a new way to meet people',
+              style: Theming.of(context)
+                  .text
+                  .body
+                  .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
             ),
           ],
         ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/theming.dart';
 
 /// Prominent button with a horizontal gradient styling.
 class SignificantButton extends StatelessWidget {
@@ -28,8 +27,8 @@ class SignificantButton extends StatelessWidget {
         height = 69.0,
         gradient = const LinearGradient(
           colors: [
-            Color.fromRGBO(0xFF, 0xA1, 0xA1, 1.0),
-            Color.fromRGBO(0xFF, 0xCC, 0xCC, 1.0),
+            Color.fromRGBO(0xFF, 0x83, 0x83, 1.0),
+            Color.fromRGBO(0x8A, 0x0, 0x00, 1.0),
           ],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,

@@ -68,11 +68,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theming.of(context).friendBlue1,
-            Theming.of(context).friendBlue2,
+            Color.fromRGBO(0x00, 0x51, 0x6E, 1.0),
+            Color.fromRGBO(0x00, 0x00, 0x00, 1.0),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -95,16 +95,17 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                 'You’re in the right spot whether you are creating an account or signing back in!',
                 textAlign: TextAlign.center,
                 style: Theming.of(context).text.body.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                    shadows: [
-                      const Shadow(
-                        blurRadius: 3,
-                        offset: Offset(0.0, 1.0),
-                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-                      ),
-                    ],
-                    fontSize: 18),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 18,
+                  color: Colors.white,
+                  shadows: [
+                    const Shadow(
+                      blurRadius: 3,
+                      offset: Offset(0.0, 1.0),
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 25),
               Stack(
@@ -198,6 +199,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
   }
 
   void _submit() async {
+    FocusScope.of(context).unfocus();
     final phoneText = _phoneController.text;
 
     // American numbers are default audience

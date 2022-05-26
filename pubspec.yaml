@@ -86,6 +86,8 @@ flutter:
   fonts:
     - family: Myriad
       fonts:
+        - asset: assets/fonts/myriad-pro-light.otf
+          weight: 300
         - asset: assets/fonts/myriad-pro-regular.otf
           weight: 400
         - asset: assets/fonts/myriad-pro-semibold.otf
