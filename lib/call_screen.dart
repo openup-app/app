@@ -347,6 +347,7 @@ class _InitiateCallState extends ConsumerState<InitiateCall> {
                 ),
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Text(
@@ -366,6 +367,7 @@ class _InitiateCallState extends ConsumerState<InitiateCall> {
                           fontWeight: FontWeight.w700),
                     ),
                   ),
+                  const SizedBox(height: 24),
                 ],
               ),
             );
@@ -408,7 +410,7 @@ class _RingingUi extends StatelessWidget {
         ),
       ),
       child: Stack(
-        fit: StackFit.expand,
+        fit: StackFit.loose,
         children: [
           Positioned(
             top: 12,
@@ -502,6 +504,7 @@ class _MiniVoiceCallScreenContentState
     extends ConsumerState<MiniVoiceCallScreenContent> {
   bool _showReportUi = false;
   StreamSubscription? _connectionStateStream;
+  DateTime _startTime = DateTime.now();
   DateTime _endTime = DateTime.now().add(const Duration(minutes: 5));
 
   @override
@@ -515,6 +518,7 @@ class _MiniVoiceCallScreenContentState
       }
 
       if (state == PhoneConnectionState.connected) {
+        _startTime = DateTime.now();
         _endTime = DateTime.now().add(const Duration(minutes: 5));
       }
     });
@@ -579,6 +583,7 @@ class _MiniVoiceCallScreenContentState
           state: state,
           mute: widget.muted,
           speakerphone: widget.speakerphone,
+          startTime: _startTime,
           endTime: _endTime,
           onHangUp: widget.onHangUp,
           onReport: () => setState(() => _showReportUi = true),
@@ -597,6 +602,7 @@ class _InCallBox extends StatelessWidget {
   final PhoneConnectionState state;
   final bool mute;
   final bool speakerphone;
+  final DateTime startTime;
   final DateTime? endTime;
   final VoidCallback onHangUp;
   final VoidCallback onReport;
@@ -610,6 +616,7 @@ class _InCallBox extends StatelessWidget {
     required this.state,
     required this.mute,
     required this.speakerphone,
+    required this.startTime,
     required this.endTime,
     required this.onHangUp,
     required this.onReport,
@@ -621,6 +628,7 @@ class _InCallBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 16, right: 24.0),
@@ -690,13 +698,7 @@ class _InCallBox extends StatelessWidget {
                   color: Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0),
                 ),
                 const SizedBox(height: 6),
-                if (endTime != null &&
-                    (state == PhoneConnectionState.connected ||
-                        state == PhoneConnectionState.complete))
-                  _CountdownTimer(
-                    endTime: endTime!,
-                    onTimeUp: onHangUp,
-                  ),
+                _CountUpTimer(start: startTime),
               ],
             ),
             const SizedBox(width: 33),
@@ -772,7 +774,56 @@ class _InCallBox extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 8),
       ],
+    );
+  }
+}
+
+class _CountUpTimer extends StatefulWidget {
+  final DateTime start;
+  const _CountUpTimer({
+    Key? key,
+    required this.start,
+  }) : super(key: key);
+
+  @override
+  State<_CountUpTimer> createState() => __CountUpTimerState();
+}
+
+class __CountUpTimerState extends State<_CountUpTimer> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _timer?.cancel();
+  }
+
+  String _formatDuration(Duration d) {
+    if (d.inHours > 1) {
+      return '${(d.inHours % 24).toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+    }
+    return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final time = DateTime.now().difference(widget.start);
+    return Text(
+      _formatDuration(time),
+      style: Theming.of(context).text.body.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w500,
+          color: const Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0)),
     );
   }
 }
@@ -875,6 +926,7 @@ class _ReportCallBox extends StatelessWidget {
         return Future.value(false);
       },
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Align(
             alignment: Alignment.centerLeft,
@@ -960,6 +1012,7 @@ class _ReportCallBox extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );
