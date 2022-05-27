@@ -97,7 +97,11 @@ class JustAudioAudioPlayer {
 
   Future<void> pause() => _player.pause();
 
-  Future<void> stop() => _player.stop();
+  Future<void> stop() async {
+    // Calling justAudio.AudioPlayer.stop() seems to unload the audio sometimes
+    await pause();
+    return seek(Duration.zero);
+  }
 
   Future<void> seek(Duration position) => _player.seek(position);
 }

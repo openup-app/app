@@ -24,6 +24,7 @@ import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/image_builder.dart';
+import 'package:openup/widgets/play_button.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
@@ -286,7 +287,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                                 return Future.value(false);
                               },
                               child: _SingleTopicList(
-                                topic: Topic.friends,
+                                topic: _selectedTopic!,
                                 participants: _topicStatuses.first.item2,
                                 pop: () =>
                                     setState(() => _selectedTopic = null),
@@ -314,14 +315,16 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                 ),
               ),
             ),
-            // if (_status != null)
-            const Positioned(
-              left: 25,
-              right: 25,
-              bottom: 106,
-              height: 66,
-              child: _StatusBanner(),
-            ),
+            if (_status != null)
+              Positioned(
+                left: 25,
+                right: 25,
+                bottom: 106,
+                height: 66,
+                child: _StatusBanner(
+                  status: _status!,
+                ),
+              ),
             Positioned(
               left: 0,
               right: 0,
@@ -554,7 +557,11 @@ class _PageHeader extends StatelessWidget {
 }
 
 class _StatusBanner extends StatelessWidget {
-  const _StatusBanner({Key? key}) : super(key: key);
+  final Status status;
+  const _StatusBanner({
+    Key? key,
+    required this.status,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -617,10 +624,7 @@ class _StatusBanner extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Button(
-                    onPressed: () {},
-                    child: const Icon(Icons.play_arrow, size: 40),
-                  ),
+                  PlayButton(url: status.audioUrl),
                   const SizedBox(width: 8),
                 ],
               );
@@ -1716,22 +1720,20 @@ class CallProfileScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Button(
-                  onPressed: () {},
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow,
-                      size: 64,
-                      color: Colors.black,
-                    ),
-                  ),
+                PlayButton(
+                  url: status.audioUrl,
+                  builder: (context, state) {
+                    return Container(
+                      width: 100,
+                      height: 100,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                      child: PlayStopArrow(state: state),
+                    );
+                  },
                 ),
                 Button(
                   onPressed: () {
@@ -1844,24 +1846,23 @@ class _ParticipantTile extends StatelessWidget {
             alignment: Alignment.bottomCenter,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
-              child: Button(
-                onPressed: () {},
-                child: const SizedBox(
-                  width: 70,
-                  height: 70,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.play_arrow,
-                        size: 56,
+              child: PlayButton(
+                url: participant.audioUrl,
+                builder: (context, state) {
+                  return SizedBox(
+                    width: 70,
+                    height: 70,
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                      ),
+                      child: Center(
+                        child: PlayStopArrow(state: state),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ),

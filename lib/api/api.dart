@@ -554,10 +554,10 @@ class Api {
         final time = DateTime.now();
         final list = List.from(jsonDecode(response.body));
         final parsed = List<TopicParticipant>.from(list.map((e) {
-          final remaining = e['remaining'] as int;
-          e['endTime'] =
-              time.add(Duration(milliseconds: remaining)).toIso8601String();
           try {
+            final remaining = e['remaining'] as int;
+            e['endTime'] =
+                time.add(Duration(milliseconds: remaining)).toIso8601String();
             return TopicParticipant.fromJson(e);
           } catch (e) {
             return null;
@@ -602,7 +602,7 @@ class Api {
     return _request(
       makeRequest: () {
         return http.put(
-          Uri.parse('$_urlBase/users/$uid/status/$topic'),
+          Uri.parse('$_urlBase/users/$uid/status/${topic.name}'),
           headers: {
             ..._headers,
             if (audio != null) ...{'Content-Type': 'application/octet-stream'}
