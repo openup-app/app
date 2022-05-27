@@ -109,9 +109,7 @@ class SoloDoubleScreen extends StatelessWidget {
         Positioned(
           top: MediaQuery.of(context).padding.top + 16,
           right: MediaQuery.of(context).padding.right + 16,
-          child: ProfileButton(
-            color: SoloDoubleScreenTheme.of(context).profileButtonColor,
-          ),
+          child: const ProfileButton(),
         ),
         Positioned(
           right: MediaQuery.of(context).padding.right + 16,

@@ -812,4 +812,4 @@ class Status with _$Status {
   factory Status.fromJson(Map<String, dynamic> json) => _$StatusFromJson(json);
 }
 
-enum Topic { moved, outing, vacation, business, school, friends }
+enum Topic { lonely, friends, moved, sleep }

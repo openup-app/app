@@ -279,10 +279,26 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     settings: settings,
                     builder: (_) {
                       final args = settings.arguments as StartWithCall?;
-                      return CurrentRouteSystemUiStyling.dark(
+                      return CurrentRouteSystemUiStyling.light(
                         key: _scaffoldKey,
                         child: LobbyListPage(
                           startWithCall: args,
+                        ),
+                      );
+                    },
+                  );
+                case 'call-profile':
+                  return _buildPageRoute<CallProfileAction>(
+                    settings: settings,
+                    transitionsBuilder: bottomToTopPageTransition,
+                    builder: (_) {
+                      final args =
+                          settings.arguments as CallProfileScreenArguments;
+                      return CurrentRouteSystemUiStyling.light(
+                        child: CallProfileScreen(
+                          profile: args.profile,
+                          status: args.status,
+                          title: args.title,
                         ),
                       );
                     },
@@ -1084,37 +1100,14 @@ class _ScaffoldWithAnimatedDrawerBackgroundBlurState
             child: child,
           );
         },
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Container(
-              width: 36,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.transparent,
-                    Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                  ],
-                ),
-              ),
+        child: const SizedBox(
+          width: 300,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Color.fromRGBO(0x17, 0x17, 0x17, 0.5),
             ),
-            const SizedBox(
-              width: 300,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.05),
-                  boxShadow: [
-                    BoxShadow(
-                      offset: Offset(5, 4),
-                      blurRadius: 10,
-                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
-                    ),
-                  ],
-                ),
-                child: ProfileDrawer(),
-              ),
-            ),
-          ],
+            child: ProfileDrawer(),
+          ),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -44,8 +45,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color.fromRGBO(0xFF, 0x8E, 0x8E, 1.0),
-              Color.fromRGBO(0x20, 0x84, 0xBD, 0.74),
+              Color.fromRGBO(0x01, 0x39, 0x59, 1.0),
+              Color.fromRGBO(0x00, 0x15, 0x20, 1.0),
             ],
           ),
         ),
@@ -126,6 +127,26 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                         ),
                         const SizedBox(height: 32),
                         Button(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) {
+                                return const _BlockedList();
+                              }),
+                            );
+                          },
+                          child: _InputArea(
+                            childNeedsOpacity: false,
+                            child: Center(
+                              child: Text(
+                                'Blocked users',
+                                style: Theming.of(context).text.body.copyWith(
+                                    fontSize: 24, fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        Button(
                           onPressed: () =>
                               Navigator.of(context).pushNamed('contact-us'),
                           child: _InputArea(
@@ -169,26 +190,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        Button(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) {
-                                return const _BlockedList();
-                              }),
-                            );
-                          },
-                          child: _InputArea(
-                            childNeedsOpacity: false,
-                            child: Center(
-                              child: Text(
-                                'Blocked users',
-                                style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 24, fontWeight: FontWeight.w500),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 30),
                         Button(
                           onPressed: _signOut,
                           child: _InputArea(
@@ -437,78 +438,137 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Blocked users'),
-        elevation: 0.0,
-        centerTitle: true,
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(0x01, 0x39, 0x59, 1.0),
+            Color.fromRGBO(0x00, 0x15, 0x20, 1.0),
+          ],
+        ),
       ),
-      body: StatefulBuilder(builder: (context, setState) {
-        if (_loading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-        if (_blockedUsers.isEmpty) {
-          return Center(
-            child: Text(
-              'You have no blocked users!',
-              style: Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontSize: 20, color: Colors.grey),
-            ),
-          );
-        }
-        return ListView.builder(
-          itemCount: _blockedUsers.length,
-          itemBuilder: (context, index) {
-            final user = _blockedUsers[index];
-            return ListTile(
-              leading: CircleAvatar(
-                backgroundImage: NetworkImage(user.photo),
-              ),
-              title: Text(user.name),
-              trailing: TextButton(
-                child: const Text('Unblock'),
-                onPressed: () async {
-                  final result = await showDialog(
-                    context: context,
-                    builder: (context) {
-                      return CupertinoTheme(
-                        data: const CupertinoThemeData(
-                            brightness: Brightness.dark),
-                        child: CupertinoAlertDialog(
-                          title: Text('Unblock ${user.name}?'),
-                          actions: [
-                            CupertinoDialogAction(
-                              onPressed: Navigator.of(context).pop,
-                              child: const Text('Cancel'),
-                            ),
-                            CupertinoDialogAction(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text('Unblock'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                  if (result == true) {
-                    final myUid = ref.read(userProvider).uid;
-                    final api = GetIt.instance.get<Api>();
-                    setState(() => _loading = true);
-                    await api.unblockUser(myUid, user.uid);
-                    if (mounted) {
-                      _getBlockedUsers();
-                    }
-                  }
-                },
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text(
+            'Blocking',
+            style: Theming.of(context)
+                .text
+                .body
+                .copyWith(fontSize: 30, fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0.0,
+          centerTitle: true,
+        ),
+        body: StatefulBuilder(builder: (context, setState) {
+          if (_loading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          if (_blockedUsers.isEmpty) {
+            return Center(
+              child: Text(
+                'You are blocking no users!',
+                style: Theming.of(context)
+                    .text
+                    .body
+                    .copyWith(fontSize: 20, color: Colors.white),
               ),
             );
-          },
-        );
-      }),
+          }
+          return ListView.builder(
+            itemCount: _blockedUsers.length,
+            itemBuilder: (context, index) {
+              final user = _blockedUsers[index];
+              return Container(
+                height: 57,
+                margin: const EdgeInsets.symmetric(horizontal: 27, vertical: 7),
+                padding: const EdgeInsets.only(left: 37, right: 29),
+                clipBehavior: Clip.hardEdge,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.65),
+                      Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.54),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(29),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      offset: Offset(0.0, 4.0),
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AutoSizeText(
+                        user.name,
+                        maxLines: 1,
+                        style: Theming.of(context).text.body.copyWith(
+                            fontSize: 24, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    TextButton(
+                      child: Text(
+                        'Unblock',
+                        style: Theming.of(context).text.body.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w500,
+                            color: const Color.fromRGBO(0xB6, 0x0B, 0x0B, 1.0)),
+                      ),
+                      onPressed: () async {
+                        final result = await showDialog(
+                          context: context,
+                          builder: (context) {
+                            return CupertinoTheme(
+                              data: const CupertinoThemeData(
+                                  brightness: Brightness.dark),
+                              child: CupertinoAlertDialog(
+                                title: Text('Unblock ${user.name}?'),
+                                actions: [
+                                  CupertinoDialogAction(
+                                    onPressed: Navigator.of(context).pop,
+                                    child: const Text('Cancel'),
+                                  ),
+                                  CupertinoDialogAction(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    child: const Text('Unblock'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                        if (result == true) {
+                          final myUid = ref.read(userProvider).uid;
+                          final api = GetIt.instance.get<Api>();
+                          setState(() => _loading = true);
+                          await api.unblockUser(myUid, user.uid);
+                          if (mounted) {
+                            _getBlockedUsers();
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        }),
+      ),
     );
   }
 }

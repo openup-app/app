@@ -54,7 +54,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     style: Theming.of(context).text.subheading),
               ),
             Positioned.fill(
-              child: _Gallery(
+              child: Gallery(
                 gallery: profile.gallery,
                 slideshow: !widget.editable,
               ),
@@ -202,20 +202,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-class _Gallery extends StatefulWidget {
+class Gallery extends StatefulWidget {
   final List<String> gallery;
   final bool slideshow;
-  const _Gallery({
+  const Gallery({
     Key? key,
     this.gallery = const [],
     required this.slideshow,
   }) : super(key: key);
 
   @override
-  State<_Gallery> createState() => __GalleryState();
+  State<Gallery> createState() => _GalleryState();
 }
 
-class __GalleryState extends State<_Gallery> {
+class _GalleryState extends State<Gallery> {
   PageController? _pageController;
   Timer? _slideshowTimer;
   bool resetPageOnce = false;
@@ -224,11 +224,6 @@ class __GalleryState extends State<_Gallery> {
   void initState() {
     super.initState();
     _resetPage();
-  }
-
-  @override
-  void didUpdateWidget(covariant _Gallery oldWidget) {
-    super.didUpdateWidget(oldWidget);
   }
 
   @override

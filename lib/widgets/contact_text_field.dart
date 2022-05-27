@@ -66,7 +66,7 @@ class _ContactTextFieldState extends State<ContactTextField> {
                 widget.hintText,
                 style: Theming.of(context).text.body.copyWith(
                       fontSize: 18,
-                      fontWeight: FontWeight.w300,
+                      fontWeight: FontWeight.w500,
                       color: const Color.fromRGBO(0xAD, 0xAD, 0xAD, 1.0),
                     ),
               ),

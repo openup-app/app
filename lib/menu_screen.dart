@@ -215,8 +215,7 @@ class _MenuScreenState extends State<MenuScreen> {
               Positioned(
                 top: MediaQuery.of(context).padding.top + 16,
                 right: MediaQuery.of(context).padding.right + 16,
-                child: ProfileButton(
-                  color: MenuScreenTheme.of(context).profileButtonColor,
+                child: const ProfileButton(
                 ),
               ),
               Positioned(

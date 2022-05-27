@@ -110,7 +110,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           top: MediaQuery.of(context).padding.top + 16,
           right: MediaQuery.of(context).padding.right + 16,
           child: const ProfileButton(
-            color: Color.fromARGB(0xFF, 0xFF, 0xAF, 0xAF),
           ),
         ),
       ],

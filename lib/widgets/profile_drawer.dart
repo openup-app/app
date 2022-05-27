@@ -53,7 +53,6 @@ class ProfileDrawer extends ConsumerWidget {
                             blurRadius: 20,
                           ),
                         ],
-                        color: Colors.white,
                       ),
                       child: Consumer(
                         builder: (context, ref, child) {
@@ -126,9 +125,9 @@ class ProfileDrawer extends ConsumerWidget {
                 ),
                 _MenuButton(
                   icon: const Center(
-                    child: Icon(Icons.interests, color: iconColor),
+                    child: Icon(Icons.call, color: iconColor),
                   ),
-                  title: 'My Interests',
+                  title: 'Call Log',
                   onPressed: () => _navigateToAttributesPage(context, ref),
                 ),
                 _MenuButton(

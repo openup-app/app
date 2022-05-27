@@ -79,11 +79,13 @@ class _ButtonState extends State<Button> with SingleTickerProviderStateMixin {
 
 class GradientButton extends StatelessWidget {
   final VoidCallback? onPressed;
+  final bool white;
   final Widget child;
 
   const GradientButton({
     Key? key,
     required this.onPressed,
+    this.white = false,
     required this.child,
   }) : super(key: key);
 
@@ -102,15 +104,21 @@ class GradientButton extends StatelessWidget {
               blurRadius: 4.0,
             ),
           ],
-          gradient: const LinearGradient(
-            colors: [
-              Color.fromRGBO(0xFF, 0x94, 0x94, 1.0),
-              Color.fromRGBO(0xFF, 0xBD, 0xBD, 1.0),
-            ],
-          ),
+          gradient: white
+              ? null
+              : const LinearGradient(
+                  colors: [
+                    Color.fromRGBO(0xFF, 0x94, 0x94, 1.0),
+                    Color.fromRGBO(0xFF, 0xBD, 0xBD, 1.0),
+                  ],
+                ),
+          color: white ? Colors.white : null,
         ),
         child: DefaultTextStyle(
-          style: Theming.of(context).text.body.copyWith(fontSize: 18),
+          style: Theming.of(context)
+              .text
+              .body
+              .copyWith(fontSize: 18, color: white ? Colors.black : null),
           child: child,
         ),
       ),
