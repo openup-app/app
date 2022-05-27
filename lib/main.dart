@@ -100,6 +100,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   @override
   void initState() {
     super.initState();
+    precacheImage(
+      const AssetImage('assets/images/loading_icon.png'),
+      context,
+    );
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
     final api = Api(
@@ -176,7 +180,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     builder: (_) {
                       final args =
                           settings.arguments as InitialLoadingScreenArguments?;
-                      return CurrentRouteSystemUiStyling.dark(
+                      return CurrentRouteSystemUiStyling.light(
                         child: InitialLoadingScreen(
                           key: _scaffoldKey,
                           scaffoldKey: _scaffoldKey,

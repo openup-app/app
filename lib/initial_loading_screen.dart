@@ -136,17 +136,23 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 32),
-          Text(
-            'Loading Openup...',
-            style: Theming.of(context).text.body.copyWith(color: Colors.black),
-          )
-        ],
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            Color.fromRGBO(0x01, 0x6E, 0x91, 1.0),
+            Colors.black,
+          ],
+        ),
+      ),
+      child: Center(
+        child: Image.asset(
+          'assets/images/loading_icon.png',
+          width: 100,
+          height: 100,
+        ),
       ),
     );
   }

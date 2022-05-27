@@ -83,6 +83,8 @@ flutter:
     - assets/images/double_dating.gif
     - assets/images/chevron_right.png
     - assets/images/close_circle.png
+    - assets/images/loading_icon.png
+
   fonts:
     - family: Myriad
       fonts:
