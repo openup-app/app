@@ -49,7 +49,7 @@ class TopicParticipant with _$TopicParticipant {
     required String photo,
     required List<String> interests,
     required String topic,
-    required String statusText,
+    required String audioUrl,
     required DateTime endTime,
   }) = _TopicParticipant;
 

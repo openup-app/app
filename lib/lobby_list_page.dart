@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
@@ -19,6 +20,7 @@ import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/profile_screen.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/util/page_transition.dart';
+import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/image_builder.dart';
@@ -655,8 +657,8 @@ class _StatusField extends StatelessWidget {
                   return _StatusBox(
                     state: '_state',
                     city: '_city',
-                    status: status?.text,
                     topic: status?.topic,
+                    audioUrl: status?.audioUrl,
                     resultCompleter: completer,
                   );
                 },
@@ -688,7 +690,7 @@ class _StatusField extends StatelessWidget {
           children: [
             Center(
               child: Text(
-                status?.text ?? 'Why are you here today?',
+                'Why are you here today?',
                 textAlign: status == null ? TextAlign.center : TextAlign.start,
                 overflow: TextOverflow.ellipsis,
                 style: Theming.of(context).text.body.copyWith(
@@ -768,27 +770,16 @@ Future<T?> _showPanel<T>({
       return Padding(
         padding:
             EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: SizedBox(
-          height: 274,
-          child: Stack(
-            children: [
-              Positioned.fill(
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final width = c.maxWidth;
+            return SizedBox(
+              width: width,
+              child: _PanelDragIndicator(
                 child: builder(context),
               ),
-              Align(
-                alignment: Alignment.topCenter,
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  margin: const EdgeInsets.only(top: 10),
-                  decoration: BoxDecoration(
-                    color: dragIndicatorColor,
-                    borderRadius: const BorderRadius.all(Radius.circular(2)),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       );
     },
@@ -796,19 +787,49 @@ Future<T?> _showPanel<T>({
   return result.closed;
 }
 
+class _PanelDragIndicator extends StatelessWidget {
+  final Widget child;
+  const _PanelDragIndicator({
+    Key? key,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.passthrough,
+      alignment: Alignment.center,
+      children: [
+        child,
+        const Positioned(
+          top: 10,
+          width: 34,
+          height: 4,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Color.fromRGBO(0x85, 0x7A, 0x7A, 1.0),
+              borderRadius: BorderRadius.all(Radius.circular(2)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _StatusBox extends ConsumerStatefulWidget {
   final String state;
   final String city;
-  final String? status;
   final Topic? topic;
+  final String? audioUrl;
   final Completer<_StatusResult?> resultCompleter;
 
   const _StatusBox({
     Key? key,
     required this.state,
     required this.city,
-    this.status,
     this.topic,
+    this.audioUrl,
     required this.resultCompleter,
   }) : super(key: key);
 
@@ -817,44 +838,42 @@ class _StatusBox extends ConsumerStatefulWidget {
 }
 
 class _StatusBoxState extends ConsumerState<_StatusBox> {
-  final _statusNode = FocusNode();
-  final _statusController = TextEditingController();
   bool _posting = false;
   bool _deleting = false;
 
   bool _page2 = false;
   late Topic _topic;
+  late final AudioBioController _audioBioController;
+  Uint8List? _audio;
 
   @override
   void initState() {
     super.initState();
-    final status = widget.status;
     _topic = widget.topic ?? Topic.moved;
-    if (status != null) {
-      _statusController.text = status;
-    }
-    _statusNode.requestFocus();
-
-    _statusController.addListener(() => setState(() {}));
+    _audioBioController = AudioBioController(onRecordingComplete: (data) {
+      setState(() => _audio = data);
+    });
   }
 
   @override
   void dispose() {
-    _statusNode.dispose();
-    _statusController.dispose();
     super.dispose();
+    _audioBioController.dispose();
   }
+
+  bool get _recorded => _audio != null || widget.audioUrl != null;
 
   @override
   Widget build(BuildContext context) {
     if (!_page2) {
       return Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 28),
           Padding(
             padding: const EdgeInsets.only(top: 10.0),
             child: Text(
-              'Create your status',
+              'Why are you here today?',
               style: Theming.of(context).text.body.copyWith(
                     color: Colors.black,
                     fontSize: 24,
@@ -865,76 +884,81 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
           Padding(
             padding:
                 const EdgeInsets.only(left: 27, right: 27, bottom: 26, top: 10),
-            child: RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Your status will be up for an',
-                    style: Theming.of(context).text.body.copyWith(
-                        color: const Color.fromRGBO(0x69, 0x69, 0x69, 1.0),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500),
-                  ),
-                  TextSpan(
-                    text: ' hour ',
-                    style: Theming.of(context).text.body.copyWith(
-                        color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500),
-                  ),
-                  TextSpan(
-                    text:
-                        'only, during that time anyone can call you. Without a status you will not recieve any calls.',
-                    style: Theming.of(context).text.body.copyWith(
-                        color: const Color.fromRGBO(0x69, 0x69, 0x69, 1.0),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ],
+            child: DefaultTextStyle(
+              style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0x69, 0x69, 0x69, 1.0),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+              child: Builder(
+                builder: (context) {
+                  return RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'To ',
+                          style: DefaultTextStyle.of(context).style,
+                        ),
+                        TextSpan(
+                          text: 'receive',
+                          style: DefaultTextStyle.of(context).style.copyWith(
+                              color: Colors.black, fontWeight: FontWeight.w700),
+                        ),
+                        TextSpan(
+                          text:
+                              ' calls, you must tell everyone why you are here today. Once you post your voice status, any one who sees it can call you. Limited to ',
+                          style: DefaultTextStyle.of(context).style,
+                        ),
+                        TextSpan(
+                          text: '10 seconds',
+                          style: DefaultTextStyle.of(context).style.copyWith(
+                              color: Colors.black, fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 44,
-                  margin: const EdgeInsets.only(left: 19),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+          AudioBioRecordButton(
+            controller: _audioBioController,
+            micBuilder: (context, recording, size) {
+              if (recording) {
+                return Container(
+                  width: size,
+                  height: size,
                   alignment: Alignment.center,
                   decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(23)),
-                    color: Color.fromRGBO(0xE6, 0xE6, 0xE6, 1.0),
+                    color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                    shape: BoxShape.circle,
                   ),
-                  child: TextField(
-                    controller: _statusController,
-                    focusNode: _statusNode,
-                    keyboardType: TextInputType.text,
-                    textCapitalization: TextCapitalization.sentences,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: _statusController.text.isEmpty || _deleting
-                        ? null
-                        : (_) => setState(() => _page2 = true),
-                    decoration: InputDecoration.collapsed(
-                      hintText: widget.status == null
-                          ? 'Why are you here today?'
-                          : null,
-                    ),
+                  child: const Icon(
+                    Icons.stop,
+                    size: 48,
+                    color: Colors.white,
                   ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 4.0, right: 11),
-                child: _deleting
+                );
+              } else {
+                return const Icon(
+                  Icons.settings_voice,
+                  size: 64,
+                  color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                );
+              }
+            },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                _deleting
                     ? const SizedBox(
                         width: 40,
                         height: 40,
                         child: CircularProgressIndicator(),
                       )
                     : Button(
-                        onPressed: (widget.status == null || _posting)
-                            ? null
-                            : _delete,
+                        onPressed: (!_recorded || _posting) ? null : _delete,
                         child: const Padding(
                           padding: EdgeInsets.all(8.0),
                           child: Icon(
@@ -943,26 +967,20 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                           ),
                         ),
                       ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 26),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: Button(
-                onPressed: _statusController.text.isEmpty || _deleting
-                    ? null
-                    : () => setState(() => _page2 = true),
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Icon(
-                    Icons.arrow_forward,
-                    color: Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                const Spacer(),
+                Button(
+                  onPressed: !_recorded || _deleting
+                      ? null
+                      : () => setState(() => _page2 = true),
+                  child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.arrow_forward,
+                      color: Color.fromRGBO(0x78, 0x78, 0x78, 1.0),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
@@ -976,6 +994,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
           return Future.value(false);
         },
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 28),
             Stack(
@@ -992,7 +1011,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                         padding: EdgeInsets.all(8.0),
                         child: Icon(
                           Icons.arrow_back,
-                          color: Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                          color: Color.fromRGBO(0x78, 0x78, 0x78, 1.0),
                         ),
                       ),
                     ),
@@ -1015,7 +1034,11 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
             ),
             Padding(
               padding: const EdgeInsets.only(
-                  left: 27, right: 27, bottom: 4, top: 10),
+                left: 27,
+                right: 27,
+                bottom: 4,
+                top: 10,
+              ),
               child: Text(
                 'Categories let others know why you’re here and will make it easier to meet those with similarities.',
                 style: Theming.of(context).text.body.copyWith(
@@ -1024,6 +1047,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                     fontWeight: FontWeight.w500),
               ),
             ),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -1064,13 +1088,14 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 12),
             Button(
-              onPressed: _deleting
-                  ? null
-                  : (_statusController.text.isEmpty ? null : _submit),
+              onPressed: _deleting ? null : (_recorded ? _submit : null),
               child: _posting
-                  ? const CircularProgressIndicator()
+                  ? const Padding(
+                      padding: EdgeInsets.only(bottom: 10.0),
+                      child: CircularProgressIndicator(),
+                    )
                   : Container(
                       width: 153,
                       height: 46,
@@ -1096,6 +1121,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                       ),
                     ),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       );
@@ -1105,11 +1131,9 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
   void _submit() async {
     setState(() => _posting = true);
     final uid = ref.read(userProvider).uid;
-    final status = _statusController.text;
     final api = GetIt.instance.get<Api>();
-    if (_statusController.text.isNotEmpty) {
-      final result = await api.updateStatus(
-          uid, widget.state, widget.city, _topic, status);
+    if (_audio != null || widget.audioUrl != null) {
+      final result = await api.updateStatus(uid, _topic, _audio);
       if (!mounted) {
         return;
       }
@@ -1119,7 +1143,6 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
           setState(() => _posting = false);
         },
         (r) {
-          print('updated to $r');
           widget.resultCompleter.complete(_StatusResult(r));
           Navigator.of(context).pop(_StatusResult(r));
         },
@@ -1128,7 +1151,10 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
   }
 
   void _delete() async {
-    setState(() => _deleting = true);
+    setState(() {
+      _audio = null;
+      _deleting = true;
+    });
     final uid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
     final result = await api.deleteStatus(uid);
@@ -1142,7 +1168,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
       },
       (_) {
         widget.resultCompleter.complete(_StatusResult(null));
-        Navigator.of(context).pop(_StatusResult(null));
+        // Navigator.of(context).pop(_StatusResult(null));
       },
     );
   }
@@ -1161,26 +1187,29 @@ class CheckboxTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Button(
-      onPressed: () => onChanged(true),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CustomPaint(
-              painter: _CheckboxPainter(value),
-              size: const Size(20, 20),
-            ),
-            const SizedBox(width: 13),
-            Text(
-              label,
-              style: Theming.of(context).text.body.copyWith(
-                  color: Colors.black,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500),
-            ),
-          ],
+    return SizedBox(
+      height: 44,
+      child: Button(
+        onPressed: () => onChanged(true),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomPaint(
+                painter: _CheckboxPainter(value),
+                size: const Size(20, 20),
+              ),
+              const SizedBox(width: 13),
+              Text(
+                label,
+                style: Theming.of(context).text.body.copyWith(
+                    color: Colors.black,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1232,7 +1261,10 @@ Future<CallProfileAction?> _displayCallProfile(
         gallery: [participant.photo],
       ),
       Status(
-          text: participant.statusText, endTime: DateTime.now(), topic: topic),
+        topic: topic,
+        audioUrl: participant.audioUrl,
+        endTime: DateTime.now(),
+      ),
       _topicToTitle(topic),
     ),
   );
@@ -1352,9 +1384,10 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
                                   gallery: [participant.photo],
                                 ),
                                 Status(
-                                    text: participant.statusText,
-                                    endTime: DateTime.now(),
-                                    topic: topic),
+                                  topic: topic,
+                                  audioUrl: participant.audioUrl,
+                                  endTime: DateTime.now(),
+                                ),
                                 _topicToTitle(topic),
                               ),
                             );

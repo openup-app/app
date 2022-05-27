@@ -15,9 +15,12 @@ import 'disable.dart';
 
 class AudioBioRecordButton extends StatelessWidget {
   final AudioBioController controller;
+  final Widget Function(BuildContext context, bool recording, double size)?
+      micBuilder;
   const AudioBioRecordButton({
     Key? key,
     required this.controller,
+    this.micBuilder,
   }) : super(key: key);
 
   @override
@@ -42,34 +45,35 @@ class AudioBioRecordButton extends StatelessWidget {
             width: 128,
             height: 128,
             alignment: Alignment.center,
-            child: Container(
-              width: size,
-              height: size,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: recordInfo.recording ? Colors.red : Colors.white,
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                    blurRadius: 14,
-                    offset: Offset(0.0, 1.0),
-                    blurStyle: BlurStyle.outer,
+            child: micBuilder?.call(context, recordInfo.recording, size) ??
+                Container(
+                  width: size,
+                  height: size,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: recordInfo.recording ? Colors.red : Colors.white,
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                        blurRadius: 14,
+                        offset: Offset(0.0, 1.0),
+                        blurStyle: BlurStyle.outer,
+                      ),
+                    ],
+                    shape: BoxShape.circle,
                   ),
-                ],
-                shape: BoxShape.circle,
-              ),
-              child: recordInfo.recording
-                  ? const Icon(
-                      Icons.stop,
-                      size: 48,
-                      color: Colors.white,
-                    )
-                  : const Icon(
-                      Icons.mic,
-                      size: 88,
-                      color: Color.fromRGBO(0xFF, 0x5E, 0x5E, 1.0),
-                    ),
-            ),
+                  child: recordInfo.recording
+                      ? const Icon(
+                          Icons.stop,
+                          size: 48,
+                          color: Colors.white,
+                        )
+                      : const Icon(
+                          Icons.mic,
+                          size: 88,
+                          color: Color.fromRGBO(0xFF, 0x5E, 0x5E, 1.0),
+                        ),
+                ),
           ),
         );
       },

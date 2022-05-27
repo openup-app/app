@@ -557,8 +557,12 @@ class Api {
           final remaining = e['remaining'] as int;
           e['endTime'] =
               time.add(Duration(milliseconds: remaining)).toIso8601String();
-          return TopicParticipant.fromJson(e);
-        }));
+          try {
+            return TopicParticipant.fromJson(e);
+          } catch (e) {
+            return null;
+          }
+        }).where((e) => e != null));
         final map = Map.fromEntries(
             Topic.values.map((e) => MapEntry(e, <TopicParticipant>[])));
         final topics =
@@ -592,22 +596,18 @@ class Api {
 
   Future<Either<ApiError, Status?>> updateStatus(
     String uid,
-    String state,
-    String city,
     Topic topic,
-    String status,
+    Uint8List? audio,
   ) {
     return _request(
       makeRequest: () {
         return http.put(
-          Uri.parse('$_urlBase/users/$uid/status'),
-          headers: _headers,
-          body: jsonEncode({
-            'state': state,
-            'city': city,
-            'topic': topic.name,
-            'text': status,
-          }),
+          Uri.parse('$_urlBase/users/$uid/status/$topic'),
+          headers: {
+            ..._headers,
+            if (audio != null) ...{'Content-Type': 'application/octet-stream'}
+          },
+          body: audio,
         );
       },
       handleSuccess: (response) {
@@ -804,8 +804,8 @@ class ServerError with _$ServerError {
 @freezed
 class Status with _$Status {
   const factory Status({
-    required String text,
     required Topic topic,
+    required String audioUrl,
     required DateTime endTime,
   }) = _Status;
 
