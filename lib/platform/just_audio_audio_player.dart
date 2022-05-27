@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
-import 'dart:typed_data';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:just_audio/just_audio.dart';
@@ -84,16 +82,14 @@ class JustAudioAudioPlayer {
   Future<void> setPath(String path) =>
       _setAudioHandleErrors(() => _player.setFilePath(path));
 
-  Future<void> setData(Uint8List data) =>
-      _setAudioHandleErrors(() => _player.setAudioSource(_ByteSource(data)));
-
   Future<void> _setAudioHandleErrors(Future<void> Function() setAudio) async {
     try {
       await setAudio();
     } on PlayerInterruptedException {
       // Player disposed before audio loaded, safe to ignore
-    } on PlayerException {
+    } on PlayerException catch (e) {
       // Audio unplayable, ignore
+      print(e);
     }
   }
 
@@ -108,23 +104,6 @@ class JustAudioAudioPlayer {
   }
 
   Future<void> seek(Duration position) => _player.seek(position);
-}
-
-class _ByteSource extends StreamAudioSource {
-  final Uint8List _data;
-
-  _ByteSource(this._data) : super();
-
-  @override
-  Future<StreamAudioResponse> request([int? start, int? end]) async {
-    return StreamAudioResponse(
-      sourceLength: _data.length,
-      contentLength: (start ?? 0) - (end ?? _data.length),
-      offset: start ?? 0,
-      stream: Stream.fromIterable([_data.sublist(start ?? 0, end)]),
-      contentType: 'audio/mp4',
-    );
-  }
 }
 
 @freezed

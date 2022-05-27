@@ -28,6 +28,8 @@ import 'package:openup/widgets/play_button.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:tuple/tuple.dart';
 
 class StartWithCall {
@@ -848,18 +850,25 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
   late final AudioBioController _audioBioController;
   Uint8List? _audio;
   String? _audioUrl;
+  String? _audioPath;
 
   @override
   void initState() {
     super.initState();
     _audioUrl = widget.audioUrl;
     _topic = widget.topic ?? Topic.lonely;
-    _audioBioController = AudioBioController(onRecordingComplete: (data) {
-      setState(() {
-        _audioUrl = null;
-        _audio = data;
-      });
-    });
+    _audioBioController = AudioBioController(
+      onRecordingComplete: (data) async {
+        final dir = await getTemporaryDirectory();
+        final file = File(path.join(dir.path, 'audio.m4a'));
+        await file.writeAsBytes(data);
+        setState(() {
+          _audioUrl = null;
+          _audio = data;
+          _audioPath = file.path;
+        });
+      },
+    );
   }
 
   @override
@@ -958,7 +967,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
           else
             PlayButton(
               url: _audioUrl,
-              data: _audio,
+              path: _audioPath,
               builder: (context, state) {
                 return Padding(
                   padding: const EdgeInsets.all(40.0),

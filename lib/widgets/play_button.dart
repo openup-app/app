@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -9,19 +8,14 @@ import 'package:openup/widgets/button.dart';
 class PlayButton extends StatefulWidget {
   final String? path;
   final String? url;
-  final Uint8List? data;
   final Widget Function(BuildContext context, PlaybackState state)? builder;
 
   const PlayButton({
     Key? key,
     this.path,
     this.url,
-    this.data,
     this.builder,
-  })  : assert(!(path == null && url == null && data == null) &&
-            ((path == null && url == null) ||
-                (path == null && data == null) ||
-                (url == null && data == null))),
+  })  : assert(!(path == null && url == null) && (path != url)),
         super(key: key);
 
   @override
@@ -39,25 +33,21 @@ class _PlayButtonState extends State<PlayButton> {
     _subscription = _audioPlayer.playbackInfoStream.listen((info) {
       setState(() => _state = info.state);
     });
-    _setAudio(null, null, null);
+    _setAudio(null, null);
   }
 
   @override
   void didUpdateWidget(covariant PlayButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _setAudio(oldWidget.url, oldWidget.path, oldWidget.data);
+    _setAudio(oldWidget.url, oldWidget.path);
   }
 
-  void _setAudio(String? oldUrl, String? oldPath, Uint8List? oldData) {
-    if (widget.url != oldUrl ||
-        widget.path != oldPath ||
-        widget.data != oldData) {
+  void _setAudio(String? oldUrl, String? oldPath) {
+    if (widget.url != oldUrl || widget.path != oldPath) {
       if (widget.url != null) {
         _audioPlayer.setUrl(widget.url!);
-      } else if (widget.path != null) {
-        _audioPlayer.setPath(widget.path!);
       } else {
-        _audioPlayer.setData(widget.data!);
+        _audioPlayer.setPath(widget.path!);
       }
     }
   }

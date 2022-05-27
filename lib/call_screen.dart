@@ -301,7 +301,8 @@ class _InitiateCallState extends ConsumerState<InitiateCall> {
               onClose: Navigator.of(context).pop,
             );
           } else if (state == PhoneConnectionState.declined) {
-            return DecoratedBox(
+            return Container(
+              height: 264,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -399,6 +400,8 @@ class _RingingUi extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 264,
+      alignment: Alignment.center,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -410,7 +413,7 @@ class _RingingUi extends StatelessWidget {
         ),
       ),
       child: Stack(
-        fit: StackFit.loose,
+        fit: StackFit.expand,
         children: [
           Positioned(
             top: 12,

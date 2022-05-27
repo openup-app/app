@@ -8,6 +8,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:rxdart/subjects.dart';
 
@@ -291,7 +293,9 @@ class AudioBioController {
     if (!await _recorder.hasPermission() || await _recorder.isRecording()) {
       return;
     }
-    await _recorder.start();
+    final dir = await getTemporaryDirectory();
+    final path = join(dir.path, 'audio.m4a');
+    await _recorder.start(path: path);
     _recordController.add(_recordController.value.copyWith(recording: true));
 
     _recordingLimitTimer?.cancel();
