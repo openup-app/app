@@ -235,25 +235,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                       child: CircularProgressIndicator(),
                     ),
                   ),
-                if (!_loading && _topicStatuses.isEmpty)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                          left: 16.0, top: 16, right: 16, bottom: 72),
-                      child: Center(
-                        child: Text(
-                          'No one is available to chat,\ncreate a status to be the first!',
-                          textAlign: TextAlign.center,
-                          style: Theming.of(context).text.body.copyWith(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                              ),
-                        ),
-                      ),
-                    ),
-                  ),
-                if (!_loading && _topicStatuses.isNotEmpty)
+                if (!_loading)
                   Expanded(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
@@ -288,7 +270,13 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                               },
                               child: _SingleTopicList(
                                 topic: _selectedTopic!,
-                                participants: _topicStatuses.first.item2,
+                                participants: _topicStatuses
+                                    .firstWhere(
+                                      (element) =>
+                                          element.item1 == _selectedTopic,
+                                      orElse: () => Tuple2(_selectedTopic!, []),
+                                    )
+                                    .item2,
                                 pop: () =>
                                     setState(() => _selectedTopic = null),
                               ),
@@ -302,23 +290,25 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
               right: 0,
               bottom: 0,
               height: 212,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      Colors.black,
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        Colors.black,
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                   ),
                 ),
               ),
             ),
             if (_status != null)
               Positioned(
-                left: 25,
-                right: 25,
+                left: 16,
+                right: 16,
                 bottom: 106,
                 height: 66,
                 child: _StatusBanner(
@@ -624,7 +614,15 @@ class _StatusBanner extends StatelessWidget {
                       ],
                     ),
                   ),
-                  PlayButton(url: status.audioUrl),
+                  PlayButton(
+                    url: status.audioUrl,
+                    builder: (context, state) {
+                      return PlayStopArrow(
+                        state: state,
+                        size: 36,
+                      );
+                    },
+                  ),
                   const SizedBox(width: 8),
                 ],
               );
@@ -849,13 +847,18 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
   late Topic _topic;
   late final AudioBioController _audioBioController;
   Uint8List? _audio;
+  String? _audioUrl;
 
   @override
   void initState() {
     super.initState();
-    _topic = widget.topic ?? Topic.moved;
+    _audioUrl = widget.audioUrl;
+    _topic = widget.topic ?? Topic.lonely;
     _audioBioController = AudioBioController(onRecordingComplete: (data) {
-      setState(() => _audio = data);
+      setState(() {
+        _audioUrl = null;
+        _audio = data;
+      });
     });
   }
 
@@ -865,7 +868,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
     _audioBioController.dispose();
   }
 
-  bool get _recorded => _audio != null || widget.audioUrl != null;
+  bool get _recorded => _audio != null || _audioUrl != null;
 
   @override
   Widget build(BuildContext context) {
@@ -913,7 +916,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                           style: DefaultTextStyle.of(context).style,
                         ),
                         TextSpan(
-                          text: '10 seconds',
+                          text: '10 seconds.',
                           style: DefaultTextStyle.of(context).style.copyWith(
                               color: Colors.black, fontWeight: FontWeight.w700),
                         ),
@@ -924,33 +927,48 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
               ),
             ),
           ),
-          AudioBioRecordButton(
-            controller: _audioBioController,
-            micBuilder: (context, recording, size) {
-              if (recording) {
-                return Container(
-                  width: size,
-                  height: size,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
+          if (!_recorded)
+            AudioBioRecordButton(
+              controller: _audioBioController,
+              micBuilder: (context, recording, size) {
+                if (recording) {
+                  return Container(
+                    width: size,
+                    height: size,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.stop,
+                      size: 48,
+                      color: Colors.white,
+                    ),
+                  );
+                } else {
+                  return const Icon(
+                    Icons.settings_voice,
+                    size: 64,
                     color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.stop,
-                    size: 48,
-                    color: Colors.white,
+                  );
+                }
+              },
+            )
+          else
+            PlayButton(
+              url: _audioUrl,
+              data: _audio,
+              builder: (context, state) {
+                return Padding(
+                  padding: const EdgeInsets.all(40.0),
+                  child: PlayStopArrow(
+                    state: state,
+                    color: Colors.black,
                   ),
                 );
-              } else {
-                return const Icon(
-                  Icons.settings_voice,
-                  size: 64,
-                  color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                );
-              }
-            },
-          ),
+              },
+            ),
           Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
@@ -1156,9 +1174,16 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
 
   void _delete() async {
     setState(() {
+      _audioUrl = null;
       _audio = null;
       _deleting = true;
     });
+
+    if (widget.audioUrl == null) {
+      setState(() => _deleting = false);
+      return;
+    }
+
     final uid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
     final result = await api.deleteStatus(uid);
@@ -1172,7 +1197,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
       },
       (_) {
         widget.resultCompleter.complete(_StatusResult(null));
-        // Navigator.of(context).pop(_StatusResult(null));
+        setState(() => _deleting = false);
       },
     );
   }
@@ -1301,7 +1326,7 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
   @override
   void didUpdateWidget(covariant _MultipleTopicList oldWidget) {
     super.didUpdateWidget(oldWidget);
-
+    setState(() => _topicStatuses = widget.topicStatuses);
     animateList(oldWidget.topicStatuses, widget.topicStatuses);
   }
 
@@ -1335,9 +1360,17 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
 
   @override
   Widget build(BuildContext context) {
+    if (_topicStatuses.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.only(top: 16, bottom: 120),
+          child: _NoUsers(),
+        ),
+      );
+    }
     return ListView.builder(
       itemCount: _topicStatuses.length,
-      padding: const EdgeInsets.only(top: 16, bottom: 76),
+      padding: const EdgeInsets.only(top: 16, bottom: 150),
       itemBuilder: (context, index) {
         final topic = _topicStatuses[index].item1;
         final participants = _topicStatuses[index].item2;
@@ -1499,6 +1532,7 @@ class _SingleTopicList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('part are $participants');
     return Column(
       children: [
         const SizedBox(height: 16),
@@ -1507,39 +1541,47 @@ class _SingleTopicList extends StatelessWidget {
           centerText: true,
           onPressed: pop,
         ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.only(bottom: 76),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 3 / 4,
+        if (participants.isEmpty)
+          const Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 120),
+              child: _NoUsers(),
             ),
-            itemCount: participants.length,
-            itemBuilder: (context, index) {
-              final participant = participants[index];
-              return _ParticipantTile(
-                participant: participant,
-                onPressed: () async {
-                  final action =
-                      await _displayCallProfile(context, participant, topic);
-                  if (action == null) {
-                    return;
-                  }
-                  switch (action) {
-                    case CallProfileAction.call:
-                      _call(context, participant);
-                      break;
-                    case CallProfileAction.block:
-                      break;
-                    case CallProfileAction.report:
-                      break;
-                  }
-                },
-                onBlock: () {},
-              );
-            },
+          )
+        else
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.only(bottom: 150),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 3 / 4,
+              ),
+              itemCount: participants.length,
+              itemBuilder: (context, index) {
+                final participant = participants[index];
+                return _ParticipantTile(
+                  participant: participant,
+                  onPressed: () async {
+                    final action =
+                        await _displayCallProfile(context, participant, topic);
+                    if (action == null) {
+                      return;
+                    }
+                    switch (action) {
+                      case CallProfileAction.call:
+                        _call(context, participant);
+                        break;
+                      case CallProfileAction.block:
+                        break;
+                      case CallProfileAction.report:
+                        break;
+                    }
+                  },
+                  onBlock: () {},
+                );
+              },
+            ),
           ),
-        ),
       ],
     );
   }
@@ -1614,6 +1656,29 @@ class _TopicHeader extends StatelessWidget {
           ),
           const SizedBox(width: 8),
         ],
+      ),
+    );
+  }
+}
+
+class _NoUsers extends StatelessWidget {
+  const _NoUsers({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding:
+          const EdgeInsets.only(left: 16.0, top: 16, right: 16, bottom: 72),
+      child: Center(
+        child: Text(
+          'No one is available to chat,\ncreate a status to be the first!',
+          textAlign: TextAlign.center,
+          style: Theming.of(context).text.body.copyWith(
+                fontSize: 24,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+        ),
       ),
     );
   }
@@ -1731,7 +1796,11 @@ class CallProfileScreen extends StatelessWidget {
                         shape: BoxShape.circle,
                         color: Colors.white,
                       ),
-                      child: PlayStopArrow(state: state),
+                      child: PlayStopArrow(
+                        state: state,
+                        color: Colors.black,
+                        size: 48,
+                      ),
                     );
                   },
                 ),
@@ -1858,7 +1927,10 @@ class _ParticipantTile extends StatelessWidget {
                         color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
                       ),
                       child: Center(
-                        child: PlayStopArrow(state: state),
+                        child: PlayStopArrow(
+                          state: state,
+                          size: 36,
+                        ),
                       ),
                     ),
                   );

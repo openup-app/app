@@ -555,11 +555,9 @@ class Api {
         final list = List.from(jsonDecode(response.body));
         final parsed = List<TopicParticipant>.from(list.map((e) {
           try {
-            final remaining = e['remaining'] as int;
-            e['endTime'] =
-                time.add(Duration(milliseconds: remaining)).toIso8601String();
             return TopicParticipant.fromJson(e);
           } catch (e) {
+            print(e);
             return null;
           }
         }).where((e) => e != null));
@@ -623,9 +621,7 @@ class Api {
     if (status == null) {
       return null;
     }
-    status['endTime'] = DateTime.now()
-        .add(Duration(milliseconds: status['remaining']))
-        .toIso8601String();
+    status['endTime'] = DateTime.now().toIso8601String();
     return Status.fromJson(status);
   }
 

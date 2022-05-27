@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,14 +9,19 @@ import 'package:openup/widgets/button.dart';
 class PlayButton extends StatefulWidget {
   final String? path;
   final String? url;
+  final Uint8List? data;
   final Widget Function(BuildContext context, PlaybackState state)? builder;
 
   const PlayButton({
     Key? key,
     this.path,
     this.url,
+    this.data,
     this.builder,
-  })  : assert(path != url && (path == null || url == null)),
+  })  : assert(!(path == null && url == null && data == null) &&
+            ((path == null && url == null) ||
+                (path == null && data == null) ||
+                (url == null && data == null))),
         super(key: key);
 
   @override
@@ -33,21 +39,25 @@ class _PlayButtonState extends State<PlayButton> {
     _subscription = _audioPlayer.playbackInfoStream.listen((info) {
       setState(() => _state = info.state);
     });
-    _setUrlOrPath(null, null);
+    _setAudio(null, null, null);
   }
 
   @override
   void didUpdateWidget(covariant PlayButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _setUrlOrPath(oldWidget.url, oldWidget.path);
+    _setAudio(oldWidget.url, oldWidget.path, oldWidget.data);
   }
 
-  void _setUrlOrPath(String? oldUrl, String? oldPath) {
-    if (widget.url != oldUrl || widget.path != oldPath) {
+  void _setAudio(String? oldUrl, String? oldPath, Uint8List? oldData) {
+    if (widget.url != oldUrl ||
+        widget.path != oldPath ||
+        widget.data != oldData) {
       if (widget.url != null) {
         _audioPlayer.setUrl(widget.url!);
-      } else {
+      } else if (widget.path != null) {
         _audioPlayer.setPath(widget.path!);
+      } else {
+        _audioPlayer.setData(widget.data!);
       }
     }
   }
@@ -69,42 +79,49 @@ class _PlayButtonState extends State<PlayButton> {
           _audioPlayer.stop();
         }
       },
-      child: widget.builder?.call(context, _state) ?? PlayStopArrow(state: _state),
+      child:
+          widget.builder?.call(context, _state) ?? PlayStopArrow(state: _state),
     );
   }
 }
 
 class PlayStopArrow extends StatelessWidget {
   final PlaybackState state;
-  const PlayStopArrow({ Key? key, required this.state, }) : super(key: key);
+  final Color? color;
+  final double? size;
+  const PlayStopArrow({
+    Key? key,
+    required this.state,
+    this.color,
+    this.size,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-        width: 48,
-        height: 48,
-        child: Builder(
-          builder: (context) {
-            switch (state) {
-              case PlaybackState.loading:
-                return const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(),
-                );
-              case PlaybackState.playing:
-                return const Icon(Icons.stop, size: 44);
-              case PlaybackState.idle:
-              case PlaybackState.paused:
-              case PlaybackState.disabled:
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SvgPicture.asset(
-                    'assets/images/play_icon.svg',
-                  ),
-                );
-            }
-          },
-        ),
-      );
+    switch (state) {
+      case PlaybackState.loading:
+        return const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: CircularProgressIndicator(),
+        );
+      case PlaybackState.playing:
+        return Icon(
+          Icons.stop,
+          size: size == null ? 57 : size! * 1.5,
+          color: color,
+        );
+      case PlaybackState.idle:
+      case PlaybackState.paused:
+      case PlaybackState.disabled:
+        return Padding(
+          padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+          child: SvgPicture.asset(
+            'assets/images/play_icon.svg',
+            color: color,
+            width: size,
+            height: size,
+          ),
+        );
+    }
   }
 }
