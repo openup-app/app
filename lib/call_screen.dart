@@ -560,23 +560,29 @@ class _MiniVoiceCallScreenContentState
       builder: (context, snapshot) {
         final state = snapshot.requireData;
         if (state == PhoneConnectionState.missing) {
-          return Center(
-            child: Text(
-              'The call has already ended',
-              style: Theming.of(context).text.body.copyWith(
-                  color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700),
+          return SizedBox(
+            height: 264,
+            child: Center(
+              child: Text(
+                'The call has already ended',
+                style: Theming.of(context).text.body.copyWith(
+                    color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700),
+              ),
             ),
           );
         } else if (state == PhoneConnectionState.complete) {
-          return Center(
-            child: Text(
-              'Call complete',
-              style: Theming.of(context).text.body.copyWith(
-                  color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700),
+          return SizedBox(
+            height: 264,
+            child: Center(
+              child: Text(
+                'Call complete',
+                style: Theming.of(context).text.body.copyWith(
+                    color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700),
+              ),
             ),
           );
         }

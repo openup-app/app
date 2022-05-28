@@ -351,7 +351,7 @@ class _PageHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 132,
+      height: MediaQuery.of(context).padding.top + 122,
       padding: const EdgeInsets.only(left: 24),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -1773,6 +1773,7 @@ class CallProfileScreen extends StatelessWidget {
                 child: Gallery(
                   slideshow: true,
                   gallery: profile.gallery,
+                  withWideBlur: false,
                 ),
               ),
             ),

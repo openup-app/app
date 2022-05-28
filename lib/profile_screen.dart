@@ -205,10 +205,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 class Gallery extends StatefulWidget {
   final List<String> gallery;
   final bool slideshow;
+  final bool withWideBlur;
   const Gallery({
     Key? key,
     this.gallery = const [],
     required this.slideshow,
+    this.withWideBlur = true,
   }) : super(key: key);
 
   @override
@@ -266,44 +268,59 @@ class _GalleryState extends State<Gallery> {
     return Listener(
       onPointerDown: (_) => _slideshowTimer?.cancel(),
       onPointerUp: (_) => _maybeStartSlideshowTimer(),
-      child: PageView.builder(
-        controller: _pageController,
-        itemBuilder: (context, index) {
-          if (widget.gallery.isEmpty) {
-            return const SizedBox.shrink();
-          }
-          final i = index % widget.gallery.length;
-          return Stack(
-            clipBehavior: Clip.hardEdge,
-            fit: StackFit.expand,
-            alignment: Alignment.center,
-            children: [
-              ClipRect(
-                clipBehavior: Clip.hardEdge,
-                child: ImageFiltered(
-                  imageFilter: ImageFilter.blur(
-                    sigmaX: 16,
-                    sigmaY: 16,
-                  ),
-                  child: Image.network(
-                    widget.gallery[i],
-                    fit: BoxFit.cover,
-                    frameBuilder: fadeInFrameBuilder,
-                    loadingBuilder: circularProgressLoadingBuilder,
-                    errorBuilder: iconErrorBuilder,
-                  ),
-                ),
-              ),
-              Image.network(
-                widget.gallery[i],
-                fit: BoxFit.contain,
-                frameBuilder: fadeInFrameBuilder,
-                loadingBuilder: circularProgressLoadingBuilder,
-                errorBuilder: iconErrorBuilder,
-              ),
-            ],
-          );
-        },
+      child: AspectRatio(
+        aspectRatio: 3 / 4,
+        child: ClipRRect(
+          child: PageView.builder(
+            controller: _pageController,
+            itemBuilder: (context, index) {
+              if (widget.gallery.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              final i = index % widget.gallery.length;
+              if (widget.withWideBlur) {
+                return Stack(
+                  clipBehavior: Clip.hardEdge,
+                  fit: StackFit.expand,
+                  alignment: Alignment.center,
+                  children: [
+                    ClipRect(
+                      clipBehavior: Clip.hardEdge,
+                      child: ImageFiltered(
+                        imageFilter: ImageFilter.blur(
+                          sigmaX: 16,
+                          sigmaY: 16,
+                        ),
+                        child: Image.network(
+                          widget.gallery[i],
+                          fit: BoxFit.cover,
+                          frameBuilder: fadeInFrameBuilder,
+                          loadingBuilder: circularProgressLoadingBuilder,
+                          errorBuilder: iconErrorBuilder,
+                        ),
+                      ),
+                    ),
+                    Image.network(
+                      widget.gallery[i],
+                      fit: BoxFit.contain,
+                      frameBuilder: fadeInFrameBuilder,
+                      loadingBuilder: circularProgressLoadingBuilder,
+                      errorBuilder: iconErrorBuilder,
+                    ),
+                  ],
+                );
+              } else {
+                return Image.network(
+                  widget.gallery[i],
+                  fit: BoxFit.cover,
+                  frameBuilder: fadeInFrameBuilder,
+                  loadingBuilder: circularProgressLoadingBuilder,
+                  errorBuilder: iconErrorBuilder,
+                );
+              }
+            },
+          ),
+        ),
       ),
     );
   }
