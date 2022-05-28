@@ -1296,7 +1296,7 @@ Future<CallProfileAction?> _displayCallProfile(
         uid: participant.uid,
         name: participant.name,
         photo: participant.photo,
-        gallery: [participant.photo],
+        gallery: participant.gallery,
       ),
       Status(
         topic: topic,

@@ -47,6 +47,7 @@ class TopicParticipant with _$TopicParticipant {
     required String uid,
     required String name,
     required String photo,
+    required List<String> gallery,
     required List<String> interests,
     required String topic,
     required String audioUrl,
