@@ -54,10 +54,7 @@ class LobbyListPage extends ConsumerStatefulWidget {
 }
 
 class LobbyListPageState extends ConsumerState<LobbyListPage> {
-  String _state = 'Texas';
-  String _city = 'Houston';
-  bool _stateExpanded = false;
-  bool _cityExpanded = false;
+  bool _nearbyOnly = false;
 
   bool _loading = false;
   Status? _status;
@@ -157,7 +154,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
   Future<void> _fetchParticipants() async {
     final myUid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
-    final topicParticipants = await api.getStatuses(myUid, _state, _city);
+    final topicParticipants = await api.getStatuses(myUid, _nearbyOnly);
     if (mounted) {
       topicParticipants.fold(
         (l) {
@@ -215,169 +212,163 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () {
-        if (_stateExpanded || _cityExpanded) {
-          setState(() {
-            _stateExpanded = false;
-            _cityExpanded = false;
-          });
-          return Future.value(false);
-        }
-        return Future.value(true);
-      },
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromRGBO(0x00, 0x2B, 0x44, 1.0),
-              Color.fromRGBO(0x00, 0x00, 0x00, 1.0),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color.fromRGBO(0x00, 0x2B, 0x44, 1.0),
+            Color.fromRGBO(0x00, 0x00, 0x00, 1.0),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                _PageHeader(
-                  loading: _loading,
-                  userCount: _userCount,
-                ),
-                if (_loading)
-                  const Expanded(
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-                if (!_loading)
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (child, animation) {
-                        if (_slideToRight) {
-                          if (child.key == const Key('multiple')) {
-                            return slideLeftToRightPageTransition(
-                              context,
-                              animation,
-                              const AlwaysStoppedAnimation(0.0),
-                              child,
-                            );
-                          } else {
-                            return slideRightToLeftPageTransition(
-                              context,
-                              animation,
-                              const AlwaysStoppedAnimation(0.0),
-                              child,
-                            );
-                          }
-                        } else {
-                          if (child.key == const Key('multiple')) {
-                            return slideRightToLeftPageTransition(
-                              context,
-                              animation,
-                              const AlwaysStoppedAnimation(0.0),
-                              child,
-                            );
-                          } else {
-                            return slideLeftToRightPageTransition(
-                              context,
-                              animation,
-                              const AlwaysStoppedAnimation(0.0),
-                              child,
-                            );
-                          }
-                        }
-                      },
-                      child: _selectedTopic == null
-                          ? _MultipleTopicList(
-                              key: const Key('multiple'),
-                              topicStatuses: _topicStatuses,
-                              onTopicSelected: (topic, slideToRight) {
-                                setState(() {
-                                  _selectedTopic = topic;
-                                  _slideToRight = slideToRight;
-                                });
-                              },
-                            )
-                          : WillPopScope(
-                              onWillPop: () {
-                                setState(() => _selectedTopic = null);
-                                return Future.value(false);
-                              },
-                              child: _SingleTopicList(
-                                topic: _selectedTopic!,
-                                reverseHeader: !_slideToRight,
-                                participants: _topicStatuses
-                                    .firstWhere(
-                                      (element) =>
-                                          element.item1 == _selectedTopic,
-                                      orElse: () => Tuple2(_selectedTopic!, []),
-                                    )
-                                    .item2,
-                                pop: () =>
-                                    setState(() => _selectedTopic = null),
-                              ),
-                            ),
-                    ),
-                  ),
-              ],
-            ),
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 212,
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        Colors.black,
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            if (_status != null)
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 106,
-                height: 66,
-                child: _StatusBanner(
-                  key: _myStatusKey,
-                  status: _status!,
-                ),
-              ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 16,
-              child: _StatusField(
+      ),
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              _PageHeader(
                 loading: _loading,
-                status: _status,
-                onStatus: (status) {
-                  setState(() {
-                    // URL stays the same, so we need to refresh the UI with new key
-                    _myStatusKey = UniqueKey();
-                    _status = status;
-                  });
+                userCount: _userCount,
+                nearbyOnly: _nearbyOnly,
+                onNearbyOnlyChanged: (value) {
+                  if (_nearbyOnly != value) {
+                    setState(() => _nearbyOnly = value);
+                    _fetchParticipants();
+                  }
                 },
               ),
+              if (_loading)
+                const Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              if (!_loading)
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (child, animation) {
+                      if (_slideToRight) {
+                        if (child.key == const Key('multiple')) {
+                          return slideLeftToRightPageTransition(
+                            context,
+                            animation,
+                            const AlwaysStoppedAnimation(0.0),
+                            child,
+                          );
+                        } else {
+                          return slideRightToLeftPageTransition(
+                            context,
+                            animation,
+                            const AlwaysStoppedAnimation(0.0),
+                            child,
+                          );
+                        }
+                      } else {
+                        if (child.key == const Key('multiple')) {
+                          return slideRightToLeftPageTransition(
+                            context,
+                            animation,
+                            const AlwaysStoppedAnimation(0.0),
+                            child,
+                          );
+                        } else {
+                          return slideLeftToRightPageTransition(
+                            context,
+                            animation,
+                            const AlwaysStoppedAnimation(0.0),
+                            child,
+                          );
+                        }
+                      }
+                    },
+                    child: _selectedTopic == null
+                        ? _MultipleTopicList(
+                            key: const Key('multiple'),
+                            topicStatuses: _topicStatuses,
+                            onTopicSelected: (topic, slideToRight) {
+                              setState(() {
+                                _selectedTopic = topic;
+                                _slideToRight = slideToRight;
+                              });
+                            },
+                          )
+                        : WillPopScope(
+                            onWillPop: () {
+                              setState(() => _selectedTopic = null);
+                              return Future.value(false);
+                            },
+                            child: _SingleTopicList(
+                              topic: _selectedTopic!,
+                              reverseHeader: !_slideToRight,
+                              participants: _topicStatuses
+                                  .firstWhere(
+                                    (element) =>
+                                        element.item1 == _selectedTopic,
+                                    orElse: () => Tuple2(_selectedTopic!, []),
+                                  )
+                                  .item2,
+                              pop: () => setState(() => _selectedTopic = null),
+                            ),
+                          ),
+                  ),
+                ),
+            ],
+          ),
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 212,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.black,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
             ),
+          ),
+          if (_status != null)
             Positioned(
-              right: 24,
-              top: MediaQuery.of(context).padding.top + 16,
-              child: const ProfileButton(),
+              left: 16,
+              right: 16,
+              bottom: 106,
+              height: 66,
+              child: _StatusBanner(
+                key: _myStatusKey,
+                status: _status!,
+              ),
             ),
-          ],
-        ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 16,
+            child: _StatusField(
+              loading: _loading,
+              status: _status,
+              onStatus: (status) {
+                setState(() {
+                  // URL stays the same, so we need to refresh the UI with new key
+                  _myStatusKey = UniqueKey();
+                  _status = status;
+                });
+              },
+            ),
+          ),
+          Positioned(
+            right: 24,
+            top: MediaQuery.of(context).padding.top + 16,
+            child: const ProfileButton(),
+          ),
+        ],
       ),
     );
   }
@@ -386,10 +377,15 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
 class _PageHeader extends StatelessWidget {
   final bool loading;
   final int userCount;
+  final bool nearbyOnly;
+  final ValueChanged<bool> onNearbyOnlyChanged;
+
   const _PageHeader({
     Key? key,
     required this.loading,
     required this.userCount,
+    required this.nearbyOnly,
+    required this.onNearbyOnlyChanged,
   }) : super(key: key);
 
   @override
@@ -449,145 +445,152 @@ class _PageHeader extends StatelessWidget {
     );
   }
 
-  void _showSettingsDialog(BuildContext context) {
-    showDialog(
+  void _showSettingsDialog(BuildContext context) async {
+    final result = await showDialog<bool>(
       context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: EdgeInsets.zero,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(41),
+      builder: (context) => SettingsDialog(nearbyOnly: nearbyOnly),
+    );
+
+    if (result != null) {
+      onNearbyOnlyChanged(result);
+    }
+  }
+}
+
+class SettingsDialog extends StatefulWidget {
+  final bool nearbyOnly;
+  const SettingsDialog({
+    Key? key,
+    required this.nearbyOnly,
+  }) : super(key: key);
+
+  @override
+  State<SettingsDialog> createState() => _SettingsDialogState();
+}
+
+class _SettingsDialogState extends State<SettingsDialog> {
+  late bool value;
+
+  @override
+  void initState() {
+    super.initState();
+    value = widget.nearbyOnly;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.zero,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(
+          Radius.circular(41),
+        ),
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(0x03, 0x2A, 0x42, 1.0),
+              Color.fromRGBO(0x00, 0x06, 0x0B, 1.0),
+            ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: WillPopScope(
+            onWillPop: () {
+              Navigator.of(context).pop(value);
+              return Future.value(false);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      left: 12.0,
+                      top: 16,
+                      bottom: 16,
+                    ),
+                    child: Icon(
+                      Icons.settings,
+                      color: Color.fromRGBO(0x95, 0x95, 0x95, 1.0),
+                      size: 36,
+                    ),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.business,
+                    color: Color.fromRGBO(0xAE, 0xAE, 0xAE, 1.0),
+                    size: 32,
+                  ),
+                  trailing: Switch.adaptive(
+                    value: value,
+                    onChanged: (v) => setState(() => value = v),
+                  ),
+                  horizontalTitleGap: 12,
+                  title: Text(
+                    'See my city only',
+                    style: Theming.of(context)
+                        .text
+                        .body
+                        .copyWith(fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: AutoSizeText(
+                    'Shows people only in your current city',
+                    style: Theming.of(context).text.body.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                        color: const Color.fromRGBO(0xAE, 0xAE, 0xAE, 1.0)),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: 263,
+                  height: 40,
+                  child: Button(
+                    onPressed: () => Navigator.of(context).pop(value),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                            color: const Color.fromRGBO(0x9C, 0x9A, 0x9A, 1.0)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(32),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Cancel',
+                          style: Theming.of(context).text.body.copyWith(
+                              fontSize: 20, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  width: 36,
+                  height: 4,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
             ),
           ),
-          clipBehavior: Clip.hardEdge,
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color.fromRGBO(0x03, 0x2A, 0x42, 1.0),
-                  Color.fromRGBO(0x00, 0x06, 0x0B, 1.0),
-                ],
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        left: 12.0,
-                        top: 16,
-                        bottom: 16,
-                      ),
-                      child: Icon(
-                        Icons.settings,
-                        color: Color.fromRGBO(0x95, 0x95, 0x95, 1.0),
-                        size: 36,
-                      ),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.business,
-                      color: Color.fromRGBO(0xAE, 0xAE, 0xAE, 1.0),
-                      size: 32,
-                    ),
-                    trailing: Switch.adaptive(
-                      value: false,
-                      onChanged: (value) {},
-                    ),
-                    horizontalTitleGap: 12,
-                    title: Text(
-                      'See my city only',
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontSize: 20, fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(
-                      'Shows people only in your current city',
-                      style: Theming.of(context).text.body.copyWith(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color: const Color.fromRGBO(0xAE, 0xAE, 0xAE, 1.0)),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.volume_up,
-                      color: Color.fromRGBO(0xAE, 0xAE, 0xAE, 1.0),
-                      size: 32,
-                    ),
-                    trailing: Switch.adaptive(
-                      value: false,
-                      onChanged: (value) {},
-                    ),
-                    horizontalTitleGap: 12,
-                    title: Text(
-                      'Speaker mode',
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontSize: 20, fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(
-                      'All audio will be in speaker mode',
-                      style: Theming.of(context).text.body.copyWith(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color: const Color.fromRGBO(0xAE, 0xAE, 0xAE, 1.0)),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: 263,
-                    height: 40,
-                    child: Button(
-                      onPressed: Navigator.of(context).pop,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                              color:
-                                  const Color.fromRGBO(0x9C, 0x9A, 0x9A, 1.0)),
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(32),
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Cancel',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 20, fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    width: 36,
-                    height: 4,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

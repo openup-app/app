@@ -541,18 +541,16 @@ class Api {
 
   Future<Either<ApiError, Map<Topic, List<TopicParticipant>>>> getStatuses(
     String uid,
-    String state,
-    String city,
+    bool nearby,
   ) {
     return _request(
       makeRequest: () {
         return http.get(
-          Uri.parse('$_urlBase/users/$uid/statuses/US/$state/$city'),
+          Uri.parse('$_urlBase/users/$uid/statuses/${nearby ? 'nearby' : ''}'),
           headers: _headers,
         );
       },
       handleSuccess: (response) {
-        final time = DateTime.now();
         final list = List.from(jsonDecode(response.body));
         final parsed = List<TopicParticipant>.from(list.map((e) {
           try {
