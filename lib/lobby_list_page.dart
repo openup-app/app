@@ -1387,33 +1387,54 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
   @override
   void didUpdateWidget(covariant _MultipleTopicList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    setState(() => _topicStatuses = widget.topicStatuses);
-    animateList(oldWidget.topicStatuses, widget.topicStatuses);
+    updateList(oldWidget.topicStatuses, widget.topicStatuses);
   }
 
-  void animateList(
+  void updateList(
     List<Tuple2<Topic, List<TopicParticipant>>> oldData,
     List<Tuple2<Topic, List<TopicParticipant>>> newData,
   ) async {
+    final operations = <Tuple2<Topic, Operation<TopicParticipant>>>[];
     for (final tuple in newData) {
       final topic = tuple.item1;
       final participants = tuple.item2;
-      final topicStatuses = _topicStatuses.firstWhere(
+      final topicStatuses = oldData.firstWhere(
         (e) => e.item1 == topic,
         orElse: () => Tuple2(topic, []),
       );
       final differences = await diff(
         topicStatuses.item2,
         participants,
-        areEqual: (a, b) {
-          return (a as TopicParticipant).name == (b as TopicParticipant).name;
-        },
+        areEqual: (a, b) =>
+            (a as TopicParticipant).uid == (b as TopicParticipant).uid,
         getHashCode: (a) => a.hashCode,
       );
       for (final difference in differences) {
-        final state = _listKeys[topic]?.currentState;
-        if (state != null) {
-          _performDiff(state, difference);
+        operations.add(Tuple2(topic, difference));
+      }
+    }
+
+    setState(() => _topicStatuses = widget.topicStatuses);
+
+    for (final operation in operations) {
+      final topic = operation.item1;
+      final difference = operation.item2;
+      final state = _listKeys[topic]?.currentState;
+      if (state != null) {
+        switch (difference.type) {
+          case OperationType.insertion:
+            state.insertItem(
+              difference.index,
+              duration: const Duration(milliseconds: 400),
+            );
+            break;
+          case OperationType.deletion:
+            state.removeItem(
+              difference.index,
+              (c, a) => _animatedRemoveBuilder(c, a, difference.item),
+              duration: const Duration(milliseconds: 400),
+            );
+            break;
         }
       }
     }
@@ -1533,24 +1554,6 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
         );
       },
     );
-  }
-
-  void _performDiff(AnimatedListState state, Operation<TopicParticipant> d) {
-    switch (d.type) {
-      case OperationType.insertion:
-        state.insertItem(
-          d.index,
-          duration: const Duration(milliseconds: 400),
-        );
-        break;
-      case OperationType.deletion:
-        state.removeItem(
-          d.index,
-          (c, a) => _animatedRemoveBuilder(c, a, d.item),
-          duration: const Duration(milliseconds: 400),
-        );
-        break;
-    }
   }
 
   Widget _animatedRemoveBuilder(
