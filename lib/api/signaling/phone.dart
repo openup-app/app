@@ -387,7 +387,7 @@ enum PhoneConnectionState {
 class PhoneController with ChangeNotifier {
   bool _muteValue = false;
   bool _speakerphoneValue = false;
-  DateTime? _endTimeValue;
+  DateTime _startTimeValue = DateTime.now();
 
   PhoneController() : super();
 
@@ -407,9 +407,9 @@ class PhoneController with ChangeNotifier {
     }
   }
 
-  set endTime(DateTime? value) {
-    final old = _endTimeValue;
-    _endTimeValue = value;
+  set startTime(DateTime value) {
+    final old = _startTimeValue;
+    _startTimeValue = value;
     if (old != value) {
       notifyListeners();
     }
@@ -419,5 +419,5 @@ class PhoneController with ChangeNotifier {
 
   bool get speakerphone => _speakerphoneValue;
 
-  DateTime? get endTime => _endTimeValue;
+  DateTime get startTime => _startTimeValue;
 }

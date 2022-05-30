@@ -92,9 +92,7 @@ class _CallPanelState extends ConsumerState<CallPanel> {
           child: MiniVoiceCallScreenContent(
             activeCall: widget.activeCall,
             hasSentTimeRequest: _hasSentTimeRequest,
-            endTime: widget.rekindles.isEmpty
-                ? null
-                : widget.activeCall.controller.endTime,
+            startTime: widget.activeCall.controller.startTime,
             muted: widget.activeCall.controller.muted,
             speakerphone: widget.activeCall.controller.speakerphone,
             onTimeUp: () => widget.onCallEnded(EndCallReason.timeUp),
@@ -471,7 +469,7 @@ class _RingingUi extends StatelessWidget {
 class MiniVoiceCallScreenContent extends ConsumerStatefulWidget {
   final ActiveCall activeCall;
   final bool hasSentTimeRequest;
-  final DateTime? endTime;
+  final DateTime startTime;
   final bool muted;
   final bool speakerphone;
   final VoidCallback onTimeUp;
@@ -486,7 +484,7 @@ class MiniVoiceCallScreenContent extends ConsumerStatefulWidget {
     Key? key,
     required this.activeCall,
     required this.hasSentTimeRequest,
-    required this.endTime,
+    required this.startTime,
     required this.muted,
     required this.speakerphone,
     required this.onTimeUp,
@@ -507,8 +505,6 @@ class _MiniVoiceCallScreenContentState
     extends ConsumerState<MiniVoiceCallScreenContent> {
   bool _showReportUi = false;
   StreamSubscription? _connectionStateStream;
-  DateTime _startTime = DateTime.now();
-  DateTime _endTime = DateTime.now().add(const Duration(minutes: 5));
 
   @override
   void initState() {
@@ -518,11 +514,6 @@ class _MiniVoiceCallScreenContentState
       if (state == PhoneConnectionState.missing ||
           state == PhoneConnectionState.complete) {
         _popSoon();
-      }
-
-      if (state == PhoneConnectionState.connected) {
-        _startTime = DateTime.now();
-        _endTime = DateTime.now().add(const Duration(minutes: 5));
       }
     });
   }
@@ -592,8 +583,7 @@ class _MiniVoiceCallScreenContentState
           state: state,
           mute: widget.muted,
           speakerphone: widget.speakerphone,
-          startTime: _startTime,
-          endTime: _endTime,
+          startTime: widget.startTime,
           onHangUp: widget.onHangUp,
           onReport: () => setState(() => _showReportUi = true),
           onConnect: widget.onConnect,
@@ -612,7 +602,6 @@ class _InCallBox extends StatelessWidget {
   final bool mute;
   final bool speakerphone;
   final DateTime startTime;
-  final DateTime? endTime;
   final VoidCallback onHangUp;
   final VoidCallback onReport;
   final ValueChanged<String> onConnect;
@@ -626,7 +615,6 @@ class _InCallBox extends StatelessWidget {
     required this.mute,
     required this.speakerphone,
     required this.startTime,
-    required this.endTime,
     required this.onHangUp,
     required this.onReport,
     required this.onConnect,
@@ -648,7 +636,7 @@ class _InCallBox extends StatelessWidget {
               child: Button(
                 onPressed: onHangUp,
                 child: Text(
-                  'Leave',
+                  'End Call',
                   style: Theming.of(context).text.body.copyWith(
                       color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
                       fontSize: 20,
@@ -1024,6 +1012,74 @@ class _ReportCallBox extends StatelessWidget {
           const SizedBox(height: 24),
         ],
       ),
+    );
+  }
+}
+
+class AddFriendBox extends StatelessWidget {
+  final String name;
+  final VoidCallback onDoNotAddFriend;
+  final VoidCallback onAddFriend;
+  const AddFriendBox({
+    Key? key,
+    required this.name,
+    required this.onDoNotAddFriend,
+    required this.onAddFriend,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            'Would you like to add\n$name as your friend?',
+            textAlign: TextAlign.center,
+            style: Theming.of(context).text.body.copyWith(
+                  color: const Color.fromRGBO(0x66, 0x64, 0x64, 1.0),
+                  fontSize: 24,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+        ),
+        const SizedBox(height: 31),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Button(
+                onPressed: onDoNotAddFriend,
+                child: Text(
+                  'No',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0x82, 0x81, 0x81, 1.0),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Button(
+                onPressed: onAddFriend,
+                child: Text(
+                  'Yes',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
     );
   }
 }

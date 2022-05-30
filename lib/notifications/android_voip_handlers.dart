@@ -129,7 +129,6 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
   Phone? phone;
   final controller = PhoneController();
   StreamSubscription? connectionStateSubscription;
-  Timer? timer;
   phone = Phone(
     controller: controller,
     signalingChannel: signalingChannel,
@@ -152,7 +151,6 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
       connectionStateSubscription?.cancel();
       signalingChannel.dispose();
       phone?.dispose();
-      timer?.cancel();
     },
     onMuteChanged: (mute) {
       // TODO
@@ -169,13 +167,7 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
   );
   connectionStateSubscription = phone.connectionStateStream.listen((state) {
     if (state == PhoneConnectionState.connected) {
-      const duration = Duration(minutes: 5);
-      final endTime = DateTime.now().add(duration);
-      timer = Timer(
-        duration,
-        () {},
-      );
-      controller.endTime = endTime;
+      controller.startTime = DateTime.now();
     }
   });
   return ActiveCall(

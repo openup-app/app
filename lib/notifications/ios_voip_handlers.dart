@@ -91,7 +91,6 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
   Phone? phone;
   final controller = PhoneController();
   StreamSubscription? connectionStateSubscription;
-  Timer? timer;
   phone = Phone(
     controller: controller,
     signalingChannel: signalingChannel,
@@ -113,7 +112,6 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
       _provider?.reportCallEnded(rid, null, FCXCallEndedReason.remoteEnded);
       signalingChannel.dispose();
       phone?.dispose();
-      timer?.cancel();
     },
     onMuteChanged: (mute) {
       _callController
@@ -131,13 +129,7 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
   );
   connectionStateSubscription = phone.connectionStateStream.listen((state) {
     if (state == PhoneConnectionState.connected) {
-      const duration = Duration(minutes: 5);
-      final endTime = DateTime.now().add(duration);
-      timer = Timer(
-        duration,
-        () {},
-      );
-      controller.endTime = endTime;
+      controller.startTime = DateTime.now();
     }
   });
   return ActiveCall(
@@ -166,13 +158,6 @@ Future<SimpleProfile?> _deserializeIncomingCallProfile() async {
     return _parseProfileIos(data);
   }
   return null;
-}
-
-Future<void> _removeIncomingCallProfile() async {
-  final documentsDir = await getApplicationDocumentsDirectory();
-  final incomingCallFile =
-      File(path.join(documentsDir.path, 'incoming_call.txt'));
-  await incomingCallFile.delete();
 }
 
 SimpleProfile? _parseProfileIos(String value) {
