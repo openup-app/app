@@ -41,7 +41,7 @@
 	<string>Make calls and record an audio bio</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Add profile photos from your gallery</string>
-	<key>NSLocationWhenInUseDescription</key>
+	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Show people to talk to in your city</string>
 	<key>UIBackgroundModes</key>
 	<array>
