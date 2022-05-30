@@ -19,11 +19,11 @@ import 'package:openup/call_screen.dart';
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/profile_screen.dart';
 import 'package:openup/report_screen.dart';
+import 'package:openup/util/location_service.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
-import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/play_button.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/profile_photo.dart';
@@ -66,6 +66,9 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
   int _userCount = 0;
 
   Topic? _selectedTopic;
+  bool _slideToRight = true;
+
+  Key _myStatusKey = UniqueKey();
 
   StreamSubscription? _phoneStateSubscription;
 
@@ -88,6 +91,17 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
         fcmMessagingToken: isIOS ? tokens[0] : null,
         apnVoipToken: isIOS ? tokens[1] : null,
       );
+    });
+
+    // Location
+    const LocationService().getLatLong().then((latLong) {
+      if (latLong != null) {
+        final api = GetIt.instance.get<Api>();
+        api.updateLocation(
+          ref.read(userProvider).uid,
+          latLong,
+        );
+      }
     });
 
     Future.wait([
@@ -242,28 +256,50 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       transitionBuilder: (child, animation) {
-                        if (child.key == const Key('multiple')) {
-                          return slideLeftToRightPageTransition(
-                            context,
-                            animation,
-                            const AlwaysStoppedAnimation(0.0),
-                            child,
-                          );
+                        if (_slideToRight) {
+                          if (child.key == const Key('multiple')) {
+                            return slideLeftToRightPageTransition(
+                              context,
+                              animation,
+                              const AlwaysStoppedAnimation(0.0),
+                              child,
+                            );
+                          } else {
+                            return slideRightToLeftPageTransition(
+                              context,
+                              animation,
+                              const AlwaysStoppedAnimation(0.0),
+                              child,
+                            );
+                          }
                         } else {
-                          return slideRightToLeftPageTransition(
-                            context,
-                            animation,
-                            const AlwaysStoppedAnimation(0.0),
-                            child,
-                          );
+                          if (child.key == const Key('multiple')) {
+                            return slideRightToLeftPageTransition(
+                              context,
+                              animation,
+                              const AlwaysStoppedAnimation(0.0),
+                              child,
+                            );
+                          } else {
+                            return slideLeftToRightPageTransition(
+                              context,
+                              animation,
+                              const AlwaysStoppedAnimation(0.0),
+                              child,
+                            );
+                          }
                         }
                       },
                       child: _selectedTopic == null
                           ? _MultipleTopicList(
                               key: const Key('multiple'),
                               topicStatuses: _topicStatuses,
-                              onTopicSelected: (topic) =>
-                                  setState(() => _selectedTopic = topic),
+                              onTopicSelected: (topic, slideToRight) {
+                                setState(() {
+                                  _selectedTopic = topic;
+                                  _slideToRight = slideToRight;
+                                });
+                              },
                             )
                           : WillPopScope(
                               onWillPop: () {
@@ -272,6 +308,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                               },
                               child: _SingleTopicList(
                                 topic: _selectedTopic!,
+                                reverseHeader: !_slideToRight,
                                 participants: _topicStatuses
                                     .firstWhere(
                                       (element) =>
@@ -314,6 +351,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                 bottom: 106,
                 height: 66,
                 child: _StatusBanner(
+                  key: _myStatusKey,
                   status: _status!,
                 ),
               ),
@@ -324,7 +362,13 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
               child: _StatusField(
                 loading: _loading,
                 status: _status,
-                onStatus: (status) => setState(() => _status = status),
+                onStatus: (status) {
+                  setState(() {
+                    // URL stays the same, so we need to refresh the UI with new key
+                    _myStatusKey = UniqueKey();
+                    _status = status;
+                  });
+                },
               ),
             ),
             Positioned(
@@ -576,7 +620,6 @@ class _StatusBanner extends StatelessWidget {
           child: Consumer(
             builder: (context, ref, child) {
               final name = ref.watch(userProvider).profile?.name ?? '';
-              final gallery = ref.watch(userProvider).profile?.gallery ?? [];
               final photo = ref.watch(userProvider).profile?.photo ?? '';
               return Row(
                 children: [
@@ -585,13 +628,14 @@ class _StatusBanner extends StatelessWidget {
                     width: 44,
                     height: 53,
                     child: Container(
-                        clipBehavior: Clip.hardEdge,
-                        decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(5))),
-                        child: ProfilePhoto(
-                          url: photo,
-                          fit: BoxFit.cover,
-                        )),
+                      clipBehavior: Clip.hardEdge,
+                      decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(5))),
+                      child: ProfilePhoto(
+                        url: photo,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 6),
                   Expanded(
@@ -607,7 +651,7 @@ class _StatusBanner extends StatelessWidget {
                               ),
                         ),
                         AutoSizeText(
-                          'Fort Worth, Texas',
+                          status.location,
                           style: Theming.of(context).text.body.copyWith(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -653,25 +697,19 @@ class _StatusField extends StatelessWidget {
       onTap: loading
           ? null
           : () async {
-              final completer = Completer<_StatusResult?>();
               // Bug in Flutter not letting showBottomPanel return a result: https://github.com/flutter/flutter/issues/66837
-              await _showPanel<_StatusResult>(
+              Status? output = status;
+              await _showPanel(
                 context: context,
                 builder: (context) {
                   return _StatusBox(
-                    state: '_state',
-                    city: '_city',
-                    topic: status?.topic,
-                    audioUrl: status?.audioUrl,
-                    resultCompleter: completer,
+                    status: status,
+                    statusUpdated: (s) => output = s,
                   );
                 },
               );
 
-              if (completer.isCompleted) {
-                final result = await completer.future;
-                onStatus(result?.status);
-              }
+              onStatus(output);
             },
       child: Container(
         height: 54,
@@ -822,19 +860,13 @@ class _PanelDragIndicator extends StatelessWidget {
 }
 
 class _StatusBox extends ConsumerStatefulWidget {
-  final String state;
-  final String city;
-  final Topic? topic;
-  final String? audioUrl;
-  final Completer<_StatusResult?> resultCompleter;
+  final Status? status;
+  final ValueChanged<Status?> statusUpdated;
 
   const _StatusBox({
     Key? key,
-    required this.state,
-    required this.city,
-    this.topic,
-    this.audioUrl,
-    required this.resultCompleter,
+    this.status,
+    required this.statusUpdated,
   }) : super(key: key);
 
   @override
@@ -846,17 +878,20 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
   bool _deleting = false;
 
   bool _page2 = false;
-  late Topic _topic;
+
   late final AudioBioController _audioBioController;
   Uint8List? _audio;
   String? _audioUrl;
   String? _audioPath;
+  Status? _status;
+  late Topic _topic;
 
   @override
   void initState() {
     super.initState();
-    _audioUrl = widget.audioUrl;
-    _topic = widget.topic ?? Topic.lonely;
+    _topic = widget.status?.topic ?? Topic.lonely;
+    _audioUrl = widget.status?.audioUrl;
+    _status = widget.status;
     _audioBioController = AudioBioController(
       onRecordingComplete: (data) async {
         final dir = await getTemporaryDirectory();
@@ -998,7 +1033,19 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                           ),
                         ),
                       ),
-                const Spacer(),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'You must delete your status if you don\'t want to recieve calls anymore.',
+                      style: Theming.of(context).text.body.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: const Color.fromRGBO(0x69, 0x69, 0x69, 1.0),
+                          ),
+                    ),
+                  ),
+                ),
                 Button(
                   onPressed: !_recorded || _deleting
                       ? null
@@ -1163,7 +1210,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
     setState(() => _posting = true);
     final uid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
-    if (_audio != null || widget.audioUrl != null) {
+    if (_audio != null || _status?.audioUrl != null) {
       final result = await api.updateStatus(uid, _topic, _audio);
       if (!mounted) {
         return;
@@ -1174,8 +1221,8 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
           setState(() => _posting = false);
         },
         (r) {
-          widget.resultCompleter.complete(_StatusResult(r));
-          Navigator.of(context).pop(_StatusResult(r));
+          widget.statusUpdated(r);
+          Navigator.of(context).pop();
         },
       );
     }
@@ -1183,16 +1230,18 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
 
   void _delete() async {
     setState(() {
-      _audioUrl = null;
       _audio = null;
+      _status = null;
       _deleting = true;
     });
+    widget.statusUpdated(null);
 
-    if (widget.audioUrl == null) {
+    if (_audioUrl == null) {
       setState(() => _deleting = false);
       return;
     }
 
+    setState(() => _audioUrl = null);
     final uid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
     final result = await api.deleteStatus(uid);
@@ -1205,7 +1254,6 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
         setState(() => _deleting = false);
       },
       (_) {
-        widget.resultCompleter.complete(_StatusResult(null));
         setState(() => _deleting = false);
       },
     );
@@ -1301,6 +1349,7 @@ Future<CallProfileAction?> _displayCallProfile(
       Status(
         topic: topic,
         audioUrl: participant.audioUrl,
+        location: participant.location,
         endTime: DateTime.now(),
       ),
       _topicToTitle(topic),
@@ -1310,7 +1359,7 @@ Future<CallProfileAction?> _displayCallProfile(
 
 class _MultipleTopicList extends StatefulWidget {
   final List<Tuple2<Topic, List<TopicParticipant>>> topicStatuses;
-  final void Function(Topic topic) onTopicSelected;
+  final void Function(Topic topic, bool slideToRight) onTopicSelected;
   const _MultipleTopicList({
     Key? key,
     required this.topicStatuses,
@@ -1383,7 +1432,7 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
       itemBuilder: (context, index) {
         final topic = _topicStatuses[index].item1;
         final participants = _topicStatuses[index].item2;
-        final reverse = index.isOdd;
+        final reverseHeader = index.isOdd;
         // Only possible to occur when just blocked a user
         if (participants.isEmpty) {
           return const SizedBox.shrink();
@@ -1392,10 +1441,11 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Directionality(
-              textDirection: reverse ? TextDirection.rtl : TextDirection.ltr,
+              textDirection:
+                  reverseHeader ? TextDirection.rtl : TextDirection.ltr,
               child: _TopicHeader(
                 topic: topic,
-                onPressed: () => widget.onTopicSelected(topic),
+                onPressed: () => widget.onTopicSelected(topic, !reverseHeader),
               ),
             ),
             SizedBox(
@@ -1432,6 +1482,7 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
                                 Status(
                                   topic: topic,
                                   audioUrl: participant.audioUrl,
+                                  location: participant.location,
                                   endTime: DateTime.now(),
                                 ),
                                 _topicToTitle(topic),
@@ -1530,25 +1581,29 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
 class _SingleTopicList extends StatelessWidget {
   final Topic topic;
   final List<TopicParticipant> participants;
+  final bool reverseHeader;
   final VoidCallback pop;
 
   const _SingleTopicList({
     Key? key,
     required this.topic,
     required this.participants,
+    this.reverseHeader = false,
     required this.pop,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    print('part are $participants');
     return Column(
       children: [
         const SizedBox(height: 16),
-        _TopicHeader(
-          topic: topic,
-          centerText: true,
-          onPressed: pop,
+        Directionality(
+          textDirection: reverseHeader ? TextDirection.rtl : TextDirection.ltr,
+          child: _TopicHeader(
+            topic: topic,
+            centerText: true,
+            onPressed: pop,
+          ),
         ),
         if (participants.isEmpty)
           const Expanded(
@@ -1610,61 +1665,66 @@ class _TopicHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      child: Row(
-        textDirection: centerText ? TextDirection.rtl : null,
-        children: [
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: centerText
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.start,
-              crossAxisAlignment: centerText
-                  ? CrossAxisAlignment.stretch
-                  : CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _topicToTitle(topic),
-                  textAlign: centerText ? TextAlign.center : null,
-                  style: Theming.of(context).text.body.copyWith(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w700,
-                    shadows: [
-                      const Shadow(
-                        blurRadius: 8,
-                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                      ),
-                    ],
+    return Directionality(
+      textDirection: !centerText
+          ? Directionality.of(context)
+          : (Directionality.of(context) == TextDirection.ltr
+              ? TextDirection.rtl
+              : TextDirection.ltr),
+      child: Button(
+        onPressed: onPressed,
+        child: Row(
+          children: [
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: centerText
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
+                crossAxisAlignment: centerText
+                    ? CrossAxisAlignment.stretch
+                    : CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _topicToTitle(topic),
+                    textAlign: centerText ? TextAlign.center : null,
+                    style: Theming.of(context).text.body.copyWith(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w700,
+                      shadows: [
+                        const Shadow(
+                          blurRadius: 8,
+                          color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _topicToDescription(topic),
-                  maxLines: 2,
-                  textAlign: centerText ? TextAlign.center : null,
-                  style: Theming.of(context).text.body.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w300,
-                    shadows: [
-                      const Shadow(
-                        blurRadius: 8,
-                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                      ),
-                    ],
+                  const SizedBox(height: 4),
+                  AutoSizeText(
+                    _topicToDescription(topic),
+                    maxLines: 1,
+                    textAlign: centerText ? TextAlign.center : null,
+                    style: Theming.of(context).text.body.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w300,
+                      shadows: [
+                        const Shadow(
+                          blurRadius: 8,
+                          color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Icon(
-            Icons.chevron_right,
-            size: 48,
-            textDirection: centerText ? TextDirection.rtl : null,
-          ),
-          const SizedBox(width: 8),
-        ],
+            const Icon(
+              Icons.chevron_right,
+              size: 48,
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
       ),
     );
   }
@@ -1785,7 +1845,7 @@ class CallProfileScreen extends StatelessWidget {
                   ),
             ),
             AutoSizeText(
-              'Fort Worth, Texas',
+              status.location,
               style: Theming.of(context).text.body.copyWith(
                     fontSize: 20,
                     fontWeight: FontWeight.w300,
@@ -1799,8 +1859,8 @@ class CallProfileScreen extends StatelessWidget {
                   url: status.audioUrl,
                   builder: (context, state) {
                     return Container(
-                      width: 100,
-                      height: 100,
+                      width: 80,
+                      height: 80,
                       alignment: Alignment.center,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
@@ -1809,7 +1869,7 @@ class CallProfileScreen extends StatelessWidget {
                       child: PlayStopArrow(
                         state: state,
                         color: Colors.black,
-                        size: 48,
+                        size: 32,
                       ),
                     );
                   },
@@ -1819,8 +1879,8 @@ class CallProfileScreen extends StatelessWidget {
                     Navigator.of(context).pop(CallProfileAction.call);
                   },
                   child: Container(
-                    width: 100,
-                    height: 100,
+                    width: 80,
+                    height: 80,
                     alignment: Alignment.center,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
@@ -1828,7 +1888,7 @@ class CallProfileScreen extends StatelessWidget {
                     ),
                     child: const Icon(
                       Icons.call,
-                      size: 64,
+                      size: 48,
                       color: Colors.black,
                     ),
                   ),
@@ -1883,12 +1943,12 @@ class _ParticipantTile extends StatelessWidget {
         children: [
           Button(
             onPressed: onPressed,
-            child: Image.network(
-              participant.photo,
-              fit: BoxFit.cover,
-              frameBuilder: fadeInFrameBuilder,
-              loadingBuilder: circularProgressLoadingBuilder,
-              errorBuilder: iconErrorBuilder,
+            child: IgnorePointer(
+              child: Gallery(
+                gallery: participant.gallery,
+                slideshow: true,
+                withWideBlur: false,
+              ),
             ),
           ),
           Positioned(
@@ -2029,12 +2089,6 @@ class _ReportBlockPopupMenu extends ConsumerWidget {
       },
     );
   }
-}
-
-class _StatusResult {
-  final Status? status;
-
-  _StatusResult(this.status);
 }
 
 String _topicToTitle(Topic topic) {

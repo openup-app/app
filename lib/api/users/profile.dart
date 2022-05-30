@@ -49,6 +49,7 @@ class TopicParticipant with _$TopicParticipant {
     required String photo,
     required List<String> gallery,
     required List<String> interests,
+    required String location,
     required String topic,
     required String audioUrl,
     required DateTime endTime,

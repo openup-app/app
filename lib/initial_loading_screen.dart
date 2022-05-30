@@ -8,7 +8,6 @@ import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/notifications/notifications.dart';
-import 'package:openup/widgets/theming.dart';
 
 /// Page used for asynchronous initialization.
 ///

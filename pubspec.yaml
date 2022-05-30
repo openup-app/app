@@ -52,6 +52,7 @@ dependencies:
     git: git@github.com:openup-app/flutter_voip_push_notification.git
   flutter_callkit_voximplant:
     git: git@github.com:openup-app/flutter_callkit.git
+  location: ^4.4.0
 
 dev_dependencies:
   flutter_test:

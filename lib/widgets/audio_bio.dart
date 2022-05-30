@@ -310,8 +310,10 @@ class AudioBioController {
       const maxAmplitude = 60.0;
       final value =
           1 - min(maxAmplitude, amplitude.current.abs()) / maxAmplitude;
-      _recordController
-          .add(_recordController.value.copyWith(recordingAmplitude: value));
+      if (!_recordController.isClosed) {
+        _recordController
+            .add(_recordController.value.copyWith(recordingAmplitude: value));
+      }
     });
   }
 

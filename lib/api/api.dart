@@ -14,6 +14,7 @@ import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/main.dart';
+import 'package:openup/util/location_service.dart';
 
 part 'api.freezed.dart';
 part 'api.g.dart';
@@ -680,6 +681,22 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, void>> updateLocation(String uid, LatLong location) {
+    return _request(
+      makeRequest: () {
+        return http.post(
+          Uri.parse('$_urlBase/users/$uid/location'),
+          headers: _headers,
+          body: jsonEncode({
+            'latitude': location.latitude,
+            'longitude': location.longitude,
+          }),
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
   static Future<Either<ApiError, void>> rejectCall(
     String uid,
     String rid,
@@ -802,6 +819,7 @@ class Status with _$Status {
   const factory Status({
     required Topic topic,
     required String audioUrl,
+    @Default("") String location,
     required DateTime endTime,
   }) = _Status;
 
