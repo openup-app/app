@@ -15,6 +15,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/call_state.dart';
 import 'package:openup/api/online_users/online_users_api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/call_system.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/connections_screen.dart';
 import 'package:openup/contact_us_screen.dart';
@@ -44,6 +45,9 @@ const socketPort = 8081;
 const urlBase = 'http://$host:$webPort';
 
 final _scaffoldKey = GlobalKey();
+
+final callSystemKey = GlobalKey<CallSystemState>();
+final _navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   void appRunner() {
@@ -138,251 +142,252 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   @override
   Widget build(BuildContext context) {
-    return Theming(
-      child: Builder(
-        builder: (context) {
-          return MaterialApp(
-            theme: ThemeData(
-              colorScheme: const ColorScheme.light(
-                primary: Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
-                secondary: Color.fromARGB(0xAA, 0xFF, 0x71, 0x71),
-              ),
-              fontFamily: 'Myriad',
-              iconTheme: const IconThemeData(
-                color: Colors.white,
-              ),
-            ),
-            navigatorObservers: [_routeObserver],
-            initialRoute: '/',
-            onGenerateRoute: (settings) {
-              switch (settings.name) {
-                case '/':
-                  return _buildPageRoute(
-                    settings: settings,
-                    transitionsBuilder: fadePageTransition,
-                    builder: (_) {
-                      final args =
-                          settings.arguments as InitialLoadingScreenArguments?;
-                      return CurrentRouteSystemUiStyling.light(
-                        child: InitialLoadingScreen(
-                          key: _scaffoldKey,
-                          scaffoldKey: _scaffoldKey,
-                          needsOnboarding: args?.needsOnboarding ?? false,
-                        ),
-                      );
-                    },
-                  );
-                case 'error':
-                  return _buildPageRoute(
-                    settings: settings,
-                    transitionsBuilder: fadePageTransition,
-                    builder: (_) {
-                      final args =
-                          settings.arguments as InitialLoadingScreenArguments?;
-                      return CurrentRouteSystemUiStyling.dark(
-                        child: ErrorScreen(
-                          needsOnboarding: args?.needsOnboarding ?? false,
-                        ),
-                      );
-                    },
-                  );
-                case 'sign-up':
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      return const CurrentRouteSystemUiStyling.light(
-                        child: SignUpScreen(),
-                      );
-                    },
-                  );
-                case 'phone-verification':
-                  final args = settings.arguments as CredentialVerification;
-                  return _buildPageRoute<String?>(
-                    settings: settings,
-                    builder: (_) {
-                      return CurrentRouteSystemUiStyling.dark(
-                        child: PhoneVerificationScreen(
-                          credentialVerification: args,
-                        ),
-                      );
-                    },
-                  );
-                case 'sign-up-info':
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      return const CurrentRouteSystemUiStyling.light(
-                        child: SignUpInfoScreen(),
-                      );
-                    },
-                  );
-                case 'sign-up-photos':
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      return const CurrentRouteSystemUiStyling.light(
-                        child: SignUpPhotosScreen(),
-                      );
-                    },
-                  );
-                case 'sign-up-welcome-info':
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      return const CurrentRouteSystemUiStyling.light(
-                        child: SignUpWelcomeInfoScreen(),
-                      );
-                    },
-                  );
-                case 'lobby-list':
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      final args = settings.arguments as StartWithCall?;
-                      return CurrentRouteSystemUiStyling.light(
-                        key: _scaffoldKey,
-                        child: LobbyListPage(
-                          startWithCall: args,
-                        ),
-                      );
-                    },
-                  );
-                case 'call-profile':
-                  return _buildPageRoute<CallProfileAction>(
-                    settings: settings,
-                    transitionsBuilder: bottomToTopPageTransition,
-                    builder: (_) {
-                      final args =
-                          settings.arguments as CallProfileScreenArguments;
-                      return CurrentRouteSystemUiStyling.light(
-                        child: CallProfileScreen(
-                          profile: args.profile,
-                          status: args.status,
-                          title: args.title,
-                        ),
-                      );
-                    },
-                  );
-                case 'home':
-                  return _buildPageRoute(
-                    settings: settings,
-                    transitionsBuilder: fadePageTransition,
-                    builder: (_) {
-                      return CurrentRouteSystemUiStyling.light(
-                        key: _scaffoldKey,
-                        child: const HomeScreen(),
-                      );
-                    },
-                  );
-                case 'call-report':
-                  final args = settings.arguments as ReportScreenArguments;
-                  return _buildPageRoute(
-                    settings: settings,
-                    transitionsBuilder: fadePageTransition,
-                    builder: (_) {
-                      return CurrentRouteSystemUiStyling.light(
-                        child: ReportScreenTheme(
-                          themeData: const ReportScreenThemeData(
-                            backgroundGradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color.fromRGBO(0xFF, 0x8E, 0x8E, 0.9),
-                                Color.fromRGBO(0xBD, 0x20, 0x20, 0.74),
-                              ],
-                            ),
-                          ),
-                          child: ReportScreen(
-                            uid: args.uid,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                case 'profile':
-                  final args = settings.arguments as ProfileArguments;
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      return CurrentRouteSystemUiStyling.light(
-                        child: ProfileScreen(
-                          profile: args.profile,
-                          editable: args.editable,
-                        ),
-                      );
-                    },
-                  );
-                case 'profile-edit':
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      return const CurrentRouteSystemUiStyling.light(
-                        child: ProfileEditScreen(),
-                      );
-                    },
-                  );
-                case 'connections':
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      return const CurrentRouteSystemUiStyling.light(
-                        child: ConnectionsScreen(),
-                      );
-                    },
-                  );
-                case 'chat':
-                  final args = settings.arguments as ChatArguments;
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      return CurrentRouteSystemUiStyling.light(
-                        child: ChatScreen(
-                          host: host,
-                          webPort: webPort,
-                          socketPort: socketPort,
-                          uid: args.uid,
-                          chatroomId: args.chatroomId,
-                        ),
-                      );
-                    },
-                  );
-                case 'account-settings':
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      return const CurrentRouteSystemUiStyling.light(
-                        child: AccountSettingsScreen(),
-                      );
-                    },
-                  );
-                case 'account-settings-phone-verification':
-                  final args = settings.arguments as String;
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      return CurrentRouteSystemUiStyling.light(
-                        child: AccountSettingsPhoneVerificationScreen(
-                          verificationId: args,
-                        ),
-                      );
-                    },
-                  );
-                case 'contact-us':
-                  return _buildPageRoute(
-                    settings: settings,
-                    builder: (_) {
-                      return const CurrentRouteSystemUiStyling.light(
-                        child: ContactUsScreen(),
-                      );
-                    },
-                  );
-                default:
-                  throw 'Route not found ${settings.name}';
-              }
-            },
-          );
-        },
+    return MaterialApp(
+      theme: ThemeData(
+        colorScheme: const ColorScheme.light(
+          primary: Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
+          secondary: Color.fromARGB(0xAA, 0xFF, 0x71, 0x71),
+        ),
+        fontFamily: 'Myriad',
+        iconTheme: const IconThemeData(
+          color: Colors.white,
+        ),
       ),
+      navigatorObservers: [_routeObserver],
+      navigatorKey: _navigatorKey,
+      initialRoute: '/',
+      builder: (context, child) {
+        return Theming(
+          child: Stack(
+            children: [
+              if (child != null) Positioned.fill(child: child),
+              Positioned(
+                left: 0,
+                bottom: 0,
+                right: 0,
+                child: CallSystem(
+                  key: callSystemKey,
+                  navigatorKey: _navigatorKey,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/':
+            return _buildPageRoute(
+              settings: settings,
+              transitionsBuilder: fadePageTransition,
+              builder: (_) {
+                final args =
+                    settings.arguments as InitialLoadingScreenArguments?;
+                return CurrentRouteSystemUiStyling.light(
+                  child: InitialLoadingScreen(
+                    key: _scaffoldKey,
+                    scaffoldKey: _scaffoldKey,
+                    needsOnboarding: args?.needsOnboarding ?? false,
+                  ),
+                );
+              },
+            );
+          case 'error':
+            return _buildPageRoute(
+              settings: settings,
+              transitionsBuilder: fadePageTransition,
+              builder: (_) {
+                final args =
+                    settings.arguments as InitialLoadingScreenArguments?;
+                return CurrentRouteSystemUiStyling.dark(
+                  child: ErrorScreen(
+                    needsOnboarding: args?.needsOnboarding ?? false,
+                  ),
+                );
+              },
+            );
+          case 'sign-up':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: SignUpScreen(),
+                );
+              },
+            );
+          case 'phone-verification':
+            final args = settings.arguments as CredentialVerification;
+            return _buildPageRoute<String?>(
+              settings: settings,
+              builder: (_) {
+                return CurrentRouteSystemUiStyling.dark(
+                  child: PhoneVerificationScreen(
+                    credentialVerification: args,
+                  ),
+                );
+              },
+            );
+          case 'sign-up-info':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: SignUpInfoScreen(),
+                );
+              },
+            );
+          case 'sign-up-photos':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: SignUpPhotosScreen(),
+                );
+              },
+            );
+          case 'sign-up-welcome-info':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: SignUpWelcomeInfoScreen(),
+                );
+              },
+            );
+          case 'lobby-list':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                final args = settings.arguments as StartWithCall?;
+                return CurrentRouteSystemUiStyling.light(
+                  key: _scaffoldKey,
+                  child: LobbyListPage(
+                    startWithCall: args,
+                  ),
+                );
+              },
+            );
+          case 'call-profile':
+            return _buildPageRoute<CallProfileAction>(
+              settings: settings,
+              transitionsBuilder: bottomToTopPageTransition,
+              builder: (_) {
+                final args = settings.arguments as CallProfileScreenArguments;
+                return CurrentRouteSystemUiStyling.light(
+                  child: CallProfileScreen(
+                    profile: args.profile,
+                    status: args.status,
+                    title: args.title,
+                  ),
+                );
+              },
+            );
+          case 'home':
+            return _buildPageRoute(
+              settings: settings,
+              transitionsBuilder: fadePageTransition,
+              builder: (_) {
+                return CurrentRouteSystemUiStyling.light(
+                  key: _scaffoldKey,
+                  child: const HomeScreen(),
+                );
+              },
+            );
+          case 'call-report':
+            final args = settings.arguments as ReportScreenArguments;
+            return _buildPageRoute(
+              settings: settings,
+              transitionsBuilder: fadePageTransition,
+              builder: (_) {
+                return CurrentRouteSystemUiStyling.light(
+                  child: ReportScreen(
+                    uid: args.uid,
+                    onClose: Navigator.of(context).pop,
+                  ),
+                );
+              },
+            );
+          case 'profile':
+            final args = settings.arguments as ProfileArguments;
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return CurrentRouteSystemUiStyling.light(
+                  child: ProfileScreen(
+                    profile: args.profile,
+                    editable: args.editable,
+                  ),
+                );
+              },
+            );
+          case 'profile-edit':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: ProfileEditScreen(),
+                );
+              },
+            );
+          case 'connections':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: ConnectionsScreen(),
+                );
+              },
+            );
+          case 'chat':
+            final args = settings.arguments as ChatArguments;
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return CurrentRouteSystemUiStyling.light(
+                  child: ChatScreen(
+                    host: host,
+                    webPort: webPort,
+                    socketPort: socketPort,
+                    uid: args.uid,
+                    chatroomId: args.chatroomId,
+                  ),
+                );
+              },
+            );
+          case 'account-settings':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: AccountSettingsScreen(),
+                );
+              },
+            );
+          case 'account-settings-phone-verification':
+            final args = settings.arguments as String;
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return CurrentRouteSystemUiStyling.light(
+                  child: AccountSettingsPhoneVerificationScreen(
+                    verificationId: args,
+                  ),
+                );
+              },
+            );
+          case 'contact-us':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: ContactUsScreen(),
+                );
+              },
+            );
+          default:
+            throw 'Route not found ${settings.name}';
+        }
+      },
     );
   }
 

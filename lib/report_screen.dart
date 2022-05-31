@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -10,13 +9,15 @@ import 'package:openup/widgets/contact_text_field.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/theming.dart';
 
-part 'report_screen.freezed.dart';
-
 class ReportScreen extends ConsumerStatefulWidget {
   final String uid;
+  final bool showHome;
+  final VoidCallback onClose;
   const ReportScreen({
     Key? key,
     required this.uid,
+    this.showHome = true,
+    required this.onClose,
   }) : super(key: key);
 
   @override
@@ -51,8 +52,15 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
           color: Colors.black,
         ),
         child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: ReportScreenTheme.of(context).backgroundGradient,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromRGBO(0xFF, 0x8E, 0x8E, 0.9),
+                Color.fromRGBO(0xBD, 0x20, 0x20, 0.74),
+              ],
+            ),
           ),
           child: Theme(
             data: Theme.of(context).copyWith(
@@ -81,9 +89,6 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                     child: Container(
                       constraints: const BoxConstraints(maxWidth: 362),
                       child: ListView(
-                        // mainAxisAlignment: MainAxisAlignment.center,
-                        // mainAxisSize: MainAxisSize.min,
-                        // crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const SizedBox(height: 42),
                           Center(
@@ -166,12 +171,22 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                   ),
                 ),
                 Positioned(
-                  right: MediaQuery.of(context).padding.right + 16,
-                  bottom: MediaQuery.of(context).padding.bottom + 16,
-                  child: const HomeButton(
-                    color: Colors.white,
+                  left: MediaQuery.of(context).padding.left + 16,
+                  top: MediaQuery.of(context).padding.top + 16,
+                  child: Button(
+                    onPressed: widget.onClose,
+                    child: const Padding(
+                        padding: EdgeInsets.all(8), child: Icon(Icons.close)),
                   ),
                 ),
+                if (widget.showHome)
+                  Positioned(
+                    right: MediaQuery.of(context).padding.right + 16,
+                    bottom: MediaQuery.of(context).padding.bottom + 16,
+                    child: const HomeButton(
+                      color: Colors.white,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -217,40 +232,13 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
             content: Text('Successfully reported user'),
           ),
         );
-        Navigator.of(context).pop();
+        widget.onClose();
       },
     );
   }
 }
 
 enum _Reason { violentRepulsive, harassmentBullying, child, other }
-
-class ReportScreenTheme extends InheritedWidget {
-  final ReportScreenThemeData themeData;
-
-  const ReportScreenTheme({
-    Key? key,
-    required Widget child,
-    required this.themeData,
-  }) : super(key: key, child: child);
-
-  static ReportScreenThemeData of(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<ReportScreenTheme>()!
-        .themeData;
-  }
-
-  @override
-  bool updateShouldNotify(ReportScreenTheme oldWidget) =>
-      oldWidget.themeData != themeData;
-}
-
-@freezed
-class ReportScreenThemeData with _$ReportScreenThemeData {
-  const factory ReportScreenThemeData({
-    required Gradient backgroundGradient,
-  }) = _ReportScreenThemeData;
-}
 
 class ReportScreenArguments {
   final String uid;

@@ -12,10 +12,8 @@ import 'package:get_it/get_it.dart';
 import 'package:list_diff/list_diff.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/call_state.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/call_screen.dart';
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/profile_screen.dart';
 import 'package:openup/report_screen.dart';
@@ -31,6 +29,8 @@ import 'package:openup/widgets/theming.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:tuple/tuple.dart';
+
+import 'main.dart';
 
 class StartWithCall {
   final String rid;
@@ -66,8 +66,6 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
   bool _slideToRight = true;
 
   Key _myStatusKey = UniqueKey();
-
-  StreamSubscription? _phoneStateSubscription;
 
   @override
   void initState() {
@@ -118,35 +116,11 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
         }
       },
     );
-
-    final callInfoStream = GetIt.instance.get<CallState>().callInfoStream;
-    callInfoStream.listen(_onCallInfo);
-  }
-
-  void _onCallInfo(CallInfo callInfo) {
-    callInfo.map(
-      active: (activeCall) {
-        WidgetsBinding.instance?.scheduleFrameCallback((_) {
-          _showPanel(
-            context: context,
-            builder: (context) {
-              return CallPanel(
-                activeCall: activeCall,
-                onCallEnded: (reason) =>
-                    _onCallEnded(context, activeCall.profile.uid, reason),
-              );
-            },
-          );
-        });
-      },
-      none: (_) {},
-    );
   }
 
   @override
   void dispose() {
     super.dispose();
-    _phoneStateSubscription?.cancel();
     _refreshTimer.cancel();
   }
 
@@ -758,40 +732,6 @@ class _StatusField extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-void _call(BuildContext context, TopicParticipant participant) {
-  _showPanel(
-    context: context,
-    dragIndicatorColor: Colors.white,
-    builder: (context) {
-      return InitiateCall(
-        participant: participant,
-        onCallEnded: (reason) => _onCallEnded(context, participant.uid, reason),
-      );
-    },
-  );
-}
-
-void _onCallEnded(BuildContext context, String uid, EndCallReason reason) {
-  switch (reason) {
-    case EndCallReason.timeUp:
-      // Panel will pop itself after timer
-      break;
-    case EndCallReason.hangUp:
-      Navigator.of(context).pop();
-      break;
-    case EndCallReason.report:
-      Navigator.of(context).pop();
-      Navigator.of(context).pushNamed(
-        'call-report',
-        arguments: ReportScreenArguments(uid: uid),
-      );
-      break;
-    case EndCallReason.remoteHangUpOrDisconnect:
-      // Panel will pop itself after timer
-      break;
   }
 }
 
@@ -1500,7 +1440,7 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
                                   uid: participant.uid,
                                   name: participant.name,
                                   photo: participant.photo,
-                                  gallery: [participant.photo],
+                                  gallery: participant.gallery,
                                 ),
                                 Status(
                                   topic: topic,
@@ -1514,7 +1454,8 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
                             if (action != null) {
                               switch (action) {
                                 case CallProfileAction.call:
-                                  _call(context, participant);
+                                  callSystemKey.currentState
+                                      ?.call(context, participant);
                                   break;
                                 case CallProfileAction.block:
                                   final item = participants.removeAt(index);
@@ -1638,7 +1579,7 @@ class _SingleTopicList extends StatelessWidget {
                     }
                     switch (action) {
                       case CallProfileAction.call:
-                        _call(context, participant);
+                        callSystemKey.currentState?.call(context, participant);
                         break;
                       case CallProfileAction.block:
                         break;

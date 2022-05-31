@@ -6,7 +6,7 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/call_screen.dart';
+import 'package:openup/call_system.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -603,20 +603,18 @@ class _RemoveConnectionAlertDialogState
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 )
-              : Text(
-                  'Remove',
+              : Text('Remove',
                   style: Theming.of(context).text.body.copyWith(
                       fontSize: 14,
-                      fontWeight: FontWeight.w300,
-                      color: Colors.red),
-                ),
+                      fontWeight: FontWeight.w500,
+                      color: Colors.red)),
         ),
         TextButton(
           onPressed: Navigator.of(context).pop,
           child: Text(
             'Cancel',
             style: Theming.of(context).text.body.copyWith(
-                fontSize: 14, fontWeight: FontWeight.w300, color: Colors.black),
+                fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
           ),
         ),
       ],
