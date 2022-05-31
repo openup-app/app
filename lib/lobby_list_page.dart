@@ -1454,8 +1454,14 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
                             if (action != null) {
                               switch (action) {
                                 case CallProfileAction.call:
-                                  callSystemKey.currentState
-                                      ?.call(context, participant);
+                                  callSystemKey.currentState?.call(
+                                    context,
+                                    SimpleProfile(
+                                      uid: participant.uid,
+                                      name: participant.name,
+                                      photo: participant.photo,
+                                    ),
+                                  );
                                   break;
                                 case CallProfileAction.block:
                                   final item = participants.removeAt(index);
@@ -1579,7 +1585,14 @@ class _SingleTopicList extends StatelessWidget {
                     }
                     switch (action) {
                       case CallProfileAction.call:
-                        callSystemKey.currentState?.call(context, participant);
+                        callSystemKey.currentState?.call(
+                          context,
+                          SimpleProfile(
+                            uid: participant.uid,
+                            name: participant.name,
+                            photo: participant.photo,
+                          ),
+                        );
                         break;
                       case CallProfileAction.block:
                         break;

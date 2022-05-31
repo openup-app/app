@@ -98,15 +98,15 @@ class CallSystemState extends ConsumerState<CallSystem> {
         .whenComplete(_disposeCallAndDismiss);
   }
 
-  void call(BuildContext context, TopicParticipant participant) async {
+  void call(BuildContext context, SimpleProfile profile) async {
     setState(() {
       _panelVisible = true;
       _initiating = true;
-      _ringingName = participant.name;
+      _ringingName = profile.name;
     });
 
     final api = GetIt.instance.get<Api>();
-    final result = await api.call(participant.uid, false, group: false);
+    final result = await api.call(profile.uid, false, group: false);
     if (!mounted) {
       // TODO: Hang up call in this case
       return;
@@ -144,25 +144,9 @@ class CallSystemState extends ConsumerState<CallSystem> {
         final uid = ref.read(userProvider).uid;
         ActiveCall? activeCall;
         if (Platform.isAndroid) {
-          activeCall = android_voip.createActiveCall(
-            uid,
-            rid,
-            SimpleProfile(
-              uid: participant.uid,
-              name: participant.name,
-              photo: participant.photo,
-            ),
-          );
+          activeCall = android_voip.createActiveCall(uid, rid, profile);
         } else if (Platform.isIOS) {
-          activeCall = ios_voip.createActiveCall(
-            uid,
-            rid,
-            SimpleProfile(
-              uid: participant.uid,
-              name: participant.name,
-              photo: participant.photo,
-            ),
-          );
+          activeCall = ios_voip.createActiveCall(uid, rid, profile);
         }
 
         if (activeCall != null) {

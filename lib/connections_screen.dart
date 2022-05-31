@@ -8,6 +8,7 @@ import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_system.dart';
 import 'package:openup/chat_screen.dart';
+import 'package:openup/main.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
@@ -170,7 +171,8 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                           ),
                         );
                       },
-                      onCall: () => _onCall(profile, video: false),
+                      onCall: (profile) =>
+                          callSystemKey.currentState?.call(context, profile),
                       onVideoCall: () => _onCall(profile, video: true),
                       onDeleteConnection: () async {
                         final connections = await showDialog<List<Connection>>(
@@ -347,7 +349,7 @@ class ConnectionTile extends StatefulWidget {
   final bool expanded;
   final VoidCallback onShowProfile;
   final VoidCallback onChat;
-  final VoidCallback onCall;
+  final void Function(SimpleProfile profile) onCall;
   final VoidCallback onVideoCall;
   final VoidCallback onDeleteConnection;
 
@@ -496,15 +498,21 @@ class _ConnectionTileState extends State<ConnectionTile>
                           ),
                         ),
                       ),
-                      // Button(
-                      //   onPressed: widget.onCall,
-                      //   child: const Padding(
-                      //     padding: EdgeInsets.all(10.0),
-                      //     child: Icon(
-                      //       Icons.phone,
-                      //     ),
-                      //   ),
-                      // ),
+                      Button(
+                        onPressed: () => widget.onCall(
+                          SimpleProfile(
+                            uid: widget.profile.uid,
+                            name: widget.profile.name,
+                            photo: widget.profile.photo,
+                          ),
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.all(10.0),
+                          child: Icon(
+                            Icons.phone,
+                          ),
+                        ),
+                      ),
                       Button(
                         onPressed: widget.onChat,
                         child: Padding(
@@ -515,15 +523,6 @@ class _ConnectionTileState extends State<ConnectionTile>
                           ),
                         ),
                       ),
-                      // Button(
-                      //   onPressed: widget.onVideoCall,
-                      //   child: const Padding(
-                      //     padding: EdgeInsets.all(10.0),
-                      //     child: Icon(
-                      //       Icons.videocam_sharp,
-                      //     ),
-                      //   ),
-                      // ),
                       Button(
                         onPressed: widget.onDeleteConnection,
                         child: const Padding(

@@ -117,23 +117,7 @@ Future<bool> _handleLaunchNotification(BuildContext context) async {
     final payload = _NotificationPayload.fromJson(jsonDecode(payloadJson));
     final api = GetIt.instance.get<Api>();
     return payload.map(
-      call: (call) {
-        const route = "";
-        final profile = SimpleProfile(
-          uid: call.callerUid,
-          name: call.name,
-          photo: call.photo,
-        );
-        Navigator.of(context).pushNamed(
-          route,
-          arguments: CallPageArguments(
-            rid: call.rid,
-            profiles: [profile],
-            serious: false,
-          ),
-        );
-        return true;
-      },
+      call: (call) => false,
       callEnded: (_) => false,
       chat: (chat) async {
         final result = await api.getProfile(chat.uid);
