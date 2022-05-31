@@ -11,7 +11,6 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/call_state.dart';
 import 'package:openup/api/chat/chat_api.dart';
-import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_screen.dart';
@@ -21,7 +20,6 @@ import 'package:openup/notifications/android_voip_handlers.dart'
     as android_voip;
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notification_comms.dart';
-import 'package:openup/util/string.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 part 'notifications.freezed.dart';
@@ -117,7 +115,7 @@ Future<bool> _handleLaunchNotification(BuildContext context) async {
     final api = GetIt.instance.get<Api>();
     return payload.map(
       call: (call) {
-        final route = call.video ? 'friends-video-call' : 'friends-voice-call';
+        const route = "";
         final profile = SimpleProfile(
           uid: call.callerUid,
           name: call.name,
@@ -128,7 +126,6 @@ Future<bool> _handleLaunchNotification(BuildContext context) async {
           arguments: CallPageArguments(
             rid: call.rid,
             profiles: [profile],
-            rekindles: [],
             serious: false,
           ),
         );
@@ -191,7 +188,7 @@ void _onForegroundNotification(
         android_voip.displayIncomingCall(
           rid: call.rid,
           profile: profile,
-          video: call.video,
+          video: false,
         );
       }
     },
@@ -246,7 +243,7 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
         android_voip.displayIncomingCall(
           rid: call.rid,
           profile: profile,
-          video: call.video,
+          video: false,
         );
       }
     },
@@ -275,13 +272,7 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
     final callerName = message.data['callerName'];
     final callerPhoto = message.data['callerPhoto'];
     final rid = message.data['rid'];
-    final purpose =
-        message.data['purpose'] == 'friends' ? Purpose.friends : Purpose.dating;
-    final video = (message.data['video'] as String).parseBool();
-    final group = (message.data['group'] as String).parseBool();
-    notificationTitle = group
-        ? ('Incoming ${purpose == Purpose.friends ? 'friends with friends' : 'double date'} ${video ? 'video call' : 'call'} from $callerName')
-        : ('Incoming ${video ? 'video call' : 'call'} from $callerName');
+    notificationTitle = 'Incoming audio call from $callerName';
     notificationBody = callerName;
     channelName = 'Calls';
     channelDescription = 'Calls from your friends';
@@ -289,10 +280,7 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
       callerUid: callerUid,
       name: callerName,
       photo: callerPhoto,
-      video: video,
-      group: group,
       rid: rid,
-      purpose: purpose,
     );
   } else if (type == 'call_ended') {
     final rid = message.data['rid'];
@@ -420,9 +408,6 @@ class _NotificationPayload with _$_NotificationPayload {
     required String name,
     required String photo,
     required String rid,
-    required Purpose purpose,
-    required bool video,
-    required bool group,
   }) = _CallPayload;
 
   const factory _NotificationPayload.callEnded({

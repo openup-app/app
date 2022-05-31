@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +9,6 @@ import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/policies.dart';
 import 'package:openup/widgets/title_and_tagline.dart';
 import 'package:openup/widgets/theming.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class PhoneVerificationScreen extends ConsumerStatefulWidget {
   final CredentialVerification credentialVerification;

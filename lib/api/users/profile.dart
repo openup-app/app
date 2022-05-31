@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:openup/api/users/preferences.dart';
 
 part 'profile.freezed.dart';
 part 'profile.g.dart';
@@ -57,28 +56,4 @@ class TopicParticipant with _$TopicParticipant {
 
   factory TopicParticipant.fromJson(Map<String, dynamic> json) =>
       _$TopicParticipantFromJson(json);
-}
-
-@freezed
-class Attributes with _$Attributes {
-  const factory Attributes({
-    required Gender gender,
-    required SkinColor skinColor,
-    required int weight,
-    required int height,
-    required String ethnicity,
-  }) = _Attributes;
-
-  factory Attributes.fromJson(Map<String, dynamic> json) =>
-      _$AttributesFromJson(json);
-}
-
-@freezed
-class Interests with _$Interests {
-  const factory Interests({
-    required List<String> interests,
-  }) = _Interests;
-
-  factory Interests.fromJson(Map<String, dynamic> json) =>
-      _$InterestsFromJson(json);
 }

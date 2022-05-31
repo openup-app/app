@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/rekindle.dart';
 
 part 'signaling.freezed.dart';
 part 'signaling.g.dart';
@@ -61,7 +60,6 @@ class Signal with _$Signal {
     @Default('room') String recipient,
     required String rid,
     required List<SimpleProfile> profiles,
-    required List<Rekindle> rekindles,
   }) = _JoinCall;
 
   factory Signal.fromJson(Map<String, dynamic> json) => _$SignalFromJson(json);

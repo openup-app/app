@@ -355,5 +355,6 @@ class _NameStateDialogContents extends State<_NameDialogContents> {
     if (value == null || value.isEmpty) {
       return 'Enter a name';
     }
+    return null;
   }
 }

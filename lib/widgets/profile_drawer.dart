@@ -128,7 +128,7 @@ class ProfileDrawer extends ConsumerWidget {
                     child: Icon(Icons.call, color: iconColor),
                   ),
                   title: 'Call Log',
-                  onPressed: () => _navigateToAttributesPage(context, ref),
+                  onPressed: () {},
                 ),
                 _MenuButton(
                   icon: SvgPicture.asset(
@@ -152,11 +152,6 @@ class ProfileDrawer extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  void _navigateToAttributesPage(BuildContext context, WidgetRef ref) async {
-    final interests = ref.read(userProvider).interests;
-    Navigator.of(context).pushNamed('attributes', arguments: interests);
   }
 }
 

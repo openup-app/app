@@ -7,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_state.dart';
-import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/users/profile.dart';
@@ -95,7 +94,6 @@ Future<void> _onCallAcceptedWhenTerminated(CallEvent callEvent) async {
   final uid = callEvent.userInfo?['uid'];
   final photo = callEvent.userInfo?['photo'];
   if (uid != null && photo != null) {
-    final video = callEvent.callType == 1;
     final backgroundCallNotification = BackgroundCallNotification(
       rid: callEvent.sessionId,
       profile: SimpleProfile(
@@ -103,9 +101,6 @@ Future<void> _onCallAcceptedWhenTerminated(CallEvent callEvent) async {
         name: callEvent.callerName,
         photo: photo,
       ),
-      video: video,
-      purpose: Purpose.friends,
-      group: false,
     );
     await serializeBackgroundCallNotification(backgroundCallNotification);
   }
@@ -161,7 +156,7 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
     onGroupCallLobbyStates: (_) {
       // Unused
     },
-    onJoinGroupCall: (rid, profiles, rekindles) {
+    onJoinGroupCall: (rid, profiles) {
       // Unused
     },
   );

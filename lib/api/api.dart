@@ -8,11 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 import 'package:openup/api/chat/chat_api.dart';
-import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/connection.dart';
-import 'package:openup/api/users/preferences.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/main.dart';
 import 'package:openup/util/location_service.dart';
 
@@ -168,133 +165,6 @@ class Api {
         );
       },
       handleSuccess: (response) => const Right(null),
-    );
-  }
-
-  Future<Either<ApiError, Preferences>> getFriendsPreferences(String uid) =>
-      _getPreferences(uid, Purpose.friends);
-
-  Future<Either<ApiError, Preferences>> getDatingPreferences(String uid) =>
-      _getPreferences(uid, Purpose.dating);
-
-  Future<Either<ApiError, Preferences>> _getPreferences(
-    String uid,
-    Purpose purpose,
-  ) {
-    return _request(
-      makeRequest: () {
-        return http.get(
-          Uri.parse('$_urlBase/users/$uid/preferences/${purpose.name}'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        return Right(Preferences.fromJson(jsonDecode(response.body)));
-      },
-    );
-  }
-
-  Future<Either<ApiError, Attributes>> getAttributes(String uid) {
-    return _request(
-      makeRequest: () {
-        return http.get(
-          Uri.parse('$_urlBase/users/$uid/attributes'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        return Right(Attributes.fromJson(jsonDecode(response.body)));
-      },
-    );
-  }
-
-  Future<Either<ApiError, void>> updateAttributes(
-    String uid,
-    Attributes attributes,
-  ) {
-    return _request(
-      makeRequest: () {
-        return http.put(
-          Uri.parse('$_urlBase/users/$uid/attributes'),
-          headers: _headers,
-          body: jsonEncode(attributes.toJson()),
-        );
-      },
-      handleSuccess: (response) => const Right(null),
-    );
-  }
-
-  Future<Either<ApiError, Interests>> getInterests(String uid) {
-    return _request(
-      makeRequest: () {
-        return http.get(
-          Uri.parse('$_urlBase/users/$uid/interests'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        final list = jsonDecode(response.body) as List<dynamic>;
-        final interests = List<String>.from(list);
-        return Right(Interests(interests: interests));
-      },
-    );
-  }
-
-  Future<Either<ApiError, void>> updateInterests(
-    String uid,
-    Interests interests,
-  ) {
-    return _request(
-      makeRequest: () {
-        return http.put(
-          Uri.parse('$_urlBase/users/$uid/interests'),
-          headers: _headers,
-          body: jsonEncode(interests.toJson()),
-        );
-      },
-      handleSuccess: (response) => const Right(null),
-    );
-  }
-
-  Future<Either<ApiError, void>> updateFriendsPreferences(
-          String uid, Preferences preferences) =>
-      _updatePreferences(uid, preferences, Purpose.friends);
-
-  Future<Either<ApiError, void>> updateDatingPreferences(
-          String uid, Preferences preferences) =>
-      _updatePreferences(uid, preferences, Purpose.dating);
-
-  Future<Either<ApiError, void>> _updatePreferences(
-    String uid,
-    Preferences preferences,
-    Purpose purpose,
-  ) {
-    return _request(
-      makeRequest: () {
-        return http.put(
-          Uri.parse('$_urlBase/users/$uid/preferences/${purpose.name}'),
-          headers: _headers,
-          body: jsonEncode(preferences.toJson()),
-        );
-      },
-      handleSuccess: (response) => const Right(null),
-    );
-  }
-
-  Future<Either<ApiError, List<Rekindle>>> getRekindles(String uid) {
-    return _request(
-      makeRequest: () {
-        return http.get(
-          Uri.parse('$_urlBase/users/$uid/rekindles'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        final list = jsonDecode(response.body) as List<dynamic>;
-        final rekindles =
-            List<Rekindle>.from(list.map((e) => Rekindle.fromJson(e)));
-        return Right(rekindles);
-      },
     );
   }
 

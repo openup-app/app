@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 /// Fades in the child when a frame is avaialbel (i.e. [frame] is not null).
 /// Used when loading images.

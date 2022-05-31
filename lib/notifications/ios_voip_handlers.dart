@@ -123,7 +123,7 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
     onGroupCallLobbyStates: (_) {
       // Unused
     },
-    onJoinGroupCall: (rid, profiles, rekindles) {
+    onJoinGroupCall: (rid, profiles) {
       // Unused
     },
   );

@@ -3,10 +3,12 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/rekindle.dart';
 import 'package:rxdart/rxdart.dart';
+
+part 'phone.freezed.dart';
 
 /// WebRTC calling service, can only be used to [call()] or [answer()] once per
 /// instance. The signaling server must already have a room ready for the
@@ -42,7 +44,6 @@ class Phone {
   final void Function(
     String rid,
     List<SimpleProfile> profiles,
-    List<Rekindle> rekindles,
   ) onJoinGroupCall;
 
   bool _usedOnce = false;
@@ -288,9 +289,9 @@ class Phone {
         iceCandidates: (iceCandidates) {
           if (_hasRemoteDescription) {
             // Should only add candidates after receciving remote description
-            iceCandidates.iceCandidates.forEach((iceCandidate) {
+            for (final iceCandidate in iceCandidates.iceCandidates) {
               _addIceCandidate(peerConnection, iceCandidate);
-            });
+            }
 
             if (!_receivedAnIceCandidate.isCompleted) {
               _receivedAnIceCandidate.complete();
@@ -307,7 +308,6 @@ class Phone {
         joinCall: (room) => onJoinGroupCall(
           room.rid,
           room.profiles,
-          room.rekindles,
         ),
         hangUp: (_) {
           _connectionStateController.add(PhoneConnectionState.complete);
@@ -384,40 +384,27 @@ enum PhoneConnectionState {
   complete
 }
 
-class PhoneController with ChangeNotifier {
-  bool _muteValue = false;
-  bool _speakerphoneValue = false;
-  DateTime _startTimeValue = DateTime.now();
+class PhoneController extends ValueNotifier<PhoneValue> {
+  PhoneController() : super(PhoneValue(startTime: DateTime.now()));
 
-  PhoneController() : super();
+  set _mute(bool v) => value = value.copyWith(mute: v);
 
-  set _mute(bool value) {
-    final old = _muteValue;
-    _muteValue = value;
-    if (old != value) {
-      notifyListeners();
-    }
-  }
+  set _speakerphone(bool v) => value = value.copyWith(speakerphone: v);
 
-  set _speakerphone(bool value) {
-    final old = _speakerphoneValue;
-    _speakerphoneValue = value;
-    if (old != value) {
-      notifyListeners();
-    }
-  }
+  set startTime(DateTime v) => value = value.copyWith(startTime: v);
 
-  set startTime(DateTime value) {
-    final old = _startTimeValue;
-    _startTimeValue = value;
-    if (old != value) {
-      notifyListeners();
-    }
-  }
+  bool get muted => value.mute;
 
-  bool get muted => _muteValue;
+  bool get speakerphone => value.speakerphone;
 
-  bool get speakerphone => _speakerphoneValue;
+  DateTime get startTime => value.startTime;
+}
 
-  DateTime get startTime => _startTimeValue;
+@freezed
+class PhoneValue with _$PhoneValue {
+  const factory PhoneValue({
+    @Default(false) bool mute,
+    @Default(false) bool speakerphone,
+    required DateTime startTime,
+  }) = _PhoneValue;
 }

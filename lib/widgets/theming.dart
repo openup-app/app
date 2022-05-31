@@ -1,7 +1,4 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class ThemingData {
   final friendBlue1 = const Color.fromARGB(0xFF, 0xCE, 0xF6, 0xFF);

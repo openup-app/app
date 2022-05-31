@@ -6,8 +6,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
@@ -17,7 +15,6 @@ import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/api/users/rekindle.dart';
 import 'package:openup/notifications/android_voip_handlers.dart'
     as android_voip;
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
@@ -29,8 +26,6 @@ import 'package:openup/widgets/theming.dart';
 
 import 'notifications/notifications.dart';
 
-part 'call_screen.freezed.dart';
-
 enum EndCallReason {
   timeUp,
   hangUp,
@@ -41,13 +36,11 @@ enum EndCallReason {
 class CallPanel extends ConsumerStatefulWidget {
   final ActiveCall activeCall;
   final void Function(EndCallReason reason) onCallEnded;
-  final List<Rekindle> rekindles;
 
   const CallPanel({
     Key? key,
     required this.activeCall,
     required this.onCallEnded,
-    required this.rekindles,
   }) : super(key: key);
 
   @override
@@ -374,7 +367,6 @@ class _InitiateCallState extends ConsumerState<InitiateCall> {
             return CallPanel(
               activeCall: activeCall,
               onCallEnded: widget.onCallEnded,
-              rekindles: const [],
             );
           }
         },
@@ -1198,37 +1190,15 @@ String connectionStateText(
   }
 }
 
-@freezed
-class CallData with _$CallData {
-  const factory CallData({
-    required Phone phone,
-    required UserConnection userConnection,
-  }) = _CallData;
-}
-
-@freezed
-class UserConnection with _$UserConnection {
-  const factory UserConnection({
-    required SimpleProfile profile,
-    required Rekindle? rekindle,
-    required RTCVideoRenderer? localVideoRenderer,
-    required RTCVideoRenderer? videoRenderer,
-    required PhoneConnectionState connectionState,
-    required bool readyForGroupCall,
-  }) = _UserConnection;
-}
-
 class CallPageArguments {
   final String rid;
   final List<SimpleProfile> profiles;
-  final List<Rekindle> rekindles;
   final bool serious;
   final bool groupLobby;
 
   CallPageArguments({
     required this.rid,
     required this.profiles,
-    required this.rekindles,
     required this.serious,
     this.groupLobby = false,
   });

@@ -33,6 +33,7 @@ class RecordAudioRecorder {
       await file.delete();
       return bytes;
     }
+    return null;
   }
 
   Future<void> dispose() async {

@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat/chat_api.dart';
-import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_screen.dart';
@@ -581,7 +580,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       return;
     }
 
-    final purpose = Purpose.friends.name;
+    const purpose = 'friends';
     final route = video ? '$purpose-video-call' : '$purpose-voice-call';
     final api = GetIt.instance.get<Api>();
     final result = await api.call(
@@ -602,7 +601,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           arguments: CallPageArguments(
             rid: rid,
             profiles: [profile.toSimpleProfile()],
-            rekindles: [],
             serious: false,
           ),
         );

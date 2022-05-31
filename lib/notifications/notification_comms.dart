@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:openup/api/lobby/lobby_api.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -40,9 +39,6 @@ class BackgroundCallNotification with _$BackgroundCallNotification {
   const factory BackgroundCallNotification({
     required String rid,
     required SimpleProfile profile,
-    required bool video,
-    required Purpose purpose,
-    required bool group,
   }) = _BackgroundCallNotification;
 
   factory BackgroundCallNotification.fromJson(Map<String, dynamic> json) =>

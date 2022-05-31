@@ -100,30 +100,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
           (r) => notifier.profile(r),
         );
       }),
-      api.getAttributes(uid).then((value) {
-        value.fold(
-          (l) => throw 'Unable to cache attributes',
-          (r) => notifier.attributes(r),
-        );
-      }),
-      api.getInterests(uid).then((value) {
-        value.fold(
-          (l) => throw 'Unable to cache interests',
-          (r) => notifier.interests(r),
-        );
-      }),
-      api.getFriendsPreferences(uid).then((value) {
-        value.fold(
-          (l) => throw 'Unable to cache friends preferences',
-          (r) => notifier.friendsPreferences(r),
-        );
-      }),
-      api.getDatingPreferences(uid).then((value) {
-        value.fold(
-          (l) => throw 'Unable to dating preferences',
-          (r) => notifier.datingPreferences(r),
-        );
-      }),
       api.getUnreadMessageCount(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to cache unread message count',

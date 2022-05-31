@@ -134,7 +134,6 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
                 activeCall: activeCall,
                 onCallEnded: (reason) =>
                     _onCallEnded(context, activeCall.profile.uid, reason),
-                rekindles: const [],
               );
             },
           );
