@@ -20,7 +20,10 @@ import 'package:openup/notifications/android_voip_handlers.dart'
     as android_voip;
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notification_comms.dart';
+import 'package:openup/profile_screen.dart';
+import 'package:openup/widgets/new_friend_banner.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 part 'notifications.freezed.dart';
 part 'notifications.g.dart';
@@ -201,28 +204,33 @@ void _onForegroundNotification(
       unreadMessageCount[chat.uid] = chat.chatroomUnread;
       userStateNotifier.unreadMessageCount(unreadMessageCount);
     },
-    newConnection: (newConnection) {
+    newConnection: (newConnection) async {
       final context = key.currentContext;
       if (context == null) {
         return false;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${newConnection.name} has accepted your connection!'),
-          action: SnackBarAction(
-            label: 'Chat',
-            onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
+
+      final api = GetIt.instance.get<Api>();
+      final result = await api.getProfile(newConnection.uid);
+      result.fold(
+        (l) {},
+        (r) {
+          showTopSnackBar(
+            context,
+            NewFriendBanner(
+              uid: newConnection.uid,
+              name: newConnection.name,
+              photo: newConnection.photo,
+              chatroomId: newConnection.chatroomId,
+            ),
+            onTap: () {
               Navigator.of(context).pushNamed(
-                'chat',
-                arguments: ChatArguments(
-                  uid: newConnection.uid,
-                  chatroomId: newConnection.chatroomId,
-                ),
+                'profile',
+                arguments: ProfileArguments(profile: r, editable: false),
               );
             },
-          ),
-        ),
+          );
+        },
       );
     },
   );
