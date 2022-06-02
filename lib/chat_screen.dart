@@ -11,6 +11,7 @@ import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_system.dart';
+import 'package:openup/main.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
@@ -375,48 +376,41 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 ),
               ),
             ),
-            // Positioned(
-            //   right: 16,
-            //   top: 20 + MediaQuery.of(context).padding.top,
-            //   child: Container(
-            //     height: 42,
-            //     alignment: Alignment.center,
-            //     decoration: BoxDecoration(
-            //       color: const Color.fromRGBO(0x42, 0x42, 0x42, 1.0),
-            //       border: Border.all(
-            //         color: const Color.fromRGBO(0x60, 0x5E, 0x5E, 1.0),
-            //         width: 2,
-            //       ),
-            //       borderRadius: const BorderRadius.all(
-            //         Radius.circular(36),
-            //       ),
-            //     ),
-            //     child: Row(
-            //       children: [
-            //         IconButton(
-            //           icon: const Icon(Icons.phone),
-            //           padding: EdgeInsets.zero,
-            //           onPressed: () {
-            //             final profile = _profile;
-            //             if (profile != null) {
-            //               _call(profile, video: false);
-            //             }
-            //           },
-            //         ),
-            //         IconButton(
-            //           icon: const Icon(Icons.video_camera_front),
-            //           padding: EdgeInsets.zero,
-            //           onPressed: () {
-            //             final profile = _profile;
-            //             if (profile != null) {
-            //               _call(profile, video: true);
-            //             }
-            //           },
-            //         ),
-            //       ],
-            //     ),
-            //   ),
-            // ),
+            if (!_loading && _profile != null)
+              Positioned(
+                right: 16,
+                top: 20 + MediaQuery.of(context).padding.top,
+                child: Container(
+                  height: 42,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(0x42, 0x42, 0x42, 1.0),
+                    border: Border.all(
+                      color: const Color.fromRGBO(0x60, 0x5E, 0x5E, 1.0),
+                      width: 2,
+                    ),
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(36),
+                    ),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.phone),
+                    padding: EdgeInsets.zero,
+                    onPressed: () {
+                      if (mounted) {
+                        callSystemKey.currentState?.call(
+                          context,
+                          SimpleProfile(
+                            uid: widget.uid,
+                            name: _profile!.name,
+                            photo: _profile!.photo,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ),
           ],
         ),
       ),

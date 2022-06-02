@@ -1453,7 +1453,16 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
                               participant,
                               topic,
                               onCall: () {
-                                if (mounted) {}
+                                if (mounted) {
+                                  callSystemKey.currentState?.call(
+                                    context,
+                                    SimpleProfile(
+                                      uid: participant.uid,
+                                      name: participant.name,
+                                      photo: participant.photo,
+                                    ),
+                                  );
+                                }
                               },
                               onBlock: () {
                                 if (mounted) {
