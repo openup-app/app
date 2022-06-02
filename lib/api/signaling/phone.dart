@@ -306,8 +306,9 @@ class Phone {
           room.profiles,
         ),
         hangUp: (_) {
-          if (_connectionStateController.value ==
-              PhoneConnectionState.connecting) {
+          final state = _connectionStateController.value;
+          if (state == PhoneConnectionState.none ||
+              state == PhoneConnectionState.waiting) {
             _connectionStateController.add(PhoneConnectionState.declined);
           } else {
             _connectionStateController.add(PhoneConnectionState.complete);
