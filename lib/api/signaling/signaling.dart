@@ -36,11 +36,6 @@ class Signal with _$Signal {
     required String uidToReport,
   }) = HangUpReport;
 
-  const factory Signal.reject({
-    @Default('room') String recipient,
-    required String rid,
-  }) = Reject;
-
   const factory Signal.roomNotFound({
     @Default('room') String recipient,
     required String rid,

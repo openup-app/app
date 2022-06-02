@@ -432,7 +432,7 @@ class _InCallDisplay extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 19),
+        const SizedBox(height: 16),
         const Divider(
           color: Color.fromRGBO(0xCA, 0xCA, 0xCA, 1.0),
         ),
@@ -510,8 +510,6 @@ class _RingingDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 264,
-      alignment: Alignment.center,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -584,7 +582,6 @@ class _DeclinedDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 264,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -625,17 +622,12 @@ class _CallCompleteDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 264,
-      child: Center(
-        child: Text(
-          'Call complete',
-          style: Theming.of(context).text.body.copyWith(
-              color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
-              fontSize: 20,
-              fontWeight: FontWeight.w700),
-        ),
-      ),
+    return Text(
+      'Call complete',
+      style: Theming.of(context).text.body.copyWith(
+          color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+          fontSize: 20,
+          fontWeight: FontWeight.w700),
     );
   }
 }
@@ -692,17 +684,12 @@ class _AlreadyEndedDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 264,
-      child: Center(
-        child: Text(
-          'The call has already ended',
-          style: Theming.of(context).text.body.copyWith(
-              color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
-              fontSize: 20,
-              fontWeight: FontWeight.w700),
-        ),
-      ),
+    return Text(
+      'The call has already ended',
+      style: Theming.of(context).text.body.copyWith(
+          color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+          fontSize: 20,
+          fontWeight: FontWeight.w700),
     );
   }
 }
@@ -799,101 +786,96 @@ class _ReportCallDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () {
-        onCancel();
-        return Future.value(false);
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 12, top: 16),
-              child: Button(
-                onPressed: onCancel,
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Icon(
-                    Icons.arrow_back,
-                    color: Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
-                    size: 32,
-                  ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 12, top: 16),
+            child: Button(
+              onPressed: onCancel,
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Icon(
+                  Icons.arrow_back,
+                  color: Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                  size: 32,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: RichText(
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'End call and',
-                    style: Theming.of(context).text.body.copyWith(
-                          color: const Color.fromRGBO(0x66, 0x64, 0x64, 1.0),
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  TextSpan(
-                    text: ' report.\n',
-                    style: Theming.of(context).text.body.copyWith(
-                          color: const Color.fromRGBO(0xF5, 0x5A, 0x5A, 1.0),
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  TextSpan(
-                    text: name,
-                    style: Theming.of(context).text.body.copyWith(
-                          color: const Color.fromRGBO(0x66, 0x64, 0x64, 1.0),
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                ],
-              ),
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: RichText(
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: 'End call and',
+                  style: Theming.of(context).text.body.copyWith(
+                        color: const Color.fromRGBO(0x66, 0x64, 0x64, 1.0),
+                        fontSize: 24,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+                TextSpan(
+                  text: ' report.\n',
+                  style: Theming.of(context).text.body.copyWith(
+                        color: const Color.fromRGBO(0xF5, 0x5A, 0x5A, 1.0),
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                TextSpan(
+                  text: name,
+                  style: Theming.of(context).text.body.copyWith(
+                        color: const Color.fromRGBO(0x66, 0x64, 0x64, 1.0),
+                        fontSize: 24,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 31),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Button(
-                onPressed: onCancel,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'No',
-                    style: Theming.of(context).text.body.copyWith(
-                        color: const Color.fromRGBO(0x82, 0x81, 0x81, 1.0),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700),
-                  ),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Button(
+              onPressed: onCancel,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'No',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0x82, 0x81, 0x81, 1.0),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700),
                 ),
               ),
-              Button(
-                onPressed: onReport,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Yes',
-                    style: Theming.of(context).text.body.copyWith(
-                        color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700),
-                  ),
+            ),
+            Button(
+              onPressed: onReport,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Yes',
+                  style: Theming.of(context).text.body.copyWith(
+                      color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 42),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -1024,6 +1006,7 @@ class _PanelMaterial extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 256 + MediaQuery.of(context).padding.bottom,
       clipBehavior: Clip.hardEdge,
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.only(
@@ -1032,7 +1015,9 @@ class _PanelMaterial extends StatelessWidget {
         ),
       ),
       child: Material(
-        child: builder(context),
+        child: Center(
+          child: builder(context),
+        ),
       ),
     );
   }

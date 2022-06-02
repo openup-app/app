@@ -310,13 +310,15 @@ class Phone {
           room.profiles,
         ),
         hangUp: (_) {
-          _connectionStateController.add(PhoneConnectionState.complete);
+          if (_connectionStateController.value ==
+              PhoneConnectionState.connecting) {
+            _connectionStateController.add(PhoneConnectionState.declined);
+          } else {
+            _connectionStateController.add(PhoneConnectionState.complete);
+          }
           onDisconnected();
         },
         hangUpReport: (_) {},
-        reject: (_) {
-          _connectionStateController.add(PhoneConnectionState.declined);
-        },
         roomNotFound: (_) {
           _connectionStateController.add(PhoneConnectionState.missing);
         },
