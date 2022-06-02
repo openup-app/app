@@ -13,7 +13,6 @@ import 'package:openup/api/call_state.dart';
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/call_system.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/lobby_list_page.dart';
 import 'package:openup/notifications/android_voip_handlers.dart'

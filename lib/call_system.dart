@@ -53,7 +53,7 @@ class CallSystemState extends ConsumerState<CallSystem> {
   void _onCallInfo(CallInfo callInfo) {
     callInfo.map(
       active: (activeCall) {
-        WidgetsBinding.instance?.scheduleFrameCallback((_) {
+        WidgetsBinding.instance.scheduleFrameCallback((_) {
           if (!mounted) {
             return;
           }

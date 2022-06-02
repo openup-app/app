@@ -197,7 +197,7 @@ class Phone {
         IceCandidate(
           candidate: candidate.candidate,
           sdpMid: candidate.sdpMid,
-          sdpMLineIndex: candidate.sdpMlineIndex,
+          sdpMLineIndex: candidate.sdpMLineIndex,
         ),
       );
 

@@ -134,16 +134,18 @@ class PhotoGrid extends ConsumerWidget {
 
     final cropped = await ImageCropper().cropImage(
       sourcePath: path,
-      androidUiSettings: const AndroidUiSettings(
-        hideBottomControls: true,
-        statusBarColor: Colors.black,
-      ),
-      iosUiSettings: const IOSUiSettings(
-        resetButtonHidden: true,
-        rotateButtonsHidden: true,
-        rotateClockwiseButtonHidden: true,
-        aspectRatioPickerButtonHidden: true,
-      ),
+      uiSettings: [
+        AndroidUiSettings(
+          hideBottomControls: true,
+          statusBarColor: Colors.black,
+        ),
+        IOSUiSettings(
+          resetButtonHidden: true,
+          rotateButtonsHidden: true,
+          rotateClockwiseButtonHidden: true,
+          aspectRatioPickerButtonHidden: true,
+        ),
+      ],
     );
 
     if (cropped != null) {

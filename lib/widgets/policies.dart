@@ -19,12 +19,13 @@ class _PoliciesState extends State<Policies> {
     super.initState();
     _privacyPolicyRecognizer = TapGestureRecognizer()
       ..onTap = () {
-        launch('https://openup-app.github.io/policies/privacy_policy.html');
+        launchUrl(Uri.parse(
+            'https://openup-app.github.io/policies/privacy_policy.html'));
       };
 
     _eulaRecognizer = TapGestureRecognizer()
       ..onTap = () {
-        launch('https://openup-app.github.io/policies/eula.html');
+        launchUrl(Uri.parse('https://openup-app.github.io/policies/eula.html'));
       };
   }
 
