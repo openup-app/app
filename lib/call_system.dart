@@ -91,6 +91,8 @@ class CallSystemState extends ConsumerState<CallSystem> {
   }
 
   void _disposeCall() {
+    _activeCall?.signalingChannel.send(const HangUp());
+
     _dismissTimer?.cancel();
     _activeCall?.signalingChannel.dispose();
     _activeCall?.controller.dispose();
@@ -123,7 +125,7 @@ class CallSystemState extends ConsumerState<CallSystem> {
   }
 
   void call(BuildContext context, SimpleProfile profile) async {
-    _dismissTimer?.cancel();
+    _disposeCall();
     setState(() {
       _panelVisible = true;
       _initiatingCall = true;
@@ -140,7 +142,6 @@ class CallSystemState extends ConsumerState<CallSystem> {
     }
     setState(() {
       _initiatingCall = false;
-      _ringingName = null;
     });
     setState(() => _requestedFriend = isFriend);
     result.fold(
@@ -675,37 +676,26 @@ class _EngagedDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color.fromRGBO(0x23, 0xE5, 0x36, 1.0),
-            Color.fromRGBO(0x0F, 0xA7, 0x1E, 1.0),
-          ],
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return RichText(
+      textAlign: TextAlign.center,
+      overflow: TextOverflow.ellipsis,
+      maxLines: 2,
+      text: TextSpan(
         children: [
-          Text(
-            '$name is already in a call',
+          TextSpan(
+            text: name,
             style: Theming.of(context).text.body.copyWith(
-                color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
+                color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                fontSize: 20,
+                fontWeight: FontWeight.w700),
           ),
-          Button(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              'OK',
-              style: Theming.of(context).text.body.copyWith(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700),
-            ),
+          TextSpan(
+            text: '\nis already in a call',
+            style: Theming.of(context).text.body.copyWith(
+                color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+                fontSize: 20,
+                fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 24),
         ],
       ),
     );
