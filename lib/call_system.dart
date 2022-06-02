@@ -22,11 +22,9 @@ import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
 class CallSystem extends ConsumerStatefulWidget {
-  final GlobalKey reportKey;
   final GlobalKey<NavigatorState> navigatorKey;
   const CallSystem({
     Key? key,
-    required this.reportKey,
     required this.navigatorKey,
   }) : super(key: key);
 

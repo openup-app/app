@@ -45,7 +45,6 @@ const socketPort = 8081;
 const urlBase = 'http://$host:$webPort';
 
 final _scaffoldKey = GlobalKey();
-
 final callSystemKey = GlobalKey<CallSystemState>();
 final _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -153,8 +152,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           color: Colors.white,
         ),
       ),
-      navigatorObservers: [_routeObserver],
       navigatorKey: _navigatorKey,
+      navigatorObservers: [_routeObserver],
       initialRoute: '/',
       builder: (context, child) {
         return Theming(
@@ -298,11 +297,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             return _buildPageRoute(
               settings: settings,
               transitionsBuilder: fadePageTransition,
-              builder: (_) {
+              builder: (context) {
                 return CurrentRouteSystemUiStyling.light(
                   child: ReportScreen(
                     uid: args.uid,
-                    onClose: Navigator.of(context).pop,
                   ),
                 );
               },
