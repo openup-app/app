@@ -123,13 +123,13 @@ class ProfileDrawer extends ConsumerWidget {
                     );
                   },
                 ),
-                _MenuButton(
-                  icon: const Center(
-                    child: Icon(Icons.call, color: iconColor),
-                  ),
-                  title: 'Call Log',
-                  onPressed: () {},
-                ),
+                // _MenuButton(
+                //   icon: const Center(
+                //     child: Icon(Icons.call, color: iconColor),
+                //   ),
+                //   title: 'Call Log',
+                //   onPressed: () {},
+                // ),
                 _MenuButton(
                   icon: SvgPicture.asset(
                     'assets/images/support_icon.svg',
