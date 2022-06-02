@@ -52,6 +52,7 @@ class _ContactTextFieldState extends State<ContactTextField> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: widget.textController,
+              textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.done,
               maxLines: 10,
               decoration: const InputDecoration.collapsed(

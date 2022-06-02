@@ -6,18 +6,13 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/contact_text_field.dart';
-import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ReportScreen extends ConsumerStatefulWidget {
   final String uid;
-  final bool showHome;
-  final VoidCallback onClose;
   const ReportScreen({
     Key? key,
     required this.uid,
-    this.showHome = true,
-    required this.onClose,
   }) : super(key: key);
 
   @override
@@ -34,6 +29,9 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
     super.initState();
     _textController.addListener(() {
       setState(() {});
+      if (_textController.text.isNotEmpty) {
+        setState(() => _reason = _Reason.other);
+      }
     });
   }
 
@@ -174,19 +172,11 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                   left: MediaQuery.of(context).padding.left + 16,
                   top: MediaQuery.of(context).padding.top + 16,
                   child: Button(
-                    onPressed: widget.onClose,
+                    onPressed: Navigator.of(context).pop,
                     child: const Padding(
                         padding: EdgeInsets.all(8), child: Icon(Icons.close)),
                   ),
                 ),
-                if (widget.showHome)
-                  Positioned(
-                    right: MediaQuery.of(context).padding.right + 16,
-                    bottom: MediaQuery.of(context).padding.bottom + 16,
-                    child: const HomeButton(
-                      color: Colors.white,
-                    ),
-                  ),
               ],
             ),
           ),
@@ -232,7 +222,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
             content: Text('Successfully reported user'),
           ),
         );
-        widget.onClose();
+        Navigator.of(context).pop();
       },
     );
   }

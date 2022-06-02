@@ -1274,12 +1274,15 @@ class _CheckboxPainter extends CustomPainter {
   bool shouldRebuildSemantics(_CheckboxPainter oldDelegate) => false;
 }
 
-Future<CallProfileAction?> _displayCallProfile(
+Future<void> _displayCallProfile(
   BuildContext context,
   TopicParticipant participant,
-  Topic topic,
-) {
-  return Navigator.of(context).pushNamed<CallProfileAction>(
+  Topic topic, {
+  required VoidCallback onCall,
+  required VoidCallback onBlock,
+  required VoidCallback onReport,
+}) async {
+  final action = await Navigator.of(context).pushNamed<CallProfileAction>(
     'call-profile',
     arguments: CallProfileScreenArguments(
       Profile(
@@ -1297,6 +1300,19 @@ Future<CallProfileAction?> _displayCallProfile(
       _topicToTitle(topic),
     ),
   );
+  if (action != null) {
+    switch (action) {
+      case CallProfileAction.call:
+        onCall();
+        break;
+      case CallProfileAction.block:
+        onBlock();
+        break;
+      case CallProfileAction.report:
+        onReport();
+        break;
+    }
+  }
 }
 
 class _MultipleTopicList extends StatefulWidget {
@@ -1432,64 +1448,42 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
                         child: _ParticipantTile(
                           participant: participant,
                           onPressed: () async {
-                            final action = await Navigator.of(context)
-                                .pushNamed<CallProfileAction>(
-                              'call-profile',
-                              arguments: CallProfileScreenArguments(
-                                Profile(
-                                  uid: participant.uid,
-                                  name: participant.name,
-                                  photo: participant.photo,
-                                  gallery: participant.gallery,
-                                ),
-                                Status(
-                                  topic: topic,
-                                  audioUrl: participant.audioUrl,
-                                  location: participant.location,
-                                  endTime: DateTime.now(),
-                                ),
-                                _topicToTitle(topic),
-                              ),
+                            _displayCallProfile(
+                              context,
+                              participant,
+                              topic,
+                              onCall: () {
+                                if (mounted) {}
+                              },
+                              onBlock: () {
+                                if (mounted) {
+                                  _removeBlockedUser(participant.uid);
+                                }
+                              },
+                              onReport: () {
+                                if (mounted) {
+                                  Navigator.of(context).pushNamed(
+                                    'call-report',
+                                    arguments: ReportScreenArguments(
+                                        uid: participant.uid),
+                                  );
+                                }
+                              },
                             );
-                            if (action != null) {
-                              switch (action) {
-                                case CallProfileAction.call:
-                                  if (mounted) {
-                                    callSystemKey.currentState?.call(
-                                      context,
-                                      SimpleProfile(
-                                        uid: participant.uid,
-                                        name: participant.name,
-                                        photo: participant.photo,
-                                      ),
-                                    );
-                                  }
-                                  break;
-                                case CallProfileAction.block:
-                                  final item = participants.removeAt(index);
-                                  setState(() {});
-                                  _listKeys[topic]?.currentState?.removeItem(
-                                        index,
-                                        (c, a) =>
-                                            _animatedRemoveBuilder(c, a, item),
-                                        duration:
-                                            const Duration(milliseconds: 400),
-                                      );
-                                  break;
-                                case CallProfileAction.report:
-                                  break;
-                              }
-                            }
                           },
                           onBlock: () {
-                            Navigator.of(context).pop();
-                            final item = participants.removeAt(index);
-                            setState(() {});
-                            _listKeys[topic]?.currentState?.removeItem(
-                                  index,
-                                  (c, a) => _animatedRemoveBuilder(c, a, item),
-                                  duration: const Duration(milliseconds: 400),
-                                );
+                            if (mounted) {
+                              _removeBlockedUser(participant.uid);
+                            }
+                          },
+                          onReport: () {
+                            if (mounted) {
+                              Navigator.of(context).pushNamed(
+                                'call-report',
+                                arguments:
+                                    ReportScreenArguments(uid: participant.uid),
+                              );
+                            }
                           },
                         ),
                       ),
@@ -1502,6 +1496,23 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
         );
       },
     );
+  }
+
+  void _removeBlockedUser(String uid) {
+    for (final tuple in _topicStatuses) {
+      final index = tuple.item2.indexWhere((element) => element.uid == uid);
+      if (index != -1) {
+        final topic = tuple.item1;
+        final item = tuple.item2.removeAt(index);
+        setState(() {});
+        _listKeys[topic]?.currentState?.removeItem(
+              index,
+              (c, a) => _animatedRemoveBuilder(c, a, item),
+              duration: const Duration(milliseconds: 400),
+            );
+        return;
+      }
+    }
   }
 
   Widget _animatedRemoveBuilder(
@@ -1523,6 +1534,9 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
               // Nothing to do
             },
             onBlock: () {
+              // Nothing to do
+            },
+            onReport: () {
               // Nothing to do
             },
           ),
@@ -1551,6 +1565,20 @@ class _SingleTopicList extends StatefulWidget {
 }
 
 class _SingleTopicListState extends State<_SingleTopicList> {
+  late List<TopicParticipant> _participants;
+
+  @override
+  void initState() {
+    super.initState();
+    _participants = widget.participants;
+  }
+
+  @override
+  void didUpdateWidget(covariant _SingleTopicList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _participants = widget.participants;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -1565,7 +1593,7 @@ class _SingleTopicListState extends State<_SingleTopicList> {
             onPressed: widget.pop,
           ),
         ),
-        if (widget.participants.isEmpty)
+        if (_participants.isEmpty)
           const Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: 120),
@@ -1580,19 +1608,17 @@ class _SingleTopicListState extends State<_SingleTopicList> {
                 crossAxisCount: 2,
                 childAspectRatio: 3 / 4,
               ),
-              itemCount: widget.participants.length,
+              itemCount: _participants.length,
               itemBuilder: (context, index) {
-                final participant = widget.participants[index];
+                final participant = _participants[index];
                 return _ParticipantTile(
                   participant: participant,
-                  onPressed: () async {
-                    final action = await _displayCallProfile(
-                        context, participant, widget.topic);
-                    if (action == null) {
-                      return;
-                    }
-                    switch (action) {
-                      case CallProfileAction.call:
+                  onPressed: () {
+                    _displayCallProfile(
+                      context,
+                      participant,
+                      widget.topic,
+                      onCall: () {
                         if (mounted) {
                           callSystemKey.currentState?.call(
                             context,
@@ -1603,14 +1629,36 @@ class _SingleTopicListState extends State<_SingleTopicList> {
                             ),
                           );
                         }
-                        break;
-                      case CallProfileAction.block:
-                        break;
-                      case CallProfileAction.report:
-                        break;
+                      },
+                      onBlock: () {
+                        if (mounted) {
+                          setState(() => _participants.removeAt(index));
+                        }
+                      },
+                      onReport: () {
+                        if (mounted) {
+                          Navigator.of(context).pushNamed(
+                            'call-report',
+                            arguments:
+                                ReportScreenArguments(uid: participant.uid),
+                          );
+                        }
+                      },
+                    );
+                  },
+                  onBlock: () {
+                    if (mounted) {
+                      setState(() => _participants.removeAt(index));
                     }
                   },
-                  onBlock: () {},
+                  onReport: () {
+                    if (mounted) {
+                      Navigator.of(context).pushNamed(
+                        'call-report',
+                        arguments: ReportScreenArguments(uid: participant.uid),
+                      );
+                    }
+                  },
                 );
               },
             ),
@@ -1772,8 +1820,10 @@ class CallProfileScreen extends StatelessWidget {
                     uid: profile.uid,
                     name: profile.name,
                     onBlock: () {
-                      Navigator.of(context).pop();
                       Navigator.of(context).pop(CallProfileAction.block);
+                    },
+                    onReport: () {
+                      Navigator.of(context).pop(CallProfileAction.report);
                     },
                   ),
                 ],
@@ -1884,11 +1934,13 @@ class _ParticipantTile extends StatelessWidget {
   final TopicParticipant participant;
   final VoidCallback onPressed;
   final VoidCallback onBlock;
+  final VoidCallback onReport;
   const _ParticipantTile({
     Key? key,
     required this.participant,
     required this.onPressed,
     required this.onBlock,
+    required this.onReport,
   }) : super(key: key);
 
   @override
@@ -1946,6 +1998,7 @@ class _ParticipantTile extends StatelessWidget {
                   uid: participant.uid,
                   name: participant.name,
                   onBlock: onBlock,
+                  onReport: onReport,
                 ),
               ],
             ),
@@ -1983,19 +2036,27 @@ class _ParticipantTile extends StatelessWidget {
   }
 }
 
-class _ReportBlockPopupMenu extends ConsumerWidget {
+class _ReportBlockPopupMenu extends ConsumerStatefulWidget {
   final String uid;
   final String name;
   final VoidCallback onBlock;
+  final VoidCallback onReport;
   const _ReportBlockPopupMenu({
     Key? key,
     required this.uid,
     required this.name,
     required this.onBlock,
+    required this.onReport,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ReportBlockPopupMenu> createState() =>
+      _ReportBlockPopupMenuState();
+}
+
+class _ReportBlockPopupMenuState extends ConsumerState<_ReportBlockPopupMenu> {
+  @override
+  Widget build(BuildContext context) {
     return PopupMenuButton(
       icon: const IconWithShadow(Icons.more_horiz, size: 32),
       onSelected: (value) {
@@ -2006,9 +2067,9 @@ class _ReportBlockPopupMenu extends ConsumerWidget {
               return CupertinoTheme(
                 data: const CupertinoThemeData(brightness: Brightness.dark),
                 child: CupertinoAlertDialog(
-                  title: Text('Block $name?'),
+                  title: Text('Block ${widget.name}?'),
                   content: Text(
-                      '$name will be unable to see or call you, and you will not be able to see or call $name.'),
+                      '${widget.name} will be unable to see or call you, and you will not be able to see or call ${widget.name}.'),
                   actions: [
                     CupertinoDialogAction(
                       onPressed: Navigator.of(context).pop,
@@ -2018,8 +2079,11 @@ class _ReportBlockPopupMenu extends ConsumerWidget {
                       onPressed: () async {
                         final myUid = ref.read(userProvider).uid;
                         final api = GetIt.instance.get<Api>();
-                        await api.blockUser(myUid, uid);
-                        onBlock();
+                        await api.blockUser(myUid, widget.uid);
+                        if (mounted) {
+                          Navigator.of(context).pop();
+                          widget.onBlock();
+                        }
                       },
                       isDestructiveAction: true,
                       child: const Text('Block'),
@@ -2030,10 +2094,7 @@ class _ReportBlockPopupMenu extends ConsumerWidget {
             },
           );
         } else if (value == 'report') {
-          Navigator.of(context).pushNamed(
-            'call-report',
-            arguments: ReportScreenArguments(uid: uid),
-          );
+          widget.onReport();
         }
       },
       itemBuilder: (context) {

@@ -22,9 +22,11 @@ import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
 class CallSystem extends ConsumerStatefulWidget {
+  final GlobalKey reportKey;
   final GlobalKey<NavigatorState> navigatorKey;
   const CallSystem({
     Key? key,
+    required this.reportKey,
     required this.navigatorKey,
   }) : super(key: key);
 
@@ -42,6 +44,7 @@ class CallSystemState extends ConsumerState<CallSystem> {
   bool _requestedFriend = false;
   bool _showFriendRequestDisplay = false;
   bool _showReportCallDisplay = false;
+  Timer? _dismissTimer;
 
   @override
   void initState() {
@@ -54,6 +57,7 @@ class CallSystemState extends ConsumerState<CallSystem> {
   void _onCallInfo(CallInfo callInfo) {
     callInfo.map(
       active: (activeCall) async {
+        _dismissTimer?.cancel();
         if (!_outgoingCall) {
           _requestedFriend = await _checkIsFriend(activeCall.profile.uid);
         }
@@ -87,6 +91,7 @@ class CallSystemState extends ConsumerState<CallSystem> {
   }
 
   void _disposeCall() {
+    _dismissTimer?.cancel();
     _activeCall?.signalingChannel.dispose();
     _activeCall?.controller.dispose();
     _activeCall?.phone.dispose();
@@ -101,8 +106,10 @@ class CallSystemState extends ConsumerState<CallSystem> {
   }
 
   void _dismissSoon() {
-    Future.delayed(const Duration(seconds: 2))
-        .whenComplete(_disposeCallAndDismiss);
+    _dismissTimer = Timer(
+      const Duration(seconds: 2),
+      _disposeCallAndDismiss,
+    );
   }
 
   Future<bool> _checkIsFriend(String otherUid) async {
@@ -116,6 +123,7 @@ class CallSystemState extends ConsumerState<CallSystem> {
   }
 
   void call(BuildContext context, SimpleProfile profile) async {
+    _dismissTimer?.cancel();
     setState(() {
       _panelVisible = true;
       _initiatingCall = true;
@@ -229,7 +237,6 @@ class CallSystemState extends ConsumerState<CallSystem> {
           initialData: PhoneConnectionState.none,
           stream: activeCall.phone.connectionStateStream,
           builder: (context, snapshot) {
-            print(snapshot.data.toString());
             if (_showReportCallDisplay) {
               return _ReportCallDisplay(
                 name: activeCall.profile.name,
