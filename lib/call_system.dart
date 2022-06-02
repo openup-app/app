@@ -34,7 +34,8 @@ class CallSystem extends ConsumerStatefulWidget {
 
 class CallSystemState extends ConsumerState<CallSystem> {
   bool _panelVisible = false;
-  bool _initiating = false;
+  bool _initiatingCall = false;
+  bool _outgoingCall = false;
   String? _ringingName;
   bool _engaged = false;
   ActiveCall? _activeCall;
@@ -52,9 +53,14 @@ class CallSystemState extends ConsumerState<CallSystem> {
 
   void _onCallInfo(CallInfo callInfo) {
     callInfo.map(
-      active: (activeCall) {
+      active: (activeCall) async {
+        if (!_outgoingCall) {
+          _requestedFriend = await _checkIsFriend(activeCall.profile.uid);
+        }
+
         WidgetsBinding.instance.scheduleFrameCallback((_) {
           if (!mounted) {
+            _disposeCallAndDismiss();
             return;
           }
           setState(() {
@@ -88,7 +94,8 @@ class CallSystemState extends ConsumerState<CallSystem> {
 
     _requestedFriend = false;
     _engaged = false;
-    _initiating = false;
+    _initiatingCall = false;
+    _outgoingCall = false;
     _showFriendRequestDisplay = false;
     _showReportCallDisplay = false;
   }
@@ -98,23 +105,36 @@ class CallSystemState extends ConsumerState<CallSystem> {
         .whenComplete(_disposeCallAndDismiss);
   }
 
+  Future<bool> _checkIsFriend(String otherUid) async {
+    final myUid = ref.read(userProvider).uid;
+    final api = GetIt.instance.get<Api>();
+    final uids = await api.getConnectionUids(myUid);
+    return uids.fold(
+      (l) => false,
+      (r) => r.contains(otherUid),
+    );
+  }
+
   void call(BuildContext context, SimpleProfile profile) async {
     setState(() {
       _panelVisible = true;
-      _initiating = true;
+      _initiatingCall = true;
+      _outgoingCall = true;
       _ringingName = profile.name;
     });
 
     final api = GetIt.instance.get<Api>();
+    final isFriend = await _checkIsFriend(profile.uid);
     final result = await api.call(profile.uid, false, group: false);
     if (!mounted) {
-      // TODO: Hang up call in this case
+      _disposeCallAndDismiss();
       return;
     }
     setState(() {
-      _initiating = false;
+      _initiatingCall = false;
       _ringingName = null;
     });
+    setState(() => _requestedFriend = isFriend);
     result.fold(
       (l) {
         if (l is ApiClientError && l.error is ClientErrorConflict) {
@@ -171,7 +191,7 @@ class CallSystemState extends ConsumerState<CallSystem> {
 
     return _PanelMaterial(
       builder: (context) {
-        if (_initiating) {
+        if (_initiatingCall) {
           return _RingingDisplay(
             name: _ringingName ?? '',
             animate: false,
@@ -189,14 +209,19 @@ class CallSystemState extends ConsumerState<CallSystem> {
         final activeCall = _activeCall;
         if (activeCall == null) {
           _dismissSoon();
-          return const Center(child: Text('Something went wrong'));
+          return const _SomethingWentWrongDisplay();
         }
 
         if (_showFriendRequestDisplay) {
           return _FriendRequestDisplay(
             name: activeCall.profile.name,
             onDoNotAddFriend: _disposeCallAndDismiss,
-            onAddFriend: () {},
+            onAddFriend: () {
+              final api = GetIt.instance.get<Api>();
+              final uid = ref.read(userProvider).uid;
+              api.addConnectionRequest(uid, activeCall.profile.uid);
+              _disposeCallAndDismiss();
+            },
           );
         }
 
@@ -204,6 +229,7 @@ class CallSystemState extends ConsumerState<CallSystem> {
           initialData: PhoneConnectionState.none,
           stream: activeCall.phone.connectionStateStream,
           builder: (context, snapshot) {
+            print(snapshot.data.toString());
             if (_showReportCallDisplay) {
               return _ReportCallDisplay(
                 name: activeCall.profile.name,
@@ -223,7 +249,7 @@ class CallSystemState extends ConsumerState<CallSystem> {
             final state = snapshot.requireData;
             switch (state) {
               case PhoneConnectionState.none:
-                return const SizedBox(height: 256);
+                return const SizedBox.shrink();
               case PhoneConnectionState.missing:
                 _dismissSoon();
                 return const _AlreadyEndedDisplay();
@@ -686,6 +712,21 @@ class _AlreadyEndedDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       'The call has already ended',
+      style: Theming.of(context).text.body.copyWith(
+          color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
+          fontSize: 20,
+          fontWeight: FontWeight.w700),
+    );
+  }
+}
+
+class _SomethingWentWrongDisplay extends StatelessWidget {
+  const _SomethingWentWrongDisplay({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Call failed',
       style: Theming.of(context).text.body.copyWith(
           color: const Color.fromRGBO(0xB0, 0xB0, 0xB0, 1.0),
           fontSize: 20,

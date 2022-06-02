@@ -89,6 +89,7 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
 
   Phone? phone;
   final controller = PhoneController();
+  PhoneValue oldPhoneValue = controller.value;
   StreamSubscription? connectionStateSubscription;
   phone = Phone(
     controller: controller,
@@ -108,16 +109,10 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
     onAddTime: (_) {},
     onDisconnected: () {
       connectionStateSubscription?.cancel();
+      controller.dispose();
       _provider?.reportCallEnded(rid, null, FCXCallEndedReason.remoteEnded);
       signalingChannel.dispose();
       phone?.dispose();
-    },
-    onMuteChanged: (mute) {
-      _callController
-          ?.requestTransactionWithAction(FCXSetMutedCallAction(rid, mute));
-    },
-    onToggleSpeakerphone: (enabled) {
-      // Unused
     },
     onGroupCallLobbyStates: (_) {
       // Unused
@@ -130,6 +125,19 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
     if (state == PhoneConnectionState.connected) {
       controller.startTime = DateTime.now();
     }
+  });
+  controller.addListener(() {
+    // Informs CallKit to update state based on user changes
+    if (oldPhoneValue.mute != controller.muted) {
+      _callController?.requestTransactionWithAction(
+          FCXSetMutedCallAction(rid, controller.muted));
+    }
+
+    if (oldPhoneValue.speakerphone != controller.speakerphone) {
+      // TODO: How to do inform CarlKit about this action?
+    }
+
+    oldPhoneValue = controller.value.copyWith();
   });
   return ActiveCall(
     rid: rid,

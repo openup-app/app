@@ -123,6 +123,7 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
 
   Phone? phone;
   final controller = PhoneController();
+  PhoneValue oldPhoneValue = controller.value;
   StreamSubscription? connectionStateSubscription;
   phone = Phone(
     controller: controller,
@@ -147,12 +148,6 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
       signalingChannel.dispose();
       phone?.dispose();
     },
-    onMuteChanged: (mute) {
-      // TODO
-    },
-    onToggleSpeakerphone: (enabled) {
-      // Unused
-    },
     onGroupCallLobbyStates: (_) {
       // Unused
     },
@@ -164,6 +159,18 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
     if (state == PhoneConnectionState.connected) {
       controller.startTime = DateTime.now();
     }
+  });
+  controller.addListener(() {
+    // Informs ConnectionService to update state based on user changes
+    if (oldPhoneValue.mute != controller.muted) {
+      // TODO: Inform ConnectionService of updates
+    }
+
+    if (oldPhoneValue.speakerphone != controller.speakerphone) {
+      // TODO: Inform ConnectionService of updates
+    }
+
+    oldPhoneValue = controller.value.copyWith();
   });
   return ActiveCall(
     rid: rid,

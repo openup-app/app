@@ -586,13 +586,15 @@ class _RemoveConnectionAlertDialogState
             final api = GetIt.instance.get<Api>();
             final result =
                 await api.deleteConnection(widget.uid, widget.profile.uid);
-            result.fold(
-              (l) {
-                displayError(context, l);
-                Navigator.of(context).pop();
-              },
-              (r) => Navigator.of(context).pop(r),
-            );
+            if (mounted) {
+              result.fold(
+                (l) {
+                  displayError(context, l);
+                  Navigator.of(context).pop();
+                },
+                (r) => Navigator.of(context).pop(r),
+              );
+            }
           },
           child: _deleting
               ? const SizedBox(

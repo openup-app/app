@@ -40,11 +40,7 @@ Future<UseContext?> initializeNotifications({
   });
   FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
 
-  UseContext? result;
-  final temporaryContext = scaffoldKey.currentContext;
-  if (temporaryContext != null) {
-    result = await _handleLaunchNotification();
-  }
+  final useContext = await _handleLaunchNotification();
 
   if (Platform.isAndroid) {
     android_voip.initAndroidVoipHandlers();
@@ -52,7 +48,7 @@ Future<UseContext?> initializeNotifications({
     ios_voip.initIosVoipHandlers();
   }
 
-  return result;
+  return useContext;
 }
 
 Future<void> dismissAllNotifications() =>

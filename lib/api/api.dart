@@ -202,6 +202,22 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, List<String>>> getConnectionUids(String uid) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/users/$uid/connection_uids'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        final uids = List<String>.from(json['uids'] ?? []);
+        return Right(uids);
+      },
+    );
+  }
+
   Future<Either<ApiError, List<Connection>>> deleteConnection(
     String uid,
     String deleteUid,

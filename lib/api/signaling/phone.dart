@@ -38,8 +38,6 @@ class Phone {
   final void Function() onAddTimeRequest;
   final void Function(Duration duration) onAddTime;
   final void Function() onDisconnected;
-  final void Function(bool muted)? onMuteChanged;
-  final void Function(bool enabled)? onToggleSpeakerphone;
   final void Function(Map<String, bool> states) onGroupCallLobbyStates;
   final void Function(
     String rid,
@@ -75,8 +73,6 @@ class Phone {
     required this.onAddTimeRequest,
     required this.onAddTime,
     required this.onDisconnected,
-    this.onMuteChanged,
-    this.onToggleSpeakerphone,
     required this.onGroupCallLobbyStates,
     required this.onJoinGroupCall,
   });
