@@ -9,7 +9,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/image_builder.dart';
 
-class PhotoGrid extends ConsumerWidget {
+class PhotoGrid extends StatelessWidget {
   final bool horizontal;
   final Color? itemColor;
   const PhotoGrid({
@@ -19,7 +19,7 @@ class PhotoGrid extends ConsumerWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final rowCount = horizontal ? 2 : 3;
     final colCount = horizontal ? 3 : 2;
     return Column(
@@ -44,57 +44,12 @@ class PhotoGrid extends ConsumerWidget {
                         final index = row * colCount + col;
                         return Stack(
                           children: [
-                            Button(
-                              onPressed: () async {
-                                final bytes = await _pickAndCropPhoto(context);
-                                if (bytes != null) {
-                                  _uploadPhoto(context, ref, bytes, index);
-                                }
-                              },
-                              child: Container(
-                                constraints:
-                                    const BoxConstraints(maxHeight: 145),
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 12,
-                                ),
-                                clipBehavior: Clip.hardEdge,
-                                decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(21)),
-                                  color: itemColor ??
-                                      const Color.fromRGBO(
-                                          0xC4, 0xC4, 0xC4, 0.5),
-                                ),
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  fit: StackFit.expand,
-                                  children: [
-                                    if (index < gallery.length)
-                                      ColorFiltered(
-                                        colorFilter: ColorFilter.mode(
-                                          Colors.black.withOpacity(0.25),
-                                          BlendMode.darken,
-                                        ),
-                                        child: Image.network(
-                                          gallery[index],
-                                          fit: BoxFit.cover,
-                                          frameBuilder: fadeInFrameBuilder,
-                                          loadingBuilder:
-                                              circularProgressLoadingBuilder,
-                                          errorBuilder: iconErrorBuilder,
-                                          opacity: const AlwaysStoppedAnimation(
-                                              0.75),
-                                        ),
-                                      ),
-                                    if (index >= gallery.length)
-                                      const Icon(
-                                        Icons.add,
-                                        size: 48,
-                                      ),
-                                  ],
-                                ),
-                              ),
+                            _ImageButton(
+                              index: index,
+                              image: index < gallery.length
+                                  ? gallery[index]
+                                  : null,
+                              itemColor: itemColor,
                             ),
                             if (index < gallery.length)
                               Positioned(
@@ -123,6 +78,76 @@ class PhotoGrid extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _ImageButton extends ConsumerStatefulWidget {
+  final int index;
+  final String? image;
+  final Color? itemColor;
+
+  const _ImageButton({
+    Key? key,
+    required this.index,
+    required this.image,
+    this.itemColor,
+  }) : super(key: key);
+
+  @override
+  ConsumerState<_ImageButton> createState() => __ImageButtonState();
+}
+
+class __ImageButtonState extends ConsumerState<_ImageButton> {
+  @override
+  Widget build(BuildContext context) {
+    final image = widget.image;
+    return Button(
+      onPressed: () async {
+        final bytes = await _pickAndCropPhoto(context);
+        if (bytes != null && mounted) {
+          _uploadPhoto(context, ref, bytes, widget.index);
+        }
+      },
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 145),
+        margin: const EdgeInsets.symmetric(
+          horizontal: 4,
+          vertical: 12,
+        ),
+        clipBehavior: Clip.hardEdge,
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.all(Radius.circular(21)),
+          color:
+              widget.itemColor ?? const Color.fromRGBO(0xC4, 0xC4, 0xC4, 0.5),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          fit: StackFit.expand,
+          children: [
+            if (image != null)
+              ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withOpacity(0.25),
+                  BlendMode.darken,
+                ),
+                child: Image.network(
+                  image,
+                  fit: BoxFit.cover,
+                  frameBuilder: fadeInFrameBuilder,
+                  loadingBuilder: circularProgressLoadingBuilder,
+                  errorBuilder: iconErrorBuilder,
+                  opacity: const AlwaysStoppedAnimation(0.75),
+                ),
+              )
+            else
+              const Icon(
+                Icons.add,
+                size: 48,
+              ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -23,7 +23,8 @@ class InitialLoadingScreen extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  _InitialLoadingScreenState createState() => _InitialLoadingScreenState();
+  ConsumerState<InitialLoadingScreen> createState() =>
+      _InitialLoadingScreenState();
 }
 
 class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
@@ -38,6 +39,10 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     final auth = FirebaseAuth.instance;
     final user = auth.currentUser;
     final api = GetIt.instance.get<Api>();
+
+    if (!mounted) {
+      return;
+    }
 
     // Verify user sign-in (will be navigated back here on success)
     if (user == null) {
@@ -64,28 +69,32 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     try {
       await _cacheData(notifier.userState.uid);
     } catch (e) {
-      print(e);
-      Navigator.of(context).pushReplacementNamed(
-        'error',
-        arguments: InitialLoadingScreenArguments(
-          needsOnboarding: widget.needsOnboarding,
-        ),
-      );
+      debugPrint(e.toString());
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed(
+          'error',
+          arguments: InitialLoadingScreenArguments(
+            needsOnboarding: widget.needsOnboarding,
+          ),
+        );
+      }
       return;
     }
 
-    // Perform deep linking
-    final deepLinked = await initializeNotifications(
+    final useContext = await initializeNotifications(
       scaffoldKey: widget.scaffoldKey,
       userStateNotifier: notifier,
     );
 
-    if (!deepLinked) {
-      // Standard app entry or sign up onboarding
-      if (widget.needsOnboarding) {
-        Navigator.of(context).pushReplacementNamed('sign-up-info');
-      } else {
-        Navigator.of(context).pushReplacementNamed('lobby-list');
+    if (mounted) {
+      final deepLinked = useContext?.call(context) ?? false;
+      if (!deepLinked && mounted) {
+        // Standard app entry or sign up onboarding
+        if (widget.needsOnboarding) {
+          Navigator.of(context).pushReplacementNamed('sign-up-info');
+        } else {
+          Navigator.of(context).pushReplacementNamed('lobby-list');
+        }
       }
     }
   }

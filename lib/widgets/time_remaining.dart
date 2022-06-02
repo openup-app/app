@@ -14,7 +14,7 @@ class TimeRemaining extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _TimeRemainingState createState() => _TimeRemainingState();
+  State<TimeRemaining> createState() => _TimeRemainingState();
 }
 
 class _TimeRemainingState extends State<TimeRemaining> {

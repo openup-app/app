@@ -24,7 +24,7 @@ class PreferencesExpansionSection extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _PreferencesExpansionSectionState createState() =>
+  State<PreferencesExpansionSection> createState() =>
       _PreferencesExpansionSectionState();
 }
 

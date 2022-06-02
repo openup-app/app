@@ -10,7 +10,7 @@ class SignUpInfoScreen extends ConsumerStatefulWidget {
   const SignUpInfoScreen({Key? key}) : super(key: key);
 
   @override
-  _SignUpInfoScreenState createState() => _SignUpInfoScreenState();
+  ConsumerState<SignUpInfoScreen> createState() => _SignUpInfoScreenState();
 }
 
 class _SignUpInfoScreenState extends ConsumerState<SignUpInfoScreen> {

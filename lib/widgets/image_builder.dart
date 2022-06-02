@@ -14,8 +14,8 @@ Widget fadeInFrameBuilder(
   return AnimatedOpacity(
     opacity: frame == null ? 0 : 1,
     duration: const Duration(milliseconds: 400),
-    child: child,
     curve: Curves.easeOut,
+    child: child,
   );
 }
 

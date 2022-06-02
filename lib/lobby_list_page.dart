@@ -1454,14 +1454,16 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
                             if (action != null) {
                               switch (action) {
                                 case CallProfileAction.call:
-                                  callSystemKey.currentState?.call(
-                                    context,
-                                    SimpleProfile(
-                                      uid: participant.uid,
-                                      name: participant.name,
-                                      photo: participant.photo,
-                                    ),
-                                  );
+                                  if (mounted) {
+                                    callSystemKey.currentState?.call(
+                                      context,
+                                      SimpleProfile(
+                                        uid: participant.uid,
+                                        name: participant.name,
+                                        photo: participant.photo,
+                                      ),
+                                    );
+                                  }
                                   break;
                                 case CallProfileAction.block:
                                   final item = participants.removeAt(index);
@@ -1530,7 +1532,7 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
   }
 }
 
-class _SingleTopicList extends StatelessWidget {
+class _SingleTopicList extends StatefulWidget {
   final Topic topic;
   final List<TopicParticipant> participants;
   final bool reverseHeader;
@@ -1545,19 +1547,25 @@ class _SingleTopicList extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<_SingleTopicList> createState() => _SingleTopicListState();
+}
+
+class _SingleTopicListState extends State<_SingleTopicList> {
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         const SizedBox(height: 16),
         Directionality(
-          textDirection: reverseHeader ? TextDirection.rtl : TextDirection.ltr,
+          textDirection:
+              widget.reverseHeader ? TextDirection.rtl : TextDirection.ltr,
           child: _TopicHeader(
-            topic: topic,
+            topic: widget.topic,
             centerText: true,
-            onPressed: pop,
+            onPressed: widget.pop,
           ),
         ),
-        if (participants.isEmpty)
+        if (widget.participants.isEmpty)
           const Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: 120),
@@ -1572,27 +1580,29 @@ class _SingleTopicList extends StatelessWidget {
                 crossAxisCount: 2,
                 childAspectRatio: 3 / 4,
               ),
-              itemCount: participants.length,
+              itemCount: widget.participants.length,
               itemBuilder: (context, index) {
-                final participant = participants[index];
+                final participant = widget.participants[index];
                 return _ParticipantTile(
                   participant: participant,
                   onPressed: () async {
-                    final action =
-                        await _displayCallProfile(context, participant, topic);
+                    final action = await _displayCallProfile(
+                        context, participant, widget.topic);
                     if (action == null) {
                       return;
                     }
                     switch (action) {
                       case CallProfileAction.call:
-                        callSystemKey.currentState?.call(
-                          context,
-                          SimpleProfile(
-                            uid: participant.uid,
-                            name: participant.name,
-                            photo: participant.photo,
-                          ),
-                        );
+                        if (mounted) {
+                          callSystemKey.currentState?.call(
+                            context,
+                            SimpleProfile(
+                              uid: participant.uid,
+                              name: participant.name,
+                              photo: participant.photo,
+                            ),
+                          );
+                        }
                         break;
                       case CallProfileAction.block:
                         break;
@@ -2029,20 +2039,20 @@ class _ReportBlockPopupMenu extends ConsumerWidget {
       itemBuilder: (context) {
         return [
           const PopupMenuItem(
+            value: 'block',
             child: ListTile(
               title: Text('Block user'),
               trailing: Icon(Icons.block),
               contentPadding: EdgeInsets.zero,
             ),
-            value: 'block',
           ),
           const PopupMenuItem(
+            value: 'report',
             child: ListTile(
               title: Text('Report user'),
               trailing: Icon(Icons.flag_outlined),
               contentPadding: EdgeInsets.zero,
             ),
-            value: 'report',
           ),
         ];
       },

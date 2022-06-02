@@ -15,7 +15,7 @@ class Button extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ButtonState createState() => _ButtonState();
+  State<Button> createState() => _ButtonState();
 }
 
 class _ButtonState extends State<Button> with SingleTickerProviderStateMixin {

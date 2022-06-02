@@ -20,7 +20,8 @@ class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({Key? key}) : super(key: key);
 
   @override
-  _AccountSettingsScreenState createState() => _AccountSettingsScreenState();
+  ConsumerState<AccountSettingsScreen> createState() =>
+      _AccountSettingsScreenState();
 }
 
 class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
@@ -288,23 +289,27 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       verificationCompleted: (credential) async {
         try {
           await user.updatePhoneNumber(credential);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Successfully updated phone number'),
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Successfully updated phone number'),
+              ),
+            );
+          }
         } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Something went wrong'),
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Something went wrong'),
+              ),
+            );
+          }
         }
 
         setState(() => _submitting = false);
       },
       verificationFailed: (FirebaseAuthException e) {
-        print(e);
+        debugPrint(e.toString());
         String message;
         if (e.code == 'network-request-failed') {
           message = 'Network error';
@@ -346,8 +351,10 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   void _signOut() async {
     await dismissAllNotifications();
     await FirebaseAuth.instance.signOut();
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    Navigator.of(context).pushReplacementNamed('/');
+    if (mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.of(context).pushReplacementNamed('/');
+    }
   }
 
   void _showDeleteAccountDialog() {
@@ -371,8 +378,10 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                 await dismissAllNotifications();
                 GetIt.instance.get<Api>().deleteUser(uid);
                 await FirebaseAuth.instance.signOut();
-                Navigator.of(context).popUntil((route) => route.isFirst);
-                Navigator.of(context).pushReplacementNamed('/');
+                if (mounted) {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  Navigator.of(context).pushReplacementNamed('/');
+                }
               },
               child: Text(
                 'Delete',

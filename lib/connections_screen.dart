@@ -568,7 +568,7 @@ class RemoveConnectionAlertDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _RemoveConnectionAlertDialogState createState() =>
+  State<RemoveConnectionAlertDialog> createState() =>
       _RemoveConnectionAlertDialogState();
 }
 

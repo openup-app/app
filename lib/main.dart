@@ -75,7 +75,7 @@ class OpenupApp extends ConsumerStatefulWidget {
   const OpenupApp({Key? key}) : super(key: key);
 
   @override
-  _OpenupAppState createState() => _OpenupAppState();
+  ConsumerState<OpenupApp> createState() => _OpenupAppState();
 }
 
 class _OpenupAppState extends ConsumerState<OpenupApp> {
@@ -106,7 +106,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         final loggedIn = user != null;
         if (_loggedIn != loggedIn) {
           setState(() => _loggedIn = loggedIn);
-          if (loggedIn && user != null) {
+          if (loggedIn) {
             _onlineUsersApi?.dispose();
             _onlineUsersApi = OnlineUsersApi(
               host: host,

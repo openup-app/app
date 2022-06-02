@@ -27,8 +27,11 @@ import 'package:top_snackbar_flutter/top_snack_bar.dart';
 part 'notifications.freezed.dart';
 part 'notifications.g.dart';
 
-/// Returns [true] if the app navigated to a deep link.
-Future<bool> initializeNotifications({
+typedef UseContext = bool Function(BuildContext context);
+
+/// Returns a function that needs a mounted [BuildContext]. The function
+/// returns [true] if the app used the context to navigate somewhere.
+Future<UseContext?> initializeNotifications({
   required GlobalKey scaffoldKey,
   required UserStateNotifier userStateNotifier,
 }) async {
@@ -37,10 +40,10 @@ Future<bool> initializeNotifications({
   });
   FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
 
-  bool deepLinked = false;
+  UseContext? result;
   final temporaryContext = scaffoldKey.currentContext;
   if (temporaryContext != null) {
-    deepLinked = await _handleLaunchNotification(temporaryContext);
+    result = await _handleLaunchNotification();
   }
 
   if (Platform.isAndroid) {
@@ -49,7 +52,7 @@ Future<bool> initializeNotifications({
     ios_voip.initIosVoipHandlers();
   }
 
-  return deepLinked;
+  return result;
 }
 
 Future<void> dismissAllNotifications() =>
@@ -72,7 +75,7 @@ void reportCallEnded(String rid) {
 }
 
 /// Returns [true] if this notification did deep link, false otherwise.
-Future<bool> _handleLaunchNotification(BuildContext context) async {
+Future<UseContext?> _handleLaunchNotification() async {
   // Calls that don't go through the standard FirebaseMessaging app launch method
   BackgroundCallNotification? backgroundCallNotification;
   try {
@@ -93,22 +96,23 @@ Future<bool> _handleLaunchNotification(BuildContext context) async {
       activeCall.phone.join();
       GetIt.instance.get<CallState>().callInfo = activeCall;
     }
-    Navigator.of(context).popUntil((r) => r.isFirst);
-    Navigator.of(context).pushReplacementNamed(
-      'lobby-list',
-      arguments: StartWithCall(
-        rid: backgroundCallNotification.rid,
-        profile: backgroundCallNotification.profile,
-      ),
-    );
-
-    return true;
+    return (BuildContext context) {
+      Navigator.of(context).popUntil((r) => r.isFirst);
+      Navigator.of(context).pushReplacementNamed(
+        'lobby-list',
+        arguments: StartWithCall(
+          rid: backgroundCallNotification!.rid,
+          profile: backgroundCallNotification.profile,
+        ),
+      );
+      return true;
+    };
   }
 
   final launchDetails =
       await FlutterLocalNotificationsPlugin().getNotificationAppLaunchDetails();
   if (launchDetails == null) {
-    return false;
+    return null;
   }
 
   final payloadJson = launchDetails.payload;
@@ -116,13 +120,15 @@ Future<bool> _handleLaunchNotification(BuildContext context) async {
     final payload = _NotificationPayload.fromJson(jsonDecode(payloadJson));
     final api = GetIt.instance.get<Api>();
     return payload.map(
-      call: (call) => false,
-      callEnded: (_) => false,
+      call: (call) => null,
+      callEnded: (_) => null,
       chat: (chat) async {
         final result = await api.getProfile(chat.uid);
-        result.fold(
-          (l) => displayError(context, l),
-          (profile) {
+        return (BuildContext context) {
+          return result.fold((l) {
+            displayError(context, l);
+            return false;
+          }, (profile) {
             Navigator.of(context).pushReplacementNamed('lobby-list');
             Navigator.of(context).pushNamed(
               'chat',
@@ -131,30 +137,35 @@ Future<bool> _handleLaunchNotification(BuildContext context) async {
                 chatroomId: chat.chatroomId,
               ),
             );
-          },
-        );
-        return true;
+            return true;
+          });
+        };
       },
       newConnection: (newConnection) async {
         final result = await api.getProfile(newConnection.uid);
-        result.fold(
-          (l) => displayError(context, l),
-          (profile) {
-            Navigator.of(context).pushReplacementNamed('lobby-list');
-            Navigator.of(context).pushNamed(
-              'chat',
-              arguments: ChatArguments(
-                uid: profile.uid,
-                chatroomId: newConnection.chatroomId,
-              ),
-            );
-          },
-        );
-        return true;
+        return (BuildContext context) {
+          return result.fold(
+            (l) {
+              displayError(context, l);
+              return false;
+            },
+            (profile) {
+              Navigator.of(context).pushReplacementNamed('lobby-list');
+              Navigator.of(context).pushNamed(
+                'chat',
+                arguments: ChatArguments(
+                  uid: profile.uid,
+                  chatroomId: newConnection.chatroomId,
+                ),
+              );
+              return true;
+            },
+          );
+        };
       },
     );
   }
-  return false;
+  return null;
 }
 
 void _onForegroundNotification(
@@ -283,7 +294,6 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
   } else if (type == 'chat') {
     final messageJson = message.data['message'];
     final senderName = message.data['senderName'];
-    final senderPhoto = message.data['senderPhoto'];
     notificationTitle = senderName;
     chatroomId = message.data['chatroomId'];
     final chatroomUnread = int.parse(message.data['chatroomUnread']);
@@ -365,14 +375,14 @@ Future<void> _initializeLocalNotifications() {
   return flutterLocalNotificationsPlugin.initialize(initializationSettings);
 }
 
-Future<void> _displayNotification(_ParsedNotification _parsedNotification) {
+Future<void> _displayNotification(_ParsedNotification parsedNotification) {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   return flutterLocalNotificationsPlugin.show(
     0,
-    _parsedNotification.title,
-    _parsedNotification.body,
-    _parsedNotification.details,
-    payload: jsonEncode(_parsedNotification.payload),
+    parsedNotification.title,
+    parsedNotification.body,
+    parsedNotification.details,
+    payload: jsonEncode(parsedNotification.payload),
   );
 }
 

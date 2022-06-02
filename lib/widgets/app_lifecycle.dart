@@ -19,7 +19,7 @@ class AppLifecycle extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _AppLifecycleState createState() => _AppLifecycleState();
+  State<AppLifecycle> createState() => _AppLifecycleState();
 }
 
 class _AppLifecycleState extends State<AppLifecycle>

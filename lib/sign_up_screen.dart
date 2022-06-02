@@ -22,7 +22,7 @@ class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
 
   @override
-  _SignUpScreenState createState() => _SignUpScreenState();
+  ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
 }
 
 class _SignUpScreenState extends ConsumerState<SignUpScreen>
@@ -168,10 +168,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
               const SizedBox(height: 22),
               const SizedBox(height: 22),
               SignificantButton.pink(
+                onPressed: _submitting || !_valid ? null : _submit,
                 child: _submitting
                     ? const CircularProgressIndicator()
                     : const Text('Send code'),
-                onPressed: _submitting || !_valid ? null : _submit,
               ),
               const SizedBox(height: 16),
               const Policies(),
@@ -216,12 +216,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
         if (userCreated && mounted) {
           ref.read(userProvider.notifier).uid(uid);
         }
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        Navigator.of(context).pushReplacementNamed(
-          '/',
-          arguments:
-              InitialLoadingScreenArguments(needsOnboarding: userCreated),
-        );
+
+        if (mounted) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          Navigator.of(context).pushReplacementNamed(
+            '/',
+            arguments:
+                InitialLoadingScreenArguments(needsOnboarding: userCreated),
+          );
+        }
       }
 
       if (mounted) {
@@ -279,7 +282,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
         if (e.code == 'network-request-failed') {
           message = 'Network error';
         } else {
-          print(e.code);
+          debugPrint(e.code);
           message = 'Failed to send verification code';
         }
         if (mounted) {

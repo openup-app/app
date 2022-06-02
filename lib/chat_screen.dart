@@ -38,7 +38,7 @@ class ChatScreen extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends ConsumerState<ChatScreen>
@@ -52,8 +52,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   final _messages = <String, ChatMessage>{};
 
   final _scrollController = ScrollController();
-
-  bool _connectionError = false;
 
   bool _loading = true;
 
@@ -79,9 +77,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         setState(() => _messages[message.messageId!] = message);
       },
       onConnectionError: () {
-        if (mounted) {
-          setState(() => _connectionError = true);
-        }
+        // TODO: Deal with connection error
       },
     );
 

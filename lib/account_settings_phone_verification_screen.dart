@@ -14,7 +14,7 @@ class AccountSettingsPhoneVerificationScreen extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  _AccountSettingsPhoneVerificationScreenState createState() =>
+  ConsumerState<AccountSettingsPhoneVerificationScreen> createState() =>
       _AccountSettingsPhoneVerificationScreenState();
 }
 

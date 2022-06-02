@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:location/location.dart';
 
 class LocationService {
@@ -31,7 +32,7 @@ class LocationService {
       }
       return LatLong(latitude, longitude);
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
       return null;
     }
   }

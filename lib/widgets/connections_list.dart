@@ -21,7 +21,7 @@ class ConnectionsBottomSheet extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  _ConnectionsBottomSheetState createState() => _ConnectionsBottomSheetState();
+  ConsumerState<ConnectionsBottomSheet> createState() => _ConnectionsBottomSheetState();
 }
 
 class _ConnectionsBottomSheetState extends ConsumerState<ConnectionsBottomSheet>

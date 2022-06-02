@@ -15,7 +15,7 @@ class ContactUsScreen extends ConsumerStatefulWidget {
   const ContactUsScreen({Key? key}) : super(key: key);
 
   @override
-  _ContactUsScreenState createState() => _ContactUsScreenState();
+  ConsumerState<ContactUsScreen> createState() => _ContactUsScreenState();
 }
 
 class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {

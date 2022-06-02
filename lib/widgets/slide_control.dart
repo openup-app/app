@@ -22,7 +22,7 @@ class SlideControl extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _SlideControlState createState() => _SlideControlState();
+  State<SlideControl> createState() => _SlideControlState();
 }
 
 class _SlideControlState extends State<SlideControl>

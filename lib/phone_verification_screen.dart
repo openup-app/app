@@ -18,7 +18,7 @@ class PhoneVerificationScreen extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  _PhoneVerificationScreenState createState() =>
+  ConsumerState<PhoneVerificationScreen> createState() =>
       _PhoneVerificationScreenState();
 }
 
@@ -124,7 +124,7 @@ class _PhoneVerificationScreenState
     if (mounted) {
       setState(() => _submitting = false);
     }
-    if (uid != null) {
+    if (uid != null && mounted) {
       Navigator.of(context).pop(uid);
     }
   }

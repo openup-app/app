@@ -25,7 +25,7 @@ class AudioChatMessage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _AudioChatMessageState createState() => _AudioChatMessageState();
+  State<AudioChatMessage> createState() => _AudioChatMessageState();
 }
 
 class _AudioChatMessageState extends State<AudioChatMessage> {
@@ -293,7 +293,7 @@ class VideoChatMessage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _VideoChatMessageState createState() => _VideoChatMessageState();
+  State<VideoChatMessage> createState() => _VideoChatMessageState();
 }
 
 class _VideoChatMessageState extends State<VideoChatMessage> {

@@ -21,7 +21,7 @@ class ReportScreen extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  _ReportScreenState createState() => _ReportScreenState();
+  ConsumerState<ReportScreen> createState() => _ReportScreenState();
 }
 
 class _ReportScreenState extends ConsumerState<ReportScreen> {

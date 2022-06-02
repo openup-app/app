@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -89,7 +90,7 @@ class JustAudioAudioPlayer {
       // Player disposed before audio loaded, safe to ignore
     } on PlayerException catch (e) {
       // Audio unplayable, ignore
-      print(e);
+      debugPrint(e.toString());
     }
   }
 

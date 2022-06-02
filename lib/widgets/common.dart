@@ -54,6 +54,7 @@ class SignificantButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Button(
+      onPressed: onPressed,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 300),
         height: height,
@@ -66,7 +67,6 @@ class SignificantButton extends StatelessWidget {
           child: Center(child: child),
         ),
       ),
-      onPressed: onPressed,
     );
   }
 }

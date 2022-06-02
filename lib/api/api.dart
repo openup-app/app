@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 import 'package:openup/api/chat/chat_api.dart';
@@ -426,7 +427,7 @@ class Api {
           try {
             return TopicParticipant.fromJson(e);
           } catch (e) {
-            print(e);
+            debugPrint(e.toString());
             return null;
           }
         }).where((e) => e != null));

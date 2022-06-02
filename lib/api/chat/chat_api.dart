@@ -61,7 +61,7 @@ class ChatApi {
 @freezed
 class _ChatEvent with _$_ChatEvent {
   const factory _ChatEvent.chatMessage({
-    String? messageId,
+    @Default(null) String? messageId,
     required String uid,
     required DateTime date,
     required ChatType type,

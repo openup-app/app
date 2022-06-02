@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_callkit_voximplant/flutter_callkit_voximplant.dart';
 import 'package:flutter_voip_push_notification/flutter_voip_push_notification.dart';
 import 'package:get_it/get_it.dart';
@@ -15,7 +16,6 @@ import 'package:openup/notifications/notification_comms.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
-FCXPlugin? _plugin;
 FCXProvider? _provider;
 FCXCallController? _callController;
 bool _callHandled = false;
@@ -31,7 +31,6 @@ bool checkAndClearCallHandledFlag() {
 }
 
 void initIosVoipHandlers() async {
-  _plugin = FCXPlugin();
   _provider = FCXProvider();
   _callController = FCXCallController();
   try {
@@ -46,7 +45,7 @@ void initIosVoipHandlers() async {
       ),
     );
   } catch (e) {
-    print(e);
+    debugPrint(e.toString());
   }
 
   Phone? phone;

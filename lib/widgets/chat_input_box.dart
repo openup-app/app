@@ -44,7 +44,7 @@ class AudioInputBox extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _AudioInputBoxState createState() => _AudioInputBoxState();
+  State<AudioInputBox> createState() => _AudioInputBoxState();
 }
 
 class _AudioInputBoxState extends State<AudioInputBox> {
@@ -242,7 +242,7 @@ class _ImageVideoInputBoxState extends State<ImageVideoInputBox> {
           },
         ),
       );
-      if (send == true) {
+      if (send == true && mounted) {
         Navigator.of(context).pop(imagePath);
       }
     }
