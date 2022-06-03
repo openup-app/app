@@ -29,6 +29,14 @@ part 'notifications.g.dart';
 
 typedef UseContext = bool Function(BuildContext context);
 
+void initializeVoipHandlers() {
+  if (Platform.isAndroid) {
+    android_voip.initAndroidVoipHandlers();
+  } else if (Platform.isIOS) {
+    ios_voip.initIosVoipHandlers();
+  }
+}
+
 /// Returns a function that needs a mounted [BuildContext]. The function
 /// returns [true] if the app used the context to navigate somewhere.
 Future<UseContext?> initializeNotifications({
@@ -40,15 +48,7 @@ Future<UseContext?> initializeNotifications({
   });
   FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
 
-  final useContext = await _handleLaunchNotification();
-
-  if (Platform.isAndroid) {
-    android_voip.initAndroidVoipHandlers();
-  } else if (Platform.isIOS) {
-    ios_voip.initIosVoipHandlers();
-  }
-
-  return useContext;
+  return _handleLaunchNotification();
 }
 
 Future<void> dismissAllNotifications() =>

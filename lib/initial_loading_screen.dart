@@ -35,6 +35,9 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
   }
 
   void _setup() async {
+    // ConnectionService and CallKit
+    initializeVoipHandlers();
+
     await Firebase.initializeApp();
     final auth = FirebaseAuth.instance;
     final user = auth.currentUser;
