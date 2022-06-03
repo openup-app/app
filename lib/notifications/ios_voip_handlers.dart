@@ -18,16 +18,9 @@ import 'package:path_provider/path_provider.dart';
 
 FCXProvider? _provider;
 FCXCallController? _callController;
-bool _callHandled = false;
 
 Future<String?> getVoipPushNotificationToken() {
   return FlutterVoipPushNotification().onTokenRefresh.first;
-}
-
-bool checkAndClearCallHandledFlag() {
-  final callHandled = _callHandled;
-  _callHandled = false;
-  return callHandled;
 }
 
 void initIosVoipHandlers() async {
@@ -39,6 +32,8 @@ void initIosVoipHandlers() async {
       FCXProviderConfiguration(
         'ExampleLocalizedName',
         includesCallsInRecents: false,
+        iconTemplateImageName: 'Icon-CallKit',
+        supportsVideo: false,
         supportedHandleTypes: {
           FCXHandleType.Generic,
         },
@@ -88,11 +83,11 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
   );
 
   Phone? phone;
-  final controller = PhoneController();
-  PhoneValue oldPhoneValue = controller.value;
+  final phoneController = PhoneController();
+  PhoneValue oldPhoneValue = phoneController.value;
   StreamSubscription? connectionStateSubscription;
   phone = Phone(
-    controller: controller,
+    controller: phoneController,
     signalingChannel: signalingChannel,
     uid: myUid,
     partnerUid: profile.uid,
@@ -109,7 +104,7 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
     onAddTime: (_) {},
     onDisconnected: () {
       connectionStateSubscription?.cancel();
-      controller.dispose();
+      phoneController.dispose();
       _provider?.reportCallEnded(rid, null, FCXCallEndedReason.remoteEnded);
       signalingChannel.dispose();
       phone?.dispose();
@@ -123,28 +118,28 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
   );
   connectionStateSubscription = phone.connectionStateStream.listen((state) {
     if (state == PhoneConnectionState.connected) {
-      controller.startTime = DateTime.now();
+      phoneController.startTime = DateTime.now();
     }
   });
-  controller.addListener(() {
-    // Informs CallKit to update state based on user changes
-    if (oldPhoneValue.mute != controller.muted) {
+  phoneController.addListener(() {
+    // Informs CallKit to update state based on user interactions
+    if (oldPhoneValue.mute != phoneController.muted) {
       _callController?.requestTransactionWithAction(
-          FCXSetMutedCallAction(rid, controller.muted));
+          FCXSetMutedCallAction(rid, phoneController.muted));
     }
 
-    if (oldPhoneValue.speakerphone != controller.speakerphone) {
-      // TODO: How to do inform CarlKit about this action?
+    if (oldPhoneValue.speakerphone != phoneController.speakerphone) {
+      // TODO: How to do inform CallKit about this action?
     }
 
-    oldPhoneValue = controller.value.copyWith();
+    oldPhoneValue = phoneController.value.copyWith();
   });
   return ActiveCall(
     rid: rid,
     profile: profile,
     signalingChannel: signalingChannel,
     phone: phone,
-    controller: controller,
+    controller: phoneController,
   );
 }
 
