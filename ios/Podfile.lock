@@ -3,38 +3,38 @@ PODS:
     - Flutter
   - camerawesome (0.0.1):
     - Flutter
-  - connectycube_flutter_call_kit (2.0.2):
+  - connectycube_flutter_call_kit (2.0.5):
     - Flutter
   - emoji_picker_flutter (0.0.1):
     - Flutter
-  - Firebase/Auth (8.9.0):
+  - Firebase/Auth (8.15.0):
     - Firebase/CoreOnly
-    - FirebaseAuth (~> 8.9.0)
-  - Firebase/CoreOnly (8.9.0):
-    - FirebaseCore (= 8.9.0)
-  - Firebase/Messaging (8.9.0):
+    - FirebaseAuth (~> 8.15.0)
+  - Firebase/CoreOnly (8.15.0):
+    - FirebaseCore (= 8.15.0)
+  - Firebase/Messaging (8.15.0):
     - Firebase/CoreOnly
-    - FirebaseMessaging (~> 8.9.0)
-  - firebase_auth (3.3.4):
-    - Firebase/Auth (= 8.9.0)
+    - FirebaseMessaging (~> 8.15.0)
+  - firebase_auth (3.3.19):
+    - Firebase/Auth (= 8.15.0)
     - firebase_core
     - Flutter
-  - firebase_core (1.10.6):
-    - Firebase/CoreOnly (= 8.9.0)
+  - firebase_core (1.17.1):
+    - Firebase/CoreOnly (= 8.15.0)
     - Flutter
-  - firebase_messaging (11.2.4):
-    - Firebase/Messaging (= 8.9.0)
+  - firebase_messaging (11.4.1):
+    - Firebase/Messaging (= 8.15.0)
     - firebase_core
     - Flutter
-  - FirebaseAuth (8.9.0):
+  - FirebaseAuth (8.15.0):
     - FirebaseCore (~> 8.0)
-    - GoogleUtilities/AppDelegateSwizzler (~> 7.6)
-    - GoogleUtilities/Environment (~> 7.6)
+    - GoogleUtilities/AppDelegateSwizzler (~> 7.7)
+    - GoogleUtilities/Environment (~> 7.7)
     - GTMSessionFetcher/Core (~> 1.5)
-  - FirebaseCore (8.9.0):
+  - FirebaseCore (8.15.0):
     - FirebaseCoreDiagnostics (~> 8.0)
-    - GoogleUtilities/Environment (~> 7.6)
-    - GoogleUtilities/Logger (~> 7.6)
+    - GoogleUtilities/Environment (~> 7.7)
+    - GoogleUtilities/Logger (~> 7.7)
   - FirebaseCoreDiagnostics (8.15.0):
     - GoogleDataTransport (~> 9.1)
     - GoogleUtilities/Environment (~> 7.7)
@@ -45,14 +45,14 @@ PODS:
     - GoogleUtilities/Environment (~> 7.7)
     - GoogleUtilities/UserDefaults (~> 7.7)
     - PromisesObjC (< 3.0, >= 1.2)
-  - FirebaseMessaging (8.9.0):
+  - FirebaseMessaging (8.15.0):
     - FirebaseCore (~> 8.0)
     - FirebaseInstallations (~> 8.0)
     - GoogleDataTransport (~> 9.1)
-    - GoogleUtilities/AppDelegateSwizzler (~> 7.6)
-    - GoogleUtilities/Environment (~> 7.6)
-    - GoogleUtilities/Reachability (~> 7.6)
-    - GoogleUtilities/UserDefaults (~> 7.6)
+    - GoogleUtilities/AppDelegateSwizzler (~> 7.7)
+    - GoogleUtilities/Environment (~> 7.7)
+    - GoogleUtilities/Reachability (~> 7.7)
+    - GoogleUtilities/UserDefaults (~> 7.7)
     - nanopb (~> 2.30908.0)
   - Flutter (1.0.0)
   - "flutter_callkit_voximplant (2.0.2+2)":
@@ -61,13 +61,11 @@ PODS:
     - Flutter
   - flutter_voip_push_notification (0.0.1):
     - Flutter
-  - flutter_webrtc (0.2.2):
+  - flutter_webrtc (0.7.1):
     - Flutter
-    - Libyuv (= 1703)
-    - WebRTC-SDK (= 92.4515.07)
-  - GoogleDataTransport (9.1.3):
+    - WebRTC-SDK (= 97.4692.05)
+  - GoogleDataTransport (9.1.4):
     - GoogleUtilities/Environment (~> 7.7)
-    - GoogleUtilities/Logger (~> 7.7)
     - nanopb (< 2.30910.0, >= 2.30908.0)
     - PromisesObjC (< 3.0, >= 1.2)
   - GoogleUtilities/AppDelegateSwizzler (7.7.0):
@@ -93,19 +91,18 @@ PODS:
   - image_cropper (0.0.4):
     - Flutter
     - TOCropViewController (~> 2.6.1)
-  - image_picker (0.0.1):
+  - image_picker_ios (0.0.1):
     - Flutter
   - just_audio (0.0.1):
     - Flutter
-  - Libyuv (1703)
   - location (0.0.1):
     - Flutter
-  - Mixpanel-swift (3.1.4):
-    - Mixpanel-swift/Complete (= 3.1.4)
-  - Mixpanel-swift/Complete (3.1.4)
-  - mixpanel_flutter (1.4.5):
+  - Mixpanel-swift (3.2.6):
+    - Mixpanel-swift/Complete (= 3.2.6)
+  - Mixpanel-swift/Complete (3.2.6)
+  - mixpanel_flutter (1.5.1):
     - Flutter
-    - Mixpanel-swift (= 3.1.4)
+    - Mixpanel-swift (= 3.2.6)
   - nanopb (2.30908.0):
     - nanopb/decode (= 2.30908.0)
     - nanopb/encode (= 2.30908.0)
@@ -118,21 +115,21 @@ PODS:
   - PromisesObjC (2.1.0)
   - record (0.0.1):
     - Flutter
-  - Sentry (7.9.0):
-    - Sentry/Core (= 7.9.0)
-  - Sentry/Core (7.9.0)
+  - Sentry (7.11.0):
+    - Sentry/Core (= 7.11.0)
+  - Sentry/Core (7.11.0)
   - sentry_flutter (0.0.1):
     - Flutter
     - FlutterMacOS
-    - Sentry (~> 7.9.0)
+    - Sentry (~> 7.11.0)
   - shared_preferences_ios (0.0.1):
     - Flutter
   - TOCropViewController (2.6.1)
   - url_launcher_ios (0.0.1):
     - Flutter
-  - video_player (0.0.1):
+  - video_player_avfoundation (0.0.1):
     - Flutter
-  - WebRTC-SDK (92.4515.07)
+  - WebRTC-SDK (97.4692.05)
 
 DEPENDENCIES:
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
@@ -149,7 +146,7 @@ DEPENDENCIES:
   - flutter_webrtc (from `.symlinks/plugins/flutter_webrtc/ios`)
   - image_crop (from `.symlinks/plugins/image_crop/ios`)
   - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
-  - image_picker (from `.symlinks/plugins/image_picker/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - just_audio (from `.symlinks/plugins/just_audio/ios`)
   - location (from `.symlinks/plugins/location/ios`)
   - mixpanel_flutter (from `.symlinks/plugins/mixpanel_flutter/ios`)
@@ -159,7 +156,7 @@ DEPENDENCIES:
   - sentry_flutter (from `.symlinks/plugins/sentry_flutter/ios`)
   - shared_preferences_ios (from `.symlinks/plugins/shared_preferences_ios/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
-  - video_player (from `.symlinks/plugins/video_player/ios`)
+  - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/ios`)
 
 SPEC REPOS:
   trunk:
@@ -172,7 +169,6 @@ SPEC REPOS:
     - GoogleDataTransport
     - GoogleUtilities
     - GTMSessionFetcher
-    - Libyuv
     - Mixpanel-swift
     - nanopb
     - PromisesObjC
@@ -209,8 +205,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/image_crop/ios"
   image_cropper:
     :path: ".symlinks/plugins/image_cropper/ios"
-  image_picker:
-    :path: ".symlinks/plugins/image_picker/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
   just_audio:
     :path: ".symlinks/plugins/just_audio/ios"
   location:
@@ -229,51 +225,50 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/shared_preferences_ios/ios"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
-  video_player:
-    :path: ".symlinks/plugins/video_player/ios"
+  video_player_avfoundation:
+    :path: ".symlinks/plugins/video_player_avfoundation/ios"
 
 SPEC CHECKSUMS:
   audio_session: 4f3e461722055d21515cf3261b64c973c062f345
   camerawesome: 0f8628efae993cb064ec4f36322e89c237e1064f
-  connectycube_flutter_call_kit: 401db1dd3c1984ed754b0b14e957a6700f95067e
-  emoji_picker_flutter: 4f9a1ac31d355e1bf9622a1e821a809149130127
-  Firebase: 13d8d96499e2635428d5bf0ec675df21f95d9a95
-  firebase_auth: e875a50b81aefb20f305dfede425647e9675c19e
-  firebase_core: c263d7daf1dc92fcd9895e6abdc04872b0ee07ff
-  firebase_messaging: dff5cd08781ee1de988565a83c977e435405cd7e
-  FirebaseAuth: 2b78b2a32c07b3ecfa4970bdf1d3632b8304099b
-  FirebaseCore: 599ee609343eaf4941bd188f85e3aa077ffe325b
+  connectycube_flutter_call_kit: 011ee5727284252d8bde5b3b52bfa622cf91a94a
+  emoji_picker_flutter: df19dac03a2b39ac667dc8d1da939ef3a9e21347
+  Firebase: 5f8193dff4b5b7c5d5ef72ae54bb76c08e2b841d
+  firebase_auth: a6470a6974d42f83117932c913aecb926182f907
+  firebase_core: 318de541b0e61d3f24262982a3f0b54afe72439b
+  firebase_messaging: 943cfe65e0b3f457240489ce67655e40da1d270c
+  FirebaseAuth: 3e73bf8abf4fbb40f8b421f361f4cc48ee57388c
+  FirebaseCore: 5743c5785c074a794d35f2fff7ecc254a91e08b1
   FirebaseCoreDiagnostics: 92e07a649aeb66352b319d43bdd2ee3942af84cb
   FirebaseInstallations: 40bd9054049b2eae9a2c38ef1c3dd213df3605cd
-  FirebaseMessaging: 82c4a48638f53f7b184f3cc9f6cd2cbe533ab316
+  FirebaseMessaging: 5e5118a2383b3531e730d974680954c679ca0a13
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
   flutter_callkit_voximplant: 1a830e9ca6c002b53889da4363b4330ce8675720
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
   flutter_voip_push_notification: f28f3ce1c6b835a3fa9e833f37f33dc1291ab888
-  flutter_webrtc: 6b71a1fc1d931a3dfe879e578ea10e2e6cd84f53
-  GoogleDataTransport: f6eab2486453329104995371bc08d4cafbe3da1f
+  flutter_webrtc: c4d09b864e7a8e93ad931bb84eed0ceb1ed51444
+  GoogleDataTransport: 5fffe35792f8b96ec8d6775f5eccd83c998d5a3b
   GoogleUtilities: e0913149f6b0625b553d70dae12b49fc62914fd1
   GTMSessionFetcher: 5595ec75acf5be50814f81e9189490412bad82ba
   image_crop: e0a67085d3ebf3cf46ca46d61c53a082507b0bc3
   image_cropper: 60c2789d1f1a78c873235d4319ca0c34a69f2d98
-  image_picker: 9aa50e1d8cdacdbed739e925b7eea16d014367e6
+  image_picker_ios: b786a5dcf033a8336a657191401bfdf12017dabb
   just_audio: baa7252489dbcf47a4c7cc9ca663e9661c99aafa
-  Libyuv: 5f79ced0ee66e60a612ca97de1e6ccacd187a437
   location: 3a2eed4dd2fab25e7b7baf2a9efefe82b512d740
-  Mixpanel-swift: 3ce40d07c05e437bf9258fc0dee9f214c4d5ed8d
-  mixpanel_flutter: 98a17cc746ec60947b71f92a7cd70a8a036d2df6
+  Mixpanel-swift: ce120e0d51dcb0d0bf5a25e1ee232fe89ad1136b
+  mixpanel_flutter: 8e274838659bb73d7896beb3568aa0b5d4f10f17
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
   package_info_plus: 6c92f08e1f853dc01228d6f553146438dafcd14e
-  path_provider_ios: 7d7ce634493af4477d156294792024ec3485acd5
+  path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
   PromisesObjC: 99b6f43f9e1044bd87a95a60beff28c2c44ddb72
   record: cae05d8dd3cdb1dea3511b20e5a5811a1ae00d0d
-  Sentry: 2f7e91f247cfb05b05bd01e0b5d0692557a7687b
-  sentry_flutter: 7c3cb050dc23563a4ea5db438c83afdb460a2ae6
-  shared_preferences_ios: aef470a42dc4675a1cdd50e3158b42e3d1232b32
+  Sentry: 0c5cd63d714187b4a39c331c1f0eb04ba7868341
+  sentry_flutter: efb3df2c203cd03aad255892a8d628a458656d14
+  shared_preferences_ios: 548a61f8053b9b8a49ac19c1ffbc8b92c50d68ad
   TOCropViewController: edfd4f25713d56905ad1e0b9f5be3fbe0f59c863
   url_launcher_ios: 839c58cdb4279282219f5e248c3321761ff3c4de
-  video_player: ecd305f42e9044793efd34846e1ce64c31ea6fcb
-  WebRTC-SDK: 540a44f2e30e89c75e331d5c4a372253ba668233
+  video_player_avfoundation: e489aac24ef5cf7af82702979ed16f2a5ef84cff
+  WebRTC-SDK: a6ee40bda0e3f7dba057907c3897374005c5715b
 
 PODFILE CHECKSUM: dfca28d30b9cc771e848a18b00f553926d158751
 
