@@ -40,7 +40,7 @@ class CallSystemState extends ConsumerState<CallSystem> {
   bool _engaged = false;
   ActiveCall? _activeCall;
   bool _requestedFriend = false;
-  bool _showFriendRequestDisplay = false;
+  SimpleProfile? _showFriendRequestDisplay;
   bool _showReportCallDisplay = false;
   Timer? _dismissTimer;
 
@@ -92,16 +92,13 @@ class CallSystemState extends ConsumerState<CallSystem> {
     _activeCall?.signalingChannel.send(const HangUp());
 
     _dismissTimer?.cancel();
-    _activeCall?.signalingChannel.dispose();
-    _activeCall?.controller.dispose();
-    _activeCall?.phone.dispose();
     _activeCall = null;
 
     _requestedFriend = false;
     _engaged = false;
     _initiatingCall = false;
     _outgoingCall = false;
-    _showFriendRequestDisplay = false;
+    _showFriendRequestDisplay = null;
     _showReportCallDisplay = false;
   }
 
@@ -198,7 +195,7 @@ class CallSystemState extends ConsumerState<CallSystem> {
 
     return _PanelMaterial(
       builder: (context) {
-        if (_initiatingCall) {
+        if (_initiatingCall && _outgoingCall) {
           return _RingingDisplay(
             name: _ringingName ?? '',
             animate: false,
@@ -213,23 +210,24 @@ class CallSystemState extends ConsumerState<CallSystem> {
           );
         }
 
-        final activeCall = _activeCall;
-        if (activeCall == null) {
-          _dismissSoon();
-          return const _SomethingWentWrongDisplay();
-        }
-
-        if (_showFriendRequestDisplay) {
+        final otherProfile = _showFriendRequestDisplay;
+        if (otherProfile != null) {
           return _FriendRequestDisplay(
-            name: activeCall.profile.name,
+            name: otherProfile.name,
             onDoNotAddFriend: _disposeCallAndDismiss,
             onAddFriend: () {
               final api = GetIt.instance.get<Api>();
               final uid = ref.read(userProvider).uid;
-              api.addConnectionRequest(uid, activeCall.profile.uid);
+              api.addConnectionRequest(uid, otherProfile.uid);
               _disposeCallAndDismiss();
             },
           );
+        }
+
+        final activeCall = _activeCall;
+        if (activeCall == null) {
+          _dismissSoon();
+          return const _CallFailedDisplay();
         }
 
         return StreamBuilder<PhoneConnectionState>(
@@ -264,9 +262,10 @@ class CallSystemState extends ConsumerState<CallSystem> {
                 return const _DeclinedDisplay();
               case PhoneConnectionState.complete:
                 if (!_requestedFriend) {
+                  final otherProfile = activeCall.profile;
                   Future.delayed(const Duration(seconds: 2)).whenComplete(() {
                     if (mounted) {
-                      setState(() => _showFriendRequestDisplay = true);
+                      setState(() => _showFriendRequestDisplay = otherProfile);
                     }
                   });
                 } else {
@@ -274,16 +273,18 @@ class CallSystemState extends ConsumerState<CallSystem> {
                 }
                 return const _CallCompleteDisplay();
               case PhoneConnectionState.waiting:
-                return _RingingDisplay(
-                  name: activeCall.profile.name,
-                  onClose: () {
-                    activeCall.signalingChannel
-                        .send(HangUp(recipient: activeCall.profile.uid));
-                    _disposeCallAndDismiss();
-                  },
-                );
               case PhoneConnectionState.connecting:
               case PhoneConnectionState.connected:
+                if (_outgoingCall && state == PhoneConnectionState.waiting) {
+                  return _RingingDisplay(
+                    name: activeCall.profile.name,
+                    onClose: () {
+                      activeCall.signalingChannel
+                          .send(HangUp(recipient: activeCall.profile.uid));
+                      _disposeCallAndDismiss();
+                    },
+                  );
+                }
                 return ValueListenableBuilder<PhoneValue>(
                   valueListenable: activeCall.controller,
                   builder: (context, phoneValue, _) {
@@ -298,7 +299,9 @@ class CallSystemState extends ConsumerState<CallSystem> {
                       onLeaveCall: () {
                         activeCall.signalingChannel.send(const HangUp());
                         if (!_requestedFriend) {
-                          setState(() => _showFriendRequestDisplay = true);
+                          _disposeCall();
+                          setState(() =>
+                              _showFriendRequestDisplay = activeCall.profile);
                         } else {
                           _disposeCallAndDismiss();
                         }
@@ -715,8 +718,8 @@ class _AlreadyEndedDisplay extends StatelessWidget {
   }
 }
 
-class _SomethingWentWrongDisplay extends StatelessWidget {
-  const _SomethingWentWrongDisplay({Key? key}) : super(key: key);
+class _CallFailedDisplay extends StatelessWidget {
+  const _CallFailedDisplay({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

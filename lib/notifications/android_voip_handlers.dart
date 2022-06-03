@@ -122,11 +122,11 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
   );
 
   Phone? phone;
-  final controller = PhoneController();
-  PhoneValue oldPhoneValue = controller.value;
+  final phoneController = PhoneController();
+  PhoneValue oldPhoneValue = phoneController.value;
   StreamSubscription? connectionStateSubscription;
   phone = Phone(
-    controller: controller,
+    controller: phoneController,
     signalingChannel: signalingChannel,
     uid: myUid,
     partnerUid: profile.uid,
@@ -157,26 +157,26 @@ ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
   );
   connectionStateSubscription = phone.connectionStateStream.listen((state) {
     if (state == PhoneConnectionState.connected) {
-      controller.startTime = DateTime.now();
+      phoneController.startTime = DateTime.now();
     }
   });
-  controller.addListener(() {
-    // Informs ConnectionService to update state based on user changes
-    if (oldPhoneValue.mute != controller.muted) {
+  phoneController.addListener(() {
+    // Informs CallKit to update state based on user interactions
+    if (oldPhoneValue.mute != phoneController.muted) {
       // TODO: Inform ConnectionService of updates
     }
 
-    if (oldPhoneValue.speakerphone != controller.speakerphone) {
+    if (oldPhoneValue.speakerphone != phoneController.speakerphone) {
       // TODO: Inform ConnectionService of updates
     }
 
-    oldPhoneValue = controller.value.copyWith();
+    oldPhoneValue = phoneController.value.copyWith();
   });
   return ActiveCall(
     rid: rid,
     profile: profile,
     signalingChannel: signalingChannel,
     phone: phone,
-    controller: controller,
+    controller: phoneController,
   );
 }
