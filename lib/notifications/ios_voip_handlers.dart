@@ -19,8 +19,10 @@ import 'package:path_provider/path_provider.dart';
 FCXProvider? _provider;
 FCXCallController? _callController;
 
-Future<String?> getVoipPushNotificationToken() {
-  return FlutterVoipPushNotification().onTokenRefresh.first;
+Future<String?> getVoipPushNotificationToken() async {
+  final notifications = FlutterVoipPushNotification();
+  await notifications.requestNotificationPermissions();
+  return notifications.getToken();
 }
 
 void initIosVoipHandlers() async {
