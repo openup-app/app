@@ -45,6 +45,7 @@
 	<string>Show people to talk to in your city</string>
 	<key>UIBackgroundModes</key>
 	<array>
+	    <string>audio</string>
 		<string>fetch</string>
 		<string>remote-notification</string>
 		<string>voip</string>

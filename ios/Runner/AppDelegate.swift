@@ -4,6 +4,7 @@ import flutter_callkit_voximplant
 import flutter_voip_push_notification
 import PushKit
 import CallKit
+import AVFAudio
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate {
@@ -15,6 +16,17 @@ import CallKit
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
     }
+
+    // Fix for Flutter package:flutter_webrtc being muted and silent when
+    // answering from the background. Should be done by package instead.
+    // See: https://github.com/flutter-webrtc/flutter-webrtc/issues/816#issuecomment-1119980562
+    let session = AVAudioSession.sharedInstance()
+    do {
+      try session.setCategory(.playback, mode: .voiceChat, options: [])
+    } catch (let error) {
+      print("Error while configuring audio session: \(error)")
+    }
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
