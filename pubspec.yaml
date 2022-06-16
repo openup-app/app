@@ -19,6 +19,8 @@ dependencies:
   flutter_riverpod: ^1.0.0-dev.7
   flutter_svg: ^1.1.0
   image_picker: ^0.8.4+2
+  # Android package to fix build issue: https://stackoverflow.com/a/72516446/1702627
+  image_picker_android: 0.8.4+13
   just_audio: ^0.9.21
   record: ^4.1.1
   intl: ^0.17.0
