@@ -1,118 +1,110 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lottie/lottie.dart';
+import 'package:openup/discover_page.dart';
+import 'package:openup/friendships_page.dart';
+import 'package:openup/profile_page.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/profile_button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
 
-class HomeScreen extends ConsumerStatefulWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(
+      length: 3,
+      initialIndex: 0,
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Button(
-                onPressed: () => Navigator.of(context).pushNamed('dating-solo'),
-                child: DecoratedBox(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color.fromRGBO(0xFF, 0x83, 0x83, 1.0),
-                        Color.fromRGBO(0xFF, 0xC8, 0xC8, 1.0),
-                      ],
-                    ),
-                  ),
-                  child: Column(
+    return MaterialApp(
+      themeMode: ThemeMode.dark,
+      home: Theming(
+        child: Builder(
+          builder: (context) {
+            return Scaffold(
+              backgroundColor: Colors.black,
+              extendBody: true,
+              bottomNavigationBar: SizedBox(
+                height: 72,
+                child: BlurredSurface(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.only(left: 40),
-                        alignment: Alignment.centerLeft,
+                      Button(
                         child: Text(
-                          'blind\ndating',
-                          textAlign: TextAlign.left,
-                          style: Theming.of(context).text.large,
+                          'Discover',
+                          style: Theming.of(context).text.body.copyWith(
+                              fontWeight: _tabController.index != 0
+                                  ? FontWeight.w300
+                                  : null),
                         ),
+                        onPressed: () {
+                          _tabController.index = 0;
+                          setState(() {});
+                        },
                       ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        height: 140,
-                        child: Lottie.asset(
-                          'assets/images/heart.json',
-                          fit: BoxFit.fitHeight,
+                      Button(
+                        child: Text(
+                          'Friendships',
+                          style: Theming.of(context).text.body.copyWith(
+                              fontWeight: _tabController.index != 1
+                                  ? FontWeight.w300
+                                  : null),
                         ),
+                        onPressed: () {
+                          _tabController.index = 1;
+                          setState(() {});
+                        },
                       ),
-                      const SizedBox(height: 100),
-                      const Spacer(),
+                      Button(
+                        child: Text(
+                          'Profile',
+                          style: Theming.of(context).text.body.copyWith(
+                              fontWeight: _tabController.index != 2
+                                  ? FontWeight.w300
+                                  : null),
+                        ),
+                        onPressed: () {
+                          _tabController.index = 2;
+                          setState(() {});
+                        },
+                      ),
                     ],
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              child: Button(
-                onPressed: () =>
-                    Navigator.of(context).pushNamed('friends-solo'),
-                child: DecoratedBox(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color.fromRGBO(0xB7, 0xF2, 0xFF, 1.0),
-                        Color.fromRGBO(0x00, 0xB9, 0xE2, 1.0),
-                      ],
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      const Spacer(),
-                      const SizedBox(height: 100),
-                      Lottie.asset(
-                        'assets/images/friends.json',
-                        height: 140,
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.only(left: 40),
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'make\nfriends',
-                          textAlign: TextAlign.left,
-                          style: Theming.of(context).text.large,
-                        ),
-                      ),
-                      const Spacer(),
-                    ],
-                  ),
-                ),
+              body: TabBarView(
+                controller: _tabController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: const [
+                  DiscoverPage(),
+                  FriendshipsPage(),
+                  ProfilePage(),
+                ],
               ),
-            ),
-          ],
+            );
+          },
         ),
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 16,
-          right: MediaQuery.of(context).padding.right + 16,
-          child: const ProfileButton(
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
