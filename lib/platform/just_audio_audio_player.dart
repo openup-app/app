@@ -94,7 +94,10 @@ class JustAudioAudioPlayer {
     }
   }
 
-  Future<void> play() => _player.play();
+  Future<void> play({bool loop = false}) {
+    _player.setLoopMode(LoopMode.all);
+    return _player.play();
+  }
 
   Future<void> pause() => _player.pause();
 

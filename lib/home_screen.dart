@@ -35,75 +35,63 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      themeMode: ThemeMode.dark,
-      home: Theming(
-        child: Builder(
-          builder: (context) {
-            return Scaffold(
-              backgroundColor: Colors.black,
-              extendBody: true,
-              bottomNavigationBar: SizedBox(
-                height: 72,
-                child: BlurredSurface(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Button(
-                        child: Text(
-                          'Discover',
-                          style: Theming.of(context).text.body.copyWith(
-                              fontWeight: _tabController.index != 0
-                                  ? FontWeight.w300
-                                  : null),
-                        ),
-                        onPressed: () {
-                          _tabController.index = 0;
-                          setState(() {});
-                        },
-                      ),
-                      Button(
-                        child: Text(
-                          'Friendships',
-                          style: Theming.of(context).text.body.copyWith(
-                              fontWeight: _tabController.index != 1
-                                  ? FontWeight.w300
-                                  : null),
-                        ),
-                        onPressed: () {
-                          _tabController.index = 1;
-                          setState(() {});
-                        },
-                      ),
-                      Button(
-                        child: Text(
-                          'Profile',
-                          style: Theming.of(context).text.body.copyWith(
-                              fontWeight: _tabController.index != 2
-                                  ? FontWeight.w300
-                                  : null),
-                        ),
-                        onPressed: () {
-                          _tabController.index = 2;
-                          setState(() {});
-                        },
-                      ),
-                    ],
-                  ),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      extendBody: true,
+      bottomNavigationBar: SizedBox(
+        height: 72.0 + MediaQuery.of(context).padding.bottom,
+        child: BlurredSurface(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Button(
+                child: Text(
+                  'Discover',
+                  style: Theming.of(context).text.body.copyWith(
+                      fontWeight:
+                          _tabController.index != 0 ? FontWeight.w300 : null),
                 ),
+                onPressed: () {
+                  _tabController.index = 0;
+                  setState(() {});
+                },
               ),
-              body: TabBarView(
-                controller: _tabController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: const [
-                  DiscoverPage(),
-                  FriendshipsPage(),
-                  ProfilePage(),
-                ],
+              Button(
+                child: Text(
+                  'Friendships',
+                  style: Theming.of(context).text.body.copyWith(
+                      fontWeight:
+                          _tabController.index != 1 ? FontWeight.w300 : null),
+                ),
+                onPressed: () {
+                  _tabController.index = 1;
+                  setState(() {});
+                },
               ),
-            );
-          },
+              Button(
+                child: Text(
+                  'Profile',
+                  style: Theming.of(context).text.body.copyWith(
+                      fontWeight:
+                          _tabController.index != 2 ? FontWeight.w300 : null),
+                ),
+                onPressed: () {
+                  _tabController.index = 2;
+                  setState(() {});
+                },
+              ),
+            ],
+          ),
         ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: const [
+          DiscoverPage(),
+          FriendshipsPage(),
+          ProfilePage(),
+        ],
       ),
     );
   }

@@ -95,7 +95,7 @@ Future<UseContext?> _handleLaunchNotification() async {
     return (BuildContext context) {
       Navigator.of(context).popUntil((r) => r.isFirst);
       Navigator.of(context).pushReplacementNamed(
-        'lobby-list',
+        'home',
         arguments: StartWithCall(
           rid: backgroundCallNotification!.rid,
           profile: backgroundCallNotification.profile,
@@ -125,7 +125,7 @@ Future<UseContext?> _handleLaunchNotification() async {
             displayError(context, l);
             return false;
           }, (profile) {
-            Navigator.of(context).pushReplacementNamed('lobby-list');
+            Navigator.of(context).pushReplacementNamed('home');
             Navigator.of(context).pushNamed(
               'chat',
               arguments: ChatArguments(
@@ -146,7 +146,7 @@ Future<UseContext?> _handleLaunchNotification() async {
               return false;
             },
             (profile) {
-              Navigator.of(context).pushReplacementNamed('lobby-list');
+              Navigator.of(context).pushReplacementNamed('home');
               Navigator.of(context).pushNamed(
                 'chat',
                 arguments: ChatArguments(

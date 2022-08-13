@@ -13,7 +13,7 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).popUntil((route) => route.isFirst);
-        Navigator.of(context).pushReplacementNamed('lobby-list');
+        Navigator.of(context).pushReplacementNamed('home');
       },
       child: Container(
         decoration: BoxDecoration(

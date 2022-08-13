@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -49,7 +51,27 @@ final callSystemKey = GlobalKey<CallSystemState>();
 final _navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
-  void appRunner() {
+  void appRunner() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    final bool useTransparentSystemUi;
+    if (!kIsWeb && Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      final sdkInt = androidInfo.version.sdkInt;
+      useTransparentSystemUi = sdkInt != null && sdkInt >= 29;
+    } else {
+      useTransparentSystemUi = true;
+    }
+
+    if (useTransparentSystemUi) {
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          systemNavigationBarColor: Color.fromRGBO(0x00, 0x00, 0x00, 0.0),
+          systemNavigationBarContrastEnforced: true,
+        ),
+      );
+    }
+
     runApp(
       const ProviderScope(
         child: OpenupApp(),
@@ -253,6 +275,15 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 );
               },
             );
+          case 'home':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: HomeScreen(),
+                );
+              },
+            );
           case 'lobby-list':
             return _buildPageRoute(
               settings: settings,
@@ -278,17 +309,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     status: args.status,
                     title: args.title,
                   ),
-                );
-              },
-            );
-          case 'home':
-            return _buildPageRoute(
-              settings: settings,
-              transitionsBuilder: fadePageTransition,
-              builder: (_) {
-                return CurrentRouteSystemUiStyling.light(
-                  key: _scaffoldKey,
-                  child: const HomeScreen(),
                 );
               },
             );

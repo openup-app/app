@@ -9,6 +9,8 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/platform/just_audio_audio_player.dart';
+import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
@@ -23,6 +25,9 @@ class DiscoverPage extends ConsumerStatefulWidget {
 class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _loading = false;
   List<TopicParticipant> _statuses = <TopicParticipant>[];
+  int _currentStatusIndex = 0;
+  Topic? _selectedTopic;
+  JustAudioAudioPlayer? _player;
 
   @override
   void initState() {
@@ -31,11 +36,18 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     _fetchParticipants();
   }
 
+  @override
+  void dispose() {
+    _player?.dispose();
+    super.dispose();
+  }
+
   Future<void> _fetchParticipants() async {
     final myUid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
     const tempNearbyOnly = false;
     final topicParticipants = await api.getStatuses(myUid, tempNearbyOnly);
+
     if (mounted) {
       setState(() => _loading = false);
     }
@@ -66,6 +78,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         setState(() {
           _statuses =
               r.values.fold(<TopicParticipant>[], (p, e) => p..addAll(e));
+          _player = JustAudioAudioPlayer();
         });
       },
     );
@@ -75,12 +88,16 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const obscuredTop = 164.0;
-        const obscuredBottom = 72.0;
+        final obscuredTop = 140.0 + MediaQuery.of(context).padding.top;
+        final obscuredBottom = MediaQuery.of(context).padding.bottom;
         const bottomHeight = 135.0;
         const padding = 32.0;
         final itemExtent =
             constraints.maxHeight - obscuredTop - obscuredBottom + padding;
+        final filteredStatuses = _statuses
+            .where((element) =>
+                _selectedTopic == null || element.topic == _selectedTopic?.name)
+            .toList();
         return Stack(
           children: [
             if (_loading)
@@ -89,15 +106,23 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
               ),
             if (!_loading)
               Positioned.fill(
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(top: obscuredTop),
-                  physics: _SnappingScrollPhysics(
-                    itemExtent: itemExtent,
-                    mainAxisStartPadding: obscuredTop,
+                child: _SnappingListView.builder(
+                  padding: EdgeInsets.only(
+                    top: obscuredTop + 8,
+                    bottom: obscuredBottom,
                   ),
-                  itemCount: _statuses.length,
+                  itemExtent: itemExtent,
+                  itemCount: filteredStatuses.length,
+                  onItemChanged: (index) {
+                    // Seems to be off by one and the first element
+                    setState(() => _currentStatusIndex = index + 1);
+                    _player?.stop();
+                    // _player?.setUrl(
+                    //     filteredStatuses[_currentStatusIndex].audioUrl);
+                    // _player?.play(loop: true);
+                  },
                   itemBuilder: (context, index) {
-                    final status = _statuses[index];
+                    final status = filteredStatuses[index];
                     return SizedBox(
                       height: itemExtent,
                       child: Stack(
@@ -128,9 +153,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                   Padding(
                                     padding: const EdgeInsets.only(
                                         bottom: bottomHeight),
-                                    child: Image.network(
-                                      status.photo,
-                                      fit: BoxFit.cover,
+                                    child: Gallery(
+                                      slideshow: _currentStatusIndex == index,
+                                      gallery: status.gallery,
+                                      withWideBlur: false,
                                     ),
                                   ),
                                   Positioned(
@@ -160,8 +186,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                                   Colors.transparent,
                                               isScrollControlled: true,
                                               builder: (context) {
-                                                return const Theming(
-                                                  child: _SharePage(),
+                                                return Theming(
+                                                  child: _SharePage(
+                                                    status: status,
+                                                  ),
                                                 );
                                               },
                                             );
@@ -251,7 +279,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
               left: 0,
               right: 0,
               top: 0,
-              height: 154,
+              height: 140 + MediaQuery.of(context).padding.top,
               child: Stack(
                 children: [
                   const BlurredSurface(
@@ -301,13 +329,24 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             children: [
                               Chip(
                                 label: 'All',
-                                selected: true,
-                                onSelected: () {},
+                                selected: _selectedTopic == null,
+                                onSelected: () {
+                                  if (_selectedTopic != null) {
+                                    setState(() => _selectedTopic = null);
+                                  }
+                                },
                               ),
                               Chip(
                                 label: 'Lonely',
-                                selected: false,
-                                onSelected: () {},
+                                selected: _selectedTopic == Topic.lonely,
+                                onSelected: () {
+                                  if (_selectedTopic == Topic.lonely) {
+                                    setState(() => _selectedTopic = null);
+                                  } else {
+                                    setState(
+                                        () => _selectedTopic = Topic.lonely);
+                                  }
+                                },
                               ),
                               Chip(
                                 label: 'Favourites',
@@ -316,18 +355,39 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                               ),
                               Chip(
                                 label: 'Just Moved',
-                                selected: false,
-                                onSelected: () {},
+                                selected: _selectedTopic == Topic.moved,
+                                onSelected: () {
+                                  if (_selectedTopic == Topic.moved) {
+                                    setState(() => _selectedTopic = null);
+                                  } else {
+                                    setState(
+                                        () => _selectedTopic = Topic.moved);
+                                  }
+                                },
                               ),
                               Chip(
                                 label: 'Can\'t Sleep',
-                                selected: false,
-                                onSelected: () {},
+                                selected: _selectedTopic == Topic.sleep,
+                                onSelected: () {
+                                  if (_selectedTopic == Topic.sleep) {
+                                    setState(() => _selectedTopic = null);
+                                  } else {
+                                    setState(
+                                        () => _selectedTopic = Topic.sleep);
+                                  }
+                                },
                               ),
                               Chip(
                                 label: 'Bored',
-                                selected: false,
-                                onSelected: () {},
+                                selected: _selectedTopic == Topic.bored,
+                                onSelected: () {
+                                  if (_selectedTopic == Topic.bored) {
+                                    setState(() => _selectedTopic = null);
+                                  } else {
+                                    setState(
+                                        () => _selectedTopic = Topic.bored);
+                                  }
+                                },
                               ),
                             ],
                           ),
@@ -346,7 +406,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 }
 
 class _SharePage extends StatefulWidget {
-  const _SharePage({Key? key}) : super(key: key);
+  final TopicParticipant status;
+  const _SharePage({
+    Key? key,
+    required this.status,
+  }) : super(key: key);
 
   @override
   State<_SharePage> createState() => __SharePageState();
@@ -373,7 +437,8 @@ class __SharePageState extends State<_SharePage>
 
   @override
   Widget build(BuildContext context) {
-    const url = 'openupfriends.com/SammieJammy';
+    final status = widget.status;
+    final url = 'openupfriends.com/${status.name}';
     return Container(
       height: MediaQuery.of(context).size.height * 0.78,
       clipBehavior: Clip.hardEdge,
@@ -396,12 +461,12 @@ class __SharePageState extends State<_SharePage>
                   child: Column(
                     children: [
                       Text(
-                        'SammieJammy',
+                        status.name,
                         style: Theming.of(context).text.body.copyWith(
                             fontSize: 24, fontWeight: FontWeight.w300),
                       ),
                       Text(
-                        'Fort Worth, Texas',
+                        status.location,
                         style: Theming.of(context).text.body.copyWith(
                             fontSize: 24, fontWeight: FontWeight.w300),
                       ),
@@ -433,9 +498,10 @@ class __SharePageState extends State<_SharePage>
                 borderRadius: const BorderRadius.all(
                   Radius.circular(24),
                 ),
-                child: Image.network(
-                  'https://picsum.photos/id/690/200/',
-                  fit: BoxFit.cover,
+                child: Gallery(
+                  slideshow: true,
+                  gallery: status.gallery,
+                  withWideBlur: false,
                 ),
               ),
             ),
@@ -496,6 +562,96 @@ class __SharePageState extends State<_SharePage>
 }
 
 /// From nxcco and yunyu's SnappingListScrollPhysics: https://gist.github.com/nxcco/98fca4a7dbdecf2f423013cf55230dba
+class _SnappingListView extends StatefulWidget {
+  final Axis scrollDirection;
+  final ScrollController? controller;
+
+  final IndexedWidgetBuilder? itemBuilder;
+  final List<Widget>? children;
+  final int? itemCount;
+
+  final double itemExtent;
+  final ValueChanged<int>? onItemChanged;
+
+  final EdgeInsets padding;
+
+  const _SnappingListView({
+    Key? key,
+    this.scrollDirection = Axis.vertical,
+    this.controller,
+    required this.children,
+    required this.itemExtent,
+    this.onItemChanged,
+    this.padding = const EdgeInsets.all(0.0),
+  })  : assert(itemExtent > 0),
+        itemCount = null,
+        itemBuilder = null,
+        super(key: key);
+
+  const _SnappingListView.builder({
+    Key? key,
+    this.scrollDirection = Axis.vertical,
+    this.controller,
+    required this.itemBuilder,
+    this.itemCount,
+    required this.itemExtent,
+    this.onItemChanged,
+    this.padding = const EdgeInsets.all(0.0),
+  })  : assert(itemExtent > 0),
+        children = null,
+        super(key: key);
+
+  @override
+  createState() => _SnappingListViewState();
+}
+
+class _SnappingListViewState extends State<_SnappingListView> {
+  int _lastItem = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final startPadding = widget.scrollDirection == Axis.horizontal
+        ? widget.padding.left
+        : widget.padding.top;
+    final scrollPhysics = _SnappingScrollPhysics(
+        mainAxisStartPadding: startPadding, itemExtent: widget.itemExtent);
+    final listView = widget.children != null
+        ? ListView(
+            scrollDirection: widget.scrollDirection,
+            controller: widget.controller,
+            itemExtent: widget.itemExtent,
+            physics: scrollPhysics,
+            padding: widget.padding,
+            children: widget.children!,
+          )
+        : ListView.builder(
+            scrollDirection: widget.scrollDirection,
+            controller: widget.controller,
+            itemCount: widget.itemCount,
+            itemExtent: widget.itemExtent,
+            physics: scrollPhysics,
+            padding: widget.padding,
+            itemBuilder: widget.itemBuilder!,
+          );
+    return NotificationListener<ScrollNotification>(
+      child: listView,
+      onNotification: (notif) {
+        if (notif.depth == 0 &&
+            widget.onItemChanged != null &&
+            notif is ScrollUpdateNotification) {
+          final currItem =
+              (notif.metrics.pixels - startPadding) ~/ widget.itemExtent;
+          if (currItem != _lastItem) {
+            _lastItem = currItem;
+            widget.onItemChanged!(currItem);
+          }
+        }
+        return false;
+      },
+    );
+  }
+}
+
 class _SnappingScrollPhysics extends ScrollPhysics {
   final double mainAxisStartPadding;
   final double itemExtent;

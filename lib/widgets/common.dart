@@ -170,7 +170,7 @@ class Chip extends StatelessWidget {
               : const Color.fromRGBO(0x77, 0x77, 0x77, 1.0),
           borderRadius: const BorderRadius.all(Radius.circular(50)),
           border: selected
-              ? null
+              ? Border.all(color: Colors.white)
               : Border.all(
                   color: const Color.fromRGBO(0xB9, 0xB9, 0xB9, 1.0),
                 ),

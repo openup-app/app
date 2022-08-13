@@ -2140,6 +2140,10 @@ String _topicToTitle(Topic topic) {
       return 'Just Moved';
     case Topic.sleep:
       return 'Can\'t Sleep';
+    case Topic.bored:
+      throw UnimplementedError();
+    case Topic.introvert:
+      throw UnimplementedError();
   }
 }
 
@@ -2153,6 +2157,10 @@ String _topicToDescription(Topic topic) {
       return 'Others who also moved to a new area';
     case Topic.sleep:
       return 'Talk to someone who is also having a hard time sleeping';
+    case Topic.bored:
+      throw UnimplementedError();
+    case Topic.introvert:
+      throw UnimplementedError();
   }
 }
 

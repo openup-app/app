@@ -264,6 +264,18 @@ class _GalleryState extends State<Gallery> {
   }
 
   @override
+  void didUpdateWidget(covariant Gallery oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.slideshow != widget.slideshow) {
+      if (widget.slideshow) {
+        _maybeStartSlideshowTimer();
+      } else {
+        _slideshowTimer?.cancel();
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Listener(
       onPointerDown: (_) => _slideshowTimer?.cancel(),
