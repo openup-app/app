@@ -35,6 +35,7 @@ import 'package:openup/home_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/widgets/profile_drawer.dart';
+import 'package:openup/widgets/sign_up_overview_page.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -245,6 +246,15 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   child: PhoneVerificationScreen(
                     credentialVerification: args,
                   ),
+                );
+              },
+            );
+          case 'sign-up-overview':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: SignUpOverviewPage(),
                 );
               },
             );
