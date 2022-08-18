@@ -838,10 +838,10 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
       onRecordingComplete: (data) async {
         final dir = await getTemporaryDirectory();
         final file = File(path.join(dir.path, 'audio.m4a'));
-        await file.writeAsBytes(data);
+        // await file.writeAsBytes(data);
         setState(() {
           _audioUrl = null;
-          _audio = data;
+          // _audio = data;
           _audioPath = file.path;
         });
       },

@@ -1,11 +1,19 @@
+import 'dart:typed_data';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide Chip;
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  final Profile profile;
+
+  const ProfilePage({
+    Key? key,
+    required this.profile,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -110,9 +118,9 @@ class ProfilePage extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius:
                             const BorderRadius.all(Radius.circular(24)),
-                        child: Image.network(
-                          'https://picsum.photos/id/691/200/',
-                          fit: BoxFit.cover,
+                        child: _PhotoOrUploadButton(
+                          url: profile.photo,
+                          onUpload: (_) {},
                         ),
                       ),
                     ),
@@ -125,9 +133,11 @@ class ProfilePage extends StatelessWidget {
                             child: ClipRRect(
                               borderRadius:
                                   const BorderRadius.all(Radius.circular(24)),
-                              child: Image.network(
-                                'https://picsum.photos/id/691/200/',
-                                fit: BoxFit.cover,
+                              child: _PhotoOrUploadButton(
+                                url: profile.gallery.length > 1
+                                    ? profile.gallery[1]
+                                    : null,
+                                onUpload: (data) {},
                               ),
                             ),
                           ),
@@ -136,9 +146,11 @@ class ProfilePage extends StatelessWidget {
                             child: ClipRRect(
                               borderRadius:
                                   const BorderRadius.all(Radius.circular(24)),
-                              child: Image.network(
-                                'https://picsum.photos/id/691/200/',
-                                fit: BoxFit.cover,
+                              child: _PhotoOrUploadButton(
+                                url: profile.gallery.length > 2
+                                    ? profile.gallery[2]
+                                    : null,
+                                onUpload: (_) {},
                               ),
                             ),
                           ),
@@ -151,7 +163,7 @@ class ProfilePage extends StatelessWidget {
               const SizedBox(height: 29),
               const Padding(
                 padding: EdgeInsets.only(left: 16, right: 16),
-                child: RecordButton(label: 'Record new status'),
+                child: _RecordButton(),
               ),
               const SizedBox(height: 16),
               Padding(
@@ -229,7 +241,7 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ),
                 child: Center(
-                  child: Text('Heisinghberg',
+                  child: Text(profile.name,
                       style: Theming.of(context)
                           .text
                           .body
@@ -241,6 +253,68 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _RecordButton extends StatefulWidget {
+  const _RecordButton({Key? key}) : super(key: key);
+
+  @override
+  State<_RecordButton> createState() => __RecordButtonState();
+}
+
+class __RecordButtonState extends State<_RecordButton> {
+  bool _uploading = false;
+  @override
+  Widget build(BuildContext context) {
+    return RecordButton(
+      label: 'Record new status',
+      submitLabel: 'Upload status',
+      submitting: _uploading,
+      submitted: false,
+      onSubmit: (_) async {
+        setState(() => _uploading = true);
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          setState(() => _uploading = false);
+        }
+      },
+    );
+  }
+}
+
+class _PhotoOrUploadButton extends StatelessWidget {
+  final String? url;
+  final void Function(Uint8List photo) onUpload;
+  const _PhotoOrUploadButton({
+    Key? key,
+    required this.url,
+    required this.onUpload,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: () {},
+      child: Builder(builder: (context) {
+        final photoUrl = url;
+        if (photoUrl != null) {
+          return Image.network(
+            photoUrl,
+            fit: BoxFit.cover,
+          );
+        }
+        return Container(
+          color: const Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.add_photo_alternate,
+            color: Colors.white,
+            size: 34,
+          ),
+        );
+      }),
     );
   }
 }

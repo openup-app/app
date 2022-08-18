@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:openup/platform/just_audio_audio_player.dart';
+import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -92,55 +94,314 @@ class BlurredSurface extends StatelessWidget {
   }
 }
 
-class RecordButton extends StatelessWidget {
+// class RecordButton extends StatelessWidget {
+//   final String label;
+//   const RecordButton({
+//     Key? key,
+//     required this.label,
+//   }) : super(key: key);
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Button(
+//       onPressed: () {},
+//       child: Container(
+//         height: 67,
+//
+//         child: Center(
+//           child: Row(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               Container(
+//                 width: 36,
+//                 height: 36,
+//                 padding: const EdgeInsets.all(2),
+//                 decoration: BoxDecoration(
+//                   border: Border.all(color: Colors.white),
+//                   shape: BoxShape.circle,
+//                 ),
+//                 child: Container(
+//                   decoration: const BoxDecoration(
+//                       color: Colors.red, shape: BoxShape.circle),
+//                 ),
+//               ),
+//               const SizedBox(width: 14),
+//               Text(
+//                 label,
+//                 style: Theming.of(context)
+//                     .text
+//                     .body
+//                     .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+class RecordButton extends StatefulWidget {
   final String label;
+  final String submitLabel;
+  final bool submitting;
+  final bool submitted;
+  final void Function(String path) onSubmit;
   const RecordButton({
     Key? key,
     required this.label,
+    required this.submitLabel,
+    required this.submitting,
+    required this.submitted,
+    required this.onSubmit,
   }) : super(key: key);
 
   @override
+  State<RecordButton> createState() => RecordButtonState();
+}
+
+class RecordButtonState extends State<RecordButton> {
+  late final AudioBioController _inviteRecorder;
+  final _invitePlayer = JustAudioAudioPlayer();
+  String? _audioPath;
+
+  @override
+  void initState() {
+    super.initState();
+    _inviteRecorder = AudioBioController(
+      onRecordingComplete: (path) async {
+        if (mounted) {
+          setState(() => _audioPath = path);
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _inviteRecorder.dispose();
+    _invitePlayer.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Button(
-      onPressed: () {},
-      child: Container(
-        height: 67,
-        decoration: BoxDecoration(
-          border:
-              Border.all(color: const Color.fromRGBO(0xA9, 0xA9, 0xA9, 1.0)),
-          borderRadius: const BorderRadius.all(
-            Radius.circular(40),
-          ),
-        ),
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white),
-                  shape: BoxShape.circle,
-                ),
-                child: Container(
+    return StreamBuilder<RecordInfo>(
+      initialData: const RecordInfo(),
+      stream: _inviteRecorder.recordInfoStream,
+      builder: (context, snapshot) {
+        final recordInfo = snapshot.requireData;
+        return SizedBox(
+          height: 67,
+          child: Builder(
+            builder: (context) {
+              if (widget.submitted) {
+                return Container(
                   decoration: const BoxDecoration(
-                      color: Colors.red, shape: BoxShape.circle),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(40),
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color.fromRGBO(0x8F, 0x14, 0x14, 1.0),
+                        Color.fromRGBO(0x8F, 0x32, 0x32, 1.0),
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Your invitation has been sent today!',
+                      style: Theming.of(context)
+                          .text
+                          .body
+                          .copyWith(fontSize: 18, fontWeight: FontWeight.w400),
+                    ),
+                  ),
+                );
+              }
+
+              if (!recordInfo.recording && _audioPath == null) {
+                return Button(
+                  onPressed: _inviteRecorder.startRecording,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: recordInfo.recording
+                          ? const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0)
+                          : null,
+                      border: recordInfo.recording
+                          ? null
+                          : Border.all(
+                              color:
+                                  const Color.fromRGBO(0xA9, 0xA9, 0xA9, 1.0),
+                            ),
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(40),
+                      ),
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.white),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Text(
+                            widget.label,
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 20, fontWeight: FontWeight.w300),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              if (recordInfo.recording) {
+                return Button(
+                  onPressed: _inviteRecorder.stopRecording,
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(40),
+                      ),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.stop,
+                            size: 30,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'recording',
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 20, fontWeight: FontWeight.w300),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return DecoratedBox(
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(0x32, 0x32, 0x32, 0.5),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(40),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 14),
-              Text(
-                label,
-                style: Theming.of(context)
-                    .text
-                    .body
-                    .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
-              ),
-            ],
+                child: Row(
+                  children: [
+                    const SizedBox(width: 20),
+                    StreamBuilder<PlaybackInfo>(
+                        stream: _invitePlayer.playbackInfoStream,
+                        initialData: const PlaybackInfo(),
+                        builder: (context, snapshot) {
+                          final playbackInfo = snapshot.requireData;
+                          return Button(
+                            onPressed: widget.submitting
+                                ? null
+                                : () async {
+                                    if (playbackInfo.state ==
+                                        PlaybackState.playing) {
+                                      _invitePlayer.stop();
+                                    } else {
+                                      _invitePlayer.play();
+                                    }
+                                  },
+                            child: SizedBox(
+                              width: 41,
+                              height: 41,
+                              child: playbackInfo.state == PlaybackState.playing
+                                  ? const Center(
+                                      child: Icon(
+                                        Icons.stop,
+                                        size: 34,
+                                      ),
+                                    )
+                                  : const Center(
+                                      child: Icon(
+                                        Icons.play_arrow,
+                                        size: 34,
+                                      ),
+                                    ),
+                            ),
+                          );
+                        }),
+                    Button(
+                      onPressed: widget.submitting
+                          ? null
+                          : () => setState(() => _audioPath = null),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Icon(
+                          Icons.delete,
+                          size: 34,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.submitLabel,
+                      style: Theming.of(context)
+                          .text
+                          .body
+                          .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+                    ),
+                    const Spacer(),
+                    Button(
+                      onPressed: widget.submitting
+                          ? null
+                          : () => widget.onSubmit(_audioPath!),
+                      child: widget.submitting
+                          ? const CircularProgressIndicator()
+                          : Container(
+                              padding: const EdgeInsets.all(8.0),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(
+                                    color: const Color.fromRGBO(
+                                        0x82, 0x82, 0x82, 1.0)),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.arrow_upward,
+                                  size: 20,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                    ),
+                    const SizedBox(width: 24),
+                  ],
+                ),
+              );
+            },
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -182,6 +443,31 @@ class Chip extends StatelessWidget {
               fontWeight: FontWeight.w300,
               color: selected ? Colors.black : null),
         ),
+      ),
+    );
+  }
+}
+
+class OutlinedArea extends StatelessWidget {
+  final Widget child;
+  const OutlinedArea({
+    Key? key,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 51,
+      margin: const EdgeInsets.only(left: 16, right: 16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.white),
+        borderRadius: const BorderRadius.all(
+          Radius.circular(40),
+        ),
+      ),
+      child: Center(
+        child: child,
       ),
     );
   }

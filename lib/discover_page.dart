@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
@@ -24,16 +25,17 @@ class DiscoverPage extends ConsumerStatefulWidget {
 
 class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _loading = false;
-  List<TopicParticipant> _statuses = <TopicParticipant>[];
+  List<Status2> _statuses = <Status2>[];
   int _currentStatusIndex = 0;
   Topic? _selectedTopic;
   JustAudioAudioPlayer? _player;
+  final _invitedUsers = <String>{};
 
   @override
   void initState() {
     super.initState();
     setState(() => _loading = true);
-    _fetchParticipants();
+    __fetchStatuses();
   }
 
   @override
@@ -42,11 +44,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     super.dispose();
   }
 
-  Future<void> _fetchParticipants() async {
+  Future<void> __fetchStatuses() async {
     final myUid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
-    const tempNearbyOnly = false;
-    final topicParticipants = await api.getStatuses(myUid, tempNearbyOnly);
+    final statuses = await api.getStatuses2(myUid);
 
     if (mounted) {
       setState(() => _loading = false);
@@ -54,7 +55,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     if (!mounted) {
       return;
     }
-    topicParticipants.fold(
+    statuses.fold(
       (l) {
         var message = errorToMessage(l);
         message = l.when(
@@ -76,8 +77,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       },
       (r) async {
         setState(() {
-          _statuses =
-              r.values.fold(<TopicParticipant>[], (p, e) => p..addAll(e));
+          _statuses = r;
           _player = JustAudioAudioPlayer();
         });
       },
@@ -95,8 +95,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         final itemExtent =
             constraints.maxHeight - obscuredTop - obscuredBottom + padding;
         final filteredStatuses = _statuses
-            .where((element) =>
-                _selectedTopic == null || element.topic == _selectedTopic?.name)
+            .where((status) =>
+                _selectedTopic == null || status.topic == _selectedTopic)
             .toList();
         return Stack(
           children: [
@@ -104,7 +104,16 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
               const Center(
                 child: CircularProgressIndicator(),
               ),
-            if (!_loading)
+            if (!_loading && filteredStatuses.isEmpty)
+              Positioned(
+                child: Center(
+                  child: ElevatedButton(
+                    onPressed: __fetchStatuses,
+                    child: const Text('Refresh'),
+                  ),
+                ),
+              ),
+            if (!_loading && filteredStatuses.isNotEmpty)
               Positioned.fill(
                 child: _SnappingListView.builder(
                   padding: EdgeInsets.only(
@@ -117,159 +126,26 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     // Seems to be off by one and the first element
                     setState(() => _currentStatusIndex = index + 1);
                     _player?.stop();
-                    // _player?.setUrl(
-                    //     filteredStatuses[_currentStatusIndex].audioUrl);
-                    // _player?.play(loop: true);
+                    final audio =
+                        filteredStatuses[_currentStatusIndex].profile.audio;
+                    if (audio != null) {
+                      _player?.setUrl(audio);
+                      _player?.play(loop: true);
+                    }
                   },
                   itemBuilder: (context, index) {
                     final status = filteredStatuses[index];
                     return SizedBox(
                       height: itemExtent,
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(24),
-                              topRight: Radius.circular(24),
-                            ),
-                            child: Container(
-                              foregroundDecoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.transparent,
-                                    Colors.black,
-                                  ],
-                                  stops: [
-                                    0.2,
-                                    0.7,
-                                  ],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                ),
-                              ),
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        bottom: bottomHeight),
-                                    child: Gallery(
-                                      slideshow: _currentStatusIndex == index,
-                                      gallery: status.gallery,
-                                      withWideBlur: false,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: 16,
-                                    top: 16,
-                                    child: Column(
-                                      children: [
-                                        const Icon(
-                                          Icons.circle,
-                                          color: Colors.green,
-                                        ),
-                                        const SizedBox(height: 24),
-                                        Button(
-                                          onPressed: () {},
-                                          child: const Icon(
-                                            Icons.bookmark_outline,
-                                            color: Colors.white,
-                                            size: 32,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 24),
-                                        Button(
-                                          onPressed: () {
-                                            showModalBottomSheet(
-                                              context: context,
-                                              backgroundColor:
-                                                  Colors.transparent,
-                                              isScrollControlled: true,
-                                              builder: (context) {
-                                                return Theming(
-                                                  child: _SharePage(
-                                                    status: status,
-                                                  ),
-                                                );
-                                              },
-                                            );
-                                          },
-                                          child: const Icon(
-                                            Icons.reply,
-                                            color: Colors.white,
-                                            size: 32,
-                                            textDirection: TextDirection.rtl,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            left: 16,
-                            right: 16,
-                            bottom: 12 + padding,
-                            height: bottomHeight,
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          status.name,
-                                          style: Theming.of(context)
-                                              .text
-                                              .body
-                                              .copyWith(fontSize: 24),
-                                        ),
-                                        Text(
-                                          status.location,
-                                          style: Theming.of(context)
-                                              .text
-                                              .body
-                                              .copyWith(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w300),
-                                        )
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        const Icon(
-                                          Icons.more_horiz,
-                                          color: Colors.white,
-                                          size: 32,
-                                        ),
-                                        Text(
-                                          status.topic,
-                                          style: Theming.of(context)
-                                              .text
-                                              .body
-                                              .copyWith(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.w400),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                const RecordButton(
-                                    label: 'Invite to voice chat'),
-                              ],
-                            ),
-                          ),
-                        ],
+                      child: _UserProfileDisplay(
+                        status: status,
+                        slideshowPlaying: _currentStatusIndex == index,
+                        playbackInfoStream: _player?.playbackInfoStream,
+                        bottomPadding: padding,
+                        bottomHeight: bottomHeight,
+                        invited: _invitedUsers.contains(status.profile.uid),
+                        onInvite: () => setState(
+                            () => _invitedUsers.add(status.profile.uid)),
                       ),
                     );
                   },
@@ -405,11 +281,228 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   }
 }
 
-class _SharePage extends StatefulWidget {
-  final TopicParticipant status;
-  const _SharePage({
+class _UserProfileDisplay extends StatefulWidget {
+  final Status2 status;
+  final bool slideshowPlaying;
+  final Stream<PlaybackInfo>? playbackInfoStream;
+  final double bottomPadding;
+  final double bottomHeight;
+  final bool invited;
+  final VoidCallback onInvite;
+
+  const _UserProfileDisplay({
     Key? key,
     required this.status,
+    required this.slideshowPlaying,
+    this.playbackInfoStream,
+    required this.bottomPadding,
+    required this.bottomHeight,
+    required this.invited,
+    required this.onInvite,
+  }) : super(key: key);
+
+  @override
+  State<_UserProfileDisplay> createState() => __UserProfileDisplayState();
+}
+
+class __UserProfileDisplayState extends State<_UserProfileDisplay> {
+  bool _uploading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+          child: Container(
+            foregroundDecoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  Colors.black,
+                ],
+                stops: [
+                  0.2,
+                  0.7,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(bottom: widget.bottomHeight),
+                  child: Gallery(
+                    slideshow: widget.slideshowPlaying,
+                    gallery: widget.status.profile.gallery,
+                    withWideBlur: false,
+                  ),
+                ),
+                Positioned(
+                  right: 16,
+                  top: 16,
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.circle,
+                        color: Colors.green,
+                      ),
+                      const SizedBox(height: 24),
+                      Button(
+                        onPressed: () {},
+                        child: const Icon(
+                          Icons.bookmark_outline,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Button(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            isScrollControlled: true,
+                            builder: (context) {
+                              return Theming(
+                                child: _SharePage(
+                                  profile: widget.status.profile,
+                                  location: widget.status.location,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        child: const Icon(
+                          Icons.reply,
+                          color: Colors.white,
+                          size: 32,
+                          textDirection: TextDirection.rtl,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 12 + widget.bottomPadding,
+          height: widget.bottomHeight + 32,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (widget.slideshowPlaying && widget.playbackInfoStream != null)
+                StreamBuilder<PlaybackInfo>(
+                  stream: widget.playbackInfoStream,
+                  initialData: const PlaybackInfo(),
+                  builder: (context, snapshot) {
+                    final value = snapshot.requireData;
+                    final position = value.position.inMilliseconds;
+                    final duration = value.duration.inMilliseconds;
+                    final ratio = duration == 0 ? 0.0 : position / duration;
+                    return FractionallySizedBox(
+                      widthFactor: ratio < 0 ? 0 : ratio,
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        height: 13,
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(3)),
+                          color: Color.fromRGBO(0xD9, 0xD9, 0xD9, 1.0),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.status.profile.name,
+                        style: Theming.of(context)
+                            .text
+                            .body
+                            .copyWith(fontSize: 24),
+                      ),
+                      Text(
+                        widget.status.location,
+                        style: Theming.of(context).text.body.copyWith(
+                            fontSize: 16, fontWeight: FontWeight.w300),
+                      )
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const Icon(
+                        Icons.more_horiz,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                      Text(
+                        widget.status.topic.name,
+                        style: Theming.of(context).text.body.copyWith(
+                            fontSize: 20, fontWeight: FontWeight.w400),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Consumer(builder: (context, ref, _) {
+                return RecordButton(
+                  label: 'Invite to voice chat',
+                  submitLabel: 'Send invitation',
+                  submitting: _uploading,
+                  submitted: widget.invited,
+                  onSubmit: (path) async {
+                    setState(() => _uploading = true);
+                    final uid = ref.read(userProvider).uid;
+                    final api = GetIt.instance.get<Api>();
+                    final result = await api.sendMessage2(
+                      uid,
+                      widget.status.profile.uid,
+                      ChatType.audio,
+                      path,
+                    );
+                    if (mounted) {
+                      setState(() => _uploading = false);
+                      result.fold((l) {
+                        displayError(context, l);
+                      }, (r) {
+                        widget.onInvite();
+                      });
+                    }
+                  },
+                );
+              }),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SharePage extends StatefulWidget {
+  final Profile profile;
+  final String location;
+  const _SharePage({
+    Key? key,
+    required this.profile,
+    required this.location,
   }) : super(key: key);
 
   @override
@@ -437,8 +530,7 @@ class __SharePageState extends State<_SharePage>
 
   @override
   Widget build(BuildContext context) {
-    final status = widget.status;
-    final url = 'openupfriends.com/${status.name}';
+    final url = 'openupfriends.com/${widget.profile.name}';
     return Container(
       height: MediaQuery.of(context).size.height * 0.78,
       clipBehavior: Clip.hardEdge,
@@ -461,12 +553,12 @@ class __SharePageState extends State<_SharePage>
                   child: Column(
                     children: [
                       Text(
-                        status.name,
+                        widget.profile.name,
                         style: Theming.of(context).text.body.copyWith(
                             fontSize: 24, fontWeight: FontWeight.w300),
                       ),
                       Text(
-                        status.location,
+                        widget.location,
                         style: Theming.of(context).text.body.copyWith(
                             fontSize: 24, fontWeight: FontWeight.w300),
                       ),
@@ -500,7 +592,7 @@ class __SharePageState extends State<_SharePage>
                 ),
                 child: Gallery(
                   slideshow: true,
-                  gallery: status.gallery,
+                  gallery: widget.profile.gallery,
                   withWideBlur: false,
                 ),
               ),

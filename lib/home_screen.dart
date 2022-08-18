@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/friendships_page.dart';
 import 'package:openup/profile_page.dart';
@@ -87,10 +89,15 @@ class _HomeScreenState extends State<HomeScreen>
       body: TabBarView(
         controller: _tabController,
         physics: const NeverScrollableScrollPhysics(),
-        children: const [
-          DiscoverPage(),
-          FriendshipsPage(),
-          ProfilePage(),
+        children: [
+          const DiscoverPage(),
+          const FriendshipsPage(),
+          Consumer(
+            builder: (context, ref, _) {
+              final profile = ref.watch(userProvider.select((p) => p.profile))!;
+              return ProfilePage(profile: profile);
+            },
+          ),
         ],
       ),
     );

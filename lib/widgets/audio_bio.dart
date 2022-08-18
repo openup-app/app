@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -253,10 +251,10 @@ class AudioBioController {
   Timer? _recordingLimitTimer;
   Timer? _amplitudeTimer;
 
-  final void Function(Uint8List data) _onRecordingComplete;
+  final void Function(String path) _onRecordingComplete;
 
   AudioBioController({
-    required void Function(Uint8List data) onRecordingComplete,
+    required void Function(String path) onRecordingComplete,
   }) : _onRecordingComplete = onRecordingComplete {
     _playbackInfoSubscription = _audio.playbackInfoStream.listen((info) {
       if (_playbackController.value != info) {
@@ -322,8 +320,7 @@ class AudioBioController {
     final path = await _recorder.stop();
     _recordController.add(_recordController.value.copyWith(recording: false));
     if (path != null) {
-      final bytes = await File(path).readAsBytes();
-      _onRecordingComplete(bytes);
+      _onRecordingComplete(path);
     }
   }
 }
