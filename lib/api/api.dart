@@ -426,6 +426,116 @@ class Api {
     }
   }
 
+  Future<Either<ApiError, List<Chatroom>>> getChatrooms(String uid) async {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/chats/$uid'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        return Right(
+            List<Chatroom>.from(list.map((e) => Chatroom.fromJson(e))));
+      },
+    );
+  }
+
+  Future<Either<ApiError, List<ChatMessage>>> getMessages2(
+    String uid,
+    String otherUid, {
+    DateTime? startDate,
+    int limit = 10,
+  }) async {
+    return _request(
+      makeRequest: () {
+        final query =
+            '${startDate == null ? '' : 'startDate=${startDate.toIso8601String()}&'}limit=$limit';
+        return http.get(
+          Uri.parse('$_urlBase/chats/$uid/$otherUid?$query'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        return Right(
+            List<ChatMessage>.from(list.map((e) => ChatMessage.fromJson(e))));
+      },
+    );
+  }
+
+  Future<Either<ApiError, ChatMessage>> sendMessage2(
+    String uid,
+    String otherUid,
+    ChatType type,
+    String content,
+  ) async {
+    final uri = Uri.parse('$_urlBase/chats/$uid/$otherUid');
+    switch (type) {
+      case ChatType.emoji:
+        return _request(
+          makeRequest: () {
+            return http.post(
+              uri,
+              headers: _headers,
+              body: jsonEncode({
+                'uid': uid,
+                'type': type.name,
+                'content': content,
+              }),
+            );
+          },
+          handleSuccess: (response) {
+            return Right(ChatMessage.fromJson(jsonDecode(response.body)));
+          },
+        );
+      case ChatType.image:
+      case ChatType.video:
+      case ChatType.audio:
+        return _requestStreamedResponse(
+          makeRequest: () async {
+            final request = http.MultipartRequest('POST', uri);
+            request.headers.addAll(_headers);
+            request.fields['uid'] = uid;
+            request.fields['type'] = type.name;
+            request.files.add(
+              await http.MultipartFile.fromPath('media', content),
+            );
+            return request.send();
+          },
+          handleSuccess: (response) {
+            return Right(ChatMessage.fromJson(jsonDecode(response.body)));
+          },
+        );
+    }
+  }
+
+  Future<Either<ApiError, List<Status2>>> getStatuses2(
+    String uid,
+  ) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/users/discover'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final list = List.from(jsonDecode(response.body));
+        final statuses = List<Status2>.from(list.map((e) {
+          try {
+            return Status2.fromJson(e);
+          } catch (e) {
+            debugPrint(e.toString());
+            return null;
+          }
+        }).where((e) => e != null)).toList();
+        return Right(statuses);
+      },
+    );
+  }
+
   Future<Either<ApiError, Map<Topic, List<TopicParticipant>>>> getStatuses(
     String uid,
     bool nearby,
@@ -709,6 +819,33 @@ class Status with _$Status {
   }) = _Status;
 
   factory Status.fromJson(Map<String, dynamic> json) => _$StatusFromJson(json);
+}
+
+@freezed
+class Status2 with _$Status2 {
+  const factory Status2({
+    required Profile profile,
+    @Default("") String location,
+    required Topic topic,
+  }) = _Status2;
+
+  factory Status2.fromJson(Map<String, dynamic> json) =>
+      _$Status2FromJson(json);
+}
+
+@freezed
+class Chatroom with _$Chatroom {
+  const factory Chatroom({
+    required Profile profile,
+    required String location,
+    required Topic topic,
+    required bool firstContact,
+    required int timeRemaining,
+    required bool hasUnread,
+  }) = _Chatroom;
+
+  factory Chatroom.fromJson(Map<String, dynamic> json) =>
+      _$ChatroomFromJson(json);
 }
 
 enum Topic { lonely, friends, moved, sleep, bored, introvert }

@@ -49,12 +49,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     final api = GetIt.instance.get<Api>();
     final statuses = await api.getStatuses2(myUid);
 
-    if (mounted) {
-      setState(() => _loading = false);
-    }
     if (!mounted) {
       return;
     }
+    setState(() => _loading = false);
+
     statuses.fold(
       (l) {
         var message = errorToMessage(l);
