@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,7 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_page.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
 
 class FriendshipsPage extends StatelessWidget {
@@ -269,10 +272,16 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          '40:00:00',
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w400),
+                        _CountdownTimer(
+                          remaining:
+                              Duration(milliseconds: chatroom.timeRemaining),
+                          onDone: () => setState(() => _chatrooms.removeWhere(
+                              (c) => c.profile.uid == chatroom.profile.uid)),
+                          color:
+                              Duration(milliseconds: chatroom.timeRemaining) <
+                                      const Duration(hours: 3)
+                                  ? const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0)
+                                  : null,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -293,6 +302,59 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
           ),
         );
       },
+    );
+  }
+}
+
+class _CountdownTimer extends StatefulWidget {
+  final Duration remaining;
+  final Color? color;
+  final VoidCallback onDone;
+  const _CountdownTimer({
+    Key? key,
+    required this.remaining,
+    this.color,
+    required this.onDone,
+  }) : super(key: key);
+
+  @override
+  State<_CountdownTimer> createState() => __CountdownTimerState();
+}
+
+class __CountdownTimerState extends State<_CountdownTimer> {
+  Timer? _timer;
+  final DateTime _start = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final ellapsed = DateTime.now().difference(_start);
+      if (mounted) {
+        final remaining = widget.remaining - ellapsed;
+        if (remaining.isNegative) {
+          widget.onDone();
+        } else {
+          setState(() {});
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _timer?.cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ellapsed = DateTime.now().difference(_start);
+    final remaining = widget.remaining - ellapsed;
+    return Text(
+      formatDuration(remaining, long: true),
+      style: Theming.of(context).text.body.copyWith(
+          fontSize: 16, fontWeight: FontWeight.w400, color: widget.color),
     );
   }
 }

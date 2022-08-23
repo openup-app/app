@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -174,6 +175,7 @@ class RecordButtonState extends State<RecordButton> {
     _inviteRecorder = AudioBioController(
       onRecordingComplete: (path) async {
         if (mounted) {
+          _invitePlayer.setPath(path);
           setState(() => _audioPath = path);
         }
       },
@@ -696,9 +698,57 @@ class OutlinedArea extends StatelessWidget {
   }
 }
 
-String formatDuration(Duration d) {
-  if (d.inHours > 1) {
-    return '${(d.inHours % 24).toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+class _CountUpTimer extends StatefulWidget {
+  final DateTime start;
+  const _CountUpTimer({
+    Key? key,
+    required this.start,
+  }) : super(key: key);
+
+  @override
+  State<_CountUpTimer> createState() => __CountUpTimerState();
+}
+
+class __CountUpTimerState extends State<_CountUpTimer> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _timer?.cancel();
+  }
+
+  String _formatDuration(Duration d) {
+    if (d.inHours > 1) {
+      return '${(d.inHours % 24).toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+    }
+    return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final time = DateTime.now().difference(widget.start);
+    return Text(
+      _formatDuration(time),
+      style: Theming.of(context).text.body.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w500,
+          color: const Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0)),
+    );
+  }
+}
+
+String formatDuration(Duration d, {bool long = false}) {
+  if (long || d.inHours > 1) {
+    return '${(d.inHours).toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
   }
   if (d.inSeconds < 1) {
     return '00:01';
