@@ -209,7 +209,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                             ready: messageReady,
                                             audioUrl: message.content,
                                             photoUrl: fromMe
-                                                ? _myAvatar
+                                                ? _myAvatar ?? ''
                                                 : _profile?.photo ?? '',
                                             date: _buildDateText(message.date),
                                             fromMe: fromMe,

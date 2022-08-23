@@ -316,6 +316,7 @@ class __RecordButtonState extends State<_RecordButton> {
           setState(() => _uploading = false);
         }
       },
+      onBeginRecording: () {},
     );
   }
 }

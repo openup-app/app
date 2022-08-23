@@ -252,9 +252,11 @@ class AudioBioController {
   Timer? _amplitudeTimer;
 
   final void Function(String path) _onRecordingComplete;
+  final Duration maxDuration;
 
   AudioBioController({
     required void Function(String path) onRecordingComplete,
+    this.maxDuration = const Duration(seconds: 10),
   }) : _onRecordingComplete = onRecordingComplete {
     _playbackInfoSubscription = _audio.playbackInfoStream.listen((info) {
       if (_playbackController.value != info) {
@@ -297,7 +299,7 @@ class AudioBioController {
     _recordController.add(_recordController.value.copyWith(recording: true));
 
     _recordingLimitTimer?.cancel();
-    _recordingLimitTimer = Timer(const Duration(seconds: 10), () {
+    _recordingLimitTimer = Timer(maxDuration, () {
       stopRecording();
     });
 

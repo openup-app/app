@@ -147,6 +147,8 @@ class RecordButton extends StatefulWidget {
   final bool submitting;
   final bool submitted;
   final void Function(String path) onSubmit;
+  final void Function() onBeginRecording;
+
   const RecordButton({
     Key? key,
     required this.label,
@@ -154,6 +156,7 @@ class RecordButton extends StatefulWidget {
     required this.submitting,
     required this.submitted,
     required this.onSubmit,
+    required this.onBeginRecording,
   }) : super(key: key);
 
   @override
@@ -224,7 +227,10 @@ class RecordButtonState extends State<RecordButton> {
 
               if (!recordInfo.recording && _audioPath == null) {
                 return Button(
-                  onPressed: _inviteRecorder.startRecording,
+                  onPressed: () {
+                    widget.onBeginRecording();
+                    _inviteRecorder.startRecording();
+                  },
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: recordInfo.recording
@@ -406,6 +412,223 @@ class RecordButtonState extends State<RecordButton> {
   }
 }
 
+class RecordButtonChat extends StatefulWidget {
+  final void Function(String path) onSubmit;
+  final void Function() onBeginRecording;
+  final void Function() onEndRecording;
+
+  const RecordButtonChat({
+    Key? key,
+    required this.onSubmit,
+    required this.onBeginRecording,
+    required this.onEndRecording,
+  }) : super(key: key);
+
+  @override
+  State<RecordButtonChat> createState() => RecordButtonChatState();
+}
+
+class RecordButtonChatState extends State<RecordButtonChat> {
+  late final AudioBioController _recorder;
+  final _audioPlayer = JustAudioAudioPlayer();
+  String? _audioPath;
+  DateTime _recordingStart = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _recorder = AudioBioController(
+      maxDuration: const Duration(seconds: 30),
+      onRecordingComplete: (path) async {
+        if (mounted) {
+          setState(() => _audioPath = path);
+          _audioPlayer.setPath(path);
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _recorder.dispose();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<RecordInfo>(
+      initialData: const RecordInfo(),
+      stream: _recorder.recordInfoStream,
+      builder: (context, snapshot) {
+        final recordInfo = snapshot.requireData;
+        return Container(
+          height: 87,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: const Color.fromRGBO(0x32, 0x32, 0x32, 1.0),
+            ),
+            borderRadius: BorderRadius.circular(50),
+          ),
+          alignment: Alignment.center,
+          child: Builder(
+            builder: (context) {
+              if (_audioPath == null) {
+                return Button(
+                  onPressed: () {
+                    if (recordInfo.recording) {
+                      widget.onEndRecording();
+                      _recorder.stopRecording();
+                    } else {
+                      widget.onBeginRecording();
+                      _recorder.startRecording();
+                      setState(() {
+                        _recordingStart = DateTime.now();
+                      });
+                    }
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        margin: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: AnimatedContainer(
+                            width: recordInfo.recording ? 27 : 50,
+                            height: recordInfo.recording ? 27 : 50,
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              color:
+                                  const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                              shape: BoxShape.rectangle,
+                              borderRadius: recordInfo.recording
+                                  ? const BorderRadius.all(Radius.circular(2))
+                                  : const BorderRadius.all(Radius.circular(25)),
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (recordInfo.recording)
+                        Align(
+                          alignment: Alignment.center,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 104.0),
+                            child: Text(
+                              formatDuration(
+                                  DateTime.now().difference(_recordingStart)),
+                              style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 20, fontWeight: FontWeight.w300),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              }
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Button(
+                    onPressed: () {
+                      _audioPlayer.stop();
+                      setState(() => _audioPath = null);
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.delete,
+                        size: 34,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                  Button(
+                    onPressed: () {
+                      _audioPlayer.stop();
+                      widget.onSubmit(_audioPath!);
+                      setState(() => _audioPath = null);
+                    },
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(
+                            color: const Color.fromRGBO(0x82, 0x82, 0x82, 1.0)),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.arrow_upward,
+                          size: 32,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                  StreamBuilder<PlaybackInfo>(
+                    stream: _audioPlayer.playbackInfoStream,
+                    initialData: const PlaybackInfo(),
+                    builder: (context, snapshot) {
+                      final playbackInfo = snapshot.requireData;
+                      return Button(
+                        onPressed: () async {
+                          if (playbackInfo.state == PlaybackState.playing) {
+                            _audioPlayer.stop();
+                          } else {
+                            _audioPlayer.play();
+                          }
+                        },
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 22),
+                            SizedBox(
+                              width: 41,
+                              child: playbackInfo.state == PlaybackState.playing
+                                  ? const Center(
+                                      child: Icon(
+                                        Icons.stop,
+                                        size: 32,
+                                      ),
+                                    )
+                                  : const Center(
+                                      child: Icon(
+                                        Icons.play_arrow,
+                                        size: 32,
+                                      ),
+                                    ),
+                            ),
+                            Text(
+                              playbackInfo.state == PlaybackState.playing
+                                  ? formatDuration(playbackInfo.position)
+                                  : formatDuration(playbackInfo.duration),
+                              style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 15, fontWeight: FontWeight.w300),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
 class Chip extends StatelessWidget {
   final String label;
   final bool selected;
@@ -471,4 +694,14 @@ class OutlinedArea extends StatelessWidget {
       ),
     );
   }
+}
+
+String formatDuration(Duration d) {
+  if (d.inHours > 1) {
+    return '${(d.inHours % 24).toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+  }
+  if (d.inSeconds < 1) {
+    return '00:01';
+  }
+  return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
 }

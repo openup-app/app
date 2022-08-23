@@ -6,6 +6,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/chat_page.dart';
 import 'package:openup/widgets/theming.dart';
 
 class FriendshipsPage extends StatelessWidget {
@@ -164,7 +165,17 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
       itemBuilder: (context, index) {
         final chatroom = _chatrooms[index];
         return Button(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.of(context).pushNamed(
+              'chat',
+              arguments: ChatPageArguments(
+                otherUid: chatroom.profile.uid,
+                otherProfile: chatroom.profile,
+                otherLocation: chatroom.location,
+                online: chatroom.online,
+              ),
+            );
+          },
           child: SizedBox(
             height: 86,
             child: Row(
@@ -217,10 +228,12 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                       child: Container(
                         width: 14,
                         height: 14,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.green,
-                        ),
+                        decoration: chatroom.online
+                            ? const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.green,
+                              )
+                            : null,
                       ),
                     ),
                   ],

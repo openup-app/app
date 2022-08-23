@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 import 'package:openup/api/chat/chat_api.dart';
+import 'package:openup/api/chat/chat_api2.dart';
 import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/main.dart';
@@ -442,7 +443,7 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, List<ChatMessage>>> getMessages2(
+  Future<Either<ApiError, List<ChatMessage2>>> getMessages2(
     String uid,
     String otherUid, {
     DateTime? startDate,
@@ -460,39 +461,20 @@ class Api {
       handleSuccess: (response) {
         final list = jsonDecode(response.body) as List<dynamic>;
         return Right(
-            List<ChatMessage>.from(list.map((e) => ChatMessage.fromJson(e))));
+            List<ChatMessage2>.from(list.map((e) => ChatMessage2.fromJson(e))));
       },
     );
   }
 
-  Future<Either<ApiError, ChatMessage>> sendMessage2(
+  Future<Either<ApiError, ChatMessage2>> sendMessage2(
     String uid,
     String otherUid,
-    ChatType type,
+    ChatType2 type,
     String content,
   ) async {
     final uri = Uri.parse('$_urlBase/chats/$uid/$otherUid');
     switch (type) {
-      case ChatType.emoji:
-        return _request(
-          makeRequest: () {
-            return http.post(
-              uri,
-              headers: _headers,
-              body: jsonEncode({
-                'uid': uid,
-                'type': type.name,
-                'content': content,
-              }),
-            );
-          },
-          handleSuccess: (response) {
-            return Right(ChatMessage.fromJson(jsonDecode(response.body)));
-          },
-        );
-      case ChatType.image:
-      case ChatType.video:
-      case ChatType.audio:
+      case ChatType2.audio:
         return _requestStreamedResponse(
           makeRequest: () async {
             final request = http.MultipartRequest('POST', uri);
@@ -505,7 +487,7 @@ class Api {
             return request.send();
           },
           handleSuccess: (response) {
-            return Right(ChatMessage.fromJson(jsonDecode(response.body)));
+            return Right(ChatMessage2.fromJson(jsonDecode(response.body)));
           },
         );
     }
@@ -827,6 +809,7 @@ class Status2 with _$Status2 {
     required Profile profile,
     @Default("") String location,
     required Topic topic,
+    required bool online,
   }) = _Status2;
 
   factory Status2.fromJson(Map<String, dynamic> json) =>
@@ -842,6 +825,7 @@ class Chatroom with _$Chatroom {
     required bool firstContact,
     required int timeRemaining,
     required bool hasUnread,
+    required bool online,
   }) = _Chatroom;
 
   factory Chatroom.fromJson(Map<String, dynamic> json) =>

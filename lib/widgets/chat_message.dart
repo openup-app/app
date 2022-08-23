@@ -5,13 +5,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:video_player/video_player.dart';
 
 class AudioChatMessage extends StatefulWidget {
   final bool ready;
   final String audioUrl;
-  final String? photoUrl;
+  final String photoUrl;
   final Widget date;
   final bool fromMe;
 
@@ -19,7 +20,7 @@ class AudioChatMessage extends StatefulWidget {
     Key? key,
     required this.ready,
     required this.audioUrl,
-    this.photoUrl,
+    required this.photoUrl,
     required this.date,
     required this.fromMe,
   }) : super(key: key);
@@ -66,98 +67,82 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: widget.fromMe
-            ? const Color.fromRGBO(0x5E, 0x5C, 0x5C, 0.3)
-            : const Color.fromRGBO(0xC4, 0xC4, 0xC4, 0.30),
-        border: Border.all(
-          color: const Color.fromRGBO(0x60, 0x5E, 0x5E, 1.0),
-          width: 2,
-        ),
-        borderRadius: const BorderRadius.all(
-          Radius.circular(36),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (!widget.fromMe) _buildAvatar(widget.photoUrl),
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: _playbackInfo.state == PlaybackState.loading
-                ? const Center(
-                    child: CircularProgressIndicator(),
-                  )
-                : Button(
-                    onPressed: () {
-                      switch (_playbackInfo.state) {
-                        case PlaybackState.playing:
-                          _audio.pause();
-                          break;
-                        case PlaybackState.paused:
-                        case PlaybackState.idle:
-                          _audio.play();
-                          break;
-                        default:
-                        // Do nothing
-                      }
-                    },
-                    child: Center(
-                      child: Builder(
-                        builder: (context) {
-                          switch (_playbackInfo.state) {
-                            case PlaybackState.playing:
-                              return const Icon(
-                                Icons.pause,
-                                size: 40,
-                              );
-                            case PlaybackState.paused:
-                            case PlaybackState.idle:
-                              return const Icon(
-                                Icons.play_arrow,
-                                size: 40,
-                              );
-                            default:
-                              return const Icon(
-                                Icons.error,
-                                size: 40,
-                              );
-                          }
-                        },
-                      ),
-                    ),
-                  ),
+    return Column(
+      crossAxisAlignment:
+          widget.fromMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 69,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: widget.fromMe
+                ? const Color.fromRGBO(0xFF, 0x00, 0x00, 0.5)
+                : const Color.fromRGBO(0xC4, 0xC4, 0xC4, 0.3),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(37),
+            ),
           ),
-          Stack(
-            alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (!widget.fromMe)
+                Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: _buildAvatar(widget.photoUrl),
+                ),
               Row(
+                textDirection:
+                    widget.fromMe ? TextDirection.ltr : TextDirection.rtl,
                 children: [
-                  if (_playbackInfo.state != PlaybackState.disabled)
-                    SizedBox(
-                      width: 100,
-                      child: SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          thumbShape: AudioSliderThumbShape(),
-                          trackShape: AudioSliderTrackShape(),
-                          overlayColor: Colors.transparent,
-                        ),
-                        child: Slider(
-                          min: Duration.zero.inMilliseconds.toDouble(),
-                          max: _playbackInfo.duration.inMilliseconds.toDouble(),
-                          value:
-                              _playbackInfo.position.inMilliseconds.toDouble(),
-                          onChanged: (value) => _audio
-                              .seek(Duration(milliseconds: value.toInt())),
-                        ),
-                      ),
-                    )
-                  else
+                  SizedBox(
+                    width: 64,
+                    height: 48,
+                    child: _playbackInfo.state == PlaybackState.loading
+                        ? const Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        : Button(
+                            onPressed: () {
+                              switch (_playbackInfo.state) {
+                                case PlaybackState.playing:
+                                  _audio.pause();
+                                  break;
+                                case PlaybackState.paused:
+                                case PlaybackState.idle:
+                                  _audio.play();
+                                  break;
+                                default:
+                                // Do nothing
+                              }
+                            },
+                            child: Center(
+                              child: Builder(
+                                builder: (context) {
+                                  switch (_playbackInfo.state) {
+                                    case PlaybackState.playing:
+                                      return const Icon(
+                                        Icons.pause,
+                                        size: 40,
+                                      );
+                                    case PlaybackState.paused:
+                                    case PlaybackState.idle:
+                                      return const Icon(
+                                        Icons.play_arrow,
+                                        size: 40,
+                                      );
+                                    default:
+                                      return const Icon(
+                                        Icons.error,
+                                        size: 40,
+                                      );
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                  ),
+                  if (_playbackInfo.state == PlaybackState.disabled)
                     SizedBox(
                       width: 100,
                       child: Text(
@@ -165,33 +150,53 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
                         style: Theming.of(context).text.body,
                       ),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      _formatDuration(
-                          _playbackInfo.state == PlaybackState.playing
-                              ? _playbackInfo.position
-                              : _playbackInfo.duration),
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontWeight: FontWeight.normal),
-                    ),
+                  Text(
+                    formatDuration(_playbackInfo.state == PlaybackState.playing
+                        ? _playbackInfo.position
+                        : _playbackInfo.duration),
+                    style: Theming.of(context)
+                        .text
+                        .body
+                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
                   ),
                 ],
               ),
-              Positioned(
-                right: widget.fromMe ? 0 : 8,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 40.0, right: 8.0),
-                  child: widget.date,
+              if (widget.fromMe)
+                Padding(
+                  padding: const EdgeInsets.only(left: 12.0),
+                  child: _buildAvatar(widget.photoUrl),
                 ),
-              ),
             ],
           ),
-          if (widget.fromMe) _buildAvatar(widget.photoUrl),
-        ],
-      ),
+        ),
+        SizedBox(
+          height: 32,
+          child: Row(
+            mainAxisAlignment:
+                widget.fromMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: widget.date,
+              ),
+              // if (widget.fromMe)
+              //   Container(
+              //     width: 20,
+              //     height: 20,
+              //     clipBehavior: Clip.hardEdge,
+              //     decoration: const BoxDecoration(
+              //       shape: BoxShape.circle,
+              //     ),
+              //     child: Image.network(
+              //       widget.photoUrl,
+              //       fit: BoxFit.cover,
+              //     ),
+              //   ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -206,9 +211,6 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
       ),
     );
   }
-
-  String _formatDuration(Duration duration) =>
-      '${min(duration.inMinutes, 99).toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
 
   void _onPlaybackInfo(PlaybackInfo info) =>
       setState(() => _playbackInfo = info);
