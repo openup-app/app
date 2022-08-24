@@ -31,8 +31,8 @@ import 'package:openup/sign_up_audio_screen.dart';
 import 'package:openup/sign_up_name_screen.dart';
 import 'package:openup/sign_up_photos_hide_screen.dart';
 import 'package:openup/sign_up_photos_screen.dart';
+import 'package:openup/sign_up_start_animation.dart';
 import 'package:openup/sign_up_topic_screen.dart';
-import 'package:openup/sign_up_welcome_info.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
@@ -180,7 +180,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       ),
       navigatorKey: _navigatorKey,
       navigatorObservers: [_routeObserver],
-      initialRoute: '/',
       builder: (context, child) {
         return Theming(
           child: Stack(
@@ -306,12 +305,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 );
               },
             );
-          case 'sign-up-welcome-info':
+          case 'sign-up-start-animation':
             return _buildPageRoute(
               settings: settings,
               builder: (_) {
                 return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpWelcomeInfoScreen(),
+                  child: SignUpStartAnimationScreen(),
                 );
               },
             );

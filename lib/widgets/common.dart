@@ -368,7 +368,10 @@ class RecordButtonState extends State<RecordButton> {
                     Button(
                       onPressed: widget.submitting
                           ? null
-                          : () => setState(() => _audioPath = null),
+                          : () {
+                              _invitePlayer.stop();
+                              setState(() => _audioPath = null);
+                            },
                       child: const Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Icon(

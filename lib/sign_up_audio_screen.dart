@@ -1,13 +1,11 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/photo_grid.dart';
 import 'package:openup/widgets/theming.dart';
 
 class SignUpAudioScreen extends StatefulWidget {
@@ -18,9 +16,9 @@ class SignUpAudioScreen extends StatefulWidget {
 }
 
 class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
-  bool _hide = false;
   bool _uploading = false;
   bool _submitted = false;
+
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
@@ -100,7 +98,8 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
               return Button(
                 onPressed: audio == null
                     ? null
-                    : () => Navigator.of(context).pushReplacementNamed('home'),
+                    : () => Navigator.of(context)
+                        .pushReplacementNamed('sign-up-start-animation'),
                 child: const OutlinedArea(
                   child: Center(
                     child: Text('continue'),
