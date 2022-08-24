@@ -16,12 +16,10 @@ import 'package:openup/widgets/theming.dart';
 
 class ProfilePage extends StatefulWidget {
   final Profile profile;
-  final DateTime? endTime;
 
   const ProfilePage({
     Key? key,
     required this.profile,
-    this.endTime,
   }) : super(key: key);
 
   @override
@@ -106,9 +104,13 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Padding(
               padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).padding.bottom),
-              child: ProfileView(
-                profile: widget.profile,
-                endTime: widget.endTime,
+              child: Consumer(
+                builder: (context, ref, _) {
+                  return ProfileView(
+                    profile: ref.watch(userProvider.select((p) => p.profile)) ??
+                        widget.profile,
+                  );
+                },
               ),
             ),
           ),
@@ -288,7 +290,7 @@ class _EditProfileView extends StatelessWidget {
                     future: updateName(
                       context: context,
                       ref: ref,
-                      name: name,
+                      name: newName,
                     ),
                   );
 

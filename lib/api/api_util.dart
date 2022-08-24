@@ -59,7 +59,6 @@ Future<Either<ApiError, void>> updateTopic({
   final userState = ref.read(userProvider);
   final newProfile = userState.profile!.copyWith(topic: topic);
   final result = await api.updateTopic(userState.uid, topic);
-  print('reult $result');
 
   if (result.isRight()) {
     ref.read(userProvider.notifier).profile(newProfile);
