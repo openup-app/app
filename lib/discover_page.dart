@@ -26,29 +26,33 @@ class DiscoverPage extends ConsumerStatefulWidget {
 
 class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _loading = false;
-  List<ProfileWithOnline> _profiles = <ProfileWithOnline>[];
+  final _profiles = <ProfileWithOnline>[];
   int _currentProfileIndex = 0;
   Topic? _selectedTopic;
-  JustAudioAudioPlayer? _player;
   final _invitedUsers = <String>{};
 
   @override
   void initState() {
     super.initState();
-    setState(() => _loading = true);
-    __fetchStatuses();
+    _fetchStatuses();
   }
 
-  @override
-  void dispose() {
-    _player?.dispose();
-    super.dispose();
-  }
+  Future<void> _fetchStatuses() async {
+    if (!mounted) {
+      return;
+    }
 
-  Future<void> __fetchStatuses() async {
+    if (_profiles.isEmpty) {
+      setState(() => _loading = true);
+    }
     final myUid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
-    final profiles = await api.getDiscover(myUid);
+    final startAfterUid = _profiles.isEmpty ? null : _profiles.last.profile.uid;
+    final profiles = await api.getDiscover(
+      myUid,
+      // startAfterUid: startAfterUid,
+      topic: _selectedTopic,
+    );
 
     if (!mounted) {
       return;
@@ -76,10 +80,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         );
       },
       (r) async {
-        setState(() {
-          _profiles = r;
-          _player = JustAudioAudioPlayer();
-        });
+        setState(() => _profiles.addAll(r));
       },
     );
   }
@@ -108,9 +109,21 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
             if (!_loading && filteredProfiles.isEmpty)
               Positioned(
                 child: Center(
-                  child: ElevatedButton(
-                    onPressed: __fetchStatuses,
-                    child: const Text('Refresh'),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'There are no profiles here',
+                          style: Theming.of(context).text.body,
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: _fetchStatuses,
+                        child: const Text('Refresh'),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -122,34 +135,39 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     bottom: obscuredBottom,
                   ),
                   itemExtent: itemExtent,
-                  itemCount: filteredProfiles.length,
+                  itemCount: filteredProfiles.length + 1,
                   onItemChanged: (index) {
                     // Seems to be off by one and the first element
                     setState(() => _currentProfileIndex = index + 1);
-                    _player?.stop();
-                    final audio =
-                        filteredProfiles[_currentProfileIndex].profile.audio;
-                    if (audio != null) {
-                      _player?.setUrl(audio);
-                      _player?.play(loop: true);
-                    }
+
+                    // if (index > _profiles.length - 3) {
+                    //   print('fetching');
+                    //   _fetchStatuses();
+                    // }
                   },
                   itemBuilder: (context, index) {
+                    if (index == filteredProfiles.length) {
+                      if (_loading) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }
+
                     final profileWithOnline = filteredProfiles[index];
                     final profile = profileWithOnline.profile;
                     return SizedBox(
                       height: itemExtent,
                       child: _UserProfileDisplay(
                         profile: profile,
-                        slideshowPlaying: _currentProfileIndex == index,
-                        playbackInfoStream: _player?.playbackInfoStream,
+                        play: _currentProfileIndex == index,
                         bottomPadding: padding,
                         bottomHeight: bottomHeight,
                         online: profileWithOnline.online,
                         invited: _invitedUsers.contains(profile.uid),
                         onInvite: () =>
                             setState(() => _invitedUsers.add(profile.uid)),
-                        onBeginRecording: () => _player?.stop(),
                         onBlock: () => setState(() => _profiles.removeWhere(
                             ((p) => p.profile.uid == profile.uid))),
                         onReport: () {
@@ -158,6 +176,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             arguments: ReportScreenArguments(uid: profile.uid),
                           );
                         },
+                        onBeginRecording: () {},
                       ),
                     );
                   },
@@ -220,7 +239,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                 selected: _selectedTopic == null,
                                 onSelected: () {
                                   if (_selectedTopic != null) {
-                                    setState(() => _selectedTopic = null);
+                                    setState(() {
+                                      _profiles.clear();
+                                      _selectedTopic = null;
+                                    });
+                                    _fetchStatuses();
                                   }
                                 },
                               ),
@@ -239,6 +262,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                     } else {
                                       setState(() => _selectedTopic = topic);
                                     }
+                                    setState(() => _profiles.clear());
+                                    _fetchStatuses();
                                   },
                                 ),
                             ],
@@ -259,8 +284,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
 class _UserProfileDisplay extends StatefulWidget {
   final Profile profile;
-  final bool slideshowPlaying;
-  final Stream<PlaybackInfo>? playbackInfoStream;
+  final bool play;
   final double bottomPadding;
   final double bottomHeight;
   final bool online;
@@ -273,8 +297,7 @@ class _UserProfileDisplay extends StatefulWidget {
   const _UserProfileDisplay({
     Key? key,
     required this.profile,
-    required this.slideshowPlaying,
-    this.playbackInfoStream,
+    required this.play,
     required this.bottomPadding,
     required this.bottomHeight,
     required this.online,
@@ -291,6 +314,38 @@ class _UserProfileDisplay extends StatefulWidget {
 
 class __UserProfileDisplayState extends State<_UserProfileDisplay> {
   bool _uploading = false;
+
+  final _player = JustAudioAudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    final audio = widget.profile.audio;
+    if (audio != null) {
+      _player.setUrl(audio);
+    }
+
+    if (widget.play) {
+      _player.play(loop: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _UserProfileDisplay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.play && !oldWidget.play) {
+      _player.play(loop: true);
+    } else if (!widget.play && oldWidget.play) {
+      _player.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _player.stop();
+    _player.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -322,7 +377,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                 Padding(
                   padding: EdgeInsets.only(bottom: widget.bottomHeight),
                   child: Gallery(
-                    slideshow: widget.slideshowPlaying,
+                    slideshow: widget.play,
                     gallery: widget.profile.gallery,
                     withWideBlur: false,
                   ),
@@ -385,9 +440,9 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.slideshowPlaying && widget.playbackInfoStream != null)
+              if (widget.play)
                 StreamBuilder<PlaybackInfo>(
-                  stream: widget.playbackInfoStream,
+                  stream: _player.playbackInfoStream,
                   initialData: const PlaybackInfo(),
                   builder: (context, snapshot) {
                     final value = snapshot.requireData;
@@ -411,22 +466,22 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.profile.name,
-                        style: Theming.of(context)
-                            .text
-                            .body
-                            .copyWith(fontSize: 24),
-                      ),
-                      Text(
-                        widget.profile.location,
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 16, fontWeight: FontWeight.w300),
-                      )
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AutoSizeText(
+                          widget.profile.name,
+                          maxFontSize: 26,
+                          style: Theming.of(context).text.body,
+                        ),
+                        Text(
+                          widget.profile.location,
+                          style: Theming.of(context).text.body.copyWith(
+                              fontSize: 16, fontWeight: FontWeight.w300),
+                        )
+                      ],
+                    ),
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -437,10 +492,13 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                         onBlock: widget.onBlock,
                         onReport: widget.onReport,
                       ),
-                      Text(
-                        widget.profile.topic.name,
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 20, fontWeight: FontWeight.w400),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: Text(
+                          topicLabel(widget.profile.topic),
+                          style: Theming.of(context).text.body.copyWith(
+                              fontSize: 20, fontWeight: FontWeight.w400),
+                        ),
                       ),
                     ],
                   ),
@@ -450,30 +508,32 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
               Consumer(
                 builder: (context, ref, _) {
                   return RecordButton(
-                    label: 'Invite to voice chat',
-                    submitLabel: 'Send invitation',
-                    submitting: _uploading,
-                    submitted: widget.invited,
-                    onSubmit: (path) async {
-                      setState(() => _uploading = true);
-                      final uid = ref.read(userProvider).uid;
-                      final api = GetIt.instance.get<Api>();
-                      final result = await api.sendMessage2(
-                        uid,
-                        widget.profile.uid,
-                        ChatType2.audio,
-                        path,
-                      );
-                      if (mounted) {
-                        setState(() => _uploading = false);
-                        result.fold(
-                          (l) => displayError(context, l),
-                          (r) => widget.onInvite(),
+                      label: 'Invite to voice chat',
+                      submitLabel: 'Send invitation',
+                      submitting: _uploading,
+                      submitted: widget.invited,
+                      onSubmit: (path) async {
+                        setState(() => _uploading = true);
+                        final uid = ref.read(userProvider).uid;
+                        final api = GetIt.instance.get<Api>();
+                        final result = await api.sendMessage2(
+                          uid,
+                          widget.profile.uid,
+                          ChatType2.audio,
+                          path,
                         );
-                      }
-                    },
-                    onBeginRecording: widget.onBeginRecording,
-                  );
+                        if (mounted) {
+                          setState(() => _uploading = false);
+                          result.fold(
+                            (l) => displayError(context, l),
+                            (r) => widget.onInvite(),
+                          );
+                        }
+                      },
+                      onBeginRecording: () {
+                        _player.stop();
+                        widget.onBeginRecording();
+                      });
                 },
               ),
             ],

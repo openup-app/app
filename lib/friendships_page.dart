@@ -26,18 +26,24 @@ class FriendshipsPage extends StatelessWidget {
           style: Theming.of(context).text.body,
         ),
         Container(
-          height: 40,
+          height: 43,
           margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           decoration: BoxDecoration(
             color: Colors.white,
             border: Border.all(),
             borderRadius: const BorderRadius.all(Radius.circular(24)),
           ),
-          child: const Align(
+          child: Align(
             alignment: Alignment.centerLeft,
             child: Padding(
-              padding: EdgeInsets.only(left: 24.0),
-              child: Text('Search'),
+              padding: const EdgeInsets.only(left: 33.0),
+              child: Text(
+                'Search',
+                style: Theming.of(context).text.body.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400,
+                    color: const Color.fromRGBO(0x4A, 0x4A, 0x4A, 1.0)),
+              ),
             ),
           ),
         ),

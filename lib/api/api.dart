@@ -507,22 +507,32 @@ class Api {
   }
 
   Future<Either<ApiError, List<ProfileWithOnline>>> getDiscover(
-    String uid,
-  ) {
+    String uid, {
+    String? startAfterUid,
+    Topic? topic,
+  }) {
     return _request(
       makeRequest: () {
+        final startAfterUidQuery =
+            startAfterUid == null ? null : 'startAfterUid=$startAfterUid';
+        final topicQuery = topic == null ? null : 'topic=${topic.name}';
+        final hasOptions = startAfterUidQuery != null || topicQuery != null;
         return http.get(
-          Uri.parse('$_urlBase/users/discover'),
+          Uri.parse('$_urlBase/users/discover${hasOptions ? '?' : ''}${[
+            startAfterUidQuery,
+            topicQuery
+          ].where((q) => q != null).join('&')}'),
           headers: _headers,
         );
       },
       handleSuccess: (response) {
         final list = List.from(jsonDecode(response.body));
-        final profiles = List<ProfileWithOnline>.from(list.map((e) {
+        final profiles = List<ProfileWithOnline>.from(list.map((p) {
           try {
-            return ProfileWithOnline.fromJson(e);
+            return ProfileWithOnline.fromJson(p);
           } catch (e) {
             debugPrint(e.toString());
+            debugPrint(p);
             return null;
           }
         }).where((e) => e != null)).toList();

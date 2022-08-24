@@ -95,7 +95,13 @@ class BlurredSurface extends StatelessWidget {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: child,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const AbsorbPointer(),
+            child,
+          ],
+        ),
       ),
     );
   }
