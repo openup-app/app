@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/theming.dart';
 
 /// Prominent button with a horizontal gradient styling.
@@ -706,6 +711,91 @@ class OutlinedArea extends StatelessWidget {
       child: Center(
         child: child,
       ),
+    );
+  }
+}
+
+class ReportBlockPopupMenu extends ConsumerStatefulWidget {
+  final String uid;
+  final String name;
+  final VoidCallback onBlock;
+  final VoidCallback onReport;
+  const ReportBlockPopupMenu({
+    Key? key,
+    required this.uid,
+    required this.name,
+    required this.onBlock,
+    required this.onReport,
+  }) : super(key: key);
+
+  @override
+  ConsumerState<ReportBlockPopupMenu> createState() =>
+      _ReportBlockPopupMenuState();
+}
+
+class _ReportBlockPopupMenuState extends ConsumerState<ReportBlockPopupMenu> {
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton(
+      icon: const IconWithShadow(Icons.more_horiz, size: 32),
+      onSelected: (value) {
+        if (value == 'block') {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return CupertinoTheme(
+                data: const CupertinoThemeData(brightness: Brightness.dark),
+                child: CupertinoAlertDialog(
+                  title: Text('Block ${widget.name}?'),
+                  content: Text(
+                      '${widget.name} will be unable to see or call you, and you will not be able to see or call ${widget.name}.'),
+                  actions: [
+                    CupertinoDialogAction(
+                      onPressed: Navigator.of(context).pop,
+                      child: const Text('Cancel'),
+                    ),
+                    CupertinoDialogAction(
+                      onPressed: () async {
+                        final myUid = ref.read(userProvider).uid;
+                        final api = GetIt.instance.get<Api>();
+                        await api.blockUser(myUid, widget.uid);
+                        if (mounted) {
+                          Navigator.of(context).pop();
+                          widget.onBlock();
+                        }
+                      },
+                      isDestructiveAction: true,
+                      child: const Text('Block'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        } else if (value == 'report') {
+          widget.onReport();
+        }
+      },
+      itemBuilder: (context) {
+        return [
+          const PopupMenuItem(
+            value: 'block',
+            child: ListTile(
+              title: Text('Block user'),
+              trailing: Icon(Icons.block),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          const PopupMenuItem(
+            value: 'report',
+            child: ListTile(
+              title: Text('Report user'),
+              trailing: Icon(Icons.flag_outlined),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        ];
+      },
     );
   }
 }

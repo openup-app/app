@@ -12,6 +12,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_screen.dart';
+import 'package:openup/report_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
@@ -149,6 +150,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         onInvite: () =>
                             setState(() => _invitedUsers.add(profile.uid)),
                         onBeginRecording: () => _player?.stop(),
+                        onBlock: () => setState(() => _profiles.removeWhere(
+                            ((p) => p.profile.uid == profile.uid))),
+                        onReport: () {
+                          Navigator.of(context).pushNamed(
+                            'call-report',
+                            arguments: ReportScreenArguments(uid: profile.uid),
+                          );
+                        },
                       ),
                     );
                   },
@@ -258,6 +267,8 @@ class _UserProfileDisplay extends StatefulWidget {
   final bool invited;
   final VoidCallback onInvite;
   final VoidCallback onBeginRecording;
+  final VoidCallback onBlock;
+  final VoidCallback onReport;
 
   const _UserProfileDisplay({
     Key? key,
@@ -270,6 +281,8 @@ class _UserProfileDisplay extends StatefulWidget {
     required this.invited,
     required this.onInvite,
     required this.onBeginRecording,
+    required this.onBlock,
+    required this.onReport,
   }) : super(key: key);
 
   @override
@@ -368,7 +381,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
           left: 16,
           right: 16,
           bottom: 12 + widget.bottomPadding,
-          height: widget.bottomHeight + 32,
+          height: widget.bottomHeight + 44,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -418,10 +431,11 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Icon(
-                        Icons.more_horiz,
-                        color: Colors.white,
-                        size: 32,
+                      ReportBlockPopupMenu(
+                        uid: widget.profile.uid,
+                        name: widget.profile.name,
+                        onBlock: widget.onBlock,
+                        onReport: widget.onReport,
                       ),
                       Text(
                         widget.profile.topic.name,

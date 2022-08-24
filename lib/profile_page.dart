@@ -262,53 +262,98 @@ class _EditProfileView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Consumer(builder: (context, ref, _) {
-          final name =
-              ref.watch(userProvider.select((p) => p.profile?.name ?? ''));
-          return Button(
-            onPressed: () async {
-              final newName = await showDialog<String>(
-                context: context,
-                builder: (contex) => _NameDialog(initialName: name),
-              );
-              if (newName != null && newName != name) {
-                final result = await withBlockingModal(
+        Consumer(
+          builder: (context, ref, _) {
+            final name =
+                ref.watch(userProvider.select((p) => p.profile?.name ?? ''));
+            return Button(
+              onPressed: () async {
+                final newName = await showDialog<String>(
                   context: context,
-                  label: 'Updating',
-                  future: updateName(
+                  builder: (contex) => _NameDialog(initialName: name),
+                );
+                if (newName != null && newName != name) {
+                  final result = await withBlockingModal(
                     context: context,
-                    ref: ref,
-                    name: name,
-                  ),
-                );
+                    label: 'Updating',
+                    future: updateName(
+                      context: context,
+                      ref: ref,
+                      name: name,
+                    ),
+                  );
 
-                result.fold(
-                  (l) => displayError(context, l),
-                  (r) {},
-                );
-              }
-            },
-            child: Container(
-              height: 51,
-              margin: const EdgeInsets.only(left: 16, right: 16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.white),
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(40),
+                  result.fold(
+                    (l) => displayError(context, l),
+                    (r) {},
+                  );
+                }
+              },
+              child: Container(
+                height: 51,
+                margin: const EdgeInsets.only(left: 16, right: 16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white),
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(40),
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    name,
+                    style: Theming.of(context)
+                        .text
+                        .body
+                        .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+                  ),
                 ),
               ),
-              child: Center(
-                child: Text(
-                  name,
-                  style: Theming.of(context)
-                      .text
-                      .body
-                      .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
-                ),
+            );
+          },
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16),
+          child: Text(
+            'My Account',
+            style: Theming.of(context).text.body.copyWith(fontSize: 24),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16),
+          child: Text(
+            'Manage your account and contact us',
+            style: Theming.of(context)
+                .text
+                .body
+                .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Button(
+          onPressed: () async {
+            Navigator.of(context).pushNamed('account-settings');
+          },
+          child: Container(
+            height: 51,
+            margin: const EdgeInsets.only(left: 16, right: 16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white),
+              borderRadius: const BorderRadius.all(
+                Radius.circular(40),
               ),
             ),
-          );
-        }),
+            child: Center(
+              child: Text(
+                'Account settings',
+                style: Theming.of(context)
+                    .text
+                    .body
+                    .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+              ),
+            ),
+          ),
+        ),
         const SizedBox(height: 16),
       ],
     );

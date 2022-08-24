@@ -40,223 +40,207 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const BoxDecoration(color: Colors.black),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromRGBO(0x01, 0x39, 0x59, 1.0),
-              Color.fromRGBO(0x00, 0x15, 0x20, 1.0),
-            ],
-          ),
-        ),
-        child: Stack(
-          fit: StackFit.loose,
-          children: [
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 24,
-              left: 8,
-              child: Transform.scale(
-                scale: 1.3,
-                child: const BackIconButton(),
-              ),
+      child: Stack(
+        fit: StackFit.loose,
+        children: [
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 24,
+            left: 8,
+            child: Transform.scale(
+              scale: 1.3,
+              child: const BackIconButton(),
             ),
-            Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).padding.top + 32),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 362),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Column(
-                      children: [
-                        Center(
-                          child: Text(
-                            'Account Settings',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 30, fontWeight: FontWeight.w600),
-                          ),
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding:
+                  EdgeInsets.only(top: MediaQuery.of(context).padding.top + 32),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 362),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    children: [
+                      Center(
+                        child: Text(
+                          'Account Settings',
+                          style: Theming.of(context).text.body.copyWith(
+                              fontSize: 30, fontWeight: FontWeight.w600),
                         ),
-                        const Spacer(),
-                        Center(
-                          child: Text(
-                            'Update login information',
-                            style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _InputArea(
-                          child: _TextField(
-                            controller: _phoneNumberController,
-                            keyboardType: TextInputType.phone,
-                            hintText: 'phone number',
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: 237,
-                          child: Button(
-                            onPressed: _submitting ? null : _updateInformation,
-                            child: _InputArea(
-                              childNeedsOpacity: false,
-                              opacity: 0.8,
-                              gradientColors: const [
-                                Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
-                                Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
-                              ],
-                              child: Center(
-                                child: _submitting
-                                    ? const CircularProgressIndicator()
-                                    : Text(
-                                        'Update Information',
-                                        style: Theming.of(context)
-                                            .text
-                                            .body
-                                            .copyWith(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.w500),
-                                      ),
+                      ),
+                      const Spacer(),
+                      Center(
+                        child: Text(
+                          'Update login information',
+                          style: Theming.of(context).text.body.copyWith(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w500,
                               ),
-                            ),
-                          ),
                         ),
-                        const SizedBox(height: 32),
-                        Button(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) {
-                                return const _BlockedList();
-                              }),
-                            );
-                          },
+                      ),
+                      const SizedBox(height: 16),
+                      _InputArea(
+                        child: _TextField(
+                          controller: _phoneNumberController,
+                          keyboardType: TextInputType.phone,
+                          hintText: 'phone number',
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: 237,
+                        child: Button(
+                          onPressed: _submitting ? null : _updateInformation,
                           child: _InputArea(
                             childNeedsOpacity: false,
+                            opacity: 0.8,
+                            gradientColors: const [
+                              Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
+                              Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
+                            ],
                             child: Center(
-                              child: Text(
-                                'Blocked users',
-                                style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 24, fontWeight: FontWeight.w500),
-                              ),
+                              child: _submitting
+                                  ? const CircularProgressIndicator()
+                                  : Text(
+                                      'Update Information',
+                                      style: Theming.of(context)
+                                          .text
+                                          .body
+                                          .copyWith(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.w500),
+                                    ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 30),
-                        Button(
-                          onPressed: () =>
-                              Navigator.of(context).pushNamed('contact-us'),
-                          child: _InputArea(
-                            childNeedsOpacity: false,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Container(
-                                    margin: const EdgeInsets.only(left: 16),
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color:
-                                          Color.fromRGBO(0xC4, 0xC4, 0xC4, 1.0),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(10.0),
-                                      child: Text(
-                                        '?',
-                                        textAlign: TextAlign.center,
-                                        style: Theming.of(context)
-                                            .text
-                                            .body
-                                            .copyWith(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w500),
-                                      ),
+                      ),
+                      const SizedBox(height: 32),
+                      Button(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) {
+                              return const _BlockedList();
+                            }),
+                          );
+                        },
+                        child: _InputArea(
+                          childNeedsOpacity: false,
+                          child: Center(
+                            child: Text(
+                              'Blocked users',
+                              style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 24, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      Button(
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed('contact-us'),
+                        child: _InputArea(
+                          childNeedsOpacity: false,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  margin: const EdgeInsets.only(left: 16),
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color:
+                                        Color.fromRGBO(0xC4, 0xC4, 0xC4, 1.0),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: Text(
+                                      '?',
+                                      textAlign: TextAlign.center,
+                                      style: Theming.of(context)
+                                          .text
+                                          .body
+                                          .copyWith(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w500),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Contact us',
-                                  style: Theming.of(context).text.body.copyWith(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        Button(
-                          onPressed: _signOut,
-                          child: _InputArea(
-                            childNeedsOpacity: false,
-                            child: Center(
-                              child: Text(
-                                'Sign Out',
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Contact us',
                                 style: Theming.of(context).text.body.copyWith(
                                     fontSize: 24, fontWeight: FontWeight.w500),
                               ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 26),
-                        Button(
-                          onPressed: _showDeleteAccountDialog,
-                          child: _InputArea(
-                            opacity: 0.5,
-                            gradientColors: const [
-                              Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                              Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
                             ],
-                            childNeedsOpacity: false,
-                            child: Center(
-                              child: Text(
-                                'Delete Account',
-                                style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 24, fontWeight: FontWeight.w500),
-                              ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      Button(
+                        onPressed: _signOut,
+                        child: _InputArea(
+                          childNeedsOpacity: false,
+                          child: Center(
+                            child: Text(
+                              'Sign Out',
+                              style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 24, fontWeight: FontWeight.w500),
                             ),
                           ),
                         ),
-                        const Spacer(flex: 2),
-                        if (kDebugMode)
-                          Container(
-                            color: Colors.white,
-                            margin:
-                                const EdgeInsets.symmetric(horizontal: 40.0),
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                    '${FirebaseAuth.instance.currentUser?.uid}'),
-                                const Divider(),
-                                Text(
-                                    '${FirebaseAuth.instance.currentUser?.phoneNumber}'),
-                              ],
+                      ),
+                      const SizedBox(height: 26),
+                      Button(
+                        onPressed: _showDeleteAccountDialog,
+                        child: _InputArea(
+                          opacity: 0.5,
+                          gradientColors: const [
+                            Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                            Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                          ],
+                          childNeedsOpacity: false,
+                          child: Center(
+                            child: Text(
+                              'Delete Account',
+                              style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 24, fontWeight: FontWeight.w500),
                             ),
                           ),
-                      ],
-                    ),
+                        ),
+                      ),
+                      const Spacer(flex: 2),
+                      if (kDebugMode)
+                        Container(
+                          color: Colors.white,
+                          margin: const EdgeInsets.symmetric(horizontal: 40.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('${FirebaseAuth.instance.currentUser?.uid}'),
+                              const Divider(),
+                              Text(
+                                  '${FirebaseAuth.instance.currentUser?.phoneNumber}'),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
             ),
-            Positioned(
-              right: MediaQuery.of(context).padding.right + 16,
-              bottom: MediaQuery.of(context).padding.bottom + 16,
-              child: const HomeButton(
-                color: Colors.white,
-              ),
+          ),
+          Positioned(
+            right: MediaQuery.of(context).padding.right + 16,
+            bottom: MediaQuery.of(context).padding.bottom + 16,
+            child: const HomeButton(
+              color: Colors.white,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
