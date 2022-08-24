@@ -3,7 +3,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -214,29 +216,31 @@ class _EditProfileView extends StatelessWidget {
         SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              Chip(
-                label: 'Sad',
-                selected: false,
-                onSelected: () {},
-              ),
-              Chip(
-                label: 'Lonely',
-                selected: false,
-                onSelected: () {},
-              ),
-              Chip(
-                label: 'Introvert',
-                selected: false,
-                onSelected: () {},
-              ),
-              Chip(
-                label: 'Talk',
-                selected: true,
-                onSelected: () {},
-              ),
-            ],
+          child: Consumer(
+            builder: (context, ref, _) {
+              final selected =
+                  ref.watch(userProvider.select((p) => p.profile?.topic));
+              return Row(
+                children: [
+                  for (final topic in Topic.values)
+                    Chip(
+                      label: topicLabel(topic),
+                      selected: selected == topic,
+                      onSelected: () async {
+                        await withBlockingModal(
+                          context: context,
+                          label: 'Updating',
+                          future: updateTopic(
+                            context: context,
+                            ref: ref,
+                            topic: topic,
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              );
+            },
           ),
         ),
         const SizedBox(height: 16),
@@ -258,25 +262,112 @@ class _EditProfileView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Container(
-          height: 51,
-          margin: const EdgeInsets.only(left: 16, right: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.white),
-            borderRadius: const BorderRadius.all(
-              Radius.circular(40),
+        Consumer(builder: (context, ref, _) {
+          final name =
+              ref.watch(userProvider.select((p) => p.profile?.name ?? ''));
+          return Button(
+            onPressed: () async {
+              final newName = await showDialog<String>(
+                context: context,
+                builder: (contex) => _NameDialog(initialName: name),
+              );
+              if (newName != null && newName != name) {
+                final result = await withBlockingModal(
+                  context: context,
+                  label: 'Updating',
+                  future: updateName(
+                    context: context,
+                    ref: ref,
+                    name: name,
+                  ),
+                );
+
+                result.fold(
+                  (l) => displayError(context, l),
+                  (r) {},
+                );
+              }
+            },
+            child: Container(
+              height: 51,
+              margin: const EdgeInsets.only(left: 16, right: 16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.white),
+                borderRadius: const BorderRadius.all(
+                  Radius.circular(40),
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  name,
+                  style: Theming.of(context)
+                      .text
+                      .body
+                      .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+                ),
+              ),
             ),
-          ),
-          child: Center(
-            child: Text(profile.name,
-                style: Theming.of(context)
-                    .text
-                    .body
-                    .copyWith(fontSize: 20, fontWeight: FontWeight.w300)),
-          ),
-        ),
+          );
+        }),
         const SizedBox(height: 16),
       ],
+    );
+  }
+}
+
+class _NameDialog extends StatefulWidget {
+  final String initialName;
+  const _NameDialog({
+    Key? key,
+    required this.initialName,
+  }) : super(key: key);
+
+  @override
+  State<_NameDialog> createState() => __NameDialogState();
+}
+
+class __NameDialogState extends State<_NameDialog> {
+  final _controller = TextEditingController();
+  final _focusNode = FocusNode();
+  @override
+  void initState() {
+    super.initState();
+    _controller.text = widget.initialName;
+    _controller.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: widget.initialName.length,
+    );
+    _focusNode.requestFocus();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('My Name'),
+      actions: [
+        TextButton(
+          onPressed: Navigator.of(context).pop,
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: const Text('Done'),
+        ),
+      ],
+      content: TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        textCapitalization: TextCapitalization.words,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (a) => Navigator.of(context).pop(_controller.text),
+      ),
     );
   }
 }
