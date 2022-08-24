@@ -450,8 +450,13 @@ class Api {
       },
       handleSuccess: (response) {
         final list = jsonDecode(response.body) as List<dynamic>;
-        return Right(
-            List<Chatroom>.from(list.map((e) => Chatroom.fromJson(e))));
+        final now = DateTime.now();
+        return Right(List<Chatroom>.from(list.map((e) {
+          final int timeRemaining = e['timeRemaining'];
+          e['endTime'] =
+              now.add(Duration(milliseconds: timeRemaining)).toIso8601String();
+          return Chatroom.fromJson(e);
+        })));
       },
     );
   }
@@ -844,7 +849,7 @@ class Chatroom with _$Chatroom {
     required String location,
     required Topic topic,
     required bool firstContact,
-    required int timeRemaining,
+    required DateTime endTime,
     required bool hasUnread,
     required bool online,
   }) = _Chatroom;

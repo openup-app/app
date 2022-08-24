@@ -7,17 +7,21 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/tab_view.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ProfilePage extends StatefulWidget {
   final Profile profile;
+  final DateTime? endTime;
 
   const ProfilePage({
     Key? key,
     required this.profile,
+    this.endTime,
   }) : super(key: key);
 
   @override
@@ -99,10 +103,15 @@ class _ProfilePageState extends State<ProfilePage> {
           )
         else
           Expanded(
-            child: _ProfileView(
-              profile: widget.profile,
+            child: Padding(
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom),
+              child: ProfileView(
+                profile: widget.profile,
+                endTime: widget.endTime,
+              ),
             ),
-          )
+          ),
       ],
     );
   }
@@ -417,21 +426,6 @@ class __NameDialogState extends State<_NameDialog> {
   }
 }
 
-class _ProfileView extends StatelessWidget {
-  final Profile profile;
-  const _ProfileView({
-    Key? key,
-    required this.profile,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: FlutterLogo(),
-    );
-  }
-}
-
 class _RecordButton extends ConsumerStatefulWidget {
   const _RecordButton({Key? key}) : super(key: key);
 
@@ -490,6 +484,9 @@ class _PhotoOrUploadButton extends StatelessWidget {
           return Image.network(
             photoUrl,
             fit: BoxFit.cover,
+            frameBuilder: fadeInFrameBuilder,
+            loadingBuilder: circularProgressLoadingBuilder,
+            errorBuilder: iconErrorBuilder,
           );
         }
         return Container(

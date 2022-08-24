@@ -82,6 +82,66 @@ class SignificantButton extends StatelessWidget {
   }
 }
 
+class CountdownTimer extends StatefulWidget {
+  final DateTime endTime;
+  final VoidCallback onDone;
+  final TextStyle? style;
+  const CountdownTimer({
+    Key? key,
+    required this.endTime,
+    required this.onDone,
+    this.style,
+  }) : super(key: key);
+
+  @override
+  State<CountdownTimer> createState() => _CountdownTimerState();
+}
+
+class _CountdownTimerState extends State<CountdownTimer> {
+  Timer? _timer;
+  final DateTime _start = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    print('End time is ${widget.endTime}');
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        final remaining = widget.endTime.difference(DateTime.now());
+        if (remaining.isNegative) {
+          widget.onDone();
+        } else {
+          setState(() {});
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _timer?.cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = widget.endTime.difference(DateTime.now());
+    final style = widget.style ??
+        Theming.of(context).text.body.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+            );
+    return Text(
+      formatDuration(remaining, long: true),
+      style: style.copyWith(
+        color: remaining < const Duration(hours: 3)
+            ? const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0)
+            : null,
+      ),
+    );
+  }
+}
+
 class BlurredSurface extends StatelessWidget {
   final Widget child;
   const BlurredSurface({

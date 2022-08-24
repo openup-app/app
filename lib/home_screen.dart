@@ -125,6 +125,7 @@ class _HomeScreenState extends State<HomeScreen>
                             socketPort: socketPort,
                             otherProfile: args.otherProfile,
                             online: args.online,
+                            endTime: args.endTime,
                           ),
                         );
                       },
