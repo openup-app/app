@@ -112,7 +112,7 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
 
     result.fold(
       (l) => displayError(context, l),
-      (r) => Navigator.of(context).pushNamed('sign-up-topic'),
+      (r) => Navigator.of(context).pushReplacementNamed('sign-up-topic'),
     );
 
     setState(() => _uploading = false);

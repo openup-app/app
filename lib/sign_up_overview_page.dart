@@ -37,7 +37,7 @@ class _SignUpOverviewPageState extends State<SignUpOverviewPage> {
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(top: 16, left: 35, right: 35),
+          padding: const EdgeInsets.only(top: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -70,22 +70,26 @@ class _SignUpOverviewPageState extends State<SignUpOverviewPage> {
                   ],
                 ),
               ),
-              Button(
-                onPressed: () {
-                  if (_page < 3) {
-                    _controller.nextPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOut,
-                    );
-                  } else {
-                    Navigator.of(context).pushReplacementNamed('sign-up-name');
-                  }
-                },
-                child: OutlinedArea(
-                  child: Center(
-                    child: _page == 3
-                        ? const Text('Let\'s get started')
-                        : const Text('continue'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 35.0),
+                child: Button(
+                  onPressed: () {
+                    if (_page < 3) {
+                      _controller.nextPage(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                    } else {
+                      Navigator.of(context)
+                          .pushReplacementNamed('sign-up-name');
+                    }
+                  },
+                  child: OutlinedArea(
+                    child: Center(
+                      child: _page == 3
+                          ? const Text('Let\'s get started')
+                          : const Text('continue'),
+                    ),
                   ),
                 ),
               ),
@@ -103,16 +107,23 @@ class _Page1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Discover people who also want to make new friends',
-          textAlign: TextAlign.center,
-          style: Theming.of(context).text.body.copyWith(fontSize: 30),
-        ),
-        Expanded(child: FlutterLogo()),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 35),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Discover people who also want to make new friends',
+            textAlign: TextAlign.center,
+            style: Theming.of(context).text.body.copyWith(fontSize: 30),
+          ),
+          Expanded(
+            child: Image.asset(
+              'assets/images/onboard_discover.jpg',
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -122,16 +133,23 @@ class _Page2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Goodbye texting, voice messages only',
-          textAlign: TextAlign.center,
-          style: Theming.of(context).text.body.copyWith(fontSize: 30),
-        ),
-        Expanded(child: FlutterLogo()),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 35),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Goodbye texting, voice messages only',
+            textAlign: TextAlign.center,
+            style: Theming.of(context).text.body.copyWith(fontSize: 30),
+          ),
+          Expanded(
+            child: Image.asset(
+              'assets/images/onboard_chat.jpg',
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -141,16 +159,23 @@ class _Page3 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Keep up with your new friends, lose them if you don\'t',
-          textAlign: TextAlign.center,
-          style: Theming.of(context).text.body.copyWith(fontSize: 30),
-        ),
-        Expanded(child: FlutterLogo()),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 35),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Keep up with your new friends, lose them if you don\'t',
+            textAlign: TextAlign.center,
+            style: Theming.of(context).text.body.copyWith(fontSize: 30),
+          ),
+          Expanded(
+            child: Image.asset(
+              'assets/images/onboard_countdown.jpg',
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

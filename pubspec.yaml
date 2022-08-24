@@ -22,7 +22,7 @@ dependencies:
   # Android package to fix build issue: https://stackoverflow.com/a/72516446/1702627
   image_picker_android: 0.8.4+13
   just_audio: ^0.9.21
-  record: ^4.1.1
+  record: ^4.3.1
   intl: ^0.17.0
   firebase_messaging: ^11.1.0
   flutter_local_notifications: ^9.1.4
@@ -89,6 +89,9 @@ flutter:
     - assets/images/chevron_right.png
     - assets/images/close_circle.png
     - assets/images/loading_icon.png
+    - assets/images/onboard_discover.jpg
+    - assets/images/onboard_chat.jpg
+    - assets/images/onboard_countdown.jpg
 
   fonts:
     - family: Myriad

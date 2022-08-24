@@ -97,11 +97,10 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
             builder: (context, ref, _) {
               final audio =
                   ref.watch(userProvider.select((p) => p.profile?.audio));
-              print('audio $audio');
               return Button(
                 onPressed: audio == null
                     ? null
-                    : () => Navigator.of(context).pushNamed('home'),
+                    : () => Navigator.of(context).pushReplacementNamed('home'),
                 child: const OutlinedArea(
                   child: Center(
                     child: Text('continue'),

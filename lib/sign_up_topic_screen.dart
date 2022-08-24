@@ -102,7 +102,7 @@ class _SignUpTopicScreenState extends ConsumerState<SignUpTopicScreen> {
 
     result.fold(
       (l) => displayError(context, l),
-      (r) => Navigator.of(context).pushNamed('sign-up-photos'),
+      (r) => Navigator.of(context).pushReplacementNamed('sign-up-photos'),
     );
 
     setState(() => _uploading = false);

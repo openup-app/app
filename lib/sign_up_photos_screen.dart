@@ -52,8 +52,8 @@ class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
               return Button(
                 onPressed: gallery.isEmpty
                     ? null
-                    : () =>
-                        Navigator.of(context).pushNamed('sign-up-photos-hide'),
+                    : () => Navigator.of(context)
+                        .pushReplacementNamed('sign-up-photos-hide'),
                 child: const OutlinedArea(
                   child: Center(
                     child: Text('continue'),

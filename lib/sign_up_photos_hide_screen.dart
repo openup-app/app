@@ -58,7 +58,8 @@ class _SignUpPhotosHideScreenState extends State<SignUpPhotosHideScreen> {
               return Button(
                 onPressed: gallery.isEmpty
                     ? null
-                    : () => Navigator.of(context).pushNamed('sign-up-audio'),
+                    : () => Navigator.of(context)
+                        .pushReplacementNamed('sign-up-audio'),
                 child: const OutlinedArea(
                   child: Center(
                     child: Text('continue'),
