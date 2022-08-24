@@ -77,11 +77,15 @@ class _SignUpOverviewPageState extends State<SignUpOverviewPage> {
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOut,
                     );
-                  } else {}
+                  } else {
+                    Navigator.of(context).pushReplacementNamed('sign-up-name');
+                  }
                 },
-                child: const OutlinedArea(
+                child: OutlinedArea(
                   child: Center(
-                    child: Text('continue'),
+                    child: _page == 3
+                        ? const Text('Let\'s get started')
+                        : const Text('continue'),
                   ),
                 ),
               ),
@@ -170,81 +174,84 @@ class _Page4 extends StatelessWidget {
             padding: const EdgeInsets.only(top: 24),
             child: Column(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '1. \n\n\n2. \n\n\n\n3. \n\n\n\n4. \n\n\n\n\n5. ',
-                      style: Theming.of(context).text.body.copyWith(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          height: 1.8),
-                    ),
-                    Expanded(
-                      child: RichText(
-                        text: TextSpan(
-                          style: Theming.of(context).text.body.copyWith(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w300,
-                                height: 1.8,
-                              ),
-                          children: [
-                            TextSpan(
-                              text: 'Give it time. ',
-                              style: Theming.of(context).text.body.copyWith(
+                SizedBox(
+                  width: 290,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '1. \n\n\n2. \n\n\n\n3. \n\n\n\n4. \n\n\n\n\n5. ',
+                        style: Theming.of(context).text.body.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            height: 1.8),
+                      ),
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: Theming.of(context).text.body.copyWith(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.8),
-                            ),
-                            const TextSpan(
-                                text:
-                                    'If you don’t water your plants, they die. Same goes for your friendships, be persistent but patient.\n'),
-                            TextSpan(
-                              text: 'Pay Attention. ',
-                              style: Theming.of(context).text.body.copyWith(
+                                  fontWeight: FontWeight.w300,
+                                  height: 1.8,
+                                ),
+                            children: [
+                              TextSpan(
+                                text: 'Give it time. ',
+                                style: Theming.of(context).text.body.copyWith(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
-                                    height: 1.8,
-                                  ),
-                            ),
-                            const TextSpan(
-                                text:
-                                    'People notice when you remember things about them, act on those oppurtunities to show how  you care.\n'),
-                            TextSpan(
-                              text: 'Don’t be a one-sided friend. ',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.8),
-                            ),
-                            const TextSpan(
-                                text:
-                                    'If you have someone who is constantly you up about hanging or talking, follow up with them and be sure to reply!\n'),
-                            TextSpan(
-                              text: 'Let your guard down. ',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.8),
-                            ),
-                            const TextSpan(
-                                text:
-                                    'A lot of the doubts and fears you have are in your mind, don’t let your mind get in the way of risk and ruin oppurtunities for you.\n'),
-                            TextSpan(
-                              text: 'Lighten up. ',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.8),
-                            ),
-                            const TextSpan(
-                                text:
-                                    'Don’t take things so seriously. Expectations, assumptions, and illogical conclusions can destroy any relationship, have fun and be open.'),
-                          ],
+                                    height: 1.8),
+                              ),
+                              const TextSpan(
+                                  text:
+                                      'If you don’t water your plants, they die. Same goes for your friendships, be persistent but patient.\n'),
+                              TextSpan(
+                                text: 'Pay Attention. ',
+                                style: Theming.of(context).text.body.copyWith(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.8,
+                                    ),
+                              ),
+                              const TextSpan(
+                                  text:
+                                      'People notice when you remember things about them, act on those oppurtunities to show how you care.\n'),
+                              TextSpan(
+                                text: 'Don’t be a one-sided friend. ',
+                                style: Theming.of(context).text.body.copyWith(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.8),
+                              ),
+                              const TextSpan(
+                                  text:
+                                      'If you have someone who is constantly you up about hanging or talking, follow up with them and be sure to reply!\n'),
+                              TextSpan(
+                                text: 'Let your guard down. ',
+                                style: Theming.of(context).text.body.copyWith(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.8),
+                              ),
+                              const TextSpan(
+                                  text:
+                                      'A lot of the doubts and fears you have are in your mind, don’t let your mind get in the way of risk and ruin oppurtunities for you.\n'),
+                              TextSpan(
+                                text: 'Lighten up. ',
+                                style: Theming.of(context).text.body.copyWith(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.8),
+                              ),
+                              const TextSpan(
+                                  text:
+                                      'Don’t take things so seriously. Expectations, assumptions, and illogical conclusions can destroy any relationship, have fun and be open.'),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),

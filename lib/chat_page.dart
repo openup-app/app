@@ -21,9 +21,7 @@ class ChatPage extends ConsumerStatefulWidget {
   final String host;
   final int webPort;
   final int socketPort;
-  final String otherUid;
   final Profile otherProfile;
-  final String otherLocation;
   final bool online;
 
   const ChatPage({
@@ -31,9 +29,7 @@ class ChatPage extends ConsumerStatefulWidget {
     required this.host,
     required this.webPort,
     required this.socketPort,
-    required this.otherUid,
     required this.otherProfile,
-    required this.otherLocation,
     required this.online,
   }) : super(key: key);
 
@@ -68,7 +64,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       host: widget.host,
       socketPort: widget.socketPort,
       uid: ref.read(userProvider).uid,
-      otherUid: widget.otherUid,
+      otherUid: widget.otherProfile.uid,
       onMessage: (message) {
         setState(() => _messages[message.messageId!] = message);
       },
@@ -133,7 +129,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                         .copyWith(fontSize: 20, fontWeight: FontWeight.w600),
                   ),
                   Text(
-                    widget.otherLocation,
+                    widget.otherProfile.location,
                     style: Theming.of(context)
                         .text
                         .body
@@ -332,8 +328,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     });
 
     final api = GetIt.instance.get<Api>();
-    final result =
-        await api.sendMessage2(uid, widget.otherUid, ChatType2.audio, content);
+    final result = await api.sendMessage2(
+        uid, widget.otherProfile.uid, ChatType2.audio, content);
 
     if (!mounted) {
       return;
@@ -365,7 +361,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     final api = GetIt.instance.get<Api>();
     final result = await api.getMessages2(
       ref.read(userProvider).uid,
-      widget.otherUid,
+      widget.otherProfile.uid,
       startDate: startDate,
     );
     if (!mounted) {

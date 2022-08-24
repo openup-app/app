@@ -50,6 +50,24 @@ Future<Either<ApiError, void>> updateName({
   return result;
 }
 
+Future<Either<ApiError, void>> updateTopic({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Topic topic,
+}) async {
+  final api = GetIt.instance.get<Api>();
+  final userState = ref.read(userProvider);
+  final newProfile = userState.profile!.copyWith(topic: topic);
+  final result = await api.updateTopic(userState.uid, topic);
+  print('reult $result');
+
+  if (result.isRight()) {
+    ref.read(userProvider.notifier).profile(newProfile);
+  }
+
+  return result;
+}
+
 Future<Either<ApiError, void>> updateAudio({
   required BuildContext context,
   required WidgetRef ref,

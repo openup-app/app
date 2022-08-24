@@ -8,7 +8,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/chat_page.dart';
+import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
 

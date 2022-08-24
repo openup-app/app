@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
@@ -180,6 +181,14 @@ class RecordButtonState extends State<RecordButton> {
         }
       },
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant RecordButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.submitting && !widget.submitting) {
+      _audioPath = null;
+    }
   }
 
   @override
@@ -754,4 +763,23 @@ String formatDuration(Duration d, {bool long = false}) {
     return '00:01';
   }
   return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+}
+
+String topicLabel(Topic topic) {
+  switch (topic) {
+    case Topic.lonely:
+      return 'Lonely';
+    case Topic.moved:
+      return 'Just Moved';
+    case Topic.sleep:
+      return 'Can\'t Sleep';
+    case Topic.bored:
+      return 'Bored';
+    case Topic.introvert:
+      return 'Introvert';
+    case Topic.sad:
+      return 'Sad';
+    case Topic.talk:
+      return 'Talk';
+  }
 }

@@ -170,6 +170,19 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, void>> updateTopic(String uid, Topic topic) {
+    return _request(
+      makeRequest: () {
+        return http.put(
+          Uri.parse('$_urlBase/users/$uid/profile/topic'),
+          headers: _headers,
+          body: jsonEncode({"topic": topic.name}),
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
   Future<Either<ApiError, void>> addConnectionRequest(
     String uid,
     String otherUid,
@@ -493,7 +506,7 @@ class Api {
     }
   }
 
-  Future<Either<ApiError, List<Status2>>> getStatuses2(
+  Future<Either<ApiError, List<ProfileWithOnline>>> getDiscover(
     String uid,
   ) {
     return _request(
@@ -505,15 +518,15 @@ class Api {
       },
       handleSuccess: (response) {
         final list = List.from(jsonDecode(response.body));
-        final statuses = List<Status2>.from(list.map((e) {
+        final profiles = List<ProfileWithOnline>.from(list.map((e) {
           try {
-            return Status2.fromJson(e);
+            return ProfileWithOnline.fromJson(e);
           } catch (e) {
             debugPrint(e.toString());
             return null;
           }
         }).where((e) => e != null)).toList();
-        return Right(statuses);
+        return Right(profiles);
       },
     );
   }
@@ -804,16 +817,14 @@ class Status with _$Status {
 }
 
 @freezed
-class Status2 with _$Status2 {
-  const factory Status2({
+class ProfileWithOnline with _$ProfileWithOnline {
+  const factory ProfileWithOnline({
     required Profile profile,
-    @Default("") String location,
-    required Topic topic,
     required bool online,
-  }) = _Status2;
+  }) = _ProfileWithOnline;
 
-  factory Status2.fromJson(Map<String, dynamic> json) =>
-      _$Status2FromJson(json);
+  factory ProfileWithOnline.fromJson(Map<String, dynamic> json) =>
+      _$ProfileWithOnlineFromJson(json);
 }
 
 @freezed
@@ -832,4 +843,4 @@ class Chatroom with _$Chatroom {
       _$ChatroomFromJson(json);
 }
 
-enum Topic { lonely, friends, moved, sleep, bored, introvert }
+enum Topic { moved, lonely, introvert, sleep, talk, sad, bored }

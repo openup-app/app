@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart' hide Chip;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -293,14 +296,14 @@ class _ProfileView extends StatelessWidget {
   }
 }
 
-class _RecordButton extends StatefulWidget {
+class _RecordButton extends ConsumerStatefulWidget {
   const _RecordButton({Key? key}) : super(key: key);
 
   @override
-  State<_RecordButton> createState() => __RecordButtonState();
+  ConsumerState<_RecordButton> createState() => __RecordButtonState();
 }
 
-class __RecordButtonState extends State<_RecordButton> {
+class __RecordButtonState extends ConsumerState<_RecordButton> {
   bool _uploading = false;
   @override
   Widget build(BuildContext context) {
@@ -309,12 +312,23 @@ class __RecordButtonState extends State<_RecordButton> {
       submitLabel: 'Upload status',
       submitting: _uploading,
       submitted: false,
-      onSubmit: (_) async {
+      onSubmit: (path) async {
         setState(() => _uploading = true);
-        await Future.delayed(const Duration(seconds: 1));
-        if (mounted) {
-          setState(() => _uploading = false);
+        final bytes = await File(path).readAsBytes();
+        final result = await updateAudio(
+          context: context,
+          ref: ref,
+          bytes: bytes,
+        );
+        if (!mounted) {
+          return;
         }
+
+        result.fold(
+          (l) => displayError(context, l),
+          (r) {},
+        );
+        setState(() => _uploading = false);
       },
       onBeginRecording: () {},
     );

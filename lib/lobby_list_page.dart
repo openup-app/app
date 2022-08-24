@@ -1080,12 +1080,12 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                         value: _topic == Topic.lonely,
                         onChanged: (_) => setState(() => _topic = Topic.lonely),
                       ),
-                      CheckboxTile(
-                        label: _topicToTitle(Topic.friends),
-                        value: _topic == Topic.friends,
-                        onChanged: (_) =>
-                            setState(() => _topic = Topic.friends),
-                      ),
+                      // CheckboxTile(
+                      //   label: _topicToTitle(Topic.friends),
+                      //   value: _topic == Topic.friends,
+                      //   onChanged: (_) =>
+                      //       setState(() => _topic = Topic.friends),
+                      // ),
                     ],
                   ),
                 ),
@@ -1290,6 +1290,8 @@ Future<void> _displayCallProfile(
         name: participant.name,
         photo: participant.photo,
         gallery: participant.gallery,
+        location: "",
+        topic: Topic.talk,
       ),
       Status(
         topic: topic,
@@ -2134,8 +2136,8 @@ String _topicToTitle(Topic topic) {
   switch (topic) {
     case Topic.lonely:
       return 'I\'m Lonely';
-    case Topic.friends:
-      return 'Need Friends';
+    // case Topic.friends:
+    //   return 'Need Friends';
     case Topic.moved:
       return 'Just Moved';
     case Topic.sleep:
@@ -2144,6 +2146,8 @@ String _topicToTitle(Topic topic) {
       throw UnimplementedError();
     case Topic.introvert:
       throw UnimplementedError();
+    default:
+      throw UnimplementedError();
   }
 }
 
@@ -2151,8 +2155,8 @@ String _topicToDescription(Topic topic) {
   switch (topic) {
     case Topic.lonely:
       return 'People who are in need of some company';
-    case Topic.friends:
-      return 'For those who are looking to make new friends';
+    // case Topic.friends:
+    //   return 'For those who are looking to make new friends';
     case Topic.moved:
       return 'Others who also moved to a new area';
     case Topic.sleep:
@@ -2160,6 +2164,8 @@ String _topicToDescription(Topic topic) {
     case Topic.bored:
       throw UnimplementedError();
     case Topic.introvert:
+      throw UnimplementedError();
+    default:
       throw UnimplementedError();
   }
 }

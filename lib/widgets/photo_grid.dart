@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,17 +13,21 @@ import 'package:openup/widgets/image_builder.dart';
 class PhotoGrid extends StatelessWidget {
   final bool horizontal;
   final Color? itemColor;
+  final bool blur;
+
   const PhotoGrid({
     Key? key,
     this.horizontal = false,
     this.itemColor,
+    this.blur = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final rowCount = horizontal ? 2 : 3;
-    final colCount = horizontal ? 3 : 2;
+    const rowCount = 1;
+    const colCount = 3;
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         for (var row = 0; row < rowCount; row++)
           Expanded(
@@ -50,6 +55,7 @@ class PhotoGrid extends StatelessWidget {
                                   ? gallery[index]
                                   : null,
                               itemColor: itemColor,
+                              blur: blur,
                             ),
                             if (index < gallery.length)
                               Positioned(
@@ -86,11 +92,13 @@ class _ImageButton extends ConsumerStatefulWidget {
   final int index;
   final String? image;
   final Color? itemColor;
+  final bool blur;
 
   const _ImageButton({
     Key? key,
     required this.index,
     required this.image,
+    required this.blur,
     this.itemColor,
   }) : super(key: key);
 
@@ -134,7 +142,27 @@ class __ImageButtonState extends ConsumerState<_ImageButton> {
                 child: Image.network(
                   image,
                   fit: BoxFit.cover,
-                  frameBuilder: fadeInFrameBuilder,
+                  frameBuilder:
+                      (context, child, frame, wasSynchronouslyLoaded) {
+                    return fadeInFrameBuilder(
+                      context,
+                      Builder(
+                        builder: (context) {
+                          if (!widget.blur) {
+                            return child;
+                          } else {
+                            return ImageFiltered(
+                              imageFilter:
+                                  ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                              child: child,
+                            );
+                          }
+                        },
+                      ),
+                      frame,
+                      wasSynchronouslyLoaded,
+                    );
+                  },
                   loadingBuilder: circularProgressLoadingBuilder,
                   errorBuilder: iconErrorBuilder,
                   opacity: const AlwaysStoppedAnimation(0.75),

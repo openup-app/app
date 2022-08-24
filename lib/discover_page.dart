@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/chat/chat_api.dart';
+import 'package:openup/api/chat/chat_api2.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
@@ -25,8 +25,8 @@ class DiscoverPage extends ConsumerStatefulWidget {
 
 class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _loading = false;
-  List<Status2> _statuses = <Status2>[];
-  int _currentStatusIndex = 0;
+  List<ProfileWithOnline> _profiles = <ProfileWithOnline>[];
+  int _currentProfileIndex = 0;
   Topic? _selectedTopic;
   JustAudioAudioPlayer? _player;
   final _invitedUsers = <String>{};
@@ -47,14 +47,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   Future<void> __fetchStatuses() async {
     final myUid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
-    final statuses = await api.getStatuses2(myUid);
+    final profiles = await api.getDiscover(myUid);
 
     if (!mounted) {
       return;
     }
     setState(() => _loading = false);
 
-    statuses.fold(
+    profiles.fold(
       (l) {
         var message = errorToMessage(l);
         message = l.when(
@@ -76,7 +76,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       },
       (r) async {
         setState(() {
-          _statuses = r;
+          _profiles = r;
           _player = JustAudioAudioPlayer();
         });
       },
@@ -93,9 +93,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         const padding = 32.0;
         final itemExtent =
             constraints.maxHeight - obscuredTop - obscuredBottom + padding;
-        final filteredStatuses = _statuses
-            .where((status) =>
-                _selectedTopic == null || status.topic == _selectedTopic)
+        final filteredProfiles = _profiles
+            .where((profileWithOnline) =>
+                _selectedTopic == null ||
+                profileWithOnline.profile.topic == _selectedTopic)
             .toList();
         return Stack(
           children: [
@@ -103,7 +104,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
               const Center(
                 child: CircularProgressIndicator(),
               ),
-            if (!_loading && filteredStatuses.isEmpty)
+            if (!_loading && filteredProfiles.isEmpty)
               Positioned(
                 child: Center(
                   child: ElevatedButton(
@@ -112,7 +113,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                   ),
                 ),
               ),
-            if (!_loading && filteredStatuses.isNotEmpty)
+            if (!_loading && filteredProfiles.isNotEmpty)
               Positioned.fill(
                 child: _SnappingListView.builder(
                   padding: EdgeInsets.only(
@@ -120,31 +121,34 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     bottom: obscuredBottom,
                   ),
                   itemExtent: itemExtent,
-                  itemCount: filteredStatuses.length,
+                  itemCount: filteredProfiles.length,
                   onItemChanged: (index) {
                     // Seems to be off by one and the first element
-                    setState(() => _currentStatusIndex = index + 1);
+                    setState(() => _currentProfileIndex = index + 1);
                     _player?.stop();
                     final audio =
-                        filteredStatuses[_currentStatusIndex].profile.audio;
+                        filteredProfiles[_currentProfileIndex].profile.audio;
                     if (audio != null) {
                       _player?.setUrl(audio);
                       _player?.play(loop: true);
                     }
                   },
                   itemBuilder: (context, index) {
-                    final status = filteredStatuses[index];
+                    final profileWithOnline = filteredProfiles[index];
+                    final profile = profileWithOnline.profile;
                     return SizedBox(
                       height: itemExtent,
                       child: _UserProfileDisplay(
-                        status: status,
-                        slideshowPlaying: _currentStatusIndex == index,
+                        profile: profile,
+                        slideshowPlaying: _currentProfileIndex == index,
                         playbackInfoStream: _player?.playbackInfoStream,
                         bottomPadding: padding,
                         bottomHeight: bottomHeight,
-                        invited: _invitedUsers.contains(status.profile.uid),
-                        onInvite: () => setState(
-                            () => _invitedUsers.add(status.profile.uid)),
+                        online: profileWithOnline.online,
+                        invited: _invitedUsers.contains(profile.uid),
+                        onInvite: () =>
+                            setState(() => _invitedUsers.add(profile.uid)),
+                        onBeginRecording: () => _player?.stop(),
                       ),
                     );
                   },
@@ -212,58 +216,22 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                 },
                               ),
                               Chip(
-                                label: 'Lonely',
-                                selected: _selectedTopic == Topic.lonely,
-                                onSelected: () {
-                                  if (_selectedTopic == Topic.lonely) {
-                                    setState(() => _selectedTopic = null);
-                                  } else {
-                                    setState(
-                                        () => _selectedTopic = Topic.lonely);
-                                  }
-                                },
-                              ),
-                              Chip(
                                 label: 'Favourites',
                                 selected: false,
                                 onSelected: () {},
                               ),
-                              Chip(
-                                label: 'Just Moved',
-                                selected: _selectedTopic == Topic.moved,
-                                onSelected: () {
-                                  if (_selectedTopic == Topic.moved) {
-                                    setState(() => _selectedTopic = null);
-                                  } else {
-                                    setState(
-                                        () => _selectedTopic = Topic.moved);
-                                  }
-                                },
-                              ),
-                              Chip(
-                                label: 'Can\'t Sleep',
-                                selected: _selectedTopic == Topic.sleep,
-                                onSelected: () {
-                                  if (_selectedTopic == Topic.sleep) {
-                                    setState(() => _selectedTopic = null);
-                                  } else {
-                                    setState(
-                                        () => _selectedTopic = Topic.sleep);
-                                  }
-                                },
-                              ),
-                              Chip(
-                                label: 'Bored',
-                                selected: _selectedTopic == Topic.bored,
-                                onSelected: () {
-                                  if (_selectedTopic == Topic.bored) {
-                                    setState(() => _selectedTopic = null);
-                                  } else {
-                                    setState(
-                                        () => _selectedTopic = Topic.bored);
-                                  }
-                                },
-                              ),
+                              for (final topic in Topic.values)
+                                Chip(
+                                  label: topicLabel(topic),
+                                  selected: _selectedTopic == topic,
+                                  onSelected: () {
+                                    if (_selectedTopic == topic) {
+                                      setState(() => _selectedTopic = null);
+                                    } else {
+                                      setState(() => _selectedTopic = topic);
+                                    }
+                                  },
+                                ),
                             ],
                           ),
                         ),
@@ -281,23 +249,27 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 }
 
 class _UserProfileDisplay extends StatefulWidget {
-  final Status2 status;
+  final Profile profile;
   final bool slideshowPlaying;
   final Stream<PlaybackInfo>? playbackInfoStream;
   final double bottomPadding;
   final double bottomHeight;
+  final bool online;
   final bool invited;
   final VoidCallback onInvite;
+  final VoidCallback onBeginRecording;
 
   const _UserProfileDisplay({
     Key? key,
-    required this.status,
+    required this.profile,
     required this.slideshowPlaying,
     this.playbackInfoStream,
     required this.bottomPadding,
     required this.bottomHeight,
+    required this.online,
     required this.invited,
     required this.onInvite,
+    required this.onBeginRecording,
   }) : super(key: key);
 
   @override
@@ -338,7 +310,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                   padding: EdgeInsets.only(bottom: widget.bottomHeight),
                   child: Gallery(
                     slideshow: widget.slideshowPlaying,
-                    gallery: widget.status.profile.gallery,
+                    gallery: widget.profile.gallery,
                     withWideBlur: false,
                   ),
                 ),
@@ -347,10 +319,11 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                   top: 16,
                   child: Column(
                     children: [
-                      const Icon(
-                        Icons.circle,
-                        color: Colors.green,
-                      ),
+                      if (widget.online)
+                        const Icon(
+                          Icons.circle,
+                          color: Colors.green,
+                        ),
                       const SizedBox(height: 24),
                       Button(
                         onPressed: () {},
@@ -370,8 +343,8 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                             builder: (context) {
                               return Theming(
                                 child: _SharePage(
-                                  profile: widget.status.profile,
-                                  location: widget.status.location,
+                                  profile: widget.profile,
+                                  location: widget.profile.location,
                                 ),
                               );
                             },
@@ -429,14 +402,14 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.status.profile.name,
+                        widget.profile.name,
                         style: Theming.of(context)
                             .text
                             .body
                             .copyWith(fontSize: 24),
                       ),
                       Text(
-                        widget.status.location,
+                        widget.profile.location,
                         style: Theming.of(context).text.body.copyWith(
                             fontSize: 16, fontWeight: FontWeight.w300),
                       )
@@ -451,7 +424,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                         size: 32,
                       ),
                       Text(
-                        widget.status.topic.name,
+                        widget.profile.topic.name,
                         style: Theming.of(context).text.body.copyWith(
                             fontSize: 20, fontWeight: FontWeight.w400),
                       ),
@@ -460,33 +433,35 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                 ],
               ),
               const SizedBox(height: 12),
-              Consumer(builder: (context, ref, _) {
-                return RecordButton(
-                  label: 'Invite to voice chat',
-                  submitLabel: 'Send invitation',
-                  submitting: _uploading,
-                  submitted: widget.invited,
-                  onSubmit: (path) async {
-                    setState(() => _uploading = true);
-                    final uid = ref.read(userProvider).uid;
-                    final api = GetIt.instance.get<Api>();
-                    final result = await api.sendMessage2(
-                      uid,
-                      widget.status.profile.uid,
-                      ChatType.audio,
-                      path,
-                    );
-                    if (mounted) {
-                      setState(() => _uploading = false);
-                      result.fold((l) {
-                        displayError(context, l);
-                      }, (r) {
-                        widget.onInvite();
-                      });
-                    }
-                  },
-                );
-              }),
+              Consumer(
+                builder: (context, ref, _) {
+                  return RecordButton(
+                    label: 'Invite to voice chat',
+                    submitLabel: 'Send invitation',
+                    submitting: _uploading,
+                    submitted: widget.invited,
+                    onSubmit: (path) async {
+                      setState(() => _uploading = true);
+                      final uid = ref.read(userProvider).uid;
+                      final api = GetIt.instance.get<Api>();
+                      final result = await api.sendMessage2(
+                        uid,
+                        widget.profile.uid,
+                        ChatType2.audio,
+                        path,
+                      );
+                      if (mounted) {
+                        setState(() => _uploading = false);
+                        result.fold(
+                          (l) => displayError(context, l),
+                          (r) => widget.onInvite(),
+                        );
+                      }
+                    },
+                    onBeginRecording: widget.onBeginRecording,
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -672,7 +647,7 @@ class _SnappingListView extends StatefulWidget {
     this.controller,
     required this.children,
     required this.itemExtent,
-    this.onItemChanged,
+    required this.onItemChanged,
     this.padding = const EdgeInsets.all(0.0),
   })  : assert(itemExtent > 0),
         itemCount = null,

@@ -84,6 +84,8 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     }
 
+    final noAudio = ref.read(userProvider).profile?.audio == null;
+
     final useContext = await initializeNotifications(
       scaffoldKey: widget.scaffoldKey,
       userStateNotifier: notifier,
@@ -93,8 +95,8 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       final deepLinked = useContext?.call(context) ?? false;
       if (!deepLinked && mounted) {
         // Standard app entry or sign up onboarding
-        if (widget.needsOnboarding) {
-          Navigator.of(context).pushReplacementNamed('sign-up-info');
+        if (widget.needsOnboarding || noAudio) {
+          Navigator.of(context).pushReplacementNamed('sign-up-overview');
         } else {
           Navigator.of(context).pushReplacementNamed('home');
         }
@@ -125,14 +127,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [
-            Color.fromRGBO(0x01, 0x6E, 0x91, 1.0),
-            Colors.black,
-          ],
-        ),
+        color: Colors.black,
       ),
       child: Center(
         child: Image.asset(

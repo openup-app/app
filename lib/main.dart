@@ -27,15 +27,18 @@ import 'package:openup/lobby_list_page.dart';
 import 'package:openup/profile_edit_screen.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/report_screen.dart';
-import 'package:openup/sign_up_info_screen.dart';
+import 'package:openup/sign_up_audio_screen.dart';
+import 'package:openup/sign_up_name_screen.dart';
+import 'package:openup/sign_up_photos_hide_screen.dart';
 import 'package:openup/sign_up_photos_screen.dart';
+import 'package:openup/sign_up_topic_screen.dart';
 import 'package:openup/sign_up_welcome_info.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/widgets/profile_drawer.dart';
-import 'package:openup/widgets/sign_up_overview_page.dart';
+import 'package:openup/sign_up_overview_page.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -258,12 +261,21 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 );
               },
             );
-          case 'sign-up-info':
+          case 'sign-up-name':
             return _buildPageRoute(
               settings: settings,
               builder: (_) {
                 return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpInfoScreen(),
+                  child: SignUpNameScreen(),
+                );
+              },
+            );
+          case 'sign-up-topic':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: SignUpTopicScreen(),
                 );
               },
             );
@@ -273,6 +285,24 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               builder: (_) {
                 return const CurrentRouteSystemUiStyling.light(
                   child: SignUpPhotosScreen(),
+                );
+              },
+            );
+          case 'sign-up-photos-hide':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: SignUpPhotosHideScreen(),
+                );
+              },
+            );
+          case 'sign-up-audio':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: SignUpAudioScreen(),
                 );
               },
             );

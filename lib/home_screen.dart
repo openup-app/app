@@ -3,10 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/friendships_page.dart';
+import 'package:openup/main.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:openup/widgets/theming.dart';
+
+import 'chat_page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,6 +22,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+
+  final _friendshipsNavigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -91,7 +97,52 @@ class _HomeScreenState extends State<HomeScreen>
         physics: const NeverScrollableScrollPhysics(),
         children: [
           const DiscoverPage(),
-          const FriendshipsPage(),
+          WillPopScope(
+            onWillPop: () {
+              print('will pop scope');
+              return _friendshipsNavigatorKey.currentState?.maybePop() ??
+                  Future.value(false);
+            },
+            child: Navigator(
+              key: _friendshipsNavigatorKey,
+              initialRoute: 'conversations',
+              onGenerateRoute: (settings) {
+                switch (settings.name) {
+                  case 'conversations':
+                    return MaterialPageRoute(
+                      settings: settings,
+                      builder: (context) => const FriendshipsPage(),
+                    );
+                  case 'chat':
+                    return MaterialPageRoute(
+                      settings: settings,
+                      builder: (context) {
+                        final args = settings.arguments as ChatPageArguments;
+                        return CurrentRouteSystemUiStyling.light(
+                          child: ChatPage(
+                            host: host,
+                            webPort: webPort,
+                            socketPort: socketPort,
+                            otherProfile: args.otherProfile,
+                            online: args.online,
+                          ),
+                        );
+                      },
+                    );
+                }
+                return MaterialPageRoute(
+                  settings: settings,
+                  builder: (context) {
+                    return Scaffold(
+                      body: Center(
+                        child: Text('Route ${settings.name} not found'),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
           Consumer(
             builder: (context, ref, _) {
               final profile = ref.watch(userProvider.select((p) => p.profile))!;

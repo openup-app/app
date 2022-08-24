@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:openup/api/api.dart';
 
 part 'profile.freezed.dart';
 part 'profile.g.dart';
@@ -11,6 +12,8 @@ class Profile with _$Profile {
     String? audio,
     required String photo,
     required List<String> gallery,
+    required String location,
+    required Topic topic,
   }) = _Profile;
 
   // Private constructor required for adding methods
