@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_callkit_voximplant/flutter_callkit_voximplant.dart';
-import 'package:flutter_voip_push_notification/flutter_voip_push_notification.dart';
+// import 'package:flutter_voip_push_notification/flutter_voip_push_notification.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_state.dart';
@@ -20,9 +20,10 @@ FCXProvider? _provider;
 FCXCallController? _callController;
 
 Future<String?> getVoipPushNotificationToken() async {
-  final notifications = FlutterVoipPushNotification();
-  await notifications.requestNotificationPermissions();
-  return notifications.getToken();
+  // final notifications = FlutterVoipPushNotification();
+  // await notifications.requestNotificationPermissions();
+  // return notifications.getToken();
+  return Future.value();
 }
 
 void initIosVoipHandlers() async {
