@@ -56,6 +56,8 @@ dependencies:
     git: git@github.com:openup-app/flutter_callkit.git
   location: ^4.4.0
   vector_math: ^2.1.2
+  device_info_plus: ^4.1.0
+  share_plus: ^4.0.10+1
 
 dev_dependencies:
   flutter_test:

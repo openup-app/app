@@ -180,6 +180,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       ),
       navigatorKey: _navigatorKey,
       navigatorObservers: [_routeObserver],
+      initialRoute: '/',
       builder: (context, child) {
         return Theming(
           child: Stack(

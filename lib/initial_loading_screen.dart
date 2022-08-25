@@ -8,6 +8,7 @@ import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/notifications/notifications.dart';
+import 'package:openup/util/location_service.dart';
 
 /// Page used for asynchronous initialization.
 ///
@@ -82,6 +83,20 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
         );
       }
       return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    // Update location
+    final latLong = await const LocationService().getLatLong();
+    if (latLong != null && mounted) {
+      final api = GetIt.instance.get<Api>();
+      api.updateLocation(
+        ref.read(userProvider).uid,
+        latLong,
+      );
     }
 
     final noAudio = ref.read(userProvider).profile?.audio == null;

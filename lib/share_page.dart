@@ -5,6 +5,7 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:share_plus/share_plus.dart';
 
 class SharePage extends StatefulWidget {
   final Profile profile;
@@ -118,7 +119,12 @@ class _SharePageState extends State<SharePage>
           ),
           const SizedBox(height: 13),
           Button(
-            onPressed: () {},
+            onPressed: () {
+              Share.share(
+                url,
+                subject: 'The only app dedicated to making new friends',
+              );
+            },
             child: Container(
               height: 58,
               margin: const EdgeInsets.symmetric(horizontal: 32),
