@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/user_state.dart';
@@ -43,50 +45,70 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    // BottomNavigationBar height is available to pages via MediaQuery bottom padding
+    final topInstrinsicHeight = 72 + MediaQuery.of(context).padding.top;
+    final bottomInstrinsicHeight = 72 + MediaQuery.of(context).padding.bottom;
+    final obscuredHeight = max(topInstrinsicHeight, bottomInstrinsicHeight);
+
     return Scaffold(
       backgroundColor: Colors.black,
       extendBody: true,
       bottomNavigationBar: SizedBox(
-        height: 72.0 + MediaQuery.of(context).padding.bottom,
+        height: obscuredHeight,
         child: BlurredSurface(
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Button(
-                child: Text(
-                  'Discover',
-                  style: Theming.of(context).text.body.copyWith(
-                      fontWeight:
-                          _tabController.index != 0 ? FontWeight.w300 : null),
+              Expanded(
+                child: Button(
+                  onPressed: () {
+                    _tabController.index = 0;
+                    setState(() {});
+                  },
+                  child: Center(
+                    child: Text(
+                      'Discover',
+                      style: Theming.of(context).text.body.copyWith(
+                          fontWeight: _tabController.index != 0
+                              ? FontWeight.w300
+                              : null),
+                    ),
+                  ),
                 ),
-                onPressed: () {
-                  _tabController.index = 0;
-                  setState(() {});
-                },
               ),
-              Button(
-                child: Text(
-                  'Friendships',
-                  style: Theming.of(context).text.body.copyWith(
-                      fontWeight:
-                          _tabController.index != 1 ? FontWeight.w300 : null),
+              Expanded(
+                child: Button(
+                  onPressed: () {
+                    _tabController.index = 1;
+                    setState(() {});
+                  },
+                  child: Center(
+                    child: Text(
+                      'Friendships',
+                      style: Theming.of(context).text.body.copyWith(
+                          fontWeight: _tabController.index != 1
+                              ? FontWeight.w300
+                              : null),
+                    ),
+                  ),
                 ),
-                onPressed: () {
-                  _tabController.index = 1;
-                  setState(() {});
-                },
               ),
-              Button(
-                child: Text(
-                  'Profile',
-                  style: Theming.of(context).text.body.copyWith(
-                      fontWeight:
-                          _tabController.index != 2 ? FontWeight.w300 : null),
+              Expanded(
+                child: Button(
+                  child: Center(
+                    child: Text(
+                      'Profile',
+                      style: Theming.of(context).text.body.copyWith(
+                          fontWeight: _tabController.index != 2
+                              ? FontWeight.w300
+                              : null),
+                    ),
+                  ),
+                  onPressed: () {
+                    _tabController.index = 2;
+                    setState(() {});
+                  },
                 ),
-                onPressed: () {
-                  _tabController.index = 2;
-                  setState(() {});
-                },
               ),
             ],
           ),

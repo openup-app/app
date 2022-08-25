@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -31,11 +30,40 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   int _currentProfileIndex = 0;
   Topic? _selectedTopic;
   final _invitedUsers = <String>{};
+  PageController? _pageController;
+  final _padding = 32.0;
 
   @override
   void initState() {
     super.initState();
     _fetchStatuses();
+  }
+
+  @override
+  void dispose() {
+    _pageController?.dispose();
+    super.dispose();
+  }
+
+  void _initPageController({
+    required double fullHeight,
+    required double itemExtent,
+    required double paddingRatio,
+  }) {
+    _pageController = PageController(
+      viewportFraction: itemExtent / fullHeight * paddingRatio,
+    );
+    _pageController?.addListener(() {
+      final oldIndex = _currentProfileIndex;
+      final index = _pageController?.page?.round() ?? _currentProfileIndex;
+      final forward = index > oldIndex;
+      if (_currentProfileIndex != index) {
+        setState(() => _currentProfileIndex = index);
+        if (index > _profiles.length - 3 && !_loading && forward) {
+          print('Would fetch here');
+        }
+      }
+    });
   }
 
   Future<void> _fetchStatuses() async {
@@ -88,14 +116,25 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
+    final obscuredHeight = MediaQuery.of(context).padding.bottom;
+    const paddingRatio = 1.1;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final obscuredTop = 140.0 + MediaQuery.of(context).padding.top;
-        final obscuredBottom = MediaQuery.of(context).padding.bottom;
-        const bottomHeight = 135.0;
-        const padding = 32.0;
-        final itemExtent =
-            constraints.maxHeight - obscuredTop - obscuredBottom + padding;
+        // Can build the PageController based on the height provided this frame
+        if (_pageController == null) {
+          Future.delayed(Duration.zero, () {
+            if (mounted) {
+              final fullHeight = constraints.maxHeight;
+              final itemExtent = fullHeight - obscuredHeight * 2;
+              _initPageController(
+                fullHeight: fullHeight,
+                itemExtent: itemExtent,
+                paddingRatio: paddingRatio,
+              );
+            }
+          });
+        }
+
         final filteredProfiles = _profiles
             .where((profileWithOnline) =>
                 _selectedTopic == null ||
@@ -116,7 +155,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          'There are no profiles here',
+                          _selectedTopic == null
+                              ? 'Could\'t find any profiles'
+                              : 'Could\'t find any "${topicLabel(_selectedTopic!)}" profiles',
                           style: Theming.of(context).text.body,
                         ),
                       ),
@@ -128,24 +169,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                   ),
                 ),
               ),
-            if (!_loading && filteredProfiles.isNotEmpty)
+            if (!_loading &&
+                filteredProfiles.isNotEmpty &&
+                _pageController != null)
               Positioned.fill(
-                child: _SnappingListView.builder(
-                  padding: EdgeInsets.only(
-                    top: obscuredTop + 8,
-                    bottom: obscuredBottom,
-                  ),
-                  itemExtent: itemExtent,
-                  itemCount: filteredProfiles.length + 1,
-                  onItemChanged: (index) {
-                    // Seems to be off by one and the first element
-                    setState(() => _currentProfileIndex = index + 1);
-
-                    // if (index > _profiles.length - 3) {
-                    //   print('fetching');
-                    //   _fetchStatuses();
-                    // }
-                  },
+                child: PageView.builder(
+                  controller: _pageController,
+                  scrollDirection: Axis.vertical,
                   itemBuilder: (context, index) {
                     if (index == filteredProfiles.length) {
                       if (_loading) {
@@ -158,13 +188,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
                     final profileWithOnline = filteredProfiles[index];
                     final profile = profileWithOnline.profile;
-                    return SizedBox(
-                      height: itemExtent,
+                    return FractionallySizedBox(
+                      heightFactor: 1 / paddingRatio,
                       child: _UserProfileDisplay(
                         profile: profile,
                         play: _currentProfileIndex == index,
-                        bottomPadding: padding,
-                        bottomHeight: bottomHeight,
                         online: profileWithOnline.online,
                         invited: _invitedUsers.contains(profile.uid),
                         onInvite: () =>
@@ -187,7 +215,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
               left: 0,
               right: 0,
               top: 0,
-              height: 140 + MediaQuery.of(context).padding.top,
+              height: obscuredHeight,
               child: Stack(
                 children: [
                   const BlurredSurface(
@@ -198,7 +226,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         top: MediaQuery.of(context).padding.top),
                     child: Column(
                       children: [
-                        const SizedBox(height: 10),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
@@ -206,29 +233,28 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             style: Theming.of(context).text.body,
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        RichText(
-                          text: TextSpan(
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 16, fontWeight: FontWeight.w300),
-                            children: [
-                              TextSpan(
-                                  text: 'Discover ',
-                                  style: Theming.of(context).text.body.copyWith(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700)),
-                              const TextSpan(
-                                  text: 'others who also want to make '),
-                              TextSpan(
-                                text: 'new friends',
-                                style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 16, fontWeight: FontWeight.w700),
-                              ),
-                              const TextSpan(text: '.'),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
+                        // RichText(
+                        //   text: TextSpan(
+                        //     style: Theming.of(context).text.body.copyWith(
+                        //         fontSize: 16, fontWeight: FontWeight.w300),
+                        //     children: [
+                        //       TextSpan(
+                        //           text: 'Discover ',
+                        //           style: Theming.of(context).text.body.copyWith(
+                        //               fontSize: 16,
+                        //               fontWeight: FontWeight.w700)),
+                        //       const TextSpan(
+                        //           text: 'others who also want to make '),
+                        //       TextSpan(
+                        //         text: 'new friends',
+                        //         style: Theming.of(context).text.body.copyWith(
+                        //             fontSize: 16, fontWeight: FontWeight.w700),
+                        //       ),
+                        //       const TextSpan(text: '.'),
+                        //     ],
+                        //   ),
+                        // ),
+                        const SizedBox(height: 4),
                         SizedBox(
                           height: 40,
                           child: ListView(
@@ -286,8 +312,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 class _UserProfileDisplay extends StatefulWidget {
   final Profile profile;
   final bool play;
-  final double bottomPadding;
-  final double bottomHeight;
   final bool online;
   final bool invited;
   final VoidCallback onInvite;
@@ -299,8 +323,6 @@ class _UserProfileDisplay extends StatefulWidget {
     Key? key,
     required this.profile,
     required this.play,
-    required this.bottomPadding,
-    required this.bottomHeight,
     required this.online,
     required this.invited,
     required this.onInvite,
@@ -352,92 +374,94 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
           ),
-          child: Container(
-            foregroundDecoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  Colors.black,
-                ],
-                stops: [
-                  0.2,
-                  0.7,
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(bottom: widget.bottomHeight),
-                  child: Gallery(
-                    slideshow: widget.play,
-                    gallery: widget.profile.gallery,
-                    withWideBlur: false,
-                  ),
-                ),
-                Positioned(
-                  right: 16,
-                  top: 16,
-                  child: Column(
-                    children: [
-                      if (widget.online)
-                        const Icon(
-                          Icons.circle,
-                          color: Colors.green,
-                        ),
-                      const SizedBox(height: 24),
-                      Button(
-                        onPressed: () {},
-                        child: const Icon(
-                          Icons.bookmark_outline,
-                          color: Colors.white,
-                          size: 32,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Button(
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            backgroundColor: Colors.transparent,
-                            isScrollControlled: true,
-                            builder: (context) {
-                              return Theming(
-                                child: SharePage(
-                                  profile: widget.profile,
-                                  location: widget.profile.location,
-                                ),
-                              );
-                            },
-                          );
-                        },
-                        child: const Icon(
-                          Icons.reply,
-                          color: Colors.white,
-                          size: 32,
-                          textDirection: TextDirection.rtl,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+          foregroundDecoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.transparent,
+                Colors.black,
               ],
+              stops: [
+                0.2,
+                0.7,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 80),
+                child: Gallery(
+                  slideshow: widget.play,
+                  gallery: widget.profile.gallery,
+                  withWideBlur: false,
+                ),
+              ),
+              Positioned(
+                right: 16,
+                top: 16,
+                child: Column(
+                  children: [
+                    if (widget.online)
+                      const Icon(
+                        Icons.circle,
+                        color: Colors.green,
+                      ),
+                    const SizedBox(height: 24),
+                    Button(
+                      onPressed: () {},
+                      child: const Icon(
+                        Icons.bookmark_outline,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Button(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Colors.transparent,
+                          isScrollControlled: true,
+                          builder: (context) {
+                            return Theming(
+                              child: SharePage(
+                                profile: widget.profile,
+                                location: widget.profile.location,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      child: const Icon(
+                        Icons.reply,
+                        color: Colors.white,
+                        size: 32,
+                        textDirection: TextDirection.rtl,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
         Positioned(
           left: 16,
           right: 16,
-          bottom: 12 + widget.bottomPadding,
-          height: widget.bottomHeight + 44,
+          bottom: 0,
+          height: 180,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

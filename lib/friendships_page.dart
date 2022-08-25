@@ -162,6 +162,18 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
         child: CircularProgressIndicator(),
       );
     }
+    if (_chatrooms.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+        child: Center(
+          child: Text(
+            'Invite someone to chat,\nthen continue the conversation here',
+            textAlign: TextAlign.center,
+            style: Theming.of(context).text.body,
+          ),
+        ),
+      );
+    }
     return ListView.separated(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
       itemCount: _chatrooms.length,
