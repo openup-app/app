@@ -48,7 +48,7 @@ const webPort = 8080;
 const socketPort = 8081;
 
 // TODO: Should be app constant coming from dart defines (to be used in background call handler too)
-const urlBase = 'http://$host:$webPort';
+const urlBase = 'https://$host:$webPort';
 
 final _scaffoldKey = GlobalKey();
 final callSystemKey = GlobalKey<CallSystemState>();
