@@ -9,7 +9,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/call_state.dart';
+import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
@@ -90,7 +90,7 @@ Future<UseContext?> _handleLaunchNotification() async {
         backgroundCallNotification.profile,
       );
       activeCall.phone.join();
-      GetIt.instance.get<CallState>().callInfo = activeCall;
+      GetIt.instance.get<CallManager>().activeCall = activeCall;
     }
     return (BuildContext context) {
       Navigator.of(context).popUntil((r) => r.isFirst);

@@ -6,7 +6,7 @@ import 'package:connectycube_flutter_call_kit/connectycube_flutter_call_kit.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/call_state.dart';
+import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/users/profile.dart';
@@ -44,7 +44,7 @@ void initAndroidVoipHandlers() {
           );
           final activeCall = createActiveCall(myUid, rid, profile);
           activeCall.phone.join();
-          GetIt.instance.get<CallState>().callInfo = activeCall;
+          GetIt.instance.get<CallManager>().activeCall = activeCall;
         }
       },
       onCallRejected: (event) {

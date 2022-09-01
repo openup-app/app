@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/util/location_service.dart';
 
@@ -89,6 +92,21 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     }
 
+    // Update push notifcation tokens
+    final isIOS = Platform.isIOS;
+    final tokens = await Future.wait([
+      FirebaseMessaging.instance.getToken(),
+      if (isIOS) ios_voip.getVoipPushNotificationToken(),
+    ]);
+    if (mounted) {
+      api.addNotificationTokens(
+        ref.read(userProvider).uid,
+        fcmMessagingAndVoipToken: isIOS ? null : tokens[0],
+        fcmMessagingToken: isIOS ? tokens[0] : null,
+        apnVoipToken: isIOS ? tokens[1] : null,
+      );
+    }
+
     // Update location
     final latLong = await const LocationService().getLatLong();
     if (latLong != null && mounted) {
@@ -97,6 +115,10 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
         ref.read(userProvider).uid,
         latLong,
       );
+    }
+
+    if (!mounted) {
+      return;
     }
 
     final noAudio = ref.read(userProvider).profile?.audio == null;

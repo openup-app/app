@@ -14,9 +14,10 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/account_settings_phone_verification_screen.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/call_state.dart';
+import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/online_users/online_users_api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/call_page.dart';
 import 'package:openup/call_system.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/connections_screen.dart';
@@ -37,6 +38,7 @@ import 'package:openup/util/page_transition.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
+import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/sign_up_overview_page.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
@@ -52,7 +54,7 @@ const urlBase = 'https://$host:$webPort';
 
 final _scaffoldKey = GlobalKey();
 final callSystemKey = GlobalKey<CallSystemState>();
-final _navigatorKey = GlobalKey<NavigatorState>();
+final navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   void appRunner() async {
@@ -123,7 +125,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       port: webPort,
     );
     GetIt.instance.registerSingleton<Api>(api);
-    GetIt.instance.registerSingleton<CallState>(CallState());
+    GetIt.instance.registerSingleton<CallManager>(CallManager());
 
     Firebase.initializeApp().whenComplete(() {
       _idTokenChangesSubscription =
@@ -178,7 +180,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           color: Colors.white,
         ),
       ),
-      navigatorKey: _navigatorKey,
+      navigatorKey: navigatorKey,
       navigatorObservers: [_routeObserver],
       initialRoute: '/',
       builder: (context, child) {
@@ -188,11 +190,59 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               if (child != null) Positioned.fill(child: child),
               Positioned(
                 left: 0,
-                bottom: 0,
                 right: 0,
-                child: CallSystem(
-                  key: callSystemKey,
-                  navigatorKey: _navigatorKey,
+                top: 0,
+                child: StreamBuilder<bool>(
+                  stream:
+                      GetIt.instance.get<CallManager>().callPageActiveStream,
+                  initialData: false,
+                  builder: (context, snapshot) {
+                    final callPageActive = snapshot.requireData;
+                    return StreamBuilder<CallState>(
+                      stream: GetIt.instance.get<CallManager>().callState,
+                      initialData: const CallState.none(),
+                      builder: (context, snapshot) {
+                        final callState = snapshot.requireData;
+                        final display =
+                            !(callState is CallStateNone || callPageActive);
+
+                        return IgnorePointer(
+                          ignoring: !display,
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 150),
+                            opacity: display ? 1.0 : 0.0,
+                            child: Button(
+                              onPressed: () {
+                                navigatorKey.currentState?.pushNamed('call');
+                              },
+                              child: Container(
+                                height: 40 + MediaQuery.of(context).padding.top,
+                                color:
+                                    const Color.fromRGBO(0x03, 0xCB, 0x17, 1.0),
+                                padding: EdgeInsets.only(
+                                    top: MediaQuery.of(context).padding.top),
+                                alignment: Alignment.center,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.call, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text('Tap to return to call',
+                                        style: Theming.of(context)
+                                            .text
+                                            .body
+                                            .copyWith(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w300)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
@@ -245,7 +295,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             return _buildPageRoute<String?>(
               settings: settings,
               builder: (_) {
-                return CurrentRouteSystemUiStyling.dark(
+                return CurrentRouteSystemUiStyling.light(
                   child: PhoneVerificationScreen(
                     credentialVerification: args,
                   ),
@@ -409,6 +459,15 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     uid: args.uid,
                     chatroomId: args.chatroomId,
                   ),
+                );
+              },
+            );
+          case 'call':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: CallPage(),
                 );
               },
             );

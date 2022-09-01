@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -7,15 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/api_util.dart';
-import 'package:openup/api/call_state.dart';
+import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/signaling/signaling.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/notifications/android_voip_handlers.dart'
-    as android_voip;
-import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/report_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/image_builder.dart';
@@ -48,32 +43,32 @@ class CallSystemState extends ConsumerState<CallSystem> {
   void initState() {
     super.initState();
 
-    final callInfoStream = GetIt.instance.get<CallState>().callInfoStream;
-    callInfoStream.listen(_onCallInfo);
+    // final callInfoStream = GetIt.instance.get<CallState>().callInfoStream;
+    // callInfoStream.listen(_onCallInfo);
   }
 
-  void _onCallInfo(CallInfo callInfo) {
-    callInfo.map(
-      active: (activeCall) async {
-        _dismissTimer?.cancel();
-        if (!_outgoingCall) {
-          _requestedFriend = await _checkIsFriend(activeCall.profile.uid);
-        }
+  // void _onCallInfo(CallInfo callInfo) {
+  //   callInfo.map(
+  //     active: (activeCall) async {
+  //       _dismissTimer?.cancel();
+  //       if (!_outgoingCall) {
+  //         _requestedFriend = await _checkIsFriend(activeCall.profile.uid);
+  //       }
 
-        WidgetsBinding.instance.scheduleFrameCallback((_) {
-          if (!mounted) {
-            _disposeCallAndDismiss();
-            return;
-          }
-          setState(() {
-            _panelVisible = true;
-            _activeCall = activeCall;
-          });
-        });
-      },
-      none: (_) {},
-    );
-  }
+  //       WidgetsBinding.instance.scheduleFrameCallback((_) {
+  //         if (!mounted) {
+  //           _disposeCallAndDismiss();
+  //           return;
+  //         }
+  //         setState(() {
+  //           _panelVisible = true;
+  //           _activeCall = activeCall;
+  //         });
+  //       });
+  //     },
+  //     none: (_) {},
+  //   );
+  // }
 
   @override
   void dispose() {
@@ -120,71 +115,73 @@ class CallSystemState extends ConsumerState<CallSystem> {
   }
 
   void call(BuildContext context, SimpleProfile profile) async {
-    _disposeCall();
-    setState(() {
-      _panelVisible = true;
-      _initiatingCall = true;
-      _outgoingCall = true;
-      _ringingName = profile.name;
-    });
+    // _disposeCall();
+    // setState(() {
+    //   _panelVisible = true;
+    //   _initiatingCall = true;
+    //   _outgoingCall = true;
+    //   _ringingName = profile.name;
+    // });
 
-    final api = GetIt.instance.get<Api>();
-    final isFriend = await _checkIsFriend(profile.uid);
-    final result = await api.call(profile.uid, false, group: false);
-    if (!mounted) {
-      _disposeCallAndDismiss();
-      return;
-    }
-    setState(() {
-      _initiatingCall = false;
-    });
-    setState(() => _requestedFriend = isFriend);
-    result.fold(
-      (l) {
-        if (l is ApiClientError && l.error is ClientErrorConflict) {
-          setState(() => _engaged = true);
-        } else {
-          var message = errorToMessage(l);
-          message = l.when(
-            network: (_) => message,
-            client: (client) => client.when(
-              badRequest: () => 'Failed to get users',
-              unauthorized: () => message,
-              notFound: () => 'Unable to find topic participants',
-              forbidden: () => message,
-              conflict: () => message,
-            ),
-            server: (_) => message,
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-            ),
-          );
-        }
-        _dismissSoon();
-      },
-      (rid) {
-        final uid = ref.read(userProvider).uid;
-        ActiveCall? activeCall;
-        if (Platform.isAndroid) {
-          activeCall = android_voip.createActiveCall(uid, rid, profile);
-        } else if (Platform.isIOS) {
-          activeCall = ios_voip.createActiveCall(uid, rid, profile);
-        }
+    // final api = GetIt.instance.get<Api>();
+    // final isFriend = await _checkIsFriend(profile.uid);
+    // final result = await api.call(profile.uid, false, group: false);
+    // print('call');
+    // if (!mounted) {
+    //   _disposeCallAndDismiss();
+    //   return;
+    // }
+    // setState(() {
+    //   _initiatingCall = false;
+    // });
+    // print('result is $result');
+    // setState(() => _requestedFriend = isFriend);
+    // result.fold(
+    //   (l) {
+    //     if (l is ApiClientError && l.error is ClientErrorConflict) {
+    //       setState(() => _engaged = true);
+    //     } else {
+    //       var message = errorToMessage(l);
+    //       message = l.when(
+    //         network: (_) => message,
+    //         client: (client) => client.when(
+    //           badRequest: () => 'Failed to get users',
+    //           unauthorized: () => message,
+    //           notFound: () => 'Unable to find topic participants',
+    //           forbidden: () => message,
+    //           conflict: () => message,
+    //         ),
+    //         server: (_) => message,
+    //       );
+    //       ScaffoldMessenger.of(context).showSnackBar(
+    //         SnackBar(
+    //           content: Text(message),
+    //         ),
+    //       );
+    //     }
+    //     _dismissSoon();
+    //   },
+    //   (rid) {
+    //     final uid = ref.read(userProvider).uid;
+    //     ActiveCall? activeCall;
+    //     if (Platform.isAndroid) {
+    //       activeCall = android_voip.createActiveCall(uid, rid, profile);
+    //     } else if (Platform.isIOS) {
+    //       activeCall = ios_voip.createActiveCall(uid, rid, profile);
+    //     }
 
-        if (activeCall != null) {
-          activeCall.phone.join();
-          GetIt.instance.get<CallState>().callInfo = CallInfo.active(
-            rid: activeCall.rid,
-            phone: activeCall.phone,
-            signalingChannel: activeCall.signalingChannel,
-            profile: activeCall.profile,
-            controller: activeCall.controller,
-          );
-        }
-      },
-    );
+    //     if (activeCall != null) {
+    //       activeCall.phone.join();
+    //       GetIt.instance.get<CallState>().callInfo = CallInfo.active(
+    //         rid: activeCall.rid,
+    //         phone: activeCall.phone,
+    //         signalingChannel: activeCall.signalingChannel,
+    //         profile: activeCall.profile,
+    //         controller: activeCall.controller,
+    //       );
+    //     }
+    //   },
+    // );
   }
 
   @override

@@ -7,7 +7,7 @@ import 'package:flutter_callkit_voximplant/flutter_callkit_voximplant.dart';
 // import 'package:flutter_voip_push_notification/flutter_voip_push_notification.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/call_state.dart';
+import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/users/profile.dart';
@@ -56,7 +56,7 @@ void initIosVoipHandlers() async {
       final activeCall = createActiveCall(myUid, rid, profile);
       phone = activeCall.phone;
       phone?.join();
-      GetIt.instance.get<CallState>().callInfo = activeCall;
+      GetIt.instance.get<CallManager>().activeCall = activeCall;
       action.fulfill();
     } else {
       action.fail();
@@ -66,7 +66,7 @@ void initIosVoipHandlers() async {
   _provider?.performEndCallAction = (action) async {
     Api.rejectCall('', action.callUuid.toLowerCase(), '');
     await removeBackgroundCallNotification();
-    GetIt.instance.get<CallState>().callInfo = const NoCall();
+    GetIt.instance.get<CallManager>().endCall();
     action.fulfill();
   };
 

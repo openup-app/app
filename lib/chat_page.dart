@@ -5,10 +5,11 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/chat/chat_api2.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/call_system.dart';
+import 'package:openup/main.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_message.dart';
@@ -233,14 +234,18 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: Button(
                             onPressed: () {
-                              // callSystemKey.currentState?.call(
-                              //   context,
-                              //   SimpleProfile(
-                              //     uid: widget.uid,
-                              //     name: _profile!.name,
-                              //     photo: _profile!.photo,
-                              //   ),
-                              // );
+                              final callManager =
+                                  GetIt.instance.get<CallManager>();
+                              callManager.call(
+                                context,
+                                ref.read(userProvider).uid,
+                                SimpleProfile(
+                                  uid: widget.otherProfile.uid,
+                                  name: widget.otherProfile.name,
+                                  photo: widget.otherProfile.photo,
+                                ),
+                              );
+                              navigatorKey.currentState?.pushNamed('call');
                             },
                             child: const Padding(
                               padding: EdgeInsets.all(8.0),
@@ -398,37 +403,37 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     Profile profile, {
     required bool video,
   }) async {
-    final profile = _profile;
-    if (profile == null) {
-      return;
-    }
+    // final profile = _profile;
+    // if (profile == null) {
+    //   return;
+    // }
 
-    const purpose = 'friends';
-    final route = video ? '$purpose-video-call' : '$purpose-voice-call';
-    final api = GetIt.instance.get<Api>();
-    final result = await api.call(
-      profile.uid,
-      video,
-      group: false,
-    );
-    if (mounted) {
-      result.fold((l) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to call ${profile.name}'),
-          ),
-        );
-      }, (rid) {
-        Navigator.of(context).pushNamed(
-          route,
-          arguments: CallPageArguments(
-            rid: rid,
-            profiles: [profile.toSimpleProfile()],
-            serious: false,
-          ),
-        );
-      });
-    }
+    // const purpose = 'friends';
+    // final route = video ? '$purpose-video-call' : '$purpose-voice-call';
+    // final api = GetIt.instance.get<Api>();
+    // final result = await api.call(
+    //   profile.uid,
+    //   video,
+    //   group: false,
+    // );
+    // if (mounted) {
+    //   result.fold((l) {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(
+    //         content: Text('Failed to call ${profile.name}'),
+    //       ),
+    //     );
+    //   }, (rid) {
+    //     Navigator.of(context).pushNamed(
+    //       route,
+    //       arguments: CallPageArguments(
+    //         rid: rid,
+    //         profiles: [profile.toSimpleProfile()],
+    //         serious: false,
+    //       ),
+    //     );
+    //   });
+    // }
   }
 }
 
@@ -479,19 +484,30 @@ class _ChatProfilePage extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Button(
-                  onPressed: () {},
-                  child: Container(
-                    width: 64,
-                    height: 46,
-                    decoration: const BoxDecoration(
-                      color: Color.fromRGBO(0x16, 0x16, 0x16, 1.0),
-                      borderRadius: BorderRadius.all(Radius.circular(9)),
-                    ),
-                    child: const Icon(
-                      Icons.call,
-                      color: Colors.white,
-                    ),
-                  ),
+                  onPressed: () {
+                    // callSystemKey.currentState?.call(
+                    //   context,
+                    //   SimpleProfile(
+                    //     uid: profile.uid,
+                    //     name: profile.name,
+                    //     photo: profile.photo,
+                    //   ),
+                    // );
+                    Navigator.of(context).pushNamed('call');
+                  },
+                  // child: Container(
+                  //   width: 64,
+                  //   height: 46,
+                  //   decoration: const BoxDecoration(
+                  //     color: Color.fromRGBO(0x16, 0x16, 0x16, 1.0),
+                  //     borderRadius: BorderRadius.all(Radius.circular(9)),
+                  //   ),
+                  //   child: const Icon(
+                  //     Icons.call,
+                  //     color: Colors.white,
+                  //   ),
+                  // ),
+                  child: FlutterLogo(),
                 ),
                 const SizedBox(width: 16),
                 Button(
