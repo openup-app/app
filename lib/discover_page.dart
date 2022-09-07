@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:async/async.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -26,12 +28,16 @@ class DiscoverPage extends ConsumerStatefulWidget {
 
 class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _loading = false;
+
+  CancelableOperation<Either<ApiError, DiscoverResults>>? _discoverOperation;
   final _profiles = <ProfileWithOnline>[];
+  double _nextMinRadius = 0.0;
+  int _nextPage = 0;
+
   int _currentProfileIndex = 0;
   Topic? _selectedTopic;
   final _invitedUsers = <String>{};
   PageController? _pageController;
-  final _padding = 32.0;
 
   @override
   void initState() {
@@ -59,8 +65,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       final forward = index > oldIndex;
       if (_currentProfileIndex != index) {
         setState(() => _currentProfileIndex = index);
-        if (index > _profiles.length - 3 && !_loading && forward) {
-          print('Would fetch here');
+        if (index > _profiles.length - 4 && !_loading && forward) {
+          print(
+              '############ INDEX IS $index, PROFILE length is ${_profiles.length}, loading is ${_loading}');
+          _fetchStatuses();
         }
       }
     });
@@ -71,19 +79,21 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       return;
     }
 
-    if (_profiles.isEmpty) {
-      setState(() => _loading = true);
-    }
+    setState(() => _loading = true);
     final myUid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
-    final startAfterUid = _profiles.isEmpty ? null : _profiles.last.profile.uid;
-    final profiles = await api.getDiscover(
+    _discoverOperation?.cancel();
+    final discoverFuture = api.getDiscover(
       myUid,
-      // startAfterUid: startAfterUid,
+      seed: Api.seed,
       topic: _selectedTopic,
+      minRadius: _nextMinRadius,
+      page: _nextPage,
     );
+    _discoverOperation = CancelableOperation.fromFuture(discoverFuture);
+    final profiles = await _discoverOperation?.value;
 
-    if (!mounted) {
+    if (!mounted || profiles == null) {
       return;
     }
     setState(() => _loading = false);
@@ -109,7 +119,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         );
       },
       (r) async {
-        setState(() => _profiles.addAll(r));
+        setState(() {
+          _profiles.addAll(r.profiles);
+          _nextMinRadius = r.nextMinRadius;
+          _nextPage = r.nextPage;
+        });
       },
     );
   }
@@ -134,19 +148,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
             }
           });
         }
-
-        final filteredProfiles = _profiles
-            .where((profileWithOnline) =>
-                _selectedTopic == null ||
-                profileWithOnline.profile.topic == _selectedTopic)
-            .toList();
         return Stack(
           children: [
-            if (_loading)
+            if (_loading && _profiles.isEmpty)
               const Center(
                 child: CircularProgressIndicator(),
               ),
-            if (!_loading && filteredProfiles.isEmpty)
+            if (!_loading && _profiles.isEmpty)
               Positioned(
                 child: Center(
                   child: Column(
@@ -162,31 +170,27 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: _fetchStatuses,
+                        onPressed: () {
+                          setState(() {
+                            _nextMinRadius = 0;
+                            _nextPage = 0;
+                          });
+                          _fetchStatuses();
+                        },
                         child: const Text('Refresh'),
                       ),
                     ],
                   ),
                 ),
               ),
-            if (!_loading &&
-                filteredProfiles.isNotEmpty &&
-                _pageController != null)
+            if (_profiles.isNotEmpty && _pageController != null)
               Positioned.fill(
                 child: PageView.builder(
                   controller: _pageController,
                   scrollDirection: Axis.vertical,
+                  itemCount: _profiles.length,
                   itemBuilder: (context, index) {
-                    if (index == filteredProfiles.length) {
-                      if (_loading) {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    }
-
-                    final profileWithOnline = filteredProfiles[index];
+                    final profileWithOnline = _profiles[index];
                     final profile = profileWithOnline.profile;
                     return FractionallySizedBox(
                       heightFactor: 1 / paddingRatio,
@@ -269,6 +273,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                     setState(() {
                                       _profiles.clear();
                                       _selectedTopic = null;
+                                      _nextMinRadius = 0;
+                                      _nextPage = 0;
                                     });
                                     _fetchStatuses();
                                   }
@@ -284,13 +290,15 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                   label: topicLabel(topic),
                                   selected: _selectedTopic == topic,
                                   onSelected: () {
-                                    if (_selectedTopic == topic) {
-                                      setState(() => _selectedTopic = null);
-                                    } else {
-                                      setState(() => _selectedTopic = topic);
+                                    if (_selectedTopic != topic) {
+                                      setState(() {
+                                        _profiles.clear();
+                                        _selectedTopic = topic;
+                                        _nextMinRadius = 0;
+                                        _nextPage = 0;
+                                      });
+                                      _fetchStatuses();
                                     }
-                                    setState(() => _profiles.clear());
-                                    _fetchStatuses();
                                   },
                                 ),
                             ],
@@ -372,6 +380,9 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
 
   @override
   Widget build(BuildContext context) {
+    if (ModalRoute.of(context)?.isCurrent == false) {
+      _player.stop();
+    }
     return Stack(
       children: [
         Container(

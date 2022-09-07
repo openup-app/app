@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -114,6 +115,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   @override
   void initState() {
     super.initState();
+
+    Api.seed = Random().nextInt(1 << 32).toString();
+
     precacheImage(
       const AssetImage('assets/images/loading_icon.png'),
       context,

@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -23,6 +22,8 @@ class Api {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
+
+  static String seed = '';
 
   final String _urlBase;
 
@@ -511,37 +512,38 @@ class Api {
     }
   }
 
-  Future<Either<ApiError, List<ProfileWithOnline>>> getDiscover(
+  Future<Either<ApiError, DiscoverResults>> getDiscover(
     String uid, {
-    String? startAfterUid,
+    String? seed,
     Topic? topic,
+    double? minRadius,
+    int? page,
   }) {
     return _request(
       makeRequest: () {
-        final startAfterUidQuery =
-            startAfterUid == null ? null : 'startAfterUid=$startAfterUid';
+        final seedQuery = seed == null ? null : 'seed=$seed';
         final topicQuery = topic == null ? null : 'topic=${topic.name}';
-        final hasOptions = startAfterUidQuery != null || topicQuery != null;
+        final minRadiusQuery =
+            minRadius == null ? null : 'minRadius=$minRadius';
+        final pageQuery = page == null ? null : 'page=$page';
+        final hasOptions = seedQuery != null ||
+            topicQuery != null ||
+            minRadiusQuery != null ||
+            pageQuery != null;
         return http.get(
           Uri.parse('$_urlBase/users/discover${hasOptions ? '?' : ''}${[
-            startAfterUidQuery,
-            topicQuery
+            seedQuery,
+            topicQuery,
+            minRadiusQuery,
+            pageQuery,
           ].where((q) => q != null).join('&')}'),
           headers: _headers,
         );
       },
       handleSuccess: (response) {
-        final list = List.from(jsonDecode(response.body));
-        final profiles = List<ProfileWithOnline>.from(list.map((p) {
-          try {
-            return ProfileWithOnline.fromJson(p);
-          } catch (e) {
-            debugPrint(e.toString());
-            debugPrint(p);
-            return null;
-          }
-        }).where((e) => e != null)).toList();
-        return Right(profiles);
+        debugPrint(response.body);
+        debugPrint(jsonDecode(response.body).toString());
+        return Right(DiscoverResults.fromJson(jsonDecode(response.body)));
       },
     );
   }
@@ -840,6 +842,18 @@ class ProfileWithOnline with _$ProfileWithOnline {
 
   factory ProfileWithOnline.fromJson(Map<String, dynamic> json) =>
       _$ProfileWithOnlineFromJson(json);
+}
+
+@freezed
+class DiscoverResults with _$DiscoverResults {
+  const factory DiscoverResults({
+    required List<ProfileWithOnline> profiles,
+    required double nextMinRadius,
+    required int nextPage,
+  }) = _DiscoverResults;
+
+  factory DiscoverResults.fromJson(Map<String, dynamic> json) =>
+      _$DiscoverResultsFromJson(json);
 }
 
 @freezed
