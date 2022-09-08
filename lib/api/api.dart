@@ -541,9 +541,57 @@ class Api {
         );
       },
       handleSuccess: (response) {
-        debugPrint(response.body);
-        debugPrint(jsonDecode(response.body).toString());
         return Right(DiscoverResults.fromJson(jsonDecode(response.body)));
+      },
+    );
+  }
+
+  Future<Either<ApiError, List<ProfileWithOnline>>> getFavorites(String uid) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/users/discover/favorites'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        return Right(List<ProfileWithOnline>.from(
+            list.map((e) => ProfileWithOnline.fromJson(e))));
+      },
+    );
+  }
+
+  Future<Either<ApiError, void>> addFavorite(String uid, String otherUid) {
+    return _request(
+      makeRequest: () {
+        return http.put(
+          Uri.parse('$_urlBase/users/discover/favorites'),
+          headers: _headers,
+          body: jsonEncode({
+            'otherUid': otherUid,
+          }),
+        );
+      },
+      handleSuccess: (response) {
+        return const Right(null);
+      },
+    );
+  }
+
+  Future<Either<ApiError, void>> removeFavorite(String uid, String otherUid) {
+    return _request(
+      makeRequest: () {
+        return http.delete(
+          Uri.parse('$_urlBase/users/discover/favorites'),
+          headers: _headers,
+          body: jsonEncode({
+            'otherUid': otherUid,
+          }),
+        );
+      },
+      handleSuccess: (response) {
+        return const Right(null);
       },
     );
   }
@@ -838,6 +886,7 @@ class ProfileWithOnline with _$ProfileWithOnline {
   const factory ProfileWithOnline({
     required Profile profile,
     required bool online,
+    required bool favorite,
   }) = _ProfileWithOnline;
 
   factory ProfileWithOnline.fromJson(Map<String, dynamic> json) =>

@@ -36,6 +36,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   int _currentProfileIndex = 0;
   Topic? _selectedTopic;
+  bool _showingFavorites = false;
   final _invitedUsers = <String>{};
   PageController? _pageController;
 
@@ -65,9 +66,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       final forward = index > oldIndex;
       if (_currentProfileIndex != index) {
         setState(() => _currentProfileIndex = index);
-        if (index > _profiles.length - 4 && !_loading && forward) {
-          print(
-              '############ INDEX IS $index, PROFILE length is ${_profiles.length}, loading is ${_loading}');
+        if (!_showingFavorites &&
+            index > _profiles.length - 4 &&
+            !_loading &&
+            forward) {
           _fetchStatuses();
         }
       }
@@ -123,6 +125,51 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
           _profiles.addAll(r.profiles);
           _nextMinRadius = r.nextMinRadius;
           _nextPage = r.nextPage;
+        });
+      },
+    );
+  }
+
+  Future<void> _fetchFavorites() async {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _loading = true);
+    final myUid = ref.read(userProvider).uid;
+    final api = GetIt.instance.get<Api>();
+    final profiles = await api.getFavorites(myUid);
+
+    if (!mounted) {
+      return;
+    }
+    setState(() => _loading = false);
+
+    profiles.fold(
+      (l) {
+        var message = errorToMessage(l);
+        message = l.when(
+          network: (_) => message,
+          client: (client) => client.when(
+            badRequest: () => 'Unable to request users',
+            unauthorized: () => message,
+            notFound: () => 'Unable to find users',
+            forbidden: () => message,
+            conflict: () => message,
+          ),
+          server: (_) => message,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+          ),
+        );
+      },
+      (r) async {
+        setState(() {
+          _profiles
+            ..clear()
+            ..addAll(r);
         });
       },
     );
@@ -199,8 +246,31 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         play: _currentProfileIndex == index,
                         online: profileWithOnline.online,
                         invited: _invitedUsers.contains(profile.uid),
+                        favourite: profileWithOnline.favorite,
                         onInvite: () =>
                             setState(() => _invitedUsers.add(profile.uid)),
+                        onFavorite: (favorite) async {
+                          if (_showingFavorites && !favorite) {
+                            setState(() => _profiles.removeAt(index));
+                          }
+                          final uid = ref.read(userProvider).uid;
+                          final api = GetIt.instance.get<Api>();
+                          final result = favorite
+                              ? await api.addFavorite(uid, profile.uid)
+                              : await api.removeFavorite(uid, profile.uid);
+                          if (!mounted) {
+                            return;
+                          }
+                          result.fold(
+                            (l) {},
+                            (r) {
+                              setState(() {
+                                _profiles[index] = _profiles[index]
+                                    .copyWith(favorite: favorite);
+                              });
+                            },
+                          );
+                        },
                         onBlock: () => setState(() => _profiles.removeWhere(
                             ((p) => p.profile.uid == profile.uid))),
                         onReport: () {
@@ -237,27 +307,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             style: Theming.of(context).text.body,
                           ),
                         ),
-                        // RichText(
-                        //   text: TextSpan(
-                        //     style: Theming.of(context).text.body.copyWith(
-                        //         fontSize: 16, fontWeight: FontWeight.w300),
-                        //     children: [
-                        //       TextSpan(
-                        //           text: 'Discover ',
-                        //           style: Theming.of(context).text.body.copyWith(
-                        //               fontSize: 16,
-                        //               fontWeight: FontWeight.w700)),
-                        //       const TextSpan(
-                        //           text: 'others who also want to make '),
-                        //       TextSpan(
-                        //         text: 'new friends',
-                        //         style: Theming.of(context).text.body.copyWith(
-                        //             fontSize: 16, fontWeight: FontWeight.w700),
-                        //       ),
-                        //       const TextSpan(text: '.'),
-                        //     ],
-                        //   ),
-                        // ),
                         const SizedBox(height: 4),
                         SizedBox(
                           height: 40,
@@ -267,23 +316,39 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             children: [
                               Chip(
                                 label: 'All',
-                                selected: _selectedTopic == null,
+                                selected: _selectedTopic == null &&
+                                    !_showingFavorites,
                                 onSelected: () {
-                                  if (_selectedTopic != null) {
+                                  if (_selectedTopic != null ||
+                                      _showingFavorites) {
                                     setState(() {
+                                      _discoverOperation?.cancel();
                                       _profiles.clear();
                                       _selectedTopic = null;
                                       _nextMinRadius = 0;
                                       _nextPage = 0;
+                                      _showingFavorites = false;
                                     });
                                     _fetchStatuses();
                                   }
                                 },
                               ),
                               Chip(
-                                label: 'Favourites',
-                                selected: false,
-                                onSelected: () {},
+                                label: 'Favorites',
+                                selected: _showingFavorites,
+                                onSelected: () async {
+                                  if (!_showingFavorites) {
+                                    setState(() {
+                                      _discoverOperation?.cancel();
+                                      _profiles.clear();
+                                      _selectedTopic = null;
+                                      _nextMinRadius = 0;
+                                      _nextPage = 0;
+                                      _showingFavorites = true;
+                                    });
+                                  }
+                                  _fetchFavorites();
+                                },
                               ),
                               for (final topic in Topic.values)
                                 Chip(
@@ -292,10 +357,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                   onSelected: () {
                                     if (_selectedTopic != topic) {
                                       setState(() {
+                                        _discoverOperation?.cancel();
                                         _profiles.clear();
                                         _selectedTopic = topic;
                                         _nextMinRadius = 0;
                                         _nextPage = 0;
+                                        _showingFavorites = false;
                                       });
                                       _fetchStatuses();
                                     }
@@ -322,8 +389,10 @@ class _UserProfileDisplay extends StatefulWidget {
   final bool play;
   final bool online;
   final bool invited;
+  final bool favourite;
   final VoidCallback onInvite;
   final VoidCallback onBeginRecording;
+  final void Function(bool favorite) onFavorite;
   final VoidCallback onBlock;
   final VoidCallback onReport;
 
@@ -333,8 +402,10 @@ class _UserProfileDisplay extends StatefulWidget {
     required this.play,
     required this.online,
     required this.invited,
+    required this.favourite,
     required this.onInvite,
     required this.onBeginRecording,
+    required this.onFavorite,
     required this.onBlock,
     required this.onReport,
   }) : super(key: key);
@@ -345,6 +416,7 @@ class _UserProfileDisplay extends StatefulWidget {
 
 class __UserProfileDisplayState extends State<_UserProfileDisplay> {
   bool _uploading = false;
+  late bool _localFavorite;
 
   final _player = JustAudioAudioPlayer();
 
@@ -359,11 +431,16 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
     if (widget.play) {
       _player.play(loop: true);
     }
+    _localFavorite = widget.favourite;
   }
 
   @override
   void didUpdateWidget(covariant _UserProfileDisplay oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.favourite != oldWidget.favourite) {
+      _localFavorite = widget.favourite;
+    }
+
     if (widget.play && !oldWidget.play) {
       _player.play(loop: true);
     } else if (!widget.play && oldWidget.play) {
@@ -431,9 +508,16 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                       ),
                     const SizedBox(height: 24),
                     Button(
-                      onPressed: () {},
-                      child: const Icon(
-                        Icons.bookmark_outline,
+                      onPressed: () {
+                        setState(() {
+                          _localFavorite = !widget.favourite;
+                        });
+                        widget.onFavorite(!widget.favourite);
+                      },
+                      child: Icon(
+                        _localFavorite
+                            ? Icons.bookmark
+                            : Icons.bookmark_outline,
                         color: Colors.white,
                         size: 32,
                       ),
