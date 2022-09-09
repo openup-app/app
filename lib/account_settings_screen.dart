@@ -38,205 +38,195 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.black),
-      child: Stack(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        leading: const BackIconButton(),
+        title: Text(
+          'Account Settings',
+          style: Theming.of(context)
+              .text
+              .body
+              .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
+        ),
+        centerTitle: true,
+      ),
+      body: Stack(
         fit: StackFit.loose,
         children: [
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 24,
-            left: 8,
-            child: Transform.scale(
-              scale: 1.3,
-              child: const BackIconButton(),
-            ),
-          ),
           Align(
             alignment: Alignment.topCenter,
-            child: Padding(
-              padding:
-                  EdgeInsets.only(top: MediaQuery.of(context).padding.top + 32),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 362),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    children: [
-                      Center(
-                        child: Text(
-                          'Account Settings',
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 30, fontWeight: FontWeight.w600),
-                        ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 362),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    Center(
+                      child: Text(
+                        'Update login information',
+                        style: Theming.of(context).text.body.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
-                      const Spacer(),
-                      Center(
-                        child: Text(
-                          'Update login information',
-                          style: Theming.of(context).text.body.copyWith(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w500,
+                    ),
+                    const SizedBox(height: 16),
+                    _InputArea(
+                      child: _TextField(
+                        controller: _phoneNumberController,
+                        keyboardType: TextInputType.phone,
+                        hintText: 'phone number',
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: 237,
+                      child: ValueListenableBuilder(
+                        valueListenable: _phoneNumberController,
+                        builder: (context, _, __) {
+                          return Button(
+                            onPressed: (_submitting |
+                                    _phoneNumberController.text.isEmpty)
+                                ? null
+                                : _updateInformation,
+                            child: _InputArea(
+                              childNeedsOpacity: false,
+                              gradientColors: const [
+                                Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
+                                Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
+                              ],
+                              child: Center(
+                                child: _submitting
+                                    ? const CircularProgressIndicator()
+                                    : Text(
+                                        'Update Information',
+                                        style: Theming.of(context)
+                                            .text
+                                            .body
+                                            .copyWith(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.w500),
+                                      ),
                               ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _InputArea(
-                        child: _TextField(
-                          controller: _phoneNumberController,
-                          keyboardType: TextInputType.phone,
-                          hintText: 'phone number',
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        width: 237,
-                        child: ValueListenableBuilder(
-                          valueListenable: _phoneNumberController,
-                          builder: (context, _, __) {
-                            return Button(
-                              onPressed: (_submitting |
-                                      _phoneNumberController.text.isEmpty)
-                                  ? null
-                                  : _updateInformation,
-                              child: _InputArea(
-                                childNeedsOpacity: false,
-                                opacity: 0.8,
-                                gradientColors: const [
-                                  Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
-                                  Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
-                                ],
-                                child: Center(
-                                  child: _submitting
-                                      ? const CircularProgressIndicator()
-                                      : Text(
-                                          'Update Information',
-                                          style: Theming.of(context)
-                                              .text
-                                              .body
-                                              .copyWith(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.w500),
-                                        ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Button(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) {
-                              return const _BlockedList();
-                            }),
+                            ),
                           );
                         },
-                        child: _InputArea(
-                          childNeedsOpacity: false,
-                          child: Center(
-                            child: Text(
-                              'Blocked users',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 24, fontWeight: FontWeight.w500),
-                            ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Button(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) {
+                            return const _BlockedList();
+                          }),
+                        );
+                      },
+                      child: _InputArea(
+                        childNeedsOpacity: false,
+                        child: Center(
+                          child: Text(
+                            'Blocked users',
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 24, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 30),
-                      Button(
-                        onPressed: () =>
-                            Navigator.of(context).pushNamed('contact-us'),
-                        child: _InputArea(
-                          childNeedsOpacity: false,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Container(
-                                  margin: const EdgeInsets.only(left: 16),
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color:
-                                        Color.fromRGBO(0xC4, 0xC4, 0xC4, 1.0),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(10.0),
-                                    child: Text(
-                                      '?',
-                                      textAlign: TextAlign.center,
-                                      style: Theming.of(context)
-                                          .text
-                                          .body
-                                          .copyWith(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w500),
-                                    ),
+                    ),
+                    const SizedBox(height: 30),
+                    Button(
+                      onPressed: () =>
+                          Navigator.of(context).pushNamed('contact-us'),
+                      child: _InputArea(
+                        childNeedsOpacity: false,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                margin: const EdgeInsets.only(left: 16),
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color.fromRGBO(0xC4, 0xC4, 0xC4, 1.0),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: Text(
+                                    '?',
+                                    textAlign: TextAlign.center,
+                                    style: Theming.of(context)
+                                        .text
+                                        .body
+                                        .copyWith(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w500),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Contact us',
-                                style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 24, fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Button(
-                        onPressed: _signOut,
-                        child: _InputArea(
-                          childNeedsOpacity: false,
-                          child: Center(
-                            child: Text(
-                              'Sign Out',
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Contact us',
                               style: Theming.of(context).text.body.copyWith(
                                   fontSize: 24, fontWeight: FontWeight.w500),
                             ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 26),
-                      Button(
-                        onPressed: _showDeleteAccountDialog,
-                        child: _InputArea(
-                          opacity: 0.5,
-                          gradientColors: const [
-                            Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                            Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
                           ],
-                          childNeedsOpacity: false,
-                          child: Center(
-                            child: Text(
-                              'Delete Account',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 24, fontWeight: FontWeight.w500),
-                            ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Button(
+                      onPressed: _signOut,
+                      child: _InputArea(
+                        childNeedsOpacity: false,
+                        child: Center(
+                          child: Text(
+                            'Sign Out',
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 24, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ),
-                      const Spacer(flex: 2),
-                      if (kDebugMode)
-                        Container(
-                          color: Colors.white,
-                          margin: const EdgeInsets.symmetric(horizontal: 40.0),
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('${FirebaseAuth.instance.currentUser?.uid}'),
-                              const Divider(),
-                              Text(
-                                  '${FirebaseAuth.instance.currentUser?.phoneNumber}'),
-                            ],
+                    ),
+                    const SizedBox(height: 26),
+                    Button(
+                      onPressed: _showDeleteAccountDialog,
+                      child: _InputArea(
+                        gradientColors: const [
+                          Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                          Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                        ],
+                        childNeedsOpacity: false,
+                        child: Center(
+                          child: Text(
+                            'Delete Account',
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 24, fontWeight: FontWeight.w500),
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                    ),
+                    const Spacer(flex: 2),
+                    if (kDebugMode)
+                      Container(
+                        color: Colors.white,
+                        margin: const EdgeInsets.symmetric(horizontal: 40.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${FirebaseAuth.instance.currentUser?.uid}'),
+                            const Divider(),
+                            Text(
+                                '${FirebaseAuth.instance.currentUser?.phoneNumber}'),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -441,24 +431,18 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color.fromRGBO(0x01, 0x39, 0x59, 1.0),
-            Color.fromRGBO(0x00, 0x15, 0x20, 1.0),
-          ],
-        ),
+        color: Colors.black,
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
+          leading: const BackIconButton(),
           title: Text(
             'Blocking',
             style: Theming.of(context)
                 .text
                 .body
-                .copyWith(fontSize: 30, fontWeight: FontWeight.w600),
+                .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0.0,
@@ -473,7 +457,7 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
           if (_blockedUsers.isEmpty) {
             return Center(
               child: Text(
-                'You are blocking no users!',
+                'You are not blocking anyone',
                 style: Theming.of(context)
                     .text
                     .body
@@ -577,7 +561,6 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
 class _InputArea extends StatelessWidget {
   final Widget child;
   final List<Color> gradientColors;
-  final double opacity;
   final bool childNeedsOpacity;
   const _InputArea({
     Key? key,
@@ -586,7 +569,6 @@ class _InputArea extends StatelessWidget {
       Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.65),
       Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.54),
     ],
-    this.opacity = 0.6,
     this.childNeedsOpacity = true,
   }) : super(key: key);
 
@@ -597,26 +579,23 @@ class _InputArea extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Opacity(
-            opacity: opacity,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: gradientColors,
-                ),
-                borderRadius: const BorderRadius.all(Radius.circular(29)),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                    offset: Offset(0.0, 4.0),
-                    blurRadius: 4,
-                  ),
-                ],
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: gradientColors,
               ),
-              child: childNeedsOpacity ? child : null,
+              borderRadius: const BorderRadius.all(Radius.circular(29)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                  offset: Offset(0.0, 4.0),
+                  blurRadius: 4,
+                ),
+              ],
             ),
+            child: childNeedsOpacity ? child : null,
           ),
           if (!childNeedsOpacity) child,
         ],
@@ -645,6 +624,11 @@ class _TextField extends StatelessWidget {
         child: TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          style: Theming.of(context).text.body.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
           decoration: InputDecoration.collapsed(
             hintText: hintText,
             hintStyle: Theming.of(context).text.body.copyWith(

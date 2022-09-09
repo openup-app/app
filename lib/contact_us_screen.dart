@@ -30,18 +30,21 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color.fromRGBO(0x01, 0x39, 0x59, 1.0),
-            Color.fromRGBO(0x00, 0x15, 0x20, 1.0),
-          ],
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        leading: const BackIconButton(),
+        centerTitle: true,
+        title: Text(
+          'Contact us',
+          style: Theming.of(context)
+              .text
+              .body
+              .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
         ),
       ),
-      child: KeyboardScreen(
+      body: KeyboardScreen(
         child: Stack(
           fit: StackFit.loose,
           children: [
@@ -56,28 +59,6 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
                 ),
                 child: Column(
                   children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Transform.scale(
-                        scale: 1.3,
-                        child: const Padding(
-                          padding: EdgeInsets.only(
-                            left: 4.0,
-                            top: 4.0,
-                          ),
-                          child: BackIconButton(),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      'Contact us anytime,\nabout anything.',
-                      textAlign: TextAlign.center,
-                      style: Theming.of(context).text.body.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(height: 20),
                     Expanded(
                       child: ContactTextField(
                         textController: _textController,

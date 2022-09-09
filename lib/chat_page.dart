@@ -11,6 +11,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/main.dart';
 import 'package:openup/profile_view.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_message.dart';
 import 'package:openup/widgets/common.dart';
@@ -98,6 +99,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
+        leading: const BackIconButton(),
         centerTitle: true,
         title: TabView(
           firstSelected: _showChat,
