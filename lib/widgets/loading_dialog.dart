@@ -42,6 +42,7 @@ class Loading extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: title,
+      backgroundColor: Colors.black,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,

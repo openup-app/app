@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,9 +10,9 @@ import 'package:openup/main.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/tab_view.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:openup/widgets/three_photo_gallery.dart';
 
 class ProfilePage extends StatefulWidget {
   final Profile profile;
@@ -154,53 +153,7 @@ class _EditProfileView extends StatelessWidget {
         Container(
           height: 298,
           margin: const EdgeInsets.only(left: 16, right: 16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.all(Radius.circular(24)),
-                  child: _PhotoOrUploadButton(
-                    url: profile.photo,
-                    onUpload: (_) {},
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(24)),
-                        child: _PhotoOrUploadButton(
-                          url: profile.gallery.length > 1
-                              ? profile.gallery[1]
-                              : null,
-                          onUpload: (data) {},
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(24)),
-                        child: _PhotoOrUploadButton(
-                          url: profile.gallery.length > 2
-                              ? profile.gallery[2]
-                              : null,
-                          onUpload: (_) {},
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          child: const ThreePhotoGallery(),
         ),
         const SizedBox(height: 29),
         const Padding(
@@ -422,44 +375,6 @@ class __RecordButtonState extends ConsumerState<_RecordButton> {
         setState(() => _uploading = false);
       },
       onBeginRecording: () {},
-    );
-  }
-}
-
-class _PhotoOrUploadButton extends StatelessWidget {
-  final String? url;
-  final void Function(Uint8List photo) onUpload;
-  const _PhotoOrUploadButton({
-    Key? key,
-    required this.url,
-    required this.onUpload,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Button(
-      onPressed: () {},
-      child: Builder(builder: (context) {
-        final photoUrl = url;
-        if (photoUrl != null) {
-          return Image.network(
-            photoUrl,
-            fit: BoxFit.cover,
-            frameBuilder: fadeInFrameBuilder,
-            loadingBuilder: circularProgressLoadingBuilder,
-            errorBuilder: iconErrorBuilder,
-          );
-        }
-        return Container(
-          color: const Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
-          alignment: Alignment.center,
-          child: const Icon(
-            Icons.add_photo_alternate,
-            color: Colors.white,
-            size: 34,
-          ),
-        );
-      }),
     );
   }
 }
