@@ -2,10 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/account_settings_phone_verification_screen.dart';
-import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/contact_us_screen.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/friendships_page.dart';
@@ -203,36 +200,6 @@ class _HomeScreenState extends State<HomeScreen>
                                   userProvider.select((p) => p.profile))!;
                               return ProfilePage(profile: profile);
                             },
-                          );
-                        },
-                      );
-                    case 'account-settings':
-                      return MaterialPageRoute(
-                        settings: settings,
-                        builder: (_) {
-                          return const CurrentRouteSystemUiStyling.light(
-                            child: AccountSettingsScreen(),
-                          );
-                        },
-                      );
-                    case 'account-settings-phone-verification':
-                      final args = settings.arguments as String;
-                      return MaterialPageRoute(
-                        settings: settings,
-                        builder: (_) {
-                          return CurrentRouteSystemUiStyling.light(
-                            child: AccountSettingsPhoneVerificationScreen(
-                              verificationId: args,
-                            ),
-                          );
-                        },
-                      );
-                    case 'contact-us':
-                      return MaterialPageRoute(
-                        settings: settings,
-                        builder: (_) {
-                          return const CurrentRouteSystemUiStyling.light(
-                            child: ContactUsScreen(),
                           );
                         },
                       );

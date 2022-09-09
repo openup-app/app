@@ -7,6 +7,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/main.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -87,7 +88,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: Colors.white,
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () => rootNavigatorKey.currentState
+                      ?.pushNamed('account-settings'),
                 ),
               ),
             ],
@@ -321,49 +323,6 @@ class _EditProfileView extends StatelessWidget {
               ),
             );
           },
-        ),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16),
-          child: Text(
-            'My Account',
-            style: Theming.of(context).text.body.copyWith(fontSize: 24),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16),
-          child: Text(
-            'Manage your account and contact us',
-            style: Theming.of(context)
-                .text
-                .body
-                .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Button(
-          onPressed: () async {
-            Navigator.of(context).pushNamed('account-settings');
-          },
-          child: Container(
-            height: 51,
-            margin: const EdgeInsets.only(left: 16, right: 16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.white),
-              borderRadius: const BorderRadius.all(
-                Radius.circular(40),
-              ),
-            ),
-            child: Center(
-              child: Text(
-                'Account settings',
-                style: Theming.of(context)
-                    .text
-                    .body
-                    .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
-              ),
-            ),
-          ),
         ),
         const SizedBox(height: 16),
       ],

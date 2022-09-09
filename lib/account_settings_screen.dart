@@ -90,29 +90,37 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                       const SizedBox(height: 32),
                       SizedBox(
                         width: 237,
-                        child: Button(
-                          onPressed: _submitting ? null : _updateInformation,
-                          child: _InputArea(
-                            childNeedsOpacity: false,
-                            opacity: 0.8,
-                            gradientColors: const [
-                              Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
-                              Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
-                            ],
-                            child: Center(
-                              child: _submitting
-                                  ? const CircularProgressIndicator()
-                                  : Text(
-                                      'Update Information',
-                                      style: Theming.of(context)
-                                          .text
-                                          .body
-                                          .copyWith(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.w500),
-                                    ),
-                            ),
-                          ),
+                        child: ValueListenableBuilder(
+                          valueListenable: _phoneNumberController,
+                          builder: (context, _, __) {
+                            return Button(
+                              onPressed: (_submitting |
+                                      _phoneNumberController.text.isEmpty)
+                                  ? null
+                                  : _updateInformation,
+                              child: _InputArea(
+                                childNeedsOpacity: false,
+                                opacity: 0.8,
+                                gradientColors: const [
+                                  Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
+                                  Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
+                                ],
+                                child: Center(
+                                  child: _submitting
+                                      ? const CircularProgressIndicator()
+                                      : Text(
+                                          'Update Information',
+                                          style: Theming.of(context)
+                                              .text
+                                              .body
+                                              .copyWith(
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.w500),
+                                        ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(height: 32),

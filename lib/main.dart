@@ -12,6 +12,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
+import 'package:openup/account_settings_phone_verification_screen.dart';
+import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/online_users/online_users_api.dart';
@@ -20,6 +22,7 @@ import 'package:openup/call_page.dart';
 import 'package:openup/call_system.dart';
 import 'package:openup/chat_screen.dart';
 import 'package:openup/connections_screen.dart';
+import 'package:openup/contact_us_screen.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/lobby_list_page.dart';
@@ -471,6 +474,36 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 );
               },
             );
+          case 'account-settings':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: AccountSettingsScreen(),
+                );
+              },
+            );
+          case 'account-settings-phone-verification':
+            final args = settings.arguments as String;
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return CurrentRouteSystemUiStyling.light(
+                  child: AccountSettingsPhoneVerificationScreen(
+                    verificationId: args,
+                  ),
+                );
+              },
+            );
+          case 'contact-us':
+            return _buildPageRoute(
+              settings: settings,
+              builder: (_) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: ContactUsScreen(),
+                );
+              },
+            );
           default:
             throw 'Route not found ${settings.name}';
         }
@@ -489,13 +522,11 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       transitionDuration: const Duration(milliseconds: 300),
       reverseTransitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (_, animation, secondaryAnimation) {
-        return _ScaffoldWithAnimatedDrawerBackgroundBlur(
-          builder: (context) {
-            return InheritedRouteObserver(
-              routeObserver: _routeObserver,
-              child: Builder(builder: builder),
-            );
-          },
+        return Scaffold(
+          body: InheritedRouteObserver(
+            routeObserver: _routeObserver,
+            child: Builder(builder: builder),
+          ),
         );
       },
     );
