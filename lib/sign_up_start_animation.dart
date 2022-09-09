@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:openup/widgets/theming.dart';
+import 'package:video_player/video_player.dart';
 
 class SignUpStartAnimationScreen extends StatefulWidget {
   const SignUpStartAnimationScreen({Key? key}) : super(key: key);
@@ -9,24 +9,42 @@ class SignUpStartAnimationScreen extends StatefulWidget {
       _SignUpStartAnimationScreenState();
 }
 
-class _SignUpStartAnimationScreenState extends State<SignUpStartAnimationScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _SignUpStartAnimationScreenState
+    extends State<SignUpStartAnimationScreen> {
+  late final VideoPlayerController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
+    _controller = VideoPlayerController.asset(
+      'assets/videos/welcome.mp4',
     );
+
+    final futures = [
+      _controller.initialize(),
+    ];
+    Future.wait(futures).then((_) {
+      if (mounted) {
+        _controller.play();
+        setState(() {});
+      }
+    }).onError((error, stackTrace) {
+      debugPrint(error.toString());
+      debugPrint(stackTrace.toString());
+      _goHome();
+    });
+
     _controller.addListener(
       () {
-        if (_controller.isCompleted) {
-          Navigator.of(context).pushReplacementNamed('home');
+        if (_controller.value.position == _controller.value.duration) {
+          _goHome();
         }
       },
     );
+  }
+
+  void _goHome() {
+    Navigator.of(context).pushReplacementNamed('home');
   }
 
   @override
@@ -37,34 +55,20 @@ class _SignUpStartAnimationScreenState extends State<SignUpStartAnimationScreen>
 
   @override
   Widget build(BuildContext context) {
-    final anim = CurvedAnimation(
-      curve: Curves.easeOut,
-      parent: _controller,
-    );
-    return GestureDetector(
-      onTap: () {
-        if (!_controller.isAnimating) {
-          _controller.forward();
-        }
-      },
-      child: Container(
-        color: Colors.black,
-        child: Center(
-          child: AnimatedBuilder(
-            animation: anim,
-            builder: (context, _) {
-              return Transform.scale(
-                scale: 1 + anim.value * 100,
-                child: Text(
-                  'Welcome to\nopenup',
-                  textAlign: TextAlign.center,
-                  style: Theming.of(context)
-                      .text
-                      .body
-                      .copyWith(fontSize: 16, fontWeight: FontWeight.w700),
-                ),
-              );
-            },
+    if (!_controller.value.isInitialized) {
+      return const DecoratedBox(
+        decoration: BoxDecoration(color: Colors.black),
+      );
+    }
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.black),
+      child: SizedBox.expand(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: _controller.value.size.width,
+            height: _controller.value.size.height,
+            child: VideoPlayer(_controller),
           ),
         ),
       ),

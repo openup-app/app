@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/input_area.dart';
-import 'package:openup/widgets/keyboard_screen.dart';
 import 'package:openup/widgets/theming.dart';
 
 class SignUpNameScreen extends ConsumerStatefulWidget {
