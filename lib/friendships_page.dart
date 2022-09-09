@@ -286,32 +286,36 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                       ],
                     ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          CountdownTimer(
-                            endTime: chatroom.endTime,
-                            onDone: () => setState(() => _chatrooms.removeWhere(
-                                (c) => c.profile.uid == chatroom.profile.uid)),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            topicLabel(chatroom.topic),
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 16, fontWeight: FontWeight.w300),
-                          ),
-                        ],
-                      ),
-                      const Icon(
-                        Icons.chevron_right,
-                        color: Colors.grey,
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            CountdownTimer(
+                              endTime: chatroom.endTime,
+                              onDone: () => setState(() =>
+                                  _chatrooms.removeWhere((c) =>
+                                      c.profile.uid == chatroom.profile.uid)),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              topicLabel(chatroom.topic),
+                              style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w300),
+                            ),
+                          ],
+                        ),
+                        const Icon(
+                          Icons.chevron_right,
+                          color: Colors.grey,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

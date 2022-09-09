@@ -237,15 +237,13 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                               final callManager =
                                   GetIt.instance.get<CallManager>();
                               callManager.call(
-                                context,
-                                ref.read(userProvider).uid,
-                                SimpleProfile(
-                                  uid: widget.otherProfile.uid,
-                                  name: widget.otherProfile.name,
-                                  photo: widget.otherProfile.photo,
-                                ),
+                                context: context,
+                                uid: ref.read(userProvider).uid,
+                                otherProfile:
+                                    widget.otherProfile.toSimpleProfile(),
+                                video: false,
                               );
-                              navigatorKey.currentState?.pushNamed('call');
+                              rootNavigatorKey.currentState?.pushNamed('call');
                             },
                             child: const Padding(
                               padding: EdgeInsets.all(8.0),
@@ -269,14 +267,16 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: Button(
                             onPressed: () {
-                              // callSystemKey.currentState?.call(
-                              //   context,
-                              //   SimpleProfile(
-                              //     uid: widget.uid,
-                              //     name: _profile!.name,
-                              //     photo: _profile!.photo,
-                              //   ),
-                              // );
+                              final callManager =
+                                  GetIt.instance.get<CallManager>();
+                              callManager.call(
+                                context: context,
+                                uid: ref.read(userProvider).uid,
+                                otherProfile:
+                                    widget.otherProfile.toSimpleProfile(),
+                                video: true,
+                              );
+                              rootNavigatorKey.currentState?.pushNamed('call');
                             },
                             child: const Padding(
                               padding: EdgeInsets.all(8.0),

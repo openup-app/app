@@ -52,7 +52,7 @@ const urlBase = 'https://$host:$webPort';
 
 final _scaffoldKey = GlobalKey();
 final callSystemKey = GlobalKey<CallSystemState>();
-final navigatorKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   void appRunner() async {
@@ -181,7 +181,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           color: Colors.white,
         ),
       ),
-      navigatorKey: navigatorKey,
+      navigatorKey: rootNavigatorKey,
       navigatorObservers: [_routeObserver],
       initialRoute: '/',
       builder: (context, child) {
@@ -213,9 +213,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             duration: const Duration(milliseconds: 150),
                             opacity: display ? 1.0 : 0.0,
                             child: Button(
-                              onPressed: () {
-                                navigatorKey.currentState?.pushNamed('call');
-                              },
+                              onPressed: () => rootNavigatorKey.currentState
+                                  ?.pushNamed('call'),
                               child: Container(
                                 height: 40 + MediaQuery.of(context).padding.top,
                                 color:

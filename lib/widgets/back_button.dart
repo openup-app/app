@@ -14,12 +14,10 @@ class BackIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Button(
       onPressed: Navigator.of(context).pop,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Icon(
-          Icons.arrow_back_rounded,
-          color: color,
-        ),
+      child: Icon(
+        Icons.chevron_left,
+        color: color,
+        size: 46,
       ),
     );
   }

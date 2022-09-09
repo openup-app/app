@@ -390,11 +390,15 @@ class PhoneController extends ValueNotifier<PhoneValue> {
 
   set _speakerphone(bool v) => value = value.copyWith(speakerphone: v);
 
+  set _video(bool v) => value = value.copyWith(video: v);
+
   set startTime(DateTime v) => value = value.copyWith(startTime: v);
 
   bool get muted => value.mute;
 
   bool get speakerphone => value.speakerphone;
+
+  bool get video => value.video;
 
   DateTime get startTime => value.startTime;
 }
@@ -404,6 +408,7 @@ class PhoneValue with _$PhoneValue {
   const factory PhoneValue({
     @Default(false) bool mute,
     @Default(false) bool speakerphone,
+    @Default(false) bool video,
     required DateTime startTime,
   }) = _PhoneValue;
 }

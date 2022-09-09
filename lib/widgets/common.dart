@@ -99,12 +99,10 @@ class CountdownTimer extends StatefulWidget {
 
 class _CountdownTimerState extends State<CountdownTimer> {
   Timer? _timer;
-  final DateTime _start = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    print('End time is ${widget.endTime}');
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
         final remaining = widget.endTime.difference(DateTime.now());
@@ -138,6 +136,50 @@ class _CountdownTimerState extends State<CountdownTimer> {
             ? const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0)
             : null,
       ),
+    );
+  }
+}
+
+class CountUpTimer extends StatefulWidget {
+  final DateTime start;
+  final TextStyle? style;
+  const CountUpTimer({
+    Key? key,
+    required this.start,
+    this.style,
+  }) : super(key: key);
+
+  @override
+  State<CountUpTimer> createState() => _CountUpTimerState();
+}
+
+class _CountUpTimerState extends State<CountUpTimer> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _timer?.cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final time = DateTime.now().difference(widget.start);
+    return Text(
+      formatDuration(time, long: true),
+      style: widget.style ??
+          Theming.of(context).text.body.copyWith(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: const Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0)),
     );
   }
 }
@@ -862,54 +904,6 @@ class _ReportBlockPopupMenuState extends ConsumerState<ReportBlockPopupMenu> {
           ),
         ];
       },
-    );
-  }
-}
-
-class _CountUpTimer extends StatefulWidget {
-  final DateTime start;
-  const _CountUpTimer({
-    Key? key,
-    required this.start,
-  }) : super(key: key);
-
-  @override
-  State<_CountUpTimer> createState() => __CountUpTimerState();
-}
-
-class __CountUpTimerState extends State<_CountUpTimer> {
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _timer?.cancel();
-  }
-
-  String _formatDuration(Duration d) {
-    if (d.inHours > 1) {
-      return '${(d.inHours % 24).toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
-    }
-    return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final time = DateTime.now().difference(widget.start);
-    return Text(
-      _formatDuration(time),
-      style: Theming.of(context).text.body.copyWith(
-          fontSize: 18,
-          fontWeight: FontWeight.w500,
-          color: const Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0)),
     );
   }
 }

@@ -39,6 +39,7 @@ class BackgroundCallNotification with _$BackgroundCallNotification {
   const factory BackgroundCallNotification({
     required String rid,
     required SimpleProfile profile,
+    required bool video,
   }) = _BackgroundCallNotification;
 
   factory BackgroundCallNotification.fromJson(Map<String, dynamic> json) =>

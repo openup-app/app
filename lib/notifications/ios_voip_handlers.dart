@@ -9,9 +9,7 @@ import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/signaling/phone.dart';
-import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/main.dart';
 import 'package:openup/notifications/notification_comms.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -53,7 +51,7 @@ void initIosVoipHandlers() async {
     final profile = await _deserializeIncomingCallProfile();
 
     if (myUid != null && profile != null) {
-      final activeCall = createActiveCall(myUid, rid, profile);
+      final activeCall = createActiveCall(myUid, rid, profile, false);
       phone = activeCall.phone;
       phone?.join();
       GetIt.instance.get<CallManager>().activeCall = activeCall;
@@ -66,7 +64,7 @@ void initIosVoipHandlers() async {
   _provider?.performEndCallAction = (action) async {
     Api.rejectCall('', action.callUuid.toLowerCase(), '');
     await removeBackgroundCallNotification();
-    GetIt.instance.get<CallManager>().endCall();
+    GetIt.instance.get<CallManager>().hangUp();
     action.fulfill();
   };
 
@@ -76,73 +74,19 @@ void initIosVoipHandlers() async {
   };
 }
 
-ActiveCall createActiveCall(String myUid, String rid, SimpleProfile profile) {
-  final signalingChannel = SocketIoSignalingChannel(
-    host: host,
-    port: socketPort,
-    uid: myUid,
-    rid: rid,
-    serious: true,
-  );
-
-  Phone? phone;
-  final phoneController = PhoneController();
-  PhoneValue oldPhoneValue = phoneController.value;
-  StreamSubscription? connectionStateSubscription;
-  phone = Phone(
-    controller: phoneController,
-    signalingChannel: signalingChannel,
-    uid: myUid,
-    partnerUid: profile.uid,
-    useVideo: false,
-    onMediaRenderers: (localRenderer, remoteRenderer) {
-      // Unused
-    },
-    onRemoteStream: (stream) {
-      // Unused
-    },
-    onAddTimeRequest: () {
-      // TODO
-    },
-    onAddTime: (_) {},
-    onDisconnected: () {
-      connectionStateSubscription?.cancel();
-      phoneController.dispose();
+PlatformVoipCallbacks createPlatformVoipCallbacks(String rid, bool video) {
+  // Informs CallKit to update state based on user interactions
+  return PlatformVoipCallbacks(
+    reportCallEnded: () {
       _provider?.reportCallEnded(rid, null, FCXCallEndedReason.remoteEnded);
-      signalingChannel.dispose();
-      phone?.dispose();
     },
-    onGroupCallLobbyStates: (_) {
-      // Unused
+    reportCallMuted: (muted) {
+      _callController
+          ?.requestTransactionWithAction(FCXSetMutedCallAction(rid, muted));
     },
-    onJoinGroupCall: (rid, profiles) {
-      // Unused
-    },
-  );
-  connectionStateSubscription = phone.connectionStateStream.listen((state) {
-    if (state == PhoneConnectionState.connected) {
-      phoneController.startTime = DateTime.now();
-    }
-  });
-  phoneController.addListener(() {
-    // Informs CallKit to update state based on user interactions
-    if (oldPhoneValue.mute != phoneController.muted) {
-      _callController?.requestTransactionWithAction(
-          FCXSetMutedCallAction(rid, phoneController.muted));
-    }
-
-    if (oldPhoneValue.speakerphone != phoneController.speakerphone) {
+    reportCallSpeakerphone: (speakerphone) {
       // TODO: How to do inform CallKit about this action?
-    }
-
-    oldPhoneValue = phoneController.value.copyWith();
-  });
-  return ActiveCall(
-    rid: rid,
-    profile: profile,
-    signalingChannel: signalingChannel,
-    phone: phone,
-    controller: phoneController,
+    },
   );
 }
 

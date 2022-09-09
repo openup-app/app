@@ -84,10 +84,11 @@ Future<UseContext?> _handleLaunchNotification() async {
   final uid = FirebaseAuth.instance.currentUser?.uid;
   if (backgroundCallNotification != null && uid != null) {
     if (Platform.isAndroid) {
-      final activeCall = android_voip.createActiveCall(
+      final activeCall = createActiveCall(
         uid,
         backgroundCallNotification.rid,
         backgroundCallNotification.profile,
+        backgroundCallNotification.video,
       );
       activeCall.phone.join();
       GetIt.instance.get<CallManager>().activeCall = activeCall;

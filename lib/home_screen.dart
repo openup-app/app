@@ -48,6 +48,13 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
+  void _navigateTabTo(int index) {
+    if (_tabController.index != index) {
+      _tabController.index = index;
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // BottomNavigationBar height is available to pages via MediaQuery bottom padding
@@ -75,10 +82,7 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 Expanded(
                   child: Button(
-                    onPressed: () {
-                      _tabController.index = 0;
-                      setState(() {});
-                    },
+                    onPressed: () => _navigateTabTo(0),
                     child: Center(
                       child: Text(
                         'Discover',
@@ -92,10 +96,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 Expanded(
                   child: Button(
-                    onPressed: () {
-                      _tabController.index = 1;
-                      setState(() {});
-                    },
+                    onPressed: () => _navigateTabTo(1),
                     child: Center(
                       child: Text(
                         'Friendships',
@@ -109,6 +110,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 Expanded(
                   child: Button(
+                    onPressed: () => _navigateTabTo(2),
                     child: Center(
                       child: Text(
                         'Profile',
@@ -118,10 +120,6 @@ class _HomeScreenState extends State<HomeScreen>
                                 : null),
                       ),
                     ),
-                    onPressed: () {
-                      _tabController.index = 2;
-                      setState(() {});
-                    },
                   ),
                 ),
               ],
