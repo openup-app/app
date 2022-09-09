@@ -26,67 +26,54 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () => Future.value(false),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(color: Colors.black),
-        child: KeyboardScreen(
-          child: Padding(
-            padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'What\'s your name?',
-                  style: Theming.of(context)
-                      .text
-                      .body
-                      .copyWith(fontWeight: FontWeight.w300, fontSize: 32),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 28),
-                InputArea(
-                  color: const Color.fromRGBO(0xED, 0xED, 0xED, 1.0),
-                  child: TextFormField(
-                    textAlign: TextAlign.center,
-                    controller: _nameController,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: InputDecoration.collapsed(
-                      hintText: 'Username',
-                      hintStyle: Theming.of(context).text.body.copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: const Color.fromRGBO(0x10, 0x10, 0x10, 1.0),
-                          ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(35.0),
-                  child: ValueListenableBuilder(
-                    valueListenable: _nameController,
-                    builder: (context, _, child) {
-                      return Button(
-                        onPressed: (_nameController.text.isEmpty || _uploading)
-                            ? null
-                            : _submit,
-                        child: child!,
-                      );
-                    },
-                    child: OutlinedArea(
-                      child: Center(
-                        child: _uploading
-                            ? const CircularProgressIndicator()
-                            : const Text('continue'),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.black),
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 80),
+            Text(
+              'What\'s your name?',
+              style: Theming.of(context)
+                  .text
+                  .body
+                  .copyWith(fontWeight: FontWeight.w700, fontSize: 36),
+              textAlign: TextAlign.center,
             ),
-          ),
+            const SizedBox(height: 30),
+            TextFormField(
+              textAlign: TextAlign.center,
+              controller: _nameController,
+              textCapitalization: TextCapitalization.sentences,
+              style: Theming.of(context).text.body.copyWith(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white),
+              decoration: InputDecoration.collapsed(
+                hintText: 'Your name',
+                hintStyle: Theming.of(context).text.body.copyWith(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w600,
+                    color: const Color.fromRGBO(0x98, 0x98, 0x98, 1.0)),
+              ),
+            ),
+            const Spacer(),
+            ValueListenableBuilder(
+              valueListenable: _nameController,
+              builder: (context, _, child) {
+                return OvalButton(
+                  onPressed: (_nameController.text.isEmpty || _uploading)
+                      ? null
+                      : _submit,
+                  child: _uploading
+                      ? const CircularProgressIndicator()
+                      : const Text('continue'),
+                );
+              },
+            ),
+            const SizedBox(height: 59),
+          ],
         ),
       ),
     );
@@ -112,7 +99,7 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
 
     result.fold(
       (l) => displayError(context, l),
-      (r) => Navigator.of(context).pushReplacementNamed('sign-up-topic'),
+      (r) => Navigator.of(context).pushNamed('sign-up-topic'),
     );
 
     setState(() => _uploading = false);

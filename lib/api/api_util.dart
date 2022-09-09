@@ -68,6 +68,23 @@ Future<Either<ApiError, void>> updateTopic({
   return result;
 }
 
+Future<Either<ApiError, void>> updateBlurPhotos({
+  required BuildContext context,
+  required WidgetRef ref,
+  required bool blur,
+}) async {
+  final api = GetIt.instance.get<Api>();
+  final userState = ref.read(userProvider);
+  final newProfile = userState.profile!.copyWith(blurPhotos: blur);
+  final result = await api.updateBlurPhotos(userState.uid, blur);
+
+  if (result.isRight()) {
+    ref.read(userProvider.notifier).profile(newProfile);
+  }
+
+  return result;
+}
+
 Future<Either<ApiError, void>> updateAudio({
   required BuildContext context,
   required WidgetRef ref,

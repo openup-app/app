@@ -27,56 +27,55 @@ class _SignUpTopicScreenState extends ConsumerState<SignUpTopicScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () => Future.value(false),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(color: Colors.black),
-        child: KeyboardScreen(
-          child: Padding(
-            padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
+    return Container(
+      color: Colors.black,
+      // Makes column fill screen
+      alignment: Alignment.center,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 70),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 356),
+                child: Text(
                   'Everyone is here to make friends, which one reason fits you the most?',
                   style: Theming.of(context)
                       .text
                       .body
-                      .copyWith(fontWeight: FontWeight.w300, fontSize: 32),
-                  textAlign: TextAlign.center,
+                      .copyWith(fontWeight: FontWeight.w700, fontSize: 36),
+                  textAlign: TextAlign.left,
                 ),
-                const SizedBox(height: 28),
-                Wrap(
-                  alignment: WrapAlignment.start,
-                  spacing: 2,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    for (final topic in Topic.values)
-                      Chip(
-                        label: topicLabel(topic),
-                        selected: _topic == topic,
-                        onSelected: () => setState(() => _topic = topic),
-                      ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(35.0),
-                  child: Button(
-                    onPressed: (_topic == null || _uploading) ? null : _submit,
-                    child: OutlinedArea(
-                      child: Center(
-                        child: _uploading
-                            ? const CircularProgressIndicator()
-                            : const Text('continue'),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(height: 28),
+            Expanded(
+              child: Wrap(
+                alignment: WrapAlignment.start,
+                spacing: 0,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  for (final topic in Topic.values)
+                    Chip(
+                      label: topicLabel(topic),
+                      height: 46,
+                      selected: _topic == topic,
+                      onSelected: () => setState(() => _topic = topic),
+                    ),
+                ],
+              ),
+            ),
+            OvalButton(
+              onPressed: (_topic == null || _uploading) ? null : _submit,
+              child: _uploading
+                  ? const CircularProgressIndicator()
+                  : const Text('continue'),
+            ),
+            const SizedBox(height: 59),
+          ],
         ),
       ),
     );
@@ -102,7 +101,7 @@ class _SignUpTopicScreenState extends ConsumerState<SignUpTopicScreen> {
 
     result.fold(
       (l) => displayError(context, l),
-      (r) => Navigator.of(context).pushReplacementNamed('sign-up-photos'),
+      (r) => Navigator.of(context).pushNamed('sign-up-photos'),
     );
 
     setState(() => _uploading = false);

@@ -184,6 +184,19 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, void>> updateBlurPhotos(String uid, bool blur) {
+    return _request(
+      makeRequest: () {
+        return http.put(
+          Uri.parse('$_urlBase/users/$uid/profile/blurPhotos'),
+          headers: _headers,
+          body: jsonEncode({"blur": blur}),
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
   Future<Either<ApiError, void>> addConnectionRequest(
     String uid,
     String otherUid,

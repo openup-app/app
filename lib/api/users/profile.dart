@@ -12,6 +12,7 @@ class Profile with _$Profile {
     String? audio,
     required String photo,
     required List<String> gallery,
+    @Default(false) bool blurPhotos,
     required String location,
     required Topic topic,
   }) = _Profile;

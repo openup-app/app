@@ -1,11 +1,15 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/audio_bio.dart';
@@ -539,6 +543,304 @@ class RecordButtonState extends State<RecordButton> {
   }
 }
 
+enum RecordButtonDisplayState {
+  displayingRecord,
+  displayingRecording,
+  displayingUpload,
+}
+
+class RecordButtonSignUp extends StatefulWidget {
+  final void Function(RecordButtonDisplayState state) onState;
+
+  const RecordButtonSignUp({
+    Key? key,
+    required this.onState,
+  }) : super(key: key);
+
+  @override
+  State<RecordButtonSignUp> createState() => RecordButtonSignUpState();
+}
+
+class RecordButtonSignUpState extends State<RecordButtonSignUp> {
+  late final AudioBioController _inviteRecorder;
+  final _invitePlayer = JustAudioAudioPlayer();
+  Uint8List? _audioBytes;
+  DateTime _recordingStart = DateTime.now();
+  bool _submitted = false;
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _inviteRecorder = AudioBioController(
+      onRecordingComplete: (path) async {
+        if (mounted) {
+          final bytes = await File(path).readAsBytes();
+          if (mounted) {
+            _invitePlayer.setPath(path);
+            setState(() => _audioBytes = bytes);
+          }
+        }
+      },
+    );
+    Future.delayed(Duration.zero, () {
+      if (mounted) {
+        widget.onState(RecordButtonDisplayState.displayingRecord);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _inviteRecorder.dispose();
+    _invitePlayer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<RecordInfo>(
+      initialData: const RecordInfo(),
+      stream: _inviteRecorder.recordInfoStream,
+      builder: (context, snapshot) {
+        final recordInfo = snapshot.requireData;
+        return SizedBox(
+          height: 91,
+          child: Builder(
+            builder: (context) {
+              if (_audioBytes == null) {
+                return Button(
+                  onPressed: () {
+                    if (recordInfo.recording) {
+                      _inviteRecorder.stopRecording();
+                      widget.onState(RecordButtonDisplayState.displayingUpload);
+                    } else {
+                      _inviteRecorder.startRecording();
+                      setState(() => _recordingStart = DateTime.now());
+                      widget.onState(
+                          RecordButtonDisplayState.displayingRecording);
+                    }
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 91,
+                        height: 91,
+                        padding: const EdgeInsets.all(4),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white, width: 2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 500),
+                          child: Container(
+                            margin: recordInfo.recording
+                                ? const EdgeInsets.all(15)
+                                : EdgeInsets.zero,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: recordInfo.recording
+                                  ? BorderRadius.circular(10)
+                                  : BorderRadius.circular(100),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 200.0),
+                          child: Text(
+                            recordInfo.recording
+                                ? formatDuration(
+                                    DateTime.now().difference(_recordingStart),
+                                    canBeZero: true)
+                                : formatDuration(
+                                    Duration.zero,
+                                    canBeZero: true,
+                                  ),
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 20, fontWeight: FontWeight.w300),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  SizedBox(
+                    width: 72,
+                    child: Button(
+                      onPressed: _submitting
+                          ? null
+                          : () {
+                              _invitePlayer.stop();
+                              widget.onState(
+                                  RecordButtonDisplayState.displayingRecord);
+                              setState(() {
+                                _submitted = false;
+                                _audioBytes = null;
+                              });
+                            },
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Icon(
+                          Icons.delete,
+                          size: 44,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 97,
+                    height: 97,
+                    child: Center(
+                      child: Consumer(
+                        builder: (context, ref, _) {
+                          if (_submitting) {
+                            return const CircularProgressIndicator();
+                          }
+
+                          if (_submitted) {
+                            return Container(
+                              padding: const EdgeInsets.all(8.0),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(
+                                    color: const Color.fromRGBO(
+                                        0x82, 0x82, 0x82, 1.0)),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.done,
+                                size: 48,
+                                color: Colors.green,
+                              ),
+                            );
+                          }
+
+                          return Button(
+                            onPressed: _submitting || _submitted
+                                ? null
+                                : () async {
+                                    final audioBytes = _audioBytes;
+                                    if (audioBytes == null) {
+                                      return;
+                                    }
+                                    setState(() => _submitting = true);
+
+                                    final result = await updateAudio(
+                                      context: context,
+                                      ref: ref,
+                                      bytes: audioBytes,
+                                    );
+                                    if (!mounted) {
+                                      return;
+                                    }
+
+                                    setState(() => _submitting = false);
+                                    result.fold(
+                                      (l) => displayError(context, l),
+                                      (r) => setState(() => _submitted = true),
+                                    );
+                                  },
+                            child: Container(
+                              padding: const EdgeInsets.all(8.0),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(
+                                    color: const Color.fromRGBO(
+                                        0x82, 0x82, 0x82, 1.0)),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_upward_rounded,
+                                size: 48,
+                                color: Colors.black,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 72,
+                    child: Center(
+                      child: StreamBuilder<PlaybackInfo>(
+                        stream: _invitePlayer.playbackInfoStream,
+                        initialData: const PlaybackInfo(),
+                        builder: (context, snapshot) {
+                          final playbackInfo = snapshot.requireData;
+                          return Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Button(
+                                onPressed: _submitting
+                                    ? null
+                                    : () async {
+                                        if (playbackInfo.state ==
+                                            PlaybackState.playing) {
+                                          _invitePlayer.stop();
+                                        } else {
+                                          _invitePlayer.play();
+                                        }
+                                      },
+                                child:
+                                    playbackInfo.state == PlaybackState.playing
+                                        ? const Center(
+                                            child: Icon(
+                                              Icons.stop,
+                                              size: 44,
+                                            ),
+                                          )
+                                        : const Center(
+                                            child: Icon(
+                                              Icons.play_arrow,
+                                              size: 44,
+                                            ),
+                                          ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 72.0),
+                                child: Text(
+                                  formatDuration(
+                                    playbackInfo.state == PlaybackState.playing
+                                        ? playbackInfo.position
+                                        : playbackInfo.duration,
+                                    canBeZero: playbackInfo.state ==
+                                        PlaybackState.playing,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  style: Theming.of(context).text.body.copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w300),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
 class RecordButtonChat extends StatefulWidget {
   final void Function(String path) onSubmit;
   final void Function() onBeginRecording;
@@ -758,11 +1060,13 @@ class RecordButtonChatState extends State<RecordButtonChat> {
 
 class Chip extends StatelessWidget {
   final String label;
+  final double? height;
   final bool selected;
   final VoidCallback? onSelected;
   const Chip({
     Key? key,
     required this.label,
+    this.height,
     required this.selected,
     this.onSelected,
   }) : super(key: key);
@@ -773,8 +1077,7 @@ class Chip extends StatelessWidget {
       onPressed: onSelected,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
         decoration: BoxDecoration(
           color: selected
               ? Colors.white
@@ -786,12 +1089,19 @@ class Chip extends StatelessWidget {
                   color: const Color.fromRGBO(0xB9, 0xB9, 0xB9, 1.0),
                 ),
         ),
-        child: Text(
-          label,
-          style: Theming.of(context).text.body.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.w300,
-              color: selected ? Colors.black : null),
+        child: Padding(
+          // Setting height on container expands the container to max width
+          // this is just a hacky goodenough workaround to set height
+          padding:
+              EdgeInsets.symmetric(vertical: max(0, (height ?? 0) - 38) / 2),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: Theming.of(context).text.body.copyWith(
+                fontSize: 20,
+                fontWeight: FontWeight.w300,
+                color: selected ? Colors.black : null),
+          ),
         ),
       ),
     );
@@ -818,6 +1128,43 @@ class OutlinedArea extends StatelessWidget {
       ),
       child: Center(
         child: child,
+      ),
+    );
+  }
+}
+
+class OvalButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final Widget child;
+  const OvalButton({
+    Key? key,
+    required this.onPressed,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onPressed,
+      child: Container(
+        width: 305,
+        height: 63,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(
+            Radius.circular(58),
+          ),
+        ),
+        child: Center(
+          child: DefaultTextStyle.merge(
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w300,
+              color: Colors.black,
+            ),
+            child: child,
+          ),
+        ),
       ),
     );
   }
@@ -908,11 +1255,15 @@ class _ReportBlockPopupMenuState extends ConsumerState<ReportBlockPopupMenu> {
   }
 }
 
-String formatDuration(Duration d, {bool long = false}) {
+String formatDuration(
+  Duration d, {
+  bool long = false,
+  bool canBeZero = false,
+}) {
   if (long || d.inHours > 1) {
     return '${(d.inHours).toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
   }
-  if (d.inSeconds < 1) {
+  if (!canBeZero && d.inSeconds < 1) {
     return '00:01';
   }
   return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';

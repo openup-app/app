@@ -13,6 +13,7 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/tab_view.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/three_photo_gallery.dart';
+import 'package:openup/widgets/toggle_button.dart';
 
 class ProfilePage extends StatefulWidget {
   final Profile profile;
@@ -120,7 +121,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-class _EditProfileView extends StatelessWidget {
+class _EditProfileView extends StatefulWidget {
   final Profile profile;
   const _EditProfileView({
     Key? key,
@@ -128,32 +129,76 @@ class _EditProfileView extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<_EditProfileView> createState() => _EditProfileViewState();
+}
+
+class _EditProfileViewState extends State<_EditProfileView> {
+  bool _blur = false;
+
+  @override
   Widget build(BuildContext context) {
     return ListView(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16),
-          child: Text(
-            'My Pictures',
-            style: Theming.of(context).text.body.copyWith(fontSize: 24),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16),
-          child: Text(
-            'Add your best three pictures',
-            style: Theming.of(context)
-                .text
-                .body
-                .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
-          ),
+        Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16),
+                  child: Text(
+                    'My Pictures',
+                    style: Theming.of(context).text.body.copyWith(fontSize: 24),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16),
+                  child: Text(
+                    'Add your best three pictures',
+                    style: Theming.of(context)
+                        .text
+                        .body
+                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              'Hide Pictures',
+              style: Theming.of(context)
+                  .text
+                  .body
+                  .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 6.0, right: 16),
+              child: Consumer(
+                builder: (context, ref, _) {
+                  return ToggleButton(
+                    value: _blur,
+                    onChanged: (value) {
+                      setState(() => _blur = value);
+                      updateBlurPhotos(
+                        context: context,
+                        ref: ref,
+                        blur: value,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 6),
         Container(
           height: 298,
           margin: const EdgeInsets.only(left: 16, right: 16),
-          child: const ThreePhotoGallery(),
+          child: ThreePhotoGallery(
+            blur: _blur,
+          ),
         ),
         const SizedBox(height: 29),
         const Padding(

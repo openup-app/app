@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,9 +14,11 @@ import 'package:openup/widgets/theming.dart';
 
 class ThreePhotoGallery extends ConsumerStatefulWidget {
   final bool canDeleteAllPhotos;
+  final bool blur;
   const ThreePhotoGallery({
     super.key,
     this.canDeleteAllPhotos = false,
+    this.blur = false,
   });
 
   @override
@@ -32,6 +36,7 @@ class _ThreePhotoGalleryState extends ConsumerState<ThreePhotoGallery> {
           child: _PhotoOrUploadButton(
             url: gallery.isNotEmpty ? gallery[0] : null,
             label: '1',
+            blur: widget.blur,
             onPressed: () => _onPressed(0),
           ),
         ),
@@ -44,6 +49,7 @@ class _ThreePhotoGalleryState extends ConsumerState<ThreePhotoGallery> {
                 child: _PhotoOrUploadButton(
                   url: gallery.length > 1 ? gallery[1] : null,
                   label: '2',
+                  blur: widget.blur,
                   onPressed: () => _onPressed(1),
                 ),
               ),
@@ -52,6 +58,7 @@ class _ThreePhotoGalleryState extends ConsumerState<ThreePhotoGallery> {
                 child: _PhotoOrUploadButton(
                   url: gallery.length > 2 ? gallery[2] : null,
                   label: '3',
+                  blur: widget.blur,
                   onPressed: () => _onPressed(2),
                 ),
               ),
@@ -64,8 +71,8 @@ class _ThreePhotoGalleryState extends ConsumerState<ThreePhotoGallery> {
 
   void _onPressed(int index) async {
     final gallery = ref.read(userProvider).profile?.gallery ?? [];
-    final showDeleteButton = gallery.length > 1 ||
-        (gallery.length == 1 && widget.canDeleteAllPhotos);
+    final showDeleteButton = (gallery.length > index) ||
+        ((gallery.length == index + 1) && widget.canDeleteAllPhotos);
     final changeOrDelete = await _showChangeOrDeleteDialog(showDeleteButton);
     if (!mounted) {
       return;
@@ -223,11 +230,13 @@ class _ThreePhotoGalleryState extends ConsumerState<ThreePhotoGallery> {
 class _PhotoOrUploadButton extends StatelessWidget {
   final String? url;
   final String label;
+  final bool blur;
   final VoidCallback onPressed;
   const _PhotoOrUploadButton({
     Key? key,
     required this.url,
     required this.label,
+    required this.blur,
     required this.onPressed,
   }) : super(key: key);
 
@@ -244,12 +253,19 @@ class _PhotoOrUploadButton extends StatelessWidget {
               builder: (context) {
                 final photoUrl = url;
                 if (photoUrl != null) {
-                  return Image.network(
-                    photoUrl,
-                    fit: BoxFit.cover,
-                    frameBuilder: fadeInFrameBuilder,
-                    loadingBuilder: circularProgressLoadingBuilder,
-                    errorBuilder: iconErrorBuilder,
+                  return ClipRRect(
+                    clipBehavior: Clip.hardEdge,
+                    child: ImageFiltered(
+                      enabled: blur,
+                      imageFilter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                      child: Image.network(
+                        photoUrl,
+                        fit: BoxFit.cover,
+                        frameBuilder: fadeInFrameBuilder,
+                        loadingBuilder: circularProgressLoadingBuilder,
+                        errorBuilder: iconErrorBuilder,
+                      ),
+                    ),
                   );
                 }
                 return Container(
