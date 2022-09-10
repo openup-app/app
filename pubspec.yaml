@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  flutter_webrtc: ^0.8.7
+  flutter_webrtc: ^0.9.6
   freezed_annotation: ^2.0.3
   socket_io_client: ^2.0.0-beta.4-nullsafety.0
   firebase_core: ^1.10.1
@@ -50,8 +50,8 @@ dependencies:
   url_launcher: ^6.0.20
   list_diff: ^2.0.1
   tuple: ^2.0.0
-  # flutter_voip_push_notification:
-  #   git: git@github.com:openup-app/flutter_voip_push_notification.git
+  flutter_voip_push_notification:
+    git: git@github.com:openup-app/flutter_voip_push_notification.git
   flutter_callkit_voximplant:
     git: git@github.com:openup-app/flutter_callkit.git
   location: ^4.4.0
