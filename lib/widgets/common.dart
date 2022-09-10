@@ -292,6 +292,91 @@ class ProfileImage extends StatelessWidget {
   }
 }
 
+class _RecordingIndicator extends StatelessWidget {
+  final _colors = const [
+    Color.fromARGB(255, 202, 0, 0),
+    Color.fromARGB(255, 255, 52, 37),
+    Color.fromARGB(255, 249, 99, 24),
+    Color.fromARGB(255, 255, 200, 0),
+    Color.fromARGB(255, 252, 241, 113),
+    Color.fromARGB(255, 255, 244, 28),
+    Color.fromARGB(255, 255, 204, 0),
+    Color.fromARGB(255, 249, 99, 24),
+    Color.fromARGB(255, 255, 52, 37),
+    Color.fromARGB(255, 202, 0, 0),
+  ];
+  final _durations = const [780, 450, 600, 500, 685, 850, 725, 675, 625, 825];
+
+  @override
+  Widget build(BuildContext context) {
+    const length = 10;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        for (var i = 0; i < length; i++)
+          _RecordingIndicatorBar(
+            duration: Duration(milliseconds: _durations[i % length]),
+            color: _colors[i % length],
+          ),
+      ],
+    );
+  }
+}
+
+class _RecordingIndicatorBar extends StatefulWidget {
+  final Duration duration;
+  final Color color;
+
+  const _RecordingIndicatorBar({
+    Key? key,
+    required this.duration,
+    required this.color,
+  }) : super(key: key);
+
+  @override
+  _RecordingIndicatorBarState createState() => _RecordingIndicatorBarState();
+}
+
+class _RecordingIndicatorBarState extends State<_RecordingIndicatorBar>
+    with SingleTickerProviderStateMixin {
+  late final Animation<double> _animation;
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: widget.duration,
+      vsync: this,
+    );
+    final curvedAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutExpo,
+    );
+    _animation = Tween<double>(begin: 0, end: 100).animate(curvedAnimation);
+    _animation.addListener(() => setState(() {}));
+    _controller.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 4,
+      decoration: BoxDecoration(
+        color: widget.color,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      height: _animation.value,
+    );
+  }
+}
+
 class RecordButton extends StatefulWidget {
   final String label;
   final String submitLabel;
@@ -318,6 +403,7 @@ class RecordButtonState extends State<RecordButton> {
   late final AudioBioController _inviteRecorder;
   final _invitePlayer = JustAudioAudioPlayer();
   String? _audioPath;
+  DateTime _recordingStart = DateTime.now();
 
   @override
   void initState() {
@@ -374,12 +460,16 @@ class RecordButtonState extends State<RecordButton> {
                     ),
                   ),
                   child: Center(
-                    child: Text(
-                      'Your invitation has been sent today!',
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontSize: 18, fontWeight: FontWeight.w400),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.send),
+                        const SizedBox(width: 16),
+                        Text(
+                          'Your invitation has been sent!',
+                          style: Theming.of(context).text.body.copyWith(
+                              fontSize: 18, fontWeight: FontWeight.w400),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -389,6 +479,7 @@ class RecordButtonState extends State<RecordButton> {
                 return Button(
                   onPressed: () {
                     widget.onBeginRecording();
+                    setState(() => _recordingStart = DateTime.now());
                     _inviteRecorder.startRecording();
                   },
                   child: DecoratedBox(
@@ -407,29 +498,20 @@ class RecordButtonState extends State<RecordButton> {
                       ),
                     ),
                     child: Center(
-                      child: Row(
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.white),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
+                          const SizedBox(height: 3),
+                          SizedBox(
+                            width: 80,
+                            height: 40,
+                            child: _RecordingIndicator(),
                           ),
-                          const SizedBox(width: 14),
                           Text(
                             widget.label,
                             style: Theming.of(context).text.body.copyWith(
-                                fontSize: 20, fontWeight: FontWeight.w300),
+                                fontSize: 20, fontWeight: FontWeight.w400),
                           ),
                         ],
                       ),
@@ -442,25 +524,47 @@ class RecordButtonState extends State<RecordButton> {
                 return Button(
                   onPressed: _inviteRecorder.stopRecording,
                   child: DecoratedBox(
-                    decoration: const BoxDecoration(
-                      color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                      borderRadius: BorderRadius.all(
+                    decoration: BoxDecoration(
+                      gradient: recordInfo.recording
+                          ? const LinearGradient(
+                              colors: [
+                                Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                Color.fromRGBO(0xCD, 0x00, 0x00, 1.0),
+                              ],
+                            )
+                          : null,
+                      borderRadius: const BorderRadius.all(
                         Radius.circular(40),
                       ),
                     ),
                     child: Center(
-                      child: Column(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
                             Icons.stop,
                             size: 30,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 20),
                           Text(
-                            'recording',
+                            'recording message',
                             style: Theming.of(context).text.body.copyWith(
                                 fontSize: 20, fontWeight: FontWeight.w300),
+                          ),
+                          const SizedBox(width: 20),
+                          Builder(
+                            builder: (context) {
+                              final time =
+                                  DateTime.now().difference(_recordingStart);
+                              return Text(
+                                formatDuration(
+                                  time,
+                                  canBeZero: true,
+                                ),
+                                style: Theming.of(context).text.body.copyWith(
+                                    fontSize: 20, fontWeight: FontWeight.w300),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -470,50 +574,19 @@ class RecordButtonState extends State<RecordButton> {
               }
 
               return DecoratedBox(
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(0x32, 0x32, 0x32, 0.5),
-                  borderRadius: BorderRadius.all(
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  border: Border.all(
+                    color: const Color.fromRGBO(0xA9, 0xA9, 0xA9, 1.0),
+                  ),
+                  borderRadius: const BorderRadius.all(
                     Radius.circular(40),
                   ),
                 ),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    const SizedBox(width: 20),
-                    StreamBuilder<PlaybackInfo>(
-                        stream: _invitePlayer.playbackInfoStream,
-                        initialData: const PlaybackInfo(),
-                        builder: (context, snapshot) {
-                          final playbackInfo = snapshot.requireData;
-                          return Button(
-                            onPressed: widget.submitting
-                                ? null
-                                : () async {
-                                    if (playbackInfo.state ==
-                                        PlaybackState.playing) {
-                                      _invitePlayer.stop();
-                                    } else {
-                                      _invitePlayer.play();
-                                    }
-                                  },
-                            child: SizedBox(
-                              width: 41,
-                              height: 41,
-                              child: playbackInfo.state == PlaybackState.playing
-                                  ? const Center(
-                                      child: Icon(
-                                        Icons.stop,
-                                        size: 34,
-                                      ),
-                                    )
-                                  : const Center(
-                                      child: Icon(
-                                        Icons.play_arrow,
-                                        size: 34,
-                                      ),
-                                    ),
-                            ),
-                          );
-                        }),
+                    const SizedBox(width: 16),
                     Button(
                       onPressed: widget.submitting
                           ? null
@@ -526,44 +599,85 @@ class RecordButtonState extends State<RecordButton> {
                         child: Icon(
                           Icons.delete,
                           size: 34,
-                          color: Colors.red,
+                          color: Color.fromRGBO(0xFF, 0x21, 0x21, 1.0),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      widget.submitLabel,
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
-                    ),
-                    const Spacer(),
-                    Button(
-                      onPressed: widget.submitting
-                          ? null
-                          : () => widget.onSubmit(_audioPath!),
-                      child: widget.submitting
-                          ? const CircularProgressIndicator()
-                          : Container(
-                              padding: const EdgeInsets.all(8.0),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(
-                                    color: const Color.fromRGBO(
-                                        0x82, 0x82, 0x82, 1.0)),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.arrow_upward,
-                                  size: 20,
-                                  color: Colors.black,
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Button(
+                          onPressed: widget.submitting
+                              ? null
+                              : () => widget.onSubmit(_audioPath!),
+                          child: widget.submitting
+                              ? const CircularProgressIndicator()
+                              : Container(
+                                  padding: const EdgeInsets.all(4.0),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(
+                                        color: const Color.fromRGBO(
+                                            0x82, 0x82, 0x82, 1.0)),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.arrow_upward_rounded,
+                                      size: 28,
+                                      color: Colors.black,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.submitLabel,
+                          style: Theming.of(context).text.body.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                              color:
+                                  const Color.fromRGBO(0x70, 0x70, 0x70, 1.0)),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 24),
+                    StreamBuilder<PlaybackInfo>(
+                      stream: _invitePlayer.playbackInfoStream,
+                      initialData: const PlaybackInfo(),
+                      builder: (context, snapshot) {
+                        final playbackInfo = snapshot.requireData;
+                        return Button(
+                          onPressed: widget.submitting
+                              ? null
+                              : () async {
+                                  if (playbackInfo.state ==
+                                      PlaybackState.playing) {
+                                    _invitePlayer.stop();
+                                  } else {
+                                    _invitePlayer.play();
+                                  }
+                                },
+                          child: SizedBox(
+                            width: 41,
+                            height: 41,
+                            child: playbackInfo.state == PlaybackState.playing
+                                ? const Center(
+                                    child: Icon(
+                                      Icons.stop,
+                                      size: 34,
+                                    ),
+                                  )
+                                : const Center(
+                                    child: Icon(
+                                      Icons.play_arrow,
+                                      size: 34,
+                                    ),
+                                  ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 16),
                   ],
                 ),
               );
@@ -1202,6 +1316,19 @@ class OvalButton extends StatelessWidget {
   }
 }
 
+class OnlineIndicator extends StatelessWidget {
+  const OnlineIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Icon(
+      Icons.circle,
+      color: Color.fromRGBO(0x01, 0xA5, 0x43, 1.0),
+      size: 16,
+    );
+  }
+}
+
 class ReportBlockPopupMenu extends ConsumerStatefulWidget {
   final String uid;
   final String name;
@@ -1224,6 +1351,7 @@ class _ReportBlockPopupMenuState extends ConsumerState<ReportBlockPopupMenu> {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton(
+      padding: EdgeInsets.zero,
       icon: const IconWithShadow(Icons.more_horiz, size: 32),
       onSelected: (value) {
         if (value == 'block') {

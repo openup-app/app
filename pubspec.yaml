@@ -85,6 +85,7 @@ flutter:
     - assets/images/onboard_discover.jpg
     - assets/images/onboard_chat.jpg
     - assets/images/onboard_countdown.jpg
+    - assets/images/earth.svg
     - assets/videos/welcome.mp4
 
   fonts:

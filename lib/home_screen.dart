@@ -55,9 +55,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     // BottomNavigationBar height is available to pages via MediaQuery bottom padding
-    final topInstrinsicHeight = 72 + MediaQuery.of(context).padding.top;
-    final bottomInstrinsicHeight = 72 + MediaQuery.of(context).padding.bottom;
-    final obscuredHeight = max(topInstrinsicHeight, bottomInstrinsicHeight);
+    const obscuredHeight = 100.0;
 
     return WillPopScope(
       onWillPop: () {

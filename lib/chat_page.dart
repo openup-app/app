@@ -503,19 +503,18 @@ class _ChatProfilePage extends StatelessWidget {
                     // );
                     Navigator.of(context).pushNamed('call');
                   },
-                  // child: Container(
-                  //   width: 64,
-                  //   height: 46,
-                  //   decoration: const BoxDecoration(
-                  //     color: Color.fromRGBO(0x16, 0x16, 0x16, 1.0),
-                  //     borderRadius: BorderRadius.all(Radius.circular(9)),
-                  //   ),
-                  //   child: const Icon(
-                  //     Icons.call,
-                  //     color: Colors.white,
-                  //   ),
-                  // ),
-                  child: FlutterLogo(),
+                  child: Container(
+                    width: 64,
+                    height: 46,
+                    decoration: const BoxDecoration(
+                      color: Color.fromRGBO(0x16, 0x16, 0x16, 1.0),
+                      borderRadius: BorderRadius.all(Radius.circular(9)),
+                    ),
+                    child: const Icon(
+                      Icons.call,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Button(

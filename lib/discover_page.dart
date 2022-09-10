@@ -3,6 +3,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -15,6 +16,7 @@ import 'package:openup/report_screen.dart';
 import 'package:openup/share_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/theming.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
@@ -193,82 +195,81 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
             }
           });
         }
-        if (_pageController == null) {
-          return const SizedBox.shrink();
-        }
 
         return Stack(
           children: [
-            Positioned.fill(
-              child: RefreshIndicator(
-                edgeOffset: MediaQuery.of(context).padding.top + 50,
-                onRefresh: () {
-                  setState(() {
-                    _discoverOperation?.cancel();
-                    _profiles.clear();
-                    _nextMinRadius = 0;
-                    _nextPage = 0;
-                  });
-                  if (_showingFavorites) {
-                    return _fetchFavorites();
-                  } else {
-                    return _fetchStatuses();
-                  }
-                },
-                child: PageView.builder(
-                  controller: _pageController,
-                  scrollDirection: Axis.vertical,
-                  itemCount: _profiles.length,
-                  itemBuilder: (context, index) {
-                    final profileWithOnline = _profiles[index];
-                    final profile = profileWithOnline.profile;
-                    return FractionallySizedBox(
-                      heightFactor: 1 / paddingRatio,
-                      child: _UserProfileDisplay(
-                        profile: profile,
-                        play: _currentProfileIndex == index,
-                        online: profileWithOnline.online,
-                        invited: _invitedUsers.contains(profile.uid),
-                        favourite: profileWithOnline.favorite,
-                        onInvite: () =>
-                            setState(() => _invitedUsers.add(profile.uid)),
-                        onFavorite: (favorite) async {
-                          if (_showingFavorites && !favorite) {
-                            setState(() => _profiles.removeAt(index));
-                          }
-                          final uid = ref.read(userProvider).uid;
-                          final api = GetIt.instance.get<Api>();
-                          final result = favorite
-                              ? await api.addFavorite(uid, profile.uid)
-                              : await api.removeFavorite(uid, profile.uid);
-                          if (!mounted) {
-                            return;
-                          }
-                          result.fold(
-                            (l) {},
-                            (r) {
-                              setState(() {
-                                _profiles[index] = _profiles[index]
-                                    .copyWith(favorite: favorite);
-                              });
-                            },
-                          );
-                        },
-                        onBlock: () => setState(() => _profiles.removeWhere(
-                            ((p) => p.profile.uid == profile.uid))),
-                        onReport: () {
-                          Navigator.of(context).pushNamed(
-                            'call-report',
-                            arguments: ReportScreenArguments(uid: profile.uid),
-                          );
-                        },
-                        onBeginRecording: () {},
-                      ),
-                    );
+            if (_pageController != null)
+              Positioned.fill(
+                child: RefreshIndicator(
+                  edgeOffset: MediaQuery.of(context).padding.top + 50,
+                  onRefresh: () {
+                    setState(() {
+                      _discoverOperation?.cancel();
+                      _profiles.clear();
+                      _nextMinRadius = 0;
+                      _nextPage = 0;
+                    });
+                    if (_showingFavorites) {
+                      return _fetchFavorites();
+                    } else {
+                      return _fetchStatuses();
+                    }
                   },
+                  child: PageView.builder(
+                    controller: _pageController,
+                    scrollDirection: Axis.vertical,
+                    itemCount: _profiles.length,
+                    itemBuilder: (context, index) {
+                      final profileWithOnline = _profiles[index];
+                      final profile = profileWithOnline.profile;
+                      return FractionallySizedBox(
+                        heightFactor: 1 / paddingRatio,
+                        child: _UserProfileDisplay(
+                          profile: profile,
+                          play: _currentProfileIndex == index,
+                          online: profileWithOnline.online,
+                          invited: _invitedUsers.contains(profile.uid),
+                          favourite: profileWithOnline.favorite,
+                          onInvite: () =>
+                              setState(() => _invitedUsers.add(profile.uid)),
+                          onFavorite: (favorite) async {
+                            if (_showingFavorites && !favorite) {
+                              setState(() => _profiles.removeAt(index));
+                            }
+                            final uid = ref.read(userProvider).uid;
+                            final api = GetIt.instance.get<Api>();
+                            final result = favorite
+                                ? await api.addFavorite(uid, profile.uid)
+                                : await api.removeFavorite(uid, profile.uid);
+                            if (!mounted) {
+                              return;
+                            }
+                            result.fold(
+                              (l) {},
+                              (r) {
+                                setState(() {
+                                  _profiles[index] = _profiles[index]
+                                      .copyWith(favorite: favorite);
+                                });
+                              },
+                            );
+                          },
+                          onBlock: () => setState(() => _profiles.removeWhere(
+                              ((p) => p.profile.uid == profile.uid))),
+                          onReport: () {
+                            Navigator.of(context).pushNamed(
+                              'call-report',
+                              arguments:
+                                  ReportScreenArguments(uid: profile.uid),
+                            );
+                          },
+                          onBeginRecording: () {},
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
             if (_profiles.isEmpty && !_loading)
               Center(
                 child: Column(
@@ -311,18 +312,29 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
               height: obscuredHeight,
               child: Stack(
                 children: [
-                  const BlurredSurface(
-                    child: SizedBox.expand(),
-                  ),
-                  Padding(
+                  Container(
                     padding: EdgeInsets.only(
                         top: MediaQuery.of(context).padding.top),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: [
+                          0.6,
+                          1.0,
+                        ],
+                        colors: [
+                          Colors.black,
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
                     child: Column(
                       children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
-                            'Discover new people',
+                            'Discover New Friends',
                             style: Theming.of(context).text.body,
                           ),
                         ),
@@ -438,6 +450,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
   late bool _localFavorite;
 
   final _player = JustAudioAudioPlayer();
+  bool _audioPaused = false;
 
   @override
   void initState() {
@@ -451,6 +464,14 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
       _player.play(loop: true);
     }
     _localFavorite = widget.favourite;
+    _player.playbackInfoStream.listen((playbackInfo) {
+      final isPaused = playbackInfo.state == PlaybackState.idle;
+      if (!_audioPaused && isPaused) {
+        setState(() => _audioPaused = true);
+      } else if (_audioPaused && !isPaused) {
+        setState(() => _audioPaused = false);
+      }
+    });
   }
 
   @override
@@ -479,208 +500,226 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
     if (ModalRoute.of(context)?.isCurrent == false) {
       _player.stop();
     }
-    return Stack(
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          clipBehavior: Clip.hardEdge,
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-          ),
-          foregroundDecoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.transparent,
-                Colors.black,
-              ],
-              stops: [
-                0.2,
-                0.7,
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-          child: Stack(
-            fit: StackFit.expand,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 80),
-                child: Gallery(
-                  slideshow: widget.play,
-                  gallery: widget.profile.gallery,
-                  withWideBlur: false,
-                  blurPhotos: widget.profile.blurPhotos,
-                ),
-              ),
-              Positioned(
-                right: 16,
-                top: 16,
+              Expanded(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (widget.online)
-                      const Icon(
-                        Icons.circle,
-                        color: Colors.green,
-                      ),
-                    const SizedBox(height: 24),
-                    Button(
-                      onPressed: () {
-                        setState(() {
-                          _localFavorite = !widget.favourite;
-                        });
-                        widget.onFavorite(!widget.favourite);
-                      },
-                      child: Icon(
-                        _localFavorite
-                            ? Icons.bookmark
-                            : Icons.bookmark_outline,
-                        color: Colors.white,
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Button(
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          backgroundColor: Colors.transparent,
-                          isScrollControlled: true,
-                          builder: (context) {
-                            return Theming(
-                              child: SharePage(
-                                profile: widget.profile,
-                                location: widget.profile.location,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      child: const Icon(
-                        Icons.reply,
-                        color: Colors.white,
-                        size: 32,
-                        textDirection: TextDirection.rtl,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        Positioned(
-          left: 16,
-          right: 16,
-          bottom: 0,
-          height: 180,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (widget.play)
-                StreamBuilder<PlaybackInfo>(
-                  stream: _player.playbackInfoStream,
-                  initialData: const PlaybackInfo(),
-                  builder: (context, snapshot) {
-                    final value = snapshot.requireData;
-                    final position = value.position.inMilliseconds;
-                    final duration = value.duration.inMilliseconds;
-                    final ratio = duration == 0 ? 0.0 : position / duration;
-                    return FractionallySizedBox(
-                      widthFactor: ratio < 0 ? 0 : ratio,
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        height: 13,
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(3)),
-                          color: Color.fromRGBO(0xD9, 0xD9, 0xD9, 1.0),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
                         AutoSizeText(
                           widget.profile.name,
                           maxFontSize: 26,
-                          style: Theming.of(context).text.body,
+                          style: Theming.of(context).text.body.copyWith(
+                              fontSize: 20, fontWeight: FontWeight.w300),
                         ),
+                        if (widget.online)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 6.0, bottom: 2),
+                            child: OnlineIndicator(),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        SvgPicture.asset(
+                          'assets/images/earth.svg',
+                          width: 16,
+                          height: 16,
+                        ),
+                        const SizedBox(width: 6),
                         Text(
                           widget.profile.location,
                           style: Theming.of(context).text.body.copyWith(
                               fontSize: 16, fontWeight: FontWeight.w300),
-                        )
+                        ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  SizedBox(
+                    height: 24,
+                    child: ReportBlockPopupMenu(
+                      uid: widget.profile.uid,
+                      name: widget.profile.name,
+                      onBlock: widget.onBlock,
+                      onReport: widget.onReport,
+                    ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      ReportBlockPopupMenu(
-                        uid: widget.profile.uid,
-                        name: widget.profile.name,
-                        onBlock: widget.onBlock,
-                        onReport: widget.onReport,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: Text(
-                          topicLabel(widget.profile.topic),
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 20, fontWeight: FontWeight.w400),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Text(
+                      topicLabel(widget.profile.topic),
+                      style: Theming.of(context)
+                          .text
+                          .body
+                          .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Consumer(
-                builder: (context, ref, _) {
-                  return RecordButton(
-                    label: 'Invite to voice chat',
-                    submitLabel: 'Send invitation',
-                    submitting: _uploading,
-                    submitted: widget.invited,
-                    onSubmit: (path) async {
-                      setState(() => _uploading = true);
-                      final uid = ref.read(userProvider).uid;
-                      final api = GetIt.instance.get<Api>();
-                      final result = await api.sendMessage2(
-                        uid,
-                        widget.profile.uid,
-                        ChatType2.audio,
-                        path,
-                      );
-                      if (mounted) {
-                        setState(() => _uploading = false);
-                        result.fold(
-                          (l) => displayError(context, l),
-                          (r) => widget.onInvite(),
-                        );
-                      }
-                    },
-                    onBeginRecording: () {
-                      _player.stop();
-                      widget.onBeginRecording();
-                    },
+            ],
+          ),
+          const SizedBox(height: 4),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (_audioPaused) {
+                  _player.play(loop: true);
+                } else {
+                  _player.pause();
+                }
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                clipBehavior: Clip.hardEdge,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(24)),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Gallery(
+                      slideshow: widget.play && !_audioPaused,
+                      gallery: widget.profile.gallery,
+                      withWideBlur: false,
+                      blurPhotos: widget.profile.blurPhotos,
+                    ),
+                    Positioned(
+                      right: 16,
+                      top: 16,
+                      child: Column(
+                        children: [
+                          Button(
+                            onPressed: () {
+                              setState(() {
+                                _localFavorite = !widget.favourite;
+                              });
+                              widget.onFavorite(!widget.favourite);
+                            },
+                            child: IconWithShadow(
+                              _localFavorite
+                                  ? Icons.bookmark
+                                  : Icons.bookmark_outline,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          Button(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                backgroundColor: Colors.transparent,
+                                isScrollControlled: true,
+                                builder: (context) {
+                                  return Theming(
+                                    child: SharePage(
+                                      profile: widget.profile,
+                                      location: widget.profile.location,
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                            child: const IconWithShadow(
+                              Icons.reply,
+                              color: Colors.white,
+                              size: 32,
+                              textDirection: TextDirection.rtl,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_audioPaused)
+                      const Center(
+                        child: IgnorePointer(
+                          child: IconWithShadow(
+                            Icons.play_arrow,
+                            size: 80,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (widget.play)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: StreamBuilder<PlaybackInfo>(
+                stream: _player.playbackInfoStream,
+                initialData: const PlaybackInfo(),
+                builder: (context, snapshot) {
+                  final value = snapshot.requireData;
+                  final position = value.position.inMilliseconds;
+                  final duration = value.duration.inMilliseconds;
+                  final ratio = duration == 0 ? 0.0 : position / duration;
+                  return FractionallySizedBox(
+                    widthFactor: ratio < 0 ? 0 : ratio,
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      height: 13,
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(3)),
+                        color: Color.fromRGBO(0xD9, 0xD9, 0xD9, 1.0),
+                      ),
+                    ),
                   );
                 },
               ),
-            ],
+            ),
+          const SizedBox(height: 16),
+          Consumer(
+            builder: (context, ref, _) {
+              return RecordButton(
+                label: 'Invite to voice chat',
+                submitLabel: 'Send invitation',
+                submitting: _uploading,
+                submitted: widget.invited,
+                onSubmit: (path) async {
+                  setState(() => _uploading = true);
+                  final uid = ref.read(userProvider).uid;
+                  final api = GetIt.instance.get<Api>();
+                  final result = await api.sendMessage2(
+                    uid,
+                    widget.profile.uid,
+                    ChatType2.audio,
+                    path,
+                  );
+                  if (mounted) {
+                    setState(() => _uploading = false);
+                    result.fold(
+                      (l) => displayError(context, l),
+                      (r) => widget.onInvite(),
+                    );
+                  }
+                },
+                onBeginRecording: () {
+                  _player.stop();
+                  widget.onBeginRecording();
+                },
+              );
+            },
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+        ],
+      ),
     );
   }
 }
