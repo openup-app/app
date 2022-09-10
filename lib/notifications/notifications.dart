@@ -177,6 +177,7 @@ void _onForegroundNotification(
         uid: call.callerUid,
         name: call.name,
         photo: call.photo,
+        blurPhotos: call.blurPhotos,
       );
       if (Platform.isAndroid) {
         android_voip.displayIncomingCall(
@@ -237,6 +238,7 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
         uid: call.callerUid,
         name: call.name,
         photo: call.photo,
+        blurPhotos: call.blurPhotos,
       );
       if (Platform.isAndroid) {
         android_voip.displayIncomingCall(
@@ -270,6 +272,9 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
     final callerUid = message.data['callerUid'];
     final callerName = message.data['callerName'];
     final callerPhoto = message.data['callerPhoto'];
+    final callerBlurPhotos =
+        message.data['callerBlurPhotos']?.toLowerCase() == 'true';
+
     final rid = message.data['rid'];
     notificationTitle = 'Incoming audio call from $callerName';
     notificationBody = callerName;
@@ -279,6 +284,7 @@ Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
       callerUid: callerUid,
       name: callerName,
       photo: callerPhoto,
+      blurPhotos: callerBlurPhotos,
       rid: rid,
     );
   } else if (type == 'call_ended') {
@@ -406,6 +412,7 @@ class _NotificationPayload with _$_NotificationPayload {
     required String name,
     required String photo,
     required String rid,
+    required bool blurPhotos,
   }) = _CallPayload;
 
   const factory _NotificationPayload.callEnded({

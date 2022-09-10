@@ -33,13 +33,15 @@ void initAndroidVoipHandlers() {
         final rid = event.sessionId;
         final uid = event.userInfo?['uid'];
         final photo = event.userInfo?['photo'];
+        final blurPhotos =
+            event.userInfo?['blurPhotos']?.toLowerCase() == 'true';
 
         if (myUid != null && uid != null && photo != null) {
           final profile = SimpleProfile(
-            uid: uid,
-            name: event.callerName,
-            photo: photo,
-          );
+              uid: uid,
+              name: event.callerName,
+              photo: photo,
+              blurPhotos: blurPhotos);
           final activeCall = createActiveCall(myUid, rid, profile, false);
           activeCall.phone.join();
           GetIt.instance.get<CallManager>().activeCall = activeCall;
@@ -93,6 +95,7 @@ Future<void> _onCallAcceptedWhenTerminated(CallEvent callEvent) async {
   final uid = callEvent.userInfo?['uid'];
   final photo = callEvent.userInfo?['photo'];
   final video = callEvent.callType == 1;
+  final blurPhotos = callEvent.userInfo?['blurPhotos']?.toLowerCase() == 'true';
   if (uid != null && photo != null) {
     final backgroundCallNotification = BackgroundCallNotification(
       rid: callEvent.sessionId,
@@ -100,6 +103,7 @@ Future<void> _onCallAcceptedWhenTerminated(CallEvent callEvent) async {
         uid: uid,
         name: callEvent.callerName,
         photo: photo,
+        blurPhotos: blurPhotos,
       ),
       video: video,
     );

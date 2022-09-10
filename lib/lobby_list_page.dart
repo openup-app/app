@@ -1292,6 +1292,7 @@ Future<void> _displayCallProfile(
         gallery: participant.gallery,
         location: "",
         topic: Topic.talk,
+        blurPhotos: false,
       ),
       Status(
         topic: topic,
@@ -1462,6 +1463,7 @@ class _MultipleTopicListState extends State<_MultipleTopicList> {
                                       uid: participant.uid,
                                       name: participant.name,
                                       photo: participant.photo,
+                                      blurPhotos: false,
                                     ),
                                   );
                                 }
@@ -1637,6 +1639,7 @@ class _SingleTopicListState extends State<_SingleTopicList> {
                               uid: participant.uid,
                               name: participant.name,
                               photo: participant.photo,
+                              blurPhotos: false,
                             ),
                           );
                         }
@@ -1864,6 +1867,7 @@ class CallProfileScreen extends StatelessWidget {
                   slideshow: true,
                   gallery: profile.gallery,
                   withWideBlur: false,
+                  blurPhotos: false,
                 ),
               ),
             ),
@@ -1980,6 +1984,7 @@ class _ParticipantTile extends StatelessWidget {
                 gallery: participant.gallery,
                 slideshow: true,
                 withWideBlur: false,
+                blurPhotos: false,
               ),
             ),
           ),

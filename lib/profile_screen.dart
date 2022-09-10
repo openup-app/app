@@ -9,6 +9,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/profile_bio.dart';
 import 'package:openup/widgets/image_builder.dart';
@@ -57,6 +58,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Gallery(
                 gallery: profile.gallery,
                 slideshow: !widget.editable,
+                blurPhotos: profile.blurPhotos,
               ),
             ),
             if (widget.editable)
@@ -206,11 +208,13 @@ class Gallery extends StatefulWidget {
   final List<String> gallery;
   final bool slideshow;
   final bool withWideBlur;
+  final bool blurPhotos;
   const Gallery({
     Key? key,
     this.gallery = const [],
     required this.slideshow,
     this.withWideBlur = true,
+    required this.blurPhotos,
   }) : super(key: key);
 
   @override
@@ -303,31 +307,23 @@ class _GalleryState extends State<Gallery> {
                           sigmaX: 16,
                           sigmaY: 16,
                         ),
-                        child: Image.network(
+                        child: ProfileImage(
                           widget.gallery[i],
-                          fit: BoxFit.cover,
-                          frameBuilder: fadeInFrameBuilder,
-                          loadingBuilder: circularProgressLoadingBuilder,
-                          errorBuilder: iconErrorBuilder,
+                          blur: widget.blurPhotos,
                         ),
                       ),
                     ),
-                    Image.network(
+                    ProfileImage(
                       widget.gallery[i],
                       fit: BoxFit.contain,
-                      frameBuilder: fadeInFrameBuilder,
-                      loadingBuilder: circularProgressLoadingBuilder,
-                      errorBuilder: iconErrorBuilder,
+                      blur: widget.blurPhotos,
                     ),
                   ],
                 );
               } else {
-                return Image.network(
+                return ProfileImage(
                   widget.gallery[i],
-                  fit: BoxFit.cover,
-                  frameBuilder: fadeInFrameBuilder,
-                  loadingBuilder: circularProgressLoadingBuilder,
-                  errorBuilder: iconErrorBuilder,
+                  blur: widget.blurPhotos,
                 );
               }
             },

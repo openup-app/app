@@ -121,7 +121,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-class _EditProfileView extends StatefulWidget {
+class _EditProfileView extends ConsumerStatefulWidget {
   final Profile profile;
   const _EditProfileView({
     Key? key,
@@ -129,11 +129,17 @@ class _EditProfileView extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<_EditProfileView> createState() => _EditProfileViewState();
+  ConsumerState<_EditProfileView> createState() => _EditProfileViewState();
 }
 
-class _EditProfileViewState extends State<_EditProfileView> {
+class _EditProfileViewState extends ConsumerState<_EditProfileView> {
   bool _blur = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _blur = ref.read(userProvider).profile?.blurPhotos ?? false;
+  }
 
   @override
   Widget build(BuildContext context) {

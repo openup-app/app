@@ -211,6 +211,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                             photoUrl: fromMe
                                                 ? _myAvatar ?? ''
                                                 : _profile?.photo ?? '',
+                                            blurPhotos: false,
                                             date: _buildDateText(message.date),
                                             fromMe: fromMe,
                                           );
@@ -400,11 +401,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                       if (mounted) {
                         callSystemKey.currentState?.call(
                           context,
-                          SimpleProfile(
-                            uid: widget.uid,
-                            name: _profile!.name,
-                            photo: _profile!.photo,
-                          ),
+                          _profile!.toSimpleProfile(),
                         );
                       }
                     },

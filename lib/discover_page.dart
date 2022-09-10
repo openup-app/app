@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:async/async.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dartz/dartz.dart' show Either;
@@ -195,43 +193,28 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
             }
           });
         }
+        if (_pageController == null) {
+          return const SizedBox.shrink();
+        }
+
         return Stack(
           children: [
-            if (_loading && _profiles.isEmpty)
-              const Center(
-                child: CircularProgressIndicator(),
-              ),
-            if (!_loading && _profiles.isEmpty)
-              Positioned(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          _selectedTopic == null
-                              ? 'Could\'t find any profiles'
-                              : 'Could\'t find any "${topicLabel(_selectedTopic!)}" profiles',
-                          style: Theming.of(context).text.body,
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _nextMinRadius = 0;
-                            _nextPage = 0;
-                          });
-                          _fetchStatuses();
-                        },
-                        child: const Text('Refresh'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            if (_profiles.isNotEmpty && _pageController != null)
-              Positioned.fill(
+            Positioned.fill(
+              child: RefreshIndicator(
+                edgeOffset: MediaQuery.of(context).padding.top + 50,
+                onRefresh: () {
+                  setState(() {
+                    _discoverOperation?.cancel();
+                    _profiles.clear();
+                    _nextMinRadius = 0;
+                    _nextPage = 0;
+                  });
+                  if (_showingFavorites) {
+                    return _fetchFavorites();
+                  } else {
+                    return _fetchStatuses();
+                  }
+                },
                 child: PageView.builder(
                   controller: _pageController,
                   scrollDirection: Axis.vertical,
@@ -284,6 +267,42 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     );
                   },
                 ),
+              ),
+            ),
+            if (_profiles.isEmpty && !_loading)
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        _selectedTopic == null
+                            ? 'Could\'t find any profiles'
+                            : 'Could\'t find any "${topicLabel(_selectedTopic!)}" profiles',
+                        style: Theming.of(context).text.body,
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _nextMinRadius = 0;
+                          _nextPage = 0;
+                        });
+                        if (_showingFavorites) {
+                          _fetchFavorites();
+                        } else {
+                          _fetchStatuses();
+                        }
+                      },
+                      child: const Text('Refresh'),
+                    ),
+                  ],
+                ),
+              )
+            else if (_profiles.isEmpty)
+              const Center(
+                child: CircularProgressIndicator(),
               ),
             Positioned(
               left: 0,
@@ -494,6 +513,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                   slideshow: widget.play,
                   gallery: widget.profile.gallery,
                   withWideBlur: false,
+                  blurPhotos: widget.profile.blurPhotos,
                 ),
               ),
               Positioned(
@@ -663,164 +683,4 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
       ],
     );
   }
-}
-
-/// From nxcco and yunyu's SnappingListScrollPhysics: https://gist.github.com/nxcco/98fca4a7dbdecf2f423013cf55230dba
-class _SnappingListView extends StatefulWidget {
-  final Axis scrollDirection;
-  final ScrollController? controller;
-
-  final IndexedWidgetBuilder? itemBuilder;
-  final List<Widget>? children;
-  final int? itemCount;
-
-  final double itemExtent;
-  final ValueChanged<int>? onItemChanged;
-
-  final EdgeInsets padding;
-
-  const _SnappingListView({
-    Key? key,
-    this.scrollDirection = Axis.vertical,
-    this.controller,
-    required this.children,
-    required this.itemExtent,
-    required this.onItemChanged,
-    this.padding = const EdgeInsets.all(0.0),
-  })  : assert(itemExtent > 0),
-        itemCount = null,
-        itemBuilder = null,
-        super(key: key);
-
-  const _SnappingListView.builder({
-    Key? key,
-    this.scrollDirection = Axis.vertical,
-    this.controller,
-    required this.itemBuilder,
-    this.itemCount,
-    required this.itemExtent,
-    this.onItemChanged,
-    this.padding = const EdgeInsets.all(0.0),
-  })  : assert(itemExtent > 0),
-        children = null,
-        super(key: key);
-
-  @override
-  createState() => _SnappingListViewState();
-}
-
-class _SnappingListViewState extends State<_SnappingListView> {
-  int _lastItem = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final startPadding = widget.scrollDirection == Axis.horizontal
-        ? widget.padding.left
-        : widget.padding.top;
-    final scrollPhysics = _SnappingScrollPhysics(
-        mainAxisStartPadding: startPadding, itemExtent: widget.itemExtent);
-    final listView = widget.children != null
-        ? ListView(
-            scrollDirection: widget.scrollDirection,
-            controller: widget.controller,
-            itemExtent: widget.itemExtent,
-            physics: scrollPhysics,
-            padding: widget.padding,
-            children: widget.children!,
-          )
-        : ListView.builder(
-            scrollDirection: widget.scrollDirection,
-            controller: widget.controller,
-            itemCount: widget.itemCount,
-            itemExtent: widget.itemExtent,
-            physics: scrollPhysics,
-            padding: widget.padding,
-            itemBuilder: widget.itemBuilder!,
-          );
-    return NotificationListener<ScrollNotification>(
-      child: listView,
-      onNotification: (notif) {
-        if (notif.depth == 0 &&
-            widget.onItemChanged != null &&
-            notif is ScrollUpdateNotification) {
-          final currItem =
-              (notif.metrics.pixels - startPadding) ~/ widget.itemExtent;
-          if (currItem != _lastItem) {
-            _lastItem = currItem;
-            widget.onItemChanged!(currItem);
-          }
-        }
-        return false;
-      },
-    );
-  }
-}
-
-class _SnappingScrollPhysics extends ScrollPhysics {
-  final double mainAxisStartPadding;
-  final double itemExtent;
-
-  const _SnappingScrollPhysics({
-    ScrollPhysics? parent,
-    this.mainAxisStartPadding = 0.0,
-    required this.itemExtent,
-  }) : super(parent: parent);
-
-  @override
-  _SnappingScrollPhysics applyTo(ScrollPhysics? ancestor) {
-    return _SnappingScrollPhysics(
-      parent: buildParent(ancestor),
-      mainAxisStartPadding: mainAxisStartPadding,
-      itemExtent: itemExtent,
-    );
-  }
-
-  double _getItem(ScrollMetrics position) {
-    return (position.pixels - mainAxisStartPadding) / itemExtent;
-  }
-
-  double _getPixels(ScrollMetrics position, double item) {
-    return min(item * itemExtent, position.maxScrollExtent);
-  }
-
-  double _getTargetPixels(
-    ScrollMetrics position,
-    Tolerance tolerance,
-    double velocity,
-  ) {
-    double item = _getItem(position);
-    if (velocity < -tolerance.velocity) {
-      item -= 0.5;
-    } else if (velocity > tolerance.velocity) {
-      item += 0.5;
-    }
-    return _getPixels(position, item.roundToDouble());
-  }
-
-  @override
-  Simulation? createBallisticSimulation(
-      ScrollMetrics position, double velocity) {
-    // If we're out of range and not headed back in range, defer to the parent
-    // ballistics, which should put us back in range at a page boundary.
-    if ((velocity <= 0.0 && position.pixels <= position.minScrollExtent) ||
-        (velocity >= 0.0 && position.pixels >= position.maxScrollExtent)) {
-      return super.createBallisticSimulation(position, velocity);
-    }
-
-    final Tolerance tolerance = this.tolerance;
-    final double target = _getTargetPixels(position, tolerance, velocity);
-    if (target != position.pixels) {
-      return ScrollSpringSimulation(
-        spring,
-        position.pixels,
-        target,
-        velocity,
-        tolerance: tolerance,
-      );
-    }
-    return null;
-  }
-
-  @override
-  bool get allowImplicitScrolling => false;
 }

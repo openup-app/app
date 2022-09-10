@@ -11,10 +11,12 @@ import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/api/users/profile.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
+import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
 /// Prominent button with a horizontal gradient styling.
@@ -259,6 +261,36 @@ class BlurredSurface extends StatelessWidget {
 //     );
 //   }
 // }
+
+class ProfileImage extends StatelessWidget {
+  final String photo;
+  final BoxFit fit;
+  final bool blur;
+  const ProfileImage(
+    this.photo, {
+    super.key,
+    this.fit = BoxFit.cover,
+    required this.blur,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      clipBehavior: Clip.hardEdge,
+      child: ImageFiltered(
+        enabled: blur,
+        imageFilter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+        child: Image.network(
+          photo,
+          fit: fit,
+          frameBuilder: fadeInFrameBuilder,
+          loadingBuilder: circularProgressLoadingBuilder,
+          errorBuilder: iconErrorBuilder,
+        ),
+      ),
+    );
+  }
+}
 
 class RecordButton extends StatefulWidget {
   final String label;

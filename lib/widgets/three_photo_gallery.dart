@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -253,19 +254,9 @@ class _PhotoOrUploadButton extends StatelessWidget {
               builder: (context) {
                 final photoUrl = url;
                 if (photoUrl != null) {
-                  return ClipRRect(
-                    clipBehavior: Clip.hardEdge,
-                    child: ImageFiltered(
-                      enabled: blur,
-                      imageFilter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                      child: Image.network(
-                        photoUrl,
-                        fit: BoxFit.cover,
-                        frameBuilder: fadeInFrameBuilder,
-                        loadingBuilder: circularProgressLoadingBuilder,
-                        errorBuilder: iconErrorBuilder,
-                      ),
-                    ),
+                  return ProfileImage(
+                    photoUrl,
+                    blur: blur,
                   );
                 }
                 return Container(

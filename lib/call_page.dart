@@ -303,9 +303,9 @@ class _UnconnectedDisplay extends StatelessWidget {
             height: 200,
             clipBehavior: Clip.hardEdge,
             decoration: const BoxDecoration(shape: BoxShape.circle),
-            child: Image.network(
+            child: ProfileImage(
               profile.photo,
-              fit: BoxFit.cover,
+              blur: profile.blurPhotos,
             ),
           ),
           const SizedBox(height: 14),
@@ -443,9 +443,9 @@ class __CallDisplayState extends State<_CallDisplay> {
               decoration: const BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(51)),
               ),
-              child: Image.network(
+              child: ProfileImage(
                 widget.activeCall.profile.photo,
-                fit: BoxFit.cover,
+                blur: widget.activeCall.profile.blurPhotos,
               ),
             ),
           ),

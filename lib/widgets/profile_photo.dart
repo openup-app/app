@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:openup/widgets/image_builder.dart';
+import 'package:openup/widgets/common.dart';
 
 class ProfilePhoto extends StatelessWidget {
   final String url;
@@ -13,12 +13,10 @@ class ProfilePhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
+    return ProfileImage(
       url,
       fit: fit,
-      frameBuilder: fadeInFrameBuilder,
-      loadingBuilder: circularProgressLoadingBuilder,
-      errorBuilder: iconErrorBuilder,
+      blur: false,
     );
   }
 }

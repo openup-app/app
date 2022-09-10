@@ -155,18 +155,31 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return const SafeArea(
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
     if (_chatrooms.isEmpty) {
-      return Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+      return SafeArea(
         child: Center(
-          child: Text(
-            'Invite someone to chat,\nthen continue the conversation here',
-            textAlign: TextAlign.center,
-            style: Theming.of(context).text.body,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Invite someone to chat,\nthen continue the conversation here',
+                textAlign: TextAlign.center,
+                style: Theming.of(context).text.body,
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() => _loading = true);
+                  _fetchConversations();
+                },
+                child: Text('Refresh', style: Theming.of(context).text.body),
+              ),
+            ],
           ),
         ),
       );
@@ -239,12 +252,9 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                         ),
-                        child: Image.network(
+                        child: ProfileImage(
                           chatroom.profile.photo,
-                          fit: BoxFit.cover,
-                          frameBuilder: fadeInFrameBuilder,
-                          loadingBuilder: circularProgressLoadingBuilder,
-                          errorBuilder: iconErrorBuilder,
+                          blur: chatroom.profile.blurPhotos,
                         ),
                       ),
                       Positioned(

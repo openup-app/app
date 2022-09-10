@@ -500,11 +500,7 @@ class _ConnectionTileState extends State<ConnectionTile>
                       ),
                       Button(
                         onPressed: () => widget.onCall(
-                          SimpleProfile(
-                            uid: widget.profile.uid,
-                            name: widget.profile.name,
-                            photo: widget.profile.photo,
-                          ),
+                          widget.profile.toSimpleProfile(),
                         ),
                         child: const Padding(
                           padding: EdgeInsets.all(10.0),

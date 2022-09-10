@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:video_player/video_player.dart';
 
@@ -13,6 +14,7 @@ class AudioChatMessage extends StatefulWidget {
   final bool ready;
   final String audioUrl;
   final String photoUrl;
+  final bool blurPhotos;
   final Widget date;
   final bool fromMe;
 
@@ -21,6 +23,7 @@ class AudioChatMessage extends StatefulWidget {
     required this.ready,
     required this.audioUrl,
     required this.photoUrl,
+    required this.blurPhotos,
     required this.date,
     required this.fromMe,
   }) : super(key: key);
@@ -204,10 +207,14 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
     if (photoUrl == null) {
       return Container();
     }
-    return CircleAvatar(
-      radius: 26,
-      backgroundImage: NetworkImage(
+    return Container(
+      width: 52,
+      height: 52,
+      clipBehavior: Clip.hardEdge,
+      decoration: const BoxDecoration(shape: BoxShape.circle),
+      child: ProfileImage(
         photoUrl,
+        blur: widget.blurPhotos,
       ),
     );
   }

@@ -188,8 +188,11 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                               : Alignment.centerLeft,
                           child: Disable(
                             disabling: !messageReady,
-                            child: Builder(
-                              builder: (context) {
+                            child: Consumer(
+                              builder: (context, ref, _) {
+                                final blurMyPhotos = ref.watch(
+                                    userProvider.select(
+                                        (p) => p.profile?.blurPhotos == true));
                                 switch (message.type) {
                                   case ChatType2.audio:
                                     return AudioChatMessage(
@@ -198,6 +201,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                       photoUrl: fromMe
                                           ? _myPhoto ?? ''
                                           : widget.otherProfile.photo,
+                                      blurPhotos: fromMe
+                                          ? blurMyPhotos
+                                          : widget.otherProfile.blurPhotos,
                                       date: _buildDateText(message.date),
                                       fromMe: fromMe,
                                     );

@@ -12,7 +12,7 @@ class Profile with _$Profile {
     String? audio,
     required String photo,
     required List<String> gallery,
-    @Default(false) bool blurPhotos,
+    required bool blurPhotos,
     required String location,
     required Topic topic,
   }) = _Profile;
@@ -25,6 +25,7 @@ class Profile with _$Profile {
       uid: uid,
       name: name,
       photo: photo,
+      blurPhotos: blurPhotos,
     );
   }
 
@@ -38,6 +39,7 @@ class SimpleProfile with _$SimpleProfile {
     required String uid,
     required String name,
     required String photo,
+    required bool blurPhotos,
   }) = _SimpleProfile;
 
   factory SimpleProfile.fromJson(Map<String, dynamic> json) =>

@@ -119,6 +119,7 @@ SimpleProfile? _parseProfileIos(String value) {
       uid: uid,
       photo: photo,
       name: name,
+      blurPhotos: true,
     );
   }
   return null;

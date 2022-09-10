@@ -72,6 +72,7 @@ class _ProfileViewState extends State<ProfileView> {
               gallery: widget.profile.gallery,
               withWideBlur: false,
               slideshow: true,
+              blurPhotos: widget.profile.blurPhotos,
             ),
           ),
         ),

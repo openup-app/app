@@ -105,6 +105,7 @@ class _SharePageState extends State<SharePage>
                   slideshow: true,
                   gallery: widget.profile.gallery,
                   withWideBlur: false,
+                  blurPhotos: widget.profile.blurPhotos,
                 ),
               ),
             ),
