@@ -539,7 +539,7 @@ class _CallControls extends StatelessWidget {
           selected: speakerphoneEnabled,
         ),
         _BarButton(
-          onPressed: onToggleVideo,
+          onPressed: null,
           icon: videoEnabled
               ? const Icon(Icons.videocam, size: 36)
               : const Icon(Icons.videocam_off, size: 36),

@@ -151,6 +151,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                   return _ChatProfilePage(
                     profile: widget.otherProfile,
                     endTime: widget.endTime,
+                    onShowMessages: () {
+                      setState(() => _showChat = true);
+                    },
                   );
                 }
                 return Column(
@@ -372,24 +375,12 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                         setState(() => _recording = false),
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0),
+                                const Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 16.0),
                                   child: Button(
-                                    onPressed: () {
-                                      final callManager =
-                                          GetIt.instance.get<CallManager>();
-                                      callManager.call(
-                                        context: context,
-                                        uid: ref.read(userProvider).uid,
-                                        otherProfile: widget.otherProfile
-                                            .toSimpleProfile(),
-                                        video: true,
-                                      );
-                                      rootNavigatorKey.currentState
-                                          ?.pushNamed('call');
-                                    },
-                                    child: const Padding(
+                                    onPressed: null,
+                                    child: Padding(
                                       padding: EdgeInsets.all(8.0),
                                       child: Icon(
                                         Icons.videocam,
@@ -568,15 +559,23 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   }
 }
 
-class _ChatProfilePage extends StatelessWidget {
+class _ChatProfilePage extends StatefulWidget {
   final Profile profile;
   final DateTime endTime;
+  final VoidCallback onShowMessages;
   const _ChatProfilePage({
     Key? key,
     required this.profile,
     required this.endTime,
+    required this.onShowMessages,
   }) : super(key: key);
 
+  @override
+  State<_ChatProfilePage> createState() => _ChatProfilePageState();
+}
+
+class _ChatProfilePageState extends State<_ChatProfilePage> {
+  bool _play = true;
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -588,9 +587,10 @@ class _ChatProfilePage extends StatelessWidget {
         children: [
           Expanded(
             child: ProfileView(
-              profile: profile,
-              endTime: endTime,
+              profile: widget.profile,
+              endTime: widget.endTime,
               interestedTab: HomeTab.friendships,
+              play: _play,
             ),
           ),
           Container(
@@ -600,7 +600,7 @@ class _ChatProfilePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Button(
-                  onPressed: () {},
+                  onPressed: widget.onShowMessages,
                   child: Container(
                     width: 64,
                     height: 46,
@@ -615,34 +615,38 @@ class _ChatProfilePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Button(
-                  onPressed: () {
-                    // callSystemKey.currentState?.call(
-                    //   context,
-                    //   SimpleProfile(
-                    //     uid: profile.uid,
-                    //     name: profile.name,
-                    //     photo: profile.photo,
-                    //   ),
-                    // );
-                    Navigator.of(context).pushNamed('call');
+                Consumer(
+                  builder: (context, ref, _) {
+                    return Button(
+                      onPressed: () {
+                        final callManager = GetIt.instance.get<CallManager>();
+                        callManager.call(
+                          context: context,
+                          uid: ref.read(userProvider).uid,
+                          otherProfile: widget.profile.toSimpleProfile(),
+                          video: false,
+                        );
+                        rootNavigatorKey.currentState?.pushNamed('call');
+                        setState(() => _play = false);
+                      },
+                      child: Container(
+                        width: 64,
+                        height: 46,
+                        decoration: const BoxDecoration(
+                          color: Color.fromRGBO(0x16, 0x16, 0x16, 1.0),
+                          borderRadius: BorderRadius.all(Radius.circular(9)),
+                        ),
+                        child: const Icon(
+                          Icons.call,
+                          color: Colors.white,
+                        ),
+                      ),
+                    );
                   },
-                  child: Container(
-                    width: 64,
-                    height: 46,
-                    decoration: const BoxDecoration(
-                      color: Color.fromRGBO(0x16, 0x16, 0x16, 1.0),
-                      borderRadius: BorderRadius.all(Radius.circular(9)),
-                    ),
-                    child: const Icon(
-                      Icons.call,
-                      color: Colors.white,
-                    ),
-                  ),
                 ),
                 const SizedBox(width: 16),
                 Button(
-                  onPressed: () {},
+                  onPressed: null,
                   child: Container(
                     width: 64,
                     height: 46,

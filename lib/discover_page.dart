@@ -15,6 +15,7 @@ import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/share_page.dart';
+import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
@@ -513,225 +514,226 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
     if (ModalRoute.of(context)?.isCurrent == false) {
       _player.stop();
     }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        AutoSizeText(
-                          widget.profile.name,
-                          maxFontSize: 26,
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 20, fontWeight: FontWeight.w300),
-                        ),
-                        if (widget.online)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 6.0, bottom: 2),
-                            child: OnlineIndicator(),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        SvgPicture.asset(
-                          'assets/images/earth.svg',
-                          width: 16,
-                          height: 16,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          widget.profile.location,
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w300),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  SizedBox(
-                    height: 24,
-                    child: ReportBlockPopupMenu(
-                      uid: widget.profile.uid,
-                      name: widget.profile.name,
-                      onBlock: widget.onBlock,
-                      onReport: widget.onReport,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Text(
-                      topicLabel(widget.profile.topic),
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: Button(
-              onPressed: () {
-                if (_audioPaused) {
-                  _player.play(loop: true);
-                } else {
-                  _player.pause();
-                }
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                clipBehavior: Clip.hardEdge,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(24)),
-                ),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Gallery(
-                      slideshow: widget.play && !_audioPaused,
-                      gallery: widget.profile.gallery,
-                      withWideBlur: false,
-                      blurPhotos: widget.profile.blurPhotos,
-                    ),
-                    Positioned(
-                      right: 16,
-                      top: 16,
-                      child: Column(
+    return AppLifecycle(
+      onPaused: _player.pause,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Button(
-                            onPressed: () {
-                              setState(() {
-                                _localFavorite = !widget.favourite;
-                              });
-                              widget.onFavorite(!widget.favourite);
-                            },
-                            child: IconWithShadow(
-                              _localFavorite
-                                  ? Icons.bookmark
-                                  : Icons.bookmark_outline,
-                              color: Colors.white,
-                              size: 32,
-                            ),
+                          AutoSizeText(
+                            widget.profile.name,
+                            maxFontSize: 26,
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 20, fontWeight: FontWeight.w300),
                           ),
-                          const SizedBox(height: 18),
-                          Button(
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                backgroundColor: Colors.transparent,
-                                isScrollControlled: true,
-                                builder: (context) {
-                                  return Theming(
-                                    child: SharePage(
-                                      profile: widget.profile,
-                                      location: widget.profile.location,
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                            child: const IconWithShadow(
-                              Icons.reply,
-                              color: Colors.white,
-                              size: 32,
-                              textDirection: TextDirection.rtl,
+                          if (widget.online)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 6.0, bottom: 2),
+                              child: OnlineIndicator(),
                             ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          SvgPicture.asset(
+                            'assets/images/earth.svg',
+                            width: 16,
+                            height: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            widget.profile.location,
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 16, fontWeight: FontWeight.w300),
                           ),
                         ],
                       ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    SizedBox(
+                      height: 24,
+                      child: ReportBlockPopupMenu(
+                        uid: widget.profile.uid,
+                        name: widget.profile.name,
+                        onBlock: widget.onBlock,
+                        onReport: widget.onReport,
+                      ),
                     ),
-                    if (_audioPaused)
-                      const Center(
-                        child: IgnorePointer(
-                          child: IconWithShadow(
-                            Icons.play_arrow,
-                            size: 80,
-                          ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Text(
+                        topicLabel(widget.profile.topic),
+                        style: Theming.of(context).text.body.copyWith(
+                            fontSize: 16, fontWeight: FontWeight.w300),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Expanded(
+              child: Button(
+                onPressed: () {
+                  if (_audioPaused) {
+                    _player.play(loop: true);
+                  } else {
+                    _player.pause();
+                  }
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  clipBehavior: Clip.hardEdge,
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(24)),
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Gallery(
+                        slideshow: widget.play && !_audioPaused,
+                        gallery: widget.profile.gallery,
+                        withWideBlur: false,
+                        blurPhotos: widget.profile.blurPhotos,
+                      ),
+                      Positioned(
+                        right: 16,
+                        top: 16,
+                        child: Column(
+                          children: [
+                            Button(
+                              onPressed: () {
+                                setState(() {
+                                  _localFavorite = !widget.favourite;
+                                });
+                                widget.onFavorite(!widget.favourite);
+                              },
+                              child: IconWithShadow(
+                                _localFavorite
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_outline,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            Button(
+                              onPressed: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  backgroundColor: Colors.transparent,
+                                  isScrollControlled: true,
+                                  builder: (context) {
+                                    return Theming(
+                                      child: SharePage(
+                                        profile: widget.profile,
+                                        location: widget.profile.location,
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: const IconWithShadow(
+                                Icons.reply,
+                                color: Colors.white,
+                                size: 32,
+                                textDirection: TextDirection.rtl,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                  ],
+                      if (_audioPaused)
+                        const Center(
+                          child: IgnorePointer(
+                            child: IconWithShadow(
+                              Icons.play_arrow,
+                              size: 80,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          if (widget.play)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: StreamBuilder<PlaybackInfo>(
-                stream: _player.playbackInfoStream,
-                initialData: const PlaybackInfo(),
-                builder: (context, snapshot) {
-                  final value = snapshot.requireData;
-                  final position = value.position.inMilliseconds;
-                  final duration = value.duration.inMilliseconds;
-                  final ratio = duration == 0 ? 0.0 : position / duration;
-                  return FractionallySizedBox(
-                    widthFactor: ratio < 0 ? 0 : ratio,
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      height: 13,
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(3)),
-                        color: Color.fromRGBO(0xD9, 0xD9, 0xD9, 1.0),
+            const SizedBox(height: 12),
+            if (widget.play)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: StreamBuilder<PlaybackInfo>(
+                  stream: _player.playbackInfoStream,
+                  initialData: const PlaybackInfo(),
+                  builder: (context, snapshot) {
+                    final value = snapshot.requireData;
+                    final position = value.position.inMilliseconds;
+                    final duration = value.duration.inMilliseconds;
+                    final ratio = duration == 0 ? 0.0 : position / duration;
+                    return FractionallySizedBox(
+                      widthFactor: ratio < 0 ? 0 : ratio,
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        height: 13,
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(3)),
+                          color: Color.fromRGBO(0xD9, 0xD9, 0xD9, 1.0),
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          const SizedBox(height: 16),
-          Consumer(
-            builder: (context, ref, _) {
-              return RecordButton(
-                label: 'Invite to voice chat',
-                submitLabel: 'send message',
-                submitting: _uploading,
-                submitted: widget.invited,
-                onSubmit: (path) async {
-                  setState(() => _uploading = true);
-                  final uid = ref.read(userProvider).uid;
-                  final api = GetIt.instance.get<Api>();
-                  final result = await api.sendMessage2(
-                    uid,
-                    widget.profile.uid,
-                    ChatType2.audio,
-                    path,
-                  );
-                  if (mounted) {
-                    setState(() => _uploading = false);
-                    result.fold(
-                      (l) => displayError(context, l),
-                      (r) => widget.onInvite(),
                     );
-                  }
-                },
-                onBeginRecording: () {
-                  _player.stop();
-                  widget.onBeginRecording();
-                },
-              );
-            },
-          ),
-          const SizedBox(height: 8),
-        ],
+                  },
+                ),
+              ),
+            const SizedBox(height: 16),
+            Consumer(
+              builder: (context, ref, _) {
+                return RecordButton(
+                  label: 'Invite to voice chat',
+                  submitLabel: 'send message',
+                  submitting: _uploading,
+                  submitted: widget.invited,
+                  onSubmit: (path) async {
+                    setState(() => _uploading = true);
+                    final uid = ref.read(userProvider).uid;
+                    final api = GetIt.instance.get<Api>();
+                    final result = await api.sendMessage2(
+                      uid,
+                      widget.profile.uid,
+                      ChatType2.audio,
+                      path,
+                    );
+                    if (mounted) {
+                      setState(() => _uploading = false);
+                      result.fold(
+                        (l) => displayError(context, l),
+                        (r) => widget.onInvite(),
+                      );
+                    }
+                  },
+                  onBeginRecording: () {
+                    _player.stop();
+                    widget.onBeginRecording();
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
