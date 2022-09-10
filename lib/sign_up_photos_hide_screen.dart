@@ -18,15 +18,13 @@ class _SignUpPhotosHideScreenState extends State<SignUpPhotosHideScreen> {
   bool _blur = false;
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Colors.black,
-      ),
-      child: SafeArea(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 75),
+            const SizedBox(height: 50),
             Text(
               'Hide pictures',
               style: Theming.of(context).text.body.copyWith(
@@ -47,11 +45,15 @@ class _SignUpPhotosHideScreenState extends State<SignUpPhotosHideScreen> {
               ),
             ),
             const SizedBox(height: 55),
-            SizedBox(
-              height: 297,
-              child: ThreePhotoGallery(
-                canDeleteAllPhotos: true,
-                blur: _blur,
+            Expanded(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minHeight: 260,
+                  maxHeight: 297,
+                ),
+                child: ThreePhotoGallery(
+                  blur: _blur,
+                ),
               ),
             ),
             const SizedBox(height: 20),

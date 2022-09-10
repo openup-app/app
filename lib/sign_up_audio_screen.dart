@@ -21,11 +21,9 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Colors.black,
-      ),
-      child: SafeArea(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

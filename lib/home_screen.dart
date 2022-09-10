@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/user_state.dart';
@@ -69,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen>
       child: Scaffold(
         backgroundColor: Colors.black,
         extendBody: true,
+        resizeToAvoidBottomInset: false,
         bottomNavigationBar: SizedBox(
           height: obscuredHeight,
           child: BlurredSurface(

@@ -58,7 +58,8 @@ class _ToggleButtonState extends State<ToggleButton> {
       },
       onPanEnd: (_) {
         setState(() => _dragging = false);
-        widget.onChanged(_left >= 4);
+        widget.onChanged(
+            _left <= 4 ? false : (_left >= 23 ? true : widget.value));
       },
       child: SizedBox(
         width: 47,

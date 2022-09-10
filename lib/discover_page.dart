@@ -689,7 +689,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
             builder: (context, ref, _) {
               return RecordButton(
                 label: 'Invite to voice chat',
-                submitLabel: 'Send invitation',
+                submitLabel: 'send message',
                 submitting: _uploading,
                 submitted: widget.invited,
                 onSubmit: (path) async {

@@ -522,11 +522,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       transitionDuration: const Duration(milliseconds: 300),
       reverseTransitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (_, animation, secondaryAnimation) {
-        return Scaffold(
-          body: InheritedRouteObserver(
-            routeObserver: _routeObserver,
-            child: Builder(builder: builder),
-          ),
+        return InheritedRouteObserver(
+          routeObserver: _routeObserver,
+          child: Builder(builder: builder),
         );
       },
     );

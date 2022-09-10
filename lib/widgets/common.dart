@@ -454,13 +454,14 @@ class RecordButtonState extends State<RecordButton> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Color.fromRGBO(0x8F, 0x14, 0x14, 1.0),
-                        Color.fromRGBO(0x8F, 0x32, 0x32, 1.0),
+                        Color.fromRGBO(0xC3, 0x06, 0x06, 1.0),
+                        Color.fromRGBO(0x64, 0x00, 0x00, 1.0),
                       ],
                     ),
                   ),
                   child: Center(
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(Icons.send),
                         const SizedBox(width: 16),

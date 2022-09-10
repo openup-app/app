@@ -15,14 +15,12 @@ class SignUpPhotosScreen extends StatefulWidget {
 class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Colors.black,
-      ),
-      child: SafeArea(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 75),
+            const SizedBox(height: 50),
             Text(
               'Add pictures',
               style: Theming.of(context).text.body.copyWith(
@@ -43,10 +41,13 @@ class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
               ),
             ),
             const SizedBox(height: 55),
-            const SizedBox(
-              height: 297,
-              child: ThreePhotoGallery(
-                canDeleteAllPhotos: true,
+            Expanded(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minHeight: 260,
+                  maxHeight: 297,
+                ),
+                child: const ThreePhotoGallery(),
               ),
             ),
             const Spacer(),

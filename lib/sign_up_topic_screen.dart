@@ -27,11 +27,10 @@ class _SignUpTopicScreenState extends ConsumerState<SignUpTopicScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black,
+    return Scaffold(
+      backgroundColor: Colors.black,
       // Makes column fill screen
-      alignment: Alignment.center,
-      child: SafeArea(
+      body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [

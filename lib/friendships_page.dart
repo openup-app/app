@@ -8,11 +8,43 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
-class FriendshipsPage extends StatelessWidget {
+class FriendshipsPage extends StatefulWidget {
   const FriendshipsPage({Key? key}) : super(key: key);
+
+  @override
+  State<FriendshipsPage> createState() => _FriendshipsPageState();
+}
+
+class _FriendshipsPageState extends State<FriendshipsPage> {
+  final _searchFocusNode = FocusNode();
+  final _searchController = TextEditingController();
+  bool _hasFocus = false;
+  String _filterString = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      if (_filterString != _searchController.text) {
+        setState(() => _filterString = _searchController.text);
+      }
+    });
+
+    _searchFocusNode.addListener(() {
+      if (_searchFocusNode.hasFocus != _hasFocus) {
+        setState(() => _hasFocus = _searchFocusNode.hasFocus);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,76 +68,100 @@ class FriendshipsPage extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.only(left: 33.0),
-              child: Text(
-                'Search',
-                style: Theming.of(context).text.body.copyWith(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
-                    color: const Color.fromRGBO(0x4A, 0x4A, 0x4A, 1.0)),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _searchController,
+                      focusNode: _searchFocusNode,
+                      decoration: InputDecoration.collapsed(
+                        hintText: 'Search',
+                        hintStyle: Theming.of(context).text.body.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                            color: const Color.fromRGBO(0x4A, 0x4A, 0x4A, 1.0)),
+                      ),
+                    ),
+                  ),
+                  if (_filterString.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16.0),
+                      child: Button(
+                        onPressed: () {
+                          setState(() => _searchController.text = "");
+                        },
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: RichText(
-            text: TextSpan(
-              style: Theming.of(context).text.body.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w300,
+        if (_filterString.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: RichText(
+              text: TextSpan(
+                style: Theming.of(context).text.body.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w300,
+                    ),
+                children: [
+                  const TextSpan(text: 'To maintain '),
+                  TextSpan(
+                    text: 'friendships ',
+                    style: Theming.of(context).text.body.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
-              children: [
-                const TextSpan(text: 'To maintain '),
-                TextSpan(
-                  text: 'friendships ',
-                  style: Theming.of(context).text.body.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const TextSpan(text: 'on openup, you must talk to '),
-                TextSpan(
-                  text: 'each other ',
-                  style: Theming.of(context).text.body.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const TextSpan(
-                    text:
-                        'once every 72 hours. Not doing so will result in your friendship '),
-                TextSpan(
-                  text: 'falling apart (deleted)',
-                  style: Theming.of(context).text.body.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: const Color.fromRGBO(0xFF, 0x0, 0x0, 1.0),
-                      ),
-                ),
-                const TextSpan(text: '. This app is for people who are '),
-                TextSpan(
-                  text: 'serious ',
-                  style: Theming.of(context).text.body.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const TextSpan(text: 'about making '),
-                TextSpan(
-                  text: 'friends',
-                  style: Theming.of(context).text.body.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const TextSpan(text: '.'),
-              ],
+                  const TextSpan(text: 'on openup, you must talk to '),
+                  TextSpan(
+                    text: 'each other ',
+                    style: Theming.of(context).text.body.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const TextSpan(
+                      text:
+                          'once every 72 hours. Not doing so will result in your friendship '),
+                  TextSpan(
+                    text: 'falling apart (deleted)',
+                    style: Theming.of(context).text.body.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color.fromRGBO(0xFF, 0x0, 0x0, 1.0),
+                        ),
+                  ),
+                  const TextSpan(text: '. This app is for people who are '),
+                  TextSpan(
+                    text: 'serious ',
+                    style: Theming.of(context).text.body.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const TextSpan(text: 'about making '),
+                  TextSpan(
+                    text: 'friends',
+                    style: Theming.of(context).text.body.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const TextSpan(text: '.'),
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 16),
-        const Expanded(
-          child: _ConversationList(),
+        if (_filterString.isEmpty) const SizedBox(height: 16),
+        Expanded(
+          child: _ConversationList(filterString: _filterString),
         ),
       ],
     );
@@ -113,7 +169,11 @@ class FriendshipsPage extends StatelessWidget {
 }
 
 class _ConversationList extends ConsumerStatefulWidget {
-  const _ConversationList({Key? key}) : super(key: key);
+  final String filterString;
+  const _ConversationList({
+    Key? key,
+    this.filterString = "",
+  }) : super(key: key);
 
   @override
   ConsumerState<_ConversationList> createState() => _ConversationListState();
@@ -184,11 +244,18 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
         ),
       );
     }
+
+    final filteredChatrooms = _chatrooms
+        .where((c) => c.profile.name
+            .toLowerCase()
+            .contains(widget.filterString.toLowerCase()))
+        .toList();
+
     return RefreshIndicator(
       onRefresh: _fetchConversations,
       child: ListView.separated(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-        itemCount: _chatrooms.length,
+        itemCount: filteredChatrooms.length,
         separatorBuilder: (context, _) {
           return Container(
             height: 1,
@@ -197,7 +264,7 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
           );
         },
         itemBuilder: (context, index) {
-          final chatroom = _chatrooms[index];
+          final chatroom = filteredChatrooms[index];
           return Button(
             onPressed: () {
               Navigator.of(context).pushNamed(

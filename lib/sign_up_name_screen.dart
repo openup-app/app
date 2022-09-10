@@ -23,9 +23,9 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.black),
-      child: SafeArea(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
