@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/user_state.dart';
@@ -54,7 +56,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     // BottomNavigationBar height is available to pages via MediaQuery bottom padding
-    const obscuredHeight = 100.0;
+    final obscuredTop = 75.0 + MediaQuery.of(context).padding.top;
+    final obscuredBottom = 40.0 + MediaQuery.of(context).padding.bottom;
+    final obscuredHeight = max(obscuredTop, obscuredBottom);
 
     return WillPopScope(
       onWillPop: () {

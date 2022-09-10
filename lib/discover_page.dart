@@ -42,6 +42,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   final _invitedUsers = <String>{};
   PageController? _pageController;
 
+  double _paddingRatio = 1.1;
+
   @override
   void initState() {
     super.initState();
@@ -180,7 +182,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   @override
   Widget build(BuildContext context) {
     final obscuredHeight = MediaQuery.of(context).padding.bottom;
-    const paddingRatio = 1.1;
     return LayoutBuilder(
       builder: (context, constraints) {
         // Can build the PageController based on the height provided this frame
@@ -189,10 +190,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
             if (mounted) {
               final fullHeight = constraints.maxHeight;
               final itemExtent = fullHeight - obscuredHeight * 2;
+              setState(() => _paddingRatio = fullHeight / itemExtent);
               _initPageController(
                 fullHeight: fullHeight,
                 itemExtent: itemExtent,
-                paddingRatio: paddingRatio,
+                paddingRatio: _paddingRatio,
               );
             }
           });
@@ -225,7 +227,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                       final profileWithOnline = _profiles[index];
                       final profile = profileWithOnline.profile;
                       return FractionallySizedBox(
-                        heightFactor: 1 / paddingRatio,
+                        heightFactor: 1 / _paddingRatio,
                         child: _UserProfileDisplay(
                           profile: profile,
                           play: _currentProfileIndex == index,
@@ -322,7 +324,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         stops: [
-                          0.6,
+                          0.8,
                           1.0,
                         ],
                         colors: [
