@@ -10,6 +10,7 @@ import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/chat/chat_api2.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/home_screen.dart';
 import 'package:openup/main.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -589,6 +590,7 @@ class _ChatProfilePage extends StatelessWidget {
             child: ProfileView(
               profile: profile,
               endTime: endTime,
+              interestedTab: HomeTab.friendships,
             ),
           ),
           Container(

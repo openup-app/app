@@ -10,6 +10,7 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat/chat_api2.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/home_screen.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/report_screen.dart';
@@ -475,6 +476,8 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
         setState(() => _audioPaused = false);
       }
     });
+
+    currentTabNotifier.addListener(_currentTabListener);
   }
 
   @override
@@ -495,7 +498,14 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
   void dispose() {
     _player.stop();
     _player.dispose();
+    currentTabNotifier.removeListener(_currentTabListener);
     super.dispose();
+  }
+
+  void _currentTabListener() {
+    if (currentTabNotifier.value != HomeTab.discover) {
+      _player.pause();
+    }
   }
 
   @override
@@ -577,8 +587,8 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
           ),
           const SizedBox(height: 4),
           Expanded(
-            child: GestureDetector(
-              onTap: () {
+            child: Button(
+              onPressed: () {
                 if (_audioPaused) {
                   _player.play(loop: true);
                 } else {

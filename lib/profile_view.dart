@@ -2,6 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/home_screen.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/share_page.dart';
@@ -13,11 +14,13 @@ import 'package:openup/widgets/theming.dart';
 class ProfileView extends StatefulWidget {
   final Profile profile;
   final DateTime? endTime;
+  final HomeTab interestedTab;
 
   const ProfileView({
     Key? key,
     required this.profile,
     this.endTime,
+    required this.interestedTab,
   }) : super(key: key);
 
   @override
@@ -45,12 +48,21 @@ class _ProfileViewState extends State<ProfileView> {
         setState(() => _audioPaused = false);
       }
     });
+
+    currentTabNotifier.addListener(_currentTabListener);
   }
 
   @override
   void dispose() {
     _player.dispose();
+    currentTabNotifier.removeListener(_currentTabListener);
     super.dispose();
+  }
+
+  void _currentTabListener() {
+    if (currentTabNotifier.value != widget.interestedTab) {
+      _player.pause();
+    }
   }
 
   @override
@@ -132,8 +144,8 @@ class _ProfileViewState extends State<ProfileView> {
             ],
           ),
           Expanded(
-            child: GestureDetector(
-              onTap: () {
+            child: Button(
+              onPressed: () {
                 if (_audioPaused) {
                   _player.play(loop: true);
                 } else {
@@ -151,7 +163,7 @@ class _ProfileViewState extends State<ProfileView> {
                     Gallery(
                       gallery: widget.profile.gallery,
                       withWideBlur: false,
-                      slideshow: true,
+                      slideshow: !_audioPaused,
                       blurPhotos: widget.profile.blurPhotos,
                     ),
                     Positioned(

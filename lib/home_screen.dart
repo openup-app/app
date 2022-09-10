@@ -13,14 +13,14 @@ import 'package:openup/widgets/theming.dart';
 
 import 'chat_page.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
+class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
@@ -47,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (_tabController.index != index) {
       _tabController.index = index;
       setState(() {});
+      currentTabNotifier.value = HomeTab.values[index];
     }
   }
 
@@ -238,3 +239,7 @@ class __KeepAliveState extends State<_KeepAlive>
     return widget.child;
   }
 }
+
+final currentTabNotifier = ValueNotifier<HomeTab>(HomeTab.discover);
+
+enum HomeTab { discover, friendships, profile }

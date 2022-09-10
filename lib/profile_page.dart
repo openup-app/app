@@ -6,6 +6,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/home_screen.dart';
 import 'package:openup/main.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/button.dart';
@@ -111,6 +112,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   return ProfileView(
                     profile: ref.watch(userProvider.select((p) => p.profile)) ??
                         widget.profile,
+                    interestedTab: HomeTab.profile,
                   );
                 },
               ),
