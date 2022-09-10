@@ -197,6 +197,36 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, bool>> getUnblurPhotosFor(
+      String uid, String otherUid) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/users/$uid/profile/unblurPhotosFor/$otherUid'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        return Right(json["unblur"] ?? false);
+      },
+    );
+  }
+
+  Future<Either<ApiError, void>> updateUnblurPhotosFor(
+      String uid, String otherUid, bool unblur) {
+    return _request(
+      makeRequest: () {
+        return http.put(
+          Uri.parse('$_urlBase/users/$uid/profile/unblurPhotosFor'),
+          headers: _headers,
+          body: jsonEncode({"otherUid": otherUid, "unblur": unblur}),
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
   Future<Either<ApiError, void>> addConnectionRequest(
     String uid,
     String otherUid,

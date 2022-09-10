@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,7 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/disable.dart';
 import 'package:openup/widgets/tab_view.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:openup/widgets/toggle_button.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
@@ -60,6 +62,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   String? _myPhoto;
 
   bool _recording = false;
+  bool? _unblur;
 
   @override
   void initState() {
@@ -81,7 +84,12 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     final profile = ref.read(userProvider).profile!;
     setState(() => _myPhoto = profile.photo);
 
-    _fetchHistory();
+    _fetchUnblurPhotosFor();
+    _fetchHistory().then((value) {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    });
 
     _scrollController.addListener(_scrollListener);
   }
@@ -121,35 +129,83 @@ class _ChatScreenState extends ConsumerState<ChatPage>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const SizedBox(width: 24),
                 Container(
-                  width: 12,
-                  height: 12,
-                  decoration: widget.online
-                      ? const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.green,
-                        )
-                      : null,
+                  width: 16,
+                  alignment: Alignment.center,
+                  child: !widget.online ? const OnlineIndicator() : null,
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  children: [
-                    Text(
-                      widget.otherProfile.name,
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontSize: 20, fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      widget.otherProfile.location,
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
-                    ),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AutoSizeText(
+                        widget.otherProfile.name,
+                        minFontSize: 9,
+                        maxFontSize: 20,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theming.of(context)
+                            .text
+                            .body
+                            .copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      AutoSizeText(
+                        widget.otherProfile.location,
+                        minFontSize: 9,
+                        maxFontSize: 16,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theming.of(context)
+                            .text
+                            .body
+                            .copyWith(fontWeight: FontWeight.w300),
+                      ),
+                    ],
+                  ),
                 ),
+                if (ref.watch(userProvider).profile?.blurPhotos == true) ...[
+                  const SizedBox(width: 4),
+                  Text(
+                    'Reveal Pictures',
+                    style: Theming.of(context)
+                        .text
+                        .body
+                        .copyWith(fontSize: 16, fontWeight: FontWeight.w400),
+                  ),
+                  const SizedBox(width: 9),
+                  Builder(
+                    builder: (context) {
+                      final unblur = _unblur;
+                      if (unblur == null) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 15.5),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return ToggleButton(
+                        value: unblur,
+                        onChanged: (value) {
+                          final api = GetIt.instance.get<Api>();
+                          api.updateUnblurPhotosFor(
+                            ref.read(userProvider).uid,
+                            widget.otherProfile.uid,
+                            value,
+                          );
+                          setState(() => _unblur = value);
+                        },
+                      );
+                    },
+                  ),
+                ],
+                const SizedBox(width: 16),
               ],
             ),
             Expanded(
@@ -191,8 +247,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                             child: Consumer(
                               builder: (context, ref, _) {
                                 final blurMyPhotos = ref.watch(
-                                    userProvider.select(
-                                        (p) => p.profile?.blurPhotos == true));
+                                        userProvider.select((p) =>
+                                            p.profile?.blurPhotos == true)) &&
+                                    _unblur != false;
                                 switch (message.type) {
                                   case ChatType2.audio:
                                     return AudioChatMessage(
@@ -377,11 +434,31 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         _messages.isNotEmpty &&
         !_loading) {
       setState(() => _loading = true);
-      _fetchHistory(startDate: startDate);
+      _fetchHistory(startDate: startDate).then((_) {
+        if (mounted) {
+          setState(() => _loading = false);
+        }
+      });
     }
   }
 
-  void _fetchHistory({DateTime? startDate}) async {
+  void _fetchUnblurPhotosFor() async {
+    final api = GetIt.instance.get<Api>();
+    final result = await api.getUnblurPhotosFor(
+        ref.read(userProvider).uid, widget.otherProfile.uid);
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (l) => displayError(context, l),
+      (r) {
+        setState(() => _unblur = r);
+      },
+    );
+  }
+
+  Future<void> _fetchHistory({DateTime? startDate}) async {
     final api = GetIt.instance.get<Api>();
     final result = await api.getMessages2(
       ref.read(userProvider).uid,
@@ -403,8 +480,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         });
       },
     );
-
-    setState(() => _loading = false);
   }
 
   void _call(
