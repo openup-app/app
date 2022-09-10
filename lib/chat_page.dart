@@ -106,279 +106,326 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        leading: const BackIconButton(),
         centerTitle: true,
-        title: TabView(
-          firstSelected: _showChat,
-          firstLabel: 'Messages',
-          secondLabel: 'Profile',
-          onSelected: (first) => setState(() => _showChat = first),
+        backgroundColor: Colors.black,
+        leading: const SizedBox.shrink(),
+        title: Text(
+          'Growing Friendships',
+          style: Theming.of(context)
+              .text
+              .body
+              .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
         ),
       ),
-      body: Builder(builder: (context) {
-        if (!_showChat) {
-          return _ChatProfilePage(
-            profile: widget.otherProfile,
-            endTime: widget.endTime,
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Stack(
               children: [
-                const SizedBox(width: 24),
-                Container(
-                  width: 16,
-                  alignment: Alignment.center,
-                  child: !widget.online ? const OnlineIndicator() : null,
+                const Positioned(
+                  top: 0,
+                  bottom: 0,
+                  left: 4,
+                  child: BackIconButton(),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AutoSizeText(
-                        widget.otherProfile.name,
-                        minFontSize: 9,
-                        maxFontSize: 20,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theming.of(context)
-                            .text
-                            .body
-                            .copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      AutoSizeText(
-                        widget.otherProfile.location,
-                        minFontSize: 9,
-                        maxFontSize: 16,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theming.of(context)
-                            .text
-                            .body
-                            .copyWith(fontWeight: FontWeight.w300),
-                      ),
-                    ],
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: TabView(
+                      firstSelected: _showChat,
+                      firstLabel: 'Messages',
+                      secondLabel: 'Profile',
+                      onSelected: (first) => setState(() => _showChat = first),
+                    ),
                   ),
                 ),
-                if (ref.watch(userProvider).profile?.blurPhotos == true) ...[
-                  const SizedBox(width: 4),
-                  Text(
-                    'Reveal Pictures',
-                    style: Theming.of(context)
-                        .text
-                        .body
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.w400),
-                  ),
-                  const SizedBox(width: 9),
-                  Builder(
-                    builder: (context) {
-                      final unblur = _unblur;
-                      if (unblur == null) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 15.5),
-                          child: SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 1,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      return ToggleButton(
-                        value: unblur,
-                        onChanged: (value) {
-                          final api = GetIt.instance.get<Api>();
-                          api.updateUnblurPhotosFor(
-                            ref.read(userProvider).uid,
-                            widget.otherProfile.uid,
-                            value,
-                          );
-                          setState(() => _unblur = value);
-                        },
-                      );
-                    },
-                  ),
-                ],
-                const SizedBox(width: 16),
               ],
             ),
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Scrollbar(
-                    controller: _scrollController,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      reverse: true,
-                      padding: EdgeInsets.only(
-                        top: MediaQuery.of(context).padding.top + 64,
-                        bottom: 80,
-                      ),
-                      itemCount: _messages.length + (_loading ? 1 : 0),
-                      itemBuilder: (context, forwardIndex) {
-                        var index = _messages.values.length - forwardIndex - 1;
-                        if (_loading && forwardIndex == _messages.length) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                        final message = _messages.values.toList()[index];
-                        final uid = ref.read(userProvider).uid;
-                        final fromMe = message.uid == uid;
-
-                        final messageReady = message.messageId != null;
-
-                        return Container(
-                          key: messageReady ? Key(message.messageId!) : null,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          alignment: fromMe
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: Disable(
-                            disabling: !messageReady,
-                            child: Consumer(
-                              builder: (context, ref, _) {
-                                final blurMyPhotos = ref.watch(
-                                        userProvider.select((p) =>
-                                            p.profile?.blurPhotos == true)) &&
-                                    _unblur != false;
-                                switch (message.type) {
-                                  case ChatType2.audio:
-                                    return AudioChatMessage(
-                                      ready: messageReady,
-                                      audioUrl: message.content,
-                                      photoUrl: fromMe
-                                          ? _myPhoto ?? ''
-                                          : widget.otherProfile.photo,
-                                      blurPhotos: fromMe
-                                          ? blurMyPhotos
-                                          : widget.otherProfile.blurPhotos,
-                                      date: _buildDateText(message.date),
-                                      fromMe: fromMe,
-                                    );
+          ),
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                if (!_showChat) {
+                  return _ChatProfilePage(
+                    profile: widget.otherProfile,
+                    endTime: widget.endTime,
+                  );
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(width: 24),
+                        Container(
+                          width: 16,
+                          alignment: Alignment.center,
+                          child:
+                              !widget.online ? const OnlineIndicator() : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AutoSizeText(
+                                widget.otherProfile.name,
+                                minFontSize: 9,
+                                maxFontSize: 20,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theming.of(context)
+                                    .text
+                                    .body
+                                    .copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              AutoSizeText(
+                                widget.otherProfile.location,
+                                minFontSize: 9,
+                                maxFontSize: 16,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theming.of(context)
+                                    .text
+                                    .body
+                                    .copyWith(fontWeight: FontWeight.w300),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (ref.watch(userProvider).profile?.blurPhotos ==
+                            true) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            'Reveal Pictures',
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 16, fontWeight: FontWeight.w400),
+                          ),
+                          const SizedBox(width: 9),
+                          Builder(
+                            builder: (context) {
+                              final unblur = _unblur;
+                              if (unblur == null) {
+                                return const Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 15.5),
+                                  child: SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                              return ToggleButton(
+                                value: unblur,
+                                onChanged: (value) {
+                                  final api = GetIt.instance.get<Api>();
+                                  api.updateUnblurPhotosFor(
+                                    ref.read(userProvider).uid,
+                                    widget.otherProfile.uid,
+                                    value,
+                                  );
+                                  setState(() => _unblur = value);
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                        const SizedBox(width: 16),
+                      ],
+                    ),
+                    Expanded(
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Scrollbar(
+                            controller: _scrollController,
+                            child: ListView.builder(
+                              controller: _scrollController,
+                              reverse: true,
+                              padding: EdgeInsets.only(
+                                top: MediaQuery.of(context).padding.top + 64,
+                                bottom: 80,
+                              ),
+                              itemCount: _messages.length + (_loading ? 1 : 0),
+                              itemBuilder: (context, forwardIndex) {
+                                var index =
+                                    _messages.values.length - forwardIndex - 1;
+                                if (_loading &&
+                                    forwardIndex == _messages.length) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
                                 }
+                                final message =
+                                    _messages.values.toList()[index];
+                                final uid = ref.read(userProvider).uid;
+                                final fromMe = message.uid == uid;
+
+                                final messageReady = message.messageId != null;
+
+                                return Container(
+                                  key: messageReady
+                                      ? Key(message.messageId!)
+                                      : null,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 4),
+                                  alignment: fromMe
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Disable(
+                                    disabling: !messageReady,
+                                    child: Consumer(
+                                      builder: (context, ref, _) {
+                                        final blurMyPhotos = ref.watch(
+                                                userProvider.select((p) =>
+                                                    p.profile?.blurPhotos ==
+                                                    true)) &&
+                                            _unblur != false;
+                                        switch (message.type) {
+                                          case ChatType2.audio:
+                                            return AudioChatMessage(
+                                              ready: messageReady,
+                                              audioUrl: message.content,
+                                              photoUrl: fromMe
+                                                  ? _myPhoto ?? ''
+                                                  : widget.otherProfile.photo,
+                                              blurPhotos: fromMe
+                                                  ? blurMyPhotos
+                                                  : widget
+                                                      .otherProfile.blurPhotos,
+                                              date:
+                                                  _buildDateText(message.date),
+                                              fromMe: fromMe,
+                                            );
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                );
                               },
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                  if (!_loading && _messages.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Text(
-                          'Send your first message to ${_profile != null ? _profile!.name : ''}',
-                          style: Theming.of(context).text.bodySecondary,
-                          textAlign: TextAlign.center,
-                        ),
+                          if (!_loading && _messages.isEmpty)
+                            Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0),
+                                child: Text(
+                                  'Send your first message to ${_profile != null ? _profile!.name : ''}',
+                                  style: Theming.of(context).text.bodySecondary,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                ],
-              ),
-            ),
-            Container(
-              height: 95,
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Button(
-                            onPressed: () {
-                              final callManager =
-                                  GetIt.instance.get<CallManager>();
-                              callManager.call(
-                                context: context,
-                                uid: ref.read(userProvider).uid,
-                                otherProfile:
-                                    widget.otherProfile.toSimpleProfile(),
-                                video: false,
-                              );
-                              rootNavigatorKey.currentState?.pushNamed('call');
-                            },
-                            child: const Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Icon(
-                                Icons.call,
-                                size: 36,
-                              ),
+                    Container(
+                      height: 95,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0),
+                                  child: Button(
+                                    onPressed: () {
+                                      final callManager =
+                                          GetIt.instance.get<CallManager>();
+                                      callManager.call(
+                                        context: context,
+                                        uid: ref.read(userProvider).uid,
+                                        otherProfile: widget.otherProfile
+                                            .toSimpleProfile(),
+                                        video: false,
+                                      );
+                                      rootNavigatorKey.currentState
+                                          ?.pushNamed('call');
+                                    },
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Icon(
+                                        Icons.call,
+                                        size: 36,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: RecordButtonChat(
+                                    onSubmit: _submit,
+                                    onBeginRecording: () =>
+                                        setState(() => _recording = true),
+                                    onEndRecording: () =>
+                                        setState(() => _recording = false),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0),
+                                  child: Button(
+                                    onPressed: () {
+                                      final callManager =
+                                          GetIt.instance.get<CallManager>();
+                                      callManager.call(
+                                        context: context,
+                                        uid: ref.read(userProvider).uid,
+                                        otherProfile: widget.otherProfile
+                                            .toSimpleProfile(),
+                                        video: true,
+                                      );
+                                      rootNavigatorKey.currentState
+                                          ?.pushNamed('call');
+                                    },
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Icon(
+                                        Icons.videocam,
+                                        size: 36,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: RecordButtonChat(
-                            onSubmit: _submit,
-                            onBeginRecording: () =>
-                                setState(() => _recording = true),
-                            onEndRecording: () =>
-                                setState(() => _recording = false),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Button(
-                            onPressed: () {
-                              final callManager =
-                                  GetIt.instance.get<CallManager>();
-                              callManager.call(
-                                context: context,
-                                uid: ref.read(userProvider).uid,
-                                otherProfile:
-                                    widget.otherProfile.toSimpleProfile(),
-                                video: true,
-                              );
-                              rootNavigatorKey.currentState?.pushNamed('call');
-                            },
-                            child: const Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Icon(
-                                Icons.videocam,
-                                size: 36,
-                              ),
+                          const SizedBox(height: 4),
+                          Visibility(
+                            visible: _recording,
+                            maintainAnimation: true,
+                            maintainState: true,
+                            maintainSize: true,
+                            child: Text(
+                              'voice messages can only be upto 30 seconds',
+                              textAlign: TextAlign.center,
+                              style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 14, fontWeight: FontWeight.w300),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Visibility(
-                    visible: _recording,
-                    maintainAnimation: true,
-                    maintainState: true,
-                    maintainSize: true,
-                    child: Text(
-                      'voice messages can only be upto 30 seconds',
-                      textAlign: TextAlign.center,
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontSize: 14, fontWeight: FontWeight.w300),
+                    SizedBox(
+                      height: MediaQuery.of(context).padding.bottom,
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              },
             ),
-            SizedBox(
-              height: MediaQuery.of(context).padding.bottom,
-            ),
-          ],
-        );
-      }),
+          ),
+        ],
+      ),
     );
   }
 

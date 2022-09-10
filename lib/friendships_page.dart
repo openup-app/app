@@ -50,11 +50,16 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SizedBox(height: MediaQuery.of(context).padding.top),
-        const SizedBox(height: 8),
-        Text(
-          'Growing Friendships',
-          style: Theming.of(context).text.body,
+        AppBar(
+          centerTitle: true,
+          backgroundColor: Colors.black,
+          title: Text(
+            'Growing Friendships',
+            style: Theming.of(context)
+                .text
+                .body
+                .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
+          ),
         ),
         Container(
           height: 43,
@@ -267,6 +272,7 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
           final chatroom = filteredChatrooms[index];
           return Button(
             onPressed: () {
+              FocusScope.of(context).unfocus();
               Navigator.of(context).pushNamed(
                 'chat',
                 arguments: ChatPageArguments(

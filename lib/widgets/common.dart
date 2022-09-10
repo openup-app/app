@@ -1224,7 +1224,7 @@ class Chip extends StatelessWidget {
       onPressed: onSelected,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
         decoration: BoxDecoration(
           color: selected
               ? Colors.white

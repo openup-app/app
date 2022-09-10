@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/signaling/phone.dart';
 import 'package:openup/api/users/profile.dart';
@@ -24,6 +25,8 @@ class _CallPageState extends State<CallPage> {
   SimpleProfile? _endedProfile;
   bool _ended = true;
   Timer? _popSoonTimer;
+  bool _gettingLocation = false;
+  String _location = '';
 
   @override
   void initState() {
@@ -34,12 +37,21 @@ class _CallPageState extends State<CallPage> {
       debugPrint('[Calling] CallState event: ${event.runtimeType}');
       event.when(
         none: () {},
-        initializing: (_, __, ___) {},
+        initializing: (profile, __, ___) {
+          if (!_gettingLocation) {
+            _createLocationFuture(profile.uid);
+          }
+        },
         engaged: (_, __) {
           _popSoon();
         },
         active: (activeCall) {
-          setState(() => _activeCall = activeCall);
+          setState(() {
+            if (!_gettingLocation) {
+              _createLocationFuture(activeCall.profile.uid);
+            }
+            _activeCall = activeCall;
+          });
         },
         ended: (profile) {
           setState(() {
@@ -50,6 +62,20 @@ class _CallPageState extends State<CallPage> {
         },
       );
     });
+  }
+
+  void _createLocationFuture(String uid) async {
+    if (!_gettingLocation) {
+      setState(() => _gettingLocation = true);
+      final api = GetIt.instance.get<Api>();
+      final result = await api.getProfile(uid);
+      if (!mounted) {
+        return;
+      }
+      result.fold((l) {}, (r) {
+        setState(() => _location = r.location);
+      });
+    }
   }
 
   @override
@@ -80,6 +106,7 @@ class _CallPageState extends State<CallPage> {
             if (_ended && endedProfile != null) {
               return _UnconnectedDisplay(
                 profile: endedProfile,
+                location: _location,
                 label: 'call ended',
                 speakerphoneEnabled: false,
                 micEnabled: true,
@@ -98,6 +125,7 @@ class _CallPageState extends State<CallPage> {
             if (outgoing) {
               return _UnconnectedDisplay(
                 profile: profile,
+                location: _location,
                 label: 'ringing...',
                 speakerphoneEnabled: false,
                 micEnabled: true,
@@ -110,6 +138,7 @@ class _CallPageState extends State<CallPage> {
             }
             return _UnconnectedDisplay(
               profile: profile,
+              location: _location,
               label: 'connecting...',
               speakerphoneEnabled: false,
               micEnabled: true,
@@ -123,6 +152,7 @@ class _CallPageState extends State<CallPage> {
           engaged: (profile, video) {
             return _UnconnectedDisplay(
               profile: profile,
+              location: _location,
               label: '${profile.name} is in another call',
               speakerphoneEnabled: false,
               micEnabled: true,
@@ -147,6 +177,7 @@ class _CallPageState extends State<CallPage> {
                   case PhoneConnectionState.complete:
                     return _UnconnectedDisplay(
                       profile: call.profile,
+                      location: _location,
                       label: _stateToMessage(state),
                       speakerphoneEnabled: false,
                       micEnabled: true,
@@ -180,6 +211,7 @@ class _CallPageState extends State<CallPage> {
           ended: (profile) {
             return _UnconnectedDisplay(
               profile: profile,
+              location: _location,
               label: 'call ended',
               speakerphoneEnabled: false,
               micEnabled: true,
@@ -246,6 +278,7 @@ class _CallPageState extends State<CallPage> {
 
 class _UnconnectedDisplay extends StatelessWidget {
   final SimpleProfile profile;
+  final String location;
   final String label;
   final bool speakerphoneEnabled;
   final bool micEnabled;
@@ -258,6 +291,7 @@ class _UnconnectedDisplay extends StatelessWidget {
   const _UnconnectedDisplay({
     Key? key,
     required this.profile,
+    required this.location,
     required this.label,
     required this.speakerphoneEnabled,
     required this.micEnabled,
@@ -286,7 +320,7 @@ class _UnconnectedDisplay extends StatelessWidget {
                   .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
             ),
             Text(
-              'Location',
+              location,
               style: Theming.of(context)
                   .text
                   .body

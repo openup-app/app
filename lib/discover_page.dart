@@ -331,21 +331,24 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     ),
                     child: Column(
                       children: [
+                        const SizedBox(height: 10),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
                             'Discover New Friends',
-                            style: Theming.of(context).text.body,
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 24, fontWeight: FontWeight.w600),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 5),
                         SizedBox(
-                          height: 40,
+                          height: 31,
                           child: ListView(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             scrollDirection: Axis.horizontal,
                             children: [
                               Chip(
+                                height: 31,
                                 label: 'All',
                                 selected: _selectedTopic == null &&
                                     !_showingFavorites,
