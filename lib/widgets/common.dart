@@ -11,7 +11,6 @@ import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/api/users/profile.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
@@ -266,27 +265,48 @@ class ProfileImage extends StatelessWidget {
   final String photo;
   final BoxFit fit;
   final bool blur;
+  final double blurSigma;
   const ProfileImage(
     this.photo, {
     super.key,
     this.fit = BoxFit.cover,
+    this.blurSigma = 10.0,
     required this.blur,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      clipBehavior: Clip.hardEdge,
-      child: ImageFiltered(
-        enabled: blur,
-        imageFilter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-        child: Image.network(
-          photo,
-          fit: fit,
-          frameBuilder: fadeInFrameBuilder,
-          loadingBuilder: circularProgressLoadingBuilder,
-          errorBuilder: iconErrorBuilder,
-        ),
+    return ClipRect(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.network(
+            photo,
+            fit: fit,
+            frameBuilder: fadeInFrameBuilder,
+            loadingBuilder: circularProgressLoadingBuilder,
+            errorBuilder: iconErrorBuilder,
+          ),
+          // Using ImageFiltered to blur image caused blur to overflow and
+          // flickering as of 2022-09-12 (Flutter 3.3), even with a parent
+          // ClipRect. Using BackdropFilter is a workaround but it much more
+          // expensive to use.
+          if (blur)
+            Positioned(
+              left: -10,
+              top: -10,
+              right: -10,
+              bottom: -10,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: blurSigma,
+                  sigmaY: blurSigma,
+                ),
+                // Container expands BackdropFilter to max constraints
+                child: Container(),
+              ),
+            ),
+        ],
       ),
     );
   }

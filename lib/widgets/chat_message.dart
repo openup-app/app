@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:video_player/video_player.dart';
 
@@ -215,6 +213,7 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
       child: ProfileImage(
         photoUrl,
         blur: widget.blurPhotos,
+        blurSigma: 5.0,
       ),
     );
   }

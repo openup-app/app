@@ -287,11 +287,13 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                     disabling: !messageReady,
                                     child: Consumer(
                                       builder: (context, ref, _) {
-                                        final blurMyPhotos = ref.watch(
-                                                userProvider.select((p) =>
-                                                    p.profile?.blurPhotos ==
-                                                    true)) &&
-                                            _unblur != false;
+                                        final blurEnabled =
+                                            ref.watch(userProvider.select((p) {
+                                          return p.profile?.blurPhotos == true;
+                                        }));
+                                        final unblur = _unblur == true;
+                                        final blurMyPhotos =
+                                            blurEnabled && !unblur;
                                         switch (message.type) {
                                           case ChatType2.audio:
                                             return AudioChatMessage(

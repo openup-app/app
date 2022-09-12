@@ -72,6 +72,7 @@ Future<void> displayIncomingCall({
     userInfo: {
       'uid': profile.uid,
       'photo': profile.photo,
+      'blurPhotos': profile.blurPhotos ? 'true' : 'false',
     },
   );
   ConnectycubeFlutterCallKit.showCallNotification(callEvent);
