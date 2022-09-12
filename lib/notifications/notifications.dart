@@ -190,12 +190,7 @@ void _onForegroundNotification(
     callEnded: (callEnded) {
       reportCallEnded(callEnded.rid);
     },
-    chat: (chat) {
-      final unreadMessageCount =
-          Map.of(userStateNotifier.userState.unreadMessageCount);
-      unreadMessageCount[chat.uid] = chat.chatroomUnread;
-      userStateNotifier.unreadMessageCount(unreadMessageCount);
-    },
+    chat: (chat) {},
     newConnection: (newConnection) async {
       final context = key.currentContext;
       if (context == null) {

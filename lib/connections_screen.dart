@@ -7,7 +7,6 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/call_system.dart';
-import 'package:openup/chat_screen.dart';
 import 'package:openup/main.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -138,14 +137,11 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                   itemBuilder: (context, index) {
                     final connection = filteredConnections[index];
                     final profile = connection.profile;
-                    final unreadMessageCount = ref.watch(
-                        userProvider.select((p) => p.unreadMessageCount));
-                    final count = unreadMessageCount[profile.uid] ?? 0;
                     return ConnectionTile(
                       onPressed: () => setState(
                           () => _openIndex = _openIndex == index ? -1 : index),
                       profile: profile,
-                      unreadCount: count,
+                      unreadCount: 0,
                       expanded: _openIndex == index,
                       onShowProfile: () {
                         Navigator.of(context).pushNamed(
@@ -156,21 +152,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
                           ),
                         );
                       },
-                      onChat: () {
-                        final unreadMessageCount =
-                            Map.of(ref.read(userProvider).unreadMessageCount);
-                        unreadMessageCount[profile.uid] = 0;
-                        ref
-                            .read(userProvider.notifier)
-                            .unreadMessageCount(unreadMessageCount);
-                        Navigator.of(context).pushNamed(
-                          'chat',
-                          arguments: ChatArguments(
-                            uid: profile.uid,
-                            chatroomId: connection.chatroomId,
-                          ),
-                        );
-                      },
+                      onChat: () {},
                       onCall: (profile) =>
                           callSystemKey.currentState?.call(context, profile),
                       onVideoCall: () => _onCall(profile, video: true),

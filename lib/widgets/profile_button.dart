@@ -63,13 +63,6 @@ class ProfileButton extends ConsumerWidget {
               right: 0,
               child: Consumer(
                 builder: (context, ref, _) {
-                  final unreadMessageCount = ref
-                      .watch(userProvider.select((p) => p.unreadMessageCount));
-                  final sum =
-                      unreadMessageCount.values.fold<int>(0, (p, e) => p + e);
-                  if (sum == 0) {
-                    return const SizedBox.shrink();
-                  }
                   return Container(
                     width: 16,
                     height: 16,
@@ -86,7 +79,7 @@ class ProfileButton extends ConsumerWidget {
                       color: Theming.of(context).alertRed,
                     ),
                     child: Text(
-                      sum.toString(),
+                      '0',
                       textAlign: TextAlign.center,
                       style: Theming.of(context).text.caption,
                     ),

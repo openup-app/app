@@ -104,10 +104,6 @@ class ProfileDrawer extends ConsumerWidget {
               children: [
                 Consumer(
                   builder: (context, ref, _) {
-                    final unreadMessageCount = ref.watch(
-                        userProvider.select((p) => p.unreadMessageCount));
-                    final sum =
-                        unreadMessageCount.values.fold<int>(0, (p, e) => p + e);
                     return _MenuButton(
                       icon: SvgPicture.asset(
                         'assets/images/connections_icon.svg',
@@ -117,7 +113,7 @@ class ProfileDrawer extends ConsumerWidget {
                         fit: BoxFit.scaleDown,
                       ),
                       title: 'Friends',
-                      badgeNumber: sum,
+                      badgeNumber: 0,
                       onPressed: () =>
                           Navigator.of(context).pushNamed('connections'),
                     );

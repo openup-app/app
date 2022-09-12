@@ -15,9 +15,6 @@ class UserStateNotifier extends StateNotifier<UserState> {
 
   void profile(Profile profile) => state = state.copyWith(profile: profile);
 
-  void unreadMessageCount(Map<String, int> unreadMessageCount) =>
-      state = state.copyWith(unreadMessageCount: unreadMessageCount);
-
   UserState get userState => state;
 }
 
@@ -26,6 +23,5 @@ class UserState with _$UserState {
   const factory UserState({
     @Default('') String uid,
     @Default(null) Profile? profile,
-    @Default({}) Map<String, int> unreadMessageCount,
   }) = _UserState;
 }

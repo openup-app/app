@@ -151,12 +151,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
           (r) => notifier.profile(r),
         );
       }),
-      api.getUnreadMessageCount(uid).then((value) {
-        value.fold(
-          (l) => throw 'Unable to cache unread message count',
-          (r) => notifier.unreadMessageCount(r),
-        );
-      }),
     ]);
   }
 
