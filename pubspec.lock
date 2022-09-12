@@ -357,21 +357,21 @@ packages:
       name: firebase_messaging
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "11.4.4"
+    version: "13.0.1"
   firebase_messaging_platform_interface:
     dependency: transitive
     description:
       name: firebase_messaging_platform_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.5.4"
+    version: "4.1.4"
   firebase_messaging_web:
     dependency: transitive
     description:
       name: firebase_messaging_web
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.4.4"
+    version: "3.1.4"
   fixnum:
     dependency: transitive
     description:
@@ -552,34 +552,27 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.2.0"
-  image_crop:
-    dependency: "direct main"
-    description:
-      name: image_crop
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.4.1"
   image_cropper:
     dependency: "direct main"
     description:
       name: image_cropper
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.3"
+    version: "3.0.0"
   image_cropper_for_web:
     dependency: transitive
     description:
       name: image_cropper_for_web
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.0.4"
+    version: "1.0.2"
   image_cropper_platform_interface:
     dependency: transitive
     description:
       name: image_cropper_platform_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.0"
+    version: "3.0.2"
   image_picker:
     dependency: "direct main"
     description:
@@ -588,7 +581,7 @@ packages:
     source: hosted
     version: "0.8.5+3"
   image_picker_android:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: image_picker_android
       url: "https://pub.dartlang.org"
@@ -754,7 +747,7 @@ packages:
       name: mixpanel_flutter
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.6.0"
+    version: "2.0.0"
   package_config:
     dependency: transitive
     description:
@@ -1235,7 +1228,7 @@ packages:
       name: top_snackbar_flutter
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.1.1"
+    version: "2.1.1"
   tuple:
     dependency: "direct main"
     description:

@@ -18,13 +18,11 @@ dependencies:
   http: ^0.13.3
   flutter_riverpod: ^1.0.0-dev.7
   flutter_svg: ^1.1.0
-  image_picker: ^0.8.4+2
-  # Android package to fix build issue: https://stackoverflow.com/a/72516446/1702627
-  image_picker_android: 0.8.4+13
+  image_picker: ^0.8.5+3
   just_audio: ^0.9.21
   record: ^4.3.1
   intl: ^0.17.0
-  firebase_messaging: ^11.1.0
+  firebase_messaging: ^13.0.1
   flutter_local_notifications: ^9.1.4
   emoji_picker_flutter: ^1.0.8
   uuid: ^3.0.5
@@ -36,13 +34,12 @@ dependencies:
   syncfusion_flutter_sliders: ^20.1.57
   auto_size_text: ^3.0.0
   dartz: ^0.10.1
-  top_snackbar_flutter: ^1.0.2
+  top_snackbar_flutter: ^2.1.1
   get_it: ^7.2.0
-  mixpanel_flutter: ^1.4.5
-  image_crop: ^0.4.0
+  mixpanel_flutter: ^2.0.0
   lottie: ^1.2.2
   sentry_flutter: ^6.3.0
-  image_cropper: ^2.0.3
+  image_cropper: ^3.0.0
   camerawesome: ^0.3.0+1
   path_provider: ^2.0.9
   path: ^1.8.0
