@@ -161,6 +161,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     Mixpanel.init(
       mixpanelToken,
       optOutTrackingDefault: !kReleaseMode,
+      trackAutomaticEvents: true,
     );
   }
 
