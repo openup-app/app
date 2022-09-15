@@ -18,17 +18,28 @@ class TitleAndTagline extends StatelessWidget {
               style: Theming.of(context)
                   .text
                   .body
-                  .copyWith(fontSize: 64, fontWeight: FontWeight.w300),
+                  .copyWith(fontSize: 80, fontWeight: FontWeight.w700),
             ),
             const SizedBox(
               height: 6,
             ),
-            Text(
-              'a new way to meet people',
-              style: Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+            RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: Theming.of(context)
+                    .text
+                    .body
+                    .copyWith(fontSize: 24, fontWeight: FontWeight.w300),
+                children: [
+                  const TextSpan(text: 'The only app dedicated to\nmaking '),
+                  TextSpan(
+                      text: 'new friends',
+                      style: Theming.of(context)
+                          .text
+                          .body
+                          .copyWith(fontSize: 24, fontWeight: FontWeight.w600)),
+                ],
+              ),
             ),
           ],
         ),
