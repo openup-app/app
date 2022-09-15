@@ -11,6 +11,7 @@ import 'package:openup/api/chat/chat_api2.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/home_screen.dart';
+import 'package:openup/main.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/report_screen.dart';
@@ -259,7 +260,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         onBlock: () => setState(() => _profiles.removeWhere(
                             ((p) => p.profile.uid == profile.uid))),
                         onReport: () {
-                          Navigator.of(context).pushNamed(
+                          rootNavigatorKey.currentState?.pushNamed(
                             'call-report',
                             arguments: ReportScreenArguments(uid: profile.uid),
                           );
