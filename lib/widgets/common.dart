@@ -278,37 +278,36 @@ class ProfileImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRect(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.network(
-            photo,
-            fit: fit,
-            frameBuilder: fadeInFrameBuilder,
-            loadingBuilder: loadingBuilder,
-            errorBuilder: iconErrorBuilder,
-          ),
-          // Using ImageFiltered to blur image caused blur to overflow and
-          // flickering as of 2022-09-12 (Flutter 3.3), even with a parent
-          // ClipRect. Using BackdropFilter is a workaround but it much more
-          // expensive to use.
-          if (blur)
-            Positioned(
-              left: -10,
-              top: -10,
-              right: -10,
-              bottom: -10,
-              child: BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: blurSigma,
-                  sigmaY: blurSigma,
-                ),
-                // Container expands BackdropFilter to max constraints
-                child: Container(),
-              ),
-            ),
-        ],
+      child: Image.network(
+        photo,
+        fit: fit,
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          return fadeInFrameBuilder(
+            context,
+            blur ? _blurred(child) : child,
+            frame,
+            wasSynchronouslyLoaded,
+          );
+        },
+        loadingBuilder: (context, child, progress) {
+          return loadingBuilder(
+            context,
+            blur ? _blurred(child) : child,
+            progress,
+          );
+        },
+        errorBuilder: iconErrorBuilder,
       ),
+    );
+  }
+
+  Widget _blurred(Widget child) {
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(
+        sigmaX: blurSigma,
+        sigmaY: blurSigma,
+      ),
+      child: child,
     );
   }
 }
