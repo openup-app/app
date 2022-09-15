@@ -1449,16 +1449,18 @@ class _ReportBlockPopupMenuState extends ConsumerState<ReportBlockPopupMenu> {
 
 class LoadingIndicator extends StatelessWidget {
   final double size;
+  final Color color;
   const LoadingIndicator({
     super.key,
     this.size = 50,
+    this.color = Colors.white,
   });
 
   @override
   Widget build(BuildContext context) {
     return SpinKitWave(
       size: size,
-      color: Colors.white,
+      color: color,
     );
   }
 }
