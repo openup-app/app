@@ -964,4 +964,19 @@ class Chatroom with _$Chatroom {
       _$ChatroomFromJson(json);
 }
 
-enum Topic { moved, lonely, introvert, sleep, talk, sad, bored }
+enum Topic {
+  moved,
+  sports,
+  sleep,
+  books,
+  school,
+  gym,
+  lonely,
+  videoGames,
+  restaurants,
+  tourism,
+  party,
+  backpacking,
+  dance,
+  conversation
+}

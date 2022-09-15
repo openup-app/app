@@ -1077,7 +1077,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CheckboxTile(
-                        label: _topicToTitle(Topic.lonely),
+                        label: '',
                         value: _topic == Topic.lonely,
                         onChanged: (_) => setState(() => _topic = Topic.lonely),
                       ),
@@ -1095,12 +1095,12 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CheckboxTile(
-                        label: _topicToTitle(Topic.moved),
+                        label: '',
                         value: _topic == Topic.moved,
                         onChanged: (_) => setState(() => _topic = Topic.moved),
                       ),
                       CheckboxTile(
-                        label: _topicToTitle(Topic.sleep),
+                        label: '',
                         value: _topic == Topic.sleep,
                         onChanged: (_) => setState(() => _topic = Topic.sleep),
                       ),
@@ -1292,7 +1292,7 @@ Future<void> _displayCallProfile(
         photo: participant.photo,
         gallery: participant.gallery,
         location: "",
-        topic: Topic.talk,
+        topic: Topic.conversation,
         blurPhotos: false,
       ),
       Status(
@@ -1301,7 +1301,7 @@ Future<void> _displayCallProfile(
         location: participant.location,
         endTime: DateTime.now(),
       ),
-      _topicToTitle(topic),
+      '',
     ),
   );
   if (action != null) {
@@ -1718,7 +1718,7 @@ class _TopicHeader extends StatelessWidget {
                     : CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _topicToTitle(topic),
+                    '',
                     textAlign: centerText ? TextAlign.center : null,
                     style: Theming.of(context).text.body.copyWith(
                       fontSize: 36,
@@ -1733,7 +1733,7 @@ class _TopicHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   AutoSizeText(
-                    _topicToDescription(topic),
+                    '',
                     maxLines: 1,
                     textAlign: centerText ? TextAlign.center : null,
                     style: Theming.of(context).text.body.copyWith(
@@ -2135,44 +2135,6 @@ class _ReportBlockPopupMenuState extends ConsumerState<_ReportBlockPopupMenu> {
         ];
       },
     );
-  }
-}
-
-String _topicToTitle(Topic topic) {
-  switch (topic) {
-    case Topic.lonely:
-      return 'I\'m Lonely';
-    // case Topic.friends:
-    //   return 'Need Friends';
-    case Topic.moved:
-      return 'Just Moved';
-    case Topic.sleep:
-      return 'Can\'t Sleep';
-    case Topic.bored:
-      throw UnimplementedError();
-    case Topic.introvert:
-      throw UnimplementedError();
-    default:
-      throw UnimplementedError();
-  }
-}
-
-String _topicToDescription(Topic topic) {
-  switch (topic) {
-    case Topic.lonely:
-      return 'People who are in need of some company';
-    // case Topic.friends:
-    //   return 'For those who are looking to make new friends';
-    case Topic.moved:
-      return 'Others who also moved to a new area';
-    case Topic.sleep:
-      return 'Talk to someone who is also having a hard time sleeping';
-    case Topic.bored:
-      throw UnimplementedError();
-    case Topic.introvert:
-      throw UnimplementedError();
-    default:
-      throw UnimplementedError();
   }
 }
 

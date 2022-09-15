@@ -2,9 +2,7 @@ import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/keyboard_screen.dart';
 import 'package:openup/widgets/theming.dart';
 
 class SignUpTopicScreen extends ConsumerStatefulWidget {
@@ -49,24 +47,28 @@ class _SignUpTopicScreenState extends ConsumerState<SignUpTopicScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 28),
-            Expanded(
-              child: Wrap(
-                alignment: WrapAlignment.start,
-                spacing: 0,
-                runSpacing: 4,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  for (final topic in Topic.values)
-                    Chip(
-                      label: topicLabel(topic),
-                      height: 46,
-                      selected: _topic == topic,
-                      onSelected: () => setState(() => _topic = topic),
-                    ),
-                ],
+            Flexible(
+              fit: FlexFit.loose,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Wrap(
+                  alignment: WrapAlignment.start,
+                  spacing: 0,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    for (final topic in Topic.values)
+                      Chip(
+                        label: topicLabel(topic),
+                        height: 46,
+                        selected: _topic == topic,
+                        onSelected: () => setState(() => _topic = topic),
+                      ),
+                  ],
+                ),
               ),
             ),
+            const SizedBox(height: 4),
             OvalButton(
               onPressed: (_topic == null || _uploading) ? null : _submit,
               child: _uploading
