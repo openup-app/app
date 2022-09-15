@@ -373,8 +373,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             return _buildPageRoute(
               settings: settings,
               builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: HomeScreen(),
+                final deepLinkArgs = settings.arguments as DeepLinkArgs?;
+                return CurrentRouteSystemUiStyling.light(
+                  key: _scaffoldKey,
+                  child: HomeScreen(deepLinkArgs: deepLinkArgs),
                 );
               },
             );
@@ -384,7 +386,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               builder: (_) {
                 final args = settings.arguments as StartWithCall?;
                 return CurrentRouteSystemUiStyling.light(
-                  key: _scaffoldKey,
                   child: LobbyListPage(
                     startWithCall: args,
                   ),

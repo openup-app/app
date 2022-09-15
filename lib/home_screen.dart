@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/error_screen.dart';
@@ -15,8 +16,14 @@ import 'package:openup/widgets/theming.dart';
 
 import 'chat_page.dart';
 
+part 'home_screen.freezed.dart';
+
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final DeepLinkArgs? deepLinkArgs;
+  const HomeScreen({
+    Key? key,
+    this.deepLinkArgs,
+  }) : super(key: key);
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -27,6 +34,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   late final TabController _tabController;
 
   final _navigatorKeys = List.generate(3, (_) => GlobalKey<NavigatorState>());
+  DeepLinkArgs? _deepLinkArgs;
+  bool _firstAttemptToDeepLink = true;
 
   @override
   void initState() {
@@ -37,6 +46,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       initialIndex: 0,
       vsync: this,
     );
+
+    _deepLinkArgs = widget.deepLinkArgs;
   }
 
   @override
@@ -53,8 +64,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
+  /// Hacky method of deeplinking to nested navigation
+  void _navigateToDeepLinkOrPostFrameCallback() {
+    final deepLinkArgs = _deepLinkArgs;
+    if (mounted && deepLinkArgs != null) {
+      _navigateTabTo(1);
+      final navigatorState = _navigatorKeys[1].currentState;
+      if (navigatorState != null) {
+        deepLinkArgs.when(chat: (args) {
+          navigatorState.pushNamed('chat', arguments: args);
+        });
+        setState(() => _deepLinkArgs = null);
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _navigateToDeepLinkOrPostFrameCallback());
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final deepLinkArgs = _deepLinkArgs;
+    if (deepLinkArgs != null && _firstAttemptToDeepLink) {
+      _firstAttemptToDeepLink = false;
+      _navigateToDeepLinkOrPostFrameCallback();
+    }
+
     // BottomNavigationBar height is available to pages via MediaQuery bottom padding
     final obscuredTop = 75.0 + MediaQuery.of(context).padding.top;
     final obscuredBottom = 40.0 + MediaQuery.of(context).padding.bottom;
@@ -242,6 +277,11 @@ class __KeepAliveState extends State<_KeepAlive>
     super.build(context);
     return widget.child;
   }
+}
+
+@freezed
+class DeepLinkArgs with _$DeepLinkArgs {
+  const factory DeepLinkArgs.chat(ChatPageArguments args) = _Chat;
 }
 
 final currentTabNotifier = ValueNotifier<HomeTab>(HomeTab.discover);

@@ -59,7 +59,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
   bool _loading = true;
 
-  Profile? _profile;
   String? _myPhoto;
 
   bool _recording = false;
@@ -324,7 +323,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16.0),
                                 child: Text(
-                                  'Send your first message to ${_profile != null ? _profile!.name : ''}',
+                                  'Send your first message to ${widget.otherProfile.name}',
                                   style: Theming.of(context).text.bodySecondary,
                                   textAlign: TextAlign.center,
                                 ),

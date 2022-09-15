@@ -7,22 +7,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/chat_page.dart';
 import 'package:openup/chat_screen.dart';
+import 'package:openup/home_screen.dart';
 import 'package:openup/lobby_list_page.dart';
 import 'package:openup/notifications/android_voip_handlers.dart'
     as android_voip;
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notification_comms.dart';
-import 'package:openup/profile_screen.dart';
-import 'package:openup/widgets/new_friend_banner.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 part 'notifications.freezed.dart';
 part 'notifications.g.dart';
@@ -43,6 +45,7 @@ Future<UseContext?> initializeNotifications({
   required GlobalKey scaffoldKey,
   required UserStateNotifier userStateNotifier,
 }) async {
+  await _initializeLocalNotifications(scaffoldKey);
   FirebaseMessaging.onMessage.listen((remoteMessage) {
     _onForegroundNotification(scaffoldKey, remoteMessage, userStateNotifier);
   });
@@ -112,55 +115,10 @@ Future<UseContext?> _handleLaunchNotification() async {
     return null;
   }
 
-  final payloadJson = launchDetails.payload;
-  if (payloadJson != null) {
-    final payload = _NotificationPayload.fromJson(jsonDecode(payloadJson));
-    final api = GetIt.instance.get<Api>();
-    return payload.map(
-      call: (call) => null,
-      callEnded: (_) => null,
-      chat: (chat) async {
-        final result = await api.getProfile(chat.uid);
-        return (BuildContext context) {
-          return result.fold((l) {
-            displayError(context, l);
-            return false;
-          }, (profile) {
-            Navigator.of(context).pushReplacementNamed('home');
-            Navigator.of(context).pushNamed(
-              'chat',
-              arguments: ChatArguments(
-                uid: profile.uid,
-                chatroomId: chat.chatroomId,
-              ),
-            );
-            return true;
-          });
-        };
-      },
-      newConnection: (newConnection) async {
-        final result = await api.getProfile(newConnection.uid);
-        return (BuildContext context) {
-          return result.fold(
-            (l) {
-              displayError(context, l);
-              return false;
-            },
-            (profile) {
-              Navigator.of(context).pushReplacementNamed('home');
-              Navigator.of(context).pushNamed(
-                'chat',
-                arguments: ChatArguments(
-                  uid: profile.uid,
-                  chatroomId: newConnection.chatroomId,
-                ),
-              );
-              return true;
-            },
-          );
-        };
-      },
-    );
+  final payload = launchDetails.payload;
+  if (payload != null) {
+    final parsedMessage = _ParsedMessage.fromJson(jsonDecode(payload));
+    return _handleDeepLink(parsedMessage);
   }
   return null;
 }
@@ -169,9 +127,9 @@ void _onForegroundNotification(
   GlobalKey key,
   RemoteMessage message,
   UserStateNotifier userStateNotifier,
-) async {
-  final parsed = await _parseRemoteMessage(message);
-  parsed.payload?.map(
+) {
+  final parsedMessage = _parseRemoteMessage(message);
+  parsedMessage?.map(
     call: (call) {
       final profile = SimpleProfile(
         uid: call.callerUid,
@@ -187,48 +145,16 @@ void _onForegroundNotification(
         );
       }
     },
-    callEnded: (callEnded) {
-      reportCallEnded(callEnded.rid);
-    },
-    chat: (chat) {},
-    newConnection: (newConnection) async {
-      final context = key.currentContext;
-      if (context == null) {
-        return false;
-      }
-
-      final api = GetIt.instance.get<Api>();
-      final result = await api.getProfile(newConnection.uid);
-      result.fold(
-        (l) {},
-        (r) {
-          showTopSnackBar(
-            context,
-            NewFriendBanner(
-              uid: newConnection.uid,
-              name: newConnection.name,
-              photo: newConnection.photo,
-              chatroomId: newConnection.chatroomId,
-            ),
-            onTap: () {
-              Navigator.of(context).pushNamed(
-                'profile',
-                arguments: ProfileArguments(profile: r, editable: false),
-              );
-            },
-          );
-        },
-      );
-    },
+    callEnded: (callEnded) => reportCallEnded(callEnded.rid),
+    chat: (_) => _displayNotification(parsedMessage),
+    newConnection: (_) => _displayNotification(parsedMessage),
   );
 }
 
-Future<void> _onBackgroundNotification(RemoteMessage message) async {
-  bool shouldDisplay = true;
-  final parsed = await _parseRemoteMessage(message);
-  parsed.payload?.map(
+Future<void> _onBackgroundNotification(RemoteMessage message) {
+  final parsedMessage = _parseRemoteMessage(message);
+  parsedMessage?.map(
     call: (call) {
-      shouldDisplay = false;
       final profile = SimpleProfile(
         uid: call.callerUid,
         name: call.name,
@@ -242,127 +168,56 @@ Future<void> _onBackgroundNotification(RemoteMessage message) async {
           video: false,
         );
       }
+      // iOS handles incoming call separately using PushKit and CallKit
     },
-    callEnded: (callEnded) {
-      reportCallEnded(callEnded.rid);
-    },
-    chat: (_) {},
-    newConnection: (_) {},
+    callEnded: (callEnded) => reportCallEnded(callEnded.rid),
+    chat: (_) => _displayNotification(parsedMessage),
+    newConnection: (_) => _displayNotification(parsedMessage),
   );
-  if (shouldDisplay) {
-    return _displayNotification(parsed);
+  return Future.value();
+}
+
+_ParsedMessage? _parseRemoteMessage(RemoteMessage message) {
+  final String? type = message.data['type'];
+  final String? bodyString = message.data['body'];
+  if (type == null || bodyString == null) {
+    debugPrint('Invalid notification. Type: $type, body: $bodyString');
+    return null;
   }
-}
 
-Future<_ParsedNotification> _parseRemoteMessage(RemoteMessage message) async {
-  final type = message.data['type'];
-  final String notificationTitle;
-  final String notificationBody;
-  final _NotificationPayload notificationPayload;
-  final String channelName;
-  final String channelDescription;
-
-  String? chatroomId;
+  final body = jsonDecode(bodyString);
   if (type == 'call') {
-    final callerUid = message.data['callerUid'];
-    final callerName = message.data['callerName'];
-    final callerPhoto = message.data['callerPhoto'];
-    final callerBlurPhotos =
-        message.data['callerBlurPhotos']?.toLowerCase() == 'true';
-
-    final rid = message.data['rid'];
-    notificationTitle = 'Incoming audio call from $callerName';
-    notificationBody = callerName;
-    channelName = 'Calls';
-    channelDescription = 'Calls from your friends';
-    notificationPayload = _CallPayload(
-      callerUid: callerUid,
-      name: callerName,
-      photo: callerPhoto,
-      blurPhotos: callerBlurPhotos,
-      rid: rid,
-    );
+    return _Call.fromJson(body);
   } else if (type == 'call_ended') {
-    final rid = message.data['rid'];
-    notificationPayload = _CallEndedPayload(rid: rid);
-    notificationTitle = '';
-    notificationBody = '';
-    channelName = '';
-    channelDescription = '';
+    return _CallEnded.fromJson(body);
   } else if (type == 'chat') {
-    final messageJson = message.data['message'];
-    final senderName = message.data['senderName'];
-    notificationTitle = senderName;
-    chatroomId = message.data['chatroomId'];
-    final chatroomUnread = int.parse(message.data['chatroomUnread']);
-    final chatMessage = ChatMessage.fromJson(jsonDecode(messageJson));
-    channelName = 'Chat messages';
-    channelDescription = 'Messages from your friends';
-    notificationPayload = _ChatPayload(
-      uid: chatMessage.uid,
-      chatroomId: chatroomId!,
-      chatroomUnread: chatroomUnread,
-    );
-
-    switch (chatMessage.type) {
-      case ChatType.emoji:
-        notificationBody = chatMessage.content;
-        break;
-      case ChatType.image:
-        notificationBody = '$senderName sent a photo';
-        break;
-      case ChatType.video:
-        notificationBody = '$senderName sent a video';
-        break;
-      case ChatType.audio:
-        notificationBody = '$senderName sent a voice memo';
-        break;
-    }
-  } else if (type == 'new_connection') {
-    channelName = 'New friends';
-    channelDescription = 'When you make a new friend';
-    final name = message.data['name'];
-    notificationPayload = _NewConnectionPayload(
-      uid: message.data['uid'],
-      chatroomId: message.data['chatroomId'],
-      name: name,
-      photo: message.data['photo'],
-    );
-    notificationTitle = '$name accepted your friend request!';
-    notificationBody = 'Tap to chat';
+    return _Chat.fromJson(body);
+  } else if (type == 'newConnection') {
+    return _NewConnection.fromJson(body);
   } else {
-    throw 'Unknown notification type $type';
+    debugPrint('Unknown notification type $type');
+    return null;
   }
-
-  await _initializeLocalNotifications();
-
-  final androidDetails = AndroidNotificationDetails(
-    type,
-    channelName,
-    ongoing: true,
-    channelDescription: channelDescription,
-    importance: Importance.max,
-    priority: Priority.high,
-    ticker: notificationBody,
-  );
-  final iOSDetails = IOSNotificationDetails(
-    threadIdentifier: chatroomId,
-  );
-  final notificationDetails = NotificationDetails(
-    android: androidDetails,
-    iOS: iOSDetails,
-  );
-
-  return _ParsedNotification(
-    id: 0,
-    title: notificationTitle,
-    body: notificationBody,
-    details: notificationDetails,
-    payload: notificationPayload,
-  );
 }
 
-Future<void> _initializeLocalNotifications() {
+Future<File?> getPhoto({
+  required String uid,
+  required String url,
+}) async {
+  return get(Uri.parse(url)).then((response) async {
+    final dir = await path_provider.getTemporaryDirectory();
+    final profilesDir = Directory(path.join(dir.path, 'profiles'));
+    await profilesDir.create();
+    final file = File(path.join(profilesDir.path, '$uid.jpg'));
+    await file.writeAsBytes(response.bodyBytes);
+    return file;
+  }).catchError((e, s) {
+    debugPrint(e.toString());
+    debugPrint(s.toString());
+  });
+}
+
+Future<void> _initializeLocalNotifications(GlobalKey globalKey) {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
   const iOSInit = IOSInitializationSettings();
@@ -370,63 +225,201 @@ Future<void> _initializeLocalNotifications() {
     android: androidInit,
     iOS: iOSInit,
   );
-  return flutterLocalNotificationsPlugin.initialize(initializationSettings);
-}
-
-Future<void> _displayNotification(_ParsedNotification parsedNotification) {
-  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  return flutterLocalNotificationsPlugin.show(
-    0,
-    parsedNotification.title,
-    parsedNotification.body,
-    parsedNotification.details,
-    payload: jsonEncode(parsedNotification.payload),
+  return flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onSelectNotification: (deepLinkPayload) async {
+      if (deepLinkPayload != null) {
+        final parsedMessage =
+            _ParsedMessage.fromJson(jsonDecode(deepLinkPayload));
+        final useContext = await _handleDeepLink(parsedMessage);
+        final context = globalKey.currentContext;
+        if (context != null) {
+          // ignore: use_build_context_synchronously
+          useContext?.call(context);
+        }
+      }
+    },
   );
 }
 
-class _ParsedNotification {
-  final int id;
-  final String title;
-  final String body;
-  final NotificationDetails details;
-  final _NotificationPayload? payload;
+Future<UseContext?> _handleDeepLink(_ParsedMessage parsedMessage) {
+  final api = GetIt.instance.get<Api>();
+  return parsedMessage.map(
+    call: (call) async {
+      return (BuildContext context) {
+        Navigator.of(context).pushReplacementNamed('home');
+        Navigator.of(context).pushNamed('call');
+        return true;
+      };
+    },
+    callEnded: (_) => Future.value(),
+    chat: (chat) async {
+      final result = await api.getProfile(chat.senderUid);
+      return (BuildContext context) {
+        return result.fold((l) {
+          displayError(context, l);
+          return false;
+        }, (profile) {
+          Navigator.of(context).pushReplacementNamed(
+            'home',
+            arguments: DeepLinkArgs.chat(
+              ChatPageArguments(
+                otherUid: profile.uid,
+                otherProfile: profile,
+                otherLocation: profile.location,
+                online: false,
+                endTime: DateTime.now().add(
+                  const Duration(days: 3),
+                ),
+              ),
+            ),
+          );
+          return true;
+        });
+      };
+    },
+    newConnection: (newConnection) async {
+      final result = await api.getProfile(newConnection.uid);
+      return (BuildContext context) {
+        return result.fold(
+          (l) {
+            displayError(context, l);
+            return false;
+          },
+          (profile) {
+            Navigator.of(context).pushReplacementNamed('home');
+            Navigator.of(context).pushNamed(
+              'chat',
+              arguments: ChatArguments(
+                uid: profile.uid,
+                chatroomId: newConnection.chatroomId,
+              ),
+            );
+            return true;
+          },
+        );
+      };
+    },
+  );
+}
 
-  _ParsedNotification({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.details,
-    required this.payload,
-  });
+Future<void> _displayNotification(_ParsedMessage parsedMessage) {
+  final plugin = FlutterLocalNotificationsPlugin();
+  return parsedMessage.map(
+    call: (call) => Future.value(),
+    callEnded: (callEnded) => Future.value(),
+    chat: (chat) async {
+      final photoFile =
+          await getPhoto(uid: chat.senderName, url: chat.senderPhoto);
+      final bytes = await photoFile?.readAsBytes();
+      const message = "New voice message";
+      plugin.show(
+        chat.message.messageId?.hashCode ?? 0,
+        "New message",
+        "Voice message",
+        payload: jsonEncode(parsedMessage.toJson()),
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            "chat",
+            "Chat messages",
+            channelDescription: "Messages from your friends",
+            ticker: message,
+            styleInformation: MessagingStyleInformation(
+              Person(
+                name: chat.senderName,
+                key: chat.senderUid,
+                icon: bytes == null ? null : ByteArrayAndroidIcon(bytes),
+              ),
+              messages: [
+                Message(
+                  message,
+                  chat.message.date,
+                  Person(
+                    name: chat.senderName,
+                    key: chat.senderUid,
+                    icon: bytes == null ? null : ByteArrayAndroidIcon(bytes),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          iOS: IOSNotificationDetails(
+            subtitle: 'New message from ${chat.senderName}',
+            attachments: photoFile == null
+                ? null
+                : [
+                    IOSNotificationAttachment(
+                      photoFile.path,
+                    ),
+                  ],
+            threadIdentifier: chat.chatroomId,
+          ),
+        ),
+      );
+    },
+    newConnection: (newConnection) async {
+      final photoFile =
+          await getPhoto(uid: newConnection.name, url: newConnection.photo);
+      final bytes = await photoFile?.readAsBytes();
+      final title = "${newConnection.name} is now your friend";
+      plugin.show(
+        newConnection.uid.hashCode,
+        title,
+        "You can now chat with each other",
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            "new_connection",
+            "New friends",
+            channelDescription: "When you make a new friend",
+            largeIcon: bytes == null ? null : ByteArrayAndroidBitmap(bytes),
+            styleInformation: const MediaStyleInformation(),
+          ),
+          iOS: IOSNotificationDetails(
+            subtitle: title,
+            attachments: photoFile == null
+                ? null
+                : [
+                    IOSNotificationAttachment(
+                      photoFile.path,
+                    ),
+                  ],
+          ),
+        ),
+      );
+    },
+  );
 }
 
 @freezed
-class _NotificationPayload with _$_NotificationPayload {
-  const factory _NotificationPayload.call({
+class _ParsedMessage with _$_ParsedMessage {
+  const factory _ParsedMessage.call({
     required String callerUid,
     required String name,
     required String photo,
     required String rid,
     required bool blurPhotos,
-  }) = _CallPayload;
+  }) = _Call;
 
-  const factory _NotificationPayload.callEnded({
+  const factory _ParsedMessage.callEnded({
     required String rid,
-  }) = _CallEndedPayload;
+  }) = _CallEnded;
 
-  const factory _NotificationPayload.chat({
-    required String uid,
+  const factory _ParsedMessage.chat({
+    required String senderUid,
+    required String senderName,
+    required String senderPhoto,
     required String chatroomId,
     required int chatroomUnread,
-  }) = _ChatPayload;
+    required ChatMessage message,
+  }) = _Chat;
 
-  const factory _NotificationPayload.newConnection({
+  const factory _ParsedMessage.newConnection({
     required String uid,
     required String chatroomId,
     required String name,
     required String photo,
-  }) = _NewConnectionPayload;
+  }) = _NewConnection;
 
-  factory _NotificationPayload.fromJson(Map<String, dynamic> json) =>
-      _$_NotificationPayloadFromJson(json);
+  factory _ParsedMessage.fromJson(Map<String, dynamic> json) =>
+      _$_ParsedMessageFromJson(json);
 }
