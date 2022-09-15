@@ -7,6 +7,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -21,7 +22,8 @@ class ConnectionsBottomSheet extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<ConnectionsBottomSheet> createState() => _ConnectionsBottomSheetState();
+  ConsumerState<ConnectionsBottomSheet> createState() =>
+      _ConnectionsBottomSheetState();
 }
 
 class _ConnectionsBottomSheetState extends ConsumerState<ConnectionsBottomSheet>
@@ -96,7 +98,7 @@ class _ConnectionsBottomSheetState extends ConsumerState<ConnectionsBottomSheet>
                     final connections = _connections;
                     if (connections == null) {
                       return const Center(
-                        child: CircularProgressIndicator(),
+                        child: LoadingIndicator(),
                       );
                     }
                     return ListView.builder(

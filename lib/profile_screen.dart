@@ -45,7 +45,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         children: [
           if (profile == null) ...[
             const Center(
-              child: CircularProgressIndicator(),
+              child: LoadingIndicator(),
             ),
           ] else ...[
             if (gallery.isEmpty)

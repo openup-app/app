@@ -101,7 +101,7 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
                     height: 48,
                     child: _playbackInfo.state == PlaybackState.loading
                         ? const Center(
-                            child: CircularProgressIndicator(),
+                            child: LoadingIndicator(size: 24),
                           )
                         : Button(
                             onPressed: () {
@@ -379,7 +379,7 @@ class _VideoChatMessageState extends State<VideoChatMessage> {
                       );
                     } else {
                       return const Center(
-                        child: CircularProgressIndicator(),
+                        child: LoadingIndicator(),
                       );
                     }
                   },

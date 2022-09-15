@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -284,7 +285,7 @@ class ProfileImage extends StatelessWidget {
             photo,
             fit: fit,
             frameBuilder: fadeInFrameBuilder,
-            loadingBuilder: circularProgressLoadingBuilder,
+            loadingBuilder: loadingBuilder,
             errorBuilder: iconErrorBuilder,
           ),
           // Using ImageFiltered to blur image caused blur to overflow and
@@ -519,16 +520,26 @@ class RecordButtonState extends State<RecordButton> {
                       ),
                     ),
                     child: Center(
-                      child: Column(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 3),
-                          SizedBox(
-                            width: 80,
-                            height: 40,
-                            child: _RecordingIndicator(),
+                          Container(
+                            width: 42,
+                            height: 42,
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.white),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
                           ),
+                          const SizedBox(width: 14),
                           Text(
                             widget.label,
                             style: Theming.of(context).text.body.copyWith(
@@ -632,7 +643,7 @@ class RecordButtonState extends State<RecordButton> {
                               ? null
                               : () => widget.onSubmit(_audioPath!),
                           child: widget.submitting
-                              ? const CircularProgressIndicator()
+                              ? const LoadingIndicator()
                               : Container(
                                   padding: const EdgeInsets.all(4.0),
                                   decoration: BoxDecoration(
@@ -871,7 +882,7 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
                       child: Consumer(
                         builder: (context, ref, _) {
                           if (_submitting) {
-                            return const CircularProgressIndicator();
+                            return const LoadingIndicator();
                           }
 
                           if (_submitted) {
@@ -1432,6 +1443,22 @@ class _ReportBlockPopupMenuState extends ConsumerState<ReportBlockPopupMenu> {
           ),
         ];
       },
+    );
+  }
+}
+
+class LoadingIndicator extends StatelessWidget {
+  final double size;
+  const LoadingIndicator({
+    super.key,
+    this.size = 50,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SpinKitWave(
+      size: size,
+      color: Colors.white,
     );
   }
 }

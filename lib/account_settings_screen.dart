@@ -12,6 +12,7 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/dialog.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -100,7 +101,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                               ],
                               child: Center(
                                 child: _submitting
-                                    ? const CircularProgressIndicator()
+                                    ? const LoadingIndicator()
                                     : Text(
                                         'Update Information',
                                         style: Theming.of(context)
@@ -451,7 +452,7 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
         body: StatefulBuilder(builder: (context, setState) {
           if (_loading) {
             return const Center(
-              child: CircularProgressIndicator(),
+              child: LoadingIndicator(),
             );
           }
           if (_blockedUsers.isEmpty) {

@@ -6,6 +6,7 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/contact_text_field.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/keyboard_screen.dart';
@@ -73,7 +74,7 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
                         onPressed: _uploading ? null : _upload,
                         white: true,
                         child: _uploading
-                            ? const CircularProgressIndicator()
+                            ? const LoadingIndicator()
                             : const Text('send'),
                       ),
                     ),

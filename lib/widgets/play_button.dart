@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 
 class PlayButton extends StatefulWidget {
   final String? path;
@@ -92,7 +93,7 @@ class PlayStopArrow extends StatelessWidget {
       case PlaybackState.loading:
         return const Padding(
           padding: EdgeInsets.all(8.0),
-          child: CircularProgressIndicator(),
+          child: LoadingIndicator(),
         );
       case PlaybackState.playing:
         return Icon(

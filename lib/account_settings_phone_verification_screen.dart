@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/theming.dart';
 
@@ -103,7 +104,7 @@ class _AccountSettingsPhoneVerificationScreenState
                               ],
                               child: Center(
                                 child: _submitting
-                                    ? const CircularProgressIndicator()
+                                    ? const LoadingIndicator()
                                     : Text(
                                         'Update',
                                         style: Theming.of(context)

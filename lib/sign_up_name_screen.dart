@@ -64,7 +64,7 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
                       ? null
                       : _submit,
                   child: _uploading
-                      ? const CircularProgressIndicator()
+                      ? const LoadingIndicator()
                       : const Text('continue'),
                 );
               },

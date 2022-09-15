@@ -163,7 +163,7 @@ class __ImageButtonState extends ConsumerState<_ImageButton> {
                       wasSynchronouslyLoaded,
                     );
                   },
-                  loadingBuilder: circularProgressLoadingBuilder,
+                  loadingBuilder: loadingBuilder,
                   errorBuilder: iconErrorBuilder,
                   opacity: const AlwaysStoppedAnimation(0.75),
                 ),

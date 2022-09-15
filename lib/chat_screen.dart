@@ -17,6 +17,7 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_input_box.dart';
 import 'package:openup/widgets/chat_message.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/disable.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
@@ -165,7 +166,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                               if (_loading &&
                                   forwardIndex == _messages.length) {
                                 return const Center(
-                                  child: CircularProgressIndicator(),
+                                  child: LoadingIndicator(),
                                 );
                               }
                               final message = _messages.values.toList()[index];
@@ -463,7 +464,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     message.content,
                     fit: BoxFit.cover,
                     frameBuilder: fadeInFrameBuilder,
-                    loadingBuilder: circularProgressLoadingBuilder,
+                    loadingBuilder: loadingBuilder,
                     errorBuilder: iconErrorBuilder,
                   );
                 },

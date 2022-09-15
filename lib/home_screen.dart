@@ -121,6 +121,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       child: Text(
                         'Discover',
                         style: Theming.of(context).text.body.copyWith(
+                            fontSize: 20,
                             fontWeight: _tabController.index != 0
                                 ? FontWeight.w300
                                 : null),
@@ -135,6 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       child: Text(
                         'Friendships',
                         style: Theming.of(context).text.body.copyWith(
+                            fontSize: 20,
                             fontWeight: _tabController.index != 1
                                 ? FontWeight.w300
                                 : null),
@@ -149,6 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       child: Text(
                         'Profile',
                         style: Theming.of(context).text.body.copyWith(
+                            fontSize: 20,
                             fontWeight: _tabController.index != 2
                                 ? FontWeight.w300
                                 : null),

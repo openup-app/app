@@ -77,7 +77,7 @@ class NewFriendBanner extends StatelessWidget {
                       height: 108,
                       fit: BoxFit.cover,
                       frameBuilder: fadeInFrameBuilder,
-                      loadingBuilder: circularProgressLoadingBuilder,
+                      loadingBuilder: loadingBuilder,
                       errorBuilder: iconErrorBuilder,
                     ),
                   ),

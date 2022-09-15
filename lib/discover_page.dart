@@ -307,7 +307,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
               )
             else if (_profiles.isEmpty)
               const Center(
-                child: CircularProgressIndicator(),
+                child: LoadingIndicator(),
               ),
             Positioned(
               left: 0,

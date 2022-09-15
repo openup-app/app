@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openup/widgets/common.dart';
 
 /// A modal which can only be dismissed by invoking the returned
 /// callback.
@@ -49,7 +50,7 @@ class Loading extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 20),
-          const CircularProgressIndicator(),
+          const LoadingIndicator(),
           if (label != null) const SizedBox(height: 20),
           if (label != null) label!,
           const SizedBox(height: 20),

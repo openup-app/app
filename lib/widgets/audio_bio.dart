@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -178,9 +179,7 @@ class _AudioBioPlaybackControlsState extends State<AudioBioPlaybackControls> {
                           return const SizedBox(
                             width: 26,
                             height: 26,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
+                            child: LoadingIndicator(),
                           );
                       }
                     },

@@ -11,6 +11,7 @@ import 'package:openup/main.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/profile_photo.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/unread_message_badge.dart';
@@ -114,7 +115,7 @@ class _ConnectionsScreenState extends ConsumerState<ConnectionsScreen> {
               builder: (context) {
                 if (filteredConnections == null) {
                   return const Center(
-                    child: CircularProgressIndicator(),
+                    child: LoadingIndicator(),
                   );
                 }
                 if (filteredConnections.isEmpty) {
@@ -579,7 +580,7 @@ class _RemoveConnectionAlertDialogState
                   width: 24,
                   height: 24,
                   child: Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: LoadingIndicator(),
                   ),
                 )
               : Text('Remove',

@@ -222,7 +222,7 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
     if (_loading) {
       return const SafeArea(
         child: Center(
-          child: CircularProgressIndicator(),
+          child: LoadingIndicator(),
         ),
       );
     }

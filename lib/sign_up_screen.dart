@@ -67,117 +67,119 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color.fromRGBO(0x00, 0x51, 0x6E, 1.0),
-            Color.fromRGBO(0x00, 0x00, 0x00, 1.0),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+    return Scaffold(
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromRGBO(0x00, 0x51, 0x6E, 1.0),
+              Color.fromRGBO(0x00, 0x00, 0x00, 1.0),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-      ),
-      child: Form(
-        key: _formKey,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        child: FlexibleSingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(
-                height: MediaQuery.of(context).padding.top,
-              ),
-              const Spacer(),
-              const TitleAndTagline(),
-              const Spacer(),
-              Text(
-                'You’re in the right spot whether you are creating an account or signing back in!',
-                textAlign: TextAlign.center,
-                style: Theming.of(context).text.body.copyWith(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 18,
-                  color: Colors.white,
-                  shadows: [
-                    const Shadow(
-                      blurRadius: 3,
-                      offset: Offset(0.0, 1.0),
-                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-                    ),
-                  ],
+        child: Form(
+          key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          child: FlexibleSingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).padding.top,
                 ),
-              ),
-              const SizedBox(height: 25),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  InputArea(
-                    errorText: _phoneErrorText,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: TextFormField(
-                        controller: _phoneController,
-                        focusNode: _phoneFocusNode,
-                        keyboardType: TextInputType.phone,
-                        textInputAction: TextInputAction.done,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.deny(RegExp(r'\s')),
-                        ],
-                        onChanged: (_) {
-                          setState(() {
-                            _phoneErrorText =
-                                _validatePhone(_phoneController.text);
-                          });
-                        },
-                        onEditingComplete: () {
-                          FocusScope.of(context).unfocus();
-                        },
-                        textAlign: TextAlign.center,
-                        style: Theming.of(context).text.body.copyWith(
-                            fontWeight: FontWeight.w400,
-                            color: Colors.grey,
-                            fontSize: 18),
-                        decoration:
-                            const InputDecoration.collapsed(hintText: ''),
+                const Spacer(),
+                const TitleAndTagline(),
+                const Spacer(),
+                Text(
+                  'You’re in the right spot whether you are creating an account or signing back in!',
+                  textAlign: TextAlign.center,
+                  style: Theming.of(context).text.body.copyWith(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                    color: Colors.white,
+                    shadows: [
+                      const Shadow(
+                        blurRadius: 3,
+                        offset: Offset(0.0, 1.0),
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 25),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    InputArea(
+                      errorText: _phoneErrorText,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: TextFormField(
+                          controller: _phoneController,
+                          focusNode: _phoneFocusNode,
+                          keyboardType: TextInputType.phone,
+                          textInputAction: TextInputAction.done,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                          ],
+                          onChanged: (_) {
+                            setState(() {
+                              _phoneErrorText =
+                                  _validatePhone(_phoneController.text);
+                            });
+                          },
+                          onEditingComplete: () {
+                            FocusScope.of(context).unfocus();
+                          },
+                          textAlign: TextAlign.center,
+                          style: Theming.of(context).text.body.copyWith(
+                              fontWeight: FontWeight.w400,
+                              color: Colors.grey,
+                              fontSize: 18),
+                          decoration:
+                              const InputDecoration.collapsed(hintText: ''),
+                        ),
                       ),
                     ),
-                  ),
-                  AnimatedBuilder(
-                    animation: _phoneLabelAnimationController,
-                    builder: (context, child) {
-                      final animation = CurvedAnimation(
-                        parent: _phoneLabelAnimationController,
-                        curve: Curves.easeOut,
-                      );
-                      return Positioned(
-                        top: 22 - animation.value * 14,
-                        child: IgnorePointer(
-                          child: Text(
-                            'Phone number',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontWeight: FontWeight.w400,
-                                color: Colors.grey,
-                                fontSize: 18 - animation.value * 4),
+                    AnimatedBuilder(
+                      animation: _phoneLabelAnimationController,
+                      builder: (context, child) {
+                        final animation = CurvedAnimation(
+                          parent: _phoneLabelAnimationController,
+                          curve: Curves.easeOut,
+                        );
+                        return Positioned(
+                          top: 22 - animation.value * 14,
+                          child: IgnorePointer(
+                            child: Text(
+                              'Phone number',
+                              style: Theming.of(context).text.body.copyWith(
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.grey,
+                                  fontSize: 18 - animation.value * 4),
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  )
-                ],
-              ),
-              const SizedBox(height: 22),
-              const SizedBox(height: 22),
-              SignificantButton.pink(
-                onPressed: _submitting || !_valid ? null : _submit,
-                child: _submitting
-                    ? const CircularProgressIndicator()
-                    : const Text('Send code'),
-              ),
-              const SizedBox(height: 16),
-              const Policies(),
-              const Spacer(),
-              const MaleFemaleConnectionImageApart(),
-            ],
+                        );
+                      },
+                    )
+                  ],
+                ),
+                const SizedBox(height: 22),
+                const SizedBox(height: 22),
+                SignificantButton.pink(
+                  onPressed: _submitting || !_valid ? null : _submit,
+                  child: _submitting
+                      ? const LoadingIndicator()
+                      : const Text('Send code'),
+                ),
+                const SizedBox(height: 16),
+                const Policies(),
+                const Spacer(),
+                const MaleFemaleConnectionImageApart(),
+              ],
+            ),
           ),
         ),
       ),

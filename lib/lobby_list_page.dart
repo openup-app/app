@@ -21,6 +21,7 @@ import 'package:openup/util/location_service.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/play_button.dart';
 import 'package:openup/widgets/profile_button.dart';
@@ -214,7 +215,7 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
               if (_loading)
                 const Expanded(
                   child: Center(
-                    child: CircularProgressIndicator(),
+                    child: LoadingIndicator(),
                   ),
                 ),
               if (!_loading)
@@ -963,7 +964,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
                     ? const SizedBox(
                         width: 40,
                         height: 40,
-                        child: CircularProgressIndicator(),
+                        child: LoadingIndicator(),
                       )
                     : Button(
                         onPressed: (!_recorded || _posting) ? null : _delete,
@@ -1114,7 +1115,7 @@ class _StatusBoxState extends ConsumerState<_StatusBox> {
               child: _posting
                   ? const Padding(
                       padding: EdgeInsets.only(bottom: 10.0),
-                      child: CircularProgressIndicator(),
+                      child: LoadingIndicator(),
                     )
                   : Container(
                       width: 153,

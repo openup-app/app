@@ -216,8 +216,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                     width: 16,
                                     height: 16,
                                     child: Center(
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 1,
+                                      child: LoadingIndicator(
+                                        size: 16,
                                       ),
                                     ),
                                   ),
@@ -261,7 +261,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                 if (_loading &&
                                     forwardIndex == _messages.length) {
                                   return const Center(
-                                    child: CircularProgressIndicator(),
+                                    child: LoadingIndicator(),
                                   );
                                 }
                                 final message =

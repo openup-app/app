@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/platform/record_audio_recorder.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ProfileBio extends StatefulWidget {
@@ -242,7 +243,7 @@ class _ProfileBioDisplay extends ConsumerWidget {
                   child: playButton == PlayButtonState.loading
                       ? const Padding(
                           padding: EdgeInsets.all(8.0),
-                          child: CircularProgressIndicator(),
+                          child: LoadingIndicator(),
                         )
                       : (playButton == PlayButtonState.playing
                           ? Padding(

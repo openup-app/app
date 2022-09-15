@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openup/widgets/common.dart';
 
 /// Fades in the child when a frame is avaialbel (i.e. [frame] is not null).
 /// Used when loading images.
@@ -20,7 +21,7 @@ Widget fadeInFrameBuilder(
 }
 
 /// Displays loading progress.
-Widget circularProgressLoadingBuilder(
+Widget loadingBuilder(
   BuildContext context,
   Widget child,
   ImageChunkEvent? progress,
@@ -33,12 +34,9 @@ Widget circularProgressLoadingBuilder(
       if (progress != null)
         Container(
           color: Colors.transparent,
-          child: Center(
-            child: CircularProgressIndicator(
-              value: progress.expectedTotalBytes != null
-                  ? progress.cumulativeBytesLoaded /
-                      progress.expectedTotalBytes!
-                  : null,
+          child: const Center(
+            child: LoadingIndicator(
+              size: 24,
             ),
           ),
         ),

@@ -70,7 +70,7 @@ class _SignUpTopicScreenState extends ConsumerState<SignUpTopicScreen> {
             OvalButton(
               onPressed: (_topic == null || _uploading) ? null : _submit,
               child: _uploading
-                  ? const CircularProgressIndicator()
+                  ? const LoadingIndicator()
                   : const Text('continue'),
             ),
             const SizedBox(height: 59),
