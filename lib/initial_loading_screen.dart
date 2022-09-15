@@ -163,8 +163,8 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       child: Center(
         child: Image.asset(
           'assets/images/loading_icon.png',
-          width: 100,
-          height: 100,
+          width: 200,
+          height: 200,
         ),
       ),
     );
