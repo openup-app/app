@@ -252,7 +252,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                               reverse: true,
                               padding: EdgeInsets.only(
                                 top: MediaQuery.of(context).padding.top + 64,
-                                bottom: 80,
                               ),
                               itemCount: _messages.length + (_loading ? 1 : 0),
                               itemBuilder: (context, forwardIndex) {
