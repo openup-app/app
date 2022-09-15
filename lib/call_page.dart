@@ -539,7 +539,13 @@ class _CallControls extends StatelessWidget {
           selected: speakerphoneEnabled,
         ),
         _BarButton(
-          onPressed: null,
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Video calling coming soon'),
+              ),
+            );
+          },
           icon: videoEnabled
               ? const Icon(Icons.videocam, size: 36)
               : const Icon(Icons.videocam_off, size: 36),

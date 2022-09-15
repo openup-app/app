@@ -376,12 +376,20 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                         setState(() => _recording = false),
                                   ),
                                 ),
-                                const Padding(
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 16.0),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0),
                                   child: Button(
-                                    onPressed: null,
-                                    child: Padding(
+                                    onPressed: () {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content:
+                                              Text('Video calling coming soon'),
+                                        ),
+                                      );
+                                    },
+                                    child: const Padding(
                                       padding: EdgeInsets.all(8.0),
                                       child: Icon(
                                         Icons.videocam,
@@ -647,7 +655,13 @@ class _ChatProfilePageState extends State<_ChatProfilePage> {
                 ),
                 const SizedBox(width: 16),
                 Button(
-                  onPressed: null,
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Video calling coming soon'),
+                      ),
+                    );
+                  },
                   child: Container(
                     width: 64,
                     height: 46,
