@@ -94,34 +94,30 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
     // Update push notifcation tokens
     final isIOS = Platform.isIOS;
-    final tokens = await Future.wait([
+    Future.wait([
       FirebaseMessaging.instance.getToken(),
       if (isIOS) ios_voip.getVoipPushNotificationToken(),
-    ]);
-    if (mounted) {
-      api.addNotificationTokens(
-        ref.read(userProvider).uid,
-        fcmMessagingAndVoipToken: isIOS ? null : tokens[0],
-        fcmMessagingToken: isIOS ? tokens[0] : null,
-        apnVoipToken: isIOS ? tokens[1] : null,
-      );
-    }
+    ]).then((tokens) {
+      if (mounted) {
+        api.addNotificationTokens(
+          ref.read(userProvider).uid,
+          fcmMessagingAndVoipToken: isIOS ? null : tokens[0],
+          fcmMessagingToken: isIOS ? tokens[0] : null,
+          apnVoipToken: isIOS ? tokens[1] : null,
+        );
+      }
+    });
 
     // Update location
     final latLong = await const LocationService().getLatLong();
     if (latLong != null && mounted) {
       final api = GetIt.instance.get<Api>();
-      api.updateLocation(
-        ref.read(userProvider).uid,
-        latLong,
-      );
+      api.updateLocation(user.uid, latLong);
     }
 
     if (!mounted) {
       return;
     }
-
-    final noAudio = ref.read(userProvider).profile?.audio == null;
 
     final useContext = await initializeNotifications(
       scaffoldKey: widget.scaffoldKey,
@@ -132,6 +128,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       final deepLinked = useContext?.call(context) ?? false;
       if (!deepLinked && mounted) {
         // Standard app entry or sign up onboarding
+        final noAudio = ref.read(userProvider).profile?.audio == null;
         if (widget.needsOnboarding || noAudio) {
           Navigator.of(context).pushReplacementNamed('sign-up-overview');
         } else {

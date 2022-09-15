@@ -642,7 +642,7 @@ class RecordButtonState extends State<RecordButton> {
                               ? null
                               : () => widget.onSubmit(_audioPath!),
                           child: widget.submitting
-                              ? const LoadingIndicator()
+                              ? const LoadingIndicator(size: 32)
                               : Container(
                                   padding: const EdgeInsets.all(4.0),
                                   decoration: BoxDecoration(

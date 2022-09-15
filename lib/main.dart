@@ -119,7 +119,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     Api.seed = Random().nextInt(1 << 32).toString();
 
     precacheImage(
-      const AssetImage('assets/images/loading_icon.png'),
+      const AssetImage('assets/images/app_icon_foreground.png'),
       context,
     );
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

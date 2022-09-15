@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/friendships_page.dart';
@@ -233,15 +232,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     case 'profile':
                       return MaterialPageRoute(
                         settings: settings,
-                        builder: (context) {
-                          return Consumer(
-                            builder: (context, ref, _) {
-                              final profile = ref.watch(
-                                  userProvider.select((p) => p.profile))!;
-                              return ProfilePage(profile: profile);
-                            },
-                          );
-                        },
+                        builder: (context) => const ProfilePage(),
                       );
                     default:
                       return MaterialPageRoute(

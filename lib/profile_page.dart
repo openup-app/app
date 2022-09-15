@@ -17,11 +17,8 @@ import 'package:openup/widgets/three_photo_gallery.dart';
 import 'package:openup/widgets/toggle_button.dart';
 
 class ProfilePage extends StatefulWidget {
-  final Profile profile;
-
   const ProfilePage({
     Key? key,
-    required this.profile,
   }) : super(key: key);
 
   @override
@@ -98,9 +95,17 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         if (_showEdit)
           Expanded(
-            child: _EditProfileView(
-              profile: widget.profile,
-            ),
+            child: Consumer(builder: (context, ref, child) {
+              final profile = ref.watch(userProvider.select((p) => p.profile));
+              if (profile == null) {
+                return const Center(
+                  child: LoadingIndicator(),
+                );
+              }
+              return _EditProfileView(
+                profile: profile,
+              );
+            }),
           )
         else
           Expanded(
@@ -109,9 +114,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   bottom: MediaQuery.of(context).padding.bottom),
               child: Consumer(
                 builder: (context, ref, _) {
+                  final profile =
+                      ref.watch(userProvider.select((p) => p.profile));
+                  if (profile == null) {
+                    return const Center(
+                      child: LoadingIndicator(),
+                    );
+                  }
                   return ProfileView(
-                    profile: ref.watch(userProvider.select((p) => p.profile)) ??
-                        widget.profile,
+                    profile: profile,
                     interestedTab: HomeTab.profile,
                   );
                 },
