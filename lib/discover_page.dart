@@ -62,7 +62,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     required double paddingRatio,
   }) {
     _pageController = PageController(
-      viewportFraction: itemExtent / fullHeight * paddingRatio,
+      viewportFraction: 1 / paddingRatio,
     );
     _pageController?.addListener(() {
       final oldIndex = _currentProfileIndex;
@@ -226,49 +226,45 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     itemBuilder: (context, index) {
                       final profileWithOnline = _profiles[index];
                       final profile = profileWithOnline.profile;
-                      return FractionallySizedBox(
-                        heightFactor: 1 / _paddingRatio,
-                        child: _UserProfileDisplay(
-                          profile: profile,
-                          play: _currentProfileIndex == index,
-                          online: profileWithOnline.online,
-                          invited: _invitedUsers.contains(profile.uid),
-                          favourite: profileWithOnline.favorite,
-                          onInvite: () =>
-                              setState(() => _invitedUsers.add(profile.uid)),
-                          onFavorite: (favorite) async {
-                            if (_showingFavorites && !favorite) {
-                              setState(() => _profiles.removeAt(index));
-                            }
-                            final uid = ref.read(userProvider).uid;
-                            final api = GetIt.instance.get<Api>();
-                            final result = favorite
-                                ? await api.addFavorite(uid, profile.uid)
-                                : await api.removeFavorite(uid, profile.uid);
-                            if (!mounted) {
-                              return;
-                            }
-                            result.fold(
-                              (l) {},
-                              (r) {
-                                setState(() {
-                                  _profiles[index] = _profiles[index]
-                                      .copyWith(favorite: favorite);
-                                });
-                              },
-                            );
-                          },
-                          onBlock: () => setState(() => _profiles.removeWhere(
-                              ((p) => p.profile.uid == profile.uid))),
-                          onReport: () {
-                            Navigator.of(context).pushNamed(
-                              'call-report',
-                              arguments:
-                                  ReportScreenArguments(uid: profile.uid),
-                            );
-                          },
-                          onBeginRecording: () {},
-                        ),
+                      return _UserProfileDisplay(
+                        profile: profile,
+                        play: _currentProfileIndex == index,
+                        online: profileWithOnline.online,
+                        invited: _invitedUsers.contains(profile.uid),
+                        favourite: profileWithOnline.favorite,
+                        onInvite: () =>
+                            setState(() => _invitedUsers.add(profile.uid)),
+                        onFavorite: (favorite) async {
+                          if (_showingFavorites && !favorite) {
+                            setState(() => _profiles.removeAt(index));
+                          }
+                          final uid = ref.read(userProvider).uid;
+                          final api = GetIt.instance.get<Api>();
+                          final result = favorite
+                              ? await api.addFavorite(uid, profile.uid)
+                              : await api.removeFavorite(uid, profile.uid);
+                          if (!mounted) {
+                            return;
+                          }
+                          result.fold(
+                            (l) {},
+                            (r) {
+                              setState(() {
+                                _profiles[index] = _profiles[index]
+                                    .copyWith(favorite: favorite);
+                              });
+                            },
+                          );
+                        },
+                        onBlock: () => setState(() => _profiles.removeWhere(
+                            ((p) => p.profile.uid == profile.uid))),
+                        onReport: () {
+                          Navigator.of(context).pushNamed(
+                            'call-report',
+                            arguments: ReportScreenArguments(uid: profile.uid),
+                          );
+                        },
+                        onBeginRecording: () {},
                       );
                     },
                   ),
@@ -522,6 +518,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Column(
           children: [
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -733,7 +730,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                 );
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
           ],
         ),
       ),
