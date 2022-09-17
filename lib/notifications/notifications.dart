@@ -399,7 +399,6 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
             styleInformation: const MediaStyleInformation(),
           ),
           iOS: IOSNotificationDetails(
-            subtitle: title,
             attachments: photoFile == null
                 ? null
                 : [
@@ -433,7 +432,6 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
             styleInformation: const MediaStyleInformation(),
           ),
           iOS: IOSNotificationDetails(
-            subtitle: title,
             attachments: photoFile == null
                 ? null
                 : [

@@ -49,11 +49,12 @@ import AVFAudio
   }
 
   private func processPush(with payload: Dictionary<AnyHashable, Any>, and completion: (() -> Void)?) {
-    guard let ridString = payload["rid"] as? String,
+    let body = payload["body"] as! Dictionary<AnyHashable, Any>
+     guard let ridString = body["rid"] as? String,
           let rid = UUID(uuidString: ridString),
-          let callerUid = payload["callerUid"] as? String,
-          let callerName = payload["callerName"] as? String,
-          let photo = payload["callerPhoto"] as? String
+          let callerUid = body["uid"] as? String,
+          let callerName = body["name"] as? String,
+          let photo = body["photo"] as? String
           else {
               return
     }
@@ -74,4 +75,11 @@ import AVFAudio
       // Ignored
     }
   }
+}
+
+struct CallNotification: Decodable {
+    let uid: String
+    let photo: String
+    let name: String
+    let rid: String
 }

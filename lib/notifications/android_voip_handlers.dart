@@ -83,7 +83,6 @@ Future<void> displayIncomingCall({
 Future<void> reportCallStarted(String rid, bool video) {
   return ConnectycubeFlutterCallKit.reportCallAccepted(
     sessionId: rid,
-    callType: video ? 1 : 0,
   );
 }
 
