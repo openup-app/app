@@ -194,6 +194,7 @@ class _CallPageState extends State<CallPage> {
                       builder: (context, value, child) {
                         return _CallDisplay(
                           activeCall: _activeCall!,
+                          location: _location,
                           speakerphoneEnabled: value.speakerphone,
                           micEnabled: !value.mute,
                           videoEnabled: value.video,
@@ -383,6 +384,7 @@ class _UnconnectedDisplay extends StatelessWidget {
 
 class _CallDisplay extends StatefulWidget {
   final ActiveCall activeCall;
+  final String location;
   final bool speakerphoneEnabled;
   final bool micEnabled;
   final bool videoEnabled;
@@ -394,6 +396,7 @@ class _CallDisplay extends StatefulWidget {
   const _CallDisplay({
     Key? key,
     required this.activeCall,
+    required this.location,
     required this.speakerphoneEnabled,
     required this.micEnabled,
     required this.videoEnabled,
@@ -425,7 +428,7 @@ class __CallDisplayState extends State<_CallDisplay> {
                   .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
             ),
             Text(
-              'Fort Worth, Texas',
+              widget.location,
               style: Theming.of(context)
                   .text
                   .body
