@@ -284,6 +284,7 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
           return Button(
             onPressed: () async {
               bool open = false;
+              final index = _chatrooms.indexOf(chatroom);
 
               final now = DateTime.now();
               final inviteAgainTime =
@@ -313,7 +314,6 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                   ),
                 );
                 if (accept != null) {
-                  final index = _chatrooms.indexOf(chatroom);
                   if (accept) {
                     open = true;
                     setState(() {
@@ -327,6 +327,10 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
               }
 
               if (open && mounted) {
+                setState(() {
+                  _chatrooms[index] =
+                      _chatrooms[index].copyWith(unreadCount: 0);
+                });
                 FocusScope.of(context).unfocus();
                 Navigator.of(context).pushNamed(
                   'chat',
@@ -355,7 +359,7 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                               style: Theming.of(context).text.body.copyWith(
                                   fontSize: 16, fontWeight: FontWeight.w300),
                             );
-                          } else if (chatroom.hasUnread) {
+                          } else if (chatroom.unreadCount > 0) {
                             return Container(
                               width: 14,
                               height: 14,

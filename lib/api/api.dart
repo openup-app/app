@@ -986,7 +986,7 @@ class Chatroom with _$Chatroom {
     required ChatroomState state,
     required DateTime endTime,
     required String? invitationAudio,
-    required bool hasUnread,
+    required int unreadCount,
     required bool online,
   }) = _Chatroom;
 
