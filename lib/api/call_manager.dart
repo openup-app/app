@@ -70,7 +70,6 @@ class CallManager {
     required SimpleProfile otherProfile,
     required bool video,
   }) async {
-    _disposeCurrentCall();
     _controller.add(CallStateInitializing(
       profile: otherProfile,
       outgoing: true,

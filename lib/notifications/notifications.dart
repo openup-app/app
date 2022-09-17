@@ -96,14 +96,8 @@ Future<UseContext?> _handleLaunchNotification() async {
       GetIt.instance.get<CallManager>().activeCall = activeCall;
     }
     return (BuildContext context) {
-      Navigator.of(context).popUntil((r) => r.isFirst);
-      Navigator.of(context).pushReplacementNamed(
-        'home',
-        arguments: StartWithCall(
-          rid: backgroundCallNotification!.rid,
-          profile: backgroundCallNotification.profile,
-        ),
-      );
+      Navigator.of(context).pushReplacementNamed('home');
+      Navigator.of(context).pushNamed('call');
       return true;
     };
   }
@@ -131,7 +125,7 @@ void _onForegroundNotification(
   parsedMessage?.map(
     call: (call) {
       final profile = SimpleProfile(
-        uid: call.callerUid,
+        uid: call.uid,
         name: call.name,
         photo: call.photo,
         blurPhotos: call.blurPhotos,
@@ -156,7 +150,7 @@ Future<void> _onBackgroundNotification(RemoteMessage message) {
   parsedMessage?.map(
     call: (call) {
       final profile = SimpleProfile(
-        uid: call.callerUid,
+        uid: call.uid,
         name: call.name,
         photo: call.photo,
         blurPhotos: call.blurPhotos,
@@ -455,7 +449,7 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
 @freezed
 class _ParsedMessage with _$_ParsedMessage {
   const factory _ParsedMessage.call({
-    required String callerUid,
+    required String uid,
     required String name,
     required String photo,
     required String rid,

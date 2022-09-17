@@ -345,17 +345,13 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                       horizontal: 16.0),
                                   child: Button(
                                     onPressed: () {
-                                      final callManager =
-                                          GetIt.instance.get<CallManager>();
-                                      callManager.call(
+                                      _call(
                                         context: context,
-                                        uid: ref.read(userProvider).uid,
-                                        otherProfile: widget.otherProfile
+                                        ref: ref,
+                                        profile: widget.otherProfile
                                             .toSimpleProfile(),
                                         video: false,
                                       );
-                                      rootNavigatorKey.currentState
-                                          ?.pushNamed('call');
                                     },
                                     child: const Padding(
                                       padding: EdgeInsets.all(8.0),
@@ -528,43 +524,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       },
     );
   }
-
-  void _call(
-    Profile profile, {
-    required bool video,
-  }) async {
-    // final profile = _profile;
-    // if (profile == null) {
-    //   return;
-    // }
-
-    // const purpose = 'friends';
-    // final route = video ? '$purpose-video-call' : '$purpose-voice-call';
-    // final api = GetIt.instance.get<Api>();
-    // final result = await api.call(
-    //   profile.uid,
-    //   video,
-    //   group: false,
-    // );
-    // if (mounted) {
-    //   result.fold((l) {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(
-    //         content: Text('Failed to call ${profile.name}'),
-    //       ),
-    //     );
-    //   }, (rid) {
-    //     Navigator.of(context).pushNamed(
-    //       route,
-    //       arguments: CallPageArguments(
-    //         rid: rid,
-    //         profiles: [profile.toSimpleProfile()],
-    //         serious: false,
-    //       ),
-    //     );
-    //   });
-    // }
-  }
 }
 
 class _ChatProfilePage extends StatefulWidget {
@@ -627,15 +586,13 @@ class _ChatProfilePageState extends State<_ChatProfilePage> {
                   builder: (context, ref, _) {
                     return Button(
                       onPressed: () {
-                        final callManager = GetIt.instance.get<CallManager>();
-                        callManager.call(
+                        setState(() => _play = false);
+                        _call(
                           context: context,
-                          uid: ref.read(userProvider).uid,
-                          otherProfile: widget.profile.toSimpleProfile(),
+                          ref: ref,
+                          profile: widget.profile.toSimpleProfile(),
                           video: false,
                         );
-                        rootNavigatorKey.currentState?.pushNamed('call');
-                        setState(() => _play = false);
                       },
                       child: Container(
                         width: 64,
@@ -681,6 +638,22 @@ class _ChatProfilePageState extends State<_ChatProfilePage> {
       ),
     );
   }
+}
+
+void _call({
+  required BuildContext context,
+  required WidgetRef ref,
+  required SimpleProfile profile,
+  required bool video,
+}) async {
+  final callManager = GetIt.instance.get<CallManager>();
+  callManager.call(
+    context: context,
+    uid: ref.read(userProvider).uid,
+    otherProfile: profile,
+    video: video,
+  );
+  rootNavigatorKey.currentState?.pushNamed('call');
 }
 
 class ChatPageArguments {
