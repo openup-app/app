@@ -67,12 +67,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void _navigateToDeepLinkOrPostFrameCallback() {
     final deepLinkArgs = _deepLinkArgs;
     if (mounted && deepLinkArgs != null) {
-      _navigateTabTo(1);
       final navigatorState = _navigatorKeys[1].currentState;
       if (navigatorState != null) {
-        deepLinkArgs.when(chat: (args) {
-          navigatorState.pushNamed('chat', arguments: args);
-        });
+        deepLinkArgs.when(
+          friendships: () => _navigateTabTo(1),
+          chat: (args) {
+            _navigateTabTo(1);
+            navigatorState.pushNamed('chat', arguments: args);
+          },
+        );
         setState(() => _deepLinkArgs = null);
       } else {
         WidgetsBinding.instance.addPostFrameCallback(
@@ -275,6 +278,7 @@ class __KeepAliveState extends State<_KeepAlive>
 
 @freezed
 class DeepLinkArgs with _$DeepLinkArgs {
+  const factory DeepLinkArgs.friendships() = _Friendships;
   const factory DeepLinkArgs.chat(ChatPageArguments args) = _Chat;
 }
 

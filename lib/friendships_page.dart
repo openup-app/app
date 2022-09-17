@@ -5,6 +5,11 @@ import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/api/users/profile.dart';
+import 'package:openup/main.dart';
+import 'package:openup/platform/just_audio_audio_player.dart';
+import 'package:openup/profile_screen.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
@@ -217,6 +222,12 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
     );
   }
 
+  String _waitDurationText(String name, Duration waitDuration) {
+    final hoursInt = waitDuration.inHours;
+    final hours = hoursInt <= 1 ? '1' : hoursInt.toString();
+    return 'You can invite $name again in $hours ${hoursInt <= 1 ? 'hour' : 'hours'}';
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -271,18 +282,63 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
         itemBuilder: (context, index) {
           final chatroom = filteredChatrooms[index];
           return Button(
-            onPressed: () {
-              FocusScope.of(context).unfocus();
-              Navigator.of(context).pushNamed(
-                'chat',
-                arguments: ChatPageArguments(
-                  otherUid: chatroom.profile.uid,
-                  otherProfile: chatroom.profile,
-                  otherLocation: chatroom.location,
-                  online: chatroom.online,
-                  endTime: chatroom.endTime,
-                ),
-              );
+            onPressed: () async {
+              bool open = false;
+
+              final now = DateTime.now();
+              final inviteAgainTime =
+                  chatroom.endTime.subtract(const Duration(days: 2));
+              if (chatroom.state == ChatroomState.accepted ||
+                  now.isAfter(inviteAgainTime)) {
+                open = true;
+              } else if (chatroom.state == ChatroomState.pending &&
+                  inviteAgainTime.isAfter(now)) {
+                final waitDuration = inviteAgainTime.difference(now).abs();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                        _waitDurationText(chatroom.profile.name, waitDuration)),
+                  ),
+                );
+              } else if (chatroom.state == ChatroomState.invitation) {
+                final accept = await rootNavigatorKey.currentState?.push<bool>(
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return _InvitationPage(
+                        profile: chatroom.profile,
+                        invitationAudio: chatroom.invitationAudio,
+                        online: chatroom.online,
+                      );
+                    },
+                  ),
+                );
+                if (accept != null) {
+                  final index = _chatrooms.indexOf(chatroom);
+                  if (accept) {
+                    open = true;
+                    setState(() {
+                      _chatrooms[index] =
+                          chatroom.copyWith(state: ChatroomState.accepted);
+                    });
+                  } else {
+                    setState(() => _chatrooms.removeAt(index));
+                  }
+                }
+              }
+
+              if (open && mounted) {
+                FocusScope.of(context).unfocus();
+                Navigator.of(context).pushNamed(
+                  'chat',
+                  arguments: ChatPageArguments(
+                    otherUid: chatroom.profile.uid,
+                    otherProfile: chatroom.profile,
+                    otherLocation: chatroom.location,
+                    online: chatroom.online,
+                    endTime: chatroom.endTime,
+                  ),
+                );
+              }
             },
             child: SizedBox(
               height: 86,
@@ -293,13 +349,11 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                     child: Center(
                       child: Builder(
                         builder: (context) {
-                          if (chatroom.firstContact) {
+                          if (chatroom.state == ChatroomState.invitation) {
                             return Text(
-                              chatroom.firstContact ? 'new' : '',
-                              style: Theming.of(context)
-                                  .text
-                                  .body
-                                  .copyWith(fontWeight: FontWeight.w300),
+                              'new',
+                              style: Theming.of(context).text.body.copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w300),
                             );
                           } else if (chatroom.hasUnread) {
                             return Container(
@@ -405,6 +459,228 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _InvitationPage extends ConsumerStatefulWidget {
+  final Profile profile;
+  final String? invitationAudio;
+  final bool online;
+  const _InvitationPage({
+    super.key,
+    required this.profile,
+    required this.invitationAudio,
+    required this.online,
+  });
+
+  @override
+  ConsumerState<_InvitationPage> createState() => __InvitationPageState();
+}
+
+class __InvitationPageState extends ConsumerState<_InvitationPage> {
+  final _player = JustAudioAudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    final invitationAudio = widget.invitationAudio;
+    if (invitationAudio != null) {
+      _player.setUrl(invitationAudio);
+      _player.play(loop: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(0x00, 0x00, 0x00, 1.0),
+              Color.fromRGBO(0x6F, 0x00, 0x00, 1.0),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              Text(
+                'A personal invitation for you',
+                style: Theming.of(context)
+                    .text
+                    .body
+                    .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
+              ),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: BackIconButton(),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.online) const OnlineIndicator(),
+                  const SizedBox(width: 8),
+                  Column(
+                    children: [
+                      AutoSizeText(
+                        widget.profile.name,
+                        minFontSize: 16,
+                        maxFontSize: 20,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theming.of(context)
+                            .text
+                            .body
+                            .copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      AutoSizeText(
+                        widget.profile.location,
+                        minFontSize: 9,
+                        maxFontSize: 16,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theming.of(context)
+                            .text
+                            .body
+                            .copyWith(fontWeight: FontWeight.w300),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 31),
+              Expanded(
+                child: Container(
+                  clipBehavior: Clip.hardEdge,
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(24)),
+                  ),
+                  child: Gallery(
+                    gallery: widget.profile.gallery,
+                    withWideBlur: false,
+                    slideshow: true,
+                    blurPhotos: widget.profile.blurPhotos,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              StreamBuilder<PlaybackInfo>(
+                stream: _player.playbackInfoStream,
+                initialData: const PlaybackInfo(),
+                builder: (context, snapshot) {
+                  final value = snapshot.requireData;
+                  final position = value.position.inMilliseconds;
+                  final duration = value.duration.inMilliseconds;
+                  final ratio = duration == 0 ? 0.0 : position / duration;
+                  return Align(
+                    alignment: Alignment.centerLeft,
+                    child: FractionallySizedBox(
+                      widthFactor: ratio < 0 ? 0 : ratio,
+                      child: Container(
+                        height: 8,
+                        margin: const EdgeInsets.symmetric(horizontal: 32),
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(3)),
+                          color: Color.fromRGBO(0xD9, 0xD9, 0xD9, 1.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                              blurRadius: 4,
+                              offset: Offset(0.0, 4.0),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 31),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Button(
+                    onPressed: () {
+                      final uid = ref.read(userProvider).uid;
+                      final api = GetIt.instance.get<Api>();
+                      api.acceptInvitation(uid, widget.profile.uid);
+                      rootNavigatorKey.currentState?.pop(true);
+                    },
+                    child: Container(
+                      width: 111,
+                      height: 50,
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(28)),
+                        color: Colors.white,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Accept',
+                        style: Theming.of(context).text.body.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w300,
+                            color: Colors.black),
+                      ),
+                    ),
+                  ),
+                  Button(
+                    onPressed: () {
+                      final uid = ref.read(userProvider).uid;
+                      final api = GetIt.instance.get<Api>();
+                      api.declineInvitation(uid, widget.profile.uid);
+                      rootNavigatorKey.currentState?.pop(false);
+                    },
+                    child: Container(
+                      width: 111,
+                      height: 50,
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(28)),
+                        color: Colors.white,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Reject',
+                        style: Theming.of(context).text.body.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w300,
+                            color: Colors.black),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 31),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 291,
+                  ),
+                  child: Text(
+                    'Accept and begin chatting now, reject and they can send you another message tomorrow.',
+                    textAlign: TextAlign.center,
+                    style: Theming.of(context).text.body.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w300,
+                        color: const Color.fromRGBO(0xDE, 0xDE, 0xDE, 1.0)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 50),
+            ],
+          ),
+        ),
       ),
     );
   }

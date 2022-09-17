@@ -116,19 +116,15 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   void initState() {
     super.initState();
 
-    Api.seed = Random().nextInt(1 << 32).toString();
-
-    precacheImage(
-      const AssetImage('assets/images/app_icon_foreground.png'),
-      context,
-    );
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
+    Api.seed = Random().nextInt(1 << 32).toString();
     final api = Api(
       host: host,
       port: webPort,
     );
     GetIt.instance.registerSingleton<Api>(api);
+
     GetIt.instance.registerSingleton<CallManager>(CallManager());
 
     Firebase.initializeApp().whenComplete(() {

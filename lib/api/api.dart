@@ -622,6 +622,35 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, void>> acceptInvitation(String uid, String otherUid) {
+    return _request(
+      makeRequest: () {
+        return http.post(
+          Uri.parse('$_urlBase/chats/$uid/$otherUid/accept'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        return const Right(null);
+      },
+    );
+  }
+
+  Future<Either<ApiError, void>> declineInvitation(
+      String uid, String otherUid) {
+    return _request(
+      makeRequest: () {
+        return http.post(
+          Uri.parse('$_urlBase/chats/$uid/$otherUid/decline'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        return const Right(null);
+      },
+    );
+  }
+
   Future<Either<ApiError, void>> removeFavorite(String uid, String otherUid) {
     return _request(
       makeRequest: () {
@@ -954,8 +983,9 @@ class Chatroom with _$Chatroom {
     required Profile profile,
     required String location,
     required Topic topic,
-    required bool firstContact,
+    required ChatroomState state,
     required DateTime endTime,
+    required String? invitationAudio,
     required bool hasUnread,
     required bool online,
   }) = _Chatroom;
@@ -963,6 +993,8 @@ class Chatroom with _$Chatroom {
   factory Chatroom.fromJson(Map<String, dynamic> json) =>
       _$ChatroomFromJson(json);
 }
+
+enum ChatroomState { invitation, pending, accepted }
 
 enum Topic {
   moved,

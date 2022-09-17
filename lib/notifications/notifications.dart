@@ -15,7 +15,6 @@ import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/chat_page.dart';
-import 'package:openup/chat_screen.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/lobby_list_page.dart';
 import 'package:openup/notifications/android_voip_handlers.dart'
@@ -147,7 +146,8 @@ void _onForegroundNotification(
     },
     callEnded: (callEnded) => reportCallEnded(callEnded.rid),
     chat: (_) => _displayNotification(parsedMessage),
-    newConnection: (_) => _displayNotification(parsedMessage),
+    newInvite: (_) => _displayNotification(parsedMessage),
+    inviteAccepted: (_) => _displayNotification(parsedMessage),
   );
 }
 
@@ -172,7 +172,8 @@ Future<void> _onBackgroundNotification(RemoteMessage message) {
     },
     callEnded: (callEnded) => reportCallEnded(callEnded.rid),
     chat: (_) => _displayNotification(parsedMessage),
-    newConnection: (_) => _displayNotification(parsedMessage),
+    newInvite: (_) => _displayNotification(parsedMessage),
+    inviteAccepted: (_) => _displayNotification(parsedMessage),
   );
   return Future.value();
 }
@@ -192,15 +193,17 @@ _ParsedMessage? _parseRemoteMessage(RemoteMessage message) {
     return _CallEnded.fromJson(body);
   } else if (type == 'chat') {
     return _Chat.fromJson(body);
-  } else if (type == 'newConnection') {
-    return _NewConnection.fromJson(body);
+  } else if (type == 'new_invite') {
+    return _NewInvite.fromJson(body);
+  } else if (type == 'invite_accepted') {
+    return _InviteAccepted.fromJson(body);
   } else {
     debugPrint('Unknown notification type $type');
     return null;
   }
 }
 
-Future<File?> getPhoto({
+Future<File?> getPhotoMaybeCached({
   required String uid,
   required String url,
 }) async {
@@ -229,8 +232,14 @@ Future<void> _initializeLocalNotifications(GlobalKey globalKey) {
     initializationSettings,
     onSelectNotification: (deepLinkPayload) async {
       if (deepLinkPayload != null) {
-        final parsedMessage =
-            _ParsedMessage.fromJson(jsonDecode(deepLinkPayload));
+        final _ParsedMessage parsedMessage;
+        try {
+          parsedMessage = _ParsedMessage.fromJson(jsonDecode(deepLinkPayload));
+        } on FormatException catch (e, s) {
+          debugPrint(e.toString());
+          debugPrint(s.toString());
+          return;
+        }
         final useContext = await _handleDeepLink(parsedMessage);
         final context = globalKey.currentContext;
         if (context != null) {
@@ -260,7 +269,8 @@ Future<UseContext?> _handleDeepLink(_ParsedMessage parsedMessage) {
           displayError(context, l);
           return false;
         }, (profile) {
-          Navigator.of(context).pushReplacementNamed(
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          Navigator.of(context).popAndPushNamed(
             'home',
             arguments: DeepLinkArgs.chat(
               ChatPageArguments(
@@ -278,26 +288,40 @@ Future<UseContext?> _handleDeepLink(_ParsedMessage parsedMessage) {
         });
       };
     },
-    newConnection: (newConnection) async {
-      final result = await api.getProfile(newConnection.uid);
+    newInvite: (newInvite) async {
       return (BuildContext context) {
-        return result.fold(
-          (l) {
-            displayError(context, l);
-            return false;
-          },
-          (profile) {
-            Navigator.of(context).pushReplacementNamed('home');
-            Navigator.of(context).pushNamed(
-              'chat',
-              arguments: ChatArguments(
-                uid: profile.uid,
-                chatroomId: newConnection.chatroomId,
-              ),
-            );
-            return true;
-          },
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        Navigator.of(context).popAndPushNamed(
+          'home',
+          arguments: const DeepLinkArgs.friendships(),
         );
+        return true;
+      };
+    },
+    inviteAccepted: (inviteAccepted) async {
+      final result = await api.getProfile(inviteAccepted.uid);
+      return (BuildContext context) {
+        return result.fold((l) {
+          displayError(context, l);
+          return false;
+        }, (profile) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          Navigator.of(context).popAndPushNamed(
+            'home',
+            arguments: DeepLinkArgs.chat(
+              ChatPageArguments(
+                otherUid: profile.uid,
+                otherProfile: profile,
+                otherLocation: profile.location,
+                online: false,
+                endTime: DateTime.now().add(
+                  const Duration(days: 3),
+                ),
+              ),
+            ),
+          );
+          return true;
+        });
       };
     },
   );
@@ -309,8 +333,8 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
     call: (call) => Future.value(),
     callEnded: (callEnded) => Future.value(),
     chat: (chat) async {
-      final photoFile =
-          await getPhoto(uid: chat.senderName, url: chat.senderPhoto);
+      final photoFile = await getPhotoMaybeCached(
+          uid: chat.senderName, url: chat.senderPhoto);
       final bytes = await photoFile?.readAsBytes();
       const message = "New voice message";
       plugin.show(
@@ -357,20 +381,24 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
         ),
       );
     },
-    newConnection: (newConnection) async {
-      final photoFile =
-          await getPhoto(uid: newConnection.name, url: newConnection.photo);
+    newInvite: (newInvite) async {
+      final photoFile = await getPhotoMaybeCached(
+        uid: newInvite.uid,
+        url: newInvite.photo,
+      );
       final bytes = await photoFile?.readAsBytes();
-      final title = "${newConnection.name} is now your friend";
+      final title = "${newInvite.name} sent you a chat invite! 🎊";
+      final notificationId = 'new_invite_${newInvite.chatroomId}'.hashCode;
       plugin.show(
-        newConnection.uid.hashCode,
+        notificationId,
         title,
-        "You can now chat with each other",
+        null,
+        payload: jsonEncode(parsedMessage.toJson()),
         NotificationDetails(
           android: AndroidNotificationDetails(
-            "new_connection",
-            "New friends",
-            channelDescription: "When you make a new friend",
+            "invites",
+            "New invites",
+            channelDescription: "New chat invites from others",
             largeIcon: bytes == null ? null : ByteArrayAndroidBitmap(bytes),
             styleInformation: const MediaStyleInformation(),
           ),
@@ -379,9 +407,40 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
             attachments: photoFile == null
                 ? null
                 : [
-                    IOSNotificationAttachment(
-                      photoFile.path,
-                    ),
+                    IOSNotificationAttachment(photoFile.path),
+                  ],
+          ),
+        ),
+      );
+    },
+    inviteAccepted: (inviteAccepted) async {
+      final photoFile = await getPhotoMaybeCached(
+        uid: inviteAccepted.uid,
+        url: inviteAccepted.photo,
+      );
+      final bytes = await photoFile?.readAsBytes();
+      final title = "${inviteAccepted.name} has accepted your chat invite! 🎊";
+      final notificationId =
+          'invite_accepted_${inviteAccepted.chatroomId}'.hashCode;
+      plugin.show(
+        notificationId,
+        title,
+        null,
+        payload: jsonEncode(parsedMessage.toJson()),
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            "new_connection",
+            "New friends",
+            channelDescription: "When your chat invites are accepted",
+            largeIcon: bytes == null ? null : ByteArrayAndroidBitmap(bytes),
+            styleInformation: const MediaStyleInformation(),
+          ),
+          iOS: IOSNotificationDetails(
+            subtitle: title,
+            attachments: photoFile == null
+                ? null
+                : [
+                    IOSNotificationAttachment(photoFile.path),
                   ],
           ),
         ),
@@ -413,12 +472,19 @@ class _ParsedMessage with _$_ParsedMessage {
     required ChatMessage message,
   }) = _Chat;
 
-  const factory _ParsedMessage.newConnection({
+  const factory _ParsedMessage.newInvite({
     required String uid,
-    required String chatroomId,
     required String name,
     required String photo,
-  }) = _NewConnection;
+    required String chatroomId,
+  }) = _NewInvite;
+
+  const factory _ParsedMessage.inviteAccepted({
+    required String uid,
+    required String name,
+    required String photo,
+    required String chatroomId,
+  }) = _InviteAccepted;
 
   factory _ParsedMessage.fromJson(Map<String, dynamic> json) =>
       _$_ParsedMessageFromJson(json);
