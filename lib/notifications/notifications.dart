@@ -348,6 +348,7 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
             "Chat messages",
             channelDescription: "Messages from your friends",
             ticker: message,
+            groupKey: chat.senderUid,
             styleInformation: MessagingStyleInformation(
               Person(
                 name: chat.senderName,
@@ -399,6 +400,7 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
             "invites",
             "New invites",
             channelDescription: "New chat invites from others",
+            groupKey: newInvite.uid,
             largeIcon: bytes == null ? null : ByteArrayAndroidBitmap(bytes),
             styleInformation: const MediaStyleInformation(),
           ),
@@ -432,6 +434,7 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
             "new_connection",
             "New friends",
             channelDescription: "When your chat invites are accepted",
+            groupKey: inviteAccepted.uid,
             largeIcon: bytes == null ? null : ByteArrayAndroidBitmap(bytes),
             styleInformation: const MediaStyleInformation(),
           ),
@@ -468,7 +471,6 @@ class _ParsedMessage with _$_ParsedMessage {
     required String senderName,
     required String senderPhoto,
     required String chatroomId,
-    required int chatroomUnread,
     required ChatMessage message,
   }) = _Chat;
 
