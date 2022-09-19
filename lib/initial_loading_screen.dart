@@ -112,7 +112,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     final latLong = await const LocationService().getLatLong();
     if (latLong != null && mounted) {
       final api = GetIt.instance.get<Api>();
-      api.updateLocation(user.uid, latLong);
+      await api.updateLocation(user.uid, latLong);
     }
 
     if (!mounted) {
