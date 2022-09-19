@@ -57,9 +57,9 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     } else {
       try {
-        api.authToken = await user.getIdToken();
+        api.authToken = await user.getIdToken(true);
       } on FirebaseAuthException catch (e) {
-        if (e.code == 'firebase_auth/user-not-found') {
+        if (e.code == 'user-not-found') {
           Navigator.of(context).pushReplacementNamed('sign-up');
           return;
         } else {
