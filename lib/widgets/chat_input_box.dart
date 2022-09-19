@@ -97,7 +97,7 @@ class _AudioInputBoxState extends State<AudioInputBox> {
       (await getTemporaryDirectory()).path,
       'chat_audio_${DateTime.now().toIso8601String()}.m4a',
     );
-    _recorder.start(path: filePath);
+    await _recorder.start(path: filePath);
     if (mounted) {
       setState(() => _recording = true);
       _timer = Timer.periodic(const Duration(milliseconds: 50), (_) async {

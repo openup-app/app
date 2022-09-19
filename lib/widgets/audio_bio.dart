@@ -288,7 +288,7 @@ class AudioBioController {
 
   Future<void> seek(Duration position) => _audio.seek(position);
 
-  void startRecording() async {
+  Future<void> startRecording() async {
     if (!await _recorder.hasPermission() || await _recorder.isRecording()) {
       return;
     }

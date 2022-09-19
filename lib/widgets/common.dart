@@ -787,15 +787,20 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
             builder: (context) {
               if (_audioBytes == null) {
                 return Button(
-                  onPressed: () {
+                  onPressed: () async {
                     if (recordInfo.recording) {
-                      _inviteRecorder.stopRecording();
-                      widget.onState(RecordButtonDisplayState.displayingUpload);
+                      await _inviteRecorder.stopRecording();
+                      if (mounted) {
+                        widget
+                            .onState(RecordButtonDisplayState.displayingUpload);
+                      }
                     } else {
-                      _inviteRecorder.startRecording();
-                      setState(() => _recordingStart = DateTime.now());
-                      widget.onState(
-                          RecordButtonDisplayState.displayingRecording);
+                      await _inviteRecorder.startRecording();
+                      if (mounted) {
+                        setState(() => _recordingStart = DateTime.now());
+                        widget.onState(
+                            RecordButtonDisplayState.displayingRecording);
+                      }
                     }
                   },
                   child: Stack(
