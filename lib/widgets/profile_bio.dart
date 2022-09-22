@@ -94,7 +94,7 @@ class ProfileBioState extends State<ProfileBio> {
         onRecord: () async {
           setState(() {
             _recordingLimitTimer?.cancel();
-            _recordingLimitTimer = Timer(const Duration(seconds: 10), () {
+            _recordingLimitTimer = Timer(const Duration(seconds: 30), () {
               if (mounted) {
                 setState(() => _recording = false);
                 _recorder.stop();

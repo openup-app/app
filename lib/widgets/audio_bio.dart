@@ -255,7 +255,7 @@ class AudioBioController {
 
   AudioBioController({
     required void Function(String path) onRecordingComplete,
-    this.maxDuration = const Duration(seconds: 10),
+    this.maxDuration = const Duration(seconds: 30),
   }) : _onRecordingComplete = onRecordingComplete {
     _playbackInfoSubscription = _audio.playbackInfoStream.listen((info) {
       if (_playbackController.value != info) {
