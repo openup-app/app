@@ -20,6 +20,7 @@ import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
+import 'package:openup/widgets/share_button.dart';
 import 'package:openup/widgets/theming.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
@@ -667,21 +668,8 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                               ),
                             ),
                             const SizedBox(height: 18),
-                            Button(
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content:
-                                        Text('Profile sharing coming soon'),
-                                  ),
-                                );
-                              },
-                              child: const IconWithShadow(
-                                Icons.reply,
-                                color: Colors.white,
-                                size: 32,
-                                textDirection: TextDirection.rtl,
-                              ),
+                            ShareButton(
+                              profile: widget.profile,
                             ),
                           ],
                         ),

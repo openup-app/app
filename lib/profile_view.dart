@@ -5,11 +5,11 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_screen.dart';
-import 'package:openup/share_page.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
+import 'package:openup/widgets/share_button.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ProfileView extends StatefulWidget {
@@ -182,28 +182,8 @@ class _ProfileViewState extends State<ProfileView> {
                       Positioned(
                         right: 16,
                         top: 16,
-                        child: Button(
-                          onPressed: () {
-                            showModalBottomSheet(
-                              context: context,
-                              backgroundColor: Colors.transparent,
-                              isScrollControlled: true,
-                              builder: (context) {
-                                return Theming(
-                                  child: SharePage(
-                                    profile: widget.profile,
-                                    location: widget.profile.location,
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                          child: const IconWithShadow(
-                            Icons.reply,
-                            color: Colors.white,
-                            size: 32,
-                            textDirection: TextDirection.rtl,
-                          ),
+                        child: ShareButton(
+                          profile: widget.profile,
                         ),
                       ),
                       if (_audioPaused)
@@ -248,44 +228,6 @@ class _ProfileViewState extends State<ProfileView> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ShareButton extends StatelessWidget {
-  final Profile profile;
-  const _ShareButton({
-    Key? key,
-    required this.profile,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Button(
-      onPressed: () {
-        showModalBottomSheet(
-          context: context,
-          backgroundColor: Colors.transparent,
-          isScrollControlled: true,
-          builder: (context) {
-            return Theming(
-              child: SharePage(
-                profile: profile,
-                location: profile.location,
-              ),
-            );
-          },
-        );
-      },
-      child: const Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Icon(
-          Icons.reply,
-          color: Colors.white,
-          size: 32,
-          textDirection: TextDirection.rtl,
         ),
       ),
     );
