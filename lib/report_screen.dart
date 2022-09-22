@@ -169,8 +169,8 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                   ),
                 ),
                 Positioned(
-                  left: MediaQuery.of(context).padding.left + 16,
-                  top: MediaQuery.of(context).padding.top + 16,
+                  left: MediaQuery.of(context).padding.left + 32,
+                  top: MediaQuery.of(context).padding.top + 32,
                   child: Button(
                     onPressed: Navigator.of(context).pop,
                     child: const Padding(

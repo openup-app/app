@@ -332,7 +332,7 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                       _chatrooms[index].copyWith(unreadCount: 0);
                 });
                 FocusScope.of(context).unfocus();
-                Navigator.of(context).pushNamed(
+                final refreshChat = await Navigator.of(context).pushNamed(
                   'chat',
                   arguments: ChatPageArguments(
                     otherUid: chatroom.profile.uid,
@@ -342,6 +342,10 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                     endTime: chatroom.endTime,
                   ),
                 );
+                if (refreshChat == true && mounted) {
+                  setState(() => _loading = true);
+                  _fetchConversations();
+                }
               }
             },
             child: SizedBox(

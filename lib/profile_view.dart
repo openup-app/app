@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/home_screen.dart';
+import 'package:openup/main.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_screen.dart';
+import 'package:openup/report_screen.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -80,6 +82,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   Widget build(BuildContext context) {
+    final isMe = widget.endTime == null;
     return AppLifecycle(
       onPaused: _player.pause,
       child: Padding(
@@ -134,7 +137,7 @@ class _ProfileViewState extends State<ProfileView> {
                     Container(
                       height: 24,
                       padding: const EdgeInsets.only(right: 8),
-                      child: widget.endTime == null
+                      child: isMe
                           ? null
                           : CountdownTimer(
                               endTime: widget.endTime!,
@@ -179,9 +182,29 @@ class _ProfileViewState extends State<ProfileView> {
                         slideshow: !_audioPaused,
                         blurPhotos: widget.profile.blurPhotos,
                       ),
+                      if (!isMe)
+                        Positioned(
+                          right: 16,
+                          top: 16,
+                          child: ReportBlockPopupMenu(
+                            uid: widget.profile.uid,
+                            name: widget.profile.name,
+                            onBlock: () {
+                              const refreshChat = true;
+                              Navigator.of(context).pop(refreshChat);
+                            },
+                            onReport: () {
+                              rootNavigatorKey.currentState?.pushNamed(
+                                'call-report',
+                                arguments: ReportScreenArguments(
+                                    uid: widget.profile.uid),
+                              );
+                            },
+                          ),
+                        ),
                       Positioned(
                         right: 16,
-                        top: 16,
+                        top: isMe ? 16 : 64,
                         child: ShareButton(
                           profile: widget.profile,
                         ),

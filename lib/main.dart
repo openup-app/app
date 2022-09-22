@@ -448,10 +448,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               },
             );
           case 'chat':
-            final args = settings.arguments as ChatArguments;
-            return _buildPageRoute(
+            return _buildPageRoute<bool>(
               settings: settings,
               builder: (_) {
+                final args = settings.arguments as ChatArguments;
                 return CurrentRouteSystemUiStyling.light(
                   child: ChatScreen(
                     host: host,
