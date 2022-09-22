@@ -15,7 +15,7 @@ import 'package:openup/main.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_screen.dart';
 import 'package:openup/report_screen.dart';
-import 'package:openup/share_page.dart';
+import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -634,18 +634,11 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                             const SizedBox(height: 18),
                             Button(
                               onPressed: () {
-                                showModalBottomSheet(
-                                  context: context,
-                                  backgroundColor: Colors.transparent,
-                                  isScrollControlled: true,
-                                  builder: (context) {
-                                    return Theming(
-                                      child: SharePage(
-                                        profile: widget.profile,
-                                        location: widget.profile.location,
-                                      ),
-                                    );
-                                  },
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content:
+                                        Text('Profile sharing coming soon'),
+                                  ),
                                 );
                               },
                               child: const IconWithShadow(
