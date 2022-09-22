@@ -90,15 +90,15 @@ class LobbyListPageState extends ConsumerState<LobbyListPage> {
     });
 
     // Location
-    const LocationService().getLatLong().then((latLong) {
-      if (latLong != null) {
-        final api = GetIt.instance.get<Api>();
-        api.updateLocation(
-          ref.read(userProvider).uid,
-          latLong,
-        );
-      }
-    });
+    // const LocationService().getLatLong().then((latLong) {
+    //   if (latLong != null) {
+    //     final api = GetIt.instance.get<Api>();
+    //     api.updateLocation(
+    //       ref.read(userProvider).uid,
+    //       latLong,
+    //     );
+    //   }
+    // });
 
     Future.wait([
       _fetchParticipants(),

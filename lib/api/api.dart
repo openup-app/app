@@ -808,15 +808,16 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> updateLocation(String uid, LatLong location) {
+  Future<Either<ApiError, void>> updateLocation(
+      String uid, double latitude, double longitude) {
     return _request(
       makeRequest: () {
         return http.post(
           Uri.parse('$_urlBase/users/$uid/location'),
           headers: _headers,
           body: jsonEncode({
-            'latitude': location.latitude,
-            'longitude': location.longitude,
+            'latitude': latitude,
+            'longitude': longitude,
           }),
         );
       },

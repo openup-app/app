@@ -109,10 +109,20 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     });
 
     // Update location
-    final latLong = await const LocationService().getLatLong();
-    if (latLong != null && mounted) {
-      final api = GetIt.instance.get<Api>();
-      await api.updateLocation(user.uid, latLong);
+    final latLong = await LocationService().getLatLong();
+    if (mounted) {
+      await latLong.when(
+        value: (lat, long) async {
+          final api = GetIt.instance.get<Api>();
+          await api.updateLocation(user.uid, lat, long);
+        },
+        denied: () {
+          // Nothing to do, request on Discover screen
+        },
+        failure: () {
+          // Nothing to do, request on Discover screen
+        },
+      );
     }
 
     if (!mounted) {
