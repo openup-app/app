@@ -280,13 +280,48 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
                         _selectedTopic == null
-                            ? 'Could\'t find any profiles'
-                            : 'Could\'t find any "${topicLabel(_selectedTopic!)}" profiles',
+                            ? 'Couldn\'t find any profiles'
+                            : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
                         style: Theming.of(context).text.body,
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        // Location needed at least once for nearby users
+                        // (may not have granted location during onboarding)
+                        if (!_showingFavorites) {
+                          if (mounted) {
+                            setState(() => _loading = true);
+                          }
+
+                          final locationService = LocationService();
+                          if (!await locationService.hasPermission()) {
+                            final status =
+                                await locationService.requestPermission();
+                            if (status) {
+                              final location =
+                                  await locationService.getLatLong();
+                              await location.when(
+                                value: (lat, long) async {
+                                  final api = GetIt.instance.get<Api>();
+                                  await api.updateLocation(
+                                      ref.read(userProvider).uid, lat, long);
+                                },
+                                denied: () {
+                                  // Nothing to do
+                                },
+                                failure: () {
+                                  // Nothing to do
+                                },
+                              );
+                            }
+                          }
+                        }
+
+                        if (!mounted) {
+                          return;
+                        }
+
                         setState(() {
                           _nextMinRadius = 0;
                           _nextPage = 0;
