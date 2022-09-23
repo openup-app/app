@@ -146,9 +146,17 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
         // Firebase ID token refresh
         if (user != null) {
-          final token = await user.getIdToken();
-          ref.read(userProvider.notifier).uid(user.uid);
-          api.authToken = token;
+          try {
+            final token = await user.getIdToken();
+            ref.read(userProvider.notifier).uid(user.uid);
+            api.authToken = token;
+          } on FirebaseAuthException catch (e) {
+            if (e.code == 'user-not-found') {
+              // Is handled during initial loading
+            } else {
+              rethrow;
+            }
+          }
         }
       });
     });
