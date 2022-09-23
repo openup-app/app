@@ -336,6 +336,8 @@ Future<void> _displayNotification(
     chat: (chat) async {
       final File? photoFile;
       if (background && Platform.isIOS) {
+        // Pauses execution until app is open, then delivers notification, so
+        // just skip photos
         photoFile = null;
       } else {
         photoFile = await getPhotoMaybeCached(
