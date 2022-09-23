@@ -92,6 +92,13 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     }
 
+    // Init notifications as early as possible for background notifications on iOS
+    // (initial route is navigated to, but execution may stop due to user prompt or second navigation)
+    await initializeNotifications(
+      scaffoldKey: widget.scaffoldKey,
+      userStateNotifier: notifier,
+    );
+
     // Update push notifcation tokens
     final isIOS = Platform.isIOS;
     Future.wait([
@@ -129,11 +136,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     }
 
-    final useContext = await initializeNotifications(
-      scaffoldKey: widget.scaffoldKey,
-      userStateNotifier: notifier,
-    );
-
+    final useContext = await handleLaunchNotification();
     if (mounted) {
       final deepLinked = useContext?.call(context) ?? false;
       if (!deepLinked && mounted) {

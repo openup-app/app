@@ -16,7 +16,6 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/home_screen.dart';
-import 'package:openup/lobby_list_page.dart';
 import 'package:openup/notifications/android_voip_handlers.dart'
     as android_voip;
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
@@ -38,19 +37,15 @@ void initializeVoipHandlers() {
   }
 }
 
-/// Returns a function that needs a mounted [BuildContext]. The function
-/// returns [true] if the app used the context to navigate somewhere.
-Future<UseContext?> initializeNotifications({
+Future<void> initializeNotifications({
   required GlobalKey scaffoldKey,
   required UserStateNotifier userStateNotifier,
 }) async {
   await _initializeLocalNotifications(scaffoldKey);
+  FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
   FirebaseMessaging.onMessage.listen((remoteMessage) {
     _onForegroundNotification(scaffoldKey, remoteMessage, userStateNotifier);
   });
-  FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
-
-  return _handleLaunchNotification();
 }
 
 Future<void> dismissAllNotifications() =>
@@ -72,8 +67,9 @@ void reportCallEnded(String rid) {
   }
 }
 
-/// Returns [true] if this notification did deep link, false otherwise.
-Future<UseContext?> _handleLaunchNotification() async {
+/// Returns a function that needs a mounted [BuildContext]. The function
+/// returns [true] if the app used the context to navigate somewhere.
+Future<UseContext?> handleLaunchNotification() async {
   // Calls that don't go through the standard FirebaseMessaging app launch method
   BackgroundCallNotification? backgroundCallNotification;
   try {
@@ -201,17 +197,24 @@ Future<File?> getPhotoMaybeCached({
   required String uid,
   required String url,
 }) async {
-  return get(Uri.parse(url)).then((response) async {
-    final dir = await path_provider.getTemporaryDirectory();
-    final profilesDir = Directory(path.join(dir.path, 'profiles'));
-    await profilesDir.create();
-    final file = File(path.join(profilesDir.path, '$uid.jpg'));
-    await file.writeAsBytes(response.bodyBytes);
+  try {
+    final tempDir = await path_provider.getTemporaryDirectory();
+    final profilesDir = Directory(path.join(tempDir.path, 'profiles'));
+    File file = File(path.join(profilesDir.path, '$uid.jpg'));
+    final oneDayAgo = DateTime.now().subtract(const Duration(days: 1));
+    if (!await file.exists() ||
+        (await file.lastModified()).isBefore(oneDayAgo)) {
+      // Recache
+      final response = await get(Uri.parse(url));
+      await profilesDir.create(recursive: true);
+      await file.writeAsBytes(response.bodyBytes);
+    }
     return file;
-  }).catchError((e, s) {
+  } catch (e, s) {
     debugPrint(e.toString());
     debugPrint(s.toString());
-  });
+  }
+  return null;
 }
 
 Future<void> _initializeLocalNotifications(GlobalKey globalKey) {
