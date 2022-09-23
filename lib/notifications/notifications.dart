@@ -336,8 +336,8 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
       const message = "New voice message";
       plugin.show(
         chat.message.messageId?.hashCode ?? 0,
-        "New message",
-        "Voice message",
+        "New voice message 🗣️",
+        "${chat.senderName} sent you a message!",
         payload: jsonEncode(parsedMessage.toJson()),
         NotificationDetails(
           android: AndroidNotificationDetails(
@@ -366,14 +366,9 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
             ),
           ),
           iOS: IOSNotificationDetails(
-            subtitle: 'New message from ${chat.senderName}',
             attachments: photoFile == null
                 ? null
-                : [
-                    IOSNotificationAttachment(
-                      photoFile.path,
-                    ),
-                  ],
+                : [IOSNotificationAttachment(photoFile.path)],
             threadIdentifier: chat.chatroomId,
           ),
         ),
@@ -385,12 +380,11 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
         url: newInvite.photo,
       );
       final bytes = await photoFile?.readAsBytes();
-      final title = "${newInvite.name} sent you a chat invite! 🎊";
       final notificationId = 'new_invite_${newInvite.chatroomId}'.hashCode;
       plugin.show(
         notificationId,
-        title,
-        null,
+        "🎊 You got an invite 🎊",
+        "${newInvite.name} has sent you an invitation to chat!",
         payload: jsonEncode(parsedMessage.toJson()),
         NotificationDetails(
           android: AndroidNotificationDetails(
@@ -404,9 +398,7 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
           iOS: IOSNotificationDetails(
             attachments: photoFile == null
                 ? null
-                : [
-                    IOSNotificationAttachment(photoFile.path),
-                  ],
+                : [IOSNotificationAttachment(photoFile.path)],
           ),
         ),
       );
