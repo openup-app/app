@@ -19,9 +19,11 @@ import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/dialog.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/share_button.dart';
 import 'package:openup/widgets/theming.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
   const DiscoverPage({Key? key}) : super(key: key);
@@ -58,6 +60,39 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     super.dispose();
   }
 
+  Future<void> _maybeRequestLocation() async {
+    final status = await Permission.notification.status;
+    if (!(status.isGranted || status.isLimited)) {
+      final result = await Permission.notification.request();
+      print(result);
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return OpenupDialog(
+              title: const Text(
+                'Location is needed to discover nearby users',
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    openAppSettings();
+                  },
+                  child: const Text('Enable in Settings'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
+  }
+
   void _initPageController({
     required double fullHeight,
     required double itemExtent,
@@ -83,6 +118,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   }
 
   Future<void> _fetchStatuses() async {
+    if (!mounted) {
+      return;
+    }
+
+    await _maybeRequestLocation();
+
     if (!mounted) {
       return;
     }

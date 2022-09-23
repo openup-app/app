@@ -38,11 +38,11 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Take profile photos</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Make calls and record an audio status</string>
+	<string>Send audio invites, messages and make calls</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Add profile photos from your gallery</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Show people to talk to in your city</string>
+	<string>Discover people nearby</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
