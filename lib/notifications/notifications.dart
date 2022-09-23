@@ -161,9 +161,10 @@ Future<void> _onBackgroundNotification(RemoteMessage message) {
       // iOS handles incoming call separately using PushKit and CallKit
     },
     callEnded: (callEnded) => reportCallEnded(callEnded.rid),
-    chat: (_) => _displayNotification(parsedMessage),
-    newInvite: (_) => _displayNotification(parsedMessage),
-    inviteAccepted: (_) => _displayNotification(parsedMessage),
+    chat: (_) => _displayNotification(parsedMessage, background: true),
+    newInvite: (_) => _displayNotification(parsedMessage, background: true),
+    inviteAccepted: (_) =>
+        _displayNotification(parsedMessage, background: true),
   );
   return Future.value();
 }
@@ -324,14 +325,24 @@ Future<UseContext?> _handleDeepLink(_ParsedMessage parsedMessage) {
   );
 }
 
-Future<void> _displayNotification(_ParsedMessage parsedMessage) {
+Future<void> _displayNotification(
+  _ParsedMessage parsedMessage, {
+  bool background = false,
+}) {
   final plugin = FlutterLocalNotificationsPlugin();
   return parsedMessage.map(
     call: (call) => Future.value(),
     callEnded: (callEnded) => Future.value(),
     chat: (chat) async {
-      final photoFile = await getPhotoMaybeCached(
-          uid: chat.senderName, url: chat.senderPhoto);
+      final File? photoFile;
+      if (background && Platform.isIOS) {
+        photoFile = null;
+      } else {
+        photoFile = await getPhotoMaybeCached(
+          uid: chat.senderName,
+          url: chat.senderPhoto,
+        );
+      }
       final bytes = await photoFile?.readAsBytes();
       const message = "New voice message";
       plugin.show(
@@ -409,12 +420,11 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
         url: inviteAccepted.photo,
       );
       final bytes = await photoFile?.readAsBytes();
-      final title = "${inviteAccepted.name} has accepted your chat invite! 🎊";
       final notificationId =
           'invite_accepted_${inviteAccepted.chatroomId}'.hashCode;
       plugin.show(
         notificationId,
-        title,
+        "${inviteAccepted.name} has accepted your chat invite! 🎊",
         null,
         payload: jsonEncode(parsedMessage.toJson()),
         NotificationDetails(
@@ -429,9 +439,7 @@ Future<void> _displayNotification(_ParsedMessage parsedMessage) {
           iOS: IOSNotificationDetails(
             attachments: photoFile == null
                 ? null
-                : [
-                    IOSNotificationAttachment(photoFile.path),
-                  ],
+                : [IOSNotificationAttachment(photoFile.path)],
           ),
         ),
       );
