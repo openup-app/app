@@ -96,8 +96,8 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
                 return OvalButton(
                   onPressed: !canGoNext
                       ? null
-                      : () => Navigator.of(context)
-                          .pushNamed('sign-up-start-animation'),
+                      : () =>
+                          Navigator.of(context).pushReplacementNamed('home'),
                   child: const Text('continue'),
                 );
               },
