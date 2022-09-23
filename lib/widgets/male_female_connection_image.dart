@@ -12,24 +12,7 @@ class MaleFemaleConnectionImageApart extends StatelessWidget {
         tag: 'male_female_connection',
         child: SizedBox(
           height: 180,
-          child: Stack(
-            clipBehavior: Clip.hardEdge,
-            fit: StackFit.loose,
-            children: [
-              Positioned(
-                height: 250,
-                left: -148,
-                bottom: -44,
-                child: Lottie.asset('assets/images/friends.json'),
-              ),
-              Positioned(
-                height: 250,
-                right: -170,
-                bottom: -44,
-                child: Lottie.asset('assets/images/friends.json'),
-              ),
-            ],
-          ),
+          child: Lottie.asset('assets/images/friends.json'),
         ),
       ),
     );
