@@ -1,6 +1,7 @@
 import 'package:async/async.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dartz/dartz.dart' show Either;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -19,7 +20,6 @@ import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/dialog.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/share_button.dart';
 import 'package:openup/widgets/theming.dart';
@@ -74,20 +74,22 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     if (!(status.isGranted || status.isLimited)) {
       final result = await Permission.location.request();
       if (!(result.isGranted || status.isLimited)) {
-        showDialog(
+        showCupertinoDialog(
           context: context,
           builder: (context) {
-            return OpenupDialog(
+            return CupertinoAlertDialog(
               title: const Text(
-                'Location is needed to discover nearby users',
+                'Location Services',
                 textAlign: TextAlign.center,
               ),
+              content: const Text(
+                  'Location needs to be on in order to discover people near you.'),
               actions: [
-                TextButton(
+                CupertinoDialogAction(
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Cancel'),
                 ),
-                TextButton(
+                CupertinoDialogAction(
                   onPressed: () {
                     openAppSettings();
                     Navigator.of(context).pop();
