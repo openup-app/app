@@ -35,6 +35,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   final _navigatorKeys = List.generate(3, (_) => GlobalKey<NavigatorState>());
   DeepLinkArgs? _deepLinkArgs;
   bool _firstAttemptToDeepLink = true;
+  final _tempFriendshipsRefresh = TempFriendshipsRefresh();
 
   @override
   void initState() {
@@ -133,7 +134,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ),
                 Expanded(
                   child: Button(
-                    onPressed: () => _navigateTabTo(1),
+                    onPressed: () {
+                      _navigateTabTo(1);
+
+                      // Notifications don't update the UI, this forces it
+                      _tempFriendshipsRefresh.refresh();
+                    },
                     child: Center(
                       child: Text(
                         'Friendships',
@@ -198,7 +204,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     case 'conversations':
                       return MaterialPageRoute(
                         settings: settings,
-                        builder: (context) => const FriendshipsPage(),
+                        builder: (context) {
+                          return FriendshipsPage(
+                            tempRefresh: _tempFriendshipsRefresh,
+                          );
+                        },
                       );
                     case 'chat':
                       return MaterialPageRoute(
@@ -285,3 +295,9 @@ class DeepLinkArgs with _$DeepLinkArgs {
 final currentTabNotifier = ValueNotifier<HomeTab>(HomeTab.discover);
 
 enum HomeTab { discover, friendships, profile }
+
+class TempFriendshipsRefresh extends ValueNotifier<void> {
+  TempFriendshipsRefresh() : super(null);
+
+  void refresh() => notifyListeners();
+}

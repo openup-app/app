@@ -6,6 +6,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
+import 'package:openup/home_screen.dart';
 import 'package:openup/main.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_screen.dart';
@@ -16,7 +17,11 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
 
 class FriendshipsPage extends StatefulWidget {
-  const FriendshipsPage({Key? key}) : super(key: key);
+  final TempFriendshipsRefresh tempRefresh;
+  const FriendshipsPage({
+    Key? key,
+    required this.tempRefresh,
+  }) : super(key: key);
 
   @override
   State<FriendshipsPage> createState() => _FriendshipsPageState();
@@ -171,7 +176,10 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
           ),
         if (_filterString.isEmpty) const SizedBox(height: 16),
         Expanded(
-          child: _ConversationList(filterString: _filterString),
+          child: _ConversationList(
+            filterString: _filterString,
+            tempRefresh: widget.tempRefresh,
+          ),
         ),
       ],
     );
@@ -180,9 +188,12 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
 
 class _ConversationList extends ConsumerStatefulWidget {
   final String filterString;
+  final TempFriendshipsRefresh tempRefresh;
+
   const _ConversationList({
     Key? key,
     this.filterString = "",
+    required this.tempRefresh,
   }) : super(key: key);
 
   @override
@@ -197,6 +208,13 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
   void initState() {
     super.initState();
     _fetchConversations();
+    widget.tempRefresh.addListener(_tempRefreshListener);
+  }
+
+  @override
+  void dispose() {
+    widget.tempRefresh.removeListener(_tempRefreshListener);
+    super.dispose();
   }
 
   Future<void> _fetchConversations() async {
@@ -226,6 +244,13 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
     final hoursInt = waitDuration.inHours;
     final hours = hoursInt <= 1 ? '1' : hoursInt.toString();
     return 'You can invite $name again in $hours ${hoursInt <= 1 ? 'hour' : 'hours'}';
+  }
+
+  void _tempRefreshListener() {
+    if (mounted) {
+      setState(() => _loading = true);
+      _fetchConversations();
+    }
   }
 
   @override
@@ -332,6 +357,7 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                       _chatrooms[index].copyWith(unreadCount: 0);
                 });
                 FocusScope.of(context).unfocus();
+                // ignore: unused_local_variable
                 final refreshChat = await Navigator.of(context).pushNamed(
                   'chat',
                   arguments: ChatPageArguments(
@@ -342,7 +368,9 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                     endTime: chatroom.endTime,
                   ),
                 );
-                if (refreshChat == true && mounted) {
+                // Auto-refresh when coming back from chat
+                // TODO: When a chat push notificaiton can refresh the conversations, we SHOULD check the refreshChat variable
+                if (mounted) {
                   setState(() => _loading = true);
                   _fetchConversations();
                 }
