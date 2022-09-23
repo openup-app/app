@@ -115,6 +115,8 @@ PODS:
     - Flutter
   - path_provider_ios (0.0.1):
     - Flutter
+  - permission_handler_apple (9.0.4):
+    - Flutter
   - PromisesObjC (2.1.1)
   - record (0.0.1):
     - Flutter
@@ -157,6 +159,7 @@ DEPENDENCIES:
   - mixpanel_flutter (from `.symlinks/plugins/mixpanel_flutter/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - record (from `.symlinks/plugins/record/ios`)
   - sentry_flutter (from `.symlinks/plugins/sentry_flutter/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
@@ -224,6 +227,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider_ios:
     :path: ".symlinks/plugins/path_provider_ios/ios"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
   record:
     :path: ".symlinks/plugins/record/ios"
   sentry_flutter:
@@ -270,6 +275,7 @@ SPEC CHECKSUMS:
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
   package_info_plus: 6c92f08e1f853dc01228d6f553146438dafcd14e
   path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
+  permission_handler_apple: 44366e37eaf29454a1e7b1b7d736c2cceaeb17ce
   PromisesObjC: ab77feca74fa2823e7af4249b8326368e61014cb
   record: cae05d8dd3cdb1dea3511b20e5a5811a1ae00d0d
   Sentry: a0d4563fa4ddacba31fdcc35daaa8573d87224d6
@@ -281,6 +287,6 @@ SPEC CHECKSUMS:
   video_player_avfoundation: e489aac24ef5cf7af82702979ed16f2a5ef84cff
   WebRTC-SDK: e0589abeb63db07a4ca1f45c82ba0f1a72e61622
 
-PODFILE CHECKSUM: dfca28d30b9cc771e848a18b00f553926d158751
+PODFILE CHECKSUM: 81d56025c4837252b6aadddcd2e61bc1f0f357b4
 
 COCOAPODS: 1.11.2

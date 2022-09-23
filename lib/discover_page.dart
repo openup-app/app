@@ -51,7 +51,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   @override
   void initState() {
     super.initState();
-    _fetchStatuses();
+    _fetchStatuses().then((_) {
+      _maybeRequestNotification();
+    });
   }
 
   @override
@@ -60,12 +62,18 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     super.dispose();
   }
 
-  Future<void> _maybeRequestLocation() async {
+  Future<void> _maybeRequestNotification() async {
     final status = await Permission.notification.status;
     if (!(status.isGranted || status.isLimited)) {
-      final result = await Permission.notification.request();
-      print(result);
-      if (mounted) {
+      await Permission.notification.request();
+    }
+  }
+
+  Future<void> _maybeRequestLocation() async {
+    final status = await Permission.location.status;
+    if (!(status.isGranted || status.isLimited)) {
+      final result = await Permission.location.request();
+      if (!(result.isGranted || status.isLimited)) {
         showDialog(
           context: context,
           builder: (context) {
@@ -82,6 +90,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                 TextButton(
                   onPressed: () {
                     openAppSettings();
+                    Navigator.of(context).pop();
                   },
                   child: const Text('Enable in Settings'),
                 ),
