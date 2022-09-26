@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -12,6 +14,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/main.dart';
+import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
@@ -64,6 +67,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   bool _recording = false;
   bool? _unblur;
 
+  final _audio = JustAudioAudioPlayer();
+  String? _playbackMessageId;
+
   @override
   void initState() {
     super.initState();
@@ -97,6 +103,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   @override
   void dispose() {
     _chatApi.dispose();
+    _audio.dispose();
     _scrollController.removeListener(_scrollListener);
     super.dispose();
   }
@@ -294,19 +301,75 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                             blurEnabled && !unblur;
                                         switch (message.type) {
                                           case ChatType2.audio:
-                                            return AudioChatMessage(
-                                              ready: messageReady,
-                                              audioUrl: message.content,
-                                              photoUrl: fromMe
-                                                  ? _myPhoto ?? ''
-                                                  : widget.otherProfile.photo,
-                                              blurPhotos: fromMe
-                                                  ? blurMyPhotos
-                                                  : widget
-                                                      .otherProfile.blurPhotos,
-                                              date:
-                                                  _buildDateText(message.date),
-                                              fromMe: fromMe,
+                                            return Builder(
+                                              builder: (context) {
+                                                if (_playbackMessageId ==
+                                                        null ||
+                                                    _playbackMessageId !=
+                                                        message.messageId) {
+                                                  return AudioChatMessage(
+                                                    key: Key(
+                                                        'audio_${message.messageId}'),
+                                                    audioUrl: message.content,
+                                                    photoUrl: fromMe
+                                                        ? _myPhoto ?? ''
+                                                        : widget
+                                                            .otherProfile.photo,
+                                                    blurPhotos: fromMe
+                                                        ? blurMyPhotos
+                                                        : widget.otherProfile
+                                                            .blurPhotos,
+                                                    date: _buildDateText(
+                                                        message.date),
+                                                    fromMe: fromMe,
+                                                    playbackInfo:
+                                                        const PlaybackInfo(),
+                                                    onPlay: () => setState(
+                                                      () {
+                                                        _playbackMessageId =
+                                                            message.messageId;
+                                                        _audio.setUrl(
+                                                            message.content);
+                                                        _audio.play();
+                                                      },
+                                                    ),
+                                                    onPause: () {},
+                                                  );
+                                                }
+                                                return StreamBuilder<
+                                                    PlaybackInfo>(
+                                                  stream:
+                                                      _audio.playbackInfoStream,
+                                                  initialData:
+                                                      const PlaybackInfo(),
+                                                  builder: (context, snapshot) {
+                                                    final playbackInfo =
+                                                        snapshot.requireData;
+                                                    return AudioChatMessage(
+                                                      key: Key(
+                                                          'audio_${message.messageId}'),
+                                                      audioUrl: message.content,
+                                                      photoUrl: fromMe
+                                                          ? _myPhoto ?? ''
+                                                          : widget.otherProfile
+                                                              .photo,
+                                                      blurPhotos: fromMe
+                                                          ? blurMyPhotos
+                                                          : widget.otherProfile
+                                                              .blurPhotos,
+                                                      date: _buildDateText(
+                                                          message.date),
+                                                      fromMe: fromMe,
+                                                      playbackInfo:
+                                                          playbackInfo,
+                                                      onPlay: () =>
+                                                          _audio.play(),
+                                                      onPause: () =>
+                                                          _audio.pause(),
+                                                    );
+                                                  },
+                                                );
+                                              },
                                             );
                                         }
                                       },

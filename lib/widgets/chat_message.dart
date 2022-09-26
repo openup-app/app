@@ -1,29 +1,31 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
-import 'package:video_player/video_player.dart';
 
 class AudioChatMessage extends StatefulWidget {
-  final bool ready;
   final String audioUrl;
   final String photoUrl;
   final bool blurPhotos;
   final Widget date;
   final bool fromMe;
+  final PlaybackInfo playbackInfo;
+  final VoidCallback onPlay;
+  final VoidCallback onPause;
 
   const AudioChatMessage({
     Key? key,
-    required this.ready,
     required this.audioUrl,
     required this.photoUrl,
     required this.blurPhotos,
     required this.date,
     required this.fromMe,
+    required this.playbackInfo,
+    required this.onPlay,
+    required this.onPause,
   }) : super(key: key);
 
   @override
@@ -32,38 +34,28 @@ class AudioChatMessage extends StatefulWidget {
 
 class _AudioChatMessageState extends State<AudioChatMessage> {
   final _audio = JustAudioAudioPlayer();
-  late final StreamSubscription _subscription;
-
-  PlaybackInfo _playbackInfo = const PlaybackInfo(
-    position: Duration.zero,
-    duration: Duration.zero,
-    state: PlaybackState.loading,
-  );
+  Duration? _tempDuration;
+  StreamSubscription? _subscription;
 
   @override
   void initState() {
     super.initState();
-    if (!widget.ready) {
-      _audio.setPath(widget.audioUrl);
-    } else {
-      _audio.setUrl(widget.audioUrl);
-    }
-    _subscription = _audio.playbackInfoStream.listen(_onPlaybackInfo);
-  }
-
-  @override
-  void didUpdateWidget(covariant AudioChatMessage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!oldWidget.ready && widget.ready) {
-      _audio.setUrl(widget.audioUrl);
-    }
+    // Duration isn't known until playback, we load the audio here too
+    _audio.setUrl(widget.audioUrl);
+    _subscription = _audio.playbackInfoStream.listen((playbackInfo) {
+      if (playbackInfo.state == PlaybackState.idle) {
+        setState(() {
+          _tempDuration = playbackInfo.duration;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
-    super.dispose();
+    _subscription?.cancel();
     _audio.dispose();
-    _subscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -99,19 +91,19 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
                   SizedBox(
                     width: 64,
                     height: 48,
-                    child: _playbackInfo.state == PlaybackState.loading
+                    child: widget.playbackInfo.state == PlaybackState.loading
                         ? const Center(
                             child: LoadingIndicator(size: 24),
                           )
                         : Button(
                             onPressed: () {
-                              switch (_playbackInfo.state) {
+                              switch (widget.playbackInfo.state) {
                                 case PlaybackState.playing:
-                                  _audio.pause();
+                                  widget.onPause();
                                   break;
                                 case PlaybackState.paused:
                                 case PlaybackState.idle:
-                                  _audio.play();
+                                  widget.onPlay();
                                   break;
                                 default:
                                 // Do nothing
@@ -120,7 +112,7 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
                             child: Center(
                               child: Builder(
                                 builder: (context) {
-                                  switch (_playbackInfo.state) {
+                                  switch (widget.playbackInfo.state) {
                                     case PlaybackState.playing:
                                       return const Icon(
                                         Icons.pause,
@@ -143,7 +135,7 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
                             ),
                           ),
                   ),
-                  if (_playbackInfo.state == PlaybackState.disabled)
+                  if (widget.playbackInfo.state == PlaybackState.disabled)
                     SizedBox(
                       width: 100,
                       child: Text(
@@ -151,14 +143,27 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
                         style: Theming.of(context).text.body,
                       ),
                     ),
-                  Text(
-                    formatDuration(_playbackInfo.state == PlaybackState.playing
-                        ? _playbackInfo.position
-                        : _playbackInfo.duration),
-                    style: Theming.of(context)
-                        .text
-                        .body
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                  Builder(
+                    builder: (context) {
+                      if (widget.playbackInfo.position != Duration.zero) {
+                        return Text(
+                          formatDuration(widget.playbackInfo.position),
+                          style: Theming.of(context).text.body.copyWith(
+                              fontSize: 16, fontWeight: FontWeight.w300),
+                        );
+                      } else {
+                        final tempDuration = _tempDuration;
+                        if (tempDuration == null) {
+                          return const LoadingIndicator(size: 28);
+                        } else {
+                          return Text(
+                            formatDuration(tempDuration),
+                            style: Theming.of(context).text.body.copyWith(
+                                fontSize: 16, fontWeight: FontWeight.w300),
+                          );
+                        }
+                      }
+                    },
                   ),
                 ],
               ),
@@ -214,216 +219,6 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
         photoUrl,
         blur: widget.blurPhotos,
         blurSigma: 5.0,
-      ),
-    );
-  }
-
-  void _onPlaybackInfo(PlaybackInfo info) =>
-      setState(() => _playbackInfo = info);
-}
-
-class AudioSliderThumbShape extends RoundSliderThumbShape {
-  @override
-  void paint(
-    PaintingContext context,
-    Offset center, {
-    required Animation<double> activationAnimation,
-    required Animation<double> enableAnimation,
-    required bool isDiscrete,
-    required TextPainter labelPainter,
-    required RenderBox parentBox,
-    required SliderThemeData sliderTheme,
-    required TextDirection textDirection,
-    required double value,
-    required double textScaleFactor,
-    required Size sizeWithOverflow,
-  }) {
-    final canvas = context.canvas;
-    final left = parentBox.size.centerLeft(Offset.zero).dx;
-    final width = parentBox.size.width;
-    const horizontalPadding = 8;
-    canvas.drawCircle(
-      Offset(left + horizontalPadding + (width - horizontalPadding * 2) * value,
-          center.dy),
-      8,
-      Paint()..color = const Color.fromRGBO(0xFF, 0x87, 0x87, 1.0),
-    );
-  }
-}
-
-class AudioSliderTrackShape extends SliderTrackShape {
-  @override
-  Rect getPreferredRect({
-    required RenderBox parentBox,
-    Offset offset = Offset.zero,
-    required SliderThemeData sliderTheme,
-    bool? isEnabled,
-    bool? isDiscrete,
-  }) {
-    return offset & parentBox.size;
-  }
-
-  @override
-  void paint(
-    PaintingContext context,
-    Offset offset, {
-    required RenderBox parentBox,
-    required SliderThemeData sliderTheme,
-    required Animation<double> enableAnimation,
-    required Offset thumbCenter,
-    bool? isEnabled,
-    bool? isDiscrete,
-    required TextDirection textDirection,
-  }) {
-    final canvas = context.canvas;
-    const height = 2.0;
-    const horizontalPadding = 8.0;
-    final rect = parentBox.size
-            .centerLeft(const Offset(horizontalPadding, -height / 2)) &
-        Size(parentBox.size.width - horizontalPadding * 2, height);
-    canvas.drawRect(
-      rect,
-      Paint()..color = const Color.fromRGBO(0xFF, 0x87, 0x87, 1.0),
-    );
-  }
-}
-
-class VideoChatMessage extends StatefulWidget {
-  final String videoUrl;
-  final Widget date;
-  final bool fromMe;
-
-  const VideoChatMessage({
-    Key? key,
-    required this.videoUrl,
-    required this.date,
-    required this.fromMe,
-  }) : super(key: key);
-
-  @override
-  State<VideoChatMessage> createState() => _VideoChatMessageState();
-}
-
-class _VideoChatMessageState extends State<VideoChatMessage> {
-  late final VideoPlayerController _controller;
-  bool _playing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.network(widget.videoUrl);
-    _controller.initialize().whenComplete(() {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-    _controller.addListener(() async {
-      if (_controller.value.isPlaying != _playing) {
-        if (mounted) {
-          setState(() => _playing = _controller.value.isPlaying);
-        }
-        if (_controller.value.position == _controller.value.duration) {
-          await _controller.seekTo(Duration.zero);
-          if (mounted) {
-            setState(() {});
-          }
-        }
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.all(
-        Radius.circular(36),
-      ),
-      child: Button(
-        onPressed: () async {
-          final playing = _controller.value.isPlaying;
-          if (!playing) {
-            await _controller.play();
-          } else {
-            await _controller.pause();
-          }
-          if (mounted) {
-            setState(() => _playing = _controller.value.isPlaying);
-          }
-        },
-        child: SizedBox(
-          width: 200,
-          height: 250,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(34),
-                ),
-                child: Builder(
-                  builder: (context) {
-                    if (_controller.value.isInitialized) {
-                      return FittedBox(
-                        fit: BoxFit.cover,
-                        child: SizedBox(
-                          width: _controller.value.size.width,
-                          height: _controller.value.size.height,
-                          child: VideoPlayer(_controller),
-                        ),
-                      );
-                    } else {
-                      return const Center(
-                        child: LoadingIndicator(),
-                      );
-                    }
-                  },
-                ),
-              ),
-              if (!_playing)
-                BackdropFilter(
-                  filter: ImageFilter.blur(
-                    sigmaX: 10,
-                    sigmaY: 10,
-                  ),
-                  child: const DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.3),
-                    ),
-                  ),
-                ),
-              Positioned(
-                right: 24,
-                bottom: 12,
-                child: widget.date,
-              ),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: const Color.fromRGBO(0x9E, 0x9E, 0x9E, 1.0),
-                    width: 2,
-                  ),
-                  borderRadius: const BorderRadius.all(
-                    Radius.circular(36),
-                  ),
-                ),
-                child: const SizedBox.expand(),
-              ),
-              if (_controller.value.isInitialized && !_playing)
-                const Center(
-                  child: Icon(
-                    Icons.play_arrow,
-                    size: 48,
-                  ),
-                )
-            ],
-          ),
-        ),
       ),
     );
   }

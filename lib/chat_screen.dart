@@ -200,22 +200,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                             messageReady,
                                           );
                                         case ChatType.video:
-                                          return VideoChatMessage(
-                                            videoUrl: message.content,
-                                            date: _buildDateText(message.date),
-                                            fromMe: fromMe,
-                                          );
+                                          // return VideoChatMessage(
+                                          //   videoUrl: message.content,
+                                          //   date: _buildDateText(message.date),
+                                          //   fromMe: fromMe,
+                                          // );
+                                          return const SizedBox.shrink();
                                         case ChatType.audio:
-                                          return AudioChatMessage(
-                                            ready: messageReady,
-                                            audioUrl: message.content,
-                                            photoUrl: fromMe
-                                                ? _myAvatar ?? ''
-                                                : _profile?.photo ?? '',
-                                            blurPhotos: false,
-                                            date: _buildDateText(message.date),
-                                            fromMe: fromMe,
-                                          );
+                                          // return VideoChatMessage(
+                                          //   videoUrl: message.content,
+                                          //   date: _buildDateText(message.date),
+                                          //   fromMe: fromMe,
+                                          // );
+                                          return const SizedBox.shrink();
                                       }
                                     },
                                   ),
