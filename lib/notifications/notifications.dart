@@ -46,6 +46,9 @@ Future<void> initializeNotifications({
   FirebaseMessaging.onMessage.listen((remoteMessage) {
     _onForegroundNotification(scaffoldKey, remoteMessage, userStateNotifier);
   });
+
+  FirebaseMessaging.instance
+      .setForegroundNotificationPresentationOptions(alert: true);
 }
 
 Future<void> dismissAllNotifications() =>
@@ -173,7 +176,9 @@ _ParsedMessage? _parseRemoteMessage(RemoteMessage message) {
   final String? type = message.data['type'];
   final String? bodyString = message.data['body'];
   if (type == null || bodyString == null) {
-    debugPrint('Invalid notification. Type: $type, body: $bodyString');
+    final error = 'Invalid notification. Type: $type, body: $bodyString';
+    Sentry.captureMessage(error);
+    debugPrint(error);
     return null;
   }
 
@@ -189,7 +194,9 @@ _ParsedMessage? _parseRemoteMessage(RemoteMessage message) {
   } else if (type == 'invite_accepted') {
     return _InviteAccepted.fromJson(body);
   } else {
-    debugPrint('Unknown notification type $type');
+    final error = 'Unknown notification type $type';
+    Sentry.captureMessage(error);
+    debugPrint(error);
     return null;
   }
 }
