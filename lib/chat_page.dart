@@ -403,7 +403,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                             maintainState: true,
                             maintainSize: true,
                             child: Text(
-                              'voice messages can only be upto 30 seconds',
+                              'voice messages can only be upto 60 seconds',
                               textAlign: TextAlign.center,
                               style: Theming.of(context).text.body.copyWith(
                                   fontSize: 14, fontWeight: FontWeight.w300),

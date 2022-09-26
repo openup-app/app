@@ -1049,7 +1049,7 @@ class RecordButtonChatState extends State<RecordButtonChat> {
   void initState() {
     super.initState();
     _recorder = AudioBioController(
-      maxDuration: const Duration(seconds: 30),
+      maxDuration: const Duration(seconds: 60),
       onRecordingComplete: (path) async {
         if (mounted) {
           setState(() => _audioPath = path);
