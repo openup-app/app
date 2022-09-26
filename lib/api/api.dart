@@ -808,7 +808,7 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> updateLocation(
+  Future<Either<ApiError, String>> updateLocation(
       String uid, double latitude, double longitude) {
     return _request(
       makeRequest: () {
@@ -821,7 +821,10 @@ class Api {
           }),
         );
       },
-      handleSuccess: (response) => const Right(null),
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(json['locationName'] ?? '');
+      },
     );
   }
 

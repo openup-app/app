@@ -356,9 +356,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                   await locationService.getLatLong();
                               await location.when(
                                 value: (lat, long) async {
-                                  final api = GetIt.instance.get<Api>();
-                                  await api.updateLocation(
-                                      ref.read(userProvider).uid, lat, long);
+                                  updateLocation(
+                                    context: context,
+                                    ref: ref,
+                                    latitude: lat,
+                                    longitude: long,
+                                  );
                                 },
                                 denied: () {
                                   // Nothing to do

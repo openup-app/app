@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
@@ -120,8 +121,12 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     if (mounted) {
       await latLong.when(
         value: (lat, long) async {
-          final api = GetIt.instance.get<Api>();
-          await api.updateLocation(user.uid, lat, long);
+          updateLocation(
+            context: context,
+            ref: ref,
+            latitude: lat,
+            longitude: long,
+          );
         },
         denied: () {
           // Nothing to do, request on Discover screen

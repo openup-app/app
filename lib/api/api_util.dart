@@ -68,6 +68,27 @@ Future<Either<ApiError, void>> updateTopic({
   return result;
 }
 
+Future<Either<ApiError, String>> updateLocation({
+  required BuildContext context,
+  required WidgetRef ref,
+  required double latitude,
+  required double longitude,
+}) async {
+  final api = GetIt.instance.get<Api>();
+  final userState = ref.read(userProvider);
+  final result = await api.updateLocation(userState.uid, latitude, longitude);
+
+  result.fold(
+    (l) {},
+    (r) {
+      final newProfile = userState.profile!.copyWith(location: r);
+      ref.read(userProvider.notifier).profile(newProfile);
+    },
+  );
+
+  return result;
+}
+
 Future<Either<ApiError, void>> updateBlurPhotos({
   required BuildContext context,
   required WidgetRef ref,
