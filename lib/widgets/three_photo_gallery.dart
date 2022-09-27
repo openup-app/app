@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +8,6 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
 class ThreePhotoGallery extends ConsumerStatefulWidget {

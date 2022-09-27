@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/theming.dart';
 
 class SignUpOverviewPage extends StatefulWidget {
