@@ -54,25 +54,23 @@ class ChatApi {
   void _handleMessage(String message) {
     final json = jsonDecode(message);
     final data = json['message'];
-    final chatEvent = _ChatEvent.fromJson(data);
-    chatEvent.map(
-      chatMessage: (event) => onMessage(event),
-    );
+    final chatMessage = ChatMessage.fromJson(data);
+    onMessage(chatMessage);
   }
 }
 
 @freezed
-class _ChatEvent with _$_ChatEvent {
-  const factory _ChatEvent.chatMessage({
+class ChatMessage with _$ChatMessage {
+  const factory ChatMessage({
     @Default(null) String? messageId,
     required String uid,
     required DateTime date,
     required ChatType type,
     required String content,
-  }) = ChatMessage;
+  }) = _ChatMessage;
 
-  factory _ChatEvent.fromJson(Map<String, dynamic> json) =>
-      _$_ChatEventFromJson(json);
+  factory ChatMessage.fromJson(Map<String, dynamic> json) =>
+      _$ChatMessageFromJson(json);
 }
 
 enum ChatType {

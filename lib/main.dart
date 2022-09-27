@@ -15,7 +15,7 @@ import 'package:openup/account_settings_phone_verification_screen.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
-import 'package:openup/api/online_users/online_users_api.dart';
+import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/call_page.dart';
 import 'package:openup/contact_us_screen.dart';

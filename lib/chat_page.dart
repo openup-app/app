@@ -9,9 +9,8 @@ import 'package:intl/intl.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/call_manager.dart';
-import 'package:openup/api/chat/chat_api.dart';
+import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/api/users/profile.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/main.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
@@ -733,14 +732,6 @@ class ChatPageArguments {
     required this.online,
     required this.endTime,
   });
-}
-
-class CallProfileScreenArguments {
-  final Profile profile;
-  final Status status;
-  final String title;
-
-  CallProfileScreenArguments(this.profile, this.status, this.title);
 }
 
 enum CallProfileAction { call, block, report }

@@ -7,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
-import 'package:openup/api/users/profile.dart';
 import 'package:openup/main.dart';
 import 'package:openup/notifications/notification_comms.dart';
 

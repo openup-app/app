@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/api.dart';
 
 part 'user_state.freezed.dart';
 

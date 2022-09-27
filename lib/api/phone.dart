@@ -4,8 +4,8 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:openup/api/signaling/signaling.dart';
-import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/signaling.dart';
 import 'package:rxdart/rxdart.dart';
 
 part 'phone.freezed.dart';

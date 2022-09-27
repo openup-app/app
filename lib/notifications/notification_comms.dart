@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'notification_comms.freezed.dart';

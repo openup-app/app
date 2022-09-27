@@ -11,9 +11,8 @@ import 'package:http/http.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/call_manager.dart';
-import 'package:openup/api/chat/chat_api.dart';
+import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/api/users/profile.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/notifications/android_voip_handlers.dart'

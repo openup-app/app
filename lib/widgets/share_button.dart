@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 

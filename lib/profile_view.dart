@@ -1,7 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/main.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';

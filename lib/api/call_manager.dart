@@ -6,10 +6,9 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/signaling/phone.dart';
-import 'package:openup/api/signaling/signaling.dart';
-import 'package:openup/api/signaling/socket_io_signaling_channel.dart';
-import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/phone.dart';
+import 'package:openup/api/signaling.dart';
+import 'package:openup/api/socket_io_signaling_channel.dart';
 import 'package:openup/main.dart';
 import 'package:openup/notifications/android_voip_handlers.dart'
     as android_voip;

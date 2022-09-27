@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:openup/api/users/profile.dart';
+import 'package:openup/api/api.dart';
 
 part 'signaling.freezed.dart';
 part 'signaling.g.dart';
