@@ -19,75 +19,6 @@ import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/theming.dart';
 
-/// Prominent button with a horizontal gradient styling.
-class SignificantButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final Widget child;
-  final BorderRadius borderRadius;
-  final double height;
-  final Gradient gradient;
-
-  const SignificantButton({
-    Key? key,
-    required this.onPressed,
-    required this.gradient,
-    required this.child,
-  })  : borderRadius = const BorderRadius.all(Radius.circular(94)),
-        height = 69.0,
-        super(key: key);
-
-  const SignificantButton.pink({
-    Key? key,
-    required this.onPressed,
-    required this.child,
-  })  : borderRadius = const BorderRadius.all(Radius.circular(94)),
-        height = 69.0,
-        gradient = const LinearGradient(
-          colors: [
-            Color.fromRGBO(0xFF, 0x83, 0x83, 1.0),
-            Color.fromRGBO(0x8A, 0x0, 0x00, 1.0),
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        super(key: key);
-
-  const SignificantButton.blue({
-    Key? key,
-    required this.onPressed,
-    required this.child,
-  })  : borderRadius = const BorderRadius.all(Radius.circular(94)),
-        height = 69.0,
-        gradient = const LinearGradient(
-          colors: [
-            Color.fromRGBO(0x26, 0xC4, 0xE6, 1.0),
-            Color.fromRGBO(0x7B, 0xDC, 0xF1, 1.0),
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 300),
-        height: height,
-        decoration: BoxDecoration(
-          borderRadius: borderRadius,
-          gradient: gradient,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 4.0),
-          child: Center(child: child),
-        ),
-      ),
-    );
-  }
-}
-
 class CountdownTimer extends StatefulWidget {
   final DateTime endTime;
   final VoidCallback onDone;
@@ -215,53 +146,6 @@ class BlurredSurface extends StatelessWidget {
   }
 }
 
-// class RecordButton extends StatelessWidget {
-//   final String label;
-//   const RecordButton({
-//     Key? key,
-//     required this.label,
-//   }) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Button(
-//       onPressed: () {},
-//       child: Container(
-//         height: 67,
-//
-//         child: Center(
-//           child: Row(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               Container(
-//                 width: 36,
-//                 height: 36,
-//                 padding: const EdgeInsets.all(2),
-//                 decoration: BoxDecoration(
-//                   border: Border.all(color: Colors.white),
-//                   shape: BoxShape.circle,
-//                 ),
-//                 child: Container(
-//                   decoration: const BoxDecoration(
-//                       color: Colors.red, shape: BoxShape.circle),
-//                 ),
-//               ),
-//               const SizedBox(width: 14),
-//               Text(
-//                 label,
-//                 style: Theming.of(context)
-//                     .text
-//                     .body
-//                     .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 class ProfileImage extends StatelessWidget {
   final String photo;
   final BoxFit fit;
@@ -308,91 +192,6 @@ class ProfileImage extends StatelessWidget {
         sigmaY: blurSigma,
       ),
       child: child,
-    );
-  }
-}
-
-class _RecordingIndicator extends StatelessWidget {
-  final _colors = const [
-    Color.fromARGB(255, 202, 0, 0),
-    Color.fromARGB(255, 255, 52, 37),
-    Color.fromARGB(255, 249, 99, 24),
-    Color.fromARGB(255, 255, 200, 0),
-    Color.fromARGB(255, 252, 241, 113),
-    Color.fromARGB(255, 255, 244, 28),
-    Color.fromARGB(255, 255, 204, 0),
-    Color.fromARGB(255, 249, 99, 24),
-    Color.fromARGB(255, 255, 52, 37),
-    Color.fromARGB(255, 202, 0, 0),
-  ];
-  final _durations = const [780, 450, 600, 500, 685, 850, 725, 675, 625, 825];
-
-  @override
-  Widget build(BuildContext context) {
-    const length = 10;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        for (var i = 0; i < length; i++)
-          _RecordingIndicatorBar(
-            duration: Duration(milliseconds: _durations[i % length]),
-            color: _colors[i % length],
-          ),
-      ],
-    );
-  }
-}
-
-class _RecordingIndicatorBar extends StatefulWidget {
-  final Duration duration;
-  final Color color;
-
-  const _RecordingIndicatorBar({
-    Key? key,
-    required this.duration,
-    required this.color,
-  }) : super(key: key);
-
-  @override
-  _RecordingIndicatorBarState createState() => _RecordingIndicatorBarState();
-}
-
-class _RecordingIndicatorBarState extends State<_RecordingIndicatorBar>
-    with SingleTickerProviderStateMixin {
-  late final Animation<double> _animation;
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
-    final curvedAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutExpo,
-    );
-    _animation = Tween<double>(begin: 0, end: 100).animate(curvedAnimation);
-    _animation.addListener(() => setState(() {}));
-    _controller.repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 4,
-      decoration: BoxDecoration(
-        color: widget.color,
-        borderRadius: BorderRadius.circular(5),
-      ),
-      height: _animation.value,
     );
   }
 }
@@ -1285,31 +1084,6 @@ class Chip extends StatelessWidget {
                 color: selected ? Colors.black : null),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class OutlinedArea extends StatelessWidget {
-  final Widget child;
-  const OutlinedArea({
-    Key? key,
-    required this.child,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 51,
-      margin: const EdgeInsets.only(left: 16, right: 16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.white),
-        borderRadius: const BorderRadius.all(
-          Radius.circular(40),
-        ),
-      ),
-      child: Center(
-        child: child,
       ),
     );
   }

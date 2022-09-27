@@ -9,10 +9,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/chat/chat_api2.dart';
-import 'package:openup/api/users/connection.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/main.dart';
-import 'package:openup/util/location_service.dart';
 
 part 'api.freezed.dart';
 part 'api.g.dart';
@@ -224,75 +222,6 @@ class Api {
         );
       },
       handleSuccess: (response) => const Right(null),
-    );
-  }
-
-  Future<Either<ApiError, void>> addConnectionRequest(
-    String uid,
-    String otherUid,
-  ) {
-    return _request(
-      makeRequest: () {
-        return http.post(
-          Uri.parse('$_urlBase/users/$otherUid/connection_requests'),
-          headers: _headers,
-          body: jsonEncode({'uid': uid}),
-        );
-      },
-      handleSuccess: (response) => const Right(null),
-    );
-  }
-
-  Future<Either<ApiError, List<Connection>>> getConnections(String uid) {
-    return _request(
-      makeRequest: () {
-        return http.get(
-          Uri.parse('$_urlBase/users/$uid/connections'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        final list = jsonDecode(response.body) as List<dynamic>;
-        final connections =
-            List<Connection>.from(list.map((e) => Connection.fromJson(e)));
-        return Right(connections);
-      },
-    );
-  }
-
-  Future<Either<ApiError, List<String>>> getConnectionUids(String uid) {
-    return _request(
-      makeRequest: () {
-        return http.get(
-          Uri.parse('$_urlBase/users/$uid/connection_uids'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final uids = List<String>.from(json['uids'] ?? []);
-        return Right(uids);
-      },
-    );
-  }
-
-  Future<Either<ApiError, List<Connection>>> deleteConnection(
-    String uid,
-    String deleteUid,
-  ) {
-    return _request(
-      makeRequest: () {
-        return http.delete(
-          Uri.parse('$_urlBase/users/$uid/connections/$deleteUid'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        final list = jsonDecode(response.body) as List<dynamic>;
-        final connections =
-            List<Connection>.from(list.map((e) => Connection.fromJson(e)));
-        return Right(connections);
-      },
     );
   }
 

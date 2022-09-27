@@ -9,11 +9,11 @@ import 'package:openup/api/users/profile.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/main.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
-import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/theming.dart';
 
 class FriendshipsPage extends StatefulWidget {

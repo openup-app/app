@@ -2,8 +2,8 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:openup/api/users/profile.dart';
-import 'package:openup/profile_screen.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/theming.dart';
 import 'package:share_plus/share_plus.dart';
 

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,15 +18,9 @@ import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/online_users/online_users_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/call_page.dart';
-import 'package:openup/call_system.dart';
-import 'package:openup/chat_screen.dart';
-import 'package:openup/connections_screen.dart';
 import 'package:openup/contact_us_screen.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
-import 'package:openup/lobby_list_page.dart';
-import 'package:openup/profile_edit_screen.dart';
-import 'package:openup/profile_screen.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
 import 'package:openup/sign_up_name_screen.dart';
@@ -40,7 +33,6 @@ import 'package:openup/home_screen.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/profile_drawer.dart';
 import 'package:openup/sign_up_overview_page.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:openup/widgets/theming.dart';
@@ -54,7 +46,6 @@ const socketPort = 8081;
 const urlBase = 'https://$host:$webPort';
 
 final _scaffoldKey = GlobalKey();
-final callSystemKey = GlobalKey<CallSystemState>();
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
@@ -384,33 +375,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 );
               },
             );
-          case 'lobby-list':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                final args = settings.arguments as StartWithCall?;
-                return CurrentRouteSystemUiStyling.light(
-                  child: LobbyListPage(
-                    startWithCall: args,
-                  ),
-                );
-              },
-            );
-          case 'call-profile':
-            return _buildPageRoute<CallProfileAction>(
-              settings: settings,
-              transitionsBuilder: bottomToTopPageTransition,
-              builder: (_) {
-                final args = settings.arguments as CallProfileScreenArguments;
-                return CurrentRouteSystemUiStyling.light(
-                  child: CallProfileScreen(
-                    profile: args.profile,
-                    status: args.status,
-                    title: args.title,
-                  ),
-                );
-              },
-            );
           case 'call-report':
             final args = settings.arguments as ReportScreenArguments;
             return _buildPageRoute(
@@ -420,53 +384,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 return CurrentRouteSystemUiStyling.light(
                   child: ReportScreen(
                     uid: args.uid,
-                  ),
-                );
-              },
-            );
-          case 'profile':
-            final args = settings.arguments as ProfileArguments;
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return CurrentRouteSystemUiStyling.light(
-                  child: ProfileScreen(
-                    profile: args.profile,
-                    editable: args.editable,
-                  ),
-                );
-              },
-            );
-          case 'profile-edit':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: ProfileEditScreen(),
-                );
-              },
-            );
-          case 'connections':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: ConnectionsScreen(),
-                );
-              },
-            );
-          case 'chat':
-            return _buildPageRoute<bool>(
-              settings: settings,
-              builder: (_) {
-                final args = settings.arguments as ChatArguments;
-                return CurrentRouteSystemUiStyling.light(
-                  child: ChatScreen(
-                    host: host,
-                    webPort: webPort,
-                    socketPort: socketPort,
-                    uid: args.uid,
-                    chatroomId: args.chatroomId,
                   ),
                 );
               },
@@ -533,86 +450,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           child: Builder(builder: builder),
         );
       },
-    );
-  }
-}
-
-class _ScaffoldWithAnimatedDrawerBackgroundBlur extends StatefulWidget {
-  final WidgetBuilder builder;
-  const _ScaffoldWithAnimatedDrawerBackgroundBlur({
-    Key? key,
-    required this.builder,
-  }) : super(key: key);
-
-  @override
-  _ScaffoldWithAnimatedDrawerBackgroundBlurState createState() =>
-      _ScaffoldWithAnimatedDrawerBackgroundBlurState();
-}
-
-class _ScaffoldWithAnimatedDrawerBackgroundBlurState
-    extends State<_ScaffoldWithAnimatedDrawerBackgroundBlur>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(
-        milliseconds: 200,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: widget.builder(context),
-      resizeToAvoidBottomInset: false,
-      onEndDrawerChanged: (open) {
-        if (open) {
-          _controller.forward();
-        } else {
-          _controller.reverse();
-        }
-      },
-      endDrawerEnableOpenDragGesture: false,
-      drawerScrimColor: Colors.transparent,
-      endDrawer: AnimatedBuilder(
-        animation: CurvedAnimation(
-          parent: _controller,
-          curve: Curves.easeOut,
-        ),
-        builder: (context, child) {
-          final blurValue = Tween(
-            begin: 0.0,
-            end: 10.0,
-          ).evaluate(_controller);
-          return BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: blurValue,
-              sigmaY: blurValue,
-            ),
-            child: child,
-          );
-        },
-        child: const SizedBox(
-          width: 300,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Color.fromRGBO(0x17, 0x17, 0x17, 0.5),
-            ),
-            child: ProfileDrawer(),
-          ),
-        ),
-      ),
     );
   }
 }

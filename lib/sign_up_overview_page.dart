@@ -84,7 +84,15 @@ class _SignUpOverviewPageState extends State<SignUpOverviewPage> {
                           .pushReplacementNamed('sign-up-name');
                     }
                   },
-                  child: OutlinedArea(
+                  child: Container(
+                    height: 51,
+                    margin: const EdgeInsets.only(left: 16, right: 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white),
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(40),
+                      ),
+                    ),
                     child: Center(
                       child: _page == 3
                           ? const Text('Let\'s get started')

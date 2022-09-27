@@ -734,3 +734,13 @@ class ChatPageArguments {
     required this.endTime,
   });
 }
+
+class CallProfileScreenArguments {
+  final Profile profile;
+  final Status status;
+  final String title;
+
+  CallProfileScreenArguments(this.profile, this.status, this.title);
+}
+
+enum CallProfileAction { call, block, report }
