@@ -8,7 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/chat/chat_api2.dart';
+import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/home_screen.dart';
@@ -781,10 +781,10 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                     setState(() => _uploading = true);
                     final uid = ref.read(userProvider).uid;
                     final api = GetIt.instance.get<Api>();
-                    final result = await api.sendMessage2(
+                    final result = await api.sendMessage(
                       uid,
                       widget.profile.uid,
-                      ChatType2.audio,
+                      ChatType.audio,
                       path,
                     );
                     if (mounted) {

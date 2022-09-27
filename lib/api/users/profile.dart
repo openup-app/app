@@ -45,21 +45,3 @@ class SimpleProfile with _$SimpleProfile {
   factory SimpleProfile.fromJson(Map<String, dynamic> json) =>
       _$SimpleProfileFromJson(json);
 }
-
-@freezed
-class TopicParticipant with _$TopicParticipant {
-  const factory TopicParticipant({
-    required String uid,
-    required String name,
-    required String photo,
-    required List<String> gallery,
-    required List<String> interests,
-    required String location,
-    required String topic,
-    required String audioUrl,
-    required DateTime endTime,
-  }) = _TopicParticipant;
-
-  factory TopicParticipant.fromJson(Map<String, dynamic> json) =>
-      _$TopicParticipantFromJson(json);
-}

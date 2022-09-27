@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 import 'package:openup/api/chat/chat_api.dart';
-import 'package:openup/api/chat/chat_api2.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/main.dart';
 
@@ -345,74 +344,6 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, List<ChatMessage>>> getMessages(
-    String chatroomId, {
-    DateTime? startDate,
-    int limit = 10,
-  }) async {
-    return _request(
-      makeRequest: () {
-        final query =
-            '${startDate == null ? '' : 'startDate=${startDate.toIso8601String()}&'}limit=$limit';
-        return http.get(
-          Uri.parse('$_urlBase/chats/$chatroomId?$query'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        final list = jsonDecode(response.body) as List<dynamic>;
-        return Right(
-            List<ChatMessage>.from(list.map((e) => ChatMessage.fromJson(e))));
-      },
-    );
-  }
-
-  Future<Either<ApiError, ChatMessage>> sendMessage(
-    String uid,
-    String chatroomId,
-    ChatType type,
-    String content,
-  ) async {
-    final uri = Uri.parse('$_urlBase/chats/$chatroomId');
-    switch (type) {
-      case ChatType.emoji:
-        return _request(
-          makeRequest: () {
-            return http.post(
-              uri,
-              headers: _headers,
-              body: jsonEncode({
-                'uid': uid,
-                'type': type.name,
-                'content': content,
-              }),
-            );
-          },
-          handleSuccess: (response) {
-            return Right(ChatMessage.fromJson(jsonDecode(response.body)));
-          },
-        );
-      case ChatType.image:
-      case ChatType.video:
-      case ChatType.audio:
-        return _requestStreamedResponse(
-          makeRequest: () async {
-            final request = http.MultipartRequest('POST', uri);
-            request.headers.addAll(_headers);
-            request.fields['uid'] = uid;
-            request.fields['type'] = type.name;
-            request.files.add(
-              await http.MultipartFile.fromPath('media', content),
-            );
-            return request.send();
-          },
-          handleSuccess: (response) {
-            return Right(ChatMessage.fromJson(jsonDecode(response.body)));
-          },
-        );
-    }
-  }
-
   Future<Either<ApiError, List<Chatroom>>> getChatrooms(String uid) async {
     return _request(
       makeRequest: () {
@@ -434,7 +365,7 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, List<ChatMessage2>>> getMessages2(
+  Future<Either<ApiError, List<ChatMessage>>> getMessages(
     String uid,
     String otherUid, {
     DateTime? startDate,
@@ -452,20 +383,20 @@ class Api {
       handleSuccess: (response) {
         final list = jsonDecode(response.body) as List<dynamic>;
         return Right(
-            List<ChatMessage2>.from(list.map((e) => ChatMessage2.fromJson(e))));
+            List<ChatMessage>.from(list.map((e) => ChatMessage.fromJson(e))));
       },
     );
   }
 
-  Future<Either<ApiError, ChatMessage2>> sendMessage2(
+  Future<Either<ApiError, ChatMessage>> sendMessage(
     String uid,
     String otherUid,
-    ChatType2 type,
+    ChatType type,
     String content,
   ) async {
     final uri = Uri.parse('$_urlBase/chats/$uid/$otherUid');
     switch (type) {
-      case ChatType2.audio:
+      case ChatType.audio:
         return _requestStreamedResponse(
           makeRequest: () async {
             final request = http.MultipartRequest('POST', uri);
@@ -478,7 +409,7 @@ class Api {
             return request.send();
           },
           handleSuccess: (response) {
-            return Right(ChatMessage2.fromJson(jsonDecode(response.body)));
+            return Right(ChatMessage.fromJson(jsonDecode(response.body)));
           },
         );
     }
@@ -594,103 +525,6 @@ class Api {
       handleSuccess: (response) {
         return const Right(null);
       },
-    );
-  }
-
-  Future<Either<ApiError, Map<Topic, List<TopicParticipant>>>> getStatuses(
-    String uid,
-    bool nearby,
-  ) {
-    return _request(
-      makeRequest: () {
-        return http.get(
-          Uri.parse('$_urlBase/users/$uid/statuses/${nearby ? 'nearby' : ''}'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        final list = List.from(jsonDecode(response.body));
-        final parsed = List<TopicParticipant>.from(list.map((e) {
-          try {
-            return TopicParticipant.fromJson(e);
-          } catch (e) {
-            debugPrint(e.toString());
-            return null;
-          }
-        }).where((e) => e != null));
-        final map = Map.fromEntries(
-            Topic.values.map((e) => MapEntry(e, <TopicParticipant>[])));
-        final topics =
-            Map.fromEntries(Topic.values.map((e) => MapEntry(e.name, e)));
-        for (final participant in parsed) {
-          final topic = topics[participant.topic];
-          if (topic != null) {
-            map[topic]?.add(participant);
-          }
-        }
-        return Right(map);
-      },
-    );
-  }
-
-  Future<Either<ApiError, Status?>> getStatus(String uid) {
-    return _request(
-      makeRequest: () {
-        return http.get(
-          Uri.parse('$_urlBase/users/$uid/status'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final status = _parseStatus(json);
-        return Right(status);
-      },
-    );
-  }
-
-  Future<Either<ApiError, Status?>> updateStatus(
-    String uid,
-    Topic topic,
-    Uint8List? audio,
-  ) {
-    return _request(
-      makeRequest: () {
-        return http.put(
-          Uri.parse('$_urlBase/users/$uid/status/${topic.name}'),
-          headers: {
-            ..._headers,
-            if (audio != null) ...{'Content-Type': 'application/octet-stream'}
-          },
-          body: audio,
-        );
-      },
-      handleSuccess: (response) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final status = _parseStatus(json);
-        return Right(status);
-      },
-    );
-  }
-
-  Status? _parseStatus(Map<String, dynamic> json) {
-    final status = json['status'];
-    if (status == null) {
-      return null;
-    }
-    status['endTime'] = DateTime.now().toIso8601String();
-    return Status.fromJson(status);
-  }
-
-  Future<Either<ApiError, void>> deleteStatus(String uid) {
-    return _request(
-      makeRequest: () {
-        return http.delete(
-          Uri.parse('$_urlBase/users/$uid/status'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) => const Right(null),
     );
   }
 

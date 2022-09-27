@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/call_manager.dart';
-import 'package:openup/api/chat/chat_api2.dart';
+import 'package:openup/api/chat/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/api/users/profile.dart';
 import 'package:openup/home_screen.dart';
@@ -52,9 +52,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     with SingleTickerProviderStateMixin {
   final _kDateFormat = DateFormat('EEEE h:mm');
 
-  late final ChatApi2 _chatApi;
+  late final ChatApi _chatApi;
 
-  final _messages = <String, ChatMessage2>{};
+  final _messages = <String, ChatMessage>{};
 
   final _scrollController = ScrollController();
 
@@ -74,7 +74,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   void initState() {
     super.initState();
 
-    _chatApi = ChatApi2(
+    _chatApi = ChatApi(
       host: widget.host,
       socketPort: widget.socketPort,
       uid: ref.read(userProvider).uid,
@@ -300,7 +300,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                         final blurMyPhotos =
                                             blurEnabled && !unblur;
                                         switch (message.type) {
-                                          case ChatType2.audio:
+                                          case ChatType.audio:
                                             return Builder(
                                               builder: (context) {
                                                 if (_playbackMessageId ==
@@ -506,17 +506,17 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     final pendingId = uuid.v4();
     final uid = ref.read(userProvider).uid;
     setState(() {
-      _messages[pendingId] = ChatMessage2(
+      _messages[pendingId] = ChatMessage(
         uid: uid,
         date: DateTime.now().toUtc(),
-        type: ChatType2.audio,
+        type: ChatType.audio,
         content: content,
       );
     });
 
     final api = GetIt.instance.get<Api>();
-    final result = await api.sendMessage2(
-        uid, widget.otherProfile.uid, ChatType2.audio, content);
+    final result = await api.sendMessage(
+        uid, widget.otherProfile.uid, ChatType.audio, content);
 
     if (!mounted) {
       return;
@@ -566,7 +566,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
   Future<void> _fetchHistory({DateTime? startDate}) async {
     final api = GetIt.instance.get<Api>();
-    final result = await api.getMessages2(
+    final result = await api.getMessages(
       ref.read(userProvider).uid,
       widget.otherProfile.uid,
       startDate: startDate,

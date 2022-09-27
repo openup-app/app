@@ -18,7 +18,7 @@ class ChatApi {
     required String host,
     required int socketPort,
     required String uid,
-    required String chatroomId,
+    required String otherUid,
     required this.onMessage,
     required this.onConnectionError,
   }) {
@@ -28,7 +28,10 @@ class ChatApi {
           .setTimeout(1500)
           .setTransports(['websocket'])
           .enableForceNew()
-          .setQuery({'uid': uid, 'chatroomId': chatroomId})
+          .setQuery({
+            'uid': uid,
+            'otherUid': otherUid,
+          })
           .build(),
     );
 
@@ -73,8 +76,5 @@ class _ChatEvent with _$_ChatEvent {
 }
 
 enum ChatType {
-  emoji,
-  image,
-  video,
   audio,
 }
