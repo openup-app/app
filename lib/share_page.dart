@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/gallery.dart';
-import 'package:openup/widgets/theming.dart';
 import 'package:share_plus/share_plus.dart';
 
 class SharePage extends StatefulWidget {
@@ -65,13 +64,17 @@ class _SharePageState extends State<SharePage>
                     children: [
                       Text(
                         widget.profile.name,
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 24, fontWeight: FontWeight.w300),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w300,
+                            ),
                       ),
                       Text(
                         widget.location,
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 24, fontWeight: FontWeight.w300),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w300,
+                            ),
                       ),
                     ],
                   ),
@@ -113,10 +116,10 @@ class _SharePageState extends State<SharePage>
           const SizedBox(height: 31),
           Text(
             'Share profile',
-            style: Theming.of(context)
-                .text
-                .body
-                .copyWith(fontSize: 24, fontWeight: FontWeight.w300),
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w300,
+                ),
           ),
           const SizedBox(height: 13),
           Button(
@@ -153,8 +156,10 @@ class _SharePageState extends State<SharePage>
                         maxLines: 1,
                         minFontSize: 16,
                         maxFontSize: 20,
-                        style: Theming.of(context).text.body.copyWith(
-                            fontWeight: FontWeight.w300, color: Colors.black),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontWeight: FontWeight.w300,
+                              color: Colors.black,
+                            ),
                       ),
                     ),
                   ),

@@ -8,7 +8,6 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/theming.dart';
 
 class ThreePhotoGallery extends ConsumerStatefulWidget {
   final bool canDeleteAllPhotos;
@@ -190,7 +189,7 @@ class _ThreePhotoGalleryState extends ConsumerState<ThreePhotoGallery> {
               ),
               title: Text(
                 'Take a photo',
-                style: Theming.of(context).text.body,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
               onTap: () => Navigator.of(context).pop('photo'),
             ),
@@ -201,7 +200,7 @@ class _ThreePhotoGalleryState extends ConsumerState<ThreePhotoGallery> {
               ),
               title: Text(
                 'Choose from gallery',
-                style: Theming.of(context).text.body,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
               onTap: () => Navigator.of(context).pop('gallery'),
             ),
@@ -213,8 +212,10 @@ class _ThreePhotoGalleryState extends ConsumerState<ThreePhotoGallery> {
                 ),
                 title: Text(
                   'Delete photo',
-                  style:
-                      Theming.of(context).text.body.copyWith(color: Colors.red),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(color: Colors.red),
                 ),
                 onTap: () => Navigator.of(context).pop('delete'),
               ),
@@ -284,10 +285,11 @@ class _PhotoOrUploadButton extends StatelessWidget {
                   child: Text(
                     label,
                     textAlign: TextAlign.center,
-                    style: Theming.of(context).text.body.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w300,
-                        color: Colors.black),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w300,
+                          color: Colors.black,
+                        ),
                   ),
                 ),
               ),

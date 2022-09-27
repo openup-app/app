@@ -13,7 +13,6 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
-import 'package:openup/widgets/theming.dart';
 
 class FriendshipsPage extends StatefulWidget {
   final TempFriendshipsRefresh tempRefresh;
@@ -64,10 +63,8 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
           backgroundColor: Colors.black,
           title: Text(
             'Growing Friendships',
-            style: Theming.of(context)
-                .text
-                .body
-                .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
+            style:
+                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
           ),
         ),
         Container(
@@ -90,10 +87,15 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
                       focusNode: _searchFocusNode,
                       decoration: InputDecoration.collapsed(
                         hintText: 'Search',
-                        hintStyle: Theming.of(context).text.body.copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400,
-                            color: const Color.fromRGBO(0x4A, 0x4A, 0x4A, 1.0)),
+                        hintStyle: Theme.of(context)
+                            .textTheme
+                            .bodyMedium!
+                            .copyWith(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                              color:
+                                  const Color.fromRGBO(0x4A, 0x4A, 0x4A, 1.0),
+                            ),
                       ),
                     ),
                   ),
@@ -120,7 +122,7 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: RichText(
               text: TextSpan(
-                style: Theming.of(context).text.body.copyWith(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w300,
                     ),
@@ -128,7 +130,7 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
                   const TextSpan(text: 'To maintain '),
                   TextSpan(
                     text: 'friendships ',
-                    style: Theming.of(context).text.body.copyWith(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
@@ -136,7 +138,7 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
                   const TextSpan(text: 'on openup, you must talk to '),
                   TextSpan(
                     text: 'each other ',
-                    style: Theming.of(context).text.body.copyWith(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
@@ -146,7 +148,7 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
                           'once every 72 hours. Not doing so will result in your friendship '),
                   TextSpan(
                     text: 'falling apart (deleted)',
-                    style: Theming.of(context).text.body.copyWith(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: const Color.fromRGBO(0xFF, 0x0, 0x0, 1.0),
@@ -155,7 +157,7 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
                   const TextSpan(text: '. This app is for people who are '),
                   TextSpan(
                     text: 'serious ',
-                    style: Theming.of(context).text.body.copyWith(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
@@ -163,7 +165,7 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
                   const TextSpan(text: 'about making '),
                   TextSpan(
                     text: 'friends',
-                    style: Theming.of(context).text.body.copyWith(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
@@ -270,14 +272,17 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
               Text(
                 'Invite someone to chat,\nthen continue the conversation here',
                 textAlign: TextAlign.center,
-                style: Theming.of(context).text.body,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
               ElevatedButton(
                 onPressed: () {
                   setState(() => _loading = true);
                   _fetchConversations();
                 },
-                child: Text('Refresh', style: Theming.of(context).text.body),
+                child: Text(
+                  'Refresh',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ),
             ],
           ),
@@ -387,8 +392,13 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                           if (chatroom.state == ChatroomState.invitation) {
                             return Text(
                               'new',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 16, fontWeight: FontWeight.w300),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w300,
+                                  ),
                             );
                           } else if (chatroom.unreadCount > 0) {
                             return Container(
@@ -443,16 +453,16 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                       children: [
                         Text(
                           chatroom.profile.name,
-                          style: Theming.of(context).text.body,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         const SizedBox(height: 4),
                         AutoSizeText(
                           chatroom.location,
                           maxFontSize: 16,
                           maxLines: 1,
-                          style: Theming.of(context)
-                              .text
-                              .body
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
                               .copyWith(fontWeight: FontWeight.w300),
                         ),
                       ],
@@ -477,8 +487,13 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                             const SizedBox(height: 4),
                             Text(
                               topicLabel(chatroom.topic),
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 16, fontWeight: FontWeight.w300),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w300,
+                                  ),
                             ),
                           ],
                         ),
@@ -554,10 +569,10 @@ class __InvitationPageState extends ConsumerState<_InvitationPage> {
               const SizedBox(height: 16),
               Text(
                 'A personal invitation for you',
-                style: Theming.of(context)
-                    .text
-                    .body
-                    .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(fontSize: 24),
               ),
               const Align(
                 alignment: Alignment.centerLeft,
@@ -575,19 +590,16 @@ class __InvitationPageState extends ConsumerState<_InvitationPage> {
                         minFontSize: 16,
                         maxFontSize: 20,
                         overflow: TextOverflow.ellipsis,
-                        style: Theming.of(context)
-                            .text
-                            .body
-                            .copyWith(fontWeight: FontWeight.w600),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       AutoSizeText(
                         widget.profile.location,
                         minFontSize: 9,
                         maxFontSize: 16,
                         overflow: TextOverflow.ellipsis,
-                        style: Theming.of(context)
-                            .text
-                            .body
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium!
                             .copyWith(fontWeight: FontWeight.w300),
                       ),
                     ],
@@ -662,10 +674,11 @@ class __InvitationPageState extends ConsumerState<_InvitationPage> {
                       alignment: Alignment.center,
                       child: Text(
                         'Accept',
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w300,
-                            color: Colors.black),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w300,
+                              color: Colors.black,
+                            ),
                       ),
                     ),
                   ),
@@ -686,10 +699,11 @@ class __InvitationPageState extends ConsumerState<_InvitationPage> {
                       alignment: Alignment.center,
                       child: Text(
                         'Reject',
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w300,
-                            color: Colors.black),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w300,
+                              color: Colors.black,
+                            ),
                       ),
                     ),
                   ),
@@ -705,10 +719,11 @@ class __InvitationPageState extends ConsumerState<_InvitationPage> {
                   child: Text(
                     'Accept and begin chatting now, reject and they can send you another message tomorrow.',
                     textAlign: TextAlign.center,
-                    style: Theming.of(context).text.body.copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w300,
-                        color: const Color.fromRGBO(0xDE, 0xDE, 0xDE, 1.0)),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w300,
+                          color: const Color.fromRGBO(0xDE, 0xDE, 0xDE, 1.0),
+                        ),
                   ),
                 ),
               ),

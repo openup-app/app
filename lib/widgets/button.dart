@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:openup/widgets/theming.dart';
 
 class Button extends StatefulWidget {
   final Widget child;
@@ -68,7 +67,7 @@ class _ButtonState extends State<Button> with SingleTickerProviderStateMixin {
               ? null
               : (_) => widget.onLongPressEnd?.call(),
           child: DefaultTextStyle(
-            style: Theming.of(context).text.body,
+            style: Theme.of(context).textTheme.bodyMedium!,
             child: widget.child,
           ),
         ),
@@ -97,10 +96,10 @@ class GradientButton extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(14.5)),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-              color: Theming.of(context).shadow.withOpacity(0.2),
-              offset: const Offset(0.0, 4.0),
+              color: Color.fromRGBO(0x40, 0x00, 0x00, 0.2),
+              offset: Offset(0.0, 4.0),
               blurRadius: 4.0,
             ),
           ],
@@ -115,10 +114,10 @@ class GradientButton extends StatelessWidget {
           color: white ? Colors.white : null,
         ),
         child: DefaultTextStyle(
-          style: Theming.of(context)
-              .text
-              .body
-              .copyWith(fontSize: 18, color: white ? Colors.black : null),
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium!
+              .copyWith(color: white ? Colors.black : null),
           child: child,
         ),
       ),

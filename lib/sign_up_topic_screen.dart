@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/theming.dart';
 
 class SignUpTopicScreen extends ConsumerStatefulWidget {
   const SignUpTopicScreen({Key? key}) : super(key: key);
@@ -39,10 +38,10 @@ class _SignUpTopicScreenState extends ConsumerState<SignUpTopicScreen> {
                 constraints: const BoxConstraints(maxWidth: 356),
                 child: Text(
                   'Everyone is here to make friends, which one reason fits you the most?',
-                  style: Theming.of(context)
-                      .text
-                      .body
-                      .copyWith(fontWeight: FontWeight.w700, fontSize: 36),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 36,
+                      ),
                   textAlign: TextAlign.left,
                 ),
               ),

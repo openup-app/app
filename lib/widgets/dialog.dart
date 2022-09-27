@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:openup/widgets/theming.dart';
 
 class OpenupDialog extends StatelessWidget {
   final Widget title;
@@ -13,7 +12,7 @@ class OpenupDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTextStyle(
-      style: Theming.of(context).text.body.copyWith(
+      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
             fontSize: 24,
             fontWeight: FontWeight.w500,
             color: Colors.black,

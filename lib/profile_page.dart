@@ -11,7 +11,6 @@ import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/tab_view.dart';
-import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/three_photo_gallery.dart';
 import 'package:openup/widgets/toggle_button.dart';
 
@@ -37,25 +36,19 @@ class _ProfilePageState extends State<ProfilePage> {
         Center(
           child: RichText(
             text: TextSpan(
-              style: Theming.of(context)
-                  .text
-                  .body
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
                   .copyWith(fontWeight: FontWeight.w300),
               children: [
                 TextSpan(
                   text: 'openup ',
-                  style: Theming.of(context)
-                      .text
-                      .body
-                      .copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const TextSpan(text: 'make new '),
                 TextSpan(
                   text: 'friends',
-                  style: Theming.of(context)
-                      .text
-                      .body
-                      .copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
@@ -167,17 +160,20 @@ class _EditProfileViewState extends ConsumerState<_EditProfileView> {
                   padding: const EdgeInsets.only(left: 16, right: 16),
                   child: Text(
                     'My Pictures',
-                    style: Theming.of(context).text.body.copyWith(fontSize: 24),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 24),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 16, right: 16),
                   child: Text(
                     'Add your best three pictures',
-                    style: Theming.of(context)
-                        .text
-                        .body
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w300,
+                        ),
                   ),
                 ),
               ],
@@ -185,10 +181,10 @@ class _EditProfileViewState extends ConsumerState<_EditProfileView> {
             const Spacer(),
             Text(
               'Hide Pictures',
-              style: Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                  ),
             ),
             Padding(
               padding: const EdgeInsets.only(left: 6.0, right: 16),
@@ -228,17 +224,18 @@ class _EditProfileViewState extends ConsumerState<_EditProfileView> {
           padding: const EdgeInsets.only(left: 16, right: 16),
           child: Text(
             'Reason you\'re here',
-            style: Theming.of(context).text.body.copyWith(fontSize: 24),
+            style:
+                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
           ),
         ),
         Padding(
           padding: const EdgeInsets.only(left: 16, right: 16),
           child: Text(
             'Choose a category that fits with you',
-            style: Theming.of(context)
-                .text
-                .body
-                .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w300,
+                ),
           ),
         ),
         const SizedBox(height: 6),
@@ -277,17 +274,18 @@ class _EditProfileViewState extends ConsumerState<_EditProfileView> {
           padding: const EdgeInsets.only(left: 16, right: 16),
           child: Text(
             'My Name',
-            style: Theming.of(context).text.body.copyWith(fontSize: 24),
+            style:
+                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
           ),
         ),
         Padding(
           padding: const EdgeInsets.only(left: 16, right: 16),
           child: Text(
             'Please don\'t use your real name',
-            style: Theming.of(context)
-                .text
-                .body
-                .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w300,
+                ),
           ),
         ),
         const SizedBox(height: 6),
@@ -330,10 +328,10 @@ class _EditProfileViewState extends ConsumerState<_EditProfileView> {
                 child: Center(
                   child: Text(
                     name,
-                    style: Theming.of(context)
-                        .text
-                        .body
-                        .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w300,
+                        ),
                   ),
                 ),
               ),

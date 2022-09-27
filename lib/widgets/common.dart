@@ -17,7 +17,6 @@ import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/image_builder.dart';
-import 'package:openup/widgets/theming.dart';
 
 class CountdownTimer extends StatefulWidget {
   final DateTime endTime;
@@ -62,7 +61,7 @@ class _CountdownTimerState extends State<CountdownTimer> {
   Widget build(BuildContext context) {
     final remaining = widget.endTime.difference(DateTime.now());
     final style = widget.style ??
-        Theming.of(context).text.body.copyWith(
+        Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 16,
               fontWeight: FontWeight.w400,
             );
@@ -113,10 +112,10 @@ class _CountUpTimerState extends State<CountUpTimer> {
     return Text(
       formatDuration(time, long: true),
       style: widget.style ??
-          Theming.of(context).text.body.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: const Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0)),
+          Theme.of(context).textTheme.bodyMedium!.copyWith(
+                fontWeight: FontWeight.w500,
+                color: const Color.fromRGBO(0x7B, 0x7B, 0x7B, 1.0),
+              ),
     );
   }
 }
@@ -286,8 +285,10 @@ class RecordButtonState extends State<RecordButton> {
                         const SizedBox(width: 16),
                         Text(
                           'Your invitation has been sent!',
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 18, fontWeight: FontWeight.w400),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(fontWeight: FontWeight.w400),
                         ),
                       ],
                     ),
@@ -340,8 +341,13 @@ class RecordButtonState extends State<RecordButton> {
                           const SizedBox(width: 14),
                           Text(
                             widget.label,
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 20, fontWeight: FontWeight.w400),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w400,
+                                ),
                           ),
                         ],
                       ),
@@ -378,8 +384,13 @@ class RecordButtonState extends State<RecordButton> {
                           const SizedBox(width: 20),
                           Text(
                             'recording message',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 20, fontWeight: FontWeight.w300),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w300,
+                                ),
                           ),
                           const SizedBox(width: 20),
                           Builder(
@@ -391,8 +402,13 @@ class RecordButtonState extends State<RecordButton> {
                                   time,
                                   canBeZero: true,
                                 ),
-                                style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 20, fontWeight: FontWeight.w300),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w300,
+                                    ),
                               );
                             },
                           ),
@@ -463,11 +479,15 @@ class RecordButtonState extends State<RecordButton> {
                         const SizedBox(height: 2),
                         Text(
                           widget.submitLabel,
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w400,
-                              color:
-                                  const Color.fromRGBO(0x70, 0x70, 0x70, 1.0)),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w400,
+                                color:
+                                    const Color.fromRGBO(0x70, 0x70, 0x70, 1.0),
+                              ),
                         ),
                       ],
                     ),
@@ -641,8 +661,13 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
                                     Duration.zero,
                                     canBeZero: true,
                                   ),
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 20, fontWeight: FontWeight.w300),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w300,
+                                ),
                           ),
                         ),
                       ),
@@ -801,9 +826,13 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
                                         PlaybackState.playing,
                                   ),
                                   textAlign: TextAlign.center,
-                                  style: Theming.of(context).text.body.copyWith(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w300),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w300,
+                                      ),
                                 ),
                               ),
                             ],
@@ -933,8 +962,13 @@ class RecordButtonChatState extends State<RecordButtonChat> {
                             child: Text(
                               formatDuration(
                                   DateTime.now().difference(_recordingStart)),
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 20, fontWeight: FontWeight.w300),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w300,
+                                  ),
                             ),
                           ),
                         ),
@@ -1021,8 +1055,13 @@ class RecordButtonChatState extends State<RecordButtonChat> {
                               playbackInfo.state == PlaybackState.playing
                                   ? formatDuration(playbackInfo.position)
                                   : formatDuration(playbackInfo.duration),
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 15, fontWeight: FontWeight.w300),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w300,
+                                  ),
                             ),
                           ],
                         ),
@@ -1078,10 +1117,11 @@ class Chip extends StatelessWidget {
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: Theming.of(context).text.body.copyWith(
-                fontSize: 20,
-                fontWeight: FontWeight.w300,
-                color: selected ? Colors.black : null),
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w300,
+                  color: selected ? Colors.black : null,
+                ),
           ),
         ),
       ),

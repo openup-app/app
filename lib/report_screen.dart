@@ -6,7 +6,6 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/contact_text_field.dart';
-import 'package:openup/widgets/theming.dart';
 
 class ReportScreen extends ConsumerStatefulWidget {
   final String uid;
@@ -92,16 +91,23 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                           Center(
                             child: Text(
                               'Reporting User',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 24, fontWeight: FontWeight.w600),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(fontSize: 24),
                             ),
                           ),
                           const SizedBox(height: 32),
                           RadioListTile<_Reason>(
                             title: Text(
                               'Violent or repulsive',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 24, fontWeight: FontWeight.w400),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                             ),
                             activeColor: Colors.white,
                             value: _Reason.violentRepulsive,
@@ -111,8 +117,13 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                           RadioListTile<_Reason>(
                             title: Text(
                               'Harassment or bullying',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 24, fontWeight: FontWeight.w400),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                             ),
                             activeColor: Colors.white,
                             value: _Reason.harassmentBullying,
@@ -122,8 +133,13 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                           RadioListTile<_Reason>(
                             title: Text(
                               'Child in call',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 24, fontWeight: FontWeight.w400),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                             ),
                             activeColor: Colors.white,
                             value: _Reason.child,
@@ -133,8 +149,13 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                           RadioListTile<_Reason>(
                             title: Text(
                               'Other',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 24, fontWeight: FontWeight.w400),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                             ),
                             activeColor: Colors.white,
                             value: _Reason.other,

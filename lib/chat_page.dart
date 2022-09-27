@@ -21,7 +21,6 @@ import 'package:openup/widgets/chat_message.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/disable.dart';
 import 'package:openup/widgets/tab_view.dart';
-import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/toggle_button.dart';
 import 'package:uuid/uuid.dart';
 
@@ -117,10 +116,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         leading: const SizedBox.shrink(),
         title: Text(
           'Growing Friendships',
-          style: Theming.of(context)
-              .text
-              .body
-              .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
         ),
       ),
       body: Column(
@@ -184,19 +180,16 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                 minFontSize: 9,
                                 maxFontSize: 20,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theming.of(context)
-                                    .text
-                                    .body
-                                    .copyWith(fontWeight: FontWeight.w600),
+                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
                               AutoSizeText(
                                 widget.otherProfile.location,
                                 minFontSize: 9,
                                 maxFontSize: 16,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theming.of(context)
-                                    .text
-                                    .body
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
                                     .copyWith(fontWeight: FontWeight.w300),
                               ),
                             ],
@@ -207,8 +200,13 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                           const SizedBox(width: 4),
                           Text(
                             'Reveal Pictures',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 16, fontWeight: FontWeight.w400),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
                           ),
                           const SizedBox(width: 9),
                           Builder(
@@ -385,7 +383,13 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                     horizontal: 16.0),
                                 child: Text(
                                   'Send your first message to ${widget.otherProfile.name}',
-                                  style: Theming.of(context).text.bodySecondary,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                        fontSize: 23,
+                                        fontWeight: FontWeight.w400,
+                                      ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -467,8 +471,13 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                             child: Text(
                               'voice messages can only be upto 60 seconds',
                               textAlign: TextAlign.center,
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 14, fontWeight: FontWeight.w300),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w300,
+                                  ),
                             ),
                           ),
                         ],
@@ -493,10 +502,11 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   }) {
     return Text(
       _kDateFormat.format(date.toLocal()),
-      style: Theming.of(context).text.body.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: Colors.white.withOpacity(opacity)),
+      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: Colors.white.withOpacity(opacity),
+          ),
     );
   }
 

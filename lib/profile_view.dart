@@ -12,7 +12,6 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/share_button.dart';
-import 'package:openup/widgets/theming.dart';
 
 class ProfileView extends StatefulWidget {
   final Profile profile;
@@ -102,8 +101,13 @@ class _ProfileViewState extends State<ProfileView> {
                           AutoSizeText(
                             widget.profile.name,
                             maxFontSize: 26,
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 20, fontWeight: FontWeight.w300),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w300,
+                                ),
                           ),
                           if (widget.endTime == null)
                             const Padding(
@@ -123,8 +127,13 @@ class _ProfileViewState extends State<ProfileView> {
                           const SizedBox(width: 6),
                           Text(
                             widget.profile.location,
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 16, fontWeight: FontWeight.w300),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w300,
+                                ),
                           ),
                         ],
                       ),
@@ -142,8 +151,13 @@ class _ProfileViewState extends State<ProfileView> {
                           : CountdownTimer(
                               endTime: widget.endTime!,
                               onDone: () {},
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 20, fontWeight: FontWeight.w300),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w300,
+                                  ),
                             ),
                     ),
                     const SizedBox(height: 8),
@@ -151,8 +165,10 @@ class _ProfileViewState extends State<ProfileView> {
                       padding: const EdgeInsets.only(right: 8.0),
                       child: Text(
                         topicLabel(widget.profile.topic),
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 16, fontWeight: FontWeight.w300),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w300,
+                            ),
                       ),
                     ),
                   ],

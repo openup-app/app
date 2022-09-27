@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:openup/widgets/theming.dart';
 
 class InputArea extends StatelessWidget {
   final String? errorText;
@@ -27,7 +26,10 @@ class InputArea extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           DefaultTextStyle(
-            style: Theming.of(context).text.body.copyWith(color: Colors.grey),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium!
+                .copyWith(color: Colors.grey),
             child: Center(child: child),
           ),
           if (errorText != null)
@@ -35,10 +37,10 @@ class InputArea extends StatelessWidget {
               bottom: -1,
               child: Text(
                 errorText!,
-                style: Theming.of(context)
-                    .text
-                    .caption
-                    .copyWith(color: Colors.red, fontSize: 11),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Colors.red,
+                      fontSize: 11,
+                    ),
               ),
             ),
         ],

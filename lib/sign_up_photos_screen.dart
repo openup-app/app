@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/three_photo_gallery.dart';
 
 class SignUpPhotosScreen extends StatefulWidget {
@@ -23,7 +22,7 @@ class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
             const SizedBox(height: 50),
             Text(
               'Add pictures',
-              style: Theming.of(context).text.body.copyWith(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 36,
                   ),
@@ -35,8 +34,11 @@ class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
                 child: Text(
                   'Adding pictures increases your chances of making friends (must add at least one)',
                   textAlign: TextAlign.center,
-                  style: Theming.of(context).text.body.copyWith(
-                      fontWeight: FontWeight.w400, fontSize: 20, height: 1.4),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 20,
+                        height: 1.4,
+                      ),
                 ),
               ),
             ),

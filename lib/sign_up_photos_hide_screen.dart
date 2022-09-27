@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/theming.dart';
 import 'package:openup/widgets/three_photo_gallery.dart';
 import 'package:openup/widgets/toggle_button.dart';
 
@@ -27,7 +26,7 @@ class _SignUpPhotosHideScreenState extends State<SignUpPhotosHideScreen> {
             const SizedBox(height: 50),
             Text(
               'Hide pictures',
-              style: Theming.of(context).text.body.copyWith(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 36,
                   ),
@@ -39,8 +38,11 @@ class _SignUpPhotosHideScreenState extends State<SignUpPhotosHideScreen> {
                 child: Text(
                   'Hide your pictures if you do not want others to see you until you are comfortable with them',
                   textAlign: TextAlign.center,
-                  style: Theming.of(context).text.body.copyWith(
-                      fontWeight: FontWeight.w400, fontSize: 20, height: 1.4),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 20,
+                        height: 1.4,
+                      ),
                 ),
               ),
             ),
@@ -59,10 +61,10 @@ class _SignUpPhotosHideScreenState extends State<SignUpPhotosHideScreen> {
             const SizedBox(height: 20),
             Text(
               '(Toggle on or off anytime in your profile)',
-              style: Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontSize: 20, fontWeight: FontWeight.w400),
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w400,
+                  ),
             ),
             const SizedBox(height: 16),
             Consumer(

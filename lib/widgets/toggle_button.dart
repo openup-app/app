@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:openup/widgets/theming.dart';
 
 class ToggleButton extends StatefulWidget {
   final bool value;
@@ -89,11 +88,11 @@ class _ToggleButtonState extends State<ToggleButton> {
                   border: Border.all(color: Colors.white, width: 1),
                   borderRadius: const BorderRadius.all(Radius.circular(14)),
                   color: Colors.white,
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
-                      color: Theming.of(context).shadow,
+                      color: Color.fromARGB(0x40, 0x00, 0x00, 0x00),
                       blurRadius: 4,
-                      offset: const Offset(0.0, 4.0),
+                      offset: Offset(0.0, 4.0),
                     )
                   ],
                 ),

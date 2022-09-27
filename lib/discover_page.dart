@@ -21,7 +21,6 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/share_button.dart';
-import 'package:openup/widgets/theming.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
@@ -334,7 +333,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         _selectedTopic == null
                             ? 'Couldn\'t find any profiles'
                             : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
-                        style: Theming.of(context).text.body,
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
                     ElevatedButton(
@@ -427,8 +426,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
                             'Discover New Friends',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 24, fontWeight: FontWeight.w600),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(fontSize: 24),
                           ),
                         ),
                         const SizedBox(height: 5),
@@ -622,8 +623,13 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                           AutoSizeText(
                             widget.profile.name,
                             maxFontSize: 26,
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 20, fontWeight: FontWeight.w300),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w300,
+                                ),
                           ),
                           if (widget.online)
                             const Padding(
@@ -643,8 +649,10 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                           const SizedBox(width: 6),
                           Text(
                             widget.profile.location,
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 16, fontWeight: FontWeight.w300),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(fontSize: 16),
                           ),
                         ],
                       ),
@@ -668,8 +676,10 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                       padding: const EdgeInsets.only(right: 8.0),
                       child: Text(
                         topicLabel(widget.profile.topic),
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 16, fontWeight: FontWeight.w300),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w300,
+                            ),
                       ),
                     ),
                   ],

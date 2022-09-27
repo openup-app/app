@@ -9,7 +9,6 @@ import 'package:openup/main.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/theming.dart';
 
 class CallPage extends StatefulWidget {
   const CallPage({Key? key}) : super(key: key);
@@ -314,17 +313,17 @@ class _UnconnectedDisplay extends StatelessWidget {
           children: [
             Text(
               profile.name,
-              style: Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 24),
             ),
             Text(
               location,
-              style: Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w300,
+                  ),
             ),
           ],
         ),
@@ -346,18 +345,16 @@ class _UnconnectedDisplay extends StatelessWidget {
           Text(
             profile.name,
             textAlign: TextAlign.center,
-            style: Theming.of(context)
-                .text
-                .body
-                .copyWith(fontSize: 36, fontWeight: FontWeight.w600),
+            style:
+                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 36),
           ),
           const SizedBox(height: 14),
           Text(
             label,
             textAlign: TextAlign.center,
-            style: Theming.of(context)
-                .text
-                .body
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium!
                 .copyWith(fontSize: 24, fontWeight: FontWeight.w300),
           ),
           const Spacer(),
@@ -421,17 +418,17 @@ class __CallDisplayState extends State<_CallDisplay> {
           children: [
             Text(
               widget.activeCall.profile.name,
-              style: Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 24),
             ),
             Text(
               widget.location,
-              style: Theming.of(context)
-                  .text
-                  .body
-                  .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w300,
+                  ),
             ),
           ],
         ),
@@ -452,18 +449,18 @@ class __CallDisplayState extends State<_CallDisplay> {
                   if (state == PhoneConnectionState.connecting) {
                     return Text(
                       'connecting...',
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontSize: 24, fontWeight: FontWeight.w300),
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w300,
+                          ),
                     );
                   } else if (state == PhoneConnectionState.connected) {
                     return CountUpTimer(
                       start: widget.activeCall.controller.startTime,
-                      style: Theming.of(context)
-                          .text
-                          .body
-                          .copyWith(fontSize: 24, fontWeight: FontWeight.w300),
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w300,
+                          ),
                     );
                   } else {
                     return const SizedBox.shrink();

@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:openup/widgets/theming.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Policies extends StatefulWidget {
@@ -36,8 +35,11 @@ class _PoliciesState extends State<Policies> {
       child: RichText(
         textAlign: TextAlign.justify,
         text: TextSpan(
-          style: Theming.of(context).text.body.copyWith(
-              color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
           children: [
             const TextSpan(
               text:
@@ -45,7 +47,7 @@ class _PoliciesState extends State<Policies> {
             ),
             TextSpan(
               text: 'Privacy Policy',
-              style: Theming.of(context).text.body.copyWith(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
                   fontSize: 16,
                   fontWeight: FontWeight.w700),
@@ -54,7 +56,7 @@ class _PoliciesState extends State<Policies> {
             const TextSpan(text: ' and agree to the '),
             TextSpan(
               text: 'EULA',
-              style: Theming.of(context).text.body.copyWith(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
                   fontSize: 16,
                   fontWeight: FontWeight.w700),

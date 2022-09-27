@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/theming.dart';
 
 class AudioChatMessage extends StatefulWidget {
   final String audioUrl;
@@ -140,7 +139,7 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
                       width: 100,
                       child: Text(
                         'Audio failed',
-                        style: Theming.of(context).text.body,
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
                   Builder(
@@ -148,8 +147,11 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
                       if (widget.playbackInfo.position != Duration.zero) {
                         return Text(
                           formatDuration(widget.playbackInfo.position),
-                          style: Theming.of(context).text.body.copyWith(
-                              fontSize: 16, fontWeight: FontWeight.w300),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w300,
+                                  ),
                         );
                       } else {
                         final tempDuration = _tempDuration;
@@ -158,8 +160,13 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
                         } else {
                           return Text(
                             formatDuration(tempDuration),
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 16, fontWeight: FontWeight.w300),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w300,
+                                ),
                           );
                         }
                       }

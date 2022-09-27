@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/theming.dart';
 
 class SignUpAudioScreen extends StatefulWidget {
   const SignUpAudioScreen({Key? key}) : super(key: key);
@@ -29,7 +28,7 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
               child: Text(
                 'Tell us why you\'re here',
                 textAlign: TextAlign.center,
-                style: Theming.of(context).text.body.copyWith(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 36,
                     ),
@@ -65,10 +64,11 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
                 return Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: Theming.of(context).text.body.copyWith(
-                      fontWeight: FontWeight.w300,
-                      fontSize: 24,
-                      color: const Color.fromRGBO(0x7F, 0x7F, 0x7F, 1.0)),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.w300,
+                        fontSize: 24,
+                        color: const Color.fromRGBO(0x7F, 0x7F, 0x7F, 1.0),
+                      ),
                 );
               },
             ),
@@ -78,10 +78,11 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
               child: Text(
                 '(Messages can only be upto 30 seconds on openup)',
                 textAlign: TextAlign.center,
-                style: Theming.of(context).text.body.copyWith(
-                    fontWeight: FontWeight.w300,
-                    fontSize: 16,
-                    color: const Color.fromRGBO(0x7F, 0x7F, 0x7F, 1.0)),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontWeight: FontWeight.w300,
+                      fontSize: 16,
+                      color: const Color.fromRGBO(0x7F, 0x7F, 0x7F, 1.0),
+                    ),
               ),
             ),
             const Spacer(),

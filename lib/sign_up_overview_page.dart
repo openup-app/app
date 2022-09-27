@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/theming.dart';
 
 class SignUpOverviewPage extends StatefulWidget {
   const SignUpOverviewPage({Key? key}) : super(key: key);
@@ -122,7 +121,8 @@ class _Page1 extends StatelessWidget {
           Text(
             'Discover people who also want to make new friends',
             textAlign: TextAlign.center,
-            style: Theming.of(context).text.body.copyWith(fontSize: 30),
+            style:
+                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 30),
           ),
           Expanded(
             child: Image.asset(
@@ -148,7 +148,8 @@ class _Page2 extends StatelessWidget {
           Text(
             'Goodbye texting, voice messages only',
             textAlign: TextAlign.center,
-            style: Theming.of(context).text.body.copyWith(fontSize: 30),
+            style:
+                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 30),
           ),
           Expanded(
             child: Image.asset(
@@ -174,7 +175,8 @@ class _Page3 extends StatelessWidget {
           Text(
             'Keep up with your new friends, lose them if you don\'t',
             textAlign: TextAlign.center,
-            style: Theming.of(context).text.body.copyWith(fontSize: 30),
+            style:
+                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 30),
           ),
           Expanded(
             child: Image.asset(
@@ -198,7 +200,7 @@ class _Page4 extends StatelessWidget {
         Text(
           'The Keys to making Successful Friendship',
           textAlign: TextAlign.center,
-          style: Theming.of(context).text.body.copyWith(fontSize: 30),
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 30),
         ),
         const SizedBox(height: 16),
         Expanded(
@@ -213,34 +215,41 @@ class _Page4 extends StatelessWidget {
                     children: [
                       Text(
                         '1. \n\n\n2. \n\n\n\n3. \n\n\n\n4. \n\n\n\n\n5. ',
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            height: 1.8),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontWeight: FontWeight.w700,
+                              height: 1.8,
+                            ),
                       ),
                       Expanded(
                         child: RichText(
                           text: TextSpan(
-                            style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 18,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
                                   fontWeight: FontWeight.w300,
                                   height: 1.8,
                                 ),
                             children: [
                               TextSpan(
                                 text: 'Give it time. ',
-                                style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.8),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.8,
+                                    ),
                               ),
                               const TextSpan(
                                   text:
                                       'If you don’t water your plants, they die. Same goes for your friendships, be persistent but patient.\n'),
                               TextSpan(
                                 text: 'Pay Attention. ',
-                                style: Theming.of(context).text.body.copyWith(
-                                      fontSize: 18,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
                                       fontWeight: FontWeight.w700,
                                       height: 1.8,
                                     ),
@@ -250,30 +259,39 @@ class _Page4 extends StatelessWidget {
                                       'People notice when you remember things about them, act on those oppurtunities to show how you care.\n'),
                               TextSpan(
                                 text: 'Don’t be a one-sided friend. ',
-                                style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.8),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.8,
+                                    ),
                               ),
                               const TextSpan(
                                   text:
                                       'If you have someone who is constantly you up about hanging or talking, follow up with them and be sure to reply!\n'),
                               TextSpan(
                                 text: 'Let your guard down. ',
-                                style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.8),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.8,
+                                    ),
                               ),
                               const TextSpan(
                                   text:
                                       'A lot of the doubts and fears you have are in your mind, don’t let your mind get in the way of risk and ruin oppurtunities for you.\n'),
                               TextSpan(
                                 text: 'Lighten up. ',
-                                style: Theming.of(context).text.body.copyWith(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.8),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.8,
+                                    ),
                               ),
                               const TextSpan(
                                   text:

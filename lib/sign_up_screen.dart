@@ -16,7 +16,6 @@ import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/widgets/policies.dart';
 import 'package:openup/widgets/title_and_tagline.dart';
-import 'package:openup/widgets/theming.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -108,10 +107,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                           FocusScope.of(context).unfocus();
                         },
                         textAlign: TextAlign.center,
-                        style: Theming.of(context).text.body.copyWith(
-                            fontWeight: FontWeight.w400,
-                            color: Colors.grey,
-                            fontSize: 18),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontWeight: FontWeight.w400,
+                              color: Colors.grey,
+                            ),
                         decoration:
                             const InputDecoration.collapsed(hintText: ''),
                       ),
@@ -129,10 +128,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                         child: IgnorePointer(
                           child: Text(
                             'Phone number',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontWeight: FontWeight.w400,
-                                color: Colors.grey,
-                                fontSize: 18 - animation.value * 4),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.grey,
+                                  fontSize: 18 - animation.value * 4,
+                                ),
                           ),
                         ),
                       );

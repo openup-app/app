@@ -14,7 +14,6 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/dialog.dart';
 import 'package:openup/widgets/home_button.dart';
-import 'package:openup/widgets/theming.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({Key? key}) : super(key: key);
@@ -45,10 +44,10 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         leading: const BackIconButton(),
         title: Text(
           'Account Settings',
-          style: Theming.of(context)
-              .text
-              .body
-              .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+              ),
         ),
         centerTitle: true,
       ),
@@ -67,7 +66,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     Center(
                       child: Text(
                         'Update login information',
-                        style: Theming.of(context).text.body.copyWith(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 24,
                               fontWeight: FontWeight.w500,
                             ),
@@ -103,12 +102,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                                     ? const LoadingIndicator()
                                     : Text(
                                         'Update Information',
-                                        style: Theming.of(context)
-                                            .text
-                                            .body
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium!
                                             .copyWith(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.w500),
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                       ),
                               ),
                             ),
@@ -130,8 +130,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                         child: Center(
                           child: Text(
                             'Blocked users',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 24, fontWeight: FontWeight.w500),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
                         ),
                       ),
@@ -158,12 +163,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                                   child: Text(
                                     '?',
                                     textAlign: TextAlign.center,
-                                    style: Theming.of(context)
-                                        .text
-                                        .body
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
                                         .copyWith(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w500),
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                   ),
                                 ),
                               ),
@@ -171,8 +177,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                             const SizedBox(width: 12),
                             Text(
                               'Contact us',
-                              style: Theming.of(context).text.body.copyWith(
-                                  fontSize: 24, fontWeight: FontWeight.w500),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                             ),
                           ],
                         ),
@@ -186,8 +197,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                         child: Center(
                           child: Text(
                             'Sign Out',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 24, fontWeight: FontWeight.w500),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
                         ),
                       ),
@@ -204,8 +220,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                         child: Center(
                           child: Text(
                             'Delete Account',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 24, fontWeight: FontWeight.w500),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
                         ),
                       ),
@@ -347,7 +368,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           title: Text(
             'Are you sure you want to delete your account?',
             textAlign: TextAlign.center,
-            style: Theming.of(context).text.body.copyWith(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 28,
                   fontWeight: FontWeight.w500,
                   color: Colors.black,
@@ -367,7 +388,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               },
               child: Text(
                 'Delete',
-                style: Theming.of(context).text.body.copyWith(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 28,
                       fontWeight: FontWeight.w500,
                       color: Colors.red,
@@ -378,7 +399,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               onPressed: Navigator.of(context).pop,
               child: Text(
                 'Cancel',
-                style: Theming.of(context).text.body.copyWith(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 28,
                       fontWeight: FontWeight.w500,
                       color: Colors.black,
@@ -439,10 +460,8 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
           leading: const BackIconButton(),
           title: Text(
             'Blocking',
-            style: Theming.of(context)
-                .text
-                .body
-                .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
+            style:
+                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0.0,
@@ -458,10 +477,10 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
             return Center(
               child: Text(
                 'You are not blocking anyone',
-                style: Theming.of(context)
-                    .text
-                    .body
-                    .copyWith(fontSize: 20, color: Colors.white),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(fontSize: 20),
               ),
             );
           }
@@ -500,17 +519,21 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
                       child: AutoSizeText(
                         user.name,
                         maxLines: 1,
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 24, fontWeight: FontWeight.w500),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
                     ),
                     TextButton(
                       child: Text(
                         'Unblock',
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w500,
-                            color: const Color.fromRGBO(0xB6, 0x0B, 0x0B, 1.0)),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w500,
+                              color:
+                                  const Color.fromRGBO(0xB6, 0x0B, 0x0B, 1.0),
+                            ),
                       ),
                       onPressed: () async {
                         final result = await showDialog(
@@ -624,18 +647,16 @@ class _TextField extends StatelessWidget {
         child: TextFormField(
           controller: controller,
           keyboardType: keyboardType,
-          style: Theming.of(context).text.body.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-              ),
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium!
+              .copyWith(fontWeight: FontWeight.w500),
           decoration: InputDecoration.collapsed(
             hintText: hintText,
-            hintStyle: Theming.of(context).text.body.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
+            hintStyle: Theme.of(context)
+                .textTheme
+                .bodyMedium!
+                .copyWith(fontWeight: FontWeight.w500),
           ),
         ),
       ),

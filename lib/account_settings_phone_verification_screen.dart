@@ -5,7 +5,6 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/home_button.dart';
-import 'package:openup/widgets/theming.dart';
 
 class AccountSettingsPhoneVerificationScreen extends ConsumerStatefulWidget {
   final String verificationId;
@@ -70,16 +69,23 @@ class _AccountSettingsPhoneVerificationScreenState
                         Center(
                           child: Text(
                             'Verify new number',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 30, fontWeight: FontWeight.w600),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(fontSize: 30),
                           ),
                         ),
                         const Spacer(),
                         Center(
                           child: Text(
                             'Enter verification code',
-                            style: Theming.of(context).text.body.copyWith(
-                                fontSize: 18, fontWeight: FontWeight.w500),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -107,12 +113,13 @@ class _AccountSettingsPhoneVerificationScreenState
                                     ? const LoadingIndicator()
                                     : Text(
                                         'Update',
-                                        style: Theming.of(context)
-                                            .text
-                                            .body
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium!
                                             .copyWith(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.w500),
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                       ),
                               ),
                             ),
@@ -252,11 +259,10 @@ class _TextField extends StatelessWidget {
           keyboardType: keyboardType,
           decoration: InputDecoration.collapsed(
             hintText: hintText,
-            hintStyle: Theming.of(context).text.body.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
+            hintStyle: Theme.of(context)
+                .textTheme
+                .bodyMedium!
+                .copyWith(fontWeight: FontWeight.w500),
           ),
         ),
       ),

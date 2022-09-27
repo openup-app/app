@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/theming.dart';
 
 class TabView extends StatefulWidget {
   final bool firstSelected;
@@ -8,13 +7,13 @@ class TabView extends StatefulWidget {
   final String secondLabel;
   final void Function(bool first) onSelected;
 
-  const TabView(
-      {Key? key,
-      required this.firstSelected,
-      required this.firstLabel,
-      required this.secondLabel,
-      required this.onSelected})
-      : super(key: key);
+  const TabView({
+    Key? key,
+    required this.firstSelected,
+    required this.firstLabel,
+    required this.secondLabel,
+    required this.onSelected,
+  }) : super(key: key);
 
   @override
   State<TabView> createState() => _TabViewState();
@@ -65,11 +64,12 @@ class _TabViewState extends State<TabView> with SingleTickerProviderStateMixin {
               child: Center(
                 child: Text(
                   widget.firstLabel,
-                  style: Theming.of(context).text.body.copyWith(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w300,
-                      color:
-                          widget.firstSelected ? Colors.black : Colors.white),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w300,
+                        color:
+                            widget.firstSelected ? Colors.black : Colors.white,
+                      ),
                 ),
               ),
             ),
@@ -83,11 +83,12 @@ class _TabViewState extends State<TabView> with SingleTickerProviderStateMixin {
               child: Center(
                 child: Text(
                   widget.secondLabel,
-                  style: Theming.of(context).text.body.copyWith(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w300,
-                      color:
-                          !widget.firstSelected ? Colors.black : Colors.white),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w300,
+                        color:
+                            !widget.firstSelected ? Colors.black : Colors.white,
+                      ),
                 ),
               ),
             ),

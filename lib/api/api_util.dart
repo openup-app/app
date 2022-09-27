@@ -7,7 +7,6 @@ import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/loading_dialog.dart';
-import 'package:openup/widgets/theming.dart';
 
 void displayError(BuildContext context, ApiError error) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -172,7 +171,7 @@ Future<T> withBlockingModal<T>({
       return Loading(
         title: Text(
           label,
-          style: Theming.of(context).text.body,
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
       );
     },

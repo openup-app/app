@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/widgets/theming.dart';
 
 class SignUpWelcomeInfoScreen extends ConsumerWidget {
   const SignUpWelcomeInfoScreen({Key? key}) : super(key: key);
@@ -16,8 +15,8 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
         Navigator.of(context).pushReplacementNamed('home');
       },
       child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
@@ -26,12 +25,16 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
             ],
           ),
           boxShadow: [
-            const BoxShadow(
+            BoxShadow(
               offset: Offset(0, 2),
               blurRadius: 11,
               blurStyle: BlurStyle.inner,
             ),
-            Theming.of(context).boxShadow,
+            BoxShadow(
+              color: Color.fromRGBO(0, 0, 0, 0.25),
+              offset: Offset(0.0, 4.0),
+              blurRadius: 4.0,
+            ),
           ],
         ),
         child: Stack(
@@ -45,10 +48,11 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 357),
                       child: DefaultTextStyle(
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w300,
-                            height: 1.7),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w300,
+                              height: 1.7,
+                            ),
                         child: Builder(
                           builder: (context) {
                             return RichText(
@@ -103,8 +107,10 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
                       padding: const EdgeInsets.only(right: 48),
                       child: Text(
                         '- openup',
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 36, fontWeight: FontWeight.w300),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w300,
+                            ),
                       ),
                     ),
                   ),

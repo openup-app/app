@@ -9,7 +9,6 @@ import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/male_female_connection_image.dart';
 import 'package:openup/widgets/policies.dart';
 import 'package:openup/widgets/title_and_tagline.dart';
-import 'package:openup/widgets/theming.dart';
 
 class PhoneVerificationScreen extends ConsumerStatefulWidget {
   final CredentialVerification credentialVerification;
@@ -57,7 +56,7 @@ class _PhoneVerificationScreenState
               Text(
                 'Verification code successfully\nsent to your phone!',
                 textAlign: TextAlign.center,
-                style: Theming.of(context).text.body.copyWith(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w300,
                     ),
@@ -76,7 +75,10 @@ class _PhoneVerificationScreenState
                     onSubmitted: (_) => FocusScope.of(context).unfocus(),
                     decoration: InputDecoration.collapsed(
                       hintText: 'Enter verification code',
-                      hintStyle: Theming.of(context).text.body.copyWith(
+                      hintStyle: Theme.of(context)
+                          .textTheme
+                          .bodyMedium!
+                          .copyWith(
                             fontSize: 18,
                             fontWeight: FontWeight.w500,
                             color: const Color.fromRGBO(0x6D, 0x6D, 0x6D, 1.0),

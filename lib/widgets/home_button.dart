@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
-import 'package:openup/widgets/theming.dart';
 
 class HomeButton extends StatelessWidget {
   final Color? color;
@@ -23,7 +22,7 @@ class HomeButton extends StatelessWidget {
         child: IconWithShadow(
           Icons.home,
           size: 48.0,
-          color: color ?? Theming.of(context).friendBlue4,
+          color: color ?? const Color.fromARGB(0xFF, 0x11, 0x8E, 0xDD),
         ),
       ),
     );

@@ -6,7 +6,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/theming.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
@@ -216,8 +215,7 @@ class _AudioBioPlaybackControlsState extends State<AudioBioPlaybackControls> {
                               playbackInfo.state == PlaybackState.paused
                           ? playbackInfo.position
                           : playbackInfo.duration),
-                  style: Theming.of(context).text.body.copyWith(
-                        color: Colors.white,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),

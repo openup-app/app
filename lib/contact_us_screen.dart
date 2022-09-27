@@ -10,7 +10,6 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/contact_text_field.dart';
 import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/keyboard_screen.dart';
-import 'package:openup/widgets/theming.dart';
 
 class ContactUsScreen extends ConsumerStatefulWidget {
   const ContactUsScreen({Key? key}) : super(key: key);
@@ -39,10 +38,7 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
         centerTitle: true,
         title: Text(
           'Contact us',
-          style: Theming.of(context)
-              .text
-              .body
-              .copyWith(fontSize: 24, fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
         ),
       ),
       body: KeyboardScreen(

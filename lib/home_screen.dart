@@ -11,7 +11,6 @@ import 'package:openup/profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
-import 'package:openup/widgets/theming.dart';
 
 import 'chat_page.dart';
 
@@ -123,11 +122,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     child: Center(
                       child: Text(
                         'Discover',
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 20,
-                            fontWeight: _tabController.index != 0
-                                ? FontWeight.w300
-                                : null),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 20,
+                              fontWeight: _tabController.index != 0
+                                  ? FontWeight.w300
+                                  : null,
+                            ),
                       ),
                     ),
                   ),
@@ -143,11 +143,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     child: Center(
                       child: Text(
                         'Friendships',
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 20,
-                            fontWeight: _tabController.index != 1
-                                ? FontWeight.w300
-                                : null),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 20,
+                              fontWeight: _tabController.index != 1
+                                  ? FontWeight.w300
+                                  : null,
+                            ),
                       ),
                     ),
                   ),
@@ -158,11 +159,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     child: Center(
                       child: Text(
                         'Profile',
-                        style: Theming.of(context).text.body.copyWith(
-                            fontSize: 20,
-                            fontWeight: _tabController.index != 2
-                                ? FontWeight.w300
-                                : null),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 20,
+                              fontWeight: _tabController.index != 2
+                                  ? FontWeight.w300
+                                  : null,
+                            ),
                       ),
                     ),
                   ),

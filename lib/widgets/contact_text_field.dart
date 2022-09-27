@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:openup/widgets/theming.dart';
 
 class ContactTextField extends StatefulWidget {
   final TextEditingController textController;
@@ -65,8 +64,7 @@ class _ContactTextFieldState extends State<ContactTextField> {
               alignment: Alignment.center,
               child: Text(
                 widget.hintText,
-                style: Theming.of(context).text.body.copyWith(
-                      fontSize: 18,
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontWeight: FontWeight.w500,
                       color: const Color.fromRGBO(0xAD, 0xAD, 0xAD, 1.0),
                     ),
