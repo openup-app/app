@@ -2,6 +2,7 @@ import 'package:async/async.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -647,13 +648,21 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                             height: 16,
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            widget.profile.location,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(fontSize: 16),
+                          Expanded(
+                            child: AutoSizeText(
+                              widget.profile.location,
+                              overflow: TextOverflow.ellipsis,
+                              minFontSize: 2,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontWeight: FontWeight.w300,
+                                    fontSize: 16,
+                                  ),
+                            ),
                           ),
+                          const SizedBox(width: 8),
                         ],
                       ),
                     ],
@@ -673,7 +682,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                     ),
                     const SizedBox(height: 8),
                     Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
+                      padding: const EdgeInsets.only(right: 8.0, bottom: 4),
                       child: Text(
                         topicLabel(widget.profile.topic),
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -738,6 +747,25 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                           ],
                         ),
                       ),
+                      if (!kReleaseMode)
+                        Positioned(
+                          left: 8,
+                          right: 8,
+                          bottom: 8,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(24),
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            alignment: Alignment.center,
+                            child: AutoSizeText(
+                              widget.profile.uid,
+                            ),
+                          ),
+                        ),
                       if (_audioPaused)
                         const Center(
                           child: IgnorePointer(
