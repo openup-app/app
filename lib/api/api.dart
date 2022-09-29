@@ -79,13 +79,13 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> updateProfile(String uid, Profile profile) {
+  Future<Either<ApiError, void>> updateName(String uid, String name) {
     return _request(
       makeRequest: () {
         return http.put(
-          Uri.parse('$_urlBase/users/$uid/profile'),
+          Uri.parse('$_urlBase/users/$uid/profile/name'),
           headers: _headers,
-          body: jsonEncode(profile.toJson()),
+          body: jsonEncode({'name': name}),
         );
       },
       handleSuccess: (response) => const Right(null),

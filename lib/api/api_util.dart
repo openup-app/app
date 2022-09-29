@@ -40,7 +40,7 @@ Future<Either<ApiError, void>> updateName({
   final api = GetIt.instance.get<Api>();
   final userState = ref.read(userProvider);
   final newProfile = userState.profile!.copyWith(name: name);
-  final result = await api.updateProfile(userState.uid, newProfile);
+  final result = await api.updateName(userState.uid, name);
 
   if (result.isRight()) {
     ref.read(userProvider.notifier).profile(newProfile);
