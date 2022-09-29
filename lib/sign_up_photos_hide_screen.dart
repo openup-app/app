@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/common.dart';
@@ -90,7 +91,7 @@ class _SignUpPhotosHideScreenState extends State<SignUpPhotosHideScreen> {
                 return OvalButton(
                   onPressed: !canGoNext
                       ? null
-                      : () => Navigator.of(context).pushNamed('sign-up-audio'),
+                      : () => context.pushNamed('onboarding-audio'),
                   child: const Text('continue'),
                 );
               },

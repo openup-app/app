@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/home_screen.dart';
-import 'package:openup/main.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -78,8 +78,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: Colors.white,
                     ),
                   ),
-                  onPressed: () => rootNavigatorKey.currentState
-                      ?.pushNamed('account-settings'),
+                  onPressed: () => context.pushNamed('settings'),
                 ),
               ),
             ],

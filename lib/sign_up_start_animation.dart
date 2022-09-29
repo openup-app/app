@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
 
 class SignUpStartAnimationScreen extends StatefulWidget {
@@ -43,9 +44,7 @@ class _SignUpStartAnimationScreenState
     );
   }
 
-  void _goHome() {
-    Navigator.of(context).pushReplacementNamed('home');
-  }
+  void _goHome() => context.goNamed('discover');
 
   @override
   void dispose() {

@@ -2,6 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -362,9 +363,10 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                 });
                 FocusScope.of(context).unfocus();
                 // ignore: unused_local_variable
-                final refreshChat = await Navigator.of(context).pushNamed(
+                context.pushNamed(
                   'chat',
-                  arguments: ChatPageArguments(
+                  params: {'uid': chatroom.profile.uid},
+                  extra: ChatPageArguments(
                     otherUid: chatroom.profile.uid,
                     otherProfile: chatroom.profile,
                     otherLocation: chatroom.location,

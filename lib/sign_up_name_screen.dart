@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/widgets/common.dart';
 
@@ -95,7 +96,7 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
 
     result.fold(
       (l) => displayError(context, l),
-      (r) => Navigator.of(context).pushNamed('sign-up-topic'),
+      (r) => context.pushNamed('onboarding-topic'),
     );
 
     setState(() => _uploading = false);

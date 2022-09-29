@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/three_photo_gallery.dart';
@@ -60,8 +61,7 @@ class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
                 return OvalButton(
                   onPressed: !canGoNext
                       ? null
-                      : () => Navigator.of(context)
-                          .pushNamed('sign-up-photos-hide'),
+                      : () => context.pushNamed('onboarding-photos-hide'),
                   child: const Text('continue'),
                 );
               },

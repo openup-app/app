@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/button.dart';
 
 class SignUpOverviewPage extends StatefulWidget {
@@ -78,8 +79,7 @@ class _SignUpOverviewPageState extends State<SignUpOverviewPage> {
                         curve: Curves.easeOut,
                       );
                     } else {
-                      Navigator.of(context)
-                          .pushReplacementNamed('sign-up-name');
+                      context.pushNamed('onboarding-name');
                     }
                   },
                   child: Container(

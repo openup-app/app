@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/initial_loading_screen.dart';
@@ -207,11 +208,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
         }
 
         if (mounted) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-          Navigator.of(context).pushReplacementNamed(
-            '/',
-            arguments:
-                InitialLoadingScreenArguments(needsOnboarding: userCreated),
+          context.goNamed(
+            'initialLoading',
+            extra: InitialLoadingScreenArguments(needsOnboarding: userCreated),
           );
         }
       }
@@ -288,9 +287,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
           return;
         }
         setState(() => _forceResendingToken = forceResendingToken);
-        final uid = await Navigator.of(context).pushNamed<String?>(
-          'phone-verification',
-          arguments: CredentialVerification(verificationId: verificationId),
+        final uid = await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) {
+              return PhoneVerificationScreen(
+                credentialVerification:
+                    CredentialVerification(verificationId: verificationId),
+              );
+            },
+          ),
         );
         if (!completer.isCompleted) {
           completer.complete(uid);

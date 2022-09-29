@@ -10,17 +10,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
-import 'package:openup/account_settings_phone_verification_screen.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/call_page.dart';
+import 'package:openup/chat_page.dart';
 import 'package:openup/contact_us_screen.dart';
+import 'package:openup/discover_page.dart';
 import 'package:openup/error_screen.dart';
+import 'package:openup/friendships_page.dart';
+import 'package:openup/home_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
+import 'package:openup/profile_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
 import 'package:openup/sign_up_name_screen.dart';
@@ -29,8 +34,6 @@ import 'package:openup/sign_up_photos_screen.dart';
 import 'package:openup/sign_up_start_animation.dart';
 import 'package:openup/sign_up_topic_screen.dart';
 import 'package:openup/util/page_transition.dart';
-import 'package:openup/home_screen.dart';
-import 'package:openup/phone_verification_screen.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/sign_up_overview_page.dart';
@@ -44,8 +47,9 @@ const socketPort = 8081;
 // TODO: Should be app constant coming from dart defines (to be used in background call handler too)
 const urlBase = 'https://$host:$webPort';
 
-final _scaffoldKey = GlobalKey();
 final rootNavigatorKey = GlobalKey<NavigatorState>();
+
+final _tempFriendshipsRefresh = TempFriendshipsRefresh();
 
 void main() async {
   void appRunner() async {
@@ -89,6 +93,14 @@ void main() async {
   }
 }
 
+/// Notifications don't update the conversations list. This noifier lets us
+/// force a refresh programmatically when tapping the Friendships button.
+class TempFriendshipsRefresh extends ValueNotifier<void> {
+  TempFriendshipsRefresh() : super(null);
+
+  void refresh() => notifyListeners();
+}
+
 class OpenupApp extends ConsumerStatefulWidget {
   const OpenupApp({Key? key}) : super(key: key);
 
@@ -100,13 +112,38 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   bool _loggedIn = false;
   StreamSubscription? _idTokenChangesSubscription;
   OnlineUsersApi? _onlineUsersApi;
+
+  late final GoRouter _goRouter;
   final _routeObserver = RouteObserver<PageRoute>();
+  final _tempFriendshipsRefresh = TempFriendshipsRefresh();
+
+  PageRoute _buildPageRoute<T>({
+    required RouteSettings settings,
+    PageTransitionBuilder? transitionsBuilder,
+    required WidgetBuilder builder,
+  }) {
+    return PageRouteBuilder<T>(
+      settings: settings,
+      transitionsBuilder: transitionsBuilder ?? slideRightToLeftPageTransition,
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (_, animation, secondaryAnimation) {
+        return InheritedRouteObserver(
+          routeObserver: _routeObserver,
+          child: Builder(builder: builder),
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+    _goRouter = _initGoRouter(
+      observers: [_routeObserver],
+    );
 
     Api.seed = Random().nextInt(1 << 32).toString();
     final api = Api(
@@ -162,6 +199,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   @override
   void dispose() {
     _idTokenChangesSubscription?.cancel();
+    _tempFriendshipsRefresh.dispose();
     _onlineUsersApi?.dispose();
     super.dispose();
   }
@@ -169,10 +207,11 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   @override
   Widget build(BuildContext context) {
     final textTheme = ThemeData().textTheme;
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: _goRouter,
       theme: ThemeData(
         colorScheme: const ColorScheme.light(
-          primary: Color.fromARGB(0xFF, 0xFF, 0x71, 0x71),
+          primary: Color.fromARGB(255, 27, 14, 14),
           secondary: Color.fromARGB(0xAA, 0xFF, 0x71, 0x71),
         ),
         fontFamily: 'Myriad',
@@ -188,9 +227,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           color: Colors.white,
         ),
       ),
-      navigatorKey: rootNavigatorKey,
-      navigatorObservers: [_routeObserver],
-      initialRoute: '/',
       builder: (context, child) {
         return Stack(
           children: [
@@ -218,8 +254,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           duration: const Duration(milliseconds: 150),
                           opacity: display ? 1.0 : 0.0,
                           child: Button(
-                            onPressed: () => rootNavigatorKey.currentState
-                                ?.pushNamed('call'),
+                            onPressed: () => context.pushNamed('call'),
                             child: Container(
                               height: 40 + MediaQuery.of(context).padding.top,
                               color:
@@ -256,208 +291,225 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           ],
         );
       },
-      onGenerateRoute: (settings) {
-        switch (settings.name) {
-          case '/':
-            return _buildPageRoute(
-              settings: settings,
-              transitionsBuilder: fadePageTransition,
-              builder: (_) {
-                final args =
-                    settings.arguments as InitialLoadingScreenArguments?;
-                return CurrentRouteSystemUiStyling.light(
-                  child: InitialLoadingScreen(
-                    key: _scaffoldKey,
-                    scaffoldKey: _scaffoldKey,
-                    needsOnboarding: args?.needsOnboarding ?? false,
-                  ),
-                );
-              },
+    );
+  }
+
+  GoRouter _initGoRouter({
+    List<NavigatorObserver>? observers,
+  }) {
+    return GoRouter(
+      observers: observers,
+      debugLogDiagnostics: !kReleaseMode,
+      navigatorKey: rootNavigatorKey,
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          name: 'initialLoading',
+          builder: (context, state) {
+            final args = state.extra as InitialLoadingScreenArguments?;
+            return CurrentRouteSystemUiStyling.light(
+              child: InitialLoadingScreen(
+                navigatorKey: rootNavigatorKey,
+                needsOnboarding: args?.needsOnboarding ?? false,
+              ),
             );
-          case 'error':
-            return _buildPageRoute(
-              settings: settings,
-              transitionsBuilder: fadePageTransition,
-              builder: (_) {
-                final args =
-                    settings.arguments as InitialLoadingScreenArguments?;
-                return CurrentRouteSystemUiStyling.dark(
-                  child: ErrorScreen(
-                    needsOnboarding: args?.needsOnboarding ?? false,
-                  ),
-                );
-              },
+          },
+        ),
+        GoRoute(
+          path: '/404',
+          name: 'error',
+          builder: (context, state) {
+            final args = state.extra as InitialLoadingScreenArguments?;
+            return CurrentRouteSystemUiStyling.dark(
+              child: ErrorScreen(
+                needsOnboarding: args?.needsOnboarding ?? false,
+              ),
             );
-          case 'sign-up':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpScreen(),
-                );
-              },
+          },
+        ),
+        GoRoute(
+          path: '/signup',
+          name: 'signup',
+          builder: (context, state) {
+            return const CurrentRouteSystemUiStyling.light(
+              child: SignUpScreen(),
             );
-          case 'phone-verification':
-            final args = settings.arguments as CredentialVerification;
-            return _buildPageRoute<String?>(
-              settings: settings,
-              builder: (_) {
-                return CurrentRouteSystemUiStyling.light(
-                  child: PhoneVerificationScreen(
-                    credentialVerification: args,
-                  ),
-                );
-              },
+          },
+          // TODO: Add PhoneVerificationScreen here instead of using imperative navigation
+        ),
+        GoRoute(
+          path: '/onboarding',
+          name: 'onboarding',
+          builder: (context, state) {
+            return const CurrentRouteSystemUiStyling.light(
+              child: SignUpOverviewPage(),
             );
-          case 'sign-up-overview':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpOverviewPage(),
-                );
-              },
-            );
-          case 'sign-up-name':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
+          },
+          routes: [
+            GoRoute(
+              path: 'name',
+              name: 'onboarding-name',
+              builder: (context, state) {
                 return const CurrentRouteSystemUiStyling.light(
                   child: SignUpNameScreen(),
                 );
               },
+              routes: [
+                GoRoute(
+                  path: 'topic',
+                  name: 'onboarding-topic',
+                  builder: (context, state) {
+                    return const CurrentRouteSystemUiStyling.light(
+                      child: SignUpTopicScreen(),
+                    );
+                  },
+                  routes: [
+                    GoRoute(
+                      path: 'photos',
+                      name: 'onboarding-photos',
+                      builder: (context, state) {
+                        return const CurrentRouteSystemUiStyling.light(
+                          child: SignUpPhotosScreen(),
+                        );
+                      },
+                      routes: [
+                        GoRoute(
+                          path: 'photos_hide',
+                          name: 'onboarding-photos-hide',
+                          builder: (context, state) {
+                            return const CurrentRouteSystemUiStyling.light(
+                              child: SignUpPhotosHideScreen(),
+                            );
+                          },
+                          routes: [
+                            GoRoute(
+                              path: 'audio',
+                              name: 'onboarding-audio',
+                              builder: (context, state) {
+                                return const CurrentRouteSystemUiStyling.light(
+                                  child: SignUpAudioScreen(),
+                                );
+                              },
+                              routes: [
+                                GoRoute(
+                                  path: 'welcome',
+                                  name: 'onboarding-welcome',
+                                  builder: (context, state) {
+                                    return const CurrentRouteSystemUiStyling
+                                        .light(
+                                      child: SignUpStartAnimationScreen(),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+        ShellRoute(
+          builder: (context, state, child) {
+            return CurrentRouteSystemUiStyling.light(
+              child: HomeShell(
+                tabIndex: state.location.contains('friendships')
+                    ? 1
+                    : (state.location.contains('profile') ? 2 : 0),
+                tempFriendshipsRefresh: _tempFriendshipsRefresh,
+                child: child,
+              ),
             );
-          case 'sign-up-topic':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpTopicScreen(),
-                );
-              },
+          },
+          routes: [
+            GoRoute(
+              path: '/discover',
+              name: 'discover',
+              builder: (context, state) => const DiscoverPage(),
+            ),
+            GoRoute(
+              path: '/friendships',
+              name: 'friendships',
+              builder: (context, state) => FriendshipsPage(
+                tempRefresh: _tempFriendshipsRefresh,
+              ),
+              routes: [
+                GoRoute(
+                  path: 'chat/:uid',
+                  name: 'chat',
+                  builder: (context, state) {
+                    final args = state.extra as ChatPageArguments;
+                    return CurrentRouteSystemUiStyling.light(
+                      child: ChatPage(
+                        host: host,
+                        webPort: webPort,
+                        socketPort: socketPort,
+                        otherProfile: args.otherProfile,
+                        online: args.online,
+                        endTime: args.endTime,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            GoRoute(
+              path: '/profile',
+              name: 'profile',
+              builder: (context, state) => const ProfilePage(),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/call',
+          name: 'call',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) {
+            return const CurrentRouteSystemUiStyling.light(
+              child: CallPage(),
             );
-          case 'sign-up-photos':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpPhotosScreen(),
-                );
-              },
+          },
+        ),
+        GoRoute(
+          path: '/settings',
+          name: 'settings',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) {
+            return const CurrentRouteSystemUiStyling.light(
+              child: AccountSettingsScreen(),
             );
-          case 'sign-up-photos-hide':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpPhotosHideScreen(),
-                );
-              },
-            );
-          case 'sign-up-audio':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpAudioScreen(),
-                );
-              },
-            );
-          case 'sign-up-start-animation':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpStartAnimationScreen(),
-                );
-              },
-            );
-          case 'home':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                final deepLinkArgs = settings.arguments as DeepLinkArgs?;
-                return CurrentRouteSystemUiStyling.light(
-                  key: _scaffoldKey,
-                  child: HomeScreen(deepLinkArgs: deepLinkArgs),
-                );
-              },
-            );
-          case 'call-report':
-            final args = settings.arguments as ReportScreenArguments;
-            return _buildPageRoute(
-              settings: settings,
-              transitionsBuilder: fadePageTransition,
-              builder: (context) {
-                return CurrentRouteSystemUiStyling.light(
-                  child: ReportScreen(
-                    uid: args.uid,
-                  ),
-                );
-              },
-            );
-          case 'call':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: CallPage(),
-                );
-              },
-            );
-          case 'account-settings':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: AccountSettingsScreen(),
-                );
-              },
-            );
-          case 'account-settings-phone-verification':
-            final args = settings.arguments as String;
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
-                return CurrentRouteSystemUiStyling.light(
-                  child: AccountSettingsPhoneVerificationScreen(
-                    verificationId: args,
-                  ),
-                );
-              },
-            );
-          case 'contact-us':
-            return _buildPageRoute(
-              settings: settings,
-              builder: (_) {
+          },
+          routes: [
+            // TODO: Add SettingsPhoneVerificationScreen here instead of using imperative navigation
+            GoRoute(
+              path: 'contact_us',
+              name: 'contact-us',
+              builder: (context, state) {
                 return const CurrentRouteSystemUiStyling.light(
                   child: ContactUsScreen(),
                 );
               },
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/report',
+          name: 'report',
+          builder: (context, state) {
+            final args = state.extra as ReportScreenArguments;
+            return CurrentRouteSystemUiStyling.light(
+              child: ReportScreen(
+                uid: args.uid,
+              ),
             );
-          default:
-            throw 'Route not found ${settings.name}';
-        }
-      },
-    );
-  }
-
-  PageRoute _buildPageRoute<T>({
-    required RouteSettings settings,
-    PageTransitionBuilder? transitionsBuilder,
-    required WidgetBuilder builder,
-  }) {
-    return PageRouteBuilder<T>(
-      settings: settings,
-      transitionsBuilder: transitionsBuilder ?? slideRightToLeftPageTransition,
-      transitionDuration: const Duration(milliseconds: 300),
-      reverseTransitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (_, animation, secondaryAnimation) {
-        return InheritedRouteObserver(
-          routeObserver: _routeObserver,
-          child: Builder(builder: builder),
-        );
-      },
+          },
+        ),
+      ],
     );
   }
 }

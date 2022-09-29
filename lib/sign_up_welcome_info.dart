@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/user_state.dart';
 
 class SignUpWelcomeInfoScreen extends ConsumerWidget {
@@ -10,10 +11,7 @@ class SignUpWelcomeInfoScreen extends ConsumerWidget {
     final profile = ref.watch(userProvider).profile!;
     final name = profile.name;
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        Navigator.of(context).pushReplacementNamed('home');
-      },
+      onTap: () => context.goNamed('discover'),
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

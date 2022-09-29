@@ -9,12 +9,9 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/api_util.dart';
 import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/chat_page.dart';
-import 'package:openup/home_screen.dart';
 import 'package:openup/notifications/android_voip_handlers.dart'
     as android_voip;
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
@@ -26,8 +23,6 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 part 'notifications.freezed.dart';
 part 'notifications.g.dart';
 
-typedef UseContext = bool Function(BuildContext context);
-
 void initializeVoipHandlers() {
   if (Platform.isAndroid) {
     android_voip.initAndroidVoipHandlers();
@@ -37,13 +32,13 @@ void initializeVoipHandlers() {
 }
 
 Future<void> initializeNotifications({
-  required GlobalKey scaffoldKey,
+  required GlobalKey<NavigatorState> navigatorKey,
   required UserStateNotifier userStateNotifier,
 }) async {
-  await _initializeLocalNotifications(scaffoldKey);
+  await _initializeLocalNotifications(navigatorKey);
   FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
   FirebaseMessaging.onMessage.listen((remoteMessage) {
-    _onForegroundNotification(scaffoldKey, remoteMessage, userStateNotifier);
+    _onForegroundNotification(remoteMessage, userStateNotifier);
   });
 
   FirebaseMessaging.instance
@@ -71,7 +66,8 @@ void reportCallEnded(String rid) {
 
 /// Returns a function that needs a mounted [BuildContext]. The function
 /// returns [true] if the app used the context to navigate somewhere.
-Future<UseContext?> handleLaunchNotification() async {
+Future<bool> handleLaunchNotification(
+    GlobalKey<NavigatorState> navigatorKey) async {
   // Calls that don't go through the standard FirebaseMessaging app launch method
   BackgroundCallNotification? backgroundCallNotification;
   try {
@@ -93,29 +89,29 @@ Future<UseContext?> handleLaunchNotification() async {
       activeCall.phone.join();
       GetIt.instance.get<CallManager>().activeCall = activeCall;
     }
-    return (BuildContext context) {
-      Navigator.of(context).pushReplacementNamed('home');
-      Navigator.of(context).pushNamed('call');
+    final navigator = navigatorKey.currentState;
+    if (navigator != null) {
+      navigator.pushNamed('call');
       return true;
-    };
+    }
+    return false;
   }
 
   final launchDetails =
       await FlutterLocalNotificationsPlugin().getNotificationAppLaunchDetails();
   if (launchDetails == null) {
-    return null;
+    return false;
   }
 
   final payload = launchDetails.payload;
   if (payload != null) {
     final parsedMessage = _ParsedMessage.fromJson(jsonDecode(payload));
-    return _handleDeepLink(parsedMessage);
+    return _handleDeepLink(parsedMessage, navigatorKey);
   }
-  return null;
+  return false;
 }
 
 void _onForegroundNotification(
-  GlobalKey key,
   RemoteMessage message,
   UserStateNotifier userStateNotifier,
 ) {
@@ -224,7 +220,8 @@ Future<File?> getPhotoMaybeCached({
   return null;
 }
 
-Future<void> _initializeLocalNotifications(GlobalKey globalKey) {
+Future<void> _initializeLocalNotifications(
+    GlobalKey<NavigatorState> navigatorKey) {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
   const iOSInit = IOSInitializationSettings();
@@ -244,89 +241,64 @@ Future<void> _initializeLocalNotifications(GlobalKey globalKey) {
           debugPrint(s.toString());
           return;
         }
-        final useContext = await _handleDeepLink(parsedMessage);
-        final context = globalKey.currentContext;
-        if (context != null) {
-          // ignore: use_build_context_synchronously
-          useContext?.call(context);
-        }
+        await _handleDeepLink(parsedMessage, navigatorKey);
       }
     },
   );
 }
 
-Future<UseContext?> _handleDeepLink(_ParsedMessage parsedMessage) {
+Future<bool> _handleDeepLink(
+  _ParsedMessage parsedMessage,
+  GlobalKey<NavigatorState> navigatorKey,
+) {
   final api = GetIt.instance.get<Api>();
   return parsedMessage.map(
     call: (call) async {
-      return (BuildContext context) {
-        Navigator.of(context).pushReplacementNamed('home');
-        Navigator.of(context).pushNamed('call');
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.popUntil((route) => route.isFirst);
+        navigatorKey.currentState!.pushNamed('call');
         return true;
-      };
+      }
+      return false;
     },
-    callEnded: (_) => Future.value(),
+    callEnded: (_) => Future.value(false),
     chat: (chat) async {
       final result = await api.getProfile(chat.senderUid);
-      return (BuildContext context) {
-        return result.fold((l) {
-          displayError(context, l);
+      return result.fold(
+        (l) => false,
+        (profile) {
+          if (navigatorKey.currentState != null) {
+            navigatorKey.currentState!.popUntil((route) => route.isFirst);
+            navigatorKey.currentState!
+                .pushNamed('/friendships/chats/${profile.uid}');
+            return true;
+          }
           return false;
-        }, (profile) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-          Navigator.of(context).popAndPushNamed(
-            'home',
-            arguments: DeepLinkArgs.chat(
-              ChatPageArguments(
-                otherUid: profile.uid,
-                otherProfile: profile,
-                otherLocation: profile.location,
-                online: false,
-                endTime: DateTime.now().add(
-                  const Duration(days: 3),
-                ),
-              ),
-            ),
-          );
-          return true;
-        });
-      };
+        },
+      );
     },
     newInvite: (newInvite) async {
-      return (BuildContext context) {
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        Navigator.of(context).popAndPushNamed(
-          'home',
-          arguments: const DeepLinkArgs.friendships(),
-        );
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.popUntil((route) => route.isFirst);
+        navigatorKey.currentState!.pushNamed('friendships');
         return true;
-      };
+      }
+      return false;
     },
     inviteAccepted: (inviteAccepted) async {
       final result = await api.getProfile(inviteAccepted.uid);
-      return (BuildContext context) {
-        return result.fold((l) {
-          displayError(context, l);
+      return result.fold(
+        (l) => false,
+        (profile) {
+          if (navigatorKey.currentState != null) {
+            navigatorKey.currentState!.popUntil((route) => route.isFirst);
+            navigatorKey.currentState!
+                .pushNamed('/friendships/chats/${profile.uid}');
+            return true;
+          }
           return false;
-        }, (profile) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-          Navigator.of(context).popAndPushNamed(
-            'home',
-            arguments: DeepLinkArgs.chat(
-              ChatPageArguments(
-                otherUid: profile.uid,
-                otherProfile: profile,
-                otherLocation: profile.location,
-                online: false,
-                endTime: DateTime.now().add(
-                  const Duration(days: 3),
-                ),
-              ),
-            ),
-          );
-          return true;
-        });
-      };
+        },
+      );
     },
   );
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/initial_loading_screen.dart';
 
 class ErrorScreen extends StatelessWidget {
@@ -30,9 +31,9 @@ class ErrorScreen extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pushNamed(
-                  '/',
-                  arguments: InitialLoadingScreenArguments(
+                context.goNamed(
+                  'initialLoading',
+                  extra: InitialLoadingScreenArguments(
                     needsOnboarding: needsOnboarding,
                   ),
                 );

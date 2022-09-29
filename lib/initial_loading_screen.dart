@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -18,12 +19,12 @@ import 'package:openup/util/location_service.dart';
 ///
 /// [notificationKey] is needed to access a context with a [Scaffold] ancestor.
 class InitialLoadingScreen extends ConsumerStatefulWidget {
-  final GlobalKey scaffoldKey;
+  final GlobalKey<NavigatorState> navigatorKey;
   final bool needsOnboarding;
 
   const InitialLoadingScreen({
     GlobalKey? key,
-    required this.scaffoldKey,
+    required this.navigatorKey,
     this.needsOnboarding = false,
   }) : super(key: key);
 
@@ -54,14 +55,14 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
     // Verify user sign-in (will be navigated back here on success)
     if (user == null) {
-      Navigator.of(context).pushReplacementNamed('sign-up');
+      context.goNamed('signup');
       return;
     } else {
       try {
         api.authToken = await user.getIdToken(true);
       } on FirebaseAuthException catch (e) {
         if (e.code == 'user-not-found') {
-          Navigator.of(context).pushReplacementNamed('sign-up');
+          context.goNamed('signup');
           return;
         } else {
           rethrow;
@@ -79,9 +80,9 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     } catch (e) {
       debugPrint(e.toString());
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed(
-          'error',
-          arguments: InitialLoadingScreenArguments(
+        context.goNamed(
+          'signup',
+          extra: InitialLoadingScreenArguments(
             needsOnboarding: widget.needsOnboarding,
           ),
         );
@@ -96,7 +97,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     // Init notifications as early as possible for background notifications on iOS
     // (initial route is navigated to, but execution may stop due to user prompt or second navigation)
     await initializeNotifications(
-      scaffoldKey: widget.scaffoldKey,
+      navigatorKey: widget.navigatorKey,
       userStateNotifier: notifier,
     );
 
@@ -141,16 +142,15 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     }
 
-    final useContext = await handleLaunchNotification();
+    final deepLinked = await handleLaunchNotification(widget.navigatorKey);
     if (mounted) {
-      final deepLinked = useContext?.call(context) ?? false;
       if (!deepLinked && mounted) {
         // Standard app entry or sign up onboarding
         final noAudio = ref.read(userProvider).profile?.audio == null;
         if (widget.needsOnboarding || noAudio) {
-          Navigator.of(context).pushReplacementNamed('sign-up-overview');
+          context.goNamed('onboarding');
         } else {
-          Navigator.of(context).pushReplacementNamed('home');
+          context.goNamed('discover');
         }
       }
     }

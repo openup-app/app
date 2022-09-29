@@ -5,10 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/notifications/notifications.dart';
+import 'package:openup/settings_phone_verification_screen.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -120,9 +122,11 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     Button(
                       onPressed: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) {
-                            return const _BlockedList();
-                          }),
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return const _BlockedList();
+                            },
+                          ),
                         );
                       },
                       child: _InputArea(
@@ -143,8 +147,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     ),
                     const SizedBox(height: 30),
                     Button(
-                      onPressed: () =>
-                          Navigator.of(context).pushNamed('contact-us'),
+                      onPressed: () => context.pushNamed('contact-us'),
                       child: _InputArea(
                         childNeedsOpacity: false,
                         child: Stack(
@@ -326,9 +329,14 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       },
       codeSent: (verificationId, forceResendingToken) async {
         setState(() => _forceResendingToken = forceResendingToken);
-        await Navigator.of(context).pushNamed(
-          'account-settings-phone-verification',
-          arguments: verificationId,
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) {
+              return SettingsPhoneVerificationScreen(
+                verificationId: verificationId,
+              );
+            },
+          ),
         );
         setState(() => _submitting = false);
       },
@@ -354,9 +362,9 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   void _signOut() async {
     await dismissAllNotifications();
     await FirebaseAuth.instance.signOut();
+    // TODO: Remove notification token
     if (mounted) {
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      Navigator.of(context).pushReplacementNamed('/');
+      context.goNamed('initialLoading');
     }
   }
 
@@ -382,8 +390,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                 GetIt.instance.get<Api>().deleteUser(uid);
                 await FirebaseAuth.instance.signOut();
                 if (mounted) {
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                  Navigator.of(context).pushReplacementNamed('/');
+                  context.goNamed('initialLoading');
                 }
               },
               child: Text(
