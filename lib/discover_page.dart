@@ -72,7 +72,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     final status = await Permission.location.status;
     if (!(status.isGranted || status.isLimited)) {
       final result = await Permission.location.request();
-      if (!(result.isGranted || status.isLimited)) {
+      if ((result.isGranted || status.isLimited)) {
+        await _updateLocation();
+      } else {
         showCupertinoDialog(
           context: context,
           builder: (context) {
@@ -101,6 +103,29 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         );
       }
     }
+  }
+
+  Future<void> _updateLocation() async {
+    setState(() => _loading = true);
+
+    final locationService = LocationService();
+    final location = await locationService.getLatLong();
+    await location.when(
+      value: (lat, long) {
+        return updateLocation(
+          context: context,
+          ref: ref,
+          latitude: lat,
+          longitude: long,
+        );
+      },
+      denied: () {
+        // Nothing to do
+      },
+      failure: () {
+        // Nothing to do
+      },
+    );
   }
 
   void _initPageController({
@@ -351,24 +376,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             final status =
                                 await locationService.requestPermission();
                             if (status) {
-                              final location =
-                                  await locationService.getLatLong();
-                              await location.when(
-                                value: (lat, long) async {
-                                  updateLocation(
-                                    context: context,
-                                    ref: ref,
-                                    latitude: lat,
-                                    longitude: long,
-                                  );
-                                },
-                                denied: () {
-                                  // Nothing to do
-                                },
-                                failure: () {
-                                  // Nothing to do
-                                },
-                              );
+                              await _updateLocation();
                             }
                           }
                         }
