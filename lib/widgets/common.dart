@@ -9,8 +9,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get_it/get_it.dart';
+import 'package:intl/date_symbols.dart';
+import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/online_users_api.dart';
+import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/audio_bio.dart';
@@ -903,12 +907,6 @@ class RecordButtonChatState extends State<RecordButtonChat> {
         final recordInfo = snapshot.requireData;
         return Container(
           height: 87,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: const Color.fromRGBO(0x32, 0x32, 0x32, 1.0),
-            ),
-            borderRadius: BorderRadius.circular(50),
-          ),
           alignment: Alignment.center,
           child: Builder(
             builder: (context) {
@@ -930,26 +928,25 @@ class RecordButtonChatState extends State<RecordButtonChat> {
                     alignment: Alignment.center,
                     children: [
                       Container(
-                        width: 50,
-                        height: 50,
-                        margin: const EdgeInsets.all(8),
+                        width: 68,
+                        height: 68,
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white),
+                          border: Border.all(color: Colors.white, width: 2),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
                           child: AnimatedContainer(
-                            width: recordInfo.recording ? 27 : 50,
-                            height: recordInfo.recording ? 27 : 50,
+                            width: recordInfo.recording ? 35 : 62,
+                            height: recordInfo.recording ? 35 : 62,
                             duration: const Duration(milliseconds: 200),
                             decoration: BoxDecoration(
                               color:
                                   const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
                               shape: BoxShape.rectangle,
                               borderRadius: recordInfo.recording
-                                  ? const BorderRadius.all(Radius.circular(2))
-                                  : const BorderRadius.all(Radius.circular(25)),
+                                  ? const BorderRadius.all(Radius.circular(6))
+                                  : const BorderRadius.all(Radius.circular(30)),
                             ),
                           ),
                         ),
@@ -958,7 +955,7 @@ class RecordButtonChatState extends State<RecordButtonChat> {
                         Align(
                           alignment: Alignment.center,
                           child: Padding(
-                            padding: const EdgeInsets.only(left: 104.0),
+                            padding: const EdgeInsets.only(left: 140.0),
                             child: Text(
                               formatDuration(
                                   DateTime.now().difference(_recordingStart)),
@@ -1166,15 +1163,76 @@ class OvalButton extends StatelessWidget {
   }
 }
 
+class OnlineIndicatorBuilder extends StatefulWidget {
+  final String uid;
+  final Widget Function(BuildContext context, bool online) builder;
+
+  const OnlineIndicatorBuilder({
+    super.key,
+    required this.uid,
+    required this.builder,
+  });
+
+  @override
+  State<OnlineIndicatorBuilder> createState() => OnlineIndicatorBuilderState();
+}
+
+class OnlineIndicatorBuilderState extends State<OnlineIndicatorBuilder> {
+  @override
+  void initState() {
+    super.initState();
+    _subscribe(widget.uid);
+  }
+
+  @override
+  void didUpdateWidget(covariant OnlineIndicatorBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.uid != widget.uid) {
+      _unsubscribe(oldWidget.uid);
+      _subscribe(widget.uid);
+    }
+  }
+
+  @override
+  void dispose() {
+    _unsubscribe(widget.uid);
+    super.dispose();
+  }
+
+  void _subscribe(String uid) {
+    final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
+    onlineUsersApi.subscribeToOnlineStatus(uid);
+  }
+
+  void _unsubscribe(String uid) {
+    final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
+    onlineUsersApi.unsubscribeToOnlineStatus(uid);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final isOnline = ref
+            .watch(onlineUsersProvider.select((p) => p.isOnline(widget.uid)));
+        return widget.builder(context, isOnline);
+      },
+    );
+  }
+}
+
 class OnlineIndicator extends StatelessWidget {
   const OnlineIndicator({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Icon(
-      Icons.circle,
-      color: Color.fromRGBO(0x01, 0xA5, 0x43, 1.0),
-      size: 16,
+    return SizedOverflowBox(
+      size: const Size(24, 24),
+      child: Lottie.asset(
+        'assets/images/online.json',
+        width: 72,
+        height: 72,
+      ),
     );
   }
 }

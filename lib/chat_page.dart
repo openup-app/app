@@ -4,6 +4,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -21,7 +22,6 @@ import 'package:openup/widgets/chat_message.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/disable.dart';
 import 'package:openup/widgets/tab_view.dart';
-import 'package:openup/widgets/toggle_button.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
@@ -163,85 +163,130 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(width: 24),
-                        Container(
-                          width: 16,
-                          alignment: Alignment.center,
-                          child:
-                              !widget.online ? const OnlineIndicator() : null,
-                        ),
-                        const SizedBox(width: 12),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AutoSizeText(
-                                widget.otherProfile.name,
-                                minFontSize: 9,
-                                maxFontSize: 20,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                              AutoSizeText(
-                                widget.otherProfile.location,
-                                minFontSize: 9,
-                                maxFontSize: 16,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .copyWith(fontWeight: FontWeight.w300),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (ref.watch(userProvider).profile?.blurPhotos ==
-                            true) ...[
-                          const SizedBox(width: 4),
-                          Text(
-                            'Reveal Pictures',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                          ),
-                          const SizedBox(width: 9),
-                          Builder(
-                            builder: (context) {
-                              final unblur = _unblur;
-                              if (unblur == null) {
-                                return const Padding(
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 15.5),
-                                  child: SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: Center(
-                                      child: LoadingIndicator(
-                                        size: 16,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: AutoSizeText(
+                                        widget.otherProfile.name,
+                                        minFontSize: 9,
+                                        maxFontSize: 20,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
                                       ),
                                     ),
-                                  ),
-                                );
-                              }
-                              return ToggleButton(
-                                value: unblur,
-                                onChanged: (value) {
-                                  final api = GetIt.instance.get<Api>();
-                                  api.updateUnblurPhotosFor(
-                                    ref.read(userProvider).uid,
-                                    widget.otherProfile.uid,
-                                    value,
-                                  );
-                                  setState(() => _unblur = value);
-                                },
-                              );
-                            },
+                                    const SizedBox(width: 4),
+                                    OnlineIndicatorBuilder(
+                                      uid: widget.otherProfile.uid,
+                                      builder: (context, online) {
+                                        print('onilen $online');
+                                        return online
+                                            ? const OnlineIndicator()
+                                            : const SizedBox.shrink();
+                                      },
+                                    ),
+                                    const SizedBox(width: 4),
+                                  ],
+                                ),
+                                AutoSizeText(
+                                  widget.otherProfile.location,
+                                  minFontSize: 9,
+                                  maxFontSize: 16,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(fontWeight: FontWeight.w300),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
+                        ),
+                        // if (ref.watch(userProvider).profile?.blurPhotos ==
+                        //     true) ...[
+                        //   const SizedBox(width: 4),
+                        //   Text(
+                        //     'Reveal Pictures',
+                        //     style: Theme.of(context)
+                        //         .textTheme
+                        //         .bodyMedium!
+                        //         .copyWith(
+                        //           fontSize: 16,
+                        //           fontWeight: FontWeight.w400,
+                        //         ),
+                        //   ),
+                        //   const SizedBox(width: 9),
+                        //   Builder(
+                        //     builder: (context) {
+                        //       final unblur = _unblur;
+                        //       if (unblur == null) {
+                        //         return const Padding(
+                        //           padding:
+                        //               EdgeInsets.symmetric(horizontal: 15.5),
+                        //           child: SizedBox(
+                        //             width: 16,
+                        //             height: 16,
+                        //             child: Center(
+                        //               child: LoadingIndicator(
+                        //                 size: 16,
+                        //               ),
+                        //             ),
+                        //           ),
+                        //         );
+                        //       }
+                        //       return ToggleButton(
+                        //         value: unblur,
+                        //         onChanged: (value) {
+                        //           final api = GetIt.instance.get<Api>();
+                        //           api.updateUnblurPhotosFor(
+                        //             ref.read(userProvider).uid,
+                        //             widget.otherProfile.uid,
+                        //             value,
+                        //           );
+                        //           setState(() => _unblur = value);
+                        //         },
+                        //       );
+                        //     },
+                        //   ),
+                        // ],
+                        Button(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Video calling coming soon'),
+                              ),
+                            );
+                          },
+                          child: SvgPicture.asset(
+                            'assets/images/videocam.svg',
+                            width: 38,
+                          ),
+                        ),
+                        const SizedBox(width: 32),
+                        Button(
+                          onPressed: () {
+                            _call(
+                              context: context,
+                              ref: ref,
+                              profile: widget.otherProfile.toSimpleProfile(),
+                              video: false,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: SvgPicture.asset(
+                              'assets/images/call.svg',
+                              width: 28,
+                            ),
+                          ),
+                        ),
                         const SizedBox(width: 16),
                       ],
                     ),
@@ -406,28 +451,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0),
-                                  child: Button(
-                                    onPressed: () {
-                                      _call(
-                                        context: context,
-                                        ref: ref,
-                                        profile: widget.otherProfile
-                                            .toSimpleProfile(),
-                                        video: false,
-                                      );
-                                    },
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: Icon(
-                                        Icons.call,
-                                        size: 36,
-                                      ),
-                                    ),
-                                  ),
-                                ),
                                 Expanded(
                                   child: RecordButtonChat(
                                     onSubmit: _submit,
@@ -435,28 +458,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                         setState(() => _recording = true),
                                     onEndRecording: () =>
                                         setState(() => _recording = false),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0),
-                                  child: Button(
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content:
-                                              Text('Video calling coming soon'),
-                                        ),
-                                      );
-                                    },
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: Icon(
-                                        Icons.videocam,
-                                        size: 36,
-                                      ),
-                                    ),
                                   ),
                                 ),
                               ],

@@ -16,6 +16,7 @@ import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/online_users_api.dart';
+import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/call_page.dart';
 import 'package:openup/chat_page.dart';
@@ -164,13 +165,22 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         if (_loggedIn != loggedIn) {
           setState(() => _loggedIn = loggedIn);
           if (loggedIn) {
+            if (GetIt.instance.isRegistered<OnlineUsersApi>()) {
+              GetIt.instance.unregister<OnlineUsersApi>();
+            }
             _onlineUsersApi?.dispose();
             _onlineUsersApi = OnlineUsersApi(
               host: host,
               port: socketPort,
               uid: user.uid,
               onConnectionError: () {},
+              onOnlineStatusChanged: (uid, online) {
+                ref
+                    .read(onlineUsersProvider.notifier)
+                    .onlineChanged(uid, online);
+              },
             );
+            GetIt.instance.registerSingleton<OnlineUsersApi>(_onlineUsersApi!);
           }
         }
 

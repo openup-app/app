@@ -640,11 +640,15 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                                   fontWeight: FontWeight.w300,
                                 ),
                           ),
-                          if (widget.online)
-                            const Padding(
-                              padding: EdgeInsets.only(left: 6.0, bottom: 2),
-                              child: OnlineIndicator(),
-                            ),
+                          const SizedBox(width: 8),
+                          OnlineIndicatorBuilder(
+                            uid: widget.profile.uid,
+                            builder: (context, online) {
+                              return online
+                                  ? const OnlineIndicator()
+                                  : const SizedBox.shrink();
+                            },
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),

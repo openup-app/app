@@ -111,9 +111,17 @@ class _ProfileViewState extends State<ProfileView> {
                                 ),
                           ),
                           if (widget.endTime == null)
-                            const Padding(
-                              padding: EdgeInsets.only(left: 6.0, bottom: 2),
-                              child: OnlineIndicator(),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 6.0, bottom: 2),
+                              child: OnlineIndicatorBuilder(
+                                uid: widget.profile.uid,
+                                builder: (context, online) {
+                                  return online
+                                      ? const OnlineIndicator()
+                                      : const SizedBox.shrink();
+                                },
+                              ),
                             ),
                         ],
                       ),

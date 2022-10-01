@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/main.dart';
@@ -500,10 +501,13 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                   top: -18,
                   width: 78,
                   height: 78,
-                  child: Container(
-                    child: chatroom.online
-                        ? const OnlineIndicator()
-                        : const SizedBox.shrink(),
+                  child: OnlineIndicatorBuilder(
+                    uid: chatroom.profile.uid,
+                    builder: (context, online) {
+                      return online
+                          ? const OnlineIndicator()
+                          : const SizedBox.shrink();
+                    },
                   ),
                 ),
               ],
