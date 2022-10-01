@@ -49,8 +49,6 @@ const urlBase = 'https://$host:$webPort';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
-final _tempFriendshipsRefresh = TempFriendshipsRefresh();
-
 void main() async {
   void appRunner() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -115,6 +113,11 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   late final GoRouter _goRouter;
   final _routeObserver = RouteObserver<PageRoute>();
+
+  final _discoverKey = GlobalKey<NavigatorState>();
+  final _friendshipsKey = GlobalKey<NavigatorState>();
+  final _profileKey = GlobalKey<NavigatorState>();
+
   final _tempFriendshipsRefresh = TempFriendshipsRefresh();
 
   PageRoute _buildPageRoute<T>({
@@ -414,13 +417,25 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             ),
           ],
         ),
-        ShellRoute(
-          builder: (context, state, child) {
+        PartitionedShellRoute.stackedNavigation(
+          stackItems: [
+            StackedNavigationItem(
+              rootRoutePath: '/discover',
+              navigatorKey: _discoverKey,
+            ),
+            StackedNavigationItem(
+              rootRoutePath: '/friendships',
+              navigatorKey: _friendshipsKey,
+            ),
+            StackedNavigationItem(
+              rootRoutePath: '/profile',
+              navigatorKey: _profileKey,
+            ),
+          ],
+          scaffoldBuilder: (context, currentIndex, itemsState, child) {
             return CurrentRouteSystemUiStyling.light(
               child: HomeShell(
-                tabIndex: state.location.contains('friendships')
-                    ? 1
-                    : (state.location.contains('profile') ? 2 : 0),
+                tabIndex: currentIndex,
                 tempFriendshipsRefresh: _tempFriendshipsRefresh,
                 child: child,
               ),
@@ -430,11 +445,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             GoRoute(
               path: '/discover',
               name: 'discover',
+              parentNavigatorKey: _discoverKey,
               builder: (context, state) => const DiscoverPage(),
             ),
             GoRoute(
               path: '/friendships',
               name: 'friendships',
+              parentNavigatorKey: _friendshipsKey,
               builder: (context, state) => FriendshipsPage(
                 tempRefresh: _tempFriendshipsRefresh,
               ),
@@ -461,6 +478,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             GoRoute(
               path: '/profile',
               name: 'profile',
+              parentNavigatorKey: _profileKey,
               builder: (context, state) => const ProfilePage(),
             ),
           ],
