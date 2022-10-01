@@ -121,6 +121,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   final _tempFriendshipsRefresh = TempFriendshipsRefresh();
 
+  final _scrollToDiscoverTopNotifier = ScrollToDiscoverTopNotifier();
+
   PageRoute _buildPageRoute<T>({
     required RouteSettings settings,
     PageTransitionBuilder? transitionsBuilder,
@@ -213,6 +215,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   void dispose() {
     _idTokenChangesSubscription?.cancel();
     _tempFriendshipsRefresh.dispose();
+    _scrollToDiscoverTopNotifier.dispose();
     _onlineUsersApi?.dispose();
     super.dispose();
   }
@@ -447,17 +450,21 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               child: HomeShell(
                 tabIndex: currentIndex,
                 tempFriendshipsRefresh: _tempFriendshipsRefresh,
+                scrollToDiscoverTopNotifier: _scrollToDiscoverTopNotifier,
                 child: child,
               ),
             );
           },
           routes: [
             GoRoute(
-              path: '/discover',
-              name: 'discover',
-              parentNavigatorKey: _discoverKey,
-              builder: (context, state) => const DiscoverPage(),
-            ),
+                path: '/discover',
+                name: 'discover',
+                parentNavigatorKey: _discoverKey,
+                builder: (context, state) {
+                  return DiscoverPage(
+                    scrollToTopNotifier: _scrollToDiscoverTopNotifier,
+                  );
+                }),
             GoRoute(
               path: '/friendships',
               name: 'friendships',

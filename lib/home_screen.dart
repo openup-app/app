@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
+import 'package:openup/discover_page.dart';
 import 'package:openup/main.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -11,11 +12,13 @@ import 'package:openup/widgets/common.dart';
 class HomeShell extends ConsumerStatefulWidget {
   final int tabIndex;
   final TempFriendshipsRefresh tempFriendshipsRefresh;
+  final ScrollToDiscoverTopNotifier scrollToDiscoverTopNotifier;
   final Widget child;
   const HomeShell({
     Key? key,
     required this.tabIndex,
     required this.tempFriendshipsRefresh,
+    required this.scrollToDiscoverTopNotifier,
     required this.child,
   }) : super(key: key);
 
@@ -52,6 +55,11 @@ class _HomeShellState extends ConsumerState<HomeShell>
       resizeToAvoidBottomInset: false,
       bottomNavigationBar: _NavigationBar(
         tabIndex: widget.tabIndex,
+        onDiscoverPressed: () {
+          if (widget.tabIndex == 0) {
+            widget.scrollToDiscoverTopNotifier.scrollToTop();
+          }
+        },
         // Notifications don't update the UI, this forces it
         onFriendshipsPressed: widget.tempFriendshipsRefresh.refresh,
       ),
@@ -62,11 +70,13 @@ class _HomeShellState extends ConsumerState<HomeShell>
 
 class _NavigationBar extends StatelessWidget {
   final int tabIndex;
+  final VoidCallback onDiscoverPressed;
   final VoidCallback onFriendshipsPressed;
 
   const _NavigationBar({
     super.key,
     required this.tabIndex,
+    required this.onDiscoverPressed,
     required this.onFriendshipsPressed,
   });
 
@@ -84,7 +94,10 @@ class _NavigationBar extends StatelessWidget {
           children: [
             Expanded(
               child: Button(
-                onPressed: () => context.goNamed('discover'),
+                onPressed: () {
+                  context.goNamed('discover');
+                  onDiscoverPressed();
+                },
                 child: Center(
                   child: Text(
                     'Discover',

@@ -25,7 +25,11 @@ import 'package:openup/widgets/share_button.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
-  const DiscoverPage({Key? key}) : super(key: key);
+  final ScrollToDiscoverTopNotifier scrollToTopNotifier;
+  const DiscoverPage({
+    Key? key,
+    required this.scrollToTopNotifier,
+  }) : super(key: key);
 
   @override
   ConsumerState<DiscoverPage> createState() => DiscoverPageState();
@@ -53,11 +57,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     _fetchStatuses().then((_) {
       _maybeRequestNotification();
     });
+    widget.scrollToTopNotifier.addListener(_onScrollToTop);
   }
 
   @override
   void dispose() {
     _pageController?.dispose();
+    widget.scrollToTopNotifier.removeListener(_onScrollToTop);
     super.dispose();
   }
 
@@ -254,6 +260,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
             ..addAll(r);
         });
       },
+    );
+  }
+
+  void _onScrollToTop() {
+    _pageController?.animateTo(
+      0,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
     );
   }
 
@@ -857,4 +871,10 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
       ),
     );
   }
+}
+
+class ScrollToDiscoverTopNotifier extends ValueNotifier<void> {
+  ScrollToDiscoverTopNotifier() : super(null);
+
+  void scrollToTop() => notifyListeners();
 }
