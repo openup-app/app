@@ -382,43 +382,44 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                 }
               }
             },
-            child: SizedBox(
-              height: 86,
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 42,
-                    child: Center(
-                      child: Builder(
-                        builder: (context) {
-                          if (chatroom.state == ChatroomState.invitation) {
-                            return Text(
-                              'new',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                            );
-                          } else if (chatroom.unreadCount > 0) {
-                            return Container(
-                              width: 14,
-                              height: 14,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                  ),
-                  Stack(
+            child: Stack(
+              children: [
+                SizedBox(
+                  height: 86,
+                  child: Row(
                     children: [
+                      SizedBox(
+                        width: 42,
+                        child: Center(
+                          child: Builder(
+                            builder: (context) {
+                              if (chatroom.state == ChatroomState.invitation) {
+                                return Text(
+                                  'new',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w300,
+                                      ),
+                                );
+                              } else if (chatroom.unreadCount > 0) {
+                                return Container(
+                                  width: 14,
+                                  height: 14,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color:
+                                        Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ),
+                      ),
                       Container(
                         width: 65,
                         height: 65,
@@ -431,83 +432,81 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                           blur: chatroom.profile.blurPhotos,
                         ),
                       ),
-                      Positioned(
-                        right: 2,
-                        top: 2,
-                        child: Container(
-                          width: 14,
-                          height: 14,
-                          decoration: chatroom.online
-                              ? const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.green,
-                                )
-                              : null,
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              chatroom.profile.name,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: 4),
+                            AutoSizeText(
+                              chatroom.location,
+                              maxFontSize: 16,
+                              maxLines: 1,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(fontWeight: FontWeight.w300),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                CountdownTimer(
+                                  endTime: chatroom.endTime,
+                                  onDone: () => setState(() =>
+                                      _chatrooms.removeWhere((c) =>
+                                          c.profile.uid ==
+                                          chatroom.profile.uid)),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  topicLabel(chatroom.topic),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w300,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            const Icon(
+                              Icons.chevron_right,
+                              color: Colors.grey,
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          chatroom.profile.name,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const SizedBox(height: 4),
-                        AutoSizeText(
-                          chatroom.location,
-                          maxFontSize: 16,
-                          maxLines: 1,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(fontWeight: FontWeight.w300),
-                        ),
-                      ],
-                    ),
+                ),
+                Positioned(
+                  left: 58,
+                  top: -18,
+                  width: 78,
+                  height: 78,
+                  child: Container(
+                    child: chatroom.online
+                        ? const OnlineIndicator()
+                        : const SizedBox.shrink(),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            CountdownTimer(
-                              endTime: chatroom.endTime,
-                              onDone: () => setState(() =>
-                                  _chatrooms.removeWhere((c) =>
-                                      c.profile.uid == chatroom.profile.uid)),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              topicLabel(chatroom.topic),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                            ),
-                          ],
-                        ),
-                        const Icon(
-                          Icons.chevron_right,
-                          color: Colors.grey,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },

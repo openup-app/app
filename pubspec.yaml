@@ -77,6 +77,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/call.json
+    - assets/images/call.svg
     - assets/images/video_call.json
     - assets/images/play_icon.svg
     - assets/images/pause_icon.svg
@@ -86,8 +87,10 @@ flutter:
     - assets/images/onboard_discover.jpg
     - assets/images/onboard_chat.jpg
     - assets/images/onboard_countdown.jpg
+    - assets/images/online.json
     - assets/images/earth.svg
     - assets/images/loading_icon.png
+    - assets/images/videocam.svg
     - assets/videos/welcome.mp4
 
   fonts:
