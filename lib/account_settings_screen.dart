@@ -1,5 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -360,9 +361,11 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   void _signOut() async {
+    final uid = ref.read(userProvider).uid;
+    await GetIt.instance.get<Api>().signOut(uid);
     await dismissAllNotifications();
+    await FirebaseMessaging.instance.deleteToken();
     await FirebaseAuth.instance.signOut();
-    // TODO: Remove notification token
     if (mounted) {
       context.goNamed('initialLoading');
     }

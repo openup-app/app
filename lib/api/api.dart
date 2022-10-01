@@ -65,6 +65,18 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, void>> signOut(String uid) {
+    return _request(
+      makeRequest: () {
+        return http.post(
+          Uri.parse('$_urlBase/users/$uid/sign_out'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
   Future<Either<ApiError, Profile>> getProfile(String uid) {
     return _request(
       makeRequest: () {
