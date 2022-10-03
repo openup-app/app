@@ -30,7 +30,6 @@ import 'package:openup/profile_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
 import 'package:openup/sign_up_name_screen.dart';
-import 'package:openup/sign_up_photos_hide_screen.dart';
 import 'package:openup/sign_up_photos_screen.dart';
 import 'package:openup/sign_up_start_animation.dart';
 import 'package:openup/sign_up_topic_screen.dart';
@@ -391,34 +390,22 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       },
                       routes: [
                         GoRoute(
-                          path: 'photos_hide',
-                          name: 'onboarding-photos-hide',
+                          path: 'audio',
+                          name: 'onboarding-audio',
                           builder: (context, state) {
                             return const CurrentRouteSystemUiStyling.light(
-                              child: SignUpPhotosHideScreen(),
+                              child: SignUpAudioScreen(),
                             );
                           },
                           routes: [
                             GoRoute(
-                              path: 'audio',
-                              name: 'onboarding-audio',
+                              path: 'welcome',
+                              name: 'onboarding-welcome',
                               builder: (context, state) {
                                 return const CurrentRouteSystemUiStyling.light(
-                                  child: SignUpAudioScreen(),
+                                  child: SignUpStartAnimationScreen(),
                                 );
                               },
-                              routes: [
-                                GoRoute(
-                                  path: 'welcome',
-                                  name: 'onboarding-welcome',
-                                  builder: (context, state) {
-                                    return const CurrentRouteSystemUiStyling
-                                        .light(
-                                      child: SignUpStartAnimationScreen(),
-                                    );
-                                  },
-                                ),
-                              ],
                             ),
                           ],
                         ),

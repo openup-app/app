@@ -76,14 +76,16 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
             Padding(
               padding: const EdgeInsets.only(
                   top: 16, bottom: 32.0, left: 8, right: 8),
-              child: Text(
-                '(Messages can only be upto 30 seconds on openup)',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontWeight: FontWeight.w300,
-                      fontSize: 16,
-                      color: const Color.fromRGBO(0x7F, 0x7F, 0x7F, 1.0),
-                    ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 300),
+                child: Text(
+                  'Messages can only be upto 30 seconds on openup. Must record a minimum of 5 seconds in order to join.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 16,
+                      ),
+                ),
               ),
             ),
             const Spacer(),

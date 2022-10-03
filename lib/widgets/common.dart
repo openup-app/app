@@ -614,8 +614,23 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
                     if (recordInfo.recording) {
                       await _inviteRecorder.stopRecording();
                       if (mounted) {
-                        widget
-                            .onState(RecordButtonDisplayState.displayingUpload);
+                        if (_recordingStart.difference(DateTime.now()) <
+                            const Duration(seconds: 5)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Must record at least 5 seconds'),
+                            ),
+                          );
+                          widget.onState(
+                              RecordButtonDisplayState.displayingRecord);
+                          setState(() {
+                            _submitted = false;
+                            _audioBytes = null;
+                          });
+                        } else {
+                          widget.onState(
+                              RecordButtonDisplayState.displayingUpload);
+                        }
                       }
                     } else {
                       await _inviteRecorder.startRecording();
@@ -653,28 +668,30 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
                           ),
                         ),
                       ),
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 200.0),
-                          child: Text(
-                            recordInfo.recording
-                                ? formatDuration(
-                                    DateTime.now().difference(_recordingStart),
-                                    canBeZero: true)
-                                : formatDuration(
-                                    Duration.zero,
-                                    canBeZero: true,
+                      if (recordInfo.recording)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 200.0),
+                            child: Text(
+                              recordInfo.recording
+                                  ? formatDuration(
+                                      DateTime.now()
+                                          .difference(_recordingStart),
+                                      canBeZero: true)
+                                  : formatDuration(
+                                      Duration.zero,
+                                      canBeZero: true,
+                                    ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w300,
                                   ),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w300,
-                                ),
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 );
