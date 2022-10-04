@@ -477,7 +477,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         webPort: webPort,
                         socketPort: socketPort,
                         otherProfile: args.otherProfile,
-                        online: args.online,
                         endTime: args.endTime,
                       ),
                     );

@@ -29,7 +29,6 @@ class ChatPage extends ConsumerStatefulWidget {
   final int webPort;
   final int socketPort;
   final Profile otherProfile;
-  final bool online;
   final DateTime endTime;
 
   const ChatPage({
@@ -38,7 +37,6 @@ class ChatPage extends ConsumerStatefulWidget {
     required this.webPort,
     required this.socketPort,
     required this.otherProfile,
-    required this.online,
     required this.endTime,
   }) : super(key: key);
 
@@ -186,7 +184,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                     OnlineIndicatorBuilder(
                                       uid: widget.otherProfile.uid,
                                       builder: (context, online) {
-                                        print('onilen $online');
                                         return online
                                             ? const OnlineIndicator()
                                             : const SizedBox.shrink();
