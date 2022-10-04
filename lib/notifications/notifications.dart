@@ -38,7 +38,7 @@ void initializeVoipHandlers({required DeepLinkCallback onDeepLink}) {
 Future<String?> getNotificationToken() {
   if (Platform.isAndroid) {
     return FirebaseMessaging.instance.getToken();
-  } else if (Platform.isAndroid) {
+  } else if (Platform.isIOS) {
     return Future.value(_apnsPushConnector?.token.value);
   }
   return Future.value();
