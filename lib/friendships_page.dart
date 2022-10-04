@@ -586,7 +586,14 @@ class __InvitationPageState extends ConsumerState<_InvitationPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (widget.online) const OnlineIndicator(),
+                  OnlineIndicatorBuilder(
+                    uid: widget.profile.uid,
+                    builder: (context, online) {
+                      return online
+                          ? const OnlineIndicator()
+                          : const SizedBox.shrink();
+                    },
+                  ),
                   const SizedBox(width: 8),
                   Column(
                     children: [
