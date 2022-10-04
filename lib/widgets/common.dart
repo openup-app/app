@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get_it/get_it.dart';
-import 'package:intl/date_symbols.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -608,39 +607,29 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
           height: 91,
           child: Builder(
             builder: (context) {
+              final moreThanFiveSeconds =
+                  DateTime.now().difference(_recordingStart) <
+                      const Duration(seconds: 5);
               if (_audioBytes == null) {
                 return Button(
-                  onPressed: () async {
-                    if (recordInfo.recording) {
-                      await _inviteRecorder.stopRecording();
-                      if (mounted) {
-                        if (_recordingStart.difference(DateTime.now()) <
-                            const Duration(seconds: 5)) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Must record at least 5 seconds'),
-                            ),
-                          );
-                          widget.onState(
-                              RecordButtonDisplayState.displayingRecord);
-                          setState(() {
-                            _submitted = false;
-                            _audioBytes = null;
-                          });
-                        } else {
-                          widget.onState(
-                              RecordButtonDisplayState.displayingUpload);
-                        }
-                      }
-                    } else {
-                      await _inviteRecorder.startRecording();
-                      if (mounted) {
-                        setState(() => _recordingStart = DateTime.now());
-                        widget.onState(
-                            RecordButtonDisplayState.displayingRecording);
-                      }
-                    }
-                  },
+                  onPressed: moreThanFiveSeconds
+                      ? null
+                      : () async {
+                          if (recordInfo.recording) {
+                            await _inviteRecorder.stopRecording();
+                            if (mounted) {
+                              widget.onState(
+                                  RecordButtonDisplayState.displayingUpload);
+                            }
+                          } else {
+                            await _inviteRecorder.startRecording();
+                            if (mounted) {
+                              setState(() => _recordingStart = DateTime.now());
+                              widget.onState(
+                                  RecordButtonDisplayState.displayingRecording);
+                            }
+                          }
+                        },
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
