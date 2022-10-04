@@ -70,5 +70,8 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<!-- Allows FirebaseMessaging to be using alongside package:flutter_apns_only -->
+	<key>flutter_apns.disable_swizzling</key>
+	<true/>
 </dict>
 </plist>

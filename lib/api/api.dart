@@ -251,7 +251,7 @@ class Api {
   Future<Either<ApiError, void>> addNotificationTokens(
     String uid, {
     String? fcmMessagingAndVoipToken,
-    String? fcmMessagingToken,
+    String? apnMessagingToken,
     String? apnVoipToken,
   }) {
     return _request(
@@ -268,12 +268,12 @@ class Api {
                   'voip': true,
                   'service': 'fcm',
                 },
-              if (fcmMessagingToken != null)
+              if (apnMessagingToken != null)
                 {
-                  'token': fcmMessagingToken,
+                  'token': apnMessagingToken,
                   'messaging': true,
                   'voip': false,
-                  'service': 'fcm',
+                  'service': 'apn',
                 },
               if (apnVoipToken != null)
                 {

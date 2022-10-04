@@ -10,6 +10,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/phone.dart';
 import 'package:openup/notifications/notification_comms.dart';
+import 'package:openup/notifications/notifications.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -22,7 +23,7 @@ Future<String?> getVoipPushNotificationToken() async {
   return notifications.getToken();
 }
 
-void initIosVoipHandlers() async {
+void initIosVoipHandlers(DeepLinkCallback onDeepLink) async {
   _provider = FCXProvider();
   _callController = FCXCallController();
   try {
@@ -54,6 +55,7 @@ void initIosVoipHandlers() async {
       phone?.join();
       GetIt.instance.get<CallManager>().activeCall = activeCall;
       action.fulfill();
+      onDeepLink('/friendships/${profile.uid}/call');
     } else {
       action.fail();
     }

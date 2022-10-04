@@ -114,13 +114,16 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   Future<void> _updateLocation() async {
     setState(() => _loading = true);
 
+    final profile = ref.read(userProvider).profile;
+    final notifier = ref.read(userProvider.notifier);
     final locationService = LocationService();
     final location = await locationService.getLatLong();
     await location.when(
       value: (lat, long) {
         return updateLocation(
           context: context,
-          ref: ref,
+          profile: profile!,
+          notifier: notifier,
           latitude: lat,
           longitude: long,
         );

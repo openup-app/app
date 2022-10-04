@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -34,6 +33,8 @@ class InitialLoadingScreen extends ConsumerStatefulWidget {
 }
 
 class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
+  bool _deepLinked = false;
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +43,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
   void _setup() async {
     // ConnectionService and CallKit
-    initializeVoipHandlers();
+    initializeVoipHandlers(onDeepLink: _onDeepLink);
 
     await Firebase.initializeApp();
     final auth = FirebaseAuth.instance;
@@ -90,41 +91,40 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     }
 
+    // Init notifications as early as possible for background notifications on iOS
+    // (initial route is navigated to, but execution may stop due to user prompt or second navigation)
+    initializeNotifications(onDeepLink: _onDeepLink);
+
     if (!mounted) {
       return;
     }
 
-    // Init notifications as early as possible for background notifications on iOS
-    // (initial route is navigated to, but execution may stop due to user prompt or second navigation)
-    await initializeNotifications(
-      navigatorKey: widget.navigatorKey,
-      userStateNotifier: notifier,
-    );
-
     // Update push notifcation tokens
     final isIOS = Platform.isIOS;
     Future.wait([
-      FirebaseMessaging.instance.getToken(),
+      getNotificationToken(),
       if (isIOS) ios_voip.getVoipPushNotificationToken(),
     ]).then((tokens) {
       if (mounted) {
         api.addNotificationTokens(
           ref.read(userProvider).uid,
           fcmMessagingAndVoipToken: isIOS ? null : tokens[0],
-          fcmMessagingToken: isIOS ? tokens[0] : null,
+          apnMessagingToken: isIOS ? tokens[0] : null,
           apnVoipToken: isIOS ? tokens[1] : null,
         );
       }
     });
 
     // Update location
+    final profile = ref.read(userProvider).profile;
     final latLong = await LocationService().getLatLong();
     if (mounted) {
       await latLong.when(
         value: (lat, long) async {
           updateLocation(
             context: context,
-            ref: ref,
+            profile: profile!,
+            notifier: notifier,
             latitude: lat,
             longitude: long,
           );
@@ -142,9 +142,8 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     }
 
-    final deepLinked = await handleLaunchNotification(widget.navigatorKey);
     if (mounted) {
-      if (!deepLinked && mounted) {
+      if (!_deepLinked && mounted) {
         // Standard app entry or sign up onboarding
         final noAudio = ref.read(userProvider).profile?.audio == null;
         if (widget.needsOnboarding || noAudio) {
@@ -153,6 +152,14 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
           context.goNamed('discover');
         }
       }
+    }
+  }
+
+  void _onDeepLink(String path) {
+    final context = widget.navigatorKey.currentContext;
+    if (context != null) {
+      _deepLinked = true;
+      context.go(path);
     }
   }
 

@@ -7,8 +7,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
-import 'package:openup/main.dart';
 import 'package:openup/notifications/notification_comms.dart';
+import 'package:openup/notifications/notifications.dart';
 
 bool _callKitInit = false;
 
@@ -16,7 +16,7 @@ Future<String?> getVoipPushNotificationToken() {
   return ConnectycubeFlutterCallKit.getToken();
 }
 
-void initAndroidVoipHandlers() {
+void initAndroidVoipHandlers(DeepLinkCallback onDeepLink) {
   ConnectycubeFlutterCallKit.onCallAcceptedWhenTerminated =
       _onCallAcceptedWhenTerminated;
   ConnectycubeFlutterCallKit.onCallRejectedWhenTerminated =
@@ -37,14 +37,15 @@ void initAndroidVoipHandlers() {
 
         if (myUid != null && uid != null && photo != null) {
           final profile = SimpleProfile(
-              uid: uid,
-              name: event.callerName,
-              photo: photo,
-              blurPhotos: blurPhotos);
+            uid: uid,
+            name: event.callerName,
+            photo: photo,
+            blurPhotos: blurPhotos,
+          );
           final activeCall = createActiveCall(myUid, rid, profile, false);
           activeCall.phone.join();
           GetIt.instance.get<CallManager>().activeCall = activeCall;
-          rootNavigatorKey.currentState?.pushNamed('call');
+          onDeepLink('/friendships/${profile.uid}/call');
         }
       },
       onCallRejected: (event) {

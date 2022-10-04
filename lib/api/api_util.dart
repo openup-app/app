@@ -68,19 +68,19 @@ Future<Either<ApiError, void>> updateTopic({
 
 Future<Either<ApiError, String>> updateLocation({
   required BuildContext context,
-  required WidgetRef ref,
+  required Profile profile,
+  required UserStateNotifier notifier,
   required double latitude,
   required double longitude,
 }) async {
   final api = GetIt.instance.get<Api>();
-  final userState = ref.read(userProvider);
-  final result = await api.updateLocation(userState.uid, latitude, longitude);
+  final result = await api.updateLocation(profile.uid, latitude, longitude);
 
   result.fold(
     (l) {},
     (r) {
-      final newProfile = userState.profile!.copyWith(location: r);
-      ref.read(userProvider.notifier).profile(newProfile);
+      final newProfile = profile.copyWith(location: r);
+      notifier.profile(newProfile);
     },
   );
 

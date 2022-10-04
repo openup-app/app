@@ -1,13 +1,9 @@
 PODS:
   - audio_session (0.0.1):
     - Flutter
-  - camerawesome (0.0.1):
-    - Flutter
   - connectycube_flutter_call_kit (2.2.1):
     - Flutter
   - device_info_plus (0.0.1):
-    - Flutter
-  - emoji_picker_flutter (0.0.1):
     - Flutter
   - Firebase/Auth (9.5.0):
     - Firebase/CoreOnly
@@ -60,6 +56,8 @@ PODS:
     - GoogleUtilities/UserDefaults (~> 7.7)
     - nanopb (< 2.30910.0, >= 2.30908.0)
   - Flutter (1.0.0)
+  - flutter_apns_only (0.0.1):
+    - Flutter
   - "flutter_callkit_voximplant (2.0.2+2)":
     - Flutter
   - flutter_local_notifications (0.0.1):
@@ -140,14 +138,13 @@ PODS:
 
 DEPENDENCIES:
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
-  - camerawesome (from `.symlinks/plugins/camerawesome/ios`)
   - connectycube_flutter_call_kit (from `.symlinks/plugins/connectycube_flutter_call_kit/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
-  - emoji_picker_flutter (from `.symlinks/plugins/emoji_picker_flutter/ios`)
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
   - Flutter (from `Flutter`)
+  - flutter_apns_only (from `.symlinks/plugins/flutter_apns_only/ios`)
   - flutter_callkit_voximplant (from `.symlinks/plugins/flutter_callkit_voximplant/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_voip_push_notification (from `.symlinks/plugins/flutter_voip_push_notification/ios`)
@@ -189,14 +186,10 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   audio_session:
     :path: ".symlinks/plugins/audio_session/ios"
-  camerawesome:
-    :path: ".symlinks/plugins/camerawesome/ios"
   connectycube_flutter_call_kit:
     :path: ".symlinks/plugins/connectycube_flutter_call_kit/ios"
   device_info_plus:
     :path: ".symlinks/plugins/device_info_plus/ios"
-  emoji_picker_flutter:
-    :path: ".symlinks/plugins/emoji_picker_flutter/ios"
   firebase_auth:
     :path: ".symlinks/plugins/firebase_auth/ios"
   firebase_core:
@@ -205,6 +198,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_messaging/ios"
   Flutter:
     :path: Flutter
+  flutter_apns_only:
+    :path: ".symlinks/plugins/flutter_apns_only/ios"
   flutter_callkit_voximplant:
     :path: ".symlinks/plugins/flutter_callkit_voximplant/ios"
   flutter_local_notifications:
@@ -244,10 +239,8 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   audio_session: 4f3e461722055d21515cf3261b64c973c062f345
-  camerawesome: 0f8628efae993cb064ec4f36322e89c237e1064f
   connectycube_flutter_call_kit: 0be5790a2f18114162a62b28290314b5aa7c4f97
   device_info_plus: e5c5da33f982a436e103237c0c85f9031142abed
-  emoji_picker_flutter: df19dac03a2b39ac667dc8d1da939ef3a9e21347
   Firebase: 800f16f07af493d98d017446a315c27af0552f41
   firebase_auth: c070c7e5b66037cddb73a68ca4bf4728b063680b
   firebase_core: 31872a49ffe0bf6f834e7044c7334e433536735a
@@ -259,6 +252,7 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 0a115432c4e223c5ab20b0dbbe4cbefa793a0e8e
   FirebaseMessaging: 732623518591384f61c287e3d8f65294beb7ffb3
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  flutter_apns_only: 3d91c0ca9dbef4439874858590909a19f8ed06a4
   flutter_callkit_voximplant: 1a830e9ca6c002b53889da4363b4330ce8675720
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
   flutter_voip_push_notification: f28f3ce1c6b835a3fa9e833f37f33dc1291ab888
