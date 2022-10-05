@@ -470,14 +470,16 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   path: ':uid',
                   name: 'chat',
                   builder: (context, state) {
-                    final args = state.extra as ChatPageArguments;
+                    final uid = state.params['uid']!;
+                    final args = state.extra as ChatPageArguments?;
                     return CurrentRouteSystemUiStyling.light(
                       child: ChatPage(
                         host: host,
                         webPort: webPort,
                         socketPort: socketPort,
-                        otherProfile: args.otherProfile,
-                        endTime: args.endTime,
+                        otherUid: uid,
+                        otherProfile: args?.otherProfile,
+                        endTime: args?.endTime,
                       ),
                     );
                   },

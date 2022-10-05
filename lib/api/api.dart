@@ -376,6 +376,23 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, Chatroom>> getChatroom(
+      String uid, String otherUid) async {
+    return _request(makeRequest: () {
+      return http.get(
+        Uri.parse('$_urlBase/chats/info/$uid/$otherUid'),
+        headers: _headers,
+      );
+    }, handleSuccess: (response) {
+      final map = jsonDecode(response.body);
+      final now = DateTime.now();
+      final int timeRemaining = map['timeRemaining'];
+      map['endTime'] =
+          now.add(Duration(milliseconds: timeRemaining)).toIso8601String();
+      return Right(Chatroom.fromJson(map));
+    });
+  }
+
   Future<Either<ApiError, List<ChatMessage>>> getMessages(
     String uid,
     String otherUid, {

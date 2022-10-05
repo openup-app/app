@@ -28,16 +28,18 @@ class ChatPage extends ConsumerStatefulWidget {
   final String host;
   final int webPort;
   final int socketPort;
-  final Profile otherProfile;
-  final DateTime endTime;
+  final String otherUid;
+  final Profile? otherProfile;
+  final DateTime? endTime;
 
   const ChatPage({
     Key? key,
     required this.host,
     required this.webPort,
     required this.socketPort,
-    required this.otherProfile,
-    required this.endTime,
+    required this.otherUid,
+    this.otherProfile,
+    this.endTime,
   }) : super(key: key);
 
   @override
@@ -58,6 +60,10 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
   bool _loading = true;
 
+  Profile? _otherProfile;
+
+  DateTime? _endTime;
+
   String? _myPhoto;
 
   bool _recording = false;
@@ -74,7 +80,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       host: widget.host,
       socketPort: widget.socketPort,
       uid: ref.read(userProvider).uid,
-      otherUid: widget.otherProfile.uid,
+      otherUid: widget.otherUid,
       onMessage: (message) {
         setState(() => _messages[message.messageId!] = message);
       },
@@ -92,6 +98,18 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         setState(() => _loading = false);
       }
     });
+
+    if (widget.otherProfile != null) {
+      _otherProfile = widget.otherProfile;
+    } else {
+      _fetchOtherProfile();
+    }
+
+    if (widget.endTime != null) {
+      _endTime = widget.endTime;
+    } else {
+      _fetchEndTime();
+    }
 
     _scrollController.addListener(_scrollListener);
   }
@@ -136,7 +154,15 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                       firstSelected: _showChat,
                       firstLabel: 'Messages',
                       secondLabel: 'Profile',
-                      onSelected: (first) => setState(() => _showChat = first),
+                      onSelected: (first) {
+                        if (first) {
+                          setState(() => _showChat = true);
+                        } else {
+                          if (_otherProfile != null && _endTime != null) {
+                            setState(() => _showChat = false);
+                          }
+                        }
+                      },
                     ),
                   ),
                 ),
@@ -148,8 +174,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
               builder: (context) {
                 if (!_showChat) {
                   return _ChatProfilePage(
-                    profile: widget.otherProfile,
-                    endTime: widget.endTime,
+                    profile: _otherProfile!,
+                    endTime: _endTime!,
                     onShowMessages: () {
                       setState(() => _showChat = true);
                     },
@@ -171,7 +197,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                   children: [
                                     Expanded(
                                       child: AutoSizeText(
-                                        widget.otherProfile.name,
+                                        _otherProfile?.name ?? '',
                                         minFontSize: 9,
                                         maxFontSize: 20,
                                         overflow: TextOverflow.ellipsis,
@@ -182,7 +208,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                     ),
                                     const SizedBox(width: 4),
                                     OnlineIndicatorBuilder(
-                                      uid: widget.otherProfile.uid,
+                                      uid: widget.otherUid,
                                       builder: (context, online) {
                                         return online
                                             ? const OnlineIndicator()
@@ -193,7 +219,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                   ],
                                 ),
                                 AutoSizeText(
-                                  widget.otherProfile.location,
+                                  _otherProfile?.location ?? '',
                                   minFontSize: 9,
                                   maxFontSize: 16,
                                   overflow: TextOverflow.ellipsis,
@@ -268,14 +294,16 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                         ),
                         const SizedBox(width: 32),
                         Button(
-                          onPressed: () {
-                            _call(
-                              context: context,
-                              ref: ref,
-                              profile: widget.otherProfile.toSimpleProfile(),
-                              video: false,
-                            );
-                          },
+                          onPressed: _otherProfile == null
+                              ? null
+                              : () {
+                                  _call(
+                                    context: context,
+                                    ref: ref,
+                                    profile: _otherProfile!.toSimpleProfile(),
+                                    video: false,
+                                  );
+                                },
                           child: Padding(
                             padding: const EdgeInsets.all(4.0),
                             child: SvgPicture.asset(
@@ -352,12 +380,14 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                                     audioUrl: message.content,
                                                     photoUrl: fromMe
                                                         ? _myPhoto ?? ''
-                                                        : widget
-                                                            .otherProfile.photo,
+                                                        : (widget.otherProfile
+                                                                ?.photo ??
+                                                            ''),
                                                     blurPhotos: fromMe
                                                         ? blurMyPhotos
-                                                        : widget.otherProfile
-                                                            .blurPhotos,
+                                                        : (_otherProfile
+                                                                ?.blurPhotos ??
+                                                            true),
                                                     date: _buildDateText(
                                                         message.date),
                                                     fromMe: fromMe,
@@ -390,12 +420,14 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                                       audioUrl: message.content,
                                                       photoUrl: fromMe
                                                           ? _myPhoto ?? ''
-                                                          : widget.otherProfile
-                                                              .photo,
+                                                          : (_otherProfile
+                                                                  ?.photo ??
+                                                              ''),
                                                       blurPhotos: fromMe
                                                           ? blurMyPhotos
-                                                          : widget.otherProfile
-                                                              .blurPhotos,
+                                                          : (_otherProfile
+                                                                  ?.blurPhotos ??
+                                                              true),
                                                       date: _buildDateText(
                                                           message.date),
                                                       fromMe: fromMe,
@@ -418,13 +450,15 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                               },
                             ),
                           ),
-                          if (!_loading && _messages.isEmpty)
+                          if (!_loading &&
+                              _messages.isEmpty &&
+                              _otherProfile != null)
                             Center(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16.0),
                                 child: Text(
-                                  'Send your first message to ${widget.otherProfile.name}',
+                                  'Send your first message to ${_otherProfile!.name}',
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium!
@@ -522,8 +556,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     });
 
     final api = GetIt.instance.get<Api>();
-    final result = await api.sendMessage(
-        uid, widget.otherProfile.uid, ChatType.audio, content);
+    final result =
+        await api.sendMessage(uid, widget.otherUid, ChatType.audio, content);
 
     if (!mounted) {
       return;
@@ -555,10 +589,37 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     }
   }
 
+  void _fetchOtherProfile() async {
+    final api = GetIt.instance.get<Api>();
+    final result = await api.getProfile(widget.otherUid);
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (l) => displayError(context, l),
+      (r) => setState(() => _otherProfile = r),
+    );
+  }
+
+  void _fetchEndTime() async {
+    final api = GetIt.instance.get<Api>();
+    final result =
+        await api.getChatroom(ref.read(userProvider).uid, widget.otherUid);
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (l) => displayError(context, l),
+      (r) => setState(() => _endTime = r.endTime),
+    );
+  }
+
   void _fetchUnblurPhotosFor() async {
     final api = GetIt.instance.get<Api>();
     final result = await api.getUnblurPhotosFor(
-        ref.read(userProvider).uid, widget.otherProfile.uid);
+        ref.read(userProvider).uid, widget.otherUid);
     if (!mounted) {
       return;
     }
@@ -575,7 +636,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     final api = GetIt.instance.get<Api>();
     final result = await api.getMessages(
       ref.read(userProvider).uid,
-      widget.otherProfile.uid,
+      widget.otherUid,
       startDate: startDate,
     );
     if (!mounted) {
