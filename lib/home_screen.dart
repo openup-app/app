@@ -2,8 +2,12 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
 
 import 'package:go_router/go_router.dart';
+import 'package:openup/api/online_users_api.dart';
+import 'package:openup/api/online_users_api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/main.dart';
 import 'package:openup/widgets/button.dart';
@@ -29,6 +33,7 @@ class HomeShell extends ConsumerStatefulWidget {
 class _HomeShellState extends ConsumerState<HomeShell>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  late final OnlineUsersApi _onlineUsersApi;
 
   @override
   void initState() {
@@ -39,11 +44,24 @@ class _HomeShellState extends ConsumerState<HomeShell>
       initialIndex: 0,
       vsync: this,
     );
+
+    _onlineUsersApi = OnlineUsersApi(
+      host: host,
+      port: socketPort,
+      uid: ref.read(userProvider).uid,
+      onConnectionError: () {},
+      onOnlineStatusChanged: (uid, online) {
+        ref.read(onlineUsersProvider.notifier).onlineChanged(uid, online);
+      },
+    );
+    GetIt.instance.registerSingleton<OnlineUsersApi>(_onlineUsersApi);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    GetIt.instance.unregister<OnlineUsersApi>();
+    _onlineUsersApi.dispose();
     super.dispose();
   }
 

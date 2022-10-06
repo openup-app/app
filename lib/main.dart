@@ -15,8 +15,6 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
-import 'package:openup/api/online_users_api.dart';
-import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/call_page.dart';
 import 'package:openup/chat_page.dart';
@@ -109,7 +107,6 @@ class OpenupApp extends ConsumerStatefulWidget {
 class _OpenupAppState extends ConsumerState<OpenupApp> {
   bool _loggedIn = false;
   StreamSubscription? _idTokenChangesSubscription;
-  OnlineUsersApi? _onlineUsersApi;
 
   late final GoRouter _goRouter;
   final _routeObserver = RouteObserver<PageRoute>();
@@ -165,24 +162,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         final loggedIn = user != null;
         if (_loggedIn != loggedIn) {
           setState(() => _loggedIn = loggedIn);
-          if (loggedIn) {
-            if (GetIt.instance.isRegistered<OnlineUsersApi>()) {
-              GetIt.instance.unregister<OnlineUsersApi>();
-            }
-            _onlineUsersApi?.dispose();
-            _onlineUsersApi = OnlineUsersApi(
-              host: host,
-              port: socketPort,
-              uid: user.uid,
-              onConnectionError: () {},
-              onOnlineStatusChanged: (uid, online) {
-                ref
-                    .read(onlineUsersProvider.notifier)
-                    .onlineChanged(uid, online);
-              },
-            );
-            GetIt.instance.registerSingleton<OnlineUsersApi>(_onlineUsersApi!);
-          }
         }
 
         // Firebase ID token refresh
@@ -217,7 +196,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     _idTokenChangesSubscription?.cancel();
     _tempFriendshipsRefresh.dispose();
     _scrollToDiscoverTopNotifier.dispose();
-    _onlineUsersApi?.dispose();
     super.dispose();
   }
 
