@@ -545,15 +545,17 @@ class RecordButtonState extends State<RecordButton> {
 enum RecordButtonDisplayState {
   displayingRecord,
   displayingRecording,
-  displayingUpload,
+  displayingPlayStop,
 }
 
 class RecordButtonSignUp extends StatefulWidget {
   final void Function(RecordButtonDisplayState state) onState;
+  final void Function(Uint8List? bytes) onAudioBytes;
 
   const RecordButtonSignUp({
     Key? key,
     required this.onState,
+    required this.onAudioBytes,
   }) : super(key: key);
 
   @override
@@ -562,11 +564,9 @@ class RecordButtonSignUp extends StatefulWidget {
 
 class RecordButtonSignUpState extends State<RecordButtonSignUp> {
   late final AudioBioController _inviteRecorder;
-  final _invitePlayer = JustAudioAudioPlayer();
+  final _audioPlayer = JustAudioAudioPlayer();
   Uint8List? _audioBytes;
   DateTime _recordingStart = DateTime.now();
-  bool _submitted = false;
-  bool _submitting = false;
 
   @override
   void initState() {
@@ -576,9 +576,10 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
         if (mounted) {
           final bytes = await File(path).readAsBytes();
           if (mounted) {
-            _invitePlayer.setPath(path);
+            _audioPlayer.setPath(path);
             setState(() => _audioBytes = bytes);
           }
+          widget.onAudioBytes(bytes);
         }
       },
     );
@@ -592,9 +593,11 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
   @override
   void dispose() {
     _inviteRecorder.dispose();
-    _invitePlayer.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
+
+  void stop() => _audioPlayer.stop();
 
   @override
   Widget build(BuildContext context) {
@@ -607,19 +610,19 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
           height: 91,
           child: Builder(
             builder: (context) {
-              final moreThanFiveSeconds =
+              final lessThanFiveSeconds =
                   DateTime.now().difference(_recordingStart) <
                       const Duration(seconds: 5);
               if (_audioBytes == null) {
                 return Button(
-                  onPressed: moreThanFiveSeconds
+                  onPressed: lessThanFiveSeconds && recordInfo.recording
                       ? null
                       : () async {
                           if (recordInfo.recording) {
                             await _inviteRecorder.stopRecording();
                             if (mounted) {
                               widget.onState(
-                                  RecordButtonDisplayState.displayingUpload);
+                                  RecordButtonDisplayState.displayingPlayStop);
                             }
                           } else {
                             await _inviteRecorder.startRecording();
@@ -689,166 +692,90 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  SizedBox(
-                    width: 72,
-                    child: Button(
-                      onPressed: _submitting
-                          ? null
-                          : () {
-                              _invitePlayer.stop();
-                              widget.onState(
-                                  RecordButtonDisplayState.displayingRecord);
-                              setState(() {
-                                _submitted = false;
-                                _audioBytes = null;
-                              });
-                            },
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Icon(
-                          Icons.delete,
-                          size: 44,
-                          color: Colors.red,
-                        ),
+                  Button(
+                    onPressed: () {
+                      _audioPlayer.stop();
+                      widget.onState(RecordButtonDisplayState.displayingRecord);
+                      setState(() => _audioBytes = null);
+                      widget.onAudioBytes(null);
+                    },
+                    child: const SizedBox(
+                      width: 72,
+                      child: Icon(
+                        Icons.delete,
+                        size: 44,
+                        color: Colors.red,
                       ),
                     ),
                   ),
-                  SizedBox(
+                  Container(
                     width: 97,
                     height: 97,
-                    child: Center(
-                      child: Consumer(
-                        builder: (context, ref, _) {
-                          if (_submitting) {
-                            return const LoadingIndicator();
-                          }
-
-                          if (_submitted) {
-                            return Container(
-                              padding: const EdgeInsets.all(8.0),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
+                    alignment: Alignment.center,
+                    child: StreamBuilder<PlaybackInfo>(
+                      stream: _audioPlayer.playbackInfoStream,
+                      initialData: const PlaybackInfo(),
+                      builder: (context, snapshot) {
+                        final playbackInfo = snapshot.requireData;
+                        return Button(
+                          onPressed: () async {
+                            if (playbackInfo.state == PlaybackState.playing) {
+                              _audioPlayer.stop();
+                            } else {
+                              _audioPlayer.play();
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8.0),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                width: 2,
                                 color: Colors.white,
-                                border: Border.all(
-                                    color: const Color.fromRGBO(
-                                        0x82, 0x82, 0x82, 1.0)),
-                                shape: BoxShape.circle,
                               ),
-                              child: const Icon(
-                                Icons.done,
-                                size: 48,
-                                color: Colors.green,
-                              ),
-                            );
-                          }
-
-                          return Button(
-                            onPressed: _submitting || _submitted
-                                ? null
-                                : () async {
-                                    final audioBytes = _audioBytes;
-                                    if (audioBytes == null) {
-                                      return;
-                                    }
-                                    setState(() => _submitting = true);
-
-                                    final result = await updateAudio(
-                                      context: context,
-                                      ref: ref,
-                                      bytes: audioBytes,
-                                    );
-                                    if (!mounted) {
-                                      return;
-                                    }
-
-                                    setState(() => _submitting = false);
-                                    result.fold(
-                                      (l) => displayError(context, l),
-                                      (r) => setState(() => _submitted = true),
-                                    );
-                                  },
-                            child: Container(
-                              padding: const EdgeInsets.all(8.0),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(
-                                    color: const Color.fromRGBO(
-                                        0x82, 0x82, 0x82, 1.0)),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.arrow_upward_rounded,
-                                size: 48,
-                                color: Colors.black,
-                              ),
+                              shape: BoxShape.circle,
                             ),
-                          );
-                        },
-                      ),
+                            child: playbackInfo.state == PlaybackState.playing
+                                ? const Center(
+                                    child: Icon(
+                                      Icons.stop,
+                                      size: 56,
+                                    ),
+                                  )
+                                : const Center(
+                                    child: Icon(
+                                      Icons.play_arrow,
+                                      size: 56,
+                                    ),
+                                  ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   SizedBox(
                     width: 72,
-                    child: Center(
-                      child: StreamBuilder<PlaybackInfo>(
-                        stream: _invitePlayer.playbackInfoStream,
-                        initialData: const PlaybackInfo(),
-                        builder: (context, snapshot) {
-                          final playbackInfo = snapshot.requireData;
-                          return Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Button(
-                                onPressed: _submitting
-                                    ? null
-                                    : () async {
-                                        if (playbackInfo.state ==
-                                            PlaybackState.playing) {
-                                          _invitePlayer.stop();
-                                        } else {
-                                          _invitePlayer.play();
-                                        }
-                                      },
-                                child:
-                                    playbackInfo.state == PlaybackState.playing
-                                        ? const Center(
-                                            child: Icon(
-                                              Icons.stop,
-                                              size: 44,
-                                            ),
-                                          )
-                                        : const Center(
-                                            child: Icon(
-                                              Icons.play_arrow,
-                                              size: 44,
-                                            ),
-                                          ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 72.0),
-                                child: Text(
-                                  formatDuration(
-                                    playbackInfo.state == PlaybackState.playing
-                                        ? playbackInfo.position
-                                        : playbackInfo.duration,
-                                    canBeZero: playbackInfo.state ==
-                                        PlaybackState.playing,
+                    child: StreamBuilder<PlaybackInfo>(
+                      stream: _audioPlayer.playbackInfoStream,
+                      initialData: const PlaybackInfo(),
+                      builder: (context, snapshot) {
+                        final playbackInfo = snapshot.requireData;
+                        return Text(
+                          formatDuration(
+                            playbackInfo.state == PlaybackState.playing
+                                ? playbackInfo.position
+                                : playbackInfo.duration,
+                            canBeZero:
+                                playbackInfo.state == PlaybackState.playing,
+                          ),
+                          textAlign: TextAlign.center,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w300,
                                   ),
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w300,
-                                      ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ],

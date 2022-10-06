@@ -1,7 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/api/user_state.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/widgets/common.dart';
 
 class SignUpAudioScreen extends StatefulWidget {
@@ -14,6 +16,10 @@ class SignUpAudioScreen extends StatefulWidget {
 class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
   RecordButtonDisplayState _recordState =
       RecordButtonDisplayState.displayingRecord;
+
+  Uint8List? _audioBytes;
+  bool _uploaded = false;
+  final _recordButtonKey = GlobalKey<RecordButtonSignUpState>();
 
   @override
   Widget build(BuildContext context) {
@@ -41,9 +47,10 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
               child: Consumer(
                 builder: (context, ref, _) {
                   return RecordButtonSignUp(
-                    onState: (state) async {
-                      setState(() => _recordState = state);
-                    },
+                    key: _recordButtonKey,
+                    onState: (state) => setState(() => _recordState = state),
+                    onAudioBytes: (bytes) =>
+                        setState(() => _audioBytes = bytes),
                   );
                 },
               ),
@@ -58,8 +65,8 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
                   case RecordButtonDisplayState.displayingRecording:
                     message = 'Tap this button to stop';
                     break;
-                  case RecordButtonDisplayState.displayingUpload:
-                    message = 'Tap this button to post';
+                  case RecordButtonDisplayState.displayingPlayStop:
+                    message = 'Tap this button to play';
                     break;
                 }
                 return Text(
@@ -90,20 +97,49 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
             ),
             const Spacer(),
             Consumer(
-              builder: (context, ref, _) {
-                final canGoNext = ref.watch(
-                    userProvider.select((p) => p.profile?.audio != null));
+              builder: (context, ref, child) {
                 return OvalButton(
-                  onPressed:
-                      !canGoNext ? null : () => context.goNamed('discover'),
-                  child: const Text('continue'),
+                  onPressed: _uploaded
+                      ? () => context.goNamed('discover')
+                      : (_audioBytes == null ? null : () => _upload(ref)),
+                  child: child!,
                 );
               },
+              child: const Text('continue'),
             ),
             const SizedBox(height: 59),
           ],
         ),
       ),
+    );
+  }
+
+  void _upload(WidgetRef ref) async {
+    _recordButtonKey.currentState?.stop();
+
+    final audioBytes = _audioBytes;
+    if (audioBytes == null) {
+      return;
+    }
+
+    final uploadFuture = updateAudio(
+      context: context,
+      ref: ref,
+      bytes: audioBytes,
+    );
+    final uploadResult = await withBlockingModal(
+      context: context,
+      label: 'Uploading audio',
+      future: uploadFuture,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    uploadResult.fold(
+      (l) => displayError(context, l),
+      (r) => setState(() => _uploaded = true),
     );
   }
 }
