@@ -809,8 +809,9 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                         Center(
                           child: IgnorePointer(
                             child: Padding(
-                              padding: const EdgeInsets.only(top: 166.0),
+                              padding: const EdgeInsets.only(top: 72.0),
                               child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
                                     'Hidden pictures',

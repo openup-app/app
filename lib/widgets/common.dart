@@ -74,7 +74,7 @@ class _CountdownTimerState extends State<CountdownTimer> {
       widget.formatter?.call(remaining) ??
           formatDuration(remaining, long: true),
       style: style.copyWith(
-        color: remaining < const Duration(hours: 1)
+        color: remaining < const Duration(days: 1)
             ? const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0)
             : null,
       ),
@@ -1291,20 +1291,17 @@ String formatDuration(
   return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
 }
 
-String formatCountdown(
-  Duration d, {
-  String suffix = "left",
-}) {
+String formatCountdown(Duration d) {
   if (d.inDays > 1) {
-    return '${d.inDays} days $suffix';
+    return '${d.inDays} days';
   } else if (d.inHours > 24) {
-    return '1 day $suffix';
+    return '1 day';
   } else if (d.inHours > 1) {
-    return '${d.inHours} hours $suffix';
+    return '${d.inHours} hours';
   } else if (d.inHours > 0) {
-    return '${d.inHours} hour $suffix';
+    return '${d.inHours} hour';
   } else {
-    return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')} $suffix';
+    return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
   }
 }
 

@@ -64,7 +64,10 @@ class _PhoneInputState extends State<PhoneInput> {
                 ],
               ),
             ),
-            onSelected: (country) => setState(() => _country = country),
+            onSelected: (country) {
+              setState(() => _country = country);
+              _validatePhoneNoPrefix(_phoneController.text);
+            },
             itemBuilder: (context) {
               return [
                 for (final country in _countries)
