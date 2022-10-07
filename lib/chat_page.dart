@@ -195,25 +195,27 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                               children: [
                                 Row(
                                   children: [
-                                    Expanded(
-                                      child: AutoSizeText(
-                                        _otherProfile?.name ?? '',
-                                        minFontSize: 9,
-                                        maxFontSize: 20,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium,
-                                      ),
+                                    AutoSizeText(
+                                      _otherProfile?.name ?? '',
+                                      minFontSize: 9,
+                                      maxFontSize: 20,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
                                     ),
                                     const SizedBox(width: 4),
-                                    OnlineIndicatorBuilder(
-                                      uid: widget.otherUid,
-                                      builder: (context, online) {
-                                        return online
-                                            ? const OnlineIndicator()
-                                            : const SizedBox.shrink();
-                                      },
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 8.0),
+                                      child: OnlineIndicatorBuilder(
+                                        uid: widget.otherUid,
+                                        builder: (context, online) {
+                                          return online
+                                              ? const OnlineIndicator()
+                                              : const SizedBox.shrink();
+                                        },
+                                      ),
                                     ),
                                     const SizedBox(width: 4),
                                   ],
@@ -343,6 +345,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                 final fromMe = message.uid == uid;
 
                                 final messageReady = message.messageId != null;
+                                final playingThisMessage =
+                                    _playbackMessageId == message.messageId;
 
                                 return Container(
                                   key: messageReady
@@ -370,14 +374,12 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                           case ChatType.audio:
                                             return Builder(
                                               builder: (context) {
-                                                if (_playbackMessageId ==
-                                                        null ||
-                                                    _playbackMessageId !=
-                                                        message.messageId) {
+                                                if (!playingThisMessage) {
                                                   return AudioChatMessage(
                                                     key: Key(
                                                         'audio_${message.messageId}'),
                                                     audioUrl: message.content,
+                                                    duration: message.duration,
                                                     photoUrl: fromMe
                                                         ? _myPhoto ?? ''
                                                         : (widget.otherProfile
@@ -403,6 +405,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                                       },
                                                     ),
                                                     onPause: () {},
+                                                    onSeek: null,
                                                   );
                                                 }
                                                 return StreamBuilder<
@@ -418,6 +421,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                                       key: Key(
                                                           'audio_${message.messageId}'),
                                                       audioUrl: message.content,
+                                                      duration:
+                                                          message.duration,
                                                       photoUrl: fromMe
                                                           ? _myPhoto ?? ''
                                                           : (_otherProfile
@@ -437,6 +442,12 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                                           _audio.play(),
                                                       onPause: () =>
                                                           _audio.pause(),
+                                                      onSeek:
+                                                          !playingThisMessage
+                                                              ? null
+                                                              : (position) =>
+                                                                  _audio.seek(
+                                                                      position),
                                                     );
                                                   },
                                                 );

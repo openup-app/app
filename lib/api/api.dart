@@ -410,8 +410,13 @@ class Api {
       },
       handleSuccess: (response) {
         final list = jsonDecode(response.body) as List<dynamic>;
-        return Right(
-            List<ChatMessage>.from(list.map((e) => ChatMessage.fromJson(e))));
+        return Right(List<ChatMessage>.from(list.map((e) {
+          final durationMillis = e['durationMillis'];
+          return ChatMessage.fromJson(e).copyWith(
+              duration: durationMillis == null
+                  ? null
+                  : Duration(milliseconds: durationMillis));
+        })));
       },
     );
   }

@@ -54,7 +54,11 @@ class ChatApi {
   void _handleMessage(String message) {
     final json = jsonDecode(message);
     final data = json['message'];
-    final chatMessage = ChatMessage.fromJson(data);
+    final durationMillis = json['durationMillis'];
+    final chatMessage = ChatMessage.fromJson(data).copyWith(
+        duration: durationMillis == null
+            ? null
+            : Duration(milliseconds: durationMillis));
     onMessage(chatMessage);
   }
 }
@@ -67,6 +71,7 @@ class ChatMessage with _$ChatMessage {
     required DateTime date,
     required ChatType type,
     required String content,
+    Duration? duration,
   }) = _ChatMessage;
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) =>

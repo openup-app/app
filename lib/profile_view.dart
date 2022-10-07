@@ -39,6 +39,7 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   void initState() {
     super.initState();
+    print('end time ${widget.endTime}');
     final audio = widget.profile.audio;
     if (audio != null) {
       _player.setUrl(audio);
@@ -110,7 +111,7 @@ class _ProfileViewState extends State<ProfileView> {
                                   fontWeight: FontWeight.w300,
                                 ),
                           ),
-                          if (widget.endTime == null)
+                          if (widget.endTime != null)
                             Padding(
                               padding:
                                   const EdgeInsets.only(left: 6.0, bottom: 2),
