@@ -455,6 +455,30 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   scrollToTopNotifier: _scrollToDiscoverTopNotifier,
                 );
               },
+              routes: [
+                GoRoute(
+                  path: 'report',
+                  name: 'report',
+                  builder: (context, state) {
+                    final args = state.extra as ReportScreenArguments;
+                    return CurrentRouteSystemUiStyling.light(
+                      child: ReportScreen(
+                        uid: args.uid,
+                      ),
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: ':uid',
+                  name: 'shared-profile',
+                  builder: (context, state) {
+                    final uid = state.params['uid']!;
+                    return SharedProfilePage(
+                      uid: uid,
+                    );
+                  },
+                ),
+              ],
             ),
             GoRoute(
               path: '/friendships',
@@ -538,18 +562,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               uid: uid,
               profile: args?.profile,
               invitationAudio: args?.invitaitonAudio,
-            );
-          },
-        ),
-        GoRoute(
-          path: '/report',
-          name: 'report',
-          builder: (context, state) {
-            final args = state.extra as ReportScreenArguments;
-            return CurrentRouteSystemUiStyling.light(
-              child: ReportScreen(
-                uid: args.uid,
-              ),
             );
           },
         ),

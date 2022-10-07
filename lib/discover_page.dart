@@ -7,16 +7,17 @@ import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/home_screen.dart';
-import 'package:openup/main.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
@@ -39,7 +40,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _loading = false;
 
   CancelableOperation<Either<ApiError, DiscoverResults>>? _discoverOperation;
-  final _profiles = <ProfileWithOnline>[];
+  final _profiles = <Profile>[];
   double _nextMinRadius = 0.0;
   int _nextPage = 0;
 
@@ -213,7 +214,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       },
       (r) async {
         setState(() {
-          _profiles.addAll(r.profiles);
+          _profiles.addAll(r.profiles.map((e) => e.profile));
           _nextMinRadius = r.nextMinRadius;
           _nextPage = r.nextPage;
         });
@@ -260,7 +261,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         setState(() {
           _profiles
             ..clear()
-            ..addAll(r);
+            ..addAll(r.map((e) => e.profile));
         });
       },
     );
@@ -319,14 +320,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     scrollDirection: Axis.vertical,
                     itemCount: _profiles.length,
                     itemBuilder: (context, index) {
-                      final profileWithOnline = _profiles[index];
-                      final profile = profileWithOnline.profile;
+                      final profile = _profiles[index];
                       return _UserProfileDisplay(
                         profile: profile,
                         play: _currentProfileIndex == index,
-                        online: profileWithOnline.online,
                         invited: _invitedUsers.contains(profile.uid),
-                        favourite: profileWithOnline.favorite,
+                        favourite: profile.favorite,
                         onInvite: () =>
                             setState(() => _invitedUsers.add(profile.uid)),
                         onFavorite: (favorite) async {
@@ -351,12 +350,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             },
                           );
                         },
-                        onBlock: () => setState(() => _profiles.removeWhere(
-                            ((p) => p.profile.uid == profile.uid))),
+                        onBlock: () => setState(() => _profiles
+                            .removeWhere(((p) => p.uid == profile.uid))),
                         onReport: () {
-                          rootNavigatorKey.currentState?.pushNamed(
-                            'call-report',
-                            arguments: ReportScreenArguments(uid: profile.uid),
+                          context.goNamed(
+                            'report',
+                            extra: ReportScreenArguments(uid: profile.uid),
                           );
                         },
                         onBeginRecording: () {},
@@ -537,7 +536,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 class _UserProfileDisplay extends StatefulWidget {
   final Profile profile;
   final bool play;
-  final bool online;
   final bool invited;
   final bool favourite;
   final VoidCallback onInvite;
@@ -550,7 +548,6 @@ class _UserProfileDisplay extends StatefulWidget {
     Key? key,
     required this.profile,
     required this.play,
-    required this.online,
     required this.invited,
     required this.favourite,
     required this.onInvite,
@@ -933,6 +930,111 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
             const SizedBox(height: 16),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class SharedProfilePage extends StatefulWidget {
+  final String uid;
+  const SharedProfilePage({
+    super.key,
+    required this.uid,
+  });
+
+  @override
+  State<SharedProfilePage> createState() => _SharedProfilePageState();
+}
+
+class _SharedProfilePageState extends State<SharedProfilePage> {
+  bool _loading = true;
+  Profile? _profile;
+  bool _invited = false;
+  final _audioPlayer = JustAudioAudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    final api = GetIt.instance.get<Api>();
+    api.getProfile(widget.uid).then((value) {
+      if (!mounted) {
+        return;
+      }
+      value.fold(
+        (l) {
+          displayError(context, l);
+          setState(() => _loading = false);
+        },
+        (r) {
+          setState(() {
+            _profile = r;
+            _loading = false;
+          });
+        },
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: const BackIconButton(),
+        title: const Text(
+          'back to discover',
+        ),
+      ),
+      backgroundColor: Colors.black,
+      body: Builder(
+        builder: (context) {
+          if (_loading) {
+            return const Center(
+              child: LoadingIndicator(),
+            );
+          }
+
+          final profile = _profile;
+          if (profile == null) {
+            return Center(
+              child: Text(
+                'Unable to get profile',
+                textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(fontSize: 22),
+              ),
+            );
+          }
+          return SafeArea(
+            bottom: true,
+            child: _UserProfileDisplay(
+              profile: profile,
+              play: true,
+              invited: _invited,
+              favourite: profile.favorite,
+              onInvite: () {
+                setState(() => _invited = true);
+              },
+              onBeginRecording: () => _audioPlayer.stop(),
+              onFavorite: (favorite) => setState(
+                  () => _profile = profile.copyWith(favorite: favorite)),
+              onBlock: () => Navigator.of(context).pop(),
+              onReport: () {
+                context.goNamed(
+                  'report',
+                  extra: ReportScreenArguments(uid: profile.uid),
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }

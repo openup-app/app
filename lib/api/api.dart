@@ -752,6 +752,7 @@ class Profile with _$Profile {
     required bool blurPhotos,
     required String location,
     required Topic topic,
+    @Default(false) bool favorite,
   }) = _Profile;
 
   // Private constructor required for adding methods
@@ -787,8 +788,6 @@ class SimpleProfile with _$SimpleProfile {
 class ProfileWithOnline with _$ProfileWithOnline {
   const factory ProfileWithOnline({
     required Profile profile,
-    required bool online,
-    required bool favorite,
   }) = _ProfileWithOnline;
 
   factory ProfileWithOnline.fromJson(Map<String, dynamic> json) =>
