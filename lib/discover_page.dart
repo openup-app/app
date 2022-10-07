@@ -795,10 +795,61 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                         ),
                       if (_audioPaused)
                         const Center(
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: 72.0),
+                            child: IgnorePointer(
+                              child: IconWithShadow(
+                                Icons.play_arrow,
+                                size: 80,
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (widget.profile.blurPhotos)
+                        Center(
                           child: IgnorePointer(
-                            child: IconWithShadow(
-                              Icons.play_arrow,
-                              size: 80,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 166.0),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Hidden pictures',
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                      fontSize: 22,
+                                      shadows: [
+                                        const BoxShadow(
+                                          color: Color.fromRGBO(
+                                              0x00, 0x00, 0x00, 0.5),
+                                          offset: Offset(0, 2),
+                                          blurRadius: 6,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'To view pics ask them to show you!',
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                      shadows: [
+                                        const BoxShadow(
+                                          color: Color.fromRGBO(
+                                              0x00, 0x00, 0x00, 0.5),
+                                          offset: Offset(0, 2),
+                                          blurRadius: 6,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
