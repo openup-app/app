@@ -1,7 +1,8 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:get_it/get_it.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/gallery.dart';
@@ -155,6 +156,7 @@ class _SharePageState extends State<_SharePage>
           const SizedBox(height: 13),
           Button(
             onPressed: () {
+              GetIt.instance.get<Mixpanel>().track("share_profile");
               Share.share(
                 url,
                 subject: 'The only app dedicated to making new friends',

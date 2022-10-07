@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/call_manager.dart';
@@ -570,6 +571,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     final result =
         await api.sendMessage(uid, widget.otherUid, ChatType.audio, content);
 
+    GetIt.instance.get<Mixpanel>().track("send_message");
+
     if (!mounted) {
       return;
     }
@@ -754,6 +757,7 @@ class _ChatProfilePageState extends State<_ChatProfilePage> {
                 const SizedBox(width: 16),
                 Button(
                   onPressed: () {
+                    GetIt.instance.get<Mixpanel>().track("video_call");
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Video calling coming soon'),
@@ -788,6 +792,7 @@ void _call({
   required SimpleProfile profile,
   required bool video,
 }) async {
+  GetIt.instance.get<Mixpanel>().track("audio_call");
   final callManager = GetIt.instance.get<CallManager>();
   callManager.call(
     context: context,

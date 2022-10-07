@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/widgets/common.dart';
 
@@ -112,7 +114,10 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
 
     result.fold(
       (l) => displayError(context, l),
-      (r) => context.pushNamed('onboarding-topic'),
+      (r) {
+        GetIt.instance.get<Mixpanel>().track("sign_up_submit_name");
+        context.pushNamed('onboarding-topic');
+      },
     );
 
     setState(() => _uploading = false);

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/common.dart';
@@ -109,7 +111,17 @@ class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
                 return OvalButton(
                   onPressed: !canGoNext
                       ? null
-                      : () => context.pushNamed('onboarding-audio'),
+                      : () {
+                          final profile = ref.read(userProvider).profile;
+                          GetIt.instance.get<Mixpanel>().track(
+                            "sign_up_submit_photos",
+                            properties: {
+                              "count": profile?.gallery.length,
+                              "blur": profile?.blurPhotos,
+                            },
+                          );
+                          context.pushNamed('onboarding-audio');
+                        },
                   child: const Text('continue'),
                 );
               },

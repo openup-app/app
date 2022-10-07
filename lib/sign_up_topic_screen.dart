@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/widgets/common.dart';
@@ -102,7 +104,10 @@ class _SignUpTopicScreenState extends ConsumerState<SignUpTopicScreen> {
 
     result.fold(
       (l) => displayError(context, l),
-      (r) => context.pushNamed('onboarding-photos'),
+      (r) {
+        GetIt.instance.get<Mixpanel>().track("sign_up_submit_topic");
+        context.pushNamed('onboarding-photos');
+      },
     );
 
     setState(() => _uploading = false);

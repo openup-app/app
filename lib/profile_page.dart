@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -417,6 +419,7 @@ class __RecordButtonState extends ConsumerState<_RecordButton> {
       submitting: _uploading,
       submitted: false,
       onSubmit: (path) async {
+        GetIt.instance.get<Mixpanel>().track("record_status");
         setState(() => _uploading = true);
         final bytes = await File(path).readAsBytes();
         final result = await updateAudio(

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
@@ -326,9 +327,23 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         play: _currentProfileIndex == index,
                         invited: _invitedUsers.contains(profile.uid),
                         favourite: profile.favorite,
-                        onInvite: () =>
-                            setState(() => _invitedUsers.add(profile.uid)),
+                        onInvite: () {
+                          GetIt.instance.get<Mixpanel>().track(
+                            "send_invite",
+                            properties: {"type": "discover"},
+                          );
+                          setState(() => _invitedUsers.add(profile.uid));
+                        },
                         onFavorite: (favorite) async {
+                          if (favorite) {
+                            GetIt.instance
+                                .get<Mixpanel>()
+                                .track("add_favorite");
+                          } else {
+                            GetIt.instance
+                                .get<Mixpanel>()
+                                .track("remove_favorite");
+                          }
                           if (_showingFavorites && !favorite) {
                             setState(() => _profiles.removeAt(index));
                           }
@@ -1020,11 +1035,21 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
               invited: _invited,
               favourite: profile.favorite,
               onInvite: () {
+                GetIt.instance.get<Mixpanel>().track(
+                  "send_invite",
+                  properties: {"type": "deep_link"},
+                );
                 setState(() => _invited = true);
               },
               onBeginRecording: () => _audioPlayer.stop(),
-              onFavorite: (favorite) => setState(
-                  () => _profile = profile.copyWith(favorite: favorite)),
+              onFavorite: (favorite) {
+                if (favorite) {
+                  GetIt.instance.get<Mixpanel>().track("add_favorite");
+                } else {
+                  GetIt.instance.get<Mixpanel>().track("remove_favorite");
+                }
+                setState(() => _profile = profile.copyWith(favorite: favorite));
+              },
               onBlock: () => Navigator.of(context).pop(),
               onReport: () {
                 context.goNamed(

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -219,6 +220,9 @@ class _InvitationPageState extends ConsumerState<InvitePage> {
                                 final uid = ref.read(userProvider).uid;
                                 final api = GetIt.instance.get<Api>();
                                 setState(() => _submittingAccept = true);
+                                GetIt.instance
+                                    .get<Mixpanel>()
+                                    .track("accept_invite");
                                 await api.acceptInvitation(uid, profile.uid);
                                 if (mounted) {
                                   setState(() => _submittingAccept = false);
@@ -258,6 +262,9 @@ class _InvitationPageState extends ConsumerState<InvitePage> {
                                 final uid = ref.read(userProvider).uid;
                                 final api = GetIt.instance.get<Api>();
                                 setState(() => _submittingReject = true);
+                                GetIt.instance
+                                    .get<Mixpanel>()
+                                    .track("reject_invite");
                                 await api.declineInvitation(uid, profile.uid);
                                 if (mounted) {
                                   setState(() => _submittingReject = false);

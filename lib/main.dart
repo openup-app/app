@@ -72,6 +72,12 @@ void main() async {
       );
     }
 
+    await Firebase.initializeApp();
+
+    final mixpanel = await _initMixpanel();
+    GetIt.instance.registerSingleton<Mixpanel>(mixpanel);
+    mixpanel.setLoggingEnabled(!kReleaseMode);
+
     runApp(
       const ProviderScope(
         child: OpenupApp(),
@@ -90,6 +96,15 @@ void main() async {
       appRunner: appRunner,
     );
   }
+}
+
+Future<Mixpanel> _initMixpanel() async {
+  const mixpanelToken = String.fromEnvironment('MIXPANEL_TOKEN');
+  return await Mixpanel.init(
+    mixpanelToken,
+    optOutTrackingDefault: !kReleaseMode,
+    trackAutomaticEvents: true,
+  );
 }
 
 /// Notifications don't update the conversations list. This noifier lets us
@@ -161,55 +176,56 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
     GetIt.instance.registerSingleton<CallManager>(CallManager());
 
-    Firebase.initializeApp().then((_) {
-      _idTokenChangesSubscription =
-          FirebaseAuth.instance.idTokenChanges().listen((user) async {
-        final loggedIn = user != null;
-        if (_loggedIn != loggedIn) {
-          setState(() => _loggedIn = loggedIn);
-        }
+    _idTokenChangesSubscription =
+        FirebaseAuth.instance.idTokenChanges().listen((user) async {
+      final loggedIn = user != null;
+      if (_loggedIn != loggedIn) {
+        setState(() => _loggedIn = loggedIn);
 
-        // Firebase ID token refresh
+        final mixpanel = GetIt.instance.get<Mixpanel>();
         if (user != null) {
-          try {
-            final token = await user.getIdToken();
-            if (mounted) {
-              ref.read(userProvider.notifier).uid(user.uid);
-              api.authToken = token;
-            }
-          } on FirebaseAuthException catch (e) {
-            if (e.code == 'user-not-found') {
-              // Is handled during initial loading
-            } else {
-              rethrow;
-            }
+          mixpanel.identify(user.uid);
+          Sentry.configureScope(
+              (scope) => scope.setUser(SentryUser(id: user.uid)));
+        } else {
+          mixpanel.reset();
+          Sentry.configureScope((scope) => scope.setUser(null));
+        }
+      }
+
+      // Firebase ID token refresh
+      if (user != null) {
+        try {
+          final token = await user.getIdToken();
+          if (mounted) {
+            ref.read(userProvider.notifier).uid(user.uid);
+            api.authToken = token;
+          }
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'user-not-found') {
+            // Is handled during initial loading
+          } else {
+            rethrow;
           }
         }
+      }
 
-        if (GetIt.instance.isRegistered<OnlineUsersApi>()) {
-          GetIt.instance.unregister<OnlineUsersApi>();
-        }
-        _onlineUsersApi?.dispose();
-        final onlineUsersApi = OnlineUsersApi(
-          host: host,
-          port: socketPort,
-          uid: ref.read(userProvider).uid,
-          onConnectionError: () {},
-          onOnlineStatusChanged: (uid, online) {
-            ref.read(onlineUsersProvider.notifier).onlineChanged(uid, online);
-          },
-        );
-        GetIt.instance.registerSingleton<OnlineUsersApi>(onlineUsersApi);
-        _onlineUsersApi = _onlineUsersApi;
-      });
+      if (GetIt.instance.isRegistered<OnlineUsersApi>()) {
+        GetIt.instance.unregister<OnlineUsersApi>();
+      }
+      _onlineUsersApi?.dispose();
+      final onlineUsersApi = OnlineUsersApi(
+        host: host,
+        port: socketPort,
+        uid: ref.read(userProvider).uid,
+        onConnectionError: () {},
+        onOnlineStatusChanged: (uid, online) {
+          ref.read(onlineUsersProvider.notifier).onlineChanged(uid, online);
+        },
+      );
+      GetIt.instance.registerSingleton<OnlineUsersApi>(onlineUsersApi);
+      _onlineUsersApi = _onlineUsersApi;
     });
-
-    const mixpanelToken = String.fromEnvironment('MIXPANEL_TOKEN');
-    Mixpanel.init(
-      mixpanelToken,
-      optOutTrackingDefault: !kReleaseMode,
-      trackAutomaticEvents: true,
-    );
   }
 
   @override
