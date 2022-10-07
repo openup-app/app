@@ -33,7 +33,6 @@ class HomeShell extends ConsumerStatefulWidget {
 class _HomeShellState extends ConsumerState<HomeShell>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-  late final OnlineUsersApi _onlineUsersApi;
 
   @override
   void initState() {
@@ -44,25 +43,20 @@ class _HomeShellState extends ConsumerState<HomeShell>
       initialIndex: 0,
       vsync: this,
     );
-
-    _onlineUsersApi = OnlineUsersApi(
-      host: host,
-      port: socketPort,
-      uid: ref.read(userProvider).uid,
-      onConnectionError: () {},
-      onOnlineStatusChanged: (uid, online) {
-        ref.read(onlineUsersProvider.notifier).onlineChanged(uid, online);
-      },
-    );
-    GetIt.instance.registerSingleton<OnlineUsersApi>(_onlineUsersApi);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    GetIt.instance.unregister<OnlineUsersApi>();
-    _onlineUsersApi.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.tabIndex != widget.tabIndex) {
+      currentTabNotifier.value = HomeTab.values[widget.tabIndex];
+    }
   }
 
   @override

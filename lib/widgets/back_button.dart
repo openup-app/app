@@ -5,15 +5,17 @@ import 'package:openup/widgets/button.dart';
 /// current [TargetPlatform].
 class BackIconButton extends StatelessWidget {
   final Color? color;
+  final VoidCallback? onPressed;
   const BackIconButton({
     Key? key,
     this.color,
+    this.onPressed,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Button(
-      onPressed: Navigator.of(context).pop,
+      onPressed: onPressed ?? Navigator.of(context).pop,
       child: Icon(
         Icons.chevron_left,
         color: color,

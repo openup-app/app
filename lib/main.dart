@@ -15,6 +15,8 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
+import 'package:openup/api/online_users_api.dart';
+import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/call_page.dart';
 import 'package:openup/chat_page.dart';
@@ -24,6 +26,7 @@ import 'package:openup/error_screen.dart';
 import 'package:openup/friendships_page.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
+import 'package:openup/invite_page.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
@@ -119,6 +122,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   final _scrollToDiscoverTopNotifier = ScrollToDiscoverTopNotifier();
 
+  OnlineUsersApi? _onlineUsersApi;
+
   PageRoute _buildPageRoute<T>({
     required RouteSettings settings,
     PageTransitionBuilder? transitionsBuilder,
@@ -180,6 +185,22 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             }
           }
         }
+
+        if (GetIt.instance.isRegistered<OnlineUsersApi>()) {
+          GetIt.instance.unregister<OnlineUsersApi>();
+        }
+        _onlineUsersApi?.dispose();
+        final onlineUsersApi = OnlineUsersApi(
+          host: host,
+          port: socketPort,
+          uid: ref.read(userProvider).uid,
+          onConnectionError: () {},
+          onOnlineStatusChanged: (uid, online) {
+            ref.read(onlineUsersProvider.notifier).onlineChanged(uid, online);
+          },
+        );
+        GetIt.instance.registerSingleton<OnlineUsersApi>(onlineUsersApi);
+        _onlineUsersApi = _onlineUsersApi;
       });
     });
 
@@ -196,6 +217,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     _idTokenChangesSubscription?.cancel();
     _tempFriendshipsRefresh.dispose();
     _scrollToDiscoverTopNotifier.dispose();
+
+    GetIt.instance.unregister<OnlineUsersApi>();
+    _onlineUsersApi?.dispose();
     super.dispose();
   }
 
@@ -300,6 +324,14 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
       initialLocation: '/',
+      errorBuilder: (context, state) {
+        final args = state.extra as InitialLoadingScreenArguments?;
+        return CurrentRouteSystemUiStyling.dark(
+          child: ErrorScreen(
+            needsOnboarding: args?.needsOnboarding ?? false,
+          ),
+        );
+      },
       routes: [
         GoRoute(
           path: '/',
@@ -309,18 +341,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             return CurrentRouteSystemUiStyling.light(
               child: InitialLoadingScreen(
                 navigatorKey: rootNavigatorKey,
-                needsOnboarding: args?.needsOnboarding ?? false,
-              ),
-            );
-          },
-        ),
-        GoRoute(
-          path: '/404',
-          name: 'error',
-          builder: (context, state) {
-            final args = state.extra as InitialLoadingScreenArguments?;
-            return CurrentRouteSystemUiStyling.dark(
-              child: ErrorScreen(
                 needsOnboarding: args?.needsOnboarding ?? false,
               ),
             );
@@ -507,6 +527,19 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ],
             ),
           ],
+        ),
+        GoRoute(
+          path: '/invite/:uid',
+          name: 'invite',
+          builder: (context, state) {
+            final uid = state.params['uid']!;
+            final args = state.extra as InvitePageArgs?;
+            return InvitePage(
+              uid: uid,
+              profile: args?.profile,
+              invitationAudio: args?.invitaitonAudio,
+            );
+          },
         ),
         GoRoute(
           path: '/report',
