@@ -802,14 +802,12 @@ class ChatPageArguments {
   final String otherUid;
   final Profile otherProfile;
   final String otherLocation;
-  final bool online;
   final DateTime endTime;
 
   const ChatPageArguments({
     required this.otherUid,
     required this.otherProfile,
     required this.otherLocation,
-    required this.online,
     required this.endTime,
   });
 }

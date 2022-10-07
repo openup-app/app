@@ -817,7 +817,6 @@ class Chatroom with _$Chatroom {
     required DateTime endTime,
     required String? invitationAudio,
     required int unreadCount,
-    required bool online,
   }) = _Chatroom;
 
   factory Chatroom.fromJson(Map<String, dynamic> json) =>

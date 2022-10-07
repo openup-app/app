@@ -355,7 +355,6 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                     otherUid: chatroom.profile.uid,
                     otherProfile: chatroom.profile,
                     otherLocation: chatroom.location,
-                    online: chatroom.online,
                     endTime: chatroom.endTime,
                   ),
                 );

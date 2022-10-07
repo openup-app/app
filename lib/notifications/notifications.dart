@@ -198,7 +198,7 @@ Future<void> _onReceiveNotification(_ParsedMessage parsedMessage) {
     },
     callEnded: (callEnded) => Future.sync(() => reportCallEnded(callEnded.rid)),
     deepLink: (_) {
-      // Deep links are handled on tap separately for each platfrom
+      // Deep links are handled on tap separately for each platform
       return Future.value();
     },
   );
