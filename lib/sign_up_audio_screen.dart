@@ -101,7 +101,14 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
                 return OvalButton(
                   onPressed: _uploaded
                       ? () => context.goNamed('discover')
-                      : (_audioBytes == null ? null : () => _upload(ref)),
+                      : (_audioBytes == null
+                          ? null
+                          : () async {
+                              final result = await _upload(ref);
+                              if (result && mounted) {
+                                context.goNamed('discover');
+                              }
+                            }),
                   child: child!,
                 );
               },
@@ -114,12 +121,12 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
     );
   }
 
-  void _upload(WidgetRef ref) async {
+  Future<bool> _upload(WidgetRef ref) async {
     _recordButtonKey.currentState?.stop();
 
     final audioBytes = _audioBytes;
     if (audioBytes == null) {
-      return;
+      return false;
     }
 
     final uploadFuture = updateAudio(
@@ -134,12 +141,18 @@ class _SignUpAudioScreenState extends State<SignUpAudioScreen> {
     );
 
     if (!mounted) {
-      return;
+      return false;
     }
 
-    uploadResult.fold(
-      (l) => displayError(context, l),
-      (r) => setState(() => _uploaded = true),
+    return uploadResult.fold(
+      (l) {
+        displayError(context, l);
+        return false;
+      },
+      (r) {
+        setState(() => _uploaded = true);
+        return true;
+      },
     );
   }
 }
