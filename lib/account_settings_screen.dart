@@ -17,6 +17,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/dialog.dart';
 import 'package:openup/widgets/home_button.dart';
+import 'package:openup/widgets/phone_number_input.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({Key? key}) : super(key: key);
@@ -27,16 +28,10 @@ class AccountSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
-  static final _phoneRegex = RegExp(r'^(?:[+0][1-9])?[0-9]{10,12}$');
-  final _phoneNumberController = TextEditingController();
+  String? _newPhoneNumber;
+  bool _newPhoneNumberValid = false;
   bool _submitting = false;
   int? _forceResendingToken;
-
-  @override
-  void dispose() {
-    _phoneNumberController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,46 +72,47 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     ),
                     const SizedBox(height: 16),
                     _InputArea(
-                      child: _TextField(
-                        controller: _phoneNumberController,
-                        keyboardType: TextInputType.phone,
-                        hintText: 'phone number',
+                      child: PhoneInput(
+                        color: Colors.white,
+                        hintTextColor: Colors.grey.shade300,
+                        onChanged: (value, valid) {
+                          setState(() {
+                            _newPhoneNumber = value;
+                            _newPhoneNumberValid = valid;
+                          });
+                        },
+                        onValidationError: (_) {},
                       ),
                     ),
                     const SizedBox(height: 32),
                     SizedBox(
                       width: 237,
-                      child: ValueListenableBuilder(
-                        valueListenable: _phoneNumberController,
-                        builder: (context, _, __) {
-                          return Button(
-                            onPressed: (_submitting |
-                                    _phoneNumberController.text.isEmpty)
-                                ? null
-                                : _updateInformation,
-                            child: _InputArea(
-                              childNeedsOpacity: false,
-                              gradientColors: const [
-                                Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
-                                Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
-                              ],
-                              child: Center(
-                                child: _submitting
-                                    ? const LoadingIndicator()
-                                    : Text(
-                                        'Update Information',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium!
-                                            .copyWith(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                      ),
-                              ),
-                            ),
-                          );
-                        },
+                      child: Button(
+                        onPressed: (_submitting | !_newPhoneNumberValid ||
+                                _newPhoneNumber?.isEmpty == true)
+                            ? null
+                            : _updateInformation,
+                        child: _InputArea(
+                          childNeedsOpacity: false,
+                          gradientColors: const [
+                            Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
+                            Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
+                          ],
+                          child: Center(
+                            child: _submitting
+                                ? const LoadingIndicator()
+                                : Text(
+                                    'Update Information',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -271,18 +267,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   void _updateInformation() async {
     FocusScope.of(context).unfocus();
     setState(() => _submitting = true);
-    final value = _phoneNumberController.text;
-    if (value.isEmpty) {
-      return;
-    }
-
-    final validation = _validatePhone(value);
-    if (validation != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(validation),
-        ),
-      );
+    final newPhoneNumber = _newPhoneNumber;
+    if (newPhoneNumber == null || !_newPhoneNumberValid) {
       return;
     }
 
@@ -292,7 +278,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     }
 
     await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: value,
+      phoneNumber: newPhoneNumber,
       verificationCompleted: (credential) async {
         try {
           await user.updatePhoneNumber(credential);
@@ -346,18 +332,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         // Android SMS auto-fill failed, nothing to do
       },
     );
-  }
-
-  String? _validatePhone(String? value) {
-    if (value == null) {
-      return 'Enter a phone number';
-    }
-
-    if (_phoneRegex.stringMatch(value) == value) {
-      return null;
-    } else {
-      return 'Invalid phone number';
-    }
   }
 
   void _signOut() async {
@@ -632,43 +606,6 @@ class _InputArea extends StatelessWidget {
           ),
           if (!childNeedsOpacity) child,
         ],
-      ),
-    );
-  }
-}
-
-class _TextField extends StatelessWidget {
-  final TextEditingController controller;
-  final TextInputType? keyboardType;
-  final String hintText;
-
-  const _TextField({
-    Key? key,
-    required this.controller,
-    this.keyboardType,
-    required this.hintText,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.only(left: 24.0),
-        child: TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium!
-              .copyWith(fontWeight: FontWeight.w500),
-          decoration: InputDecoration.collapsed(
-            hintText: hintText,
-            hintStyle: Theme.of(context)
-                .textTheme
-                .bodyMedium!
-                .copyWith(fontWeight: FontWeight.w500),
-          ),
-        ),
       ),
     );
   }
