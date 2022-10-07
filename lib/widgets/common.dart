@@ -22,11 +22,13 @@ import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/image_builder.dart';
 
 class CountdownTimer extends StatefulWidget {
+  final String Function(Duration remaining)? formatter;
   final DateTime endTime;
   final VoidCallback onDone;
   final TextStyle? style;
   const CountdownTimer({
     Key? key,
+    this.formatter,
     required this.endTime,
     required this.onDone,
     this.style,
@@ -69,9 +71,10 @@ class _CountdownTimerState extends State<CountdownTimer> {
               fontWeight: FontWeight.w400,
             );
     return Text(
-      formatDuration(remaining, long: true),
+      widget.formatter?.call(remaining) ??
+          formatDuration(remaining, long: true),
       style: style.copyWith(
-        color: remaining < const Duration(hours: 3)
+        color: remaining < const Duration(hours: 1)
             ? const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0)
             : null,
       ),
@@ -1286,6 +1289,23 @@ String formatDuration(
     return '00:01';
   }
   return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+}
+
+String formatCountdown(
+  Duration d, {
+  String suffix = "left",
+}) {
+  if (d.inDays > 1) {
+    return '${d.inDays} days $suffix';
+  } else if (d.inHours > 24) {
+    return '1 day $suffix';
+  } else if (d.inHours > 1) {
+    return '${d.inHours} hours $suffix';
+  } else if (d.inHours > 0) {
+    return '${d.inHours} hour $suffix';
+  } else {
+    return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')} $suffix';
+  }
 }
 
 String topicLabel(Topic topic) {

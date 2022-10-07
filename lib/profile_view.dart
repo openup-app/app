@@ -163,6 +163,8 @@ class _ProfileViewState extends State<ProfileView> {
                       child: isMe
                           ? null
                           : CountdownTimer(
+                              formatter: (remaining) =>
+                                  formatCountdown(remaining),
                               endTime: widget.endTime!,
                               onDone: () {},
                               style: Theme.of(context)

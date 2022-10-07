@@ -5,9 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/home_screen.dart';
 import 'package:openup/main.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -147,7 +145,7 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
                   ),
                   const TextSpan(
                       text:
-                          'once every 72 hours. Not doing so will result in your friendship '),
+                          'once each week. Not doing so will result in your friendship '),
                   TextSpan(
                     text: 'falling apart (deleted)',
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -446,12 +444,16 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                             const SizedBox(height: 4),
                             AutoSizeText(
                               chatroom.location,
-                              maxFontSize: 16,
+                              minFontSize: 10,
                               maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium!
-                                  .copyWith(fontWeight: FontWeight.w300),
+                                  .copyWith(
+                                    fontWeight: FontWeight.w300,
+                                    fontSize: 18,
+                                  ),
                             ),
                           ],
                         ),
@@ -467,11 +469,13 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 CountdownTimer(
+                                  formatter: (remaining) =>
+                                      formatCountdown(remaining),
                                   endTime: chatroom.endTime,
-                                  onDone: () => setState(() =>
-                                      _chatrooms.removeWhere((c) =>
-                                          c.profile.uid ==
-                                          chatroom.profile.uid)),
+                                  onDone: () {
+                                    setState(() => _chatrooms.removeWhere((c) =>
+                                        c.profile.uid == chatroom.profile.uid));
+                                  },
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
