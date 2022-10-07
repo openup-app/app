@@ -15,6 +15,11 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
   final _nameController = TextEditingController();
   bool _uploading = false;
 
+  // Using valid flag rather than using Form validation due to there being no
+  // way align error text properly, so we don't even display error text. See:
+  // https://github.com/flutter/flutter/issues/11068
+  bool _valid = false;
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -47,6 +52,8 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
                   .textTheme
                   .bodyMedium!
                   .copyWith(fontSize: 32),
+              onChanged: (text) =>
+                  setState(() => _valid = _nameValidator(text) == null),
               decoration: InputDecoration.collapsed(
                 hintText: 'Your name',
                 hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -60,9 +67,7 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
               valueListenable: _nameController,
               builder: (context, _, child) {
                 return OvalButton(
-                  onPressed: (_nameController.text.isEmpty || _uploading)
-                      ? null
-                      : _submit,
+                  onPressed: (!_valid || _uploading) ? null : _submit,
                   child: _uploading
                       ? const LoadingIndicator(color: Colors.black)
                       : const Text('continue'),
@@ -76,9 +81,20 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
     );
   }
 
+  String? _nameValidator(String? text) {
+    if (text == null || text.isEmpty) {
+      return 'Enter a name';
+    }
+
+    if (text.length < 3) {
+      return 'Must be at least three characters long';
+    }
+    return null;
+  }
+
   void _submit() async {
     final newName = _nameController.text;
-    if (newName.isEmpty) {
+    if (_nameValidator(newName) != null) {
       return;
     }
 
