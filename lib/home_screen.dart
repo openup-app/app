@@ -73,6 +73,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
       resizeToAvoidBottomInset: false,
       bottomNavigationBar: _NavigationBar(
         tabIndex: widget.tabIndex,
+        paddingTop: MediaQuery.of(context).padding.top,
         onDiscoverPressed: () {
           if (widget.tabIndex == 0) {
             widget.scrollToDiscoverTopNotifier.scrollToTop();
@@ -88,12 +89,14 @@ class _HomeShellState extends ConsumerState<HomeShell>
 
 class _NavigationBar extends StatelessWidget {
   final int tabIndex;
+  final double paddingTop;
   final VoidCallback onDiscoverPressed;
   final VoidCallback onFriendshipsPressed;
 
   const _NavigationBar({
     super.key,
     required this.tabIndex,
+    required this.paddingTop,
     required this.onDiscoverPressed,
     required this.onFriendshipsPressed,
   });
@@ -101,7 +104,7 @@ class _NavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // BottomNavigationBar height is available to pages via MediaQuery bottom padding
-    final obscuredTop = 75.0 + MediaQuery.of(context).padding.top;
+    final obscuredTop = 55.0 + paddingTop;
     final obscuredBottom = 40.0 + MediaQuery.of(context).padding.bottom;
     final obscuredHeight = max(obscuredTop, obscuredBottom);
     return SizedBox(

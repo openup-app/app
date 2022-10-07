@@ -436,7 +436,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         stops: [
-                          0.8,
+                          0.9,
                           1.0,
                         ],
                         colors: [
@@ -447,7 +447,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     ),
                     child: Column(
                       children: [
-                        const SizedBox(height: 10),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
@@ -455,10 +454,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
-                                .copyWith(fontSize: 24),
+                                .copyWith(fontSize: 20),
                           ),
                         ),
-                        const SizedBox(height: 5),
                         SizedBox(
                           height: 31,
                           child: ListView(
