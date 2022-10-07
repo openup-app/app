@@ -106,7 +106,7 @@ Future<void> _handleAndroidBackgroundCall(DeepLinkCallback onDeepLink) async {
   );
   activeCall.phone.join();
   GetIt.instance.get<CallManager>().activeCall = activeCall;
-  onDeepLink('/call');
+  onDeepLink('/friendships/${backgroundCallNotification.profile.uid}/call');
 }
 
 Future<void> _handleAndroidNotification(DeepLinkCallback onDeepLink) async {
