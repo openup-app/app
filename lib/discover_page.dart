@@ -905,7 +905,19 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                     if (mounted) {
                       setState(() => _uploading = false);
                       result.fold(
-                        (l) => displayError(context, l),
+                        (l) {
+                          if (l is ApiClientError &&
+                              l.error is ClientErrorForbidden) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Failed to send invite, try again later'),
+                              ),
+                            );
+                          } else {
+                            displayError(context, l);
+                          }
+                        },
                         (r) => widget.onInvite(),
                       );
                     }
