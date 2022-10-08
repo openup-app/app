@@ -464,7 +464,7 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  topicLabel(chatroom.topic),
+                                  topicLabel(chatroom.profile.topic),
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium!

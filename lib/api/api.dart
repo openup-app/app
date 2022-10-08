@@ -811,7 +811,6 @@ class Chatroom with _$Chatroom {
   const factory Chatroom({
     required Profile profile,
     required String location,
-    required Topic topic,
     required ChatroomState state,
     required DateTime endTime,
     required String? invitationAudio,
