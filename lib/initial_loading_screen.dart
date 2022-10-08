@@ -93,7 +93,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
     // Init notifications as early as possible for background notifications on iOS
     // (initial route is navigated to, but execution may stop due to user prompt or second navigation)
-    initializeNotifications(onDeepLink: _onDeepLink);
+    await initializeNotifications(onDeepLink: _onDeepLink);
 
     if (!mounted) {
       return;

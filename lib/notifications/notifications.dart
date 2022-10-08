@@ -46,7 +46,7 @@ Future<String?> getNotificationToken() {
 
 /// The callback will receive a deep link path whenever the user taps on a
 /// notification, or immediately if the app was launched from a notification.
-void initializeNotifications({
+Future<void> initializeNotifications({
   required DeepLinkCallback onDeepLink,
 }) async {
   // May not be needed, used to dismiss remaining notifications on logout
@@ -58,9 +58,9 @@ void initializeNotifications({
       _onForegroundNotification(remoteMessage);
     });
     await _handleAndroidBackgroundCall(onDeepLink);
-    _handleAndroidNotification(onDeepLink);
+    await _handleAndroidNotification(onDeepLink);
   } else if (Platform.isIOS) {
-    _handleIosNotification(onDeepLink);
+    await _handleIosNotification(onDeepLink);
   }
 }
 
@@ -174,6 +174,8 @@ Future<void> _handleIosNotification(DeepLinkCallback onDeepLink) async {
       return Future.value();
     },
   );
+  _apnsPushConnector = connector;
+  connector.shouldPresent = (_) => Future.value(true);
   await connector.requestNotificationPermissions();
 }
 
