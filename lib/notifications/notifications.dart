@@ -271,10 +271,10 @@ Future<File?> getPhotoMaybeCached({
 Future<void> _initializeLocalNotifications() {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const iOSInit = IOSInitializationSettings();
+  const darwinInit = DarwinInitializationSettings();
   const initializationSettings = InitializationSettings(
     android: androidInit,
-    iOS: iOSInit,
+    iOS: darwinInit,
   );
   return flutterLocalNotificationsPlugin.initialize(initializationSettings);
 }
