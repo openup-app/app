@@ -4,15 +4,14 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_apns_only/flutter_apns_only.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_apns/flutter_apns.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
-import 'package:openup/api/chat_api.dart';
 import 'package:openup/notifications/android_voip_handlers.dart'
     as android_voip;
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
@@ -27,6 +26,16 @@ part 'notifications.g.dart';
 typedef DeepLinkCallback = void Function(String path);
 ApnsPushConnectorOnly? _apnsPushConnector;
 
+// TODO: This is never disposed, probably it should be
+final _iosNotificationTokenController = StreamController<String?>();
+
+Future<void> initializeNotifications() async {
+  // May not be needed, used to dismiss remaining notifications on logout
+  await _initializeLocalNotifications();
+
+  _apnsPushConnector = ApnsPushConnectorOnly();
+}
+
 void initializeVoipHandlers({required DeepLinkCallback onDeepLink}) {
   if (Platform.isAndroid) {
     android_voip.initAndroidVoipHandlers(onDeepLink);
@@ -35,23 +44,24 @@ void initializeVoipHandlers({required DeepLinkCallback onDeepLink}) {
   }
 }
 
-Future<String?> getNotificationToken() {
+Stream<String?> get onNotificationMessagingToken async* {
   if (Platform.isAndroid) {
-    return FirebaseMessaging.instance.getToken();
+    yield await FirebaseMessaging.instance.getToken();
+    yield* FirebaseMessaging.instance.onTokenRefresh;
   } else if (Platform.isIOS) {
-    return Future.value(_apnsPushConnector?.token.value);
+    yield _apnsPushConnector?.token.value;
+    _apnsPushConnector?.token.addListener(() {
+      _iosNotificationTokenController.add(_apnsPushConnector?.token.value);
+    });
+    yield* _iosNotificationTokenController.stream;
   }
-  return Future.value();
 }
 
 /// The callback will receive a deep link path whenever the user taps on a
 /// notification, or immediately if the app was launched from a notification.
-Future<void> initializeNotifications({
+Future<void> handleNotifications({
   required DeepLinkCallback onDeepLink,
 }) async {
-  // May not be needed, used to dismiss remaining notifications on logout
-  await _initializeLocalNotifications();
-
   if (Platform.isAndroid) {
     FirebaseMessaging.onBackgroundMessage(_onBackgroundNotification);
     FirebaseMessaging.onMessage.listen((remoteMessage) {

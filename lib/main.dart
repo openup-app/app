@@ -27,6 +27,8 @@ import 'package:openup/friendships_page.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/invite_page.dart';
+import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
+import 'package:openup/notifications/notifications.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
@@ -125,6 +127,7 @@ class OpenupApp extends ConsumerStatefulWidget {
 class _OpenupAppState extends ConsumerState<OpenupApp> {
   bool _loggedIn = false;
   StreamSubscription? _idTokenChangesSubscription;
+  StreamSubscription? _notificationTokenSubscription;
 
   late final GoRouter _goRouter;
   final _routeObserver = RouteObserver<PageRoute>();
@@ -226,11 +229,40 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       GetIt.instance.registerSingleton<OnlineUsersApi>(onlineUsersApi);
       _onlineUsersApi = _onlineUsersApi;
     });
+
+    // Update initial notification messaging and voip tokens
+    final isIOS = Platform.isIOS;
+    Future.wait([
+      onNotificationMessagingToken.first,
+      if (isIOS) ios_voip.getVoipPushNotificationToken(),
+    ]).then((tokens) {
+      if (mounted) {
+        api.addNotificationTokens(
+          ref.read(userProvider).uid,
+          fcmMessagingAndVoipToken: isIOS ? null : tokens[0],
+          apnMessagingToken: isIOS ? tokens[0] : null,
+          apnVoipToken: isIOS ? tokens[1] : null,
+        );
+      }
+    });
+
+    // Subsequent messaging tokens
+    _notificationTokenSubscription =
+        onNotificationMessagingToken.listen((token) {
+      if (mounted) {
+        api.addNotificationTokens(
+          ref.read(userProvider).uid,
+          fcmMessagingAndVoipToken: isIOS ? null : token,
+          apnMessagingToken: isIOS ? token : null,
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     _idTokenChangesSubscription?.cancel();
+    _notificationTokenSubscription?.cancel();
     _tempFriendshipsRefresh.dispose();
     _scrollToDiscoverTopNotifier.dispose();
 

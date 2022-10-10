@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/util/location_service.dart';
 
@@ -91,29 +89,14 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     }
 
-    // Init notifications as early as possible for background notifications on iOS
-    // (initial route is navigated to, but execution may stop due to user prompt or second navigation)
-    await initializeNotifications(onDeepLink: _onDeepLink);
+    // Handle notifications as early as possible for background notifications.
+    // On iOS, initial route is navigated to, but execution may stop due to
+    // a user prompt or a second navigation
+    await handleNotifications(onDeepLink: _onDeepLink);
 
     if (!mounted) {
       return;
     }
-
-    // Update push notifcation tokens
-    final isIOS = Platform.isIOS;
-    Future.wait([
-      getNotificationToken(),
-      if (isIOS) ios_voip.getVoipPushNotificationToken(),
-    ]).then((tokens) {
-      if (mounted) {
-        api.addNotificationTokens(
-          ref.read(userProvider).uid,
-          fcmMessagingAndVoipToken: isIOS ? null : tokens[0],
-          apnMessagingToken: isIOS ? tokens[0] : null,
-          apnVoipToken: isIOS ? tokens[1] : null,
-        );
-      }
-    });
 
     // Update location
     final profile = ref.read(userProvider).profile;
