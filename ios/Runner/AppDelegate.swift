@@ -1,4 +1,5 @@
 import UIKit
+import Firebase
 import Flutter
 import flutter_callkit_voximplant
 import flutter_voip_push_notification
@@ -12,6 +13,7 @@ import AVFAudio
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    FirebaseApp.configure();
     GeneratedPluginRegistrant.register(with: self)
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
@@ -30,17 +32,30 @@ import AVFAudio
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
-    func pushRegistry(_ registry: PKPushRegistry,
-                      didReceiveIncomingPushWith payload: PKPushPayload,
-                      for type: PKPushType) {
-        processPush(with: payload.dictionaryPayload, and: nil);
+  override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    // Token for Firebase Auth, see: https://github.com/firebase/flutterfire/issues/4970#issuecomment-894834223
+    Auth.auth().setAPNSToken(deviceToken, type: AuthAPNSTokenType.unknown)
+  }
+
+  override func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+    // Let FirebaseAuth handle push notification, see: https://github.com/firebase/flutterfire/issues/4970#issuecomment-894834223ß
+    if (Auth.auth().canHandleNotification(userInfo)){
+        print(userInfo)
+        return
     }
+    // Other plugins to handle push notifications
+  }
+
+  func pushRegistry(_ registry: PKPushRegistry,
+                    didReceiveIncomingPushWith payload: PKPushPayload,
+                    for type: PKPushType) {
+      processPush(with: payload.dictionaryPayload, and: nil);
+  }
     
   func pushRegistry(_ registry: PKPushRegistry,
                     didReceiveIncomingPushWith payload: PKPushPayload,
                     for type: PKPushType,
                     completion: @escaping () -> Void) {
-//    FlutterVoipPushNotificationPlugin.didReceiveIncomingPush(with: payload, forType: type.rawValue)
       processPush(with: payload.dictionaryPayload, and: completion);
   }
 
