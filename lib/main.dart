@@ -27,7 +27,6 @@ import 'package:openup/friendships_page.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/invite_page.dart';
-import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/report_screen.dart';
@@ -179,12 +178,14 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
     GetIt.instance.registerSingleton<CallManager>(CallManager());
 
+    // Logging in/out triggers
     _idTokenChangesSubscription =
         FirebaseAuth.instance.idTokenChanges().listen((user) async {
       final loggedIn = user != null;
       if (_loggedIn != loggedIn) {
         setState(() => _loggedIn = loggedIn);
 
+        // Mixpanel
         final mixpanel = GetIt.instance.get<Mixpanel>();
         if (user != null) {
           mixpanel.identify(user.uid);
@@ -213,6 +214,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         }
       }
 
+      // Online indicator
       if (GetIt.instance.isRegistered<OnlineUsersApi>()) {
         GetIt.instance.unregister<OnlineUsersApi>();
       }
@@ -230,26 +232,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       _onlineUsersApi = _onlineUsersApi;
     });
 
-    // Update initial notification messaging and voip tokens
+    // Notifications (subsequent messaging tokens)
     final isIOS = Platform.isIOS;
-    Future.wait([
-      onNotificationMessagingToken.first,
-      if (isIOS) ios_voip.getVoipPushNotificationToken(),
-    ]).then((tokens) {
-      if (mounted) {
-        api.addNotificationTokens(
-          ref.read(userProvider).uid,
-          fcmMessagingAndVoipToken: isIOS ? null : tokens[0],
-          apnMessagingToken: isIOS ? tokens[0] : null,
-          apnVoipToken: isIOS ? tokens[1] : null,
-        );
-      }
-    });
-
-    // Subsequent messaging tokens
+    _notificationTokenSubscription?.cancel();
     _notificationTokenSubscription =
         onNotificationMessagingToken.listen((token) {
-      if (mounted) {
+      final uid = ref.read(userProvider).uid;
+      if (token != null && uid.isNotEmpty) {
         api.addNotificationTokens(
           ref.read(userProvider).uid,
           fcmMessagingAndVoipToken: isIOS ? null : token,
