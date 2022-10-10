@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_apns/flutter_apns.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -24,16 +25,25 @@ part 'notifications.freezed.dart';
 part 'notifications.g.dart';
 
 typedef DeepLinkCallback = void Function(String path);
-ApnsPushConnectorOnly? _apnsPushConnector;
-
-// TODO: This is never disposed, probably it should be
-final _iosNotificationTokenController = StreamController<String?>();
+ApnsPushConnector? _apnsPushConnector;
+StreamController<String?>? _iosNotificationTokenController;
+StreamSubscription? _iosEventChannelTokenSubscription;
 
 Future<void> initializeNotifications() async {
   // May not be needed, used to dismiss remaining notifications on logout
   await _initializeLocalNotifications();
 
-  _apnsPushConnector = ApnsPushConnectorOnly();
+  _iosNotificationTokenController = StreamController<String?>.broadcast();
+  _apnsPushConnector = ApnsPushConnector();
+}
+
+void disposeNotifications() {
+  _iosNotificationTokenController?.close();
+  _iosNotificationTokenController = null;
+  _iosEventChannelTokenSubscription?.cancel();
+  _iosEventChannelTokenSubscription = null;
+  _apnsPushConnector = null;
+  // TODO: Dispose voip handlers
 }
 
 void initializeVoipHandlers({required DeepLinkCallback onDeepLink}) {
@@ -49,11 +59,29 @@ Stream<String?> get onNotificationMessagingToken async* {
     yield await FirebaseMessaging.instance.getToken();
     yield* FirebaseMessaging.instance.onTokenRefresh;
   } else if (Platform.isIOS) {
-    yield _apnsPushConnector?.token.value;
-    _apnsPushConnector?.token.addListener(() {
-      _iosNotificationTokenController.add(_apnsPushConnector?.token.value);
-    });
-    yield* _iosNotificationTokenController.stream;
+    final status = await _apnsPushConnector?.getAuthorizationStatus();
+    if (status != ApnsAuthorizationStatus.authorized) {
+      await _apnsPushConnector
+          ?.requestNotificationPermissions(const IosNotificationSettings());
+    }
+
+    if (await _apnsPushConnector?.getAuthorizationStatus() ==
+        ApnsAuthorizationStatus.authorized) {
+      // APNSPushConnector is receving a null token, so manually get it ourselves
+      const eventChannel = EventChannel('com.openupdating/notification_tokens');
+      _iosEventChannelTokenSubscription =
+          eventChannel.receiveBroadcastStream().listen((token) {
+        _iosNotificationTokenController?.add(token);
+      });
+      // yield _apnsPushConnector?.token.value;
+      // _apnsPushConnector?.token.addListener(() {
+      //   // Seems to always be a null token
+      //   _iosNotificationTokenController?.add(_apnsPushConnector?.token.value);
+      // });
+    }
+    if (_iosNotificationTokenController != null) {
+      yield* _iosNotificationTokenController!.stream;
+    }
   }
 }
 
@@ -137,7 +165,7 @@ Future<void> _handleAndroidNotification(DeepLinkCallback onDeepLink) async {
 }
 
 Future<void> _handleIosNotification(DeepLinkCallback onDeepLink) async {
-  final connector = ApnsPushConnectorOnly();
+  final connector = ApnsPushConnector();
   connector.configureApns(
     onMessage: (remoteMessage) {
       final data = remoteMessage.payload['data'];

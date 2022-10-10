@@ -27,6 +27,7 @@ import 'package:openup/friendships_page.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/invite_page.dart';
+import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/report_screen.dart';
@@ -230,20 +231,27 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       );
       GetIt.instance.registerSingleton<OnlineUsersApi>(onlineUsersApi);
       _onlineUsersApi = _onlineUsersApi;
-    });
-
-    // Notifications (subsequent messaging tokens)
-    final isIOS = Platform.isIOS;
-    _notificationTokenSubscription?.cancel();
-    _notificationTokenSubscription =
-        onNotificationMessagingToken.listen((token) {
-      final uid = ref.read(userProvider).uid;
-      if (token != null && uid.isNotEmpty) {
-        api.addNotificationTokens(
-          ref.read(userProvider).uid,
-          fcmMessagingAndVoipToken: isIOS ? null : token,
-          apnMessagingToken: isIOS ? token : null,
-        );
+      // Notifications (subsequent messaging tokens)
+      if (_loggedIn) {
+        final isIOS = Platform.isIOS;
+        await initializeNotifications();
+        _notificationTokenSubscription =
+            onNotificationMessagingToken.listen((token) async {
+          final uid = ref.read(userProvider).uid;
+          if (token != null && uid.isNotEmpty) {
+            api.addNotificationTokens(
+              ref.read(userProvider).uid,
+              fcmMessagingAndVoipToken: isIOS ? null : token,
+              apnMessagingToken: isIOS ? token : null,
+              // Voip token not sending in InitialLoadingScreen, so tries here
+              apnVoipToken:
+                  isIOS ? await ios_voip.getVoipPushNotificationToken() : null,
+            );
+          }
+        });
+      } else {
+        _notificationTokenSubscription?.cancel();
+        disposeNotifications();
       }
     });
   }
@@ -252,6 +260,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   void dispose() {
     _idTokenChangesSubscription?.cancel();
     _notificationTokenSubscription?.cancel();
+    disposeNotifications();
+
     _tempFriendshipsRefresh.dispose();
     _scrollToDiscoverTopNotifier.dispose();
 

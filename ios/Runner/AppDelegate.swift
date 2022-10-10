@@ -8,12 +8,14 @@ import CallKit
 import AVFAudio
 
 @UIApplicationMain
-@objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate {
+@objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate, FlutterStreamHandler {
+  var eventChannel: FlutterEventChannel?;
+  var notificationTokenEventSink: FlutterEventSink?;
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    FirebaseApp.configure();
     GeneratedPluginRegistrant.register(with: self)
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
@@ -29,12 +31,21 @@ import AVFAudio
       print("Error while configuring audio session: \(error)")
     }
 
+    guard let controller = window?.rootViewController as? FlutterViewController else {
+      fatalError("rootViewController is not type FlutterViewController")
+    }
+    self.eventChannel = FlutterEventChannel(name: "com.openupdating/notification_tokens", binaryMessenger: controller.binaryMessenger);
+    self.eventChannel?.setStreamHandler(self);
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
     // Token for Firebase Auth, see: https://github.com/firebase/flutterfire/issues/4970#issuecomment-894834223
     Auth.auth().setAPNSToken(deviceToken, type: AuthAPNSTokenType.unknown)
+    
+    // Token to handle ourselves in Dart
+    self.notificationTokenEventSink?(deviceToken.hexString);
   }
 
   override func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
@@ -44,6 +55,17 @@ import AVFAudio
         return
     }
     // Other plugins to handle push notifications
+  }
+
+  // Handle EventChannel
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    self.notificationTokenEventSink = events;
+    return nil
+  }
+
+  // Handler for EventChannel
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    return nil;  
   }
 
   func pushRegistry(_ registry: PKPushRegistry,
@@ -73,7 +95,7 @@ import AVFAudio
           else {
               return
     }
-      
+
     // Write to disk to pass to Flutter side in case it has not yet started
     let handle = "\(callerUid)#_\(photo)#_\(callerName)";
     let dirPaths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
@@ -97,4 +119,11 @@ struct CallNotification: Decodable {
     let photo: String
     let name: String
     let rid: String
+}
+
+extension Data {
+  var hexString: String {
+    let hexString = map { String(format: "%02.2hhx", $0) }.joined()
+    return hexString
+  }
 }
