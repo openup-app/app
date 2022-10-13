@@ -216,21 +216,29 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       }
 
       // Online indicator
-      if (GetIt.instance.isRegistered<OnlineUsersApi>()) {
-        GetIt.instance.unregister<OnlineUsersApi>();
+      if (_loggedIn) {
+        _onlineUsersApi?.dispose();
+        final onlineUsersApi = OnlineUsersApi(
+          host: host,
+          port: socketPort,
+          uid: ref.read(userProvider).uid,
+          onConnectionError: () {},
+          onOnlineStatusChanged: (uid, online) {
+            ref.read(onlineUsersProvider.notifier).onlineChanged(uid, online);
+          },
+        );
+        if (GetIt.instance.isRegistered<OnlineUsersApi>()) {
+          GetIt.instance.unregister<OnlineUsersApi>();
+        }
+        GetIt.instance.registerSingleton<OnlineUsersApi>(onlineUsersApi);
+        _onlineUsersApi = onlineUsersApi;
+      } else {
+        if (GetIt.instance.isRegistered<OnlineUsersApi>()) {
+          GetIt.instance.unregister<OnlineUsersApi>();
+        }
+        _onlineUsersApi?.dispose();
       }
-      _onlineUsersApi?.dispose();
-      final onlineUsersApi = OnlineUsersApi(
-        host: host,
-        port: socketPort,
-        uid: ref.read(userProvider).uid,
-        onConnectionError: () {},
-        onOnlineStatusChanged: (uid, online) {
-          ref.read(onlineUsersProvider.notifier).onlineChanged(uid, online);
-        },
-      );
-      GetIt.instance.registerSingleton<OnlineUsersApi>(onlineUsersApi);
-      _onlineUsersApi = _onlineUsersApi;
+
       // Notifications (subsequent messaging tokens)
       if (_loggedIn) {
         final isIOS = Platform.isIOS;
