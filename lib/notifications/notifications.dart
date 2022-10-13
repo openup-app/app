@@ -73,7 +73,7 @@ Stream<String?> get onNotificationMessagingToken async* {
           eventChannel.receiveBroadcastStream().listen((token) {
         _iosNotificationTokenController?.add(token);
       });
-      // yield _apnsPushConnector?.token.value;
+      yield _apnsPushConnector?.token.value;
       // _apnsPushConnector?.token.addListener(() {
       //   // Seems to always be a null token
       //   _iosNotificationTokenController?.add(_apnsPushConnector?.token.value);

@@ -245,6 +245,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         await initializeNotifications();
         _notificationTokenSubscription =
             onNotificationMessagingToken.listen((token) async {
+          debugPrint('On notification token: $token');
           final uid = ref.read(userProvider).uid;
           if (token != null && uid.isNotEmpty) {
             api.addNotificationTokens(
