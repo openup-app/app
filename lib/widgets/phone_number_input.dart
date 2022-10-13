@@ -38,6 +38,7 @@ class _PhoneInputState extends State<PhoneInput> {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SizedBox(
           width: 60,
@@ -129,7 +130,8 @@ class _PhoneInputState extends State<PhoneInput> {
           ),
         ),
         const SizedBox(width: 8),
-        Expanded(
+        SizedBox(
+          width: 130,
           child: TextFormField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
