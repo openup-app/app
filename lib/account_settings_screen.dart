@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -338,7 +340,9 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     final uid = ref.read(userProvider).uid;
     await GetIt.instance.get<Api>().signOut(uid);
     await dismissAllNotifications();
-    await FirebaseMessaging.instance.deleteToken();
+    if (Platform.isAndroid) {
+      await FirebaseMessaging.instance.deleteToken();
+    }
     await FirebaseAuth.instance.signOut();
     if (mounted) {
       context.goNamed('initialLoading');
