@@ -70,6 +70,8 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>FlutterDeepLinkingEnabled</key>
+	<true/>
 	<!-- Allows Firebase to be used alongside package:flutter_apns -->
 	<key>flutter_apns.disable_firebase_core</key>
 	<false/>
