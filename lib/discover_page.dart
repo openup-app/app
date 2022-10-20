@@ -494,6 +494,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                       _showingFavorites = false;
                                     });
                                     _fetchStatuses();
+                                    GetIt.instance.get<Mixpanel>().track(
+                                        'view_topic',
+                                        properties: {'topic': 'all'});
                                   }
                                 },
                               ),
@@ -510,8 +513,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                       _nextPage = 0;
                                       _showingFavorites = true;
                                     });
+                                    GetIt.instance.get<Mixpanel>().track(
+                                        'view_topic',
+                                        properties: {'topic': 'favorites'});
+                                    _fetchFavorites();
                                   }
-                                  _fetchFavorites();
                                 },
                               ),
                               for (final topic in Topic.values)
@@ -528,6 +534,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                         _nextPage = 0;
                                         _showingFavorites = false;
                                       });
+                                      GetIt.instance.get<Mixpanel>().track(
+                                          'view_topic',
+                                          properties: {'topic': topic.name});
                                       _fetchStatuses();
                                     }
                                   },

@@ -254,6 +254,10 @@ class _EditProfileViewState extends ConsumerState<_EditProfileView> {
                       label: topicLabel(topic),
                       selected: selected == topic,
                       onSelected: () async {
+                        GetIt.instance.get<Mixpanel>().track(
+                          'change_topic',
+                          properties: {'topic': 'All'},
+                        );
                         await withBlockingModal(
                           context: context,
                           label: 'Updating',
@@ -301,6 +305,15 @@ class _EditProfileViewState extends ConsumerState<_EditProfileView> {
                   builder: (contex) => _NameDialog(initialName: name),
                 );
                 if (newName != null && newName != name) {
+                  GetIt.instance.get<Mixpanel>()
+                    ..getPeople().set('name', newName)
+                    ..track(
+                      'change_name',
+                      properties: {
+                        'old_name': name,
+                        'new_name': newName,
+                      },
+                    );
                   final result = await withBlockingModal(
                     context: context,
                     label: 'Updating',

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -267,6 +268,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   void _updateInformation() async {
+    GetIt.instance.get<Mixpanel>().track("change_phone_number");
     FocusScope.of(context).unfocus();
     setState(() => _submitting = true);
     final newPhoneNumber = _newPhoneNumber;
@@ -337,6 +339,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   void _signOut() async {
+    GetIt.instance.get<Mixpanel>().track("sign_out");
     final uid = ref.read(userProvider).uid;
     await GetIt.instance.get<Api>().signOut(uid);
     await dismissAllNotifications();
@@ -366,6 +369,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           actions: [
             TextButton(
               onPressed: () async {
+                GetIt.instance.get<Mixpanel>().track("delete_account");
                 final uid = ref.read(userProvider).uid;
                 await dismissAllNotifications();
                 GetIt.instance.get<Api>().deleteUser(uid);

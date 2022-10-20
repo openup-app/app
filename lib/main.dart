@@ -380,6 +380,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
       initialLocation: '/',
+      redirect: (context, state) {
+        GetIt.instance.get<Mixpanel>().track(
+          "page_view",
+          properties: {'location': state.location},
+        );
+        return null;
+      },
       errorBuilder: (context, state) {
         final args = state.extra as InitialLoadingScreenArguments?;
         return CurrentRouteSystemUiStyling.dark(
