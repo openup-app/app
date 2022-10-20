@@ -416,6 +416,7 @@ class __RecordButtonState extends ConsumerState<_RecordButton> {
     return RecordButton(
       label: 'Record new status',
       submitLabel: 'Upload status',
+      minimumRecordTime: const Duration(seconds: 5),
       submitting: _uploading,
       submitted: false,
       onSubmit: (path) async {

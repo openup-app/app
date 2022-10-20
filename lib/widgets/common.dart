@@ -203,6 +203,7 @@ class ProfileImage extends StatelessWidget {
 
 class RecordButton extends StatefulWidget {
   final String label;
+  final Duration minimumRecordTime;
   final String submitLabel;
   final bool submitting;
   final bool submitted;
@@ -212,6 +213,7 @@ class RecordButton extends StatefulWidget {
   const RecordButton({
     Key? key,
     required this.label,
+    this.minimumRecordTime = const Duration(seconds: 0),
     required this.submitLabel,
     required this.submitting,
     required this.submitted,
@@ -362,9 +364,14 @@ class RecordButtonState extends State<RecordButton> {
                 );
               }
 
+              final lessThanMinimumRecordingTime =
+                  DateTime.now().difference(_recordingStart) <
+                      widget.minimumRecordTime;
               if (recordInfo.recording) {
                 return Button(
-                  onPressed: _inviteRecorder.stopRecording,
+                  onPressed: lessThanMinimumRecordingTime
+                      ? null
+                      : _inviteRecorder.stopRecording,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: recordInfo.recording
