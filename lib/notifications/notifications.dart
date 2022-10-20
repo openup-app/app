@@ -34,7 +34,9 @@ Future<void> initializeNotifications() async {
   await _initializeLocalNotifications();
 
   _iosNotificationTokenController = StreamController<String?>.broadcast();
-  _apnsPushConnector = ApnsPushConnector();
+  if (Platform.isIOS) {
+    _apnsPushConnector = ApnsPushConnector();
+  }
 }
 
 void disposeNotifications() {
@@ -42,7 +44,9 @@ void disposeNotifications() {
   _iosNotificationTokenController = null;
   _iosEventChannelTokenSubscription?.cancel();
   _iosEventChannelTokenSubscription = null;
-  _apnsPushConnector = null;
+  if (Platform.isIOS) {
+    _apnsPushConnector = null;
+  }
   // TODO: Dispose voip handlers
 }
 
