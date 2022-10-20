@@ -1000,6 +1000,7 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.black,
         leading: const BackIconButton(),
         title: const Text(
           'back to discover',

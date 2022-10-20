@@ -527,6 +527,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 GoRoute(
                   path: ':uid',
                   name: 'shared-profile',
+                  parentNavigatorKey: rootNavigatorKey,
                   builder: (context, state) {
                     final uid = state.params['uid']!;
                     return SharedProfilePage(
