@@ -520,18 +520,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               },
               routes: [
                 GoRoute(
-                  path: 'report',
-                  name: 'report',
-                  builder: (context, state) {
-                    final args = state.extra as ReportScreenArguments;
-                    return CurrentRouteSystemUiStyling.light(
-                      child: ReportScreen(
-                        uid: args.uid,
-                      ),
-                    );
-                  },
-                ),
-                GoRoute(
                   path: ':uid',
                   name: 'shared-profile',
                   parentNavigatorKey: rootNavigatorKey,
@@ -599,22 +587,33 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       child: AccountSettingsScreen(),
                     );
                   },
-                  routes: [
-                    // TODO: Add SettingsPhoneVerificationScreen here instead of using imperative navigation
-                    GoRoute(
-                      path: 'contact_us',
-                      name: 'contact-us',
-                      builder: (context, state) {
-                        return const CurrentRouteSystemUiStyling.light(
-                          child: ContactUsScreen(),
-                        );
-                      },
-                    ),
-                  ],
                 ),
               ],
             ),
           ],
+        ),
+        GoRoute(
+          path: '/report',
+          name: 'report',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) {
+            final args = state.extra as ReportScreenArguments;
+            return CurrentRouteSystemUiStyling.light(
+              child: ReportScreen(
+                uid: args.uid,
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/contact_us',
+          name: 'contact-us',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) {
+            return const CurrentRouteSystemUiStyling.light(
+              child: ContactUsScreen(),
+            );
+          },
         ),
         GoRoute(
           path: '/invite/:uid',

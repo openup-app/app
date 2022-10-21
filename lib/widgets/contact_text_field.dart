@@ -34,7 +34,7 @@ class _ContactTextFieldState extends State<ContactTextField> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxHeight: 242),
+      constraints: const BoxConstraints(maxHeight: 400),
       margin: const EdgeInsets.symmetric(
         horizontal: 23,
       ),

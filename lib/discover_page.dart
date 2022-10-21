@@ -368,7 +368,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         onBlock: () => setState(() => _profiles
                             .removeWhere(((p) => p.uid == profile.uid))),
                         onReport: () {
-                          context.goNamed(
+                          context.pushNamed(
                             'report',
                             extra: ReportScreenArguments(uid: profile.uid),
                           );
@@ -1062,7 +1062,7 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
               },
               onBlock: () => Navigator.of(context).pop(),
               onReport: () {
-                context.goNamed(
+                context.pushNamed(
                   'report',
                   extra: ReportScreenArguments(uid: profile.uid),
                 );

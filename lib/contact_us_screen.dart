@@ -8,8 +8,6 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/contact_text_field.dart';
-import 'package:openup/widgets/home_button.dart';
-import 'package:openup/widgets/keyboard_screen.dart';
 
 class ContactUsScreen extends ConsumerStatefulWidget {
   const ContactUsScreen({Key? key}) : super(key: key);
@@ -41,53 +39,44 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
           style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
         ),
       ),
-      body: KeyboardScreen(
-        child: Stack(
-          fit: StackFit.loose,
-          children: [
-            Positioned(
-              left: 16,
-              right: 16,
-              top: MediaQuery.of(context).padding.top + 72,
-              bottom: MediaQuery.of(context).viewPadding.bottom + 72,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: 362,
-                ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ContactTextField(
-                        textController: _textController,
-                        hintText: 'Questions and concerns',
-                      ),
+      body: Stack(
+        fit: StackFit.loose,
+        children: [
+          Positioned(
+            left: 16,
+            right: 16,
+            top: MediaQuery.of(context).padding.top + 16,
+            bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: 362,
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ContactTextField(
+                      textController: _textController,
+                      hintText: 'Questions and concerns',
                     ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: 162,
-                      height: 43,
-                      child: GradientButton(
-                        onPressed: _uploading ? null : _upload,
-                        white: true,
-                        child: _uploading
-                            ? const LoadingIndicator()
-                            : const Text('send'),
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: 162,
+                    height: 43,
+                    child: GradientButton(
+                      onPressed: _uploading ? null : _upload,
+                      white: true,
+                      child: _uploading
+                          ? const LoadingIndicator()
+                          : const Text('send'),
                     ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
-            Positioned(
-              right: MediaQuery.of(context).padding.right + 16,
-              bottom: MediaQuery.of(context).padding.bottom + 16,
-              child: const HomeButton(
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
