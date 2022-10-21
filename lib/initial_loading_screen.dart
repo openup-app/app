@@ -60,14 +60,24 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       context.goNamed('signup');
       return;
     } else {
-      try {
-        api.authToken = await user.getIdToken(true);
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'user-not-found') {
-          context.goNamed('signup');
-          return;
-        } else {
-          rethrow;
+      for (var retryAttempt = 0; retryAttempt < 3; retryAttempt++) {
+        debugPrint('FirebaseAuth getIdToken attempt $retryAttempt');
+        try {
+          api.authToken = await user.getIdToken(true);
+          break;
+        } on FirebaseAuthException catch (e) {
+          debugPrint('FirebaseAuth error ${e.code}');
+          if (e.code == 'user-not-found') {
+            context.goNamed('signup');
+            return;
+          } else if (e.code == 'unknown') {
+            // Retry
+            debugPrint('FirebaseAuth unknown error, retrying');
+            await Future.delayed(const Duration(milliseconds: 300));
+            continue;
+          } else {
+            rethrow;
+          }
         }
       }
     }
