@@ -140,8 +140,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   final _scrollToDiscoverTopNotifier = ScrollToDiscoverTopNotifier();
 
-  OnlineUsersApi? _onlineUsersApi;
-
   PageRoute _buildPageRoute<T>({
     required RouteSettings settings,
     PageTransitionBuilder? transitionsBuilder,
@@ -178,6 +176,17 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     GetIt.instance.registerSingleton<Api>(api);
 
     GetIt.instance.registerSingleton<CallManager>(CallManager());
+
+    GetIt.instance.registerSingleton<OnlineUsersApi>(
+      OnlineUsersApi(
+        host: host,
+        port: socketPort,
+        onConnectionError: () {},
+        onOnlineStatusChanged: (uid, online) {
+          ref.read(onlineUsersProvider.notifier).onlineChanged(uid, online);
+        },
+      ),
+    );
 
     // Logging in/out triggers
     _idTokenChangesSubscription =
@@ -216,27 +225,11 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       }
 
       // Online indicator
+      final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
       if (_loggedIn) {
-        _onlineUsersApi?.dispose();
-        final onlineUsersApi = OnlineUsersApi(
-          host: host,
-          port: socketPort,
-          uid: ref.read(userProvider).uid,
-          onConnectionError: () {},
-          onOnlineStatusChanged: (uid, online) {
-            ref.read(onlineUsersProvider.notifier).onlineChanged(uid, online);
-          },
-        );
-        if (GetIt.instance.isRegistered<OnlineUsersApi>()) {
-          GetIt.instance.unregister<OnlineUsersApi>();
-        }
-        GetIt.instance.registerSingleton<OnlineUsersApi>(onlineUsersApi);
-        _onlineUsersApi = onlineUsersApi;
+        onlineUsersApi.setOnline(ref.read(userProvider).uid, true);
       } else {
-        if (GetIt.instance.isRegistered<OnlineUsersApi>()) {
-          GetIt.instance.unregister<OnlineUsersApi>();
-        }
-        _onlineUsersApi?.dispose();
+        onlineUsersApi.setOnline(ref.read(userProvider).uid, false);
       }
 
       // Notifications (subsequent messaging tokens)
@@ -274,8 +267,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     _tempFriendshipsRefresh.dispose();
     _scrollToDiscoverTopNotifier.dispose();
 
+    final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
     GetIt.instance.unregister<OnlineUsersApi>();
-    _onlineUsersApi?.dispose();
+    onlineUsersApi.dispose();
     super.dispose();
   }
 

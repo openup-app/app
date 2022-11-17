@@ -11,7 +11,6 @@ class OnlineUsersApi {
   OnlineUsersApi({
     required String host,
     required int port,
-    required String uid,
     required VoidCallback onConnectionError,
     required void Function(String uid, bool online) onOnlineStatusChanged,
   }) {
@@ -21,7 +20,6 @@ class OnlineUsersApi {
           .setTimeout(1500)
           .setTransports(['websocket'])
           .enableForceNew()
-          .setQuery({'uid': uid})
           .build(),
     );
 
@@ -38,6 +36,17 @@ class OnlineUsersApi {
         onOnlineStatusChanged(uid, online);
       }
     });
+  }
+
+  void setOnline(String uid, bool online) {
+    _socket.emit(
+      'message',
+      jsonEncode({
+        'type': 'online_status',
+        'uid': uid,
+        'online': online,
+      }),
+    );
   }
 
   void subscribeToOnlineStatus(String uid) {
