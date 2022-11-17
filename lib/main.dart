@@ -373,8 +373,18 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       observers: observers,
       debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
-      initialLocation: '/',
+      initialLocation: '/discover',
       redirect: (context, state) {
+        final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+        if (!isLoggedIn) {
+          final inAllowList = state.location.startsWith('/signup') ||
+              state.location == '/discover' ||
+              state.location == '/friendships' ||
+              state.location == '/profile';
+          if (!inAllowList) {
+            return '/signup';
+          }
+        }
         GetIt.instance.get<Mixpanel>().track(
           "page_view",
           properties: {'location': state.location},
@@ -406,6 +416,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         GoRoute(
           path: '/signup',
           name: 'signup',
+          parentNavigatorKey: rootNavigatorKey,
           builder: (context, state) {
             return const CurrentRouteSystemUiStyling.light(
               child: SignUpScreen(),

@@ -1,13 +1,10 @@
 import 'dart:math';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 
 import 'package:go_router/go_router.dart';
-import 'package:openup/api/online_users_api.dart';
-import 'package:openup/api/online_users_api_util.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/main.dart';
 import 'package:openup/widgets/button.dart';
@@ -74,7 +71,12 @@ class _HomeShellState extends ConsumerState<HomeShell>
           }
         },
         // Notifications don't update the UI, this forces it
-        onFriendshipsPressed: widget.tempFriendshipsRefresh.refresh,
+        onFriendshipsPressed: () {
+          final loggedIn = FirebaseAuth.instance.currentUser != null;
+          if (loggedIn) {
+            widget.tempFriendshipsRefresh.refresh();
+          }
+        },
       ),
       body: widget.child,
     );
