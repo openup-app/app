@@ -449,7 +449,8 @@ class Api {
   }
 
   Future<Either<ApiError, DiscoverResults>> getDiscover(
-    String uid, {
+    double? latitude,
+    double? longitude, {
     String? seed,
     Topic? topic,
     double? minRadius,
@@ -457,17 +458,23 @@ class Api {
   }) {
     return _request(
       makeRequest: () {
+        final locationQuery = (latitude == null || longitude == null)
+            ? null
+            : 'lat=$latitude&long=$longitude';
         final seedQuery = seed == null ? null : 'seed=$seed';
         final topicQuery = topic == null ? null : 'topic=${topic.name}';
         final minRadiusQuery =
             minRadius == null ? null : 'minRadius=$minRadius';
         final pageQuery = page == null ? null : 'page=$page';
-        final hasOptions = seedQuery != null ||
+        final hasOptions = latitude != null ||
+            longitude != null ||
+            seedQuery != null ||
             topicQuery != null ||
             minRadiusQuery != null ||
             pageQuery != null;
         return http.get(
           Uri.parse('$_urlBase/users/discover${hasOptions ? '?' : ''}${[
+            locationQuery,
             seedQuery,
             topicQuery,
             minRadiusQuery,

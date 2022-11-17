@@ -39,6 +39,7 @@ class DiscoverPage extends ConsumerStatefulWidget {
 
 class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _loading = false;
+  bool _hasLocation = false;
 
   CancelableOperation<Either<ApiError, DiscoverResults>>? _discoverOperation;
   final _profiles = <Profile>[];
@@ -76,67 +77,73 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     }
   }
 
-  Future<void> _maybeRequestLocation() async {
+  Future<bool> _maybeRequestLocationPermission() async {
     final status = await Permission.location.status;
-    if (!(status.isGranted || status.isLimited)) {
-      final result = await Permission.location.request();
-      if ((result.isGranted || status.isLimited)) {
-        await _updateLocation();
-      } else {
-        showCupertinoDialog(
-          context: context,
-          builder: (context) {
-            return CupertinoAlertDialog(
-              title: const Text(
-                'Location Services',
-                textAlign: TextAlign.center,
-              ),
-              content: const Text(
-                  'Location needs to be on in order to discover people near you.'),
-              actions: [
-                CupertinoDialogAction(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                CupertinoDialogAction(
-                  onPressed: () {
-                    openAppSettings();
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Enable in Settings'),
-                ),
-              ],
-            );
-          },
-        );
-      }
+    if (status.isGranted || status.isLimited) {
+      return Future.value(true);
     }
+
+    final result = await Permission.location.request();
+    if ((result.isGranted || status.isLimited)) {
+      return Future.value(true);
+    } else {
+      showCupertinoDialog(
+        context: context,
+        builder: (context) {
+          return CupertinoAlertDialog(
+            title: const Text(
+              'Location Services',
+              textAlign: TextAlign.center,
+            ),
+            content: const Text(
+                'Location needs to be on in order to discover people near you.'),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              CupertinoDialogAction(
+                onPressed: () {
+                  openAppSettings();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Enable in Settings'),
+              ),
+            ],
+          );
+        },
+      );
+      return Future.value(false);
+    }
+  }
+
+  Future<_LatLong?> _getLocation() async {
+    final locationService = LocationService();
+    final location = await locationService.getLatLong();
+    return location.when(
+      value: (lat, long) {
+        return Future.value(_LatLong(lat, long));
+      },
+      denied: () => Future.value(),
+      failure: () => Future.value(),
+    );
   }
 
   Future<void> _updateLocation() async {
     setState(() => _loading = true);
 
-    final profile = ref.read(userProvider).profile;
-    final notifier = ref.read(userProvider.notifier);
-    final locationService = LocationService();
-    final location = await locationService.getLatLong();
-    await location.when(
-      value: (lat, long) {
-        return updateLocation(
-          context: context,
-          profile: profile!,
-          notifier: notifier,
-          latitude: lat,
-          longitude: long,
-        );
-      },
-      denied: () {
-        // Nothing to do
-      },
-      failure: () {
-        // Nothing to do
-      },
-    );
+    final location = await _getLocation();
+    if (location != null) {
+      final profile = ref.read(userProvider).profile;
+      final notifier = ref.read(userProvider.notifier);
+      await updateLocation(
+        context: context,
+        profile: profile!,
+        notifier: notifier,
+        latitude: location.latitude,
+        longitude: location.longitude,
+      );
+    }
   }
 
   void _initPageController({
@@ -168,18 +175,27 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       return;
     }
 
-    await _maybeRequestLocation();
-
-    if (!mounted) {
+    final granted = await _maybeRequestLocationPermission();
+    if (!mounted || !granted) {
       return;
     }
 
     setState(() => _loading = true);
-    final myUid = ref.read(userProvider).uid;
+    final location = await _getLocation();
+    if (!mounted) {
+      return;
+    }
+
+    if (location == null) {
+      return;
+    }
+    setState(() => _hasLocation = true);
+
     final api = GetIt.instance.get<Api>();
     _discoverOperation?.cancel();
     final discoverFuture = api.getDiscover(
-      myUid,
+      location.latitude,
+      location.longitude,
       seed: Api.seed,
       topic: _selectedTopic,
       minRadius: _nextMinRadius,
@@ -386,12 +402,17 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        _selectedTopic == null
-                            ? 'Couldn\'t find any profiles'
-                            : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                      child: !_hasLocation
+                          ? Text(
+                              'Unable to get location',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            )
+                          : Text(
+                              _selectedTopic == null
+                                  ? 'Couldn\'t find any profiles'
+                                  : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
                     ),
                     ElevatedButton(
                       onPressed: () async {
@@ -1073,6 +1094,15 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
       ),
     );
   }
+}
+
+class _LatLong {
+  final double latitude;
+  final double longitude;
+  const _LatLong(
+    this.latitude,
+    this.longitude,
+  );
 }
 
 class ScrollToDiscoverTopNotifier extends ValueNotifier<void> {
