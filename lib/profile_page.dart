@@ -274,7 +274,7 @@ class _EditProfileViewState extends ConsumerState<_EditProfileView> {
                       onSelected: () async {
                         GetIt.instance.get<Mixpanel>().track(
                           'change_topic',
-                          properties: {'topic': 'All'},
+                          properties: {'topic': topic.name},
                         );
                         await withBlockingModal(
                           context: context,
