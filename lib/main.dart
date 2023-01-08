@@ -384,20 +384,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       navigatorKey: rootNavigatorKey,
       initialLocation: '/discover',
       redirect: (context, state) {
-        final isLoggedIn = FirebaseAuth.instance.currentUser != null;
-        if (!isLoggedIn) {
-          final inAllowList = state.location.startsWith('/signup') ||
-              state.location == '/discover' ||
-              state.location == '/friendships' ||
-              state.location == '/profile';
-          if (!inAllowList) {
-            return '/signup';
-          }
-        }
-        GetIt.instance.get<Mixpanel>().track(
-          "page_view",
-          properties: {'location': state.location},
-        );
         return null;
       },
       errorBuilder: (context, state) {
