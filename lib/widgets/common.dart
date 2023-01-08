@@ -151,6 +151,54 @@ class BlurredSurface extends StatelessWidget {
   }
 }
 
+class Surface extends StatelessWidget {
+  final bool squareBottom;
+  final Widget child;
+  const Surface({
+    Key? key,
+    this.squareBottom = true,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    const blur = 30.0;
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(40),
+          topRight: const Radius.circular(40),
+          bottomLeft: squareBottom ? Radius.zero : const Radius.circular(40),
+          bottomRight: squareBottom ? Radius.zero : const Radius.circular(40),
+        ),
+      ),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: Material(
+          elevation: 0,
+          type: MaterialType.transparency,
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+Future<T?> showModalSheet<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+}) {
+  return showCupertinoModalPopup<T>(
+    context: context,
+    barrierColor: const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+    builder: (context) {
+      return builder(context);
+    },
+  );
+}
+
 class ProfileImage extends StatelessWidget {
   final String photo;
   final BoxFit fit;
@@ -1262,6 +1310,344 @@ class _ReportBlockPopupMenuState extends ConsumerState<ReportBlockPopupMenu> {
           ),
         ];
       },
+    );
+  }
+}
+
+class ReportBlockPopupMenu2 extends ConsumerStatefulWidget {
+  final String uid;
+  final String name;
+  final VoidCallback onBlock;
+  final WidgetBuilder builder;
+  const ReportBlockPopupMenu2({
+    Key? key,
+    required this.uid,
+    required this.name,
+    required this.onBlock,
+    required this.builder,
+  }) : super(key: key);
+
+  @override
+  ConsumerState<ReportBlockPopupMenu2> createState() =>
+      _ReportBlockPopupMenuState2();
+}
+
+class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: () {
+        showCupertinoModalPopup(
+          context: context,
+          barrierColor: const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+          builder: (context) {
+            return CupertinoActionSheet(
+              cancelButton: CupertinoActionSheetAction(
+                onPressed: _showBlockDialog,
+                child: const Text('Block User'),
+              ),
+              actions: [
+                CupertinoActionSheetAction(
+                  onPressed: _showReportModal,
+                  child: const Text('Report User'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: widget.builder(context),
+    );
+  }
+
+  void _showBlockDialog() async {
+    final block = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) {
+        return Center(
+          child: Surface(
+            squareBottom: false,
+            child: Padding(
+              padding: const EdgeInsets.all(36.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Block "${widget.name}"?',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium!
+                          .copyWith(fontSize: 24, fontWeight: FontWeight.w300),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'They won\'t see you anywhere on this app, and won\'t be able to send you messages.\n\nYou won\'t see them anywhere, and won\'t be able to send them messages.',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Button(
+                        onPressed: () {
+                          Navigator.of(context).pop(true);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            'Block',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                    color:
+                                        Color.fromRGBO(0xFF, 0x07, 0x07, 1.0),
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w300),
+                          ),
+                        ),
+                      ),
+                      Button(
+                        onPressed: Navigator.of(context).pop,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            'Cancel',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                    fontSize: 20, fontWeight: FontWeight.w300),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (block == true && mounted) {
+      final myUid = ref.read(userProvider).uid;
+      final api = GetIt.instance.get<Api>();
+      final blockFuture = api.blockUser(myUid, widget.uid);
+      await withBlockingModal(
+        context: context,
+        label: 'Blocking...',
+        future: blockFuture,
+      );
+      widget.onBlock();
+    }
+
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  void _showReportModal() async {
+    final reportReason = await showModalSheet<String>(
+      context: context,
+      builder: (context) {
+        return Surface(
+          child: Padding(
+            padding: const EdgeInsets.all(36.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Why are you reporting this account?',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 24, fontWeight: FontWeight.w300),
+                ),
+                const SizedBox(height: 8),
+                _RadioTile(
+                  label: 'Impersonation or deceptive identity',
+                  onTap: () => Navigator.of(context).pop("deceptive"),
+                ),
+                _RadioTile(
+                  label: 'Nudity or sexual activity',
+                  onTap: () => Navigator.of(context).pop("sexual"),
+                ),
+                _RadioTile(
+                  label: 'Suicide or self-harm',
+                  onTap: () => Navigator.of(context).pop("self-harm"),
+                ),
+                _RadioTile(
+                  label: 'Violence or harmful content',
+                  onTap: () => Navigator.of(context).pop("harmful"),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (reportReason != null && mounted) {
+      final myUid = ref.read(userProvider).uid;
+      final api = GetIt.instance.get<Api>();
+      // final reportFuture = api.reportUser(
+      //   uid: myUid,
+      //   reportedUid: widget.uid,
+      //   reason: reportReason,
+      // );
+      final reportFuture = Future.delayed(const Duration(seconds: 1));
+      await withBlockingModal(
+        context: context,
+        label: 'Reporting...',
+        future: reportFuture,
+      );
+    }
+
+    if (mounted) {
+      final block = await showCupertinoDialog<bool>(
+        context: context,
+        builder: (context) {
+          return Center(
+            child: Surface(
+              squareBottom: false,
+              child: Padding(
+                padding: const EdgeInsets.all(36.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Thank you for submitting your report',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 24, fontWeight: FontWeight.w300),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'We will investigate this issue.\n\nAdditionally you can block the user so they can\'t discover your account.',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium!
+                          .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Button(
+                          onPressed: () {
+                            Navigator.of(context).pop(true);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Block',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                      color:
+                                          Color.fromRGBO(0xFF, 0x07, 0x07, 1.0),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w300),
+                            ),
+                          ),
+                        ),
+                        Button(
+                          onPressed: Navigator.of(context).pop,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Done',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w300),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+
+      if (block == true && mounted) {
+        final myUid = ref.read(userProvider).uid;
+        final api = GetIt.instance.get<Api>();
+        // final blockFuture = api.blockUser(myUid, widget.uid);
+        final blockFuture = Future.delayed(const Duration(seconds: 1));
+        await withBlockingModal(
+          context: context,
+          label: 'Blocking...',
+          future: blockFuture,
+        );
+        widget.onBlock();
+      }
+    }
+
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+}
+
+class _RadioTile extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _RadioTile({
+    super.key,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onTap,
+      child: SizedBox(
+        height: 51,
+        child: Row(
+          children: [
+            Container(
+              width: 18,
+              height: 18,
+              decoration: const BoxDecoration(
+                  border: Border(
+                    left: BorderSide(color: Colors.white, width: 2),
+                    top: BorderSide(color: Colors.white, width: 2),
+                    right: BorderSide(color: Colors.white, width: 2),
+                    bottom: BorderSide(color: Colors.white, width: 2),
+                  ),
+                  shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 18),
+            Text(
+              label,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 14, fontWeight: FontWeight.w300),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

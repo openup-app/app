@@ -82,6 +82,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/images/app_icon_new.png
     - assets/images/call.json
     - assets/images/call.svg
     - assets/images/video_call.json
@@ -94,6 +95,7 @@ flutter:
     - assets/images/onboard_chat.jpg
     - assets/images/onboard_countdown.jpg
     - assets/images/online.json
+    - assets/images/preferences_icon.png
     - assets/images/earth.svg
     - assets/images/loading_icon.png
     - assets/images/videocam.svg
@@ -116,6 +118,14 @@ flutter:
         - asset: assets/fonts/myriad-pro-boldit.otf
           weight: 700
           style: italic
+    - family: Neue Haas Unica W1G
+      fonts:
+        - asset: assets/fonts/neue-haas-unica-w1g-thin.ttf
+          weight: 300
+        - asset: assets/fonts/neue-haas-unica-w1g.ttf
+          weight: 500
+        - asset: assets/fonts/neue-haas-unica-w1g-heavy.ttf
+          weight: 700
 
 flutter_icons:
   android: true

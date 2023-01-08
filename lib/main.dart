@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -43,7 +44,8 @@ import 'package:openup/sign_up_overview_page.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
+const host = '192.168.1.111';
+// const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
 const webPort = 8080;
 const socketPort = 8081;
 
@@ -284,10 +286,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             primary: Color.fromARGB(255, 27, 14, 14),
             secondary: Color.fromARGB(0xAA, 0xFF, 0x71, 0x71),
           ),
-          fontFamily: 'Myriad',
+          fontFamily: 'Neue Haas Unica W1G',
           textTheme: textTheme.copyWith(
             bodyMedium: textTheme.bodyMedium!.copyWith(
-              fontFamily: 'Myriad',
+              fontFamily: 'Neue Haas Unica W1G',
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -298,68 +300,75 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           ),
         ),
         builder: (context, child) {
-          return Stack(
-            children: [
-              if (child != null) Positioned.fill(child: child),
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                child: StreamBuilder<bool>(
-                  stream:
-                      GetIt.instance.get<CallManager>().callPageActiveStream,
-                  initialData: false,
-                  builder: (context, snapshot) {
-                    final callPageActive = snapshot.requireData;
-                    return StreamBuilder<CallState>(
-                      stream: GetIt.instance.get<CallManager>().callState,
-                      initialData: const CallState.none(),
-                      builder: (context, snapshot) {
-                        final callState = snapshot.requireData;
-                        final display =
-                            !(callState is CallStateNone || callPageActive);
+          return CupertinoTheme(
+            data: const CupertinoThemeData(
+              brightness: Brightness.dark,
+              primaryColor: Colors.white,
+            ),
+            child: Stack(
+              children: [
+                if (child != null) Positioned.fill(child: child),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  child: StreamBuilder<bool>(
+                    stream:
+                        GetIt.instance.get<CallManager>().callPageActiveStream,
+                    initialData: false,
+                    builder: (context, snapshot) {
+                      final callPageActive = snapshot.requireData;
+                      return StreamBuilder<CallState>(
+                        stream: GetIt.instance.get<CallManager>().callState,
+                        initialData: const CallState.none(),
+                        builder: (context, snapshot) {
+                          final callState = snapshot.requireData;
+                          final display =
+                              !(callState is CallStateNone || callPageActive);
 
-                        return IgnorePointer(
-                          ignoring: !display,
-                          child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 150),
-                            opacity: display ? 1.0 : 0.0,
-                            child: Button(
-                              onPressed: () => context.pushNamed('call'),
-                              child: Container(
-                                height: 40 + MediaQuery.of(context).padding.top,
-                                color:
-                                    const Color.fromRGBO(0x03, 0xCB, 0x17, 1.0),
-                                padding: EdgeInsets.only(
-                                    top: MediaQuery.of(context).padding.top),
-                                alignment: Alignment.center,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.call, size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Tap to return to call',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium!
-                                          .copyWith(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w300,
-                                          ),
-                                    ),
-                                  ],
+                          return IgnorePointer(
+                            ignoring: !display,
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 150),
+                              opacity: display ? 1.0 : 0.0,
+                              child: Button(
+                                onPressed: () => context.pushNamed('call'),
+                                child: Container(
+                                  height:
+                                      40 + MediaQuery.of(context).padding.top,
+                                  color: const Color.fromRGBO(
+                                      0x03, 0xCB, 0x17, 1.0),
+                                  padding: EdgeInsets.only(
+                                      top: MediaQuery.of(context).padding.top),
+                                  alignment: Alignment.center,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.call, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Tap to return to call',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium!
+                                            .copyWith(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w300,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    );
-                  },
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),

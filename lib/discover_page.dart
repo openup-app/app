@@ -5,9 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
-import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -15,7 +13,6 @@ import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
-import 'package:openup/report_screen.dart';
 import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -23,7 +20,6 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
-import 'package:openup/widgets/share_button.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
@@ -50,9 +46,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   Topic? _selectedTopic;
   bool _showingFavorites = false;
   final _invitedUsers = <String>{};
-  PageController? _pageController;
+  final _pageController = PageController();
 
-  double _paddingRatio = 1.1;
+  final _pageListener = ValueNotifier<double>(1);
 
   @override
   void initState() {
@@ -60,12 +56,30 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     _fetchStatuses().then((_) {
       _maybeRequestNotification();
     });
+
+    _pageController.addListener(() {
+      final page = _pageController.page ?? 1;
+      _pageListener.value = page;
+      final oldIndex = _currentProfileIndex;
+      final index = _pageController.page?.round() ?? _currentProfileIndex;
+      final forward = index > oldIndex;
+      if (_currentProfileIndex != index) {
+        setState(() => _currentProfileIndex = index);
+        if (!_showingFavorites &&
+            index > _profiles.length - 4 &&
+            !_loading &&
+            forward) {
+          _fetchStatuses();
+        }
+      }
+    });
+
     widget.scrollToTopNotifier.addListener(_onScrollToTop);
   }
 
   @override
   void dispose() {
-    _pageController?.dispose();
+    _pageController.dispose();
     widget.scrollToTopNotifier.removeListener(_onScrollToTop);
     super.dispose();
   }
@@ -87,6 +101,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     if ((result.isGranted || status.isLimited)) {
       return Future.value(true);
     } else {
+      if (!mounted) {
+        return false;
+      }
       showCupertinoDialog(
         context: context,
         builder: (context) {
@@ -133,7 +150,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     setState(() => _loading = true);
 
     final location = await _getLocation();
-    if (location != null) {
+    if (location != null && mounted) {
       final profile = ref.read(userProvider).profile;
       final notifier = ref.read(userProvider.notifier);
       await updateLocation(
@@ -144,30 +161,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         longitude: location.longitude,
       );
     }
-  }
-
-  void _initPageController({
-    required double fullHeight,
-    required double itemExtent,
-    required double paddingRatio,
-  }) {
-    _pageController = PageController(
-      viewportFraction: 1 / paddingRatio,
-    );
-    _pageController?.addListener(() {
-      final oldIndex = _currentProfileIndex;
-      final index = _pageController?.page?.round() ?? _currentProfileIndex;
-      final forward = index > oldIndex;
-      if (_currentProfileIndex != index) {
-        setState(() => _currentProfileIndex = index);
-        if (!_showingFavorites &&
-            index > _profiles.length - 4 &&
-            !_loading &&
-            forward) {
-          _fetchStatuses();
-        }
-      }
-    });
   }
 
   Future<void> _fetchStatuses() async {
@@ -285,7 +278,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   }
 
   void _onScrollToTop() {
-    _pageController?.animateTo(
+    _pageController.animateTo(
       0,
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeOut,
@@ -294,286 +287,163 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
-    final obscuredHeight = MediaQuery.of(context).padding.bottom;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Can build the PageController based on the height provided this frame
-        if (_pageController == null) {
-          Future.delayed(Duration.zero, () {
-            if (mounted) {
-              final fullHeight = constraints.maxHeight;
-              final itemExtent = fullHeight - obscuredHeight * 2;
-              setState(() => _paddingRatio = fullHeight / itemExtent);
-              _initPageController(
-                fullHeight: fullHeight,
-                itemExtent: itemExtent,
-                paddingRatio: _paddingRatio,
-              );
-            }
-          });
-        }
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: RefreshIndicator(
+            edgeOffset: MediaQuery.of(context).padding.top + 50,
+            onRefresh: () {
+              setState(() {
+                _discoverOperation?.cancel();
+                _profiles.clear();
+                _nextMinRadius = 0;
+                _nextPage = 0;
+              });
+              if (_showingFavorites) {
+                return _fetchFavorites();
+              } else {
+                return _fetchStatuses();
+              }
+            },
+            child: PageView.builder(
+              controller: _pageController,
+              scrollDirection: Axis.vertical,
+              itemCount: _profiles.length,
+              itemBuilder: (context, index) {
+                final profile = _profiles[index];
+                return ValueListenableBuilder<double>(
+                  valueListenable: _pageListener,
+                  builder: (context, page, child) {
+                    final pageIndex = page.floor();
+                    final visibility = (page - pageIndex) * (page - pageIndex);
+                    if (index <= pageIndex) {
+                      return ColorFiltered(
+                        colorFilter: ColorFilter.mode(
+                          Color.fromRGBO(0x00, 0x00, 0x00, visibility),
+                          BlendMode.srcOver,
+                        ),
+                        child: child!,
+                      );
+                    } else {
+                      return ColorFiltered(
+                        colorFilter: ColorFilter.mode(
+                          Color.fromRGBO(0x00, 0x00, 0x00, 1 - visibility),
+                          BlendMode.srcOver,
+                        ),
+                        child: child!,
+                      );
+                    }
+                  },
+                  child: _UserProfileDisplay(
+                    profile: profile,
+                    play: _currentProfileIndex == index,
+                    invited: _invitedUsers.contains(profile.uid),
+                    favourite: profile.favorite,
+                    onInvite: () {
+                      GetIt.instance.get<Mixpanel>().track(
+                        "send_invite",
+                        properties: {"type": "discover"},
+                      );
+                      setState(() => _invitedUsers.add(profile.uid));
+                    },
+                    onFavorite: (favorite) async {
+                      if (favorite) {
+                        GetIt.instance.get<Mixpanel>().track("add_favorite");
+                      } else {
+                        GetIt.instance.get<Mixpanel>().track("remove_favorite");
+                      }
+                      if (_showingFavorites && !favorite) {
+                        setState(() => _profiles.removeAt(index));
+                      }
+                      final uid = ref.read(userProvider).uid;
+                      final api = GetIt.instance.get<Api>();
+                      final result = favorite
+                          ? await api.addFavorite(uid, profile.uid)
+                          : await api.removeFavorite(uid, profile.uid);
+                      if (!mounted) {
+                        return;
+                      }
+                      result.fold(
+                        (l) {},
+                        (r) {
+                          setState(() {
+                            _profiles[index] =
+                                _profiles[index].copyWith(favorite: favorite);
+                          });
+                        },
+                      );
+                    },
+                    onBlocked: () => setState(() =>
+                        _profiles.removeWhere(((p) => p.uid == profile.uid))),
+                    onBeginRecording: () {},
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        if (_profiles.isEmpty && !_loading)
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: !_hasLocation
+                      ? Text(
+                          'Unable to get location',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        )
+                      : Text(
+                          _selectedTopic == null
+                              ? 'Couldn\'t find any profiles'
+                              : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Location needed at least once for nearby users
+                    // (may not have granted location during onboarding)
+                    if (!_showingFavorites) {
+                      if (mounted) {
+                        setState(() => _loading = true);
+                      }
 
-        return Stack(
-          children: [
-            if (_pageController != null)
-              Positioned.fill(
-                child: RefreshIndicator(
-                  edgeOffset: MediaQuery.of(context).padding.top + 50,
-                  onRefresh: () {
+                      final locationService = LocationService();
+                      if (!await locationService.hasPermission()) {
+                        final status =
+                            await locationService.requestPermission();
+                        if (status) {
+                          await _updateLocation();
+                        }
+                      }
+                    }
+
+                    if (!mounted) {
+                      return;
+                    }
+
                     setState(() {
-                      _discoverOperation?.cancel();
-                      _profiles.clear();
                       _nextMinRadius = 0;
                       _nextPage = 0;
                     });
                     if (_showingFavorites) {
-                      return _fetchFavorites();
+                      _fetchFavorites();
                     } else {
-                      return _fetchStatuses();
+                      _fetchStatuses();
                     }
                   },
-                  child: PageView.builder(
-                    controller: _pageController,
-                    scrollDirection: Axis.vertical,
-                    itemCount: _profiles.length,
-                    itemBuilder: (context, index) {
-                      final profile = _profiles[index];
-                      return _UserProfileDisplay(
-                        profile: profile,
-                        play: _currentProfileIndex == index,
-                        invited: _invitedUsers.contains(profile.uid),
-                        favourite: profile.favorite,
-                        onInvite: () {
-                          GetIt.instance.get<Mixpanel>().track(
-                            "send_invite",
-                            properties: {"type": "discover"},
-                          );
-                          setState(() => _invitedUsers.add(profile.uid));
-                        },
-                        onFavorite: (favorite) async {
-                          if (favorite) {
-                            GetIt.instance
-                                .get<Mixpanel>()
-                                .track("add_favorite");
-                          } else {
-                            GetIt.instance
-                                .get<Mixpanel>()
-                                .track("remove_favorite");
-                          }
-                          if (_showingFavorites && !favorite) {
-                            setState(() => _profiles.removeAt(index));
-                          }
-                          final uid = ref.read(userProvider).uid;
-                          final api = GetIt.instance.get<Api>();
-                          final result = favorite
-                              ? await api.addFavorite(uid, profile.uid)
-                              : await api.removeFavorite(uid, profile.uid);
-                          if (!mounted) {
-                            return;
-                          }
-                          result.fold(
-                            (l) {},
-                            (r) {
-                              setState(() {
-                                _profiles[index] = _profiles[index]
-                                    .copyWith(favorite: favorite);
-                              });
-                            },
-                          );
-                        },
-                        onBlock: () => setState(() => _profiles
-                            .removeWhere(((p) => p.uid == profile.uid))),
-                        onReport: () {
-                          context.pushNamed(
-                            'report',
-                            extra: ReportScreenArguments(uid: profile.uid),
-                          );
-                        },
-                        onBeginRecording: () {},
-                      );
-                    },
-                  ),
+                  child: const Text('Refresh'),
                 ),
-              ),
-            if (_profiles.isEmpty && !_loading)
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: !_hasLocation
-                          ? Text(
-                              'Unable to get location',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            )
-                          : Text(
-                              _selectedTopic == null
-                                  ? 'Couldn\'t find any profiles'
-                                  : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        // Location needed at least once for nearby users
-                        // (may not have granted location during onboarding)
-                        if (!_showingFavorites) {
-                          if (mounted) {
-                            setState(() => _loading = true);
-                          }
-
-                          final locationService = LocationService();
-                          if (!await locationService.hasPermission()) {
-                            final status =
-                                await locationService.requestPermission();
-                            if (status) {
-                              await _updateLocation();
-                            }
-                          }
-                        }
-
-                        if (!mounted) {
-                          return;
-                        }
-
-                        setState(() {
-                          _nextMinRadius = 0;
-                          _nextPage = 0;
-                        });
-                        if (_showingFavorites) {
-                          _fetchFavorites();
-                        } else {
-                          _fetchStatuses();
-                        }
-                      },
-                      child: const Text('Refresh'),
-                    ),
-                  ],
-                ),
-              )
-            else if (_profiles.isEmpty)
-              const Center(
-                child: LoadingIndicator(),
-              ),
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
-              height: obscuredHeight,
-              child: Stack(
-                children: [
-                  Container(
-                    padding: EdgeInsets.only(
-                        top: MediaQuery.of(context).padding.top),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: [
-                          0.9,
-                          1.0,
-                        ],
-                        colors: [
-                          Colors.black,
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(
-                            'Discover New Friends',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(fontSize: 20),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 31,
-                          child: ListView(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            scrollDirection: Axis.horizontal,
-                            children: [
-                              Chip(
-                                height: 31,
-                                label: 'All',
-                                selected: _selectedTopic == null &&
-                                    !_showingFavorites,
-                                onSelected: () {
-                                  if (_selectedTopic != null ||
-                                      _showingFavorites) {
-                                    setState(() {
-                                      _discoverOperation?.cancel();
-                                      _profiles.clear();
-                                      _selectedTopic = null;
-                                      _nextMinRadius = 0;
-                                      _nextPage = 0;
-                                      _showingFavorites = false;
-                                    });
-                                    _fetchStatuses();
-                                    GetIt.instance.get<Mixpanel>().track(
-                                        'view_topic',
-                                        properties: {'topic': 'all'});
-                                  }
-                                },
-                              ),
-                              Chip(
-                                label: 'Favorites',
-                                selected: _showingFavorites,
-                                onSelected: () async {
-                                  if (!_showingFavorites) {
-                                    setState(() {
-                                      _discoverOperation?.cancel();
-                                      _profiles.clear();
-                                      _selectedTopic = null;
-                                      _nextMinRadius = 0;
-                                      _nextPage = 0;
-                                      _showingFavorites = true;
-                                    });
-                                    GetIt.instance.get<Mixpanel>().track(
-                                        'view_topic',
-                                        properties: {'topic': 'favorites'});
-                                    _fetchFavorites();
-                                  }
-                                },
-                              ),
-                              for (final topic in Topic.values)
-                                Chip(
-                                  label: topicLabel(topic),
-                                  selected: _selectedTopic == topic,
-                                  onSelected: () {
-                                    if (_selectedTopic != topic) {
-                                      setState(() {
-                                        _discoverOperation?.cancel();
-                                        _profiles.clear();
-                                        _selectedTopic = topic;
-                                        _nextMinRadius = 0;
-                                        _nextPage = 0;
-                                        _showingFavorites = false;
-                                      });
-                                      GetIt.instance.get<Mixpanel>().track(
-                                          'view_topic',
-                                          properties: {'topic': topic.name});
-                                      _fetchStatuses();
-                                    }
-                                  },
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
-          ],
-        );
-      },
+          )
+        else if (_profiles.isEmpty)
+          const Center(
+            child: LoadingIndicator(),
+          ),
+      ],
     );
   }
 }
@@ -586,8 +456,7 @@ class _UserProfileDisplay extends StatefulWidget {
   final VoidCallback onInvite;
   final VoidCallback onBeginRecording;
   final void Function(bool favorite) onFavorite;
-  final VoidCallback onBlock;
-  final VoidCallback onReport;
+  final VoidCallback onBlocked;
 
   const _UserProfileDisplay({
     Key? key,
@@ -598,8 +467,7 @@ class _UserProfileDisplay extends StatefulWidget {
     required this.onInvite,
     required this.onBeginRecording,
     required this.onFavorite,
-    required this.onBlock,
-    required this.onReport,
+    required this.onBlocked,
   }) : super(key: key);
 
   @override
@@ -672,309 +540,419 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
     }
     return AppLifecycle(
       onPaused: _player.pause,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Button(
+            onPressed: () {
+              if (_audioPaused) {
+                _player.play(loop: true);
+              } else {
+                _player.pause();
+              }
+            },
+            child: Gallery(
+              slideshow: widget.play && !_audioPaused,
+              gallery: widget.profile.gallery,
+              withWideBlur: false,
+              blurPhotos: widget.profile.blurPhotos,
+            ),
+          ),
+          Positioned(
+            right: 16,
+            top: 16 + MediaQuery.of(context).padding.top,
+            child: Column(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          AutoSizeText(
-                            widget.profile.name,
-                            maxFontSize: 26,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                          ),
-                          const SizedBox(width: 8),
-                          OnlineIndicatorBuilder(
-                            uid: widget.profile.uid,
-                            builder: (context, online) {
-                              return online
-                                  ? const OnlineIndicator()
-                                  : const SizedBox.shrink();
-                            },
-                          ),
-                        ],
+                Button(
+                  onPressed: () {},
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          SvgPicture.asset(
-                            'assets/images/earth.svg',
-                            width: 16,
-                            height: 16,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: AutoSizeText(
-                              widget.profile.location,
-                              overflow: TextOverflow.ellipsis,
-                              minFontSize: 2,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    fontWeight: FontWeight.w300,
-                                    fontSize: 16,
-                                  ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 13),
+                Button(
+                  onPressed: () {},
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Image.asset(
+                        'assets/images/preferences_icon.png',
+                        color: Colors.white,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.medium,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 13),
+                ReportBlockPopupMenu2(
+                  uid: widget.profile.uid,
+                  name: widget.profile.name,
+                  onBlock: widget.onBlocked,
+                  builder: (context) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(
+                          color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          CupertinoIcons.ellipsis,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          if (_audioPaused)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 72.0),
+                child: IgnorePointer(
+                  child: IconWithShadow(
+                    Icons.play_arrow,
+                    size: 80,
+                  ),
+                ),
+              ),
+            ),
+          if (widget.profile.blurPhotos)
+            Center(
+              child: IgnorePointer(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 72.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Hidden pictures',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 22,
+                          shadows: [
+                            const BoxShadow(
+                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                              offset: Offset(0, 2),
+                              blurRadius: 6,
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'To view pics ask them to show you!',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          shadows: [
+                            const BoxShadow(
+                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                              offset: Offset(0, 2),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+              ),
+            ),
+          Positioned(
+            left: 24,
+            right: 24,
+            bottom: 48 + MediaQuery.of(context).padding.bottom,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
                   children: [
+                    const Spacer(),
                     SizedBox(
-                      height: 24,
-                      child: ReportBlockPopupMenu(
-                        uid: widget.profile.uid,
-                        name: widget.profile.name,
-                        onBlock: widget.onBlock,
-                        onReport: widget.onReport,
+                      width: 44,
+                      height: 46,
+                      child: Stack(
+                        children: [
+                          Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: const BoxDecoration(
+                                color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Image.asset(
+                                'assets/images/app_icon_new.png',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: Button(
+                              onPressed: () {},
+                              child: Container(
+                                width: 18,
+                                height: 18,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                    colors: [
+                                      Color.fromRGBO(0xC6, 0x0A, 0x0A, 1.0),
+                                      Color.fromRGBO(0xFA, 0x4F, 0x4F, 1.0),
+                                    ],
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '2',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(fontSize: 14),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 11),
+                if (widget.play)
+                  Container(
+                    height: 4,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(2)),
+                      color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: StreamBuilder<PlaybackInfo>(
+                        stream: _player.playbackInfoStream,
+                        initialData: const PlaybackInfo(),
+                        builder: (context, snapshot) {
+                          final value = snapshot.requireData;
+                          final position = value.position.inMilliseconds;
+                          final duration = value.duration.inMilliseconds;
+                          final ratio =
+                              duration == 0 ? 0.0 : position / duration;
+                          return FractionallySizedBox(
+                            widthFactor: ratio < 0 ? 0 : ratio,
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(2)),
+                                color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 1.0),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              AutoSizeText(
+                                '${widget.profile.name}, 28',
+                                maxFontSize: 26,
+                                minFontSize: 18,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w300,
+                                    ),
+                              ),
+                              const SizedBox(width: 8),
+                              OnlineIndicatorBuilder(
+                                uid: widget.profile.uid,
+                                builder: (context, online) {
+                                  return online
+                                      ? const OnlineIndicator()
+                                      : const SizedBox.shrink();
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.school,
+                                size: 17,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: AutoSizeText(
+                                  widget.profile.location,
+                                  overflow: TextOverflow.ellipsis,
+                                  minFontSize: 2,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                        fontWeight: FontWeight.w300,
+                                        fontSize: 16,
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 8),
                     Padding(
-                      padding: const EdgeInsets.only(right: 8.0, bottom: 4),
-                      child: Text(
-                        topicLabel(widget.profile.topic),
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w300,
-                            ),
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Consumer(
+                        builder: (context, ref, _) {
+                          return _RecordButtonNew();
+                          return RecordButton(
+                            label: 'send invitation',
+                            submitLabel: 'send message',
+                            submitting: _uploading,
+                            submitted: widget.invited,
+                            onSubmit: (path) async {
+                              setState(() => _uploading = true);
+                              final uid = ref.read(userProvider).uid;
+                              final api = GetIt.instance.get<Api>();
+                              final result = await api.sendMessage(
+                                uid,
+                                widget.profile.uid,
+                                ChatType.audio,
+                                path,
+                              );
+                              if (mounted) {
+                                setState(() => _uploading = false);
+                                result.fold(
+                                  (l) {
+                                    if (l is ApiClientError &&
+                                        l.error is ClientErrorForbidden) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                              'Failed to send invite, try again later'),
+                                        ),
+                                      );
+                                    } else {
+                                      displayError(context, l);
+                                    }
+                                  },
+                                  (r) => widget.onInvite(),
+                                );
+                              }
+                            },
+                            onBeginRecording: () {
+                              _player.stop();
+                              widget.onBeginRecording();
+                            },
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            Expanded(
-              child: Button(
-                onPressed: () {
-                  if (_audioPaused) {
-                    _player.play(loop: true);
-                  } else {
-                    _player.pause();
-                  }
-                },
-                child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  clipBehavior: Clip.hardEdge,
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(24)),
+          ),
+          if (!kReleaseMode)
+            Positioned(
+              left: 8,
+              right: 8,
+              bottom: 8 + MediaQuery.of(context).padding.bottom,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(24),
                   ),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Gallery(
-                        slideshow: widget.play && !_audioPaused,
-                        gallery: widget.profile.gallery,
-                        withWideBlur: false,
-                        blurPhotos: widget.profile.blurPhotos,
-                      ),
-                      Positioned(
-                        right: 16,
-                        top: 16,
-                        child: Column(
-                          children: [
-                            Button(
-                              onPressed: () {
-                                setState(() {
-                                  _localFavorite = !widget.favourite;
-                                });
-                                widget.onFavorite(!widget.favourite);
-                              },
-                              child: IconWithShadow(
-                                _localFavorite
-                                    ? Icons.bookmark
-                                    : Icons.bookmark_outline,
-                                color: Colors.white,
-                                size: 32,
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            ShareButton(
-                              profile: widget.profile,
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (!kReleaseMode)
-                        Positioned(
-                          left: 8,
-                          right: 8,
-                          bottom: 8,
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(24),
-                              ),
-                            ),
-                            padding: const EdgeInsets.all(8),
-                            alignment: Alignment.center,
-                            child: AutoSizeText(
-                              widget.profile.uid,
-                            ),
-                          ),
-                        ),
-                      if (_audioPaused)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.only(bottom: 72.0),
-                            child: IgnorePointer(
-                              child: IconWithShadow(
-                                Icons.play_arrow,
-                                size: 80,
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (widget.profile.blurPhotos)
-                        Center(
-                          child: IgnorePointer(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 72.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Hidden pictures',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                      fontSize: 22,
-                                      shadows: [
-                                        const BoxShadow(
-                                          color: Color.fromRGBO(
-                                              0x00, 0x00, 0x00, 0.5),
-                                          offset: Offset(0, 2),
-                                          blurRadius: 6,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'To view pics ask them to show you!',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                      shadows: [
-                                        const BoxShadow(
-                                          color: Color.fromRGBO(
-                                              0x00, 0x00, 0x00, 0.5),
-                                          offset: Offset(0, 2),
-                                          blurRadius: 6,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                ),
+                padding: const EdgeInsets.all(8),
+                alignment: Alignment.center,
+                child: AutoSizeText(
+                  widget.profile.uid,
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            if (widget.play)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: StreamBuilder<PlaybackInfo>(
-                  stream: _player.playbackInfoStream,
-                  initialData: const PlaybackInfo(),
-                  builder: (context, snapshot) {
-                    final value = snapshot.requireData;
-                    final position = value.position.inMilliseconds;
-                    final duration = value.duration.inMilliseconds;
-                    final ratio = duration == 0 ? 0.0 : position / duration;
-                    return FractionallySizedBox(
-                      widthFactor: ratio < 0 ? 0 : ratio,
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        height: 13,
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(3)),
-                          color: Color.fromRGBO(0xD9, 0xD9, 0xD9, 1.0),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            const SizedBox(height: 16),
-            Consumer(
-              builder: (context, ref, _) {
-                return RecordButton(
-                  label: 'Invite to voice chat',
-                  submitLabel: 'send message',
-                  submitting: _uploading,
-                  submitted: widget.invited,
-                  onSubmit: (path) async {
-                    setState(() => _uploading = true);
-                    final uid = ref.read(userProvider).uid;
-                    final api = GetIt.instance.get<Api>();
-                    final result = await api.sendMessage(
-                      uid,
-                      widget.profile.uid,
-                      ChatType.audio,
-                      path,
-                    );
-                    if (mounted) {
-                      setState(() => _uploading = false);
-                      result.fold(
-                        (l) {
-                          if (l is ApiClientError &&
-                              l.error is ClientErrorForbidden) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Failed to send invite, try again later'),
-                              ),
-                            );
-                          } else {
-                            displayError(context, l);
-                          }
-                        },
-                        (r) => widget.onInvite(),
-                      );
-                    }
-                  },
-                  onBeginRecording: () {
-                    _player.stop();
-                    widget.onBeginRecording();
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _RecordButtonNew extends StatelessWidget {
+  const _RecordButtonNew({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 180,
+      height: 71,
+      decoration: const BoxDecoration(
+        color: Color.fromRGBO(0xFF, 0x00, 0x00, 0.5),
+        borderRadius: BorderRadius.all(
+          Radius.circular(72),
         ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.mic_none),
+          const SizedBox(width: 4),
+          Text(
+            'send invitation',
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium!
+                .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+          ),
+        ],
       ),
     );
   }
@@ -1081,13 +1059,7 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
                 }
                 setState(() => _profile = profile.copyWith(favorite: favorite));
               },
-              onBlock: () => Navigator.of(context).pop(),
-              onReport: () {
-                context.pushNamed(
-                  'report',
-                  extra: ReportScreenArguments(uid: profile.uid),
-                );
-              },
+              onBlocked: () => Navigator.of(context).pop(),
             ),
           );
         },

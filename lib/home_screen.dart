@@ -1,14 +1,8 @@
-import 'dart:math';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:go_router/go_router.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/main.dart';
-import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/common.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   final int tabIndex;
@@ -62,104 +56,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
       backgroundColor: Colors.black,
       extendBody: true,
       resizeToAvoidBottomInset: false,
-      bottomNavigationBar: _NavigationBar(
-        tabIndex: widget.tabIndex,
-        paddingTop: MediaQuery.of(context).padding.top,
-        onDiscoverPressed: () {
-          if (widget.tabIndex == 0) {
-            widget.scrollToDiscoverTopNotifier.scrollToTop();
-          }
-        },
-        // Notifications don't update the UI, this forces it
-        onFriendshipsPressed: () {
-          final loggedIn = FirebaseAuth.instance.currentUser != null;
-          if (loggedIn) {
-            widget.tempFriendshipsRefresh.refresh();
-          }
-        },
-      ),
       body: widget.child,
-    );
-  }
-}
-
-class _NavigationBar extends StatelessWidget {
-  final int tabIndex;
-  final double paddingTop;
-  final VoidCallback onDiscoverPressed;
-  final VoidCallback onFriendshipsPressed;
-
-  const _NavigationBar({
-    super.key,
-    required this.tabIndex,
-    required this.paddingTop,
-    required this.onDiscoverPressed,
-    required this.onFriendshipsPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // BottomNavigationBar height is available to pages via MediaQuery bottom padding
-    final obscuredTop = 55.0 + paddingTop;
-    final obscuredBottom = 40.0 + MediaQuery.of(context).padding.bottom;
-    final obscuredHeight = max(obscuredTop, obscuredBottom);
-    return SizedBox(
-      height: obscuredHeight,
-      child: BlurredSurface(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Button(
-                onPressed: () {
-                  context.goNamed('discover');
-                  onDiscoverPressed();
-                },
-                child: Center(
-                  child: Text(
-                    'Discover',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 20,
-                          fontWeight: tabIndex != 0 ? FontWeight.w300 : null,
-                        ),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Button(
-                onPressed: () {
-                  context.goNamed('friendships');
-                  onFriendshipsPressed();
-                },
-                child: Center(
-                  child: Text(
-                    'Friendships',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 20,
-                          fontWeight: tabIndex != 1 ? FontWeight.w300 : null,
-                        ),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Button(
-                onPressed: () => context.goNamed('profile'),
-                child: Center(
-                  child: Text(
-                    'Profile',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 20,
-                          fontWeight: tabIndex != 2 ? FontWeight.w300 : null,
-                        ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
