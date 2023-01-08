@@ -41,11 +41,11 @@ import 'package:openup/util/page_transition.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/sign_up_overview_page.dart';
+import 'package:openup/widgets/carousel.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-const host = '192.168.1.111';
-// const host = 'ec2-54-156-60-224.compute-1.amazonaws.com';
+const host = String.fromEnvironment('HOST');
 const webPort = 8080;
 const socketPort = 8081;
 
@@ -141,6 +141,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   final _tempFriendshipsRefresh = TempFriendshipsRefresh();
 
   final _scrollToDiscoverTopNotifier = ScrollToDiscoverTopNotifier();
+
+  final _carouselKey = GlobalKey<CarouselState>();
 
   PageRoute _buildPageRoute<T>({
     required RouteSettings settings,
@@ -300,74 +302,80 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           ),
         ),
         builder: (context, child) {
-          return CupertinoTheme(
-            data: const CupertinoThemeData(
-              brightness: Brightness.dark,
-              primaryColor: Colors.white,
-            ),
-            child: Stack(
-              children: [
-                if (child != null) Positioned.fill(child: child),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  child: StreamBuilder<bool>(
-                    stream:
-                        GetIt.instance.get<CallManager>().callPageActiveStream,
-                    initialData: false,
-                    builder: (context, snapshot) {
-                      final callPageActive = snapshot.requireData;
-                      return StreamBuilder<CallState>(
-                        stream: GetIt.instance.get<CallManager>().callState,
-                        initialData: const CallState.none(),
-                        builder: (context, snapshot) {
-                          final callState = snapshot.requireData;
-                          final display =
-                              !(callState is CallStateNone || callPageActive);
+          return Carousel(
+            key: _carouselKey,
+            child: CupertinoTheme(
+              data: const CupertinoThemeData(
+                brightness: Brightness.dark,
+                primaryColor: Colors.white,
+              ),
+              child: Stack(
+                children: [
+                  if (child != null) Positioned.fill(child: child),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    child: StreamBuilder<bool>(
+                      stream: GetIt.instance
+                          .get<CallManager>()
+                          .callPageActiveStream,
+                      initialData: false,
+                      builder: (context, snapshot) {
+                        final callPageActive = snapshot.requireData;
+                        return StreamBuilder<CallState>(
+                          stream: GetIt.instance.get<CallManager>().callState,
+                          initialData: const CallState.none(),
+                          builder: (context, snapshot) {
+                            final callState = snapshot.requireData;
+                            final display =
+                                !(callState is CallStateNone || callPageActive);
 
-                          return IgnorePointer(
-                            ignoring: !display,
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 150),
-                              opacity: display ? 1.0 : 0.0,
-                              child: Button(
-                                onPressed: () => context.pushNamed('call'),
-                                child: Container(
-                                  height:
-                                      40 + MediaQuery.of(context).padding.top,
-                                  color: const Color.fromRGBO(
-                                      0x03, 0xCB, 0x17, 1.0),
-                                  padding: EdgeInsets.only(
-                                      top: MediaQuery.of(context).padding.top),
-                                  alignment: Alignment.center,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(Icons.call, size: 20),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Tap to return to call',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium!
-                                            .copyWith(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w300,
-                                            ),
-                                      ),
-                                    ],
+                            return IgnorePointer(
+                              ignoring: !display,
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 150),
+                                opacity: display ? 1.0 : 0.0,
+                                child: Button(
+                                  onPressed: () => context.pushNamed('call'),
+                                  child: Container(
+                                    height:
+                                        40 + MediaQuery.of(context).padding.top,
+                                    color: const Color.fromRGBO(
+                                        0x03, 0xCB, 0x17, 1.0),
+                                    padding: EdgeInsets.only(
+                                        top:
+                                            MediaQuery.of(context).padding.top),
+                                    alignment: Alignment.center,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.call, size: 20),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Tap to return to call',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium!
+                                              .copyWith(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w300,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      );
-                    },
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -516,6 +524,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               builder: (context, state) {
                 return DiscoverPage(
                   scrollToTopNotifier: _scrollToDiscoverTopNotifier,
+                  carouselKey: _carouselKey,
                 );
               },
               routes: [

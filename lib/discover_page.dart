@@ -17,6 +17,7 @@ import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/carousel.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
@@ -24,9 +25,12 @@ import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
   final ScrollToDiscoverTopNotifier scrollToTopNotifier;
+  final GlobalKey<CarouselState> carouselKey;
+
   const DiscoverPage({
     Key? key,
     required this.scrollToTopNotifier,
+    required this.carouselKey,
   }) : super(key: key);
 
   @override
@@ -376,6 +380,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     onBlocked: () => setState(() =>
                         _profiles.removeWhere(((p) => p.uid == profile.uid))),
                     onBeginRecording: () {},
+                    onMenu: () {
+                      widget.carouselKey.currentState?.showMenu = true;
+                    },
                   ),
                 );
               },
@@ -457,6 +464,7 @@ class _UserProfileDisplay extends StatefulWidget {
   final VoidCallback onBeginRecording;
   final void Function(bool favorite) onFavorite;
   final VoidCallback onBlocked;
+  final VoidCallback onMenu;
 
   const _UserProfileDisplay({
     Key? key,
@@ -468,6 +476,7 @@ class _UserProfileDisplay extends StatefulWidget {
     required this.onBeginRecording,
     required this.onFavorite,
     required this.onBlocked,
+    required this.onMenu,
   }) : super(key: key);
 
   @override
@@ -703,16 +712,19 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                         children: [
                           Align(
                             alignment: Alignment.bottomLeft,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: const BoxDecoration(
-                                color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Image.asset(
-                                'assets/images/app_icon_new.png',
-                                fit: BoxFit.contain,
+                            child: Button(
+                              onPressed: widget.onMenu,
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: const BoxDecoration(
+                                  color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Image.asset(
+                                  'assets/images/app_icon_new.png',
+                                  fit: BoxFit.contain,
+                                ),
                               ),
                             ),
                           ),
@@ -1060,6 +1072,7 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
                 setState(() => _profile = profile.copyWith(favorite: favorite));
               },
               onBlocked: () => Navigator.of(context).pop(),
+              onMenu: () {},
             ),
           );
         },
