@@ -102,6 +102,9 @@ flutter:
     - assets/images/videocam.svg
     - assets/videos/welcome.mp4
 
+  shaders:
+    - assets/shaders/depth.frag
+
   fonts:
     - family: Myriad
       fonts:

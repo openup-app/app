@@ -68,6 +68,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       final index = _pageController.page?.round() ?? _currentProfileIndex;
       final forward = index > oldIndex;
       if (_currentProfileIndex != index) {
+        _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
         setState(() => _currentProfileIndex = index);
         if (!_showingFavorites &&
             index > _profiles.length - 4 &&
@@ -79,6 +80,25 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     });
 
     widget.scrollToTopNotifier.addListener(_onScrollToTop);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _precacheImageAndDepth(_profiles, from: 1, count: 2);
+  }
+
+  void _precacheImageAndDepth(
+    List<Profile> profiles, {
+    required int from,
+    required int count,
+  }) {
+    profiles.skip(from).take(count).forEach((profile) {
+      profile.gallery.forEach((photo) {
+        precacheImage(NetworkImage(photo), context);
+        precacheImage(NetworkImage('${photo}_depth'), context);
+      });
+    });
   }
 
   @override
@@ -377,6 +397,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         },
                       );
                     },
+                    onNext: () {
+                      _pageController.nextPage(
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeOut,
+                      );
+                    },
                     onBlocked: () => setState(() =>
                         _profiles.removeWhere(((p) => p.uid == profile.uid))),
                     onBeginRecording: () {},
@@ -463,6 +489,7 @@ class _UserProfileDisplay extends StatefulWidget {
   final VoidCallback onInvite;
   final VoidCallback onBeginRecording;
   final void Function(bool favorite) onFavorite;
+  final VoidCallback onNext;
   final VoidCallback onBlocked;
   final VoidCallback onMenu;
 
@@ -475,6 +502,7 @@ class _UserProfileDisplay extends StatefulWidget {
     required this.onInvite,
     required this.onBeginRecording,
     required this.onFavorite,
+    required this.onNext,
     required this.onBlocked,
     required this.onMenu,
   }) : super(key: key);
@@ -573,7 +601,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
             child: Column(
               children: [
                 Button(
-                  onPressed: () {},
+                  onPressed: widget.onNext,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Container(
@@ -808,7 +836,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                           Row(
                             children: [
                               AutoSizeText(
-                                '${widget.profile.name}, 28',
+                                '${widget.profile.name}, 00',
                                 maxFontSize: 26,
                                 minFontSize: 18,
                                 style: Theme.of(context)
@@ -943,28 +971,31 @@ class _RecordButtonNew extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 180,
-      height: 71,
-      decoration: const BoxDecoration(
-        color: Color.fromRGBO(0xFF, 0x00, 0x00, 0.5),
-        borderRadius: BorderRadius.all(
-          Radius.circular(72),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.mic_none),
-          const SizedBox(width: 4),
-          Text(
-            'send invitation',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium!
-                .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        width: 180,
+        height: 71,
+        decoration: const BoxDecoration(
+          color: Color.fromRGBO(0xFF, 0x00, 0x00, 0.5),
+          borderRadius: BorderRadius.all(
+            Radius.circular(72),
           ),
-        ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.mic_none),
+            const SizedBox(width: 4),
+            Text(
+              'send invitation',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1071,6 +1102,7 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
                 }
                 setState(() => _profile = profile.copyWith(favorite: favorite));
               },
+              onNext: () {},
               onBlocked: () => Navigator.of(context).pop(),
               onMenu: () {},
             ),

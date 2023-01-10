@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -19,7 +20,7 @@ import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
-import 'package:openup/widgets/image_builder.dart';
+import 'package:openup/widgets/image3d.dart';
 
 class CountdownTimer extends StatefulWidget {
   final String Function(Duration remaining)? formatter;
@@ -199,52 +200,84 @@ Future<T?> showModalSheet<T>({
   );
 }
 
-class ProfileImage extends StatelessWidget {
+class ProfileImage extends StatefulWidget {
   final String photo;
   final BoxFit fit;
   final bool blur;
   final double blurSigma;
+  final bool animate;
+  final VoidCallback? onLoaded;
+
   const ProfileImage(
     this.photo, {
     super.key,
     this.fit = BoxFit.cover,
     this.blurSigma = 10.0,
     required this.blur,
+    this.animate = true,
+    this.onLoaded,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return ClipRect(
-      child: Image.network(
-        photo,
-        fit: fit,
-        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-          return fadeInFrameBuilder(
-            context,
-            blur ? _blurred(child) : child,
-            frame,
-            wasSynchronouslyLoaded,
-          );
-        },
-        loadingBuilder: (context, child, progress) {
-          return loadingBuilder(
-            context,
-            blur ? _blurred(child) : child,
-            progress,
-          );
-        },
-        errorBuilder: iconErrorBuilder,
-      ),
-    );
+  State<ProfileImage> createState() => _ProfileImageState();
+}
+
+class _ProfileImageState extends State<ProfileImage> {
+  late final _photoImageProvider = NetworkImage(widget.photo);
+  late final _depthImageProvider = NetworkImage('${widget.photo}_depth');
+
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final futures = Future.wait([
+      _decodeImage(_photoImageProvider),
+      _decodeImage(_depthImageProvider),
+    ]);
+    futures.then((values) {
+      values[0].dispose();
+      values[1].dispose();
+      if (mounted) {
+        setState(() => _loading = false);
+        widget.onLoaded?.call();
+      }
+    });
   }
 
-  Widget _blurred(Widget child) {
-    return ImageFiltered(
-      imageFilter: ImageFilter.blur(
-        sigmaX: blurSigma,
-        sigmaY: blurSigma,
-      ),
-      child: child,
+  Future<ui.Image> _decodeImage(ImageProvider provider) {
+    final completer = Completer<ui.Image>();
+    final listener = ImageStreamListener((imageInfo, _) {
+      completer.complete(imageInfo.image);
+    }, onError: (error, stackTrace) {
+      completer.completeError(error, stackTrace);
+    });
+    provider.resolve(ImageConfiguration.empty).addListener(listener);
+    return completer.future;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ImageFiltered(
+          enabled: widget.blur,
+          imageFilter: ImageFilter.blur(
+            sigmaX: widget.blurSigma,
+            sigmaY: widget.blurSigma,
+          ),
+          child: Image3D(
+            image: _photoImageProvider,
+            depth: _depthImageProvider,
+            animate: widget.animate,
+          ),
+        ),
+        if (_loading)
+          const Center(
+            child: LoadingIndicator(),
+          ),
+      ],
     );
   }
 }
