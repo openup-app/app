@@ -4,6 +4,7 @@ import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Chip;
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
@@ -622,7 +623,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                 ),
                 const SizedBox(height: 13),
                 Button(
-                  onPressed: () {},
+                  onPressed: _showPreferencesSheet,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Container(
@@ -964,6 +965,68 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
       ),
     );
   }
+
+  void _showPreferencesSheet() {
+    showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Surface(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 30.0, right: 45),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    'I\'m interested in seeing...',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                RadioTile(
+                  label: 'Men',
+                  onTap: () {},
+                  radioAtEnd: true,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                ),
+                RadioTile(
+                  label: 'Women',
+                  onTap: () {},
+                  radioAtEnd: true,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                ),
+                RadioTile(
+                  label: 'Non-Binary',
+                  selected: true,
+                  onTap: () {},
+                  radioAtEnd: true,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).padding.bottom + 24,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _RecordButtonNew extends StatelessWidget {
@@ -972,7 +1035,7 @@ class _RecordButtonNew extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () => _showRecordSheet(context),
       child: Container(
         width: 180,
         height: 71,
@@ -997,6 +1060,18 @@ class _RecordButtonNew extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showRecordSheet(BuildContext context) {
+    showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return const Surface(
+          child: RecordPanel(),
+        );
+      },
     );
   }
 }

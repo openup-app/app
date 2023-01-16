@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get_it/get_it.dart';
@@ -163,7 +164,6 @@ class Surface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const blur = 30.0;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -175,8 +175,7 @@ class Surface extends StatelessWidget {
           bottomRight: squareBottom ? Radius.zero : const Radius.circular(40),
         ),
       ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+      child: CupertinoPopupSurface(
         child: Material(
           elevation: 0,
           type: MaterialType.transparency,
@@ -185,19 +184,6 @@ class Surface extends StatelessWidget {
       ),
     );
   }
-}
-
-Future<T?> showModalSheet<T>({
-  required BuildContext context,
-  required WidgetBuilder builder,
-}) {
-  return showCupertinoModalPopup<T>(
-    context: context,
-    barrierColor: const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-    builder: (context) {
-      return builder(context);
-    },
-  );
 }
 
 class ProfileImage extends StatefulWidget {
@@ -879,6 +865,224 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
   }
 }
 
+class RecordPanel extends StatefulWidget {
+  const RecordPanel({super.key});
+
+  @override
+  State<RecordPanel> createState() => _RecordPanelState();
+}
+
+class _RecordPanelState extends State<RecordPanel> {
+  bool _recording = false;
+  late AudioBioController _recorder;
+  String? _recordingPath;
+
+  late Ticker _countdownTicker;
+  var _countdown = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _recorder = AudioBioController(
+      onRecordingComplete: (path) {
+        if (mounted) {
+          setState(() => _recordingPath = path);
+        }
+      },
+    );
+
+    _recorder.recordInfoStream.listen((recordInfo) {
+      if (_recording != recordInfo.recording) {
+        setState(() => _recording = recordInfo.recording);
+      }
+    });
+
+    _restartCountdown();
+  }
+
+  @override
+  void dispose() {
+    _countdownTicker.dispose();
+    _recorder.dispose();
+    super.dispose();
+  }
+
+  void _restartCountdown() {
+    setState(() {
+      _recordingPath = null;
+      _countdown = const Duration(seconds: 3);
+    });
+    _countdownTicker = Ticker(
+      (duration) {
+        setState(() => _countdown = duration);
+        if (duration >= const Duration(seconds: 3)) {
+          setState(() => _recording = true);
+          _countdownTicker.stop();
+          _recorder.startRecording();
+        }
+      },
+    );
+    _countdownTicker.start();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: () {
+        if (!_recording && _recordingPath == null) {
+          Navigator.of(context).pop();
+        } else {
+          _recorder.stopRecording();
+        }
+      },
+      child: SizedBox(
+        height: 234,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 16),
+            Text(
+              'Recording message',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+            ),
+            Expanded(
+              child: Center(
+                child: Builder(
+                  builder: (context) {
+                    if (_recordingPath == null) {
+                      return StreamBuilder<RecordInfo>(
+                        initialData: const RecordInfo(),
+                        stream: _recorder.recordInfoStream,
+                        builder: (context, snapshot) {
+                          final recordInfo = snapshot.requireData;
+                          if (!recordInfo.recording) {
+                            return Text(
+                              ((const Duration(seconds: 3) - _countdown)
+                                          .inSeconds +
+                                      1)
+                                  .toString(),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w300,
+                                      color: const Color.fromRGBO(
+                                          0xFF, 0x00, 0x00, 1.0)),
+                            );
+                          } else {
+                            return const Center(
+                              child: Text('TODO'),
+                            );
+                          }
+                        },
+                      );
+                    } else {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Button(
+                            onPressed: Navigator.of(context).pop,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.delete,
+                                    color:
+                                        Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'delete',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w300),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Button(
+                            onPressed: () => _restartCountdown(),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.loop),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'retry',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w300),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Button(
+                            onPressed: () {},
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.send),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'send',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w300),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
+            Visibility(
+              visible: _recordingPath == null,
+              child: Text(
+                'tap to stop',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: MediaQuery.of(context).padding.bottom,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class RecordButtonChat extends StatefulWidget {
   final void Function(String path) onSubmit;
   final void Function() onBeginRecording;
@@ -1488,7 +1692,7 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
   }
 
   void _showReportModal() async {
-    final reportReason = await showModalSheet<String>(
+    final reportReason = await showModalBottomSheet<String>(
       context: context,
       builder: (context) {
         return Surface(
@@ -1506,19 +1710,19 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
                       .copyWith(fontSize: 24, fontWeight: FontWeight.w300),
                 ),
                 const SizedBox(height: 8),
-                _RadioTile(
+                RadioTile(
                   label: 'Impersonation or deceptive identity',
                   onTap: () => Navigator.of(context).pop("deceptive"),
                 ),
-                _RadioTile(
+                RadioTile(
                   label: 'Nudity or sexual activity',
                   onTap: () => Navigator.of(context).pop("sexual"),
                 ),
-                _RadioTile(
+                RadioTile(
                   label: 'Suicide or self-harm',
                   onTap: () => Navigator.of(context).pop("self-harm"),
                 ),
-                _RadioTile(
+                RadioTile(
                   label: 'Violence or harmful content',
                   onTap: () => Navigator.of(context).pop("harmful"),
                 ),
@@ -1532,12 +1736,11 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
     if (reportReason != null && mounted) {
       final myUid = ref.read(userProvider).uid;
       final api = GetIt.instance.get<Api>();
-      // final reportFuture = api.reportUser(
-      //   uid: myUid,
-      //   reportedUid: widget.uid,
-      //   reason: reportReason,
-      // );
-      final reportFuture = Future.delayed(const Duration(seconds: 1));
+      final reportFuture = api.reportUser(
+        uid: myUid,
+        reportedUid: widget.uid,
+        reason: reportReason,
+      );
       await withBlockingModal(
         context: context,
         label: 'Reporting...',
@@ -1641,13 +1844,20 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
   }
 }
 
-class _RadioTile extends StatelessWidget {
+class RadioTile extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
-  const _RadioTile({
+  final bool? selected;
+  final bool radioAtEnd;
+  final TextStyle? style;
+
+  const RadioTile({
     super.key,
     required this.label,
+    this.selected,
     required this.onTap,
+    this.radioAtEnd = false,
+    this.style,
   });
 
   @override
@@ -1658,26 +1868,46 @@ class _RadioTile extends StatelessWidget {
         height: 51,
         child: Row(
           children: [
-            Container(
-              width: 18,
-              height: 18,
-              decoration: const BoxDecoration(
-                  border: Border(
+            if (!radioAtEnd)
+              Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: selected == true ? Colors.white : null,
+                  border: const Border(
                     left: BorderSide(color: Colors.white, width: 2),
                     top: BorderSide(color: Colors.white, width: 2),
                     right: BorderSide(color: Colors.white, width: 2),
                     bottom: BorderSide(color: Colors.white, width: 2),
                   ),
-                  shape: BoxShape.circle),
-            ),
+                  shape: BoxShape.circle,
+                ),
+              ),
             const SizedBox(width: 18),
             Text(
               label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 14, fontWeight: FontWeight.w300),
+              style: style ??
+                  Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 14, fontWeight: FontWeight.w300),
             ),
+            const Spacer(),
+            if (radioAtEnd)
+              Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: selected == true ? Colors.white : null,
+                  border: const Border(
+                    left: BorderSide(color: Colors.white, width: 2),
+                    top: BorderSide(color: Colors.white, width: 2),
+                    right: BorderSide(color: Colors.white, width: 2),
+                    bottom: BorderSide(color: Colors.white, width: 2),
+                  ),
+                  shape: BoxShape.circle,
+                ),
+              ),
           ],
         ),
       ),
