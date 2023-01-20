@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:async/async.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dartz/dartz.dart' show Either;
@@ -49,38 +51,17 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   int _currentProfileIndex = 0;
   Topic? _selectedTopic;
-  bool _showingFavorites = false;
   final _invitedUsers = <String>{};
-  final _pageController = PageController();
 
-  final _pageListener = ValueNotifier<double>(1);
+  final _swipeKey = GlobalKey<__SwipableState>();
+  final _nextScaleAnimation = ValueNotifier<double>(0);
 
   @override
   void initState() {
     super.initState();
-    _fetchStatuses().then((_) {
+    _fetchPageOfProfiles().then((_) {
       _maybeRequestNotification();
     });
-
-    _pageController.addListener(() {
-      final page = _pageController.page ?? 1;
-      _pageListener.value = page;
-      final oldIndex = _currentProfileIndex;
-      final index = _pageController.page?.round() ?? _currentProfileIndex;
-      final forward = index > oldIndex;
-      if (_currentProfileIndex != index) {
-        _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-        setState(() => _currentProfileIndex = index);
-        if (!_showingFavorites &&
-            index > _profiles.length - 4 &&
-            !_loading &&
-            forward) {
-          _fetchStatuses();
-        }
-      }
-    });
-
-    widget.scrollToTopNotifier.addListener(_onScrollToTop);
   }
 
   @override
@@ -104,8 +85,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   @override
   void dispose() {
-    _pageController.dispose();
-    widget.scrollToTopNotifier.removeListener(_onScrollToTop);
     super.dispose();
   }
 
@@ -188,11 +167,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     }
   }
 
-  Future<void> _fetchStatuses() async {
-    if (!mounted) {
-      return;
-    }
-
+  Future<void> _fetchPageOfProfiles() async {
     final granted = await _maybeRequestLocationPermission();
     if (!mounted || !granted) {
       return;
@@ -257,226 +232,146 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     );
   }
 
-  Future<void> _fetchFavorites() async {
-    if (!mounted) {
-      return;
-    }
-
-    setState(() => _loading = true);
-    final myUid = ref.read(userProvider).uid;
-    final api = GetIt.instance.get<Api>();
-    final profiles = await api.getFavorites(myUid);
-
-    if (!mounted) {
-      return;
-    }
-    setState(() => _loading = false);
-
-    profiles.fold(
-      (l) {
-        var message = errorToMessage(l);
-        message = l.when(
-          network: (_) => message,
-          client: (client) => client.when(
-            badRequest: () => 'Unable to request users',
-            unauthorized: () => message,
-            notFound: () => 'Unable to find users',
-            forbidden: () => message,
-            conflict: () => message,
-          ),
-          server: (_) => message,
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-          ),
-        );
-      },
-      (r) async {
-        setState(() {
-          _profiles
-            ..clear()
-            ..addAll(r.map((e) => e.profile));
-        });
-      },
-    );
-  }
-
-  void _onScrollToTop() {
-    _pageController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOut,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: RefreshIndicator(
-            edgeOffset: MediaQuery.of(context).padding.top + 50,
-            onRefresh: () {
-              setState(() {
-                _discoverOperation?.cancel();
-                _profiles.clear();
-                _nextMinRadius = 0;
-                _nextPage = 0;
-              });
-              if (_showingFavorites) {
-                return _fetchFavorites();
-              } else {
-                return _fetchStatuses();
-              }
-            },
-            child: PageView.builder(
-              controller: _pageController,
-              scrollDirection: Axis.vertical,
-              itemCount: _profiles.length,
-              itemBuilder: (context, index) {
-                final profile = _profiles[index];
-                return ValueListenableBuilder<double>(
-                  valueListenable: _pageListener,
-                  builder: (context, page, child) {
-                    final pageIndex = page.floor();
-                    final visibility = (page - pageIndex) * (page - pageIndex);
-                    if (index <= pageIndex) {
-                      return ColorFiltered(
-                        colorFilter: ColorFilter.mode(
-                          Color.fromRGBO(0x00, 0x00, 0x00, visibility),
-                          BlendMode.srcOver,
-                        ),
-                        child: child!,
-                      );
-                    } else {
-                      return ColorFiltered(
-                        colorFilter: ColorFilter.mode(
-                          Color.fromRGBO(0x00, 0x00, 0x00, 1 - visibility),
-                          BlendMode.srcOver,
-                        ),
-                        child: child!,
-                      );
+    if (_profiles.isEmpty) {
+      if (_loading) {
+        return const Center(
+          child: LoadingIndicator(),
+        );
+      } else {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: !_hasLocation
+                    ? Text(
+                        'Unable to get location',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      )
+                    : Text(
+                        _selectedTopic == null
+                            ? 'Couldn\'t find any profiles'
+                            : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  // Location needed at least once for nearby users
+                  // (may not have granted location during onboarding)
+                  setState(() => _loading = true);
+                  final locationService = LocationService();
+                  if (!await locationService.hasPermission()) {
+                    final status = await locationService.requestPermission();
+                    if (status) {
+                      await _updateLocation();
                     }
+                  }
+
+                  if (!mounted) {
+                    return;
+                  }
+                  setState(() {
+                    _nextMinRadius = 0;
+                    _nextPage = 0;
+                  });
+                  _fetchPageOfProfiles();
+                },
+                child: const Text('Refresh'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (_profiles.length > _currentProfileIndex)
+          for (var i = _currentProfileIndex + 1; i >= _currentProfileIndex; i--)
+            Builder(
+              key: ValueKey(i),
+              builder: (context) {
+                final frontProfile = i == _currentProfileIndex;
+                if (i >= _profiles.length) {
+                  return const Center(
+                    child: LoadingIndicator(),
+                  );
+                }
+                final profile = _profiles[i];
+                return ValueListenableBuilder<double>(
+                  valueListenable: frontProfile
+                      ? const AlwaysStoppedAnimation(1.0)
+                      : _nextScaleAnimation,
+                  builder: (context, value, child) {
+                    return ScaleTransition(
+                      scale: AlwaysStoppedAnimation(value),
+                      child: child!,
+                    );
                   },
-                  child: _UserProfileDisplay(
-                    profile: profile,
-                    play: _currentProfileIndex == index,
-                    invited: _invitedUsers.contains(profile.uid),
-                    favourite: profile.favorite,
-                    onInvite: () {
-                      GetIt.instance.get<Mixpanel>().track(
-                        "send_invite",
-                        properties: {"type": "discover"},
-                      );
-                      setState(() => _invitedUsers.add(profile.uid));
-                    },
-                    onFavorite: (favorite) async {
-                      if (favorite) {
-                        GetIt.instance.get<Mixpanel>().track("add_favorite");
-                      } else {
-                        GetIt.instance.get<Mixpanel>().track("remove_favorite");
-                      }
-                      if (_showingFavorites && !favorite) {
-                        setState(() => _profiles.removeAt(index));
-                      }
-                      final uid = ref.read(userProvider).uid;
-                      final api = GetIt.instance.get<Api>();
-                      final result = favorite
-                          ? await api.addFavorite(uid, profile.uid)
-                          : await api.removeFavorite(uid, profile.uid);
-                      if (!mounted) {
-                        return;
-                      }
-                      result.fold(
-                        (l) {},
-                        (r) {
-                          setState(() {
-                            _profiles[index] =
-                                _profiles[index].copyWith(favorite: favorite);
-                          });
+                  child: IgnorePointer(
+                    ignoring: !frontProfile,
+                    child: _Swipable(
+                      key: frontProfile ? _swipeKey : null,
+                      onSwipe: (right) {
+                        setState(() => _currentProfileIndex++);
+                        _nextScaleAnimation.value = 0.0;
+                        _precacheImageAndDepth(
+                          _profiles,
+                          from: _currentProfileIndex + 1,
+                          count: 2,
+                        );
+
+                        if (_currentProfileIndex >= _profiles.length - 4 &&
+                            !_loading) {
+                          _fetchPageOfProfiles();
+                        }
+                      },
+                      onUpdate: (value) {
+                        _nextScaleAnimation.value = value.abs() * 0.3 + 0.7;
+                      },
+                      child: _UserProfileDisplay(
+                        key: ValueKey(profile.uid),
+                        profile: profile,
+                        play: frontProfile,
+                        invited: _invitedUsers.contains(profile.uid),
+                        onInvite: () {
+                          GetIt.instance.get<Mixpanel>().track(
+                            "send_invite",
+                            properties: {"type": "discover"},
+                          );
+                          setState(() => _invitedUsers.add(profile.uid));
                         },
-                      );
-                    },
-                    onNext: () {
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 400),
-                        curve: Curves.easeOut,
-                      );
-                    },
-                    onBlocked: () => setState(() =>
-                        _profiles.removeWhere(((p) => p.uid == profile.uid))),
-                    onBeginRecording: () {},
-                    onMenu: () {
-                      widget.carouselKey.currentState?.showMenu = true;
-                    },
+                        onNext: () => _swipeKey.currentState?.animateLeft(),
+                        onPrevious: !frontProfile
+                            ? () {}
+                            : (_currentProfileIndex <= 0
+                                ? null
+                                : () {
+                                    setState(() => _currentProfileIndex--);
+                                    SchedulerBinding.instance
+                                        .addPostFrameCallback((_) {
+                                      if (mounted) {
+                                        _swipeKey.currentState?.reverse();
+                                      }
+                                    });
+                                  }),
+                        onBlocked: () => setState(() => _profiles
+                            .removeWhere(((p) => p.uid == profile.uid))),
+                        onBeginRecording: () {},
+                        onMenu: () {
+                          widget.carouselKey.currentState?.showMenu = true;
+                        },
+                      ),
+                    ),
                   ),
                 );
               },
             ),
-          ),
-        ),
-        if (_profiles.isEmpty && !_loading)
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: !_hasLocation
-                      ? Text(
-                          'Unable to get location',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        )
-                      : Text(
-                          _selectedTopic == null
-                              ? 'Couldn\'t find any profiles'
-                              : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    // Location needed at least once for nearby users
-                    // (may not have granted location during onboarding)
-                    if (!_showingFavorites) {
-                      if (mounted) {
-                        setState(() => _loading = true);
-                      }
-
-                      final locationService = LocationService();
-                      if (!await locationService.hasPermission()) {
-                        final status =
-                            await locationService.requestPermission();
-                        if (status) {
-                          await _updateLocation();
-                        }
-                      }
-                    }
-
-                    if (!mounted) {
-                      return;
-                    }
-
-                    setState(() {
-                      _nextMinRadius = 0;
-                      _nextPage = 0;
-                    });
-                    if (_showingFavorites) {
-                      _fetchFavorites();
-                    } else {
-                      _fetchStatuses();
-                    }
-                  },
-                  child: const Text('Refresh'),
-                ),
-              ],
-            ),
-          )
-        else if (_profiles.isEmpty)
-          const Center(
-            child: LoadingIndicator(),
-          ),
       ],
     );
   }
@@ -486,11 +381,10 @@ class _UserProfileDisplay extends StatefulWidget {
   final Profile profile;
   final bool play;
   final bool invited;
-  final bool favourite;
   final VoidCallback onInvite;
   final VoidCallback onBeginRecording;
-  final void Function(bool favorite) onFavorite;
-  final VoidCallback onNext;
+  final VoidCallback? onNext;
+  final VoidCallback? onPrevious;
   final VoidCallback onBlocked;
   final VoidCallback onMenu;
 
@@ -499,11 +393,10 @@ class _UserProfileDisplay extends StatefulWidget {
     required this.profile,
     required this.play,
     required this.invited,
-    required this.favourite,
     required this.onInvite,
     required this.onBeginRecording,
-    required this.onFavorite,
     required this.onNext,
+    required this.onPrevious,
     required this.onBlocked,
     required this.onMenu,
   }) : super(key: key);
@@ -514,7 +407,6 @@ class _UserProfileDisplay extends StatefulWidget {
 
 class __UserProfileDisplayState extends State<_UserProfileDisplay> {
   bool _uploading = false;
-  late bool _localFavorite;
 
   final _player = JustAudioAudioPlayer();
   bool _audioPaused = false;
@@ -530,7 +422,6 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
     if (widget.play) {
       _player.play(loop: true);
     }
-    _localFavorite = widget.favourite;
     _player.playbackInfoStream.listen((playbackInfo) {
       final isPaused = playbackInfo.state == PlaybackState.idle;
       if (!_audioPaused && isPaused) {
@@ -546,10 +437,6 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
   @override
   void didUpdateWidget(covariant _UserProfileDisplay oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.favourite != oldWidget.favourite) {
-      _localFavorite = widget.favourite;
-    }
-
     if (widget.play && !oldWidget.play) {
       _player.play(loop: true);
     } else if (!widget.play && oldWidget.play) {
@@ -579,8 +466,14 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
     return AppLifecycle(
       onPaused: _player.pause,
       child: Stack(
-        fit: StackFit.expand,
+        fit: StackFit.loose,
         children: [
+          // Stops becoming see through when fade transitioning or when tapped
+          const Positioned.fill(
+            child: ColoredBox(
+              color: Colors.black,
+            ),
+          ),
           Button(
             onPressed: () {
               if (_audioPaused) {
@@ -596,6 +489,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
               blurPhotos: widget.profile.blurPhotos,
             ),
           ),
+
           Positioned(
             right: 16,
             top: 16 + MediaQuery.of(context).padding.top,
@@ -639,6 +533,26 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                         color: Colors.white,
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.medium,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 13),
+                Button(
+                  onPressed: widget.onPrevious,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.undo,
+                        size: 16,
                       ),
                     ),
                   ),
@@ -837,7 +751,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                           Row(
                             children: [
                               AutoSizeText(
-                                '${widget.profile.name}, 00',
+                                widget.profile.name,
                                 maxFontSize: 26,
                                 minFontSize: 18,
                                 style: Theme.of(context)
@@ -845,7 +759,7 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                                     .bodyMedium!
                                     .copyWith(
                                       fontSize: 20,
-                                      fontWeight: FontWeight.w300,
+                                      fontWeight: FontWeight.w700,
                                     ),
                               ),
                               const SizedBox(width: 8),
@@ -860,30 +774,19 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
                             ],
                           ),
                           const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.school,
-                                size: 17,
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: AutoSizeText(
-                                  widget.profile.location,
-                                  overflow: TextOverflow.ellipsis,
-                                  minFontSize: 2,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                        fontWeight: FontWeight.w300,
-                                        fontSize: 16,
-                                      ),
+                          AutoSizeText(
+                            widget.profile.location,
+                            overflow: TextOverflow.ellipsis,
+                            minFontSize: 2,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontWeight: FontWeight.w300,
+                                  fontSize: 15,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
                           ),
+                          const SizedBox(width: 8),
                         ],
                       ),
                     ),
@@ -1029,6 +932,129 @@ class __UserProfileDisplayState extends State<_UserProfileDisplay> {
   }
 }
 
+class _Swipable extends StatefulWidget {
+  final void Function(bool right) onSwipe;
+  final ValueChanged<double>? onUpdate;
+  final Widget child;
+
+  const _Swipable({
+    super.key,
+    required this.onSwipe,
+    required this.onUpdate,
+    required this.child,
+  });
+
+  @override
+  State<_Swipable> createState() => __SwipableState();
+}
+
+class __SwipableState extends State<_Swipable>
+    with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 400),
+    value: 0.5,
+  );
+
+  double _lastValue = 0.5;
+
+  @override
+  void initState() {
+    _controller.addListener(() {
+      final status = _controller.status;
+      if (_lastValue != _controller.value) {
+        if (status == AnimationStatus.completed && _controller.value == 1.0) {
+          widget.onSwipe(true);
+          _controller.value = 0.5;
+        } else if (status == AnimationStatus.dismissed &&
+            _controller.value == 0.0) {
+          widget.onSwipe(false);
+          _controller.value = 0.5;
+        }
+
+        widget.onUpdate?.call(_controller.value * 2 - 1);
+        _lastValue = _controller.value;
+      }
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void animateRight() {
+    _controller.forward();
+  }
+
+  void animateLeft() {
+    _controller.reverse();
+  }
+
+  void reverse() {
+    _controller.value = 0.0001;
+    _controller.animateTo(0.5);
+  }
+
+  void reset() {
+    _controller.value = 0.5;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GestureDetector(
+          onPanDown: (_) => _controller.stop(),
+          onPanUpdate: (details) =>
+              _controller.value += details.delta.dx / constraints.maxWidth / 4,
+          onPanEnd: (details) {
+            final flung = details.velocity.pixelsPerSecond.dx.abs() > 450;
+            final releasedLeft = _controller.value <= 0.3;
+            final releasedRight = _controller.value >= 0.6;
+            if (flung) {
+              if (details.velocity.pixelsPerSecond.dx.isNegative) {
+                animateLeft();
+              } else {
+                animateRight();
+              }
+            } else if (releasedLeft) {
+              animateLeft();
+            } else if (releasedRight) {
+              animateRight();
+            } else {
+              _controller.animateTo(
+                0.5,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOut,
+              );
+            }
+          },
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Tween<Offset>(
+                  begin: Offset(-constraints.maxWidth, 0.0),
+                  end: Offset(constraints.maxWidth, 0.0),
+                ).evaluate(_controller),
+                child: Transform.rotate(
+                  angle: (_controller.value * 2 - 1) * pi / 8,
+                  alignment: const Alignment(0.0, 3.0),
+                  child: child,
+                ),
+              );
+            },
+            child: widget.child,
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _RecordButtonNew extends StatelessWidget {
   const _RecordButtonNew({super.key});
 
@@ -1037,13 +1063,19 @@ class _RecordButtonNew extends StatelessWidget {
     return GestureDetector(
       onTap: () => _showRecordSheet(context),
       child: Container(
-        width: 180,
-        height: 71,
+        width: 156,
+        height: 50,
         decoration: const BoxDecoration(
           color: Color.fromRGBO(0xFF, 0x00, 0x00, 0.5),
           borderRadius: BorderRadius.all(
             Radius.circular(72),
           ),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 14,
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1160,7 +1192,6 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
               profile: profile,
               play: true,
               invited: _invited,
-              favourite: profile.favorite,
               onInvite: () {
                 GetIt.instance.get<Mixpanel>().track(
                   "send_invite",
@@ -1169,15 +1200,8 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
                 setState(() => _invited = true);
               },
               onBeginRecording: () => _audioPlayer.stop(),
-              onFavorite: (favorite) {
-                if (favorite) {
-                  GetIt.instance.get<Mixpanel>().track("add_favorite");
-                } else {
-                  GetIt.instance.get<Mixpanel>().track("remove_favorite");
-                }
-                setState(() => _profile = profile.copyWith(favorite: favorite));
-              },
               onNext: () {},
+              onPrevious: () {},
               onBlocked: () => Navigator.of(context).pop(),
               onMenu: () {},
             ),

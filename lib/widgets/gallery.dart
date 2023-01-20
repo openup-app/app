@@ -62,32 +62,29 @@ class _GalleryState extends State<Gallery> {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 3 / 4,
-      child: ClipRRect(
-        child: Builder(
-          builder: (context) {
-            if (widget.gallery.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            final i = _index % widget.gallery.length;
-            final photo = widget.gallery[i];
+    return ClipRRect(
+      child: Builder(
+        builder: (context) {
+          if (widget.gallery.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          final i = _index % widget.gallery.length;
+          final photo = widget.gallery[i];
 
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 800),
-              child: ProfileImage(
-                key: ValueKey(_index),
-                photo,
-                blur: widget.blurPhotos,
-                animate: _slideshowTimer?.isActive == true,
-                onLoaded: () {
-                  setState(() => _ready = true);
-                  _maybeStartSlideshowTimer();
-                },
-              ),
-            );
-          },
-        ),
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 800),
+            child: ProfileImage(
+              key: ValueKey(_index),
+              photo,
+              blur: widget.blurPhotos,
+              animate: _slideshowTimer?.isActive == true,
+              onLoaded: () {
+                setState(() => _ready = true);
+                _maybeStartSlideshowTimer();
+              },
+            ),
+          );
+        },
       ),
     );
   }
