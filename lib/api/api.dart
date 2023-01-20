@@ -568,6 +568,61 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, Collection>> createCollection(
+    String uid,
+    List<String> photos,
+    Uint8List? audio,
+  ) {
+    return _requestStreamedResponse(
+      makeRequest: () async {
+        final uri = Uri.parse('$_urlBase/users/$uid/profile/collections');
+        final request = http.MultipartRequest('POST', uri)
+          ..headers.addAll(_headers)
+          ..fields['uid'] = uid
+          ..files.addAll([
+            for (final photo in photos)
+              await http.MultipartFile.fromPath('photos', photo),
+            if (audio != null) http.MultipartFile.fromBytes('audio', audio),
+          ]);
+        return request.send();
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(Collection.fromJson(json));
+      },
+    );
+  }
+
+  Future<Either<ApiError, void>> deleteCollection(
+      String uid, String collectionId) {
+    return _request(
+      makeRequest: () {
+        return http.delete(
+          Uri.parse('$_urlBase/users/$uid/profile/collections/$collectionId'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
+  Future<Either<ApiError, List<Collection>>> getCollections(String uid) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/users/$uid/profile/collections'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        final collections = json['collections'] as List<dynamic>;
+        return Right(List<Collection>.from(
+            collections.map((e) => Collection.fromJson(e))));
+      },
+    );
+  }
+
   Future<Either<ApiError, List<SimpleProfile>>> getBlockedUsers(String uid) {
     return _request(
       makeRequest: () {
@@ -811,6 +866,20 @@ class DiscoverResults with _$DiscoverResults {
 
   factory DiscoverResults.fromJson(Map<String, dynamic> json) =>
       _$DiscoverResultsFromJson(json);
+}
+
+@freezed
+class Collection with _$Collection {
+  const factory Collection({
+    required String collectionId,
+    required String uid,
+    required DateTime date,
+    required List<String> photos,
+    @Default(null) String? audio,
+  }) = _Collection;
+
+  factory Collection.fromJson(Map<String, dynamic> json) =>
+      _$CollectionFromJson(json);
 }
 
 @freezed

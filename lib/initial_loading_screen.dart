@@ -55,29 +55,28 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     }
 
-    // Verify user sign-in (will be navigated back here on success)
     if (user == null) {
-      context.goNamed('signup');
+      context.goNamed('discover');
       return;
-    } else {
-      for (var retryAttempt = 0; retryAttempt < 3; retryAttempt++) {
-        debugPrint('FirebaseAuth getIdToken attempt $retryAttempt');
-        try {
-          api.authToken = await user.getIdToken(true);
-          break;
-        } on FirebaseAuthException catch (e) {
-          debugPrint('FirebaseAuth error ${e.code}');
-          if (e.code == 'user-not-found') {
-            context.goNamed('signup');
-            return;
-          } else if (e.code == 'unknown') {
-            // Retry
-            debugPrint('FirebaseAuth unknown error, retrying');
-            await Future.delayed(const Duration(milliseconds: 300));
-            continue;
-          } else {
-            rethrow;
-          }
+    }
+
+    for (var retryAttempt = 0; retryAttempt < 3; retryAttempt++) {
+      debugPrint('FirebaseAuth getIdToken attempt $retryAttempt');
+      try {
+        api.authToken = await user.getIdToken(true);
+        break;
+      } on FirebaseAuthException catch (e) {
+        debugPrint('FirebaseAuth error ${e.code}');
+        if (e.code == 'user-not-found') {
+          context.goNamed('discover');
+          return;
+        } else if (e.code == 'unknown') {
+          // Retry
+          debugPrint('FirebaseAuth unknown error, retrying');
+          await Future.delayed(const Duration(milliseconds: 300));
+          continue;
+        } else {
+          rethrow;
         }
       }
     }
@@ -91,13 +90,9 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       await _cacheData(notifier.userState.uid);
     } catch (e) {
       debugPrint(e.toString());
+      // TODO: Deal with onboarding
       if (mounted) {
-        context.goNamed(
-          'signup',
-          extra: InitialLoadingScreenArguments(
-            needsOnboarding: widget.needsOnboarding,
-          ),
-        );
+        context.goNamed('discover');
       }
       return;
     }
@@ -167,7 +162,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
         if (widget.needsOnboarding || noAudio) {
           context.goNamed('onboarding');
         } else {
-          context.goNamed('discover');
+          context.goNamed('profile2');
         }
       }
     }
@@ -189,6 +184,12 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
         value.fold(
           (l) => throw 'Unable to cache profile',
           (r) => notifier.profile(r),
+        );
+      }),
+      api.getCollections(uid).then((value) {
+        value.fold(
+          (l) => throw 'Unable to cache collections',
+          (r) => notifier.collections(r),
         );
       }),
     ]);

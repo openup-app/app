@@ -15,6 +15,9 @@ class UserStateNotifier extends StateNotifier<UserState> {
 
   void profile(Profile profile) => state = state.copyWith(profile: profile);
 
+  void collections(List<Collection> collections) =>
+      state = state.copyWith(collections: collections);
+
   UserState get userState => state;
 }
 
@@ -23,5 +26,6 @@ class UserState with _$UserState {
   const factory UserState({
     @Default('') String uid,
     @Default(null) Profile? profile,
+    @Default(<Collection>[]) List<Collection> collections,
   }) = _UserState;
 }
