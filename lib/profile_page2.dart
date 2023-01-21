@@ -253,7 +253,6 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
                   onBlocked: () {},
                   onMenu: () {},
                   onNext: () {},
-                  onPrevious: () {},
                 ),
               );
             },

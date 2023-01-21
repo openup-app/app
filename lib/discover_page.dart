@@ -1,10 +1,7 @@
-import 'dart:math';
-
 import 'package:async/async.dart';
 import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide Chip;
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
@@ -46,14 +43,29 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   Topic? _selectedTopic;
   final _invitedUsers = <String>{};
 
-  final _swipeKey = GlobalKey<__SwipableState>();
-  final _nextScaleAnimation = ValueNotifier<double>(0);
+  final _pageListener = ValueNotifier<double>(1);
+  final _pageController = PageController();
 
   @override
   void initState() {
     super.initState();
     _fetchPageOfProfiles().then((_) {
       _maybeRequestNotification();
+    });
+
+    _pageController.addListener(() {
+      final page = _pageController.page ?? 1;
+      _pageListener.value = page;
+      final oldIndex = _currentProfileIndex;
+      final index = _pageController.page?.round() ?? _currentProfileIndex;
+      final scrollingForward = index > oldIndex;
+      if (_currentProfileIndex != index) {
+        _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+        setState(() => _currentProfileIndex = index);
+        if (index > _profiles.length - 4 && !_loading && scrollingForward) {
+          _fetchPageOfProfiles();
+        }
+      }
     });
   }
 
@@ -79,6 +91,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   @override
   void dispose() {
     super.dispose();
+    _pageController.dispose();
   }
 
   Future<void> _maybeRequestNotification() async {
@@ -281,211 +294,54 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       }
     }
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        if (_profiles.length > _currentProfileIndex)
-          for (var i = _currentProfileIndex + 1; i >= _currentProfileIndex; i--)
-            Builder(
-              key: ValueKey(i),
-              builder: (context) {
-                final frontProfile = i == _currentProfileIndex;
-                if (i >= _profiles.length) {
-                  return const Center(
-                    child: LoadingIndicator(),
-                  );
-                }
-                final profile = _profiles[i];
-                return ValueListenableBuilder<double>(
-                  valueListenable: frontProfile
-                      ? const AlwaysStoppedAnimation(1.0)
-                      : _nextScaleAnimation,
-                  builder: (context, value, child) {
-                    return ScaleTransition(
-                      scale: AlwaysStoppedAnimation(value),
-                      child: child!,
-                    );
-                  },
-                  child: IgnorePointer(
-                    ignoring: !frontProfile,
-                    child: _Swipable(
-                      key: frontProfile ? _swipeKey : null,
-                      onSwipe: (right) {
-                        setState(() => _currentProfileIndex++);
-                        _nextScaleAnimation.value = 0.0;
-                        _precacheImageAndDepth(
-                          _profiles,
-                          from: _currentProfileIndex + 1,
-                          count: 2,
-                        );
-
-                        if (_currentProfileIndex >= _profiles.length - 4 &&
-                            !_loading) {
-                          _fetchPageOfProfiles();
-                        }
-                      },
-                      onUpdate: (value) {
-                        _nextScaleAnimation.value = value.abs() * 0.3 + 0.7;
-                      },
-                      child: UserProfileDisplay(
-                        key: ValueKey(profile.uid),
-                        profile: profile,
-                        play: frontProfile,
-                        invited: _invitedUsers.contains(profile.uid),
-                        onInvite: () {
-                          GetIt.instance.get<Mixpanel>().track(
-                            "send_invite",
-                            properties: {"type": "discover"},
-                          );
-                          setState(() => _invitedUsers.add(profile.uid));
-                        },
-                        onNext: () => _swipeKey.currentState?.animateLeft(),
-                        onPrevious: !frontProfile
-                            ? () {}
-                            : (_currentProfileIndex <= 0
-                                ? null
-                                : () {
-                                    setState(() => _currentProfileIndex--);
-                                    SchedulerBinding.instance
-                                        .addPostFrameCallback((_) {
-                                      if (mounted) {
-                                        _swipeKey.currentState?.reverse();
-                                      }
-                                    });
-                                  }),
-                        onBlocked: () => setState(() => _profiles
-                            .removeWhere(((p) => p.uid == profile.uid))),
-                        onBeginRecording: () {},
-                        onMenu: () {
-                          widget.carouselKey.currentState?.showMenu = true;
-                        },
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-      ],
-    );
-  }
-}
-
-class _Swipable extends StatefulWidget {
-  final void Function(bool right) onSwipe;
-  final ValueChanged<double>? onUpdate;
-  final Widget child;
-
-  const _Swipable({
-    super.key,
-    required this.onSwipe,
-    required this.onUpdate,
-    required this.child,
-  });
-
-  @override
-  State<_Swipable> createState() => __SwipableState();
-}
-
-class __SwipableState extends State<_Swipable>
-    with SingleTickerProviderStateMixin {
-  late final _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 400),
-    value: 0.5,
-  );
-
-  double _lastValue = 0.5;
-
-  @override
-  void initState() {
-    _controller.addListener(() {
-      final status = _controller.status;
-      if (_lastValue != _controller.value) {
-        if (status == AnimationStatus.completed && _controller.value == 1.0) {
-          widget.onSwipe(true);
-          _controller.value = 0.5;
-        } else if (status == AnimationStatus.dismissed &&
-            _controller.value == 0.0) {
-          widget.onSwipe(false);
-          _controller.value = 0.5;
-        }
-
-        widget.onUpdate?.call(_controller.value * 2 - 1);
-        _lastValue = _controller.value;
-      }
-    });
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void animateRight() {
-    _controller.forward();
-  }
-
-  void animateLeft() {
-    _controller.reverse();
-  }
-
-  void reverse() {
-    _controller.value = 0.0001;
-    _controller.animateTo(0.5);
-  }
-
-  void reset() {
-    _controller.value = 0.5;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return GestureDetector(
-          onPanDown: (_) => _controller.stop(),
-          onPanUpdate: (details) =>
-              _controller.value += details.delta.dx / constraints.maxWidth / 4,
-          onPanEnd: (details) {
-            final flung = details.velocity.pixelsPerSecond.dx.abs() > 450;
-            final releasedLeft = _controller.value <= 0.3;
-            final releasedRight = _controller.value >= 0.6;
-            if (flung) {
-              if (details.velocity.pixelsPerSecond.dx.isNegative) {
-                animateLeft();
-              } else {
-                animateRight();
-              }
-            } else if (releasedLeft) {
-              animateLeft();
-            } else if (releasedRight) {
-              animateRight();
+    return PageView.builder(
+      controller: _pageController,
+      scrollDirection: Axis.vertical,
+      itemCount: _profiles.length,
+      itemBuilder: (context, index) {
+        final profile = _profiles[index];
+        return ValueListenableBuilder<double>(
+          valueListenable: _pageListener,
+          builder: (context, page, child) {
+            final pageIndex = page.floor();
+            final opacity = (page - pageIndex) * (page - pageIndex);
+            if (index <= pageIndex) {
+              return ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  Color.fromRGBO(0x00, 0x00, 0x00, opacity),
+                  BlendMode.srcOver,
+                ),
+                child: child!,
+              );
             } else {
-              _controller.animateTo(
-                0.5,
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.easeOut,
+              return ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  Color.fromRGBO(0x00, 0x00, 0x00, 1 - opacity),
+                  BlendMode.srcOver,
+                ),
+                child: child!,
               );
             }
           },
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Tween<Offset>(
-                  begin: Offset(-constraints.maxWidth, 0.0),
-                  end: Offset(constraints.maxWidth, 0.0),
-                ).evaluate(_controller),
-                child: Transform.rotate(
-                  angle: (_controller.value * 2 - 1) * pi / 8,
-                  alignment: const Alignment(0.0, 3.0),
-                  child: child,
-                ),
+          child: UserProfileDisplay(
+            key: ValueKey(profile.uid),
+            profile: profile,
+            play: true,
+            invited: _invitedUsers.contains(profile.uid),
+            onInvite: () {
+              GetIt.instance.get<Mixpanel>().track(
+                "send_invite",
+                properties: {"type": "discover"},
               );
+              setState(() => _invitedUsers.add(profile.uid));
             },
-            child: widget.child,
+            onNext: () {},
+            onBlocked: () => setState(
+                () => _profiles.removeWhere(((p) => p.uid == profile.uid))),
+            onBeginRecording: () {},
+            onMenu: () {
+              widget.carouselKey.currentState?.showMenu = true;
+            },
           ),
         );
       },
@@ -586,7 +442,6 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
               },
               onBeginRecording: () => _audioPlayer.stop(),
               onNext: () {},
-              onPrevious: () {},
               onBlocked: () => Navigator.of(context).pop(),
               onMenu: () {},
             ),

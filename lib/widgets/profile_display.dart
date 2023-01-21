@@ -23,7 +23,6 @@ class UserProfileDisplay extends StatefulWidget {
   final VoidCallback onInvite;
   final VoidCallback onBeginRecording;
   final VoidCallback? onNext;
-  final VoidCallback? onPrevious;
   final VoidCallback onBlocked;
   final VoidCallback onMenu;
 
@@ -35,7 +34,6 @@ class UserProfileDisplay extends StatefulWidget {
     required this.onInvite,
     required this.onBeginRecording,
     required this.onNext,
-    required this.onPrevious,
     required this.onBlocked,
     required this.onMenu,
   }) : super(key: key);
@@ -107,12 +105,6 @@ class _UserProfileDisplayState extends State<UserProfileDisplay> {
       child: Stack(
         fit: StackFit.loose,
         children: [
-          // Stops becoming see through when fade transitioning or when tapped
-          const Positioned.fill(
-            child: ColoredBox(
-              color: Colors.black,
-            ),
-          ),
           Button(
             onPressed: () {
               if (_audioPaused) {
@@ -128,7 +120,6 @@ class _UserProfileDisplayState extends State<UserProfileDisplay> {
               blurPhotos: widget.profile.blurPhotos,
             ),
           ),
-
           Positioned(
             right: 16,
             top: 16 + MediaQuery.of(context).padding.top,
@@ -172,26 +163,6 @@ class _UserProfileDisplayState extends State<UserProfileDisplay> {
                         color: Colors.white,
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.medium,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 13),
-                Button(
-                  onPressed: widget.onPrevious,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      width: 26,
-                      height: 26,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.undo,
-                        size: 16,
                       ),
                     ),
                   ),
