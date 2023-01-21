@@ -11,8 +11,10 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/back_button.dart';
+import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/carousel.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -43,8 +45,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   Topic? _selectedTopic;
   final _invitedUsers = <String>{};
 
-  final _pageListener = ValueNotifier<double>(1);
+  final _pageListener = ValueNotifier<double>(0);
   final _pageController = PageController();
+  final _userProfileInfoDisplayKey = GlobalKey<UserProfileInfoDisplayState>();
 
   @override
   void initState() {
@@ -54,10 +57,16 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     });
 
     _pageController.addListener(() {
-      final page = _pageController.page ?? 1;
+      final page = _pageController.page ?? 0;
       _pageListener.value = page;
       final oldIndex = _currentProfileIndex;
       final index = _pageController.page?.round() ?? _currentProfileIndex;
+
+      if (oldIndex != index) {
+        _userProfileInfoDisplayKey.currentState?.play();
+      }
+
+      // Prefetching profiles
       final scrollingForward = index > oldIndex;
       if (_currentProfileIndex != index) {
         _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
@@ -294,54 +303,273 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       }
     }
 
-    return PageView.builder(
-      controller: _pageController,
-      scrollDirection: Axis.vertical,
-      itemCount: _profiles.length,
-      itemBuilder: (context, index) {
-        final profile = _profiles[index];
-        return ValueListenableBuilder<double>(
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: ValueListenableBuilder<double>(
+            valueListenable: _pageListener,
+            builder: (context, page, child) {
+              final index = page.round();
+              final profile = _profiles[index];
+              return UserProfileInfoDisplay(
+                key: _userProfileInfoDisplayKey,
+                profile: profile,
+                // invited: _invitedUsers.contains(profile.uid),
+                play: index == _currentProfileIndex,
+                onInvite: () {
+                  GetIt.instance.get<Mixpanel>().track(
+                    "send_invite",
+                    properties: {"type": "discover"},
+                  );
+                  setState(() => _invitedUsers.add(profile.uid));
+                },
+                onBeginRecording: () {},
+                onMenu: () {
+                  widget.carouselKey.currentState?.showMenu = true;
+                },
+                builder: (context, play) {
+                  return PageView.builder(
+                    controller: _pageController,
+                    scrollDirection: Axis.vertical,
+                    itemCount: _profiles.length,
+                    itemBuilder: (context, index) {
+                      final profile = _profiles[index];
+                      return ValueListenableBuilder<double>(
+                        valueListenable: _pageListener,
+                        builder: (context, page, child) {
+                          final pageIndex = page.floor();
+                          final opacity =
+                              (page - pageIndex) * (page - pageIndex);
+                          if (index <= pageIndex) {
+                            return ColorFiltered(
+                              colorFilter: ColorFilter.mode(
+                                Color.fromRGBO(0x00, 0x00, 0x00, opacity),
+                                BlendMode.srcOver,
+                              ),
+                              child: child!,
+                            );
+                          } else {
+                            return ColorFiltered(
+                              colorFilter: ColorFilter.mode(
+                                Color.fromRGBO(0x00, 0x00, 0x00, 1 - opacity),
+                                BlendMode.srcOver,
+                              ),
+                              child: child!,
+                            );
+                          }
+                        },
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Button(
+                              onPressed: () {
+                                if (!play) {
+                                  _userProfileInfoDisplayKey.currentState
+                                      ?.play();
+                                } else {
+                                  _userProfileInfoDisplayKey.currentState
+                                      ?.pause();
+                                }
+                              },
+                              child: UserProfileDisplay(
+                                key: ValueKey(profile.uid),
+                                profile: profile,
+                                playSlideshow: play,
+                                invited: false,
+                              ),
+                            ),
+                            if (!play)
+                              const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.only(bottom: 72.0),
+                                  child: IgnorePointer(
+                                    child: IconWithShadow(
+                                      Icons.play_arrow,
+                                      size: 80,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        ValueListenableBuilder<double>(
           valueListenable: _pageListener,
           builder: (context, page, child) {
-            final pageIndex = page.floor();
-            final opacity = (page - pageIndex) * (page - pageIndex);
-            if (index <= pageIndex) {
-              return ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  Color.fromRGBO(0x00, 0x00, 0x00, opacity),
-                  BlendMode.srcOver,
-                ),
-                child: child!,
-              );
-            } else {
-              return ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  Color.fromRGBO(0x00, 0x00, 0x00, 1 - opacity),
-                  BlendMode.srcOver,
-                ),
-                child: child!,
-              );
-            }
+            final index = page.toInt();
+            final profile = _profiles[index];
+            return Positioned(
+              right: 16,
+              top: 16 + MediaQuery.of(context).padding.top,
+              child: _PageControls(
+                profile: profile,
+                onNext: () {
+                  _pageController.nextPage(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOut,
+                  );
+                },
+                onBlocked: () => setState(
+                    () => _profiles.removeWhere(((p) => p.uid == profile.uid))),
+              ),
+            );
           },
-          child: UserProfileDisplay(
-            key: ValueKey(profile.uid),
-            profile: profile,
-            play: true,
-            invited: _invitedUsers.contains(profile.uid),
-            onInvite: () {
-              GetIt.instance.get<Mixpanel>().track(
-                "send_invite",
-                properties: {"type": "discover"},
-              );
-              setState(() => _invitedUsers.add(profile.uid));
-            },
-            onNext: () {},
-            onBlocked: () => setState(
-                () => _profiles.removeWhere(((p) => p.uid == profile.uid))),
-            onBeginRecording: () {},
-            onMenu: () {
-              widget.carouselKey.currentState?.showMenu = true;
-            },
+        ),
+      ],
+    );
+  }
+}
+
+class _PageControls extends StatelessWidget {
+  final Profile profile;
+  final VoidCallback? onNext;
+  final VoidCallback onBlocked;
+
+  const _PageControls({
+    super.key,
+    required this.profile,
+    required this.onNext,
+    required this.onBlocked,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Button(
+          onPressed: onNext,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              width: 26,
+              height: 26,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.close,
+                color: Colors.white,
+                size: 14,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 13),
+        Button(
+          onPressed: () => _showPreferencesSheet(context),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              width: 26,
+              height: 26,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset(
+                'assets/images/preferences_icon.png',
+                color: Colors.white,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 13),
+        ReportBlockPopupMenu2(
+          uid: profile.uid,
+          name: profile.name,
+          onBlock: onBlocked,
+          builder: (context) {
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                width: 26,
+                height: 26,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  CupertinoIcons.ellipsis,
+                  color: Colors.white,
+                  size: 14,
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void _showPreferencesSheet(BuildContext context) {
+    showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Surface(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 30.0, right: 45),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    'I\'m interested in seeing...',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                RadioTile(
+                  label: 'Men',
+                  onTap: () {},
+                  radioAtEnd: true,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                ),
+                RadioTile(
+                  label: 'Women',
+                  onTap: () {},
+                  radioAtEnd: true,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                ),
+                RadioTile(
+                  label: 'Non-Binary',
+                  selected: true,
+                  onTap: () {},
+                  radioAtEnd: true,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).padding.bottom + 24,
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -429,10 +657,9 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
           }
           return SafeArea(
             bottom: true,
-            child: UserProfileDisplay(
+            child: UserProfileInfoDisplay(
               profile: profile,
               play: true,
-              invited: _invited,
               onInvite: () {
                 GetIt.instance.get<Mixpanel>().track(
                   "send_invite",
@@ -441,9 +668,14 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
                 setState(() => _invited = true);
               },
               onBeginRecording: () => _audioPlayer.stop(),
-              onNext: () {},
-              onBlocked: () => Navigator.of(context).pop(),
               onMenu: () {},
+              builder: (context, play) {
+                return UserProfileDisplay(
+                  profile: profile,
+                  playSlideshow: true,
+                  invited: _invited,
+                );
+              },
             ),
           );
         },

@@ -1,41 +1,25 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/api_util.dart';
-import 'package:openup/api/chat_api.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
-import 'package:openup/widgets/icon_with_shadow.dart';
 
 class UserProfileDisplay extends StatefulWidget {
   final Profile profile;
-  final bool play;
+  final bool playSlideshow;
   final bool invited;
-  final VoidCallback onInvite;
-  final VoidCallback onBeginRecording;
-  final VoidCallback? onNext;
-  final VoidCallback onBlocked;
-  final VoidCallback onMenu;
 
   const UserProfileDisplay({
     Key? key,
     required this.profile,
-    required this.play,
+    required this.playSlideshow,
     required this.invited,
-    required this.onInvite,
-    required this.onBeginRecording,
-    required this.onNext,
-    required this.onBlocked,
-    required this.onMenu,
   }) : super(key: key);
 
   @override
@@ -43,6 +27,86 @@ class UserProfileDisplay extends StatefulWidget {
 }
 
 class _UserProfileDisplayState extends State<UserProfileDisplay> {
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.loose,
+      children: [
+        Gallery(
+          slideshow: widget.playSlideshow,
+          gallery: widget.profile.gallery,
+          withWideBlur: false,
+          blurPhotos: widget.profile.blurPhotos,
+        ),
+        if (widget.profile.blurPhotos)
+          Center(
+            child: IgnorePointer(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 72.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Hidden pictures',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 22,
+                        shadows: [
+                          const BoxShadow(
+                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                            offset: Offset(0, 2),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'To view pics ask them to show you!',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        shadows: [
+                          const BoxShadow(
+                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                            offset: Offset(0, 2),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class UserProfileInfoDisplay extends StatefulWidget {
+  final Profile profile;
+  final bool play;
+  final VoidCallback onInvite;
+  final VoidCallback onBeginRecording;
+  final VoidCallback onMenu;
+  final Widget Function(BuildContext context, bool play) builder;
+
+  const UserProfileInfoDisplay({
+    super.key,
+    required this.profile,
+    required this.play,
+    required this.onInvite,
+    required this.onBeginRecording,
+    required this.onMenu,
+    required this.builder,
+  });
+
+  @override
+  State<UserProfileInfoDisplay> createState() => UserProfileInfoDisplayState();
+}
+
+class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
   bool _uploading = false;
 
   final _player = JustAudioAudioPlayer();
@@ -72,8 +136,16 @@ class _UserProfileDisplayState extends State<UserProfileDisplay> {
   }
 
   @override
-  void didUpdateWidget(covariant UserProfileDisplay oldWidget) {
+  void didUpdateWidget(covariant UserProfileInfoDisplay oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.profile.audio != widget.profile.audio) {
+      final audio = widget.profile.audio;
+      if (audio != null) {
+        _player.setUrl(audio);
+      }
+    }
+
     if (widget.play && !oldWidget.play) {
       _player.play(loop: true);
     } else if (!widget.play && oldWidget.play) {
@@ -89,6 +161,10 @@ class _UserProfileDisplayState extends State<UserProfileDisplay> {
     super.dispose();
   }
 
+  void play() => _player.play(loop: true);
+
+  void pause() => _player.pause();
+
   void _currentTabListener() {
     if (currentTabNotifier.value != HomeTab.discover) {
       _player.pause();
@@ -103,151 +179,9 @@ class _UserProfileDisplayState extends State<UserProfileDisplay> {
     return AppLifecycle(
       onPaused: _player.pause,
       child: Stack(
-        fit: StackFit.loose,
+        fit: StackFit.expand,
         children: [
-          Button(
-            onPressed: () {
-              if (_audioPaused) {
-                _player.play(loop: true);
-              } else {
-                _player.pause();
-              }
-            },
-            child: Gallery(
-              slideshow: widget.play && !_audioPaused,
-              gallery: widget.profile.gallery,
-              withWideBlur: false,
-              blurPhotos: widget.profile.blurPhotos,
-            ),
-          ),
-          Positioned(
-            right: 16,
-            top: 16 + MediaQuery.of(context).padding.top,
-            child: Column(
-              children: [
-                Button(
-                  onPressed: widget.onNext,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      width: 26,
-                      height: 26,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 13),
-                Button(
-                  onPressed: _showPreferencesSheet,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      width: 26,
-                      height: 26,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Image.asset(
-                        'assets/images/preferences_icon.png',
-                        color: Colors.white,
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.medium,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 13),
-                ReportBlockPopupMenu2(
-                  uid: widget.profile.uid,
-                  name: widget.profile.name,
-                  onBlock: widget.onBlocked,
-                  builder: (context) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        width: 26,
-                        height: 26,
-                        alignment: Alignment.center,
-                        decoration: const BoxDecoration(
-                          color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          CupertinoIcons.ellipsis,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          if (_audioPaused)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 72.0),
-                child: IgnorePointer(
-                  child: IconWithShadow(
-                    Icons.play_arrow,
-                    size: 80,
-                  ),
-                ),
-              ),
-            ),
-          if (widget.profile.blurPhotos)
-            Center(
-              child: IgnorePointer(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 72.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Hidden pictures',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 22,
-                          shadows: [
-                            const BoxShadow(
-                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-                              offset: Offset(0, 2),
-                              blurRadius: 6,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'To view pics ask them to show you!',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          shadows: [
-                            const BoxShadow(
-                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-                              offset: Offset(0, 2),
-                              blurRadius: 6,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          widget.builder(context, widget.play && !_audioPaused),
           Positioned(
             left: 24,
             right: 24,
@@ -406,47 +340,46 @@ class _UserProfileDisplayState extends State<UserProfileDisplay> {
                       child: Consumer(
                         builder: (context, ref, _) {
                           return _RecordButtonNew();
-                          return RecordButton(
-                            label: 'send invitation',
-                            submitLabel: 'send message',
-                            submitting: _uploading,
-                            submitted: widget.invited,
-                            onSubmit: (path) async {
-                              setState(() => _uploading = true);
-                              final uid = ref.read(userProvider).uid;
-                              final api = GetIt.instance.get<Api>();
-                              final result = await api.sendMessage(
-                                uid,
-                                widget.profile.uid,
-                                ChatType.audio,
-                                path,
-                              );
-                              if (mounted) {
-                                setState(() => _uploading = false);
-                                result.fold(
-                                  (l) {
-                                    if (l is ApiClientError &&
-                                        l.error is ClientErrorForbidden) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                              'Failed to send invite, try again later'),
-                                        ),
-                                      );
-                                    } else {
-                                      displayError(context, l);
-                                    }
-                                  },
-                                  (r) => widget.onInvite(),
-                                );
-                              }
-                            },
-                            onBeginRecording: () {
-                              _player.stop();
-                              widget.onBeginRecording();
-                            },
-                          );
+                          // return RecordButton(
+                          //   label: 'send invitation',
+                          //   submitLabel: 'send message',
+                          //   submitting: _uploading,
+                          //   submitted: widget.invited,
+                          //   onSubmit: (path) async {
+                          //     setState(() => _uploading = true);
+                          //     final uid = ref.read(userProvider).uid;
+                          //     final api = GetIt.instance.get<Api>();
+                          //     final result = await api.sendMessage(
+                          //       uid,
+                          //       widget.profile.uid,
+                          //       ChatType.audio,
+                          //       path,
+                          //     );
+                          //     if (mounted) {
+                          //       setState(() => _uploading = false);
+                          //       result.fold(
+                          //         (l) {
+                          //           if (l is ApiClientError &&
+                          //               l.error is ClientErrorForbidden) {
+                          //             ScaffoldMessenger.of(context).showSnackBar(
+                          //               const SnackBar(
+                          //                 content: Text(
+                          //                     'Failed to send invite, try again later'),
+                          //               ),
+                          //             );
+                          //           } else {
+                          //             displayError(context, l);
+                          //           }
+                          //         },
+                          //         (r) => widget.onInvite(),
+                          //       );
+                          //     }
+                          //   },
+                          //   onBeginRecording: () {
+                          //     _player.stop();
+                          //     widget.onBeginRecording();
+                          //   },
+                          // );
                         },
                       ),
                     ),
@@ -476,68 +409,6 @@ class _UserProfileDisplayState extends State<UserProfileDisplay> {
             ),
         ],
       ),
-    );
-  }
-
-  void _showPreferencesSheet() {
-    showModalBottomSheet(
-      backgroundColor: Colors.transparent,
-      context: context,
-      builder: (context) {
-        return Surface(
-          child: Padding(
-            padding: const EdgeInsets.only(left: 30.0, right: 45),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 12),
-                Center(
-                  child: Text(
-                    'I\'m interested in seeing...',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                RadioTile(
-                  label: 'Men',
-                  onTap: () {},
-                  radioAtEnd: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
-                ),
-                RadioTile(
-                  label: 'Women',
-                  onTap: () {},
-                  radioAtEnd: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
-                ),
-                RadioTile(
-                  label: 'Non-Binary',
-                  selected: true,
-                  onTap: () {},
-                  radioAtEnd: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).padding.bottom + 24,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

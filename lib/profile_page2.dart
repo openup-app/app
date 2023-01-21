@@ -235,24 +235,29 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) {
+              final profile = Profile(
+                uid: widget.collection.uid,
+                name: 'Jaween',
+                photo: widget.collection.photos.first,
+                gallery: widget.collection.photos,
+                blurPhotos: false,
+                location: '',
+                topic: Topic.conversation,
+              );
               return Scaffold(
-                body: UserProfileDisplay(
-                  profile: Profile(
-                    uid: widget.collection.uid,
-                    name: 'Jaween',
-                    photo: widget.collection.photos.first,
-                    gallery: widget.collection.photos,
-                    blurPhotos: false,
-                    location: '',
-                    topic: Topic.conversation,
-                  ),
-                  play: false,
-                  invited: true,
+                body: UserProfileInfoDisplay(
+                  play: true,
+                  profile: profile,
                   onInvite: () {},
                   onBeginRecording: () {},
-                  onBlocked: () {},
                   onMenu: () {},
-                  onNext: () {},
+                  builder: (context, play) {
+                    return UserProfileDisplay(
+                      profile: profile,
+                      playSlideshow: play,
+                      invited: true,
+                    );
+                  },
                 ),
               );
             },
