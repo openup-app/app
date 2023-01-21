@@ -1581,12 +1581,12 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
           builder: (context) {
             return CupertinoActionSheet(
               cancelButton: CupertinoActionSheetAction(
-                onPressed: _showBlockDialog,
+                onPressed: () => _showBlockDialog(context),
                 child: const Text('Block User'),
               ),
               actions: [
                 CupertinoActionSheetAction(
-                  onPressed: _showReportModal,
+                  onPressed: () => _showReportModal(context),
                   child: const Text('Report User'),
                 ),
               ],
@@ -1598,7 +1598,7 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
     );
   }
 
-  void _showBlockDialog() async {
+  void _showBlockDialog(BuildContext context) async {
     final block = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) {
@@ -1644,8 +1644,8 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
-                                    color:
-                                        Color.fromRGBO(0xFF, 0x07, 0x07, 1.0),
+                                    color: const Color.fromRGBO(
+                                        0xFF, 0x07, 0x07, 1.0),
                                     fontSize: 20,
                                     fontWeight: FontWeight.w300),
                           ),
@@ -1692,7 +1692,7 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
     }
   }
 
-  void _showReportModal() async {
+  void _showReportModal(BuildContext context) async {
     final reportReason = await showModalBottomSheet<String>(
       context: context,
       builder: (context) {
@@ -1749,7 +1749,7 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
       );
     }
 
-    if (mounted) {
+    if (reportReason != null && mounted) {
       final block = await showCupertinoDialog<bool>(
         context: context,
         builder: (context) {
@@ -1793,8 +1793,8 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
                                   .textTheme
                                   .bodyMedium!
                                   .copyWith(
-                                      color:
-                                          Color.fromRGBO(0xFF, 0x07, 0x07, 1.0),
+                                      color: const Color.fromRGBO(
+                                          0xFF, 0x07, 0x07, 1.0),
                                       fontSize: 20,
                                       fontWeight: FontWeight.w300),
                             ),
@@ -1828,8 +1828,7 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
       if (block == true && mounted) {
         final myUid = ref.read(userProvider).uid;
         final api = GetIt.instance.get<Api>();
-        // final blockFuture = api.blockUser(myUid, widget.uid);
-        final blockFuture = Future.delayed(const Duration(seconds: 1));
+        final blockFuture = api.blockUser(myUid, widget.uid);
         await withBlockingModal(
           context: context,
           label: 'Blocking...',
