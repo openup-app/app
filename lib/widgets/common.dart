@@ -130,14 +130,15 @@ class _CountUpTimerState extends State<CountUpTimer> {
 
 class BlurredSurface extends StatelessWidget {
   final Widget child;
+  final double blur;
   const BlurredSurface({
     Key? key,
     required this.child,
+    this.blur = 75.0,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    const blur = 75.0;
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),

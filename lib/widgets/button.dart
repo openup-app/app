@@ -5,12 +5,14 @@ class Button extends StatefulWidget {
   final VoidCallback? onPressed;
   final VoidCallback? onLongPressStart;
   final VoidCallback? onLongPressEnd;
+  final bool useFadeWheNoPressedCallback;
   const Button({
     Key? key,
     required this.child,
     required this.onPressed,
     this.onLongPressStart,
     this.onLongPressEnd,
+    this.useFadeWheNoPressedCallback = true,
   }) : super(key: key);
 
   @override
@@ -42,7 +44,10 @@ class _ButtonState extends State<Button> with SingleTickerProviderStateMixin {
       animation: _animationController,
       builder: (context, child) {
         return Opacity(
-          opacity: widget.onPressed == null ? 0.5 : _animationController.value,
+          opacity:
+              widget.onPressed == null && widget.useFadeWheNoPressedCallback
+                  ? 0.5
+                  : _animationController.value,
           child: child!,
         );
       },
