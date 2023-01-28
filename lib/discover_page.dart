@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:async/async.dart';
 import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/cupertino.dart';
@@ -7,6 +10,7 @@ import 'package:get_it/get_it.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/util/location_service.dart';
@@ -16,6 +20,8 @@ import 'package:openup/widgets/carousel.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/profile_display.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
@@ -316,14 +322,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                 profile: profile,
                 // invited: _invitedUsers.contains(profile.uid),
                 play: index == _currentProfileIndex,
-                onInvite: () {
-                  GetIt.instance.get<Mixpanel>().track(
-                    "send_invite",
-                    properties: {"type": "discover"},
-                  );
-                  setState(() => _invitedUsers.add(profile.uid));
-                },
-                onBeginRecording: () {},
+                onRecordInvite: () => _showRecordPanel(context, profile.uid),
                 onMenu: () {
                   widget.carouselKey.currentState?.showMenu = true;
                 },
@@ -424,6 +423,50 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         ),
       ],
     );
+  }
+
+  void _showRecordPanel(BuildContext context, String uid) async {
+    final audio = await showModalBottomSheet<Uint8List>(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Surface(
+          child: RecordPanelContents(
+            onSubmit: (audio) => Navigator.of(context).pop(audio),
+          ),
+        );
+      },
+    );
+
+    if (audio == null || !mounted) {
+      return;
+    }
+
+    GetIt.instance.get<Mixpanel>().track(
+      "send_invite",
+      properties: {"type": "discover"},
+    );
+
+    final tempDir = await getTemporaryDirectory();
+    final file = File(path.join(tempDir.path, 'invite.m4a'));
+    await file.writeAsBytes(audio);
+    if (!mounted) {
+      return;
+    }
+
+    final myUid = ref.read(userProvider).uid;
+    final future = GetIt.instance
+        .get<Api>()
+        .sendMessage(myUid, uid, ChatType.audio, file.path);
+    await withBlockingModal(
+      context: context,
+      label: 'Sending invite...',
+      future: future,
+    );
+
+    if (mounted) {
+      setState(() => _invitedUsers.add(uid));
+    }
   }
 }
 
@@ -660,14 +703,13 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
             child: UserProfileInfoDisplay(
               profile: profile,
               play: true,
-              onInvite: () {
+              onRecordInvite: () {
                 GetIt.instance.get<Mixpanel>().track(
                   "send_invite",
                   properties: {"type": "deep_link"},
                 );
                 setState(() => _invited = true);
               },
-              onBeginRecording: () => _audioPlayer.stop(),
               onMenu: () {},
               builder: (context, play) {
                 return UserProfileDisplay(

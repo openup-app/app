@@ -241,6 +241,7 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
                 photo: widget.collection.photos.first,
                 gallery: widget.collection.photos,
                 blurPhotos: false,
+                mutualFriends: [],
                 location: '',
                 topic: Topic.conversation,
               );
@@ -248,8 +249,7 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
                 body: UserProfileInfoDisplay(
                   play: true,
                   profile: profile,
-                  onInvite: () {},
-                  onBeginRecording: () {},
+                  onRecordInvite: () {},
                   onMenu: () {},
                   builder: (context, play) {
                     return UserProfileDisplay(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'dart:ui';
 import 'dart:ui' as ui;
 
@@ -11,7 +12,6 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get_it/get_it.dart';
-import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/online_users_api.dart';
@@ -22,6 +22,9 @@ import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/image3d.dart';
+import 'package:openup/widgets/waveforms.dart';
+import 'package:rxdart/subjects.dart';
+import 'package:tuple/tuple.dart';
 
 class CountdownTimer extends StatefulWidget {
   final String Function(Duration remaining)? formatter;
@@ -866,38 +869,42 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
   }
 }
 
-class RecordPanel extends StatefulWidget {
-  const RecordPanel({super.key});
+class RecordPanelContents extends StatefulWidget {
+  final void Function(Uint8List audio) onSubmit;
+
+  const RecordPanelContents({
+    super.key,
+    required this.onSubmit,
+  });
 
   @override
-  State<RecordPanel> createState() => _RecordPanelState();
+  State<RecordPanelContents> createState() => _RecordPanelContentsState();
 }
 
-class _RecordPanelState extends State<RecordPanel> {
-  bool _recording = false;
-  late AudioBioController _recorder;
-  String? _recordingPath;
+class _RecordPanelContentsState extends State<RecordPanelContents> {
+  final _controller = PlaybackRecorderController();
 
   late Ticker _countdownTicker;
   var _countdown = Duration.zero;
+  Uint8List? _recordingBytes;
 
   @override
   void initState() {
     super.initState();
 
-    _recorder = AudioBioController(
-      onRecordingComplete: (path) {
-        if (mounted) {
-          setState(() => _recordingPath = path);
-        }
-      },
-    );
+    // _recorder = AudioBioController(
+    //   onRecordingComplete: (path) {
+    //     if (mounted) {
+    //       setState(() => _recordingPath = path);
+    //     }
+    //   },
+    // );
 
-    _recorder.recordInfoStream.listen((recordInfo) {
-      if (_recording != recordInfo.recording) {
-        setState(() => _recording = recordInfo.recording);
-      }
-    });
+    // _recorder.recordInfoStream.listen((recordInfo) {
+    //   if (_recording != recordInfo.recording) {
+    //     setState(() => _recording = recordInfo.recording);
+    //   }
+    // });
 
     _restartCountdown();
   }
@@ -905,22 +912,25 @@ class _RecordPanelState extends State<RecordPanel> {
   @override
   void dispose() {
     _countdownTicker.dispose();
-    _recorder.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   void _restartCountdown() {
     setState(() {
-      _recordingPath = null;
+      _recordingBytes = null;
       _countdown = const Duration(seconds: 3);
     });
     _countdownTicker = Ticker(
       (duration) {
         setState(() => _countdown = duration);
         if (duration >= const Duration(seconds: 3)) {
-          setState(() => _recording = true);
           _countdownTicker.stop();
-          _recorder.startRecording();
+          _controller.startRecording(
+            onComplete: (recordingBytes) {
+              setState(() => _recordingBytes = recordingBytes);
+            },
+          );
         }
       },
     );
@@ -929,157 +939,307 @@ class _RecordPanelState extends State<RecordPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Button(
-      onPressed: () {
-        if (!_recording && _recordingPath == null) {
-          Navigator.of(context).pop();
-        } else {
-          _recorder.stopRecording();
-        }
-      },
-      child: SizedBox(
-        height: 234,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 16),
-            Text(
-              'Recording message',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
-            ),
-            Expanded(
-              child: Center(
-                child: Builder(
-                  builder: (context) {
-                    if (_recordingPath == null) {
-                      return StreamBuilder<RecordInfo>(
-                        initialData: const RecordInfo(),
-                        stream: _recorder.recordInfoStream,
-                        builder: (context, snapshot) {
-                          final recordInfo = snapshot.requireData;
-                          if (!recordInfo.recording) {
-                            return Text(
-                              ((const Duration(seconds: 3) - _countdown)
-                                          .inSeconds +
-                                      1)
-                                  .toString(),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.w300,
-                                      color: const Color.fromRGBO(
-                                          0xFF, 0x00, 0x00, 1.0)),
-                            );
-                          } else {
-                            return const Center(
-                              child: Text('TODO'),
+    return StreamBuilder<Tuple2<RecordingInfo, PlaybackInfo>>(
+      stream: _controller.combinedStream,
+      initialData: Tuple2(RecordingInfo.none(), const PlaybackInfo()),
+      builder: (context, snapshot) {
+        final recordingInfo = snapshot.requireData.item1;
+        final playbackInfo = snapshot.requireData.item2;
+        return Button(
+          onPressed: () {
+            if (!recordingInfo.recording && _recordingBytes == null) {
+              Navigator.of(context).pop();
+            } else {
+              _controller.stopRecording();
+            }
+          },
+          child: SizedBox(
+            height: 234,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 16),
+                Text(
+                  'Recording message',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+                ),
+                if (recordingInfo.recording) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    formatDurationWithMillis(
+                      recordingInfo.duration,
+                      canBeZero: true,
+                    ),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                  ),
+                ],
+                Expanded(
+                  child: Center(
+                    child: Builder(
+                      builder: (context) {
+                        if (_recordingBytes == null) {
+                          if (recordingInfo.recording) {
+                            return Center(
+                              child: SizedBox(
+                                width: 345,
+                                height: 80,
+                                child: CustomPaint(
+                                  painter: FrequenciesPainter(
+                                    frequencies: recordingInfo.frequencies,
+                                    barCount: 54,
+                                  ),
+                                ),
+                              ),
                             );
                           }
-                        },
-                      );
-                    } else {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Button(
-                            onPressed: Navigator.of(context).pop,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.delete,
-                                    color:
-                                        Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+
+                          return Text(
+                            ((const Duration(seconds: 3) - _countdown)
+                                        .inSeconds +
+                                    1)
+                                .toString(),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w300,
+                                    color: const Color.fromRGBO(
+                                        0xFF, 0x00, 0x00, 1.0)),
+                          );
+                        } else {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Button(
+                                onPressed: Navigator.of(context).pop,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.delete,
+                                        color: Color.fromRGBO(
+                                            0xFF, 0x00, 0x00, 1.0),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'delete',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium!
+                                            .copyWith(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w300),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'delete',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w300),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                          Button(
-                            onPressed: () => _restartCountdown(),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.loop),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'retry',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w300),
+                              Button(
+                                onPressed: () => _restartCountdown(),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.loop),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'retry',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium!
+                                            .copyWith(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w300),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                          Button(
-                            onPressed: () {},
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.send),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'send',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w300),
+                              Button(
+                                onPressed: () =>
+                                    widget.onSubmit(_recordingBytes!),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.send),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'send',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium!
+                                            .copyWith(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w300),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-                  },
+                            ],
+                          );
+                        }
+                      },
+                    ),
+                  ),
                 ),
-              ),
+                Visibility(
+                  visible: _recordingBytes == null,
+                  child: Text(
+                    'tap to stop',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  height: MediaQuery.of(context).padding.bottom,
+                ),
+              ],
             ),
-            Visibility(
-              visible: _recordingPath == null,
-              child: Text(
-                'tap to stop',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: MediaQuery.of(context).padding.bottom,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class PlaybackRecorder extends StatefulWidget {
+  final PlaybackRecorderController controller;
+  final Widget Function(
+    BuildContext context,
+    RecordingInfo recordingInfo,
+    PlaybackInfo playbackInfo,
+  ) builder;
+
+  const PlaybackRecorder({
+    super.key,
+    required this.controller,
+    required this.builder,
+  });
+
+  @override
+  State<PlaybackRecorder> createState() => _PlaybackRecorderState();
+}
+
+class _PlaybackRecorderState extends State<PlaybackRecorder> {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<Tuple2<RecordingInfo, PlaybackInfo>>(
+      stream: widget.controller.combinedStream,
+      initialData: Tuple2(RecordingInfo.none(), const PlaybackInfo()),
+      builder: (context, snapshot) {
+        final value = snapshot.requireData;
+        return widget.builder(
+          context,
+          value.item1,
+          value.item2,
+        );
+      },
+    );
+  }
+}
+
+class PlaybackRecorderController extends ChangeNotifier {
+  late final AudioBioController _playbackController;
+  final _recorder = RecorderWithWaveforms();
+
+  final _combinedController =
+      BehaviorSubject<Tuple2<RecordingInfo, PlaybackInfo>>.seeded(
+          Tuple2(RecordingInfo.none(), const PlaybackInfo()));
+
+  PlaybackRecorderController() : super() {
+    _playbackController = AudioBioController(onRecordingComplete: (_) {});
+
+    _playbackController.playbackInfoStream.listen((playbackInfo) {
+      final value = _combinedController.value;
+      _combinedController.add(Tuple2(value.item1, playbackInfo));
+    });
+  }
+
+  Stream<Tuple2<RecordingInfo, PlaybackInfo>> get combinedStream =>
+      _combinedController.stream;
+
+  @override
+  void dispose() {
+    super.dispose();
+    _combinedController.close();
+    _playbackController.dispose();
+    _recorder.dispose();
+  }
+
+  void startRecording({
+    Duration maxDuration = const Duration(seconds: 30),
+    required void Function(Uint8List bytes) onComplete,
+  }) {
+    _recorder.startRecording(
+      onFrequencies: (frequencies) {
+        final value = _combinedController.value;
+        final recordingInfo = value.item1.copyWith(frequencies: frequencies);
+        _combinedController.add(Tuple2(recordingInfo, value.item2));
+      },
+      onComplete: onComplete,
+    );
+
+    final value = _combinedController.value;
+    final recordingInfo = value.item1.copyWith(recording: true);
+    _combinedController.add(Tuple2(recordingInfo, value.item2));
+  }
+
+  void stopRecording() {
+    _recorder.stopRecording();
+
+    final value = _combinedController.value;
+    final recordingInfo = RecordingInfo.none();
+    _combinedController.add(Tuple2(recordingInfo, value.item2));
+  }
+
+  void startPlayback() => _playbackController.play();
+
+  void pausePlayback() => _playbackController.pause();
+
+  void stopPlayback() => _playbackController.stop();
+}
+
+class RecordingInfo {
+  final bool recording;
+  final Duration duration;
+  final Float64x2List frequencies;
+
+  const RecordingInfo(
+    this.recording,
+    this.duration,
+    this.frequencies,
+  );
+
+  RecordingInfo.none()
+      : recording = false,
+        duration = Duration.zero,
+        frequencies = Float64x2List(0);
+
+  RecordingInfo copyWith({
+    bool? recording,
+    Duration? duration,
+    Float64x2List? frequencies,
+  }) {
+    return RecordingInfo(
+      recording ?? this.recording,
+      duration ?? this.duration,
+      frequencies ?? this.frequencies,
     );
   }
 }
@@ -1455,12 +1615,19 @@ class OnlineIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedOverflowBox(
-      size: const Size(24, 24),
-      child: Lottie.asset(
-        'assets/images/online.json',
-        width: 72,
-        height: 72,
+    return Container(
+      width: 19,
+      height: 19,
+      alignment: Alignment.center,
+      child: const SizedBox(
+        width: 7,
+        height: 7,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+          ),
+        ),
       ),
     );
   }
@@ -1945,6 +2112,16 @@ String formatDuration(
     return '00:01';
   }
   return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+}
+
+String formatDurationWithMillis(
+  Duration d, {
+  bool canBeZero = false,
+}) {
+  if (!canBeZero && d.inSeconds < 1) {
+    return '00:00:01';
+  }
+  return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}:${(d.inMilliseconds % 100).toString().padLeft(2, '0')}';
 }
 
 String formatCountdown(Duration d) {

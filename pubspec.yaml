@@ -68,6 +68,8 @@ dependencies:
   shared_preferences: ^2.0.11
   url_launcher: ^6.1.6
   video_player: ^2.2.10
+  mic_stream: ^0.6.2
+  fftea: ^1.2.0+1
   photo_manager: ^2.5.2
 
 dev_dependencies:

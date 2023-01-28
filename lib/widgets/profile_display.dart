@@ -1,7 +1,8 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/home_screen.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
@@ -87,8 +88,7 @@ class _UserProfileDisplayState extends State<UserProfileDisplay> {
 class UserProfileInfoDisplay extends StatefulWidget {
   final Profile profile;
   final bool play;
-  final VoidCallback onInvite;
-  final VoidCallback onBeginRecording;
+  final VoidCallback onRecordInvite;
   final VoidCallback onMenu;
   final Widget Function(BuildContext context, bool play) builder;
 
@@ -96,8 +96,7 @@ class UserProfileInfoDisplay extends StatefulWidget {
     super.key,
     required this.profile,
     required this.play,
-    required this.onInvite,
-    required this.onBeginRecording,
+    required this.onRecordInvite,
     required this.onMenu,
     required this.builder,
   });
@@ -190,7 +189,42 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    OnlineIndicatorBuilder(
+                      uid: widget.profile.uid,
+                      builder: (context, online) {
+                        return online
+                            ? const OnlineIndicator()
+                            : const SizedBox.shrink();
+                      },
+                    ),
+                    if (widget.profile.mutualFriends.isNotEmpty)
+                      Button(
+                        onPressed: () => _showMutualFriendsModal(context),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text(
+                            widget.profile.mutualFriends.length == 1
+                                ? '1 mutual friend'
+                                : '${widget.profile.mutualFriends.length} mutual friends',
+                            textAlign: TextAlign.left,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              shadows: [
+                                const Shadow(
+                                  blurRadius: 4,
+                                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     const Spacer(),
                     SizedBox(
                       width: 44,
@@ -250,7 +284,7 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 11),
+                const SizedBox(height: 14),
                 if (widget.play)
                   Container(
                     height: 4,
@@ -337,50 +371,8 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
                     const SizedBox(height: 8),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
-                      child: Consumer(
-                        builder: (context, ref, _) {
-                          return _RecordButtonNew();
-                          // return RecordButton(
-                          //   label: 'send invitation',
-                          //   submitLabel: 'send message',
-                          //   submitting: _uploading,
-                          //   submitted: widget.invited,
-                          //   onSubmit: (path) async {
-                          //     setState(() => _uploading = true);
-                          //     final uid = ref.read(userProvider).uid;
-                          //     final api = GetIt.instance.get<Api>();
-                          //     final result = await api.sendMessage(
-                          //       uid,
-                          //       widget.profile.uid,
-                          //       ChatType.audio,
-                          //       path,
-                          //     );
-                          //     if (mounted) {
-                          //       setState(() => _uploading = false);
-                          //       result.fold(
-                          //         (l) {
-                          //           if (l is ApiClientError &&
-                          //               l.error is ClientErrorForbidden) {
-                          //             ScaffoldMessenger.of(context).showSnackBar(
-                          //               const SnackBar(
-                          //                 content: Text(
-                          //                     'Failed to send invite, try again later'),
-                          //               ),
-                          //             );
-                          //           } else {
-                          //             displayError(context, l);
-                          //           }
-                          //         },
-                          //         (r) => widget.onInvite(),
-                          //       );
-                          //     }
-                          //   },
-                          //   onBeginRecording: () {
-                          //     _player.stop();
-                          //     widget.onBeginRecording();
-                          //   },
-                          // );
-                        },
+                      child: _RecordButton(
+                        onPressed: widget.onRecordInvite,
                       ),
                     ),
                   ],
@@ -411,15 +403,31 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
       ),
     );
   }
+
+  void _showMutualFriendsModal(BuildContext context) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) {
+        return _MutualFriendsModal(
+          uids: widget.profile.mutualFriends,
+        );
+      },
+    );
+  }
 }
 
-class _RecordButtonNew extends StatelessWidget {
-  const _RecordButtonNew({super.key});
+class _RecordButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+
+  const _RecordButton({
+    super.key,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _showRecordSheet(context),
+      onTap: onPressed,
       child: Container(
         width: 156,
         height: 50,
@@ -452,16 +460,101 @@ class _RecordButtonNew extends StatelessWidget {
       ),
     );
   }
+}
 
-  void _showRecordSheet(BuildContext context) {
-    showModalBottomSheet(
-      backgroundColor: Colors.transparent,
-      context: context,
-      builder: (context) {
-        return const Surface(
-          child: RecordPanel(),
-        );
-      },
+class _MutualFriendsModal extends StatefulWidget {
+  final List<String> uids;
+
+  const _MutualFriendsModal({
+    super.key,
+    required this.uids,
+  });
+
+  @override
+  State<_MutualFriendsModal> createState() => _MutualFriendsModalState();
+}
+
+class _MutualFriendsModalState extends State<_MutualFriendsModal> {
+  bool _loading = true;
+
+  final _profiles = <Profile>[];
+
+  @override
+  void initState() {
+    super.initState();
+    final api = GetIt.instance.get<Api>();
+    Future.wait(widget.uids.map(api.getProfile)).then((results) {
+      if (mounted) {
+        final profiles = results.map((result) {
+          return result.fold(
+            (l) => null,
+            (r) => r,
+          );
+        });
+
+        final nonNullProfiles =
+            List<Profile>.from(profiles.where((e) => e != null));
+
+        setState(() {
+          _loading = false;
+          _profiles.addAll(nonNullProfiles);
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoActionSheet(
+      cancelButton: CupertinoActionSheetAction(
+        onPressed: Navigator.of(context).pop,
+        isDefaultAction: true,
+        child: const Text('Cancel'),
+      ),
+      title: Text(
+        'Mutual friends',
+        style: Theme.of(context)
+            .textTheme
+            .bodyMedium!
+            .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+      ),
+      actions: [
+        if (_loading)
+          CupertinoActionSheetAction(
+            onPressed: () {},
+            child: const LoadingIndicator(size: 35),
+          ),
+        for (final profile in _profiles)
+          CupertinoActionSheetAction(
+            onPressed: () {},
+            child: Row(
+              children: [
+                const SizedBox(width: 21),
+                Container(
+                  width: 35,
+                  height: 35,
+                  clipBehavior: Clip.hardEdge,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                  ),
+                  child: Image.network(
+                    profile.photo,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    profile.name,
+                    textAlign: TextAlign.left,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
