@@ -14,7 +14,9 @@ import 'package:image/image.dart' as img;
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/main.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/carousel.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/profile_display.dart';
@@ -203,6 +205,17 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                     setState(() => _showCollectionCreation = false);
                   },
                 ),
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.bounceOut,
+                right: 22,
+                bottom: 12 + MediaQuery.of(context).padding.bottom + 120,
+                height: 184,
+                child: MenuButton(
+                  color: const Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+                  onPressed: () => carouselKey.currentState?.showMenu = true,
+                ),
+              ),
             ],
           );
         },

@@ -31,6 +31,7 @@ import 'package:openup/invite_page.dart';
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/profile_page.dart';
+import 'package:openup/profile_page2.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
 import 'package:openup/sign_up_name_screen.dart';
@@ -48,6 +49,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 const host = String.fromEnvironment('HOST');
 const webPort = 8080;
 const socketPort = 8081;
+final carouselKey = GlobalKey<CarouselState>();
 
 // TODO: Should be app constant coming from dart defines (to be used in background call handler too)
 const urlBase = 'https://$host:$webPort';
@@ -141,8 +143,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   final _tempFriendshipsRefresh = TempFriendshipsRefresh();
 
   final _scrollToDiscoverTopNotifier = ScrollToDiscoverTopNotifier();
-
-  final _carouselKey = GlobalKey<CarouselState>();
 
   PageRoute _buildPageRoute<T>({
     required RouteSettings settings,
@@ -303,7 +303,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         ),
         builder: (context, child) {
           return Carousel(
-            key: _carouselKey,
+            key: carouselKey,
             child: CupertinoTheme(
               data: const CupertinoThemeData(
                 brightness: Brightness.dark,
@@ -390,7 +390,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       observers: observers,
       debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
-      initialLocation: '/discover',
+      initialLocation: '/',
       redirect: (context, state) {
         return null;
       },
@@ -524,7 +524,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               builder: (context, state) {
                 return DiscoverPage(
                   scrollToTopNotifier: _scrollToDiscoverTopNotifier,
-                  carouselKey: _carouselKey,
+                  carouselKey: carouselKey,
                 );
               },
               routes: [
@@ -600,6 +600,11 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ],
             ),
           ],
+        ),
+        GoRoute(
+          path: '/profile2',
+          name: 'profile2',
+          builder: (context, state) => const ProfilePage2(),
         ),
         GoRoute(
           path: '/report',

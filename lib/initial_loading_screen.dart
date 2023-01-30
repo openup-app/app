@@ -162,7 +162,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
         if (widget.needsOnboarding || noAudio) {
           context.goNamed('onboarding');
         } else {
-          context.goNamed('profile2');
+          context.goNamed('discover');
         }
       }
     }

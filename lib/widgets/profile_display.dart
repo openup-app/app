@@ -8,6 +8,7 @@ import 'package:openup/home_screen.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/carousel.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 
@@ -233,20 +234,8 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
                         children: [
                           Align(
                             alignment: Alignment.bottomLeft,
-                            child: Button(
+                            child: MenuButton(
                               onPressed: widget.onMenu,
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: const BoxDecoration(
-                                  color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Image.asset(
-                                  'assets/images/app_icon_new.png',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
                             ),
                           ),
                           Align(
