@@ -9,26 +9,29 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/invite_page.dart';
 import 'package:openup/main.dart';
+import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/screenshot.dart';
 
-class FriendshipsPage extends StatefulWidget {
+class RelationshipsPage extends ConsumerStatefulWidget {
   final TempFriendshipsRefresh tempRefresh;
-  const FriendshipsPage({
+  const RelationshipsPage({
     Key? key,
     required this.tempRefresh,
   }) : super(key: key);
 
   @override
-  State<FriendshipsPage> createState() => _FriendshipsPageState();
+  ConsumerState<RelationshipsPage> createState() => _RelationshipsPageState();
 }
 
-class _FriendshipsPageState extends State<FriendshipsPage> {
+class _RelationshipsPageState extends ConsumerState<RelationshipsPage> {
   final _searchFocusNode = FocusNode();
   final _searchController = TextEditingController();
   bool _hasFocus = false;
   String _filterString = "";
+  final _screenshotController = ScreenshotController();
 
   @override
   void initState() {
@@ -62,7 +65,7 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Login to create friendships'),
+            const Text('Login to create relationships'),
             ElevatedButton(
               onPressed: () => context.pushNamed('signup'),
               child: const Text('Login'),
@@ -72,46 +75,85 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
       );
     }
 
-    return Column(
-      children: [
-        AppBar(
-          centerTitle: true,
-          backgroundColor: Colors.black,
-          title: Text(
-            'Growing Friendships',
-            style:
-                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
+    final profile = Profile(
+      blurPhotos: false,
+      location: 'Test',
+      name: 'Test user',
+      photo: 'https://picsum.photos/200/300',
+      gallery: [
+        'https://picsum.photos/200/300',
+        'https://picsum.photos/200/400',
+      ],
+      topic: Topic.backpacking,
+      uid: 'abcd',
+      favorite: false,
+      mutualFriends: [],
+    );
+
+    return Screenshot(
+      controller: _screenshotController,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).padding.top,
           ),
-        ),
-        Container(
-          height: 43,
-          margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(),
-            borderRadius: const BorderRadius.all(Radius.circular(24)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18.0),
+            child: ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (bounds) {
+                return const LinearGradient(
+                  colors: [
+                    Color.fromRGBO(0xFF, 0x76, 0x76, 1.0),
+                    Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
+                  ],
+                ).createShader(bounds);
+              },
+              child: Text(
+                'Growing Relationships',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(fontSize: 28, fontWeight: FontWeight.w300),
+              ),
+            ),
           ),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 33.0),
+          Container(
+            height: 31,
+            margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color.fromRGBO(0xD9, 0xD9, 0xD9, 0.1),
+              border: Border.all(),
+              borderRadius: const BorderRadius.all(Radius.circular(5)),
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
               child: Row(
                 children: [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6.0),
+                    child: Icon(
+                      Icons.search,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
                   Expanded(
-                    child: TextFormField(
-                      controller: _searchController,
-                      focusNode: _searchFocusNode,
-                      decoration: InputDecoration.collapsed(
-                        hintText: 'Search',
-                        hintStyle: Theme.of(context)
-                            .textTheme
-                            .bodyMedium!
-                            .copyWith(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w400,
-                              color:
-                                  const Color.fromRGBO(0x4A, 0x4A, 0x4A, 1.0),
-                            ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 6.0),
+                      child: TextFormField(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        decoration: InputDecoration.collapsed(
+                          hintText: 'Search',
+                          hintStyle:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w300,
+                                    color: Colors.white,
+                                  ),
+                        ),
                       ),
                     ),
                   ),
@@ -132,73 +174,82 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
               ),
             ),
           ),
-        ),
-        if (_filterString.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: RichText(
-              text: TextSpan(
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w300,
-                    ),
-                children: [
-                  const TextSpan(text: 'To maintain '),
-                  TextSpan(
-                    text: 'friendships ',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+          if (_filterString.isEmpty)
+            SizedBox(
+              height: 150,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: 20,
+                itemBuilder: (context, index) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 82,
+                        height: 110,
+                        clipBehavior: Clip.hardEdge,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: const Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
+                            width: 2,
+                          ),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(11)),
                         ),
-                  ),
-                  const TextSpan(text: 'on openup, you must talk to '),
-                  TextSpan(
-                    text: 'each other ',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                        margin: const EdgeInsets.all(9),
+                        child: Image.network(
+                          profile.photo,
+                          fit: BoxFit.cover,
                         ),
-                  ),
-                  const TextSpan(
-                      text:
-                          'once every 7 days. Not doing so will result in your friendship '),
-                  TextSpan(
-                    text: 'falling apart (deleted)',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: const Color.fromRGBO(0xFF, 0x0, 0x0, 1.0),
+                      ),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: 82,
+                        child: Text(
+                          profile.name,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w200,
+                                    color: Colors.white,
+                                  ),
                         ),
-                  ),
-                  const TextSpan(text: '. This app is for people who are '),
-                  TextSpan(
-                    text: 'serious ',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  const TextSpan(text: 'about making '),
-                  TextSpan(
-                    text: 'friends',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  const TextSpan(text: '.'),
-                ],
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
+          if (_filterString.isEmpty) const SizedBox(height: 16),
+          Expanded(
+            child: Stack(
+              children: [
+                _ConversationList(
+                  filterString: _filterString,
+                  tempRefresh: widget.tempRefresh,
+                ),
+                Positioned(
+                  right: 25,
+                  bottom: 40 + MediaQuery.of(context).padding.bottom,
+                  child: MenuButton(
+                    onPressed: () async {
+                      final screenshot =
+                          await _screenshotController.takeScreenshot();
+                      if (!mounted) {
+                        return;
+                      }
+                      menuKey.currentState?.showMenu(screenshot);
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
-        if (_filterString.isEmpty) const SizedBox(height: 16),
-        Expanded(
-          child: _ConversationList(
-            filterString: _filterString,
-            tempRefresh: widget.tempRefresh,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -279,6 +330,34 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
         ),
       );
     }
+
+    final profile = Profile(
+      blurPhotos: false,
+      location: 'Test',
+      name: 'Test user',
+      photo: 'https://picsum.photos/200/300',
+      gallery: [
+        'https://picsum.photos/200/300',
+        'https://picsum.photos/200/400',
+      ],
+      topic: Topic.backpacking,
+      uid: 'abcd',
+      favorite: false,
+      mutualFriends: [],
+    );
+
+    final count = 20;
+    _chatrooms = List.generate(20 + 3, (index) {
+      return Chatroom(
+        invitationAudio: null,
+        endTime: DateTime.now().add(const Duration(days: 3)),
+        location: 'Location',
+        profile: profile,
+        state: ChatroomState.accepted,
+        unreadCount: 0,
+      );
+    });
+
     if (_chatrooms.isEmpty) {
       return SafeArea(
         child: Center(
@@ -317,14 +396,19 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
       child: ListView.separated(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
         itemCount: filteredChatrooms.length,
-        separatorBuilder: (context, _) {
-          return Container(
-            height: 1,
-            margin: const EdgeInsets.only(left: 99),
-            color: const Color.fromRGBO(0x44, 0x44, 0x44, 1.0),
+        separatorBuilder: (_, index) {
+          final suggestedFriendDivider = index == count;
+          return Divider(
+            color: suggestedFriendDivider
+                ? const Color.fromRGBO(0x99, 0x91, 0x91, 1.0)
+                : const Color.fromRGBO(0x16, 0x16, 0x16, 1.0),
+            height: suggestedFriendDivider ? 3 : 1,
+            indent: 29,
           );
         },
         itemBuilder: (context, index) {
+          final suggestedFriend = index > count;
+
           final chatroom = filteredChatrooms[index];
           return Button(
             onPressed: () async {
@@ -368,10 +452,11 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                 // ignore: unused_local_variable
                 context.pushNamed(
                   'chat',
-                  params: {'uid': chatroom.profile.uid},
+                  params: {'uid': 'ZASK6WFfS0VmJJboUxTzxQYFP212'},
                   extra: ChatPageArguments(
-                    otherUid: chatroom.profile.uid,
-                    otherProfile: chatroom.profile,
+                    otherUid: 'ZASK6WFfS0VmJJboUxTzxQYFP212',
+                    otherProfile: chatroom.profile
+                        .copyWith(uid: 'ZASK6WFfS0VmJJboUxTzxQYFP212'),
                   ),
                 );
                 // Auto-refresh when coming back from chat
@@ -385,33 +470,26 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
             child: Stack(
               children: [
                 SizedBox(
-                  height: 86,
+                  height: 140,
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 42,
+                        width: 29,
                         child: Center(
                           child: Builder(
                             builder: (context) {
-                              if (chatroom.state == ChatroomState.invitation) {
-                                return Text(
-                                  'new',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w300,
-                                      ),
-                                );
-                              } else if (chatroom.unreadCount > 0) {
+                              if (chatroom.unreadCount != 0) {
                                 return Container(
-                                  width: 14,
-                                  height: 14,
+                                  width: 10,
+                                  height: 10,
                                   decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color:
-                                        Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color.fromRGBO(0xF6, 0x28, 0x28, 1.0),
+                                        Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
+                                      ],
+                                    ),
                                   ),
                                 );
                               }
@@ -421,11 +499,11 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                         ),
                       ),
                       Container(
-                        width: 65,
-                        height: 65,
+                        width: 82,
+                        height: 110,
                         clipBehavior: Clip.hardEdge,
                         decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.all(Radius.circular(11)),
                         ),
                         child: ProfileImage(
                           chatroom.profile.photo,
@@ -442,7 +520,7 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                               chatroom.profile.name,
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 2),
                             AutoSizeText(
                               chatroom.location,
                               minFontSize: 10,
@@ -459,48 +537,29 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                           ],
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4.0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                CountdownTimer(
-                                  formatter: (remaining) =>
-                                      formatCountdown(remaining),
-                                  endTime: chatroom.endTime,
-                                  onDone: () {
-                                    setState(() => _chatrooms.removeWhere((c) =>
-                                        c.profile.uid == chatroom.profile.uid));
-                                  },
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  topicLabel(chatroom.profile.topic),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w300,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            const Icon(
-                              Icons.chevron_right,
-                              color: Colors.grey,
-                            ),
-                          ],
-                        ),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+                        size: 32,
                       ),
+                      const SizedBox(width: 12),
                     ],
                   ),
                 ),
+                if (suggestedFriend || chatroom.unreadCount > 0)
+                  Positioned(
+                    right: 41,
+                    bottom: 16,
+                    child: Text(
+                      suggestedFriend ? 'Suggested Friend' : 'New message',
+                      textAlign: TextAlign.right,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontWeight: FontWeight.w300,
+                            fontSize: 16,
+                            fontStyle: FontStyle.italic,
+                          ),
+                    ),
+                  ),
                 Positioned(
                   left: 58,
                   top: -18,

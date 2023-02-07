@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,8 @@ import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/home_screen.dart';
+import 'package:openup/main.dart';
+import 'package:openup/menu_page.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -22,7 +26,10 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_message.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/disable.dart';
+import 'package:openup/widgets/screenshot.dart';
 import 'package:openup/widgets/tab_view.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
@@ -73,6 +80,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   final _audio = JustAudioAudioPlayer();
   String? _playbackMessageId;
 
+  final _screenshotController = ScreenshotController();
+
   @override
   void initState() {
     super.initState();
@@ -90,7 +99,22 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       },
     );
 
-    final profile = ref.read(userProvider).profile!;
+    final profile = Profile(
+      blurPhotos: false,
+      location: 'Test',
+      name: 'Test user',
+      photo: 'https://picsum.photos/200/300',
+      gallery: [
+        'https://picsum.photos/200/300',
+        'https://picsum.photos/200/400',
+      ],
+      topic: Topic.backpacking,
+      uid: 'abcd',
+      favorite: false,
+      mutualFriends: [],
+    );
+
+    // final profile = ref.read(userProvider).profile!;
     setState(() => _myPhoto = profile.photo);
 
     _fetchUnblurPhotosFor();
@@ -125,299 +149,151 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        centerTitle: true,
+    return Screenshot(
+      controller: _screenshotController,
+      child: Scaffold(
         backgroundColor: Colors.black,
-        leading: const SizedBox.shrink(),
-        title: Text(
-          'Growing Friendships',
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
-        ),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Stack(
-              children: [
-                const Positioned(
-                  top: 0,
-                  bottom: 0,
-                  left: 4,
-                  child: BackIconButton(),
+        appBar: AppBar(
+          centerTitle: true,
+          backgroundColor: Colors.black,
+          leading: const SizedBox.shrink(),
+          title: Row(
+            children: [
+              Container(
+                width: 45,
+                height: 45,
+                clipBehavior: Clip.hardEdge,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
                 ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: TabView(
-                      firstSelected: _showChat,
-                      firstLabel: 'Messages',
-                      secondLabel: 'Profile',
-                      onSelected: (first) {
-                        if (first) {
-                          setState(() => _showChat = true);
-                        } else {
-                          if (_otherProfile != null && _endTime != null) {
-                            setState(() => _showChat = false);
+                child: widget.otherProfile?.photo == null
+                    ? Image.network(
+                        widget.otherProfile!.photo,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(width: 9),
+              Text(
+                widget.otherProfile?.name ?? '',
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w300,
+                    color: const Color.fromRGBO(0x96, 0x96, 0x96, 1.0)),
+              ),
+            ],
+          ),
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Stack(
+                children: [
+                  const Positioned(
+                    top: 0,
+                    bottom: 0,
+                    left: 4,
+                    child: BackIconButton(),
+                  ),
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: TabView(
+                        firstSelected: _showChat,
+                        firstLabel: 'Messages',
+                        secondLabel: 'Profile',
+                        onSelected: (first) {
+                          if (first) {
+                            setState(() => _showChat = true);
+                          } else {
+                            if (_otherProfile != null && _endTime != null) {
+                              setState(() => _showChat = false);
+                            }
                           }
-                        }
-                      },
+                        },
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: Builder(
-              builder: (context) {
-                if (!_showChat) {
-                  return _ChatProfilePage(
-                    profile: _otherProfile!,
-                    endTime: _endTime!,
-                    onShowMessages: () {
-                      setState(() => _showChat = true);
-                    },
-                  );
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    AutoSizeText(
-                                      _otherProfile?.name ?? '',
-                                      minFontSize: 9,
-                                      maxFontSize: 20,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 8.0),
-                                      child: OnlineIndicatorBuilder(
-                                        uid: widget.otherUid,
-                                        builder: (context, online) {
-                                          return online
-                                              ? const OnlineIndicator()
-                                              : const SizedBox.shrink();
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                  ],
-                                ),
-                                AutoSizeText(
-                                  _otherProfile?.location ?? '',
-                                  minFontSize: 9,
-                                  maxFontSize: 16,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(fontWeight: FontWeight.w300),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // if (ref.watch(userProvider).profile?.blurPhotos ==
-                        //     true) ...[
-                        //   const SizedBox(width: 4),
-                        //   Text(
-                        //     'Reveal Pictures',
-                        //     style: Theme.of(context)
-                        //         .textTheme
-                        //         .bodyMedium!
-                        //         .copyWith(
-                        //           fontSize: 16,
-                        //           fontWeight: FontWeight.w400,
-                        //         ),
-                        //   ),
-                        //   const SizedBox(width: 9),
-                        //   Builder(
-                        //     builder: (context) {
-                        //       final unblur = _unblur;
-                        //       if (unblur == null) {
-                        //         return const Padding(
-                        //           padding:
-                        //               EdgeInsets.symmetric(horizontal: 15.5),
-                        //           child: SizedBox(
-                        //             width: 16,
-                        //             height: 16,
-                        //             child: Center(
-                        //               child: LoadingIndicator(
-                        //                 size: 16,
-                        //               ),
-                        //             ),
-                        //           ),
-                        //         );
-                        //       }
-                        //       return ToggleButton(
-                        //         value: unblur,
-                        //         onChanged: (value) {
-                        //           final api = GetIt.instance.get<Api>();
-                        //           api.updateUnblurPhotosFor(
-                        //             ref.read(userProvider).uid,
-                        //             widget.otherProfile.uid,
-                        //             value,
-                        //           );
-                        //           setState(() => _unblur = value);
-                        //         },
-                        //       );
-                        //     },
-                        //   ),
-                        // ],
-                        Button(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Video calling coming soon'),
-                              ),
-                            );
-                          },
-                          child: SvgPicture.asset(
-                            'assets/images/videocam.svg',
-                            width: 38,
-                          ),
-                        ),
-                        const SizedBox(width: 32),
-                        Button(
-                          onPressed: _otherProfile == null
-                              ? null
-                              : () {
-                                  _call(
-                                    context: context,
-                                    ref: ref,
-                                    profile: _otherProfile!.toSimpleProfile(),
-                                    video: false,
-                                  );
-                                },
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: SvgPicture.asset(
-                              'assets/images/call.svg',
-                              width: 28,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                      ],
-                    ),
-                    Expanded(
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Scrollbar(
-                            controller: _scrollController,
-                            child: ListView.builder(
+            Expanded(
+              child: Builder(
+                builder: (context) {
+                  if (!_showChat) {
+                    return _ChatProfilePage(
+                      profile: _otherProfile!,
+                      endTime: _endTime!,
+                      onShowMessages: () {
+                        setState(() => _showChat = true);
+                      },
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Scrollbar(
                               controller: _scrollController,
-                              reverse: true,
-                              padding: EdgeInsets.only(
-                                top: MediaQuery.of(context).padding.top + 64,
-                              ),
-                              itemCount: _messages.length + (_loading ? 1 : 0),
-                              itemBuilder: (context, forwardIndex) {
-                                var index =
-                                    _messages.values.length - forwardIndex - 1;
-                                if (_loading &&
-                                    forwardIndex == _messages.length) {
-                                  return const Center(
-                                    child: LoadingIndicator(),
-                                  );
-                                }
-                                final message =
-                                    _messages.values.toList()[index];
-                                final uid = ref.read(userProvider).uid;
-                                final fromMe = message.uid == uid;
+                              child: ListView.builder(
+                                controller: _scrollController,
+                                reverse: true,
+                                padding: EdgeInsets.only(
+                                  top: MediaQuery.of(context).padding.top + 64,
+                                ),
+                                itemCount:
+                                    _messages.length + (_loading ? 1 : 0),
+                                itemBuilder: (context, forwardIndex) {
+                                  var index = _messages.values.length -
+                                      forwardIndex -
+                                      1;
+                                  if (_loading &&
+                                      forwardIndex == _messages.length) {
+                                    return const Center(
+                                      child: LoadingIndicator(),
+                                    );
+                                  }
+                                  final message =
+                                      _messages.values.toList()[index];
+                                  final uid = ref.read(userProvider).uid;
+                                  final fromMe = message.uid == uid;
 
-                                final messageReady = message.messageId != null;
-                                final playingThisMessage =
-                                    _playbackMessageId == message.messageId;
+                                  final messageReady =
+                                      message.messageId != null;
+                                  final playingThisMessage =
+                                      _playbackMessageId == message.messageId;
 
-                                return Container(
-                                  key: messageReady
-                                      ? Key(message.messageId!)
-                                      : null,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 4),
-                                  alignment: fromMe
-                                      ? Alignment.centerRight
-                                      : Alignment.centerLeft,
-                                  child: Disable(
-                                    disabling: !messageReady,
-                                    child: Consumer(
-                                      builder: (context, ref, _) {
-                                        final blurEnabled =
-                                            ref.watch(userProvider.select((p) {
-                                          return p.profile?.blurPhotos == true;
-                                        }));
-                                        final unblur = _unblur == true;
-                                        final blurMyPhotos =
-                                            blurEnabled && !unblur;
-                                        switch (message.type) {
-                                          case ChatType.audio:
-                                            return Builder(
-                                              builder: (context) {
-                                                if (!playingThisMessage) {
-                                                  return AudioChatMessage(
-                                                    key: Key(
-                                                        'audio_${message.messageId}'),
-                                                    audioUrl: message.content,
-                                                    duration: message.duration,
-                                                    photoUrl: fromMe
-                                                        ? _myPhoto ?? ''
-                                                        : (widget.otherProfile
-                                                                ?.photo ??
-                                                            ''),
-                                                    blurPhotos: fromMe
-                                                        ? blurMyPhotos
-                                                        : (_otherProfile
-                                                                ?.blurPhotos ??
-                                                            true),
-                                                    date: _buildDateText(
-                                                        message.date),
-                                                    fromMe: fromMe,
-                                                    playbackInfo:
-                                                        const PlaybackInfo(),
-                                                    onPlay: () => setState(
-                                                      () {
-                                                        _playbackMessageId =
-                                                            message.messageId;
-                                                        _audio.setUrl(
-                                                            message.content);
-                                                        _audio.play();
-                                                      },
-                                                    ),
-                                                    onPause: () {},
-                                                    onSeek: null,
-                                                  );
-                                                }
-                                                return StreamBuilder<
-                                                    PlaybackInfo>(
-                                                  stream:
-                                                      _audio.playbackInfoStream,
-                                                  initialData:
-                                                      const PlaybackInfo(),
-                                                  builder: (context, snapshot) {
-                                                    final playbackInfo =
-                                                        snapshot.requireData;
+                                  return Container(
+                                    key: messageReady
+                                        ? Key(message.messageId!)
+                                        : null,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    margin:
+                                        const EdgeInsets.symmetric(vertical: 4),
+                                    alignment: fromMe
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: Disable(
+                                      disabling: !messageReady,
+                                      child: Consumer(
+                                        builder: (context, ref, _) {
+                                          final blurEnabled = ref
+                                              .watch(userProvider.select((p) {
+                                            return p.profile?.blurPhotos ==
+                                                true;
+                                          }));
+                                          final unblur = _unblur == true;
+                                          final blurMyPhotos =
+                                              blurEnabled && !unblur;
+                                          switch (message.type) {
+                                            case ChatType.audio:
+                                              return Builder(
+                                                builder: (context) {
+                                                  if (!playingThisMessage) {
                                                     return AudioChatMessage(
                                                       key: Key(
                                                           'audio_${message.messageId}'),
@@ -426,7 +302,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                                           message.duration,
                                                       photoUrl: fromMe
                                                           ? _myPhoto ?? ''
-                                                          : (_otherProfile
+                                                          : (widget.otherProfile
                                                                   ?.photo ??
                                                               ''),
                                                       blurPhotos: fromMe
@@ -438,104 +314,176 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                                           message.date),
                                                       fromMe: fromMe,
                                                       playbackInfo:
-                                                          playbackInfo,
-                                                      onPlay: () =>
-                                                          _audio.play(),
-                                                      onPause: () =>
-                                                          _audio.pause(),
-                                                      onSeek:
-                                                          !playingThisMessage
-                                                              ? null
-                                                              : (position) =>
-                                                                  _audio.seek(
-                                                                      position),
+                                                          const PlaybackInfo(),
+                                                      onPlay: () => setState(
+                                                        () {
+                                                          _playbackMessageId =
+                                                              message.messageId;
+                                                          _audio.setUrl(
+                                                              message.content);
+                                                          _audio.play();
+                                                        },
+                                                      ),
+                                                      onPause: () {},
+                                                      onSeek: null,
                                                     );
-                                                  },
-                                                );
-                                              },
-                                            );
+                                                  }
+                                                  return StreamBuilder<
+                                                      PlaybackInfo>(
+                                                    stream: _audio
+                                                        .playbackInfoStream,
+                                                    initialData:
+                                                        const PlaybackInfo(),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      final playbackInfo =
+                                                          snapshot.requireData;
+                                                      return AudioChatMessage(
+                                                        key: Key(
+                                                            'audio_${message.messageId}'),
+                                                        audioUrl:
+                                                            message.content,
+                                                        duration:
+                                                            message.duration,
+                                                        photoUrl: fromMe
+                                                            ? _myPhoto ?? ''
+                                                            : (_otherProfile
+                                                                    ?.photo ??
+                                                                ''),
+                                                        blurPhotos: fromMe
+                                                            ? blurMyPhotos
+                                                            : (_otherProfile
+                                                                    ?.blurPhotos ??
+                                                                true),
+                                                        date: _buildDateText(
+                                                            message.date),
+                                                        fromMe: fromMe,
+                                                        playbackInfo:
+                                                            playbackInfo,
+                                                        onPlay: () =>
+                                                            _audio.play(),
+                                                        onPause: () =>
+                                                            _audio.pause(),
+                                                        onSeek:
+                                                            !playingThisMessage
+                                                                ? null
+                                                                : (position) =>
+                                                                    _audio.seek(
+                                                                        position),
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              );
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            if (!_loading &&
+                                _messages.isEmpty &&
+                                _otherProfile != null)
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0),
+                                  child: Text(
+                                    'Send your first message to ${_otherProfile!.name}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                          fontSize: 23,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        height: 95,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  const SizedBox(width: 16),
+                                  const Icon(
+                                    Icons.fingerprint,
+                                    size: 48,
+                                    color:
+                                        Color.fromRGBO(0xFF, 0xC7, 0xC7, 1.0),
+                                  ),
+                                  const Spacer(),
+                                  SizedBox(
+                                    width: 180,
+                                    child: _RecordButton(
+                                      onPressed: () async {
+                                        final audioFile =
+                                            await _showRecordPanel(context);
+                                        if (audioFile != null && mounted) {
+                                          _submit(audioFile.path);
                                         }
                                       },
                                     ),
                                   ),
-                                );
-                              },
-                            ),
-                          ),
-                          if (!_loading &&
-                              _messages.isEmpty &&
-                              _otherProfile != null)
-                            Center(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0),
-                                child: Text(
-                                  'Send your first message to ${_otherProfile!.name}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                        fontSize: 23,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                  textAlign: TextAlign.center,
-                                ),
+                                  const Spacer(),
+                                  MenuButton(
+                                    onPressed: () async {
+                                      final screenshot =
+                                          await _screenshotController
+                                              .takeScreenshot();
+                                      if (!mounted) {
+                                        return;
+                                      }
+                                      menuKey.currentState
+                                          ?.showMenu(screenshot);
+                                    },
+                                  ),
+                                  const SizedBox(width: 16),
+                                ],
                               ),
                             ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      height: 95,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                Expanded(
-                                  child: RecordButtonChat(
-                                    onSubmit: _submit,
-                                    onBeginRecording: () =>
-                                        setState(() => _recording = true),
-                                    onEndRecording: () =>
-                                        setState(() => _recording = false),
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(height: 4),
+                            Visibility(
+                              visible: _recording,
+                              maintainAnimation: true,
+                              maintainState: true,
+                              maintainSize: true,
+                              child: Text(
+                                'voice messages can only be upto 60 seconds',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w300,
+                                    ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Visibility(
-                            visible: _recording,
-                            maintainAnimation: true,
-                            maintainState: true,
-                            maintainSize: true,
-                            child: Text(
-                              'voice messages can only be upto 60 seconds',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      height: MediaQuery.of(context).padding.bottom,
-                    ),
-                  ],
-                );
-              },
+                      SizedBox(
+                        height: MediaQuery.of(context).padding.bottom,
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -552,6 +500,30 @@ class _ChatScreenState extends ConsumerState<ChatPage>
             color: Colors.white.withOpacity(opacity),
           ),
     );
+  }
+
+  Future<File?> _showRecordPanel(BuildContext context) async {
+    final audio = await showModalBottomSheet<Uint8List>(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Surface(
+          child: RecordPanelContents(
+            onSubmit: (audio) => Navigator.of(context).pop(audio),
+          ),
+        );
+      },
+    );
+
+    if (audio == null || !mounted) {
+      return null;
+    }
+
+    final tempDir = await getTemporaryDirectory();
+    final file = File(path.join(
+        tempDir.path, 'chats', '${DateTime.now().toIso8601String()}.m4a'));
+    await file.writeAsBytes(audio);
+    return file;
   }
 
   void _submit(String content) async {
@@ -667,6 +639,52 @@ class _ChatScreenState extends ConsumerState<ChatPage>
           _messages.addEntries(entries);
         });
       },
+    );
+  }
+}
+
+class _RecordButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+
+  const _RecordButton({
+    super.key,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 156,
+        height: 50,
+        decoration: const BoxDecoration(
+          color: Color.fromRGBO(0xFF, 0x00, 0x00, 0.5),
+          borderRadius: BorderRadius.all(
+            Radius.circular(72),
+          ),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 14,
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.mic_none),
+            const SizedBox(width: 4),
+            Text(
+              'send invitation',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -806,14 +824,10 @@ void _call({
 class ChatPageArguments {
   final String otherUid;
   final Profile otherProfile;
-  final String otherLocation;
-  final DateTime endTime;
 
   const ChatPageArguments({
     required this.otherUid,
     required this.otherProfile,
-    required this.otherLocation,
-    required this.endTime,
   });
 }
 

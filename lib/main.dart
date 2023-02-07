@@ -18,6 +18,7 @@ import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/chat_page.dart';
 import 'package:openup/contact_us_screen.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/error_screen.dart';
@@ -26,6 +27,7 @@ import 'package:openup/invite_page.dart';
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/profile_page2.dart';
+import 'package:openup/relationships_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
 import 'package:openup/sign_up_name_screen.dart';
@@ -131,10 +133,11 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   final _routeObserver = RouteObserver<PageRoute>();
 
   final _discoverKey = GlobalKey<NavigatorState>();
-  final _friendshipsKey = GlobalKey<NavigatorState>();
+  final _relationshipsKey = GlobalKey<NavigatorState>();
   final _profileKey = GlobalKey<NavigatorState>();
+  final _peopleKey = GlobalKey<NavigatorState>();
 
-  final _tempFriendshipsRefresh = TempFriendshipsRefresh();
+  final _tempRelationshipsRefresh = TempFriendshipsRefresh();
 
   final _scrollToDiscoverTopNotifier = ScrollToDiscoverTopNotifier();
 
@@ -262,7 +265,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     _notificationTokenSubscription?.cancel();
     disposeNotifications();
 
-    _tempFriendshipsRefresh.dispose();
+    _tempRelationshipsRefresh.dispose();
     _scrollToDiscoverTopNotifier.dispose();
 
     final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
@@ -486,12 +489,16 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               navigatorKey: _discoverKey,
             ),
             StackedNavigationItem(
-              rootRoutePath: 'friendships',
-              navigatorKey: _friendshipsKey,
+              rootRoutePath: 'relationships',
+              navigatorKey: _relationshipsKey,
             ),
             StackedNavigationItem(
               rootRoutePath: 'profile',
               navigatorKey: _profileKey,
+            ),
+            StackedNavigationItem(
+              rootRoutePath: 'people',
+              navigatorKey: _peopleKey,
             ),
           ],
           scaffoldBuilder: (context, currentIndex, itemsState, child) {
@@ -528,10 +535,46 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ],
             ),
             GoRoute(
+              path: '/relationships',
+              name: 'relationships',
+              parentNavigatorKey: _relationshipsKey,
+              builder: (context, state) {
+                return RelationshipsPage(
+                    tempRefresh: _tempRelationshipsRefresh);
+              },
+              routes: [
+                GoRoute(
+                  path: 'chat/:uid',
+                  name: 'chat',
+                  builder: (context, state) {
+                    final otherUid = state.params['uid']!;
+                    final args = state.extra as ChatPageArguments?;
+                    return ChatPage(
+                      host: host,
+                      webPort: webPort,
+                      socketPort: socketPort,
+                      otherUid: otherUid,
+                      otherProfile: args?.otherProfile,
+                    );
+                  },
+                ),
+              ],
+            ),
+            GoRoute(
               path: '/profile',
               name: 'profile',
               parentNavigatorKey: _profileKey,
               builder: (context, state) => const ProfilePage2(),
+            ),
+            GoRoute(
+              path: '/people',
+              name: 'people',
+              parentNavigatorKey: _peopleKey,
+              builder: (context, state) {
+                return const Center(
+                  child: FlutterLogo(size: 200),
+                );
+              },
             ),
           ],
         ),
