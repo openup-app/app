@@ -8,7 +8,7 @@ import 'package:openup/home_screen.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/carousel.dart';
+import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 

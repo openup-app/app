@@ -12,26 +12,25 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/main.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/carousel.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/profile_display.dart';
+import 'package:openup/widgets/screenshot.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
   final ScrollToDiscoverTopNotifier scrollToTopNotifier;
-  final GlobalKey<CarouselState> carouselKey;
 
   const DiscoverPage({
     Key? key,
     required this.scrollToTopNotifier,
-    required this.carouselKey,
   }) : super(key: key);
 
   @override
@@ -54,6 +53,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   final _pageListener = ValueNotifier<double>(0);
   final _pageController = PageController();
   final _userProfileInfoDisplayKey = GlobalKey<UserProfileInfoDisplayState>();
+
+  final _screenshotController = ScreenshotController();
 
   @override
   void initState() {
@@ -309,119 +310,128 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       }
     }
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: ValueListenableBuilder<double>(
-            valueListenable: _pageListener,
-            builder: (context, page, child) {
-              final index = page.round();
-              final profile = _profiles[index];
-              return UserProfileInfoDisplay(
-                key: _userProfileInfoDisplayKey,
-                profile: profile,
-                // invited: _invitedUsers.contains(profile.uid),
-                play: index == _currentProfileIndex,
-                onRecordInvite: () => _showRecordPanel(context, profile.uid),
-                onMenu: () {
-                  widget.carouselKey.currentState?.showMenu = true;
-                },
-                builder: (context, play) {
-                  return PageView.builder(
-                    controller: _pageController,
-                    scrollDirection: Axis.vertical,
-                    itemCount: _profiles.length,
-                    itemBuilder: (context, index) {
-                      final profile = _profiles[index];
-                      return ValueListenableBuilder<double>(
-                        valueListenable: _pageListener,
-                        builder: (context, page, child) {
-                          final pageIndex = page.floor();
-                          final opacity =
-                              (page - pageIndex) * (page - pageIndex);
-                          if (index <= pageIndex) {
-                            return ColorFiltered(
-                              colorFilter: ColorFilter.mode(
-                                Color.fromRGBO(0x00, 0x00, 0x00, opacity),
-                                BlendMode.srcOver,
+    return Screenshot(
+      controller: _screenshotController,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ValueListenableBuilder<double>(
+              valueListenable: _pageListener,
+              builder: (context, page, child) {
+                final index = page.round();
+                final profile = _profiles[index];
+                return UserProfileInfoDisplay(
+                  key: _userProfileInfoDisplayKey,
+                  profile: profile,
+                  // invited: _invitedUsers.contains(profile.uid),
+                  play: index == _currentProfileIndex,
+                  onRecordInvite: () => _showRecordPanel(context, profile.uid),
+                  onMenu: () async {
+                    final screenshot =
+                        await _screenshotController.takeScreenshot();
+                    if (!mounted) {
+                      return;
+                    }
+                    menuKey.currentState?.showMenu(screenshot);
+                    _userProfileInfoDisplayKey.currentState?.pause();
+                  },
+                  builder: (context, play) {
+                    return PageView.builder(
+                      controller: _pageController,
+                      scrollDirection: Axis.vertical,
+                      itemCount: _profiles.length,
+                      itemBuilder: (context, index) {
+                        final profile = _profiles[index];
+                        return ValueListenableBuilder<double>(
+                          valueListenable: _pageListener,
+                          builder: (context, page, child) {
+                            final pageIndex = page.floor();
+                            final opacity =
+                                (page - pageIndex) * (page - pageIndex);
+                            if (index <= pageIndex) {
+                              return ColorFiltered(
+                                colorFilter: ColorFilter.mode(
+                                  Color.fromRGBO(0x00, 0x00, 0x00, opacity),
+                                  BlendMode.srcOver,
+                                ),
+                                child: child!,
+                              );
+                            } else {
+                              return ColorFiltered(
+                                colorFilter: ColorFilter.mode(
+                                  Color.fromRGBO(0x00, 0x00, 0x00, 1 - opacity),
+                                  BlendMode.srcOver,
+                                ),
+                                child: child!,
+                              );
+                            }
+                          },
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Button(
+                                onPressed: () {
+                                  if (!play) {
+                                    _userProfileInfoDisplayKey.currentState
+                                        ?.play();
+                                  } else {
+                                    _userProfileInfoDisplayKey.currentState
+                                        ?.pause();
+                                  }
+                                },
+                                child: UserProfileDisplay(
+                                  key: ValueKey(profile.uid),
+                                  profile: profile,
+                                  playSlideshow: play,
+                                  invited: false,
+                                ),
                               ),
-                              child: child!,
-                            );
-                          } else {
-                            return ColorFiltered(
-                              colorFilter: ColorFilter.mode(
-                                Color.fromRGBO(0x00, 0x00, 0x00, 1 - opacity),
-                                BlendMode.srcOver,
-                              ),
-                              child: child!,
-                            );
-                          }
-                        },
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Button(
-                              onPressed: () {
-                                if (!play) {
-                                  _userProfileInfoDisplayKey.currentState
-                                      ?.play();
-                                } else {
-                                  _userProfileInfoDisplayKey.currentState
-                                      ?.pause();
-                                }
-                              },
-                              child: UserProfileDisplay(
-                                key: ValueKey(profile.uid),
-                                profile: profile,
-                                playSlideshow: play,
-                                invited: false,
-                              ),
-                            ),
-                            if (!play)
-                              const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.only(bottom: 72.0),
-                                  child: IgnorePointer(
-                                    child: IconWithShadow(
-                                      Icons.play_arrow,
-                                      size: 80,
+                              if (!play)
+                                const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(bottom: 72.0),
+                                    child: IgnorePointer(
+                                      child: IconWithShadow(
+                                        Icons.play_arrow,
+                                        size: 80,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          ValueListenableBuilder<double>(
+            valueListenable: _pageListener,
+            builder: (context, page, child) {
+              final index = page.toInt();
+              final profile = _profiles[index];
+              return Positioned(
+                right: 16,
+                top: 16 + MediaQuery.of(context).padding.top,
+                child: _PageControls(
+                  profile: profile,
+                  onNext: () {
+                    _pageController.nextPage(
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeOut,
+                    );
+                  },
+                  onBlocked: () => setState(() =>
+                      _profiles.removeWhere(((p) => p.uid == profile.uid))),
+                ),
               );
             },
           ),
-        ),
-        ValueListenableBuilder<double>(
-          valueListenable: _pageListener,
-          builder: (context, page, child) {
-            final index = page.toInt();
-            final profile = _profiles[index];
-            return Positioned(
-              right: 16,
-              top: 16 + MediaQuery.of(context).padding.top,
-              child: _PageControls(
-                profile: profile,
-                onNext: () {
-                  _pageController.nextPage(
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeOut,
-                  );
-                },
-                onBlocked: () => setState(
-                    () => _profiles.removeWhere(((p) => p.uid == profile.uid))),
-              ),
-            );
-          },
-        ),
-      ],
+        ],
+      ),
     );
   }
 

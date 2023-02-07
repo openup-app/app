@@ -13,24 +13,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
-import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/call_page.dart';
-import 'package:openup/chat_page.dart';
 import 'package:openup/contact_us_screen.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/error_screen.dart';
-import 'package:openup/friendships_page.dart';
-import 'package:openup/home_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/invite_page.dart';
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
-import 'package:openup/profile_page.dart';
 import 'package:openup/profile_page2.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
@@ -42,14 +36,14 @@ import 'package:openup/util/page_transition.dart';
 import 'package:openup/sign_up_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/sign_up_overview_page.dart';
-import 'package:openup/widgets/carousel.dart';
+import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 const host = String.fromEnvironment('HOST');
 const webPort = 8080;
 const socketPort = 8081;
-final carouselKey = GlobalKey<CarouselState>();
+final menuKey = GlobalKey<MenuPageState>();
 
 // TODO: Should be app constant coming from dart defines (to be used in background call handler too)
 const urlBase = 'https://$host:$webPort';
@@ -302,80 +296,74 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           ),
         ),
         builder: (context, child) {
-          return Carousel(
-            key: carouselKey,
-            child: CupertinoTheme(
-              data: const CupertinoThemeData(
-                brightness: Brightness.dark,
-                primaryColor: Colors.white,
-              ),
-              child: Stack(
-                children: [
-                  if (child != null) Positioned.fill(child: child),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    child: StreamBuilder<bool>(
-                      stream: GetIt.instance
-                          .get<CallManager>()
-                          .callPageActiveStream,
-                      initialData: false,
-                      builder: (context, snapshot) {
-                        final callPageActive = snapshot.requireData;
-                        return StreamBuilder<CallState>(
-                          stream: GetIt.instance.get<CallManager>().callState,
-                          initialData: const CallState.none(),
-                          builder: (context, snapshot) {
-                            final callState = snapshot.requireData;
-                            final display =
-                                !(callState is CallStateNone || callPageActive);
+          return CupertinoTheme(
+            data: const CupertinoThemeData(
+              brightness: Brightness.dark,
+              primaryColor: Colors.white,
+            ),
+            child: Stack(
+              children: [
+                if (child != null) Positioned.fill(child: child),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  child: StreamBuilder<bool>(
+                    stream:
+                        GetIt.instance.get<CallManager>().callPageActiveStream,
+                    initialData: false,
+                    builder: (context, snapshot) {
+                      final callPageActive = snapshot.requireData;
+                      return StreamBuilder<CallState>(
+                        stream: GetIt.instance.get<CallManager>().callState,
+                        initialData: const CallState.none(),
+                        builder: (context, snapshot) {
+                          final callState = snapshot.requireData;
+                          final display =
+                              !(callState is CallStateNone || callPageActive);
 
-                            return IgnorePointer(
-                              ignoring: !display,
-                              child: AnimatedOpacity(
-                                duration: const Duration(milliseconds: 150),
-                                opacity: display ? 1.0 : 0.0,
-                                child: Button(
-                                  onPressed: () => context.pushNamed('call'),
-                                  child: Container(
-                                    height:
-                                        40 + MediaQuery.of(context).padding.top,
-                                    color: const Color.fromRGBO(
-                                        0x03, 0xCB, 0x17, 1.0),
-                                    padding: EdgeInsets.only(
-                                        top:
-                                            MediaQuery.of(context).padding.top),
-                                    alignment: Alignment.center,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(Icons.call, size: 20),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'Tap to return to call',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium!
-                                              .copyWith(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w300,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
+                          return IgnorePointer(
+                            ignoring: !display,
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 150),
+                              opacity: display ? 1.0 : 0.0,
+                              child: Button(
+                                onPressed: () => context.pushNamed('call'),
+                                child: Container(
+                                  height:
+                                      40 + MediaQuery.of(context).padding.top,
+                                  color: const Color.fromRGBO(
+                                      0x03, 0xCB, 0x17, 1.0),
+                                  padding: EdgeInsets.only(
+                                      top: MediaQuery.of(context).padding.top),
+                                  alignment: Alignment.center,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.call, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Tap to return to call',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium!
+                                            .copyWith(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w300,
+                                            ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -494,24 +482,23 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         PartitionedShellRoute.stackedNavigation(
           stackItems: [
             StackedNavigationItem(
-              rootRoutePath: '/discover',
+              rootRoutePath: 'discover',
               navigatorKey: _discoverKey,
             ),
             StackedNavigationItem(
-              rootRoutePath: '/friendships',
+              rootRoutePath: 'friendships',
               navigatorKey: _friendshipsKey,
             ),
             StackedNavigationItem(
-              rootRoutePath: '/profile',
+              rootRoutePath: 'profile',
               navigatorKey: _profileKey,
             ),
           ],
           scaffoldBuilder: (context, currentIndex, itemsState, child) {
             return CurrentRouteSystemUiStyling.light(
-              child: HomeShell(
-                tabIndex: currentIndex,
-                tempFriendshipsRefresh: _tempFriendshipsRefresh,
-                scrollToDiscoverTopNotifier: _scrollToDiscoverTopNotifier,
+              child: MenuPage(
+                key: menuKey,
+                currentIndex: currentIndex,
                 child: child,
               ),
             );
@@ -524,7 +511,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               builder: (context, state) {
                 return DiscoverPage(
                   scrollToTopNotifier: _scrollToDiscoverTopNotifier,
-                  carouselKey: carouselKey,
                 );
               },
               routes: [
@@ -542,69 +528,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ],
             ),
             GoRoute(
-              path: '/friendships',
-              name: 'friendships',
-              parentNavigatorKey: _friendshipsKey,
-              builder: (context, state) => FriendshipsPage(
-                tempRefresh: _tempFriendshipsRefresh,
-              ),
-              routes: [
-                GoRoute(
-                  path: ':uid',
-                  name: 'chat',
-                  builder: (context, state) {
-                    final uid = state.params['uid']!;
-                    final args = state.extra as ChatPageArguments?;
-                    return CurrentRouteSystemUiStyling.light(
-                      child: ChatPage(
-                        host: host,
-                        webPort: webPort,
-                        socketPort: socketPort,
-                        otherUid: uid,
-                        otherProfile: args?.otherProfile,
-                        endTime: args?.endTime,
-                      ),
-                    );
-                  },
-                  routes: [
-                    GoRoute(
-                      path: 'call',
-                      name: 'call',
-                      parentNavigatorKey: rootNavigatorKey,
-                      builder: (context, state) {
-                        return const CurrentRouteSystemUiStyling.light(
-                          child: CallPage(),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            GoRoute(
               path: '/profile',
               name: 'profile',
               parentNavigatorKey: _profileKey,
-              builder: (context, state) => const ProfilePage(),
-              routes: [
-                GoRoute(
-                  path: 'settings',
-                  name: 'settings',
-                  parentNavigatorKey: rootNavigatorKey,
-                  builder: (context, state) {
-                    return const CurrentRouteSystemUiStyling.light(
-                      child: AccountSettingsScreen(),
-                    );
-                  },
-                ),
-              ],
+              builder: (context, state) => const ProfilePage2(),
             ),
           ],
-        ),
-        GoRoute(
-          path: '/profile2',
-          name: 'profile2',
-          builder: (context, state) => const ProfilePage2(),
         ),
         GoRoute(
           path: '/report',
