@@ -575,11 +575,11 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/go_router"
-      ref: "3b3909fb8ca8eb0f9a4eb8ad5da8a85b9d3fc4a5"
-      resolved-ref: "3b3909fb8ca8eb0f9a4eb8ad5da8a85b9d3fc4a5"
-      url: "https://github.com/flutter/packages"
+      ref: f9a26084d264b0a0b98211f168455232e96698b9
+      resolved-ref: f9a26084d264b0a0b98211f168455232e96698b9
+      url: "https://github.com/tolo/flutter_packages"
     source: git
-    version: "5.1.0"
+    version: "6.1.0"
   graphs:
     dependency: transitive
     description:

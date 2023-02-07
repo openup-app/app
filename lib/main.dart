@@ -45,7 +45,6 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 const host = String.fromEnvironment('HOST');
 const webPort = 8080;
 const socketPort = 8081;
-final menuKey = GlobalKey<MenuPageState>();
 
 // TODO: Should be app constant coming from dart defines (to be used in background call handler too)
 const urlBase = 'https://$host:$webPort';
@@ -482,101 +481,119 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             ),
           ],
         ),
-        PartitionedShellRoute.stackedNavigation(
-          stackItems: [
-            StackedNavigationItem(
-              rootRoutePath: 'discover',
+        StatefulShellRoute(
+          branches: [
+            StatefulShellBranch(
               navigatorKey: _discoverKey,
+              preload: true,
+              routes: [
+                GoRoute(
+                  path: '/discover',
+                  name: 'discover',
+                  builder: (context, state) {
+                    return DiscoverPage(
+                      scrollToTopNotifier: _scrollToDiscoverTopNotifier,
+                    );
+                  },
+                  routes: [
+                    GoRoute(
+                      path: ':uid',
+                      name: 'shared-profile',
+                      parentNavigatorKey: rootNavigatorKey,
+                      builder: (context, state) {
+                        final uid = state.params['uid']!;
+                        return SharedProfilePage(
+                          uid: uid,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
-            StackedNavigationItem(
-              rootRoutePath: 'relationships',
+            StatefulShellBranch(
               navigatorKey: _relationshipsKey,
+              preload: true,
+              routes: [
+                GoRoute(
+                  path: '/relationships',
+                  name: 'relationships',
+                  builder: (context, state) {
+                    return RelationshipsPage(
+                        tempRefresh: _tempRelationshipsRefresh);
+                  },
+                  routes: [
+                    GoRoute(
+                      path: 'chat/:uid',
+                      name: 'chat',
+                      builder: (context, state) {
+                        final otherUid = state.params['uid']!;
+                        final args = state.extra as ChatPageArguments?;
+                        return ChatPage(
+                          host: host,
+                          webPort: webPort,
+                          socketPort: socketPort,
+                          otherUid: otherUid,
+                          otherProfile: args?.otherProfile,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
-            StackedNavigationItem(
-              rootRoutePath: 'profile',
+            StatefulShellBranch(
               navigatorKey: _profileKey,
+              preload: true,
+              routes: [
+                GoRoute(
+                  path: '/profile',
+                  name: 'profile',
+                  builder: (context, state) => const ProfilePage2(),
+                ),
+              ],
             ),
-            StackedNavigationItem(
-              rootRoutePath: 'people',
+            StatefulShellBranch(
               navigatorKey: _peopleKey,
+              preload: true,
+              routes: [
+                GoRoute(
+                  path: '/people',
+                  name: 'people',
+                  builder: (context, state) {
+                    return Scaffold(
+                      body: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'People',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(color: Colors.black),
+                            ),
+                            const MenuButton(),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ],
-          scaffoldBuilder: (context, currentIndex, itemsState, child) {
+          builder: (context, state, child) {
             return CurrentRouteSystemUiStyling.light(
-              child: MenuPage(
-                key: menuKey,
-                currentIndex: currentIndex,
-                child: child,
+              child: _StatefulShellRouteChildren(
+                builder: (context, children) {
+                  return _MenuPageNavigation(
+                    children: children,
+                  );
+                },
               ),
             );
           },
-          routes: [
-            GoRoute(
-              path: '/discover',
-              name: 'discover',
-              parentNavigatorKey: _discoverKey,
-              builder: (context, state) {
-                return DiscoverPage(
-                  scrollToTopNotifier: _scrollToDiscoverTopNotifier,
-                );
-              },
-              routes: [
-                GoRoute(
-                  path: ':uid',
-                  name: 'shared-profile',
-                  parentNavigatorKey: rootNavigatorKey,
-                  builder: (context, state) {
-                    final uid = state.params['uid']!;
-                    return SharedProfilePage(
-                      uid: uid,
-                    );
-                  },
-                ),
-              ],
-            ),
-            GoRoute(
-              path: '/relationships',
-              name: 'relationships',
-              parentNavigatorKey: _relationshipsKey,
-              builder: (context, state) {
-                return RelationshipsPage(
-                    tempRefresh: _tempRelationshipsRefresh);
-              },
-              routes: [
-                GoRoute(
-                  path: 'chat/:uid',
-                  name: 'chat',
-                  builder: (context, state) {
-                    final otherUid = state.params['uid']!;
-                    final args = state.extra as ChatPageArguments?;
-                    return ChatPage(
-                      host: host,
-                      webPort: webPort,
-                      socketPort: socketPort,
-                      otherUid: otherUid,
-                      otherProfile: args?.otherProfile,
-                    );
-                  },
-                ),
-              ],
-            ),
-            GoRoute(
-              path: '/profile',
-              name: 'profile',
-              parentNavigatorKey: _profileKey,
-              builder: (context, state) => const ProfilePage2(),
-            ),
-            GoRoute(
-              path: '/people',
-              name: 'people',
-              parentNavigatorKey: _peopleKey,
-              builder: (context, state) {
-                return const Center(
-                  child: FlutterLogo(size: 200),
-                );
-              },
-            ),
-          ],
         ),
         GoRoute(
           path: '/report',
@@ -616,5 +633,70 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         ),
       ],
     );
+  }
+}
+
+class _MenuPageNavigation extends StatefulWidget {
+  final List<Widget> children;
+
+  const _MenuPageNavigation({
+    super.key,
+    required this.children,
+  });
+
+  @override
+  State<_MenuPageNavigation> createState() => _MenuPageNavigationState();
+}
+
+class _MenuPageNavigationState extends State<_MenuPageNavigation> {
+  int _currentIndex = 0;
+  @override
+  Widget build(BuildContext context) {
+    return MenuPage(
+      currentIndex: _currentIndex,
+      onItemPressed: (index) {
+        setState(() => _currentIndex = index);
+        final navigationFunctions = [
+          () => context.goNamed('discover'),
+          () => context.goNamed('relationships'),
+          () => context.goNamed('profile'),
+          () => context.goNamed('people'),
+        ];
+        navigationFunctions[index]();
+      },
+      children: widget.children,
+    );
+  }
+}
+
+class _StatefulShellRouteChildren extends StatefulWidget {
+  final Widget Function(
+    BuildContext context,
+    List<Widget> children,
+  ) builder;
+
+  const _StatefulShellRouteChildren({
+    super.key,
+    required this.builder,
+  });
+
+  @override
+  State<_StatefulShellRouteChildren> createState() =>
+      _StatefulShellRouteChildrenState();
+}
+
+class _StatefulShellRouteChildrenState
+    extends State<_StatefulShellRouteChildren> {
+  late List<Widget> _children;
+
+  @override
+  void didChangeDependencies() {
+    _children = StatefulShellRouteState.of(context).children;
+    super.didChangeDependencies();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(context, _children);
   }
 }

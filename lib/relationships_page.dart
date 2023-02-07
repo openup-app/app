@@ -79,10 +79,10 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage> {
       blurPhotos: false,
       location: 'Test',
       name: 'Test user',
-      photo: 'https://picsum.photos/200/300',
+      photo: 'https://sample-videos.com/img/Sample-png-image-100kb.png',
       gallery: [
-        'https://picsum.photos/200/300',
-        'https://picsum.photos/200/400',
+        'https://sample-videos.com/img/Sample-png-image-100kb.png',
+        'https://sample-videos.com/img/Sample-png-image-100kb.png',
       ],
       topic: Topic.backpacking,
       uid: 'abcd',
@@ -234,16 +234,7 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage> {
                 Positioned(
                   right: 25,
                   bottom: 40 + MediaQuery.of(context).padding.bottom,
-                  child: MenuButton(
-                    onPressed: () async {
-                      final screenshot =
-                          await _screenshotController.takeScreenshot();
-                      if (!mounted) {
-                        return;
-                      }
-                      menuKey.currentState?.showMenu(screenshot);
-                    },
-                  ),
+                  child: const MenuButton(),
                 ),
               ],
             ),
@@ -335,10 +326,10 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
       blurPhotos: false,
       location: 'Test',
       name: 'Test user',
-      photo: 'https://picsum.photos/200/300',
+      photo: 'https://sample-videos.com/img/Sample-png-image-100kb.png',
       gallery: [
-        'https://picsum.photos/200/300',
-        'https://picsum.photos/200/400',
+        'https://sample-videos.com/img/Sample-png-image-100kb.png',
+        'https://sample-videos.com/img/Sample-png-image-100kb.png',
       ],
       topic: Topic.backpacking,
       uid: 'abcd',
@@ -346,8 +337,8 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
       mutualFriends: [],
     );
 
-    final count = 20;
-    _chatrooms = List.generate(20 + 3, (index) {
+    const count = 3;
+    _chatrooms = List.generate(count + 3, (index) {
       return Chatroom(
         invitationAudio: null,
         endTime: DateTime.now().add(const Duration(days: 3)),
@@ -505,9 +496,9 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                         decoration: const BoxDecoration(
                           borderRadius: BorderRadius.all(Radius.circular(11)),
                         ),
-                        child: ProfileImage(
+                        child: Image.network(
                           chatroom.profile.photo,
-                          blur: chatroom.profile.blurPhotos,
+                          fit: BoxFit.cover,
                         ),
                       ),
                       const SizedBox(width: 14),

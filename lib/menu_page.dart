@@ -1,35 +1,63 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/button.dart';
+
+final _menuKey = GlobalKey<_KeyedMenuPageState>();
 
 class MenuPage extends StatefulWidget {
   final int currentIndex;
-  final Widget child;
+  final void Function(int index) onItemPressed;
+  final List<Widget> children;
 
   const MenuPage({
     super.key,
     required this.currentIndex,
-    required this.child,
+    required this.onItemPressed,
+    required this.children,
   });
 
   @override
-  State<MenuPage> createState() => MenuPageState();
+  State<MenuPage> createState() => _MenuPageState();
 }
 
-class MenuPageState extends State<MenuPage>
+class _MenuPageState extends State<MenuPage> {
+  @override
+  Widget build(BuildContext context) {
+    return _KeyedMenuPage(
+      key: _menuKey,
+      currentIndex: widget.currentIndex,
+      onItemPressed: widget.onItemPressed,
+      children: widget.children,
+    );
+  }
+}
+
+class _KeyedMenuPage extends StatefulWidget {
+  final int currentIndex;
+  final void Function(int index) onItemPressed;
+  final List<Widget> children;
+
+  const _KeyedMenuPage({
+    super.key,
+    required this.currentIndex,
+    required this.onItemPressed,
+    required this.children,
+  }) : assert(children.length == 4, 'Must have four menu pages');
+
+  @override
+  State<_KeyedMenuPage> createState() => _KeyedMenuPageState();
+}
+
+class _KeyedMenuPageState extends State<_KeyedMenuPage>
     with SingleTickerProviderStateMixin {
   late final _animationController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 400),
   );
 
-  final _screenshots = <ui.Image?>[null, null, null, null];
-
   @override
-  void didUpdateWidget(covariant MenuPage oldWidget) {
+  void didUpdateWidget(covariant _KeyedMenuPage oldWidget) {
     super.didUpdateWidget(oldWidget);
+    print('widget index is ${widget.currentIndex}');
     if (widget.currentIndex != oldWidget.currentIndex) {
       _animationController.reverse();
     }
@@ -49,36 +77,32 @@ class MenuPageState extends State<MenuPage>
         alignment: Alignment.topLeft,
         animation: _animationController,
         selected: widget.currentIndex == 0,
-        onPressed: () => context.goNamed('discover'),
-        screenshot: _screenshots[0],
-        child: widget.currentIndex == 0 ? widget.child : const Placeholder(),
+        onPressed: () => widget.onItemPressed(0),
+        child: widget.children[0],
       ),
       _PageDisplay(
         key: const ValueKey('1'),
         alignment: Alignment.topRight,
         animation: _animationController,
         selected: widget.currentIndex == 1,
-        onPressed: () => context.goNamed('relationships'),
-        screenshot: _screenshots[1],
-        child: widget.currentIndex == 1 ? widget.child : const Placeholder(),
+        onPressed: () => widget.onItemPressed(1),
+        child: widget.children[1],
       ),
       _PageDisplay(
         key: const ValueKey('2'),
         alignment: Alignment.bottomLeft,
         animation: _animationController,
         selected: widget.currentIndex == 2,
-        onPressed: () => context.goNamed('profile'),
-        screenshot: _screenshots[2],
-        child: widget.currentIndex == 2 ? widget.child : const Placeholder(),
+        onPressed: () => widget.onItemPressed(2),
+        child: widget.children[2],
       ),
       _PageDisplay(
         key: const ValueKey('3'),
         alignment: Alignment.bottomRight,
         animation: _animationController,
         selected: widget.currentIndex == 3,
-        onPressed: () => context.goNamed('people'),
-        screenshot: _screenshots[3],
-        child: widget.currentIndex == 3 ? widget.child : const Placeholder(),
+        onPressed: () => widget.onItemPressed(3),
+        child: widget.children[3],
       ),
     ];
 
@@ -149,19 +173,16 @@ class MenuPageState extends State<MenuPage>
     );
   }
 
-  void showMenu(ui.Image screenshot) {
-    setState(() => _screenshots[widget.currentIndex] = screenshot);
-    _animationController.forward();
-  }
+  void showMenu() => _animationController.forward();
 }
 
 class MenuButton extends StatelessWidget {
   final Color color;
-  final VoidCallback onPressed;
+  final VoidCallback? onShowMenu;
   const MenuButton({
     super.key,
     this.color = const Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-    required this.onPressed,
+    this.onShowMenu,
   });
 
   @override
@@ -175,7 +196,10 @@ class MenuButton extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: Button(
-          onPressed: onPressed,
+          onPressed: () {
+            _menuKey.currentState?.showMenu();
+            onShowMenu?.call();
+          },
           child: Image.asset(
             'assets/images/app_icon_new.png',
             fit: BoxFit.contain,
@@ -191,7 +215,6 @@ class _PageDisplay extends StatefulWidget {
   final AnimationController animation;
   final bool selected;
   final VoidCallback? onPressed;
-  final ui.Image? screenshot;
   final Widget child;
 
   const _PageDisplay({
@@ -200,7 +223,6 @@ class _PageDisplay extends StatefulWidget {
     required this.animation,
     required this.selected,
     required this.onPressed,
-    required this.screenshot,
     required this.child,
   });
 
@@ -278,66 +300,12 @@ class _PageDisplayState extends State<_PageDisplay> {
     return AnimatedBuilder(
       animation: widget.animation,
       builder: (context, child) {
-        final childVisible = widget.selected && widget.animation.value == 0.0;
         return IgnorePointer(
           ignoring: widget.animation.value != 0.0,
-          child: Stack(
-            children: [
-              Visibility(
-                visible: !childVisible,
-                child: CustomPaint(
-                  painter: ScreenshotPainter(
-                    screenshot: widget.screenshot,
-                  ),
-                  child: const SizedBox.expand(),
-                ),
-              ),
-              Visibility(
-                visible: childVisible,
-                maintainState: true,
-                maintainAnimation: true,
-                maintainSize: true,
-                child: widget.child,
-              ),
-            ],
-          ),
+          child: widget.child,
         );
       },
     );
-  }
-}
-
-class ScreenshotPainter extends CustomPainter {
-  final ui.Image? screenshot;
-
-  ScreenshotPainter({
-    required this.screenshot,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final s = screenshot;
-    if (s == null) {
-      return;
-    }
-    final screenshotSize = Size(s.width.toDouble(), s.height.toDouble());
-    final fittedSizes = applyBoxFit(BoxFit.cover, screenshotSize, size);
-    canvas.drawImageRect(
-      s,
-      Alignment.center
-          .inscribe(fittedSizes.source, Offset.zero & screenshotSize),
-      Alignment.center.inscribe(fittedSizes.destination, Offset.zero & size),
-      Paint(),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant ScreenshotPainter oldDelegate) {
-    return screenshot == null && oldDelegate.screenshot != null ||
-        screenshot != null && oldDelegate.screenshot == null ||
-        (screenshot != null &&
-            oldDelegate.screenshot != null &&
-            !screenshot!.isCloneOf(oldDelegate.screenshot!));
   }
 }
 

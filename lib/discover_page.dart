@@ -327,12 +327,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                   play: index == _currentProfileIndex,
                   onRecordInvite: () => _showRecordPanel(context, profile.uid),
                   onMenu: () async {
-                    final screenshot =
-                        await _screenshotController.takeScreenshot();
-                    if (!mounted) {
-                      return;
-                    }
-                    menuKey.currentState?.showMenu(screenshot);
                     _userProfileInfoDisplayKey.currentState?.pause();
                   },
                   builder: (context, play) {

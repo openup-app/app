@@ -14,7 +14,6 @@ import 'package:image/image.dart' as img;
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/main.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/common.dart';
@@ -227,14 +226,6 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                   height: 184,
                   child: MenuButton(
                     color: const Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-                    onPressed: () async {
-                      final screenshot =
-                          await _screenshotController.takeScreenshot();
-                      if (!mounted) {
-                        return;
-                      }
-                      menuKey.currentState?.showMenu(screenshot);
-                    },
                   ),
                 ),
               ],

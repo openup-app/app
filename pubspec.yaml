@@ -51,8 +51,8 @@ dependencies:
   go_router:
     # Persistent sibling navigators
     git:
-      url: https://github.com/flutter/packages
-      ref: 3b3909fb8ca8eb0f9a4eb8ad5da8a85b9d3fc4a5
+      url: https://github.com/tolo/flutter_packages
+      ref: f9a26084d264b0a0b98211f168455232e96698b9
       path: packages/go_router
   image_cropper: ^3.0.0
   image_picker: ^0.8.6

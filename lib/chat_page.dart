@@ -103,10 +103,10 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       blurPhotos: false,
       location: 'Test',
       name: 'Test user',
-      photo: 'https://picsum.photos/200/300',
+      photo: 'https://sample-videos.com/img/Sample-png-image-100kb.png',
       gallery: [
-        'https://picsum.photos/200/300',
-        'https://picsum.photos/200/400',
+        'https://sample-videos.com/img/Sample-png-image-100kb.png',
+        'https://sample-videos.com/img/Sample-png-image-100kb.png',
       ],
       topic: Topic.backpacking,
       uid: 'abcd',
@@ -437,18 +437,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                     ),
                                   ),
                                   const Spacer(),
-                                  MenuButton(
-                                    onPressed: () async {
-                                      final screenshot =
-                                          await _screenshotController
-                                              .takeScreenshot();
-                                      if (!mounted) {
-                                        return;
-                                      }
-                                      menuKey.currentState
-                                          ?.showMenu(screenshot);
-                                    },
-                                  ),
+                                  const MenuButton(),
                                   const SizedBox(width: 16),
                                 ],
                               ),

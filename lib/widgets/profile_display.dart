@@ -235,7 +235,7 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
                           Align(
                             alignment: Alignment.bottomLeft,
                             child: MenuButton(
-                              onPressed: widget.onMenu,
+                              onShowMenu: widget.onMenu,
                             ),
                           ),
                           Align(
