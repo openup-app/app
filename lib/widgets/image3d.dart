@@ -122,13 +122,16 @@ class _Image3DState extends State<Image3D> {
       final seconds = widget.animate
           ? (time.inSeconds + (time.inMilliseconds % 1000) / 1000)
           : _secondsWhenPaused;
-      return _DisplacedImage(
-        image: _image!,
-        depth: _depth!,
-        fragmentProgram: _fragmentProgram!,
-        displacementX: 0,
-        displacementY: 0,
-        displacementZ: 0.025 * seconds - 0.05,
+      return Transform.scale(
+        scale: 1.1,
+        child: _DisplacedImage(
+          image: _image!,
+          depth: _depth!,
+          fragmentProgram: _fragmentProgram!,
+          displacementX: 0.01 * seconds - 0.05,
+          displacementY: 0,
+          displacementZ: 0.050 * seconds - 0.09,
+        ),
       );
     } else {
       return const SizedBox.shrink();
