@@ -29,7 +29,6 @@ void main() {
     vec2 uv = imageCoord / fittedImageSize;
 
     // Depth sample at this pixel 
-    // vec2 uv = gl_FragCoord.xy / canvasSize;
     vec4 depthSample = texture(depthImage, uv);
     float depthAverage = (depthSample.r + depthSample.g + depthSample.b)/3.0;
 
@@ -38,7 +37,6 @@ void main() {
     vec2 depthScaled = scale * depth * vec2(xDisp, yDisp);
 
     // Image sample at the displaced point in XY
-
     vec2 displacedUv = (imageCoord.xy - depthScaled) / fittedImageSize;
 
     // Z displacement

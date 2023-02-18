@@ -48,7 +48,7 @@ class _Image3DState extends State<Image3D> {
     final depth = widget.depth;
     if (depth != null) {
       _decodeImage(depth).then((image) {
-        _blurDepthMap(image, 20).then((image) {
+        _blurDepthMap(image, 30).then((image) {
           if (mounted) {
             setState(() {
               _depth = image;
@@ -130,7 +130,7 @@ class _Image3DState extends State<Image3D> {
           fragmentProgram: _fragmentProgram!,
           displacementX: 0.01 * seconds - 0.05,
           displacementY: 0,
-          displacementZ: 0.050 * seconds - 0.09,
+          displacementZ: 0.075 * seconds - 0.20,
         ),
       );
     } else {
