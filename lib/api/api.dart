@@ -571,7 +571,7 @@ class Api {
   Future<Either<ApiError, Collection>> createCollection(
     String uid,
     List<String> photos,
-    Uint8List? audio,
+    String audio,
   ) {
     return _requestStreamedResponse(
       makeRequest: () async {
@@ -582,7 +582,7 @@ class Api {
           ..files.addAll([
             for (final photo in photos)
               await http.MultipartFile.fromPath('photos', photo),
-            if (audio != null) http.MultipartFile.fromBytes('audio', audio),
+            await http.MultipartFile.fromPath('audio', audio),
           ]);
         return request.send();
       },

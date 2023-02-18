@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:dartz/dartz.dart' show Either;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -405,6 +407,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
 
   List<File>? _allFiles;
   final _selectedFiles = <File>[];
+  File? _audioFile;
 
   @override
   void initState() {
@@ -484,20 +487,25 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                         ),
                       ),
                     ),
-                    Center(
-                      child: Text(
-                        '${_selectedFiles.length}/6',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 16, fontWeight: FontWeight.w400),
+                    if (_showPhotoGallery)
+                      Center(
+                        child: Text(
+                          '${_selectedFiles.length}/6',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w400),
+                        ),
                       ),
-                    ),
                     Align(
                       alignment: Alignment.centerRight,
                       child: Visibility(
                         visible: !_readyToUpload,
                         child: Button(
-                          onPressed: _selectedFiles.isEmpty
+                          onPressed: (_selectedFiles.isEmpty ||
+                                  (!_showPhotoGallery && _audioFile == null))
                               ? null
                               : () {
                                   if (_showPhotoGallery) {
@@ -628,7 +636,12 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                   children: [
                     if (!_readyToUpload)
                       Button(
-                        onPressed: () {},
+                        onPressed: () async {
+                          final result = await _showRecordPanel(context);
+                          if (mounted && result != null) {
+                            setState(() => _audioFile = result);
+                          }
+                        },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               vertical: 4.0, horizontal: 8.0),
@@ -667,7 +680,9 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                       ),
                       const SizedBox(width: 100),
                       Button(
-                        onPressed: () => _upload(_selectedFiles),
+                        onPressed: _audioFile == null
+                            ? null
+                            : () => _upload(_selectedFiles, _audioFile!),
                         child: Container(
                           decoration: const BoxDecoration(
                             color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
@@ -778,51 +793,37 @@ class __CollectionCreationState extends State<_CollectionCreation> {
     );
   }
 
-  void _upload(List<File> photos) async {
-    final api = GetIt.instance.get<Api>();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      return;
-    }
-
-    final photoBytes = await Future.wait(photos.map((f) => f.readAsBytes()));
-    final images = await Future.wait(photoBytes.map(decodeImageFromList));
-    final resized =
-        await Future.wait(images.map((i) => downscaleImage(i, 800)));
-    final jpgs = await Future.wait(resized.map(encodeJpg));
-    if (jpgs.contains(null)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to prepare photos'),
+  Future<File?> _showRecordPanel(BuildContext context) async {
+    final audio = await showModalBottomSheet<Uint8List>(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Surface(
+          child: RecordPanelContents(
+            onSubmit: (audio) => Navigator.of(context).pop(audio),
           ),
         );
-      }
-      return;
+      },
+    );
+
+    if (audio == null || !mounted) {
+      return null;
     }
+
     final tempDir = await getTemporaryDirectory();
+    final file = File(path.join(tempDir.path, 'collection_audio.m4a'));
+    await file.writeAsBytes(audio);
+    return file;
+  }
 
-    final jpgFiles = <File>[];
-    for (var i = 0; i < jpgs.length; i++) {
-      final file = await File(
-              path.join(tempDir.path, 'upload', 'collection_photo_$i.jpg'))
-          .create(recursive: true);
-      jpgFiles.add(await file.writeAsBytes(jpgs[i]!));
-    }
-
-    final apiFuture =
-        api.createCollection(uid, jpgFiles.map((e) => e.path).toList(), null);
-    if (!mounted) {
-      return;
-    }
-
+  void _upload(List<File> photos, File audio) async {
     final result = await withBlockingModal(
       context: context,
       label: 'Uploading collection...',
-      future: apiFuture,
+      future: _uploadCore(photos, audio),
     );
 
-    if (!mounted) {
+    if (!mounted || result == null) {
       return;
     }
 
@@ -848,6 +849,48 @@ class __CollectionCreationState extends State<_CollectionCreation> {
           widget.onDone(r);
         }
       },
+    );
+  }
+
+  Future<Either<ApiError, Collection>?> _uploadCore(
+    List<File> photos,
+    File audio,
+  ) async {
+    final api = GetIt.instance.get<Api>();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return null;
+    }
+
+    final photoBytes = await Future.wait(photos.map((f) => f.readAsBytes()));
+    final images = await Future.wait(photoBytes.map(decodeImageFromList));
+    final resized =
+        await Future.wait(images.map((i) => downscaleImage(i, 800)));
+    final jpgs = await Future.wait(resized.map(encodeJpg));
+    if (jpgs.contains(null)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to prepare photos'),
+          ),
+        );
+      }
+      return null;
+    }
+    final tempDir = await getTemporaryDirectory();
+
+    final jpgFiles = <File>[];
+    for (var i = 0; i < jpgs.length; i++) {
+      final file = await File(
+              path.join(tempDir.path, 'upload', 'collection_photo_$i.jpg'))
+          .create(recursive: true);
+      jpgFiles.add(await file.writeAsBytes(jpgs[i]!));
+    }
+
+    return api.createCollection(
+      uid,
+      jpgFiles.map((e) => e.path).toList(),
+      audio.path,
     );
   }
 
