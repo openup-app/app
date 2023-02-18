@@ -86,7 +86,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/app_icon_new.png
     - assets/images/call.json
     - assets/images/call.svg
     - assets/images/video_call.json
@@ -96,6 +95,7 @@ flutter:
     - assets/images/chevron_right.png
     - assets/images/close_circle.png
     - assets/images/menu_background.png
+    - assets/images/menu_button.png
     - assets/images/onboard_discover.jpg
     - assets/images/onboard_chat.jpg
     - assets/images/onboard_countdown.jpg
@@ -137,10 +137,11 @@ flutter:
           weight: 700
 
 flutter_icons:
-  android: true
-  ios: true
   image_path: "assets/images/app_icon.png"
-  image_path_ios: "assets/images/app_icon_ios.png"
-  adaptive_icon_background: "#FFFFFF"
+  android: true
+  min_sdk_android: 21
+  adaptive_icon_background: "assets/images/app_icon_background.png"
   adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  ios: true
+  image_path_ios: "assets/images/app_icon_ios.png"
   remove_alpha_ios: true

@@ -201,7 +201,7 @@ class MenuButton extends StatelessWidget {
             onShowMenu?.call();
           },
           child: Image.asset(
-            'assets/images/app_icon_new.png',
+            'assets/images/menu_button.png',
             fit: BoxFit.contain,
           ),
         ),
