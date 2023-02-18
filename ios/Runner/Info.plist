@@ -45,6 +45,8 @@
 	<string>Send audio invites, messages and make calls</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Add profile photos from your gallery</string>
+	 <key>NSContactsUsageDescription</key>
+     <string>Invite your friends to Openup, and see who's already here</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

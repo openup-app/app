@@ -26,6 +26,7 @@ import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/invite_page.dart';
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
+import 'package:openup/people_page.dart';
 import 'package:openup/profile_page2.dart';
 import 'package:openup/relationships_page.dart';
 import 'package:openup/report_screen.dart';
@@ -561,23 +562,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   path: '/people',
                   name: 'people',
                   builder: (context, state) {
-                    return Scaffold(
-                      body: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'People',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(color: Colors.black),
-                            ),
-                            const MenuButton(),
-                          ],
-                        ),
-                      ),
-                    );
+                    return const PeoplePage();
                   },
                 ),
               ],

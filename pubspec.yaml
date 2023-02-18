@@ -71,6 +71,7 @@ dependencies:
   mic_stream: ^0.6.2
   fftea: ^1.2.0+1
   photo_manager: ^2.5.2
+  flutter_contacts: ^1.1.6
 
 dev_dependencies:
   flutter_test:
@@ -99,6 +100,7 @@ flutter:
     - assets/images/onboard_chat.jpg
     - assets/images/onboard_countdown.jpg
     - assets/images/online.json
+    - assets/images/people_background.png
     - assets/images/preferences_icon.png
     - assets/images/earth.svg
     - assets/images/loading_icon.png
