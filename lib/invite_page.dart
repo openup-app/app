@@ -170,9 +170,7 @@ class _InvitationPageState extends ConsumerState<InvitePage> {
                       ),
                       child: Gallery(
                         gallery: profile.gallery,
-                        withWideBlur: false,
                         slideshow: true,
-                        blurPhotos: profile.blurPhotos,
                       ),
                     ),
                   ),

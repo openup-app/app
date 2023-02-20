@@ -571,19 +571,18 @@ class Api {
   Future<Either<ApiError, Collection>> createCollection(
     String uid,
     List<String> photos,
-    String audio,
+    String? audio,
   ) {
     return _requestStreamedResponse(
       makeRequest: () async {
         final uri = Uri.parse('$_urlBase/users/$uid/profile/collections');
-        final request = http.MultipartRequest('POST', uri)
-          ..headers.addAll(_headers)
-          ..fields['uid'] = uid
-          ..files.addAll([
-            for (final photo in photos)
-              await http.MultipartFile.fromPath('photos', photo),
-            await http.MultipartFile.fromPath('audio', audio),
-          ]);
+        final request = http.MultipartRequest('POST', uri);
+        request.headers.addAll(_headers);
+        request.files.addAll([
+          for (final photo in photos)
+            await http.MultipartFile.fromPath('photos', photo),
+          if (audio != null) await http.MultipartFile.fromPath('audio', audio),
+        ]);
         return request.send();
       },
       handleSuccess: (response) {
@@ -870,12 +869,23 @@ class DiscoverResults with _$DiscoverResults {
 }
 
 @freezed
+class Photo3d with _$Photo3d {
+  const factory Photo3d({
+    required String url,
+    required String depthUrl,
+  }) = _Photo3d;
+
+  factory Photo3d.fromJson(Map<String, dynamic> json) =>
+      _$Photo3dFromJson(json);
+}
+
+@freezed
 class Collection with _$Collection {
   const factory Collection({
     required String collectionId,
     required String uid,
     required DateTime date,
-    required List<String> photos,
+    required List<Photo3d> photos,
     @Default(null) String? audio,
   }) = _Collection;
 

@@ -252,10 +252,7 @@ class _PhotoOrUploadButton extends StatelessWidget {
               builder: (context) {
                 final photoUrl = url;
                 if (photoUrl != null) {
-                  return ProfileImage(
-                    photoUrl,
-                    blur: blur,
-                  );
+                  return ProfileImage(photoUrl);
                 }
                 return Container(
                   color: const Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),

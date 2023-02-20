@@ -21,7 +21,7 @@ import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
-import 'package:openup/widgets/image3d.dart';
+import 'package:openup/widgets/photo3d.dart';
 import 'package:openup/widgets/waveforms.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:tuple/tuple.dart';
@@ -193,8 +193,6 @@ class Surface extends StatelessWidget {
 class ProfileImage extends StatefulWidget {
   final String photo;
   final BoxFit fit;
-  final bool blur;
-  final double blurSigma;
   final bool animate;
   final VoidCallback? onLoaded;
 
@@ -202,8 +200,6 @@ class ProfileImage extends StatefulWidget {
     this.photo, {
     super.key,
     this.fit = BoxFit.cover,
-    this.blurSigma = 10.0,
-    required this.blur,
     this.animate = true,
     this.onLoaded,
   });
@@ -251,17 +247,81 @@ class _ProfileImageState extends State<ProfileImage> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        ImageFiltered(
-          enabled: widget.blur,
-          imageFilter: ImageFilter.blur(
-            sigmaX: widget.blurSigma,
-            sigmaY: widget.blurSigma,
+        Photo3dDisplay(
+          image: _photoImageProvider,
+          depth: _depthImageProvider,
+          animate: widget.animate,
+        ),
+        if (_loading)
+          const Center(
+            child: LoadingIndicator(),
           ),
-          child: Image3D(
-            image: _photoImageProvider,
-            depth: _depthImageProvider,
-            animate: widget.animate,
-          ),
+      ],
+    );
+  }
+}
+
+class CinematicPhoto extends StatefulWidget {
+  final Photo3d photo3d;
+  final BoxFit fit;
+  final bool animate;
+  final VoidCallback? onLoaded;
+
+  const CinematicPhoto({
+    super.key,
+    required this.photo3d,
+    this.fit = BoxFit.cover,
+    this.animate = true,
+    this.onLoaded,
+  });
+
+  @override
+  State<CinematicPhoto> createState() => _CinematicPhotoState();
+}
+
+class _CinematicPhotoState extends State<CinematicPhoto> {
+  late final _photoImageProvider = NetworkImage(widget.photo3d.url);
+  late final _depthImageProvider = NetworkImage(widget.photo3d.depthUrl);
+
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final futures = Future.wait([
+      _decodeImage(_photoImageProvider),
+      _decodeImage(_depthImageProvider),
+    ]);
+    futures.then((values) {
+      values[0].dispose();
+      values[1].dispose();
+      if (mounted) {
+        setState(() => _loading = false);
+        widget.onLoaded?.call();
+      }
+    });
+  }
+
+  Future<ui.Image> _decodeImage(ImageProvider provider) {
+    final completer = Completer<ui.Image>();
+    final listener = ImageStreamListener((imageInfo, _) {
+      completer.complete(imageInfo.image);
+    }, onError: (error, stackTrace) {
+      completer.completeError(error, stackTrace);
+    });
+    provider.resolve(ImageConfiguration.empty).addListener(listener);
+    return completer.future;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Photo3dDisplay(
+          image: _photoImageProvider,
+          depth: _depthImageProvider,
+          animate: widget.animate,
         ),
         if (_loading)
           const Center(

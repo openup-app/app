@@ -37,6 +37,7 @@ import 'package:openup/sign_up_start_animation.dart';
 import 'package:openup/sign_up_topic_screen.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/sign_up_screen.dart';
+import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/sign_up_overview_page.dart';
 import 'package:openup/menu_page.dart';
@@ -577,6 +578,18 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   );
                 },
               ),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/collections',
+          name: 'view_collection',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) {
+            final args = state.extra as ViewCollectionPageArguments;
+            return ViewCollectionPage(
+              collections: args.collections,
+              collectionIndex: args.collectionIndex,
             );
           },
         ),

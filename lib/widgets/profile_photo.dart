@@ -16,7 +16,6 @@ class ProfilePhoto extends StatelessWidget {
     return ProfileImage(
       url,
       fit: fit,
-      blur: false,
     );
   }
 }

@@ -31,57 +31,9 @@ class UserProfileDisplay extends StatefulWidget {
 class _UserProfileDisplayState extends State<UserProfileDisplay> {
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.loose,
-      children: [
-        Gallery(
-          slideshow: widget.playSlideshow,
-          gallery: widget.profile.gallery,
-          withWideBlur: false,
-          blurPhotos: widget.profile.blurPhotos,
-        ),
-        if (widget.profile.blurPhotos)
-          Center(
-            child: IgnorePointer(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 72.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Hidden pictures',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 22,
-                        shadows: [
-                          const BoxShadow(
-                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-                            offset: Offset(0, 2),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'To view pics ask them to show you!',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        shadows: [
-                          const BoxShadow(
-                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-                            offset: Offset(0, 2),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-      ],
+    return Gallery(
+      slideshow: widget.playSlideshow,
+      gallery: widget.profile.gallery,
     );
   }
 }

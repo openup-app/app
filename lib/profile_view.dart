@@ -211,9 +211,7 @@ class _ProfileViewState extends State<ProfileView> {
                     children: [
                       Gallery(
                         gallery: widget.profile.gallery,
-                        withWideBlur: false,
                         slideshow: !_audioPaused,
-                        blurPhotos: widget.profile.blurPhotos,
                       ),
                       if (!isMe)
                         Positioned(

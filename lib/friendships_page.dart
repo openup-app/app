@@ -427,10 +427,7 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                         ),
-                        child: ProfileImage(
-                          chatroom.profile.photo,
-                          blur: chatroom.profile.blurPhotos,
-                        ),
+                        child: ProfileImage(chatroom.profile.photo),
                       ),
                       const SizedBox(width: 14),
                       Expanded(

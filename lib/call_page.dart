@@ -336,10 +336,7 @@ class _UnconnectedDisplay extends StatelessWidget {
             height: 200,
             clipBehavior: Clip.hardEdge,
             decoration: const BoxDecoration(shape: BoxShape.circle),
-            child: ProfileImage(
-              profile.photo,
-              blur: profile.blurPhotos,
-            ),
+            child: ProfileImage(profile.photo),
           ),
           const SizedBox(height: 14),
           Text(
@@ -476,10 +473,7 @@ class __CallDisplayState extends State<_CallDisplay> {
               decoration: const BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(51)),
               ),
-              child: ProfileImage(
-                widget.activeCall.profile.photo,
-                blur: widget.activeCall.profile.blurPhotos,
-              ),
+              child: ProfileImage(widget.activeCall.profile.photo),
             ),
           ),
           _CallControls(

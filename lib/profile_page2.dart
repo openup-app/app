@@ -16,11 +16,11 @@ import 'package:image/image.dart' as img;
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/image_builder.dart';
-import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/screenshot.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -184,6 +184,15 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                                 final collection = collections[realIndex];
                                 return _CollectionPreview(
                                   collection: collection,
+                                  onView: () {
+                                    context.pushNamed(
+                                      'view_collection',
+                                      extra: ViewCollectionPageArguments(
+                                        collections: collections,
+                                        collectionIndex: realIndex,
+                                      ),
+                                    );
+                                  },
                                   onDelete: () {
                                     GetIt.instance.get<Api>().deleteCollection(
                                         collection.uid,
@@ -226,8 +235,8 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                   right: 22,
                   bottom: 12 + MediaQuery.of(context).padding.bottom + 120,
                   height: 184,
-                  child: MenuButton(
-                    color: const Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+                  child: const MenuButton(
+                    color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
                   ),
                 ),
               ],
@@ -241,11 +250,13 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
 
 class _CollectionPreview extends StatefulWidget {
   final Collection collection;
+  final VoidCallback onView;
   final VoidCallback onDelete;
 
   const _CollectionPreview({
     super.key,
     required this.collection,
+    required this.onView,
     required this.onDelete,
   });
 
@@ -259,44 +270,12 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
     final format = DateFormat.yMd();
     return Button(
       onLongPressStart: _showDeleteDialog,
-      onPressed: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) {
-              final profile = Profile(
-                uid: widget.collection.uid,
-                name: 'Jaween',
-                photo: widget.collection.photos.first,
-                gallery: widget.collection.photos,
-                blurPhotos: false,
-                mutualFriends: [],
-                location: '',
-                topic: Topic.conversation,
-              );
-              return Scaffold(
-                body: UserProfileInfoDisplay(
-                  play: true,
-                  profile: profile,
-                  onRecordInvite: () {},
-                  onMenu: () {},
-                  builder: (context, play) {
-                    return UserProfileDisplay(
-                      profile: profile,
-                      playSlideshow: play,
-                      invited: true,
-                    );
-                  },
-                ),
-              );
-            },
-          ),
-        );
-      },
+      onPressed: widget.onView,
       child: Stack(
         children: [
           Positioned.fill(
             child: Image.network(
-              widget.collection.photos.first,
+              widget.collection.photos.first.url,
               fit: BoxFit.cover,
               loadingBuilder: loadingBuilder,
               errorBuilder: iconErrorBuilder,
@@ -504,8 +483,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                       child: Visibility(
                         visible: !_readyToUpload,
                         child: Button(
-                          onPressed: (_selectedFiles.isEmpty ||
-                                  (!_showPhotoGallery && _audioFile == null))
+                          onPressed: _selectedFiles.isEmpty
                               ? null
                               : () {
                                   if (_showPhotoGallery) {
@@ -680,9 +658,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                       ),
                       const SizedBox(width: 100),
                       Button(
-                        onPressed: _audioFile == null
-                            ? null
-                            : () => _upload(_selectedFiles, _audioFile!),
+                        onPressed: () => _upload(_selectedFiles, _audioFile),
                         child: Container(
                           decoration: const BoxDecoration(
                             color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
@@ -816,7 +792,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
     return file;
   }
 
-  void _upload(List<File> photos, File audio) async {
+  void _upload(List<File> photos, File? audio) async {
     final result = await withBlockingModal(
       context: context,
       label: 'Uploading collection...',
@@ -854,7 +830,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
 
   Future<Either<ApiError, Collection>?> _uploadCore(
     List<File> photos,
-    File audio,
+    File? audio,
   ) async {
     final api = GetIt.instance.get<Api>();
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -890,7 +866,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
     return api.createCollection(
       uid,
       jpgFiles.map((e) => e.path).toList(),
-      audio.path,
+      audio?.path,
     );
   }
 

@@ -4,17 +4,15 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/image_builder.dart';
 
 FragmentProgram? _tempFragmentProgram;
 
-class Image3D extends StatefulWidget {
+class Photo3dDisplay extends StatefulWidget {
   final ImageProvider image;
   final ImageProvider? depth;
   final bool animate;
 
-  const Image3D({
+  const Photo3dDisplay({
     super.key,
     required this.image,
     this.depth,
@@ -22,10 +20,10 @@ class Image3D extends StatefulWidget {
   });
 
   @override
-  State<Image3D> createState() => _Image3DState();
+  State<Photo3dDisplay> createState() => _Photo3dDisplayState();
 }
 
-class _Image3DState extends State<Image3D> {
+class _Photo3dDisplayState extends State<Photo3dDisplay> {
   ui.Image? _image;
   ui.Image? _depth;
 
@@ -68,7 +66,7 @@ class _Image3DState extends State<Image3D> {
   }
 
   @override
-  void didUpdateWidget(Image3D oldWidget) {
+  void didUpdateWidget(Photo3dDisplay oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.animate != widget.animate) {
       if (!widget.animate) {
