@@ -285,8 +285,6 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
       ),
       child: ProfileImage(
         photoUrl,
-        blur: widget.blurPhotos,
-        blurSigma: 5.0,
       ),
     );
   }

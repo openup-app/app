@@ -1051,8 +1051,10 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                                 height: 80,
                                 child: CustomPaint(
                                   painter: FrequenciesPainter(
-                                    frequencies: recordingInfo.frequencies,
+                                    frequencies: recordingInfo.frequencies
+                                        .map((e) => e.y),
                                     barCount: 54,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),

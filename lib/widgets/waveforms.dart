@@ -93,33 +93,29 @@ class RecorderWithWaveforms {
 }
 
 class FrequenciesPainter extends CustomPainter {
-  final Float64x2List frequencies;
+  final Iterable<num> frequencies;
   final int barCount;
+  final Color color;
 
   const FrequenciesPainter({
     required this.frequencies,
-    required this.barCount,
-  });
+    int? barCount,
+    required this.color,
+  }) : barCount = barCount ?? frequencies.length;
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (barCount >= frequencies.length) {
+    if (barCount > frequencies.length) {
       return;
     }
 
-    final paint = Paint()
-      ..color = const Color.fromRGBO(
-        0xAF,
-        0xAF,
-        0xAF,
-        1.0,
-      );
+    final paint = Paint()..color = color;
     const thickness = 4.0;
     final countPerBar = frequencies.length ~/ barCount;
     for (var bar = 1; bar < barCount; bar++) {
       var peak = 0.0;
-      frequencies.skip(countPerBar * bar).take(countPerBar).forEach((e) {
-        peak = max(peak, e.y).clamp(0.0, 1.0);
+      frequencies.skip(countPerBar * bar).take(countPerBar).forEach((f) {
+        peak = max(peak, f.toDouble()).clamp(0.0, 1.0);
       });
       final ratio = bar / barCount;
       final x = size.width * ratio;

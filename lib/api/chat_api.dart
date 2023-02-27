@@ -54,11 +54,7 @@ class ChatApi {
   void _handleMessage(String message) {
     final json = jsonDecode(message);
     final data = json['message'];
-    final durationMillis = json['durationMillis'];
-    final chatMessage = ChatMessage.fromJson(data).copyWith(
-        duration: durationMillis == null
-            ? null
-            : Duration(milliseconds: durationMillis));
+    final chatMessage = ChatMessage.fromJson(data);
     onMessage(chatMessage);
   }
 }
@@ -71,11 +67,25 @@ class ChatMessage with _$ChatMessage {
     required DateTime date,
     required ChatType type,
     required String content,
-    Duration? duration,
+    @JsonKey(name: "durationMillis")
+    @DurationConverter()
+        required Duration duration,
+    required List<double> waveform,
   }) = _ChatMessage;
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) =>
       _$ChatMessageFromJson(json);
+}
+
+class DurationConverter implements JsonConverter<Duration, int> {
+  const DurationConverter();
+
+  @override
+  Duration fromJson(int durationMillis) =>
+      Duration(milliseconds: durationMillis);
+
+  @override
+  int toJson(Duration duration) => duration.inMilliseconds;
 }
 
 enum ChatType {

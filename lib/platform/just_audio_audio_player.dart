@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:just_audio/just_audio.dart';
@@ -23,6 +24,7 @@ class JustAudioAudioPlayer {
   late final StreamSubscription _stateSubscription;
   late final StreamSubscription _positionSubscription;
   late final StreamSubscription _durationSubscription;
+  StreamSubscription? _fftSubscription;
 
   PlaybackInfo _playbackInfo = const PlaybackInfo();
 
@@ -39,6 +41,7 @@ class JustAudioAudioPlayer {
           break;
         case ProcessingState.ready:
         case ProcessingState.completed:
+          _fftSubscription?.cancel();
           _playbackInfo = _playbackInfo.copyWith(
               state: state.playing &&
                       state.processingState == ProcessingState.ready
@@ -49,6 +52,24 @@ class JustAudioAudioPlayer {
             _player.seek(Duration.zero);
           }
           break;
+      }
+
+      if (state.playing &&
+          state.processingState != ProcessingState.idle &&
+          state.processingState != ProcessingState.completed) {
+        _fftSubscription?.cancel();
+        _player.startVisualizer();
+        _fftSubscription = _player.visualizerFftStream.listen((capture) {
+          final magnitudes = List<double>.generate(capture.length, (_) => 0);
+          for (var i = 0; i < capture.length; i++) {
+            magnitudes[i] = capture.getMagnitude(i) / 128;
+          }
+          _playbackInfo = _playbackInfo.copyWith(frequencies: magnitudes);
+          _playbackInfoController.add(_playbackInfo);
+        });
+      } else {
+        _fftSubscription?.cancel();
+        _player.stopVisualizer();
       }
 
       _playbackInfoController.add(_playbackInfo);
@@ -94,15 +115,19 @@ class JustAudioAudioPlayer {
     }
   }
 
-  Future<void> play({bool loop = false}) {
+  Future<void> play({bool loop = false}) async {
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.speech());
     _player.setLoopMode(loop ? LoopMode.all : LoopMode.off);
-    return _player.play();
+    _player.play();
   }
 
   Future<void> pause() => _player.pause();
 
   Future<void> stop() async {
     // Calling justAudio.AudioPlayer.stop() seems to unload the audio sometimes
+    _fftSubscription?.cancel();
+    _player.stopVisualizer();
     await pause();
     return seek(Duration.zero);
   }
@@ -116,6 +141,7 @@ class PlaybackInfo with _$PlaybackInfo {
     @Default(Duration.zero) Duration position,
     @Default(Duration.zero) Duration duration,
     @Default(PlaybackState.idle) PlaybackState state,
+    @Default([]) List<double> frequencies,
   }) = _PlaybackInfo;
 }
 

@@ -410,13 +410,8 @@ class Api {
       },
       handleSuccess: (response) {
         final list = jsonDecode(response.body) as List<dynamic>;
-        return Right(List<ChatMessage>.from(list.map((e) {
-          final durationMillis = e['durationMillis'];
-          return ChatMessage.fromJson(e).copyWith(
-              duration: durationMillis == null
-                  ? null
-                  : Duration(milliseconds: durationMillis));
-        })));
+        return Right(
+            List<ChatMessage>.from(list.map((e) => ChatMessage.fromJson(e))));
       },
     );
   }
@@ -811,7 +806,7 @@ class Profile with _$Profile {
     required String photo,
     required List<String> gallery,
     required bool blurPhotos,
-    required List<String> mutualFriends,
+    @Default([]) List<String> mutualFriends,
     required String location,
     required Topic topic,
     @Default(false) bool favorite,
