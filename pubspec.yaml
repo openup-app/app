@@ -88,6 +88,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/images/app_logo.png
     - assets/images/call.json
     - assets/images/call.svg
     - assets/images/video_call.json
@@ -104,6 +105,7 @@ flutter:
     - assets/images/online.json
     - assets/images/people_background.png
     - assets/images/preferences_icon.png
+    - assets/images/signup_background.png
     - assets/images/earth.svg
     - assets/images/loading_icon.png
     - assets/images/videocam.svg

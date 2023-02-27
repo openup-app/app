@@ -19,7 +19,6 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/dialog.dart';
-import 'package:openup/widgets/home_button.dart';
 import 'package:openup/widgets/phone_number_input.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
@@ -237,8 +236,11 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     const Spacer(flex: 2),
                     if (kDebugMode)
                       Container(
-                        color: Colors.white,
-                        margin: const EdgeInsets.symmetric(horizontal: 40.0),
+                        margin: EdgeInsets.only(
+                          left: 4,
+                          right: 4,
+                          bottom: 16 + MediaQuery.of(context).padding.bottom,
+                        ),
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,13 +255,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                   ],
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            right: MediaQuery.of(context).padding.right + 16,
-            bottom: MediaQuery.of(context).padding.bottom + 16,
-            child: const HomeButton(
-              color: Colors.white,
             ),
           ),
         ],
@@ -339,14 +334,21 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   void _signOut() async {
-    GetIt.instance.get<Mixpanel>().track("sign_out");
-    final uid = ref.read(userProvider).uid;
-    await GetIt.instance.get<Api>().signOut(uid);
-    await dismissAllNotifications();
-    if (Platform.isAndroid) {
-      await FirebaseMessaging.instance.deleteToken();
-    }
-    await FirebaseAuth.instance.signOut();
+    await withBlockingModal(
+      context: context,
+      label: 'Signing out',
+      future: Future(() async {
+        GetIt.instance.get<Mixpanel>().track("sign_out");
+        final uid = ref.read(userProvider).uid;
+        await GetIt.instance.get<Api>().signOut(uid);
+        await dismissAllNotifications();
+        if (Platform.isAndroid) {
+          await FirebaseMessaging.instance.deleteToken();
+        }
+        await FirebaseAuth.instance.signOut();
+      }),
+    );
+
     if (mounted) {
       context.goNamed('initialLoading');
     }

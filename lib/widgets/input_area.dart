@@ -18,18 +18,14 @@ class InputArea extends StatelessWidget {
       height: 64.0,
       margin: const EdgeInsets.symmetric(horizontal: 32),
       padding: const EdgeInsets.symmetric(horizontal: 32),
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(32)),
-        color: color,
-      ),
       child: Stack(
         alignment: Alignment.center,
         children: [
           DefaultTextStyle(
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium!
-                .copyWith(color: Colors.grey),
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: Colors.white,
+                  fontSize: 20,
+                ),
             child: Center(child: child),
           ),
           if (errorText != null)
@@ -38,8 +34,8 @@ class InputArea extends StatelessWidget {
               child: Text(
                 errorText!,
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: Colors.red,
-                      fontSize: 11,
+                      color: Colors.red.shade900,
+                      fontSize: 14,
                     ),
               ),
             ),

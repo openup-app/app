@@ -33,11 +33,14 @@ import 'package:openup/relationships_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
 import 'package:openup/sign_up_name_screen.dart';
+import 'package:openup/sign_up_permissions.dart';
+import 'package:openup/sign_up_phone.dart';
 import 'package:openup/sign_up_photos_screen.dart';
 import 'package:openup/sign_up_start_animation.dart';
 import 'package:openup/sign_up_topic_screen.dart';
+import 'package:openup/sign_up_verify.dart';
 import 'package:openup/util/page_transition.dart';
-import 'package:openup/sign_up_screen.dart';
+import 'package:openup/sign_up_age.dart';
 import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/sign_up_overview_page.dart';
@@ -283,8 +286,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       child: MaterialApp.router(
         routerConfig: _goRouter,
         theme: ThemeData(
+          primaryColor: const Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
           colorScheme: const ColorScheme.light(
-            primary: Color.fromARGB(255, 27, 14, 14),
+            primary: Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
             secondary: Color.fromARGB(0xAA, 0xFF, 0x71, 0x71),
           ),
           fontFamily: 'Neue Haas Unica W1G',
@@ -415,10 +419,52 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           parentNavigatorKey: rootNavigatorKey,
           builder: (context, state) {
             return const CurrentRouteSystemUiStyling.light(
-              child: SignUpScreen(),
+              child: SignUpAge(),
             );
           },
-          // TODO: Add PhoneVerificationScreen here instead of using imperative navigation
+          routes: [
+            GoRoute(
+              path: 'permissions',
+              name: 'signup_permissions',
+              parentNavigatorKey: rootNavigatorKey,
+              builder: (context, state) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: SignUpPermissionsScreen(),
+                );
+              },
+            ),
+            GoRoute(
+              path: 'phone',
+              name: 'signup_phone',
+              parentNavigatorKey: rootNavigatorKey,
+              builder: (context, state) {
+                final verifiedUid = state.queryParams['verifiedUid'];
+                return CurrentRouteSystemUiStyling.light(
+                  child: SignUpPhone(
+                    verifiedUid: verifiedUid,
+                  ),
+                );
+              },
+              routes: [
+                GoRoute(
+                  path: 'verify',
+                  name: 'signup_verify',
+                  parentNavigatorKey: rootNavigatorKey,
+                  builder: (context, state) {
+                    final verificationId = state.queryParams['verificationId'];
+                    if (verificationId == null) {
+                      throw 'Missing verification ID';
+                    }
+                    return CurrentRouteSystemUiStyling.light(
+                      child: SignUpVerify(
+                        verificationId: verificationId,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
         ),
         GoRoute(
           path: '/onboarding',

@@ -11,7 +11,7 @@ class Policies extends StatefulWidget {
 
 class _PoliciesState extends State<Policies> {
   late final TapGestureRecognizer _privacyPolicyRecognizer;
-  late final TapGestureRecognizer _eulaRecognizer;
+  late final TapGestureRecognizer _termsRecognizer;
 
   @override
   void initState() {
@@ -22,7 +22,7 @@ class _PoliciesState extends State<Policies> {
             'https://openup-app.github.io/policies/privacy_policy.html'));
       };
 
-    _eulaRecognizer = TapGestureRecognizer()
+    _termsRecognizer = TapGestureRecognizer()
       ..onTap = () {
         launchUrl(Uri.parse('https://openup-app.github.io/policies/eula.html'));
       };
@@ -33,34 +33,33 @@ class _PoliciesState extends State<Policies> {
     return SizedBox(
       width: 280,
       child: RichText(
-        textAlign: TextAlign.justify,
+        textAlign: TextAlign.center,
         text: TextSpan(
           style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w300,
+              height: 1.8),
           children: [
             const TextSpan(
-              text:
-                  'By tapping Verify Account & Accept, you acknowledge that you have read the ',
+              text: 'By entering your age, you agree to our\n',
             ),
             TextSpan(
               text: 'Privacy Policy',
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 13, fontWeight: FontWeight.w300),
               recognizer: _privacyPolicyRecognizer,
             ),
-            const TextSpan(text: ' and agree to the '),
+            const TextSpan(text: ' and '),
             TextSpan(
-              text: 'EULA',
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700),
-              recognizer: _eulaRecognizer,
+              text: 'Terms of Service',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 13, fontWeight: FontWeight.w300),
+              recognizer: _termsRecognizer,
             ),
             const TextSpan(text: '.'),
           ],

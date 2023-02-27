@@ -1577,6 +1577,31 @@ class Chip extends StatelessWidget {
   }
 }
 
+class RoundedRectangleContainer extends StatelessWidget {
+  final Color color;
+  final Widget child;
+
+  const RoundedRectangleContainer({
+    super.key,
+    Color? color,
+    required this.child,
+  }) : color = color ?? const Color.fromRGBO(0x00, 0x00, 0x00, 0.25);
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.all(Radius.circular(7)),
+        color: color,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 24),
+        child: child,
+      ),
+    );
+  }
+}
+
 class OvalButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final Widget child;

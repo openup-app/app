@@ -51,15 +51,16 @@ class _PhoneInputState extends State<PhoneInput> {
                     text: '+ ',
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontWeight: FontWeight.w400,
-                          color: widget.hintTextColor ??
-                              const Color.fromRGBO(0x6C, 0x6C, 0x6C, 1.0),
+                          fontSize: 20,
+                          color: widget.hintTextColor ?? Colors.white,
                         ),
                   ),
                   TextSpan(
                     text: _country.callingCode.toString(),
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontWeight: FontWeight.w400,
-                          color: widget.color ?? Colors.black,
+                          fontSize: 20,
+                          color: widget.color ?? Colors.white,
                         ),
                   ),
                 ],
@@ -131,7 +132,7 @@ class _PhoneInputState extends State<PhoneInput> {
         ),
         const SizedBox(width: 8),
         SizedBox(
-          width: 130,
+          width: 150,
           child: TextFormField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
@@ -153,14 +154,15 @@ class _PhoneInputState extends State<PhoneInput> {
             textAlign: TextAlign.start,
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontWeight: FontWeight.w400,
-                  color: widget.color ?? Colors.black,
+                  fontSize: 20,
+                  color: widget.color ?? Colors.white,
                 ),
             decoration: InputDecoration.collapsed(
               hintText: 'Phone Number',
               hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontWeight: FontWeight.w400,
-                    color: widget.hintTextColor ??
-                        const Color.fromRGBO(0x6C, 0x6C, 0x6C, 1.0),
+                    fontSize: 20,
+                    color: widget.hintTextColor ?? Colors.white,
                   ),
             ),
           ),
