@@ -930,10 +930,12 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
 }
 
 class RecordPanelContents extends StatefulWidget {
+  final Duration? maxDuration;
   final void Function(Uint8List audio) onSubmit;
 
   const RecordPanelContents({
     super.key,
+    this.maxDuration,
     required this.onSubmit,
   });
 
@@ -947,6 +949,8 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
   late Ticker _countdownTicker;
   var _countdown = Duration.zero;
   Uint8List? _recordingBytes;
+  final _recordingDurationNotifier = RecordingDurationNotifier(Duration.zero);
+  Ticker? _recordingDurationTicker;
 
   @override
   void initState() {
@@ -971,12 +975,14 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
 
   @override
   void dispose() {
+    _recordingDurationNotifier.dispose();
+    _recordingDurationTicker?.dispose();
     _countdownTicker.dispose();
     _controller.dispose();
     super.dispose();
   }
 
-  void _restartCountdown() {
+  void _restartCountdown() async {
     setState(() {
       _recordingBytes = null;
       _countdown = const Duration(seconds: 3);
@@ -986,25 +992,37 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
         setState(() => _countdown = duration);
         if (duration >= const Duration(seconds: 3)) {
           _countdownTicker.stop();
-          _controller.startRecording(
-            onComplete: (recordingBytes) {
-              setState(() => _recordingBytes = recordingBytes);
-            },
-          );
         }
       },
     );
-    _countdownTicker.start();
+    await _countdownTicker.start();
+    _startRecording();
+  }
+
+  void _startRecording() {
+    _recordingDurationTicker = Ticker((d) {
+      final start = (_controller._combinedController.value).item1.start;
+      _recordingDurationNotifier.value = DateTime.now().difference(start);
+    });
+    _recordingDurationTicker?.start();
+
+    _controller.startRecording(
+      maxDuration: widget.maxDuration,
+      onComplete: (recordingBytes) {
+        _recordingDurationTicker?.dispose();
+        _recordingDurationTicker = null;
+        setState(() => _recordingBytes = recordingBytes);
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<Tuple2<RecordingInfo, PlaybackInfo>>(
-      stream: _controller.combinedStream,
-      initialData: Tuple2(RecordingInfo.none(), const PlaybackInfo()),
+    return StreamBuilder<RecordingInfo>(
+      stream: _controller.combinedStream.map((event) => event.item1),
+      initialData: RecordingInfo.none(),
       builder: (context, snapshot) {
-        final recordingInfo = snapshot.requireData.item1;
-        final playbackInfo = snapshot.requireData.item2;
+        final recordingInfo = snapshot.requireData;
         return Button(
           onPressed: () {
             if (!recordingInfo.recording && _recordingBytes == null) {
@@ -1028,15 +1046,18 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                 ),
                 if (recordingInfo.recording) ...[
                   const SizedBox(height: 8),
-                  Text(
-                    formatDurationWithMillis(
-                      recordingInfo.duration,
-                      canBeZero: true,
-                    ),
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                  ValueListenableBuilder<Duration>(
+                    valueListenable: _recordingDurationNotifier,
+                    builder: (context, duration, _) {
+                      return Text(
+                        formatDurationWithMillis(
+                          duration,
+                          canBeZero: true,
+                        ),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 16, fontWeight: FontWeight.w300),
+                      );
+                    },
                   ),
                 ],
                 Expanded(
@@ -1180,6 +1201,12 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
   }
 }
 
+class RecordingDurationNotifier extends ValueNotifier<Duration> {
+  RecordingDurationNotifier(super.value);
+
+  void update(Duration duration) => value = duration;
+}
+
 class PlaybackRecorder extends StatefulWidget {
   final PlaybackRecorderController controller;
   final Widget Function(
@@ -1220,6 +1247,8 @@ class PlaybackRecorderController extends ChangeNotifier {
   late final AudioBioController _playbackController;
   final _recorder = RecorderWithWaveforms();
 
+  Timer? _recordingLimitTimer;
+
   final _combinedController =
       BehaviorSubject<Tuple2<RecordingInfo, PlaybackInfo>>.seeded(
           Tuple2(RecordingInfo.none(), const PlaybackInfo()));
@@ -1239,30 +1268,38 @@ class PlaybackRecorderController extends ChangeNotifier {
   @override
   void dispose() {
     super.dispose();
+    _recordingLimitTimer?.cancel();
     _combinedController.close();
     _playbackController.dispose();
     _recorder.dispose();
   }
 
   void startRecording({
-    Duration maxDuration = const Duration(seconds: 30),
+    Duration? maxDuration,
     required void Function(Uint8List bytes) onComplete,
   }) {
-    _recorder.startRecording(
-      onFrequencies: (frequencies) {
-        final value = _combinedController.value;
-        final recordingInfo = value.item1.copyWith(frequencies: frequencies);
-        _combinedController.add(Tuple2(recordingInfo, value.item2));
-      },
-      onComplete: onComplete,
-    );
-
-    final value = _combinedController.value;
-    final recordingInfo = value.item1.copyWith(recording: true);
-    _combinedController.add(Tuple2(recordingInfo, value.item2));
+    maxDuration ??= const Duration(seconds: 30);
+    _recorder.startRecording(onFrequencies: (frequencies) {
+      final value = _combinedController.value;
+      final recordingInfo = value.item1.copyWith(frequencies: frequencies);
+      _combinedController.add(Tuple2(recordingInfo, value.item2));
+    }, onComplete: (bytes) {
+      onComplete(bytes);
+    }).then((value) {
+      final value = _combinedController.value;
+      final recordingInfo = value.item1.copyWith(
+        recording: true,
+        start: DateTime.now(),
+      );
+      _combinedController.add(Tuple2(recordingInfo, value.item2));
+      _recordingLimitTimer = Timer(maxDuration!, () {
+        _recorder.stopRecording();
+      });
+    });
   }
 
   void stopRecording() {
+    _recordingLimitTimer?.cancel();
     _recorder.stopRecording();
 
     final value = _combinedController.value;
@@ -1279,28 +1316,28 @@ class PlaybackRecorderController extends ChangeNotifier {
 
 class RecordingInfo {
   final bool recording;
-  final Duration duration;
+  final DateTime start;
   final Float64x2List frequencies;
 
   const RecordingInfo(
     this.recording,
-    this.duration,
+    this.start,
     this.frequencies,
   );
 
   RecordingInfo.none()
       : recording = false,
-        duration = Duration.zero,
+        start = DateTime.now(),
         frequencies = Float64x2List(0);
 
   RecordingInfo copyWith({
     bool? recording,
-    Duration? duration,
+    DateTime? start,
     Float64x2List? frequencies,
   }) {
     return RecordingInfo(
       recording ?? this.recording,
-      duration ?? this.duration,
+      start ?? this.start,
       frequencies ?? this.frequencies,
     );
   }
@@ -2208,7 +2245,7 @@ String formatDurationWithMillis(
   if (!canBeZero && d.inSeconds < 1) {
     return '00:00:01';
   }
-  return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}:${(d.inMilliseconds % 100).toString().padLeft(2, '0')}';
+  return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}:${((d.inMilliseconds % 1000) ~/ 10).toString().padLeft(2, '0')}';
 }
 
 String formatCountdown(Duration d) {
