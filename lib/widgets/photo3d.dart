@@ -128,7 +128,7 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
           fragmentProgram: _fragmentProgram!,
           displacementX: 0.01 * seconds - 0.05,
           displacementY: 0,
-          displacementZ: 0.075 * seconds - 0.20,
+          displacementZ: (0.075 * seconds - 0.20).clamp(-0.3, 0.3),
         ),
       );
     } else {

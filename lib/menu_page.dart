@@ -51,7 +51,7 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
     with SingleTickerProviderStateMixin {
   late final _animationController = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 400),
+    duration: const Duration(milliseconds: 250),
   );
 
   @override
@@ -110,64 +110,19 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
     previews.add(selectedPage);
 
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            'assets/images/menu_background.png',
+      resizeToAvoidBottomInset: false,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/menu_background.png'),
             fit: BoxFit.fill,
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 65,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 21,
-                  height: 21,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: [
-                        Color.fromRGBO(0xBE, 0x00, 0x00, 1.0),
-                        Color.fromRGBO(0xFD, 0x53, 0x53, 1.0),
-                      ],
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '1',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium!
-                          .copyWith(fontWeight: FontWeight.w500, fontSize: 16),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 7),
-                Text(
-                  'New chat request',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontWeight: FontWeight.w500, fontSize: 16),
-                ),
-              ],
-            ),
-          ),
-          Stack(
-            children: [
-              ...previews,
-            ],
-          ),
-        ],
+        ),
+        child: Stack(
+          children: [
+            ...previews,
+          ],
+        ),
       ),
     );
   }

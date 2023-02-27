@@ -72,6 +72,11 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
 
     final api = GetIt.instance.get<Api>();
     final uid = ref.read(userProvider).uid;
+
+    if (uid.isEmpty) {
+      return;
+    }
+
     final result = await api.getChatrooms(uid);
 
     if (!mounted) {

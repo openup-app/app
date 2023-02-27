@@ -807,6 +807,7 @@ class Profile with _$Profile {
     required List<String> gallery,
     required bool blurPhotos,
     @Default([]) List<String> mutualFriends,
+    @Default(0) int friendCount,
     required String location,
     required Topic topic,
     @Default(false) bool favorite,

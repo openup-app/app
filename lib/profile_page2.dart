@@ -20,6 +20,7 @@ import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/screenshot.dart';
 import 'package:path/path.dart' as path;
@@ -46,204 +47,287 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
       controller: _screenshotController,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Builder(
-          builder: (context) {
-            if (!loggedIn) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Login to create a profile'),
-                    ElevatedButton(
-                      onPressed: () => context.pushNamed('signup'),
-                      child: const Text('Login'),
+        body: Stack(
+          children: [
+            Builder(
+              builder: (context) {
+                if (!loggedIn) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Login to create a profile'),
+                        ElevatedButton(
+                          onPressed: () => context.pushNamed('signup'),
+                          child: const Text('Login'),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            }
+                  );
+                }
 
-            final profile = ref.watch(userProvider.select((p) => p.profile));
-            if (profile == null) {
-              return const Center(
-                child: LoadingIndicator(),
-              );
-            }
+                final profile =
+                    ref.watch(userProvider.select((p) => p.profile));
+                if (profile == null) {
+                  return const Center(
+                    child: LoadingIndicator(),
+                  );
+                }
 
-            return Stack(
-              children: [
-                Positioned.fill(
-                  child: Image.network(
-                    profile.photo,
-                    fit: BoxFit.cover,
-                    loadingBuilder: loadingBuilder,
-                    errorBuilder: iconErrorBuilder,
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  top: 16 + MediaQuery.of(context).padding.top,
-                  right: 0,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 45,
-                        height: 45,
-                        margin: const EdgeInsets.only(left: 13, right: 7),
-                        clipBehavior: Clip.hardEdge,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
-                        child: Image.network(
-                          profile.photo,
-                          fit: BoxFit.cover,
-                        ),
+                return Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Image.network(
+                        profile.photo,
+                        fit: BoxFit.cover,
+                        loadingBuilder: loadingBuilder,
+                        errorBuilder: iconErrorBuilder,
                       ),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              profile.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w300),
-                            ),
-                            Text(
-                              'Friends 215',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w300),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 8, right: 16),
-                        child: Icon(
-                          Icons.more_horiz,
-                          size: 32,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 12 + MediaQuery.of(context).padding.bottom,
-                  height: 189,
-                  child: Builder(
-                    builder: (context) {
-                      final collections =
-                          ref.watch(userProvider.select((p) => p.collections));
-                      return ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 7),
-                        itemCount: 2 + collections.length,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            width: 106,
-                            height: 189,
+                    ),
+                    Positioned(
+                      left: 0,
+                      top: 16 + MediaQuery.of(context).padding.top,
+                      right: 0,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 45,
+                            height: 45,
+                            margin: const EdgeInsets.only(left: 13, right: 7),
                             clipBehavior: Clip.hardEdge,
-                            margin: const EdgeInsets.all(7),
                             decoration: const BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(15)),
+                              shape: BoxShape.circle,
                             ),
-                            child: Builder(
-                              builder: (context) {
-                                if (index == 0) {
-                                  return _BottomButton(
-                                    label: 'Update voice bio',
-                                    icon: const Icon(
-                                      Icons.mic_none,
-                                      color:
-                                          Color.fromRGBO(0xFF, 0x5C, 0x5C, 1.0),
-                                    ),
-                                    onPressed: () {
-                                      context.pushNamed('test');
-                                    },
-                                  );
-                                } else if (index == 1) {
-                                  return _BottomButton(
-                                    label: 'Upload new collection',
-                                    icon: const Icon(Icons.upload),
-                                    onPressed: () => setState(
-                                        () => _showCollectionCreation = true),
-                                  );
-                                }
-                                final realIndex = index - 2;
-                                final collection = collections[realIndex];
-                                return _CollectionPreview(
-                                  collection: collection,
-                                  onView: () {
-                                    context.pushNamed(
-                                      'view_collection',
-                                      extra: ViewCollectionPageArguments(
-                                        collections: collections,
-                                        collectionIndex: realIndex,
-                                      ),
+                            child: Image.network(
+                              profile.photo,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  profile.name,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w300),
+                                ),
+                                Text(
+                                  'Friends ${profile.friendCount}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w300),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuButton(
+                            padding: const EdgeInsets.only(left: 8, right: 16),
+                            child: const Icon(
+                              Icons.more_horiz,
+                              size: 32,
+                            ),
+                            itemBuilder: (context) {
+                              return [
+                                PopupMenuItem(
+                                  onTap: () =>
+                                      context.pushNamed('account_settings'),
+                                  child: const Text('Account Settings'),
+                                ),
+                              ];
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 12 + MediaQuery.of(context).padding.bottom,
+                      height: 189,
+                      child: Builder(
+                        builder: (context) {
+                          final collections = ref
+                              .watch(userProvider.select((p) => p.collections));
+                          return ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 7),
+                            itemCount: 2 + collections.length,
+                            itemBuilder: (context, index) {
+                              return Container(
+                                width: 106,
+                                height: 189,
+                                clipBehavior: Clip.hardEdge,
+                                margin: const EdgeInsets.all(7),
+                                decoration: const BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(15)),
+                                ),
+                                child: Builder(
+                                  builder: (context) {
+                                    if (index == 0) {
+                                      return _BottomButton(
+                                        label: 'Update voice bio',
+                                        icon: const Icon(
+                                          Icons.mic_none,
+                                          color: Color.fromRGBO(
+                                              0xFF, 0x5C, 0x5C, 1.0),
+                                        ),
+                                        onPressed: () async {
+                                          final audio =
+                                              await _showRecordPanel(context);
+                                          if (mounted && audio != null) {
+                                            _upload(audio);
+                                          }
+                                        },
+                                      );
+                                    } else if (index == 1) {
+                                      return _BottomButton(
+                                        label: 'Upload new collection',
+                                        icon: const Icon(Icons.upload),
+                                        onPressed: () => setState(() =>
+                                            _showCollectionCreation = true),
+                                      );
+                                    }
+                                    final realIndex = index - 2;
+                                    final collection = collections[realIndex];
+                                    return _CollectionPreview(
+                                      collection: collection,
+                                      onView: () {
+                                        context.pushNamed(
+                                          'view_collection',
+                                          extra: ViewCollectionPageArguments(
+                                            collections: collections,
+                                            collectionIndex: realIndex,
+                                          ),
+                                        );
+                                      },
+                                      onDelete: () {
+                                        GetIt.instance
+                                            .get<Api>()
+                                            .deleteCollection(collection.uid,
+                                                collection.collectionId);
+                                        final collections = ref.read(
+                                            userProvider
+                                                .select((p) => p.collections));
+                                        final newCollections =
+                                            List.of(collections)
+                                              ..removeAt(realIndex);
+                                        ref
+                                            .read(userProvider.notifier)
+                                            .collections(newCollections);
+                                      },
                                     );
                                   },
-                                  onDelete: () {
-                                    GetIt.instance.get<Api>().deleteCollection(
-                                        collection.uid,
-                                        collection.collectionId);
-                                    final collections = ref.read(userProvider
-                                        .select((p) => p.collections));
-                                    final newCollections = List.of(collections)
-                                      ..removeAt(realIndex);
-                                    ref
-                                        .read(userProvider.notifier)
-                                        .collections(newCollections);
-                                  },
-                                );
-                              },
-                            ),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  ),
-                ),
-                if (_showCollectionCreation)
-                  _CollectionCreation(
-                    onCancel: () =>
-                        setState(() => _showCollectionCreation = false),
-                    onDone: (collection) {
-                      final collections =
-                          ref.read(userProvider.select((p) => p.collections));
-                      final newCollections = List.of(collections)
-                        ..insert(0, collection);
-                      ref
-                          .read(userProvider.notifier)
-                          .collections(newCollections);
-                      setState(() => _showCollectionCreation = false);
-                    },
-                  ),
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.bounceOut,
-                  right: 22,
-                  bottom: 12 + MediaQuery.of(context).padding.bottom + 120,
-                  height: 184,
-                  child: const MenuButton(
-                    color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-                  ),
+                      ),
+                    ),
+                    if (_showCollectionCreation)
+                      _CollectionCreation(
+                        onCancel: () =>
+                            setState(() => _showCollectionCreation = false),
+                        onDone: (collection) {
+                          final collections = ref
+                              .read(userProvider.select((p) => p.collections));
+                          final newCollections = List.of(collections)
+                            ..insert(0, collection);
+                          ref
+                              .read(userProvider.notifier)
+                              .collections(newCollections);
+                          setState(() => _showCollectionCreation = false);
+                        },
+                      ),
+                  ],
+                );
+              },
+            ),
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.bounceOut,
+              right: 22,
+              bottom: 12 + MediaQuery.of(context).padding.bottom + 120,
+              height: 184,
+              child: const MenuButton(
+                color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<File?> _showRecordPanel(BuildContext context) async {
+    final audio = await showModalBottomSheet<Uint8List>(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Surface(
+          child: RecordPanelContents(
+            onSubmit: (audio) => Navigator.of(context).pop(audio),
+          ),
+        );
+      },
+    );
+
+    if (audio == null || !mounted) {
+      return null;
+    }
+
+    final tempDir = await getTemporaryDirectory();
+    final file = await File(path.join(
+            tempDir.path, 'audio_bio_${DateTime.now().toIso8601String()}.m4a'))
+        .create();
+    return file.writeAsBytes(audio);
+  }
+
+  void _upload(File audio) async {
+    final api = GetIt.instance.get<Api>();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return null;
+    }
+
+    final result = await withBlockingModal(
+      context: context,
+      label: 'Uploading voice bio...',
+      future: api.updateProfileAudio(uid, await audio.readAsBytes()),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (l) => displayError(context, l),
+      (r) {
+        showCupertinoDialog(
+          context: context,
+          builder: (context) {
+            return CupertinoAlertDialog(
+              title: const Text('Successfully uploaded void bio'),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: Navigator.of(context).pop,
+                  child: const Text('OK'),
                 ),
               ],
             );
           },
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -274,11 +358,9 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
       child: Stack(
         children: [
           Positioned.fill(
-            child: Image.network(
-              widget.collection.photos.first.url,
-              fit: BoxFit.cover,
-              loadingBuilder: loadingBuilder,
-              errorBuilder: iconErrorBuilder,
+            child: CinematicGallery(
+              slideshow: true,
+              gallery: widget.collection.photos,
             ),
           ),
           Align(
