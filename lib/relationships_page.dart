@@ -13,7 +13,6 @@ import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/screenshot.dart';
 
 class RelationshipsPage extends ConsumerStatefulWidget {
   final TempFriendshipsRefresh tempRefresh;
@@ -26,12 +25,20 @@ class RelationshipsPage extends ConsumerStatefulWidget {
   ConsumerState<RelationshipsPage> createState() => _RelationshipsPageState();
 }
 
-class _RelationshipsPageState extends ConsumerState<RelationshipsPage> {
+class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
+    with SingleTickerProviderStateMixin {
   final _searchFocusNode = FocusNode();
   final _searchController = TextEditingController();
   bool _hasFocus = false;
   String _filterString = "";
-  final _screenshotController = ScreenshotController();
+
+  final _collections = <Collection>[];
+  late final _tabController = TabController(
+    length: 2,
+    vsync: this,
+  );
+
+  List<Chatroom>? _chatrooms;
 
   @override
   void initState() {
@@ -47,236 +54,22 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage> {
         setState(() => _hasFocus = _searchFocusNode.hasFocus);
       }
     });
+
+    widget.tempRefresh.addListener(_fetchChatrooms);
+    _fetchChatrooms();
   }
 
   @override
   void dispose() {
+    widget.tempRefresh.removeListener(_fetchChatrooms);
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final loggedIn = FirebaseAuth.instance.currentUser != null;
-    if (!loggedIn) {
-      return DecoratedBox(
-        decoration: const BoxDecoration(color: Colors.black),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Login to create relationships'),
-            ElevatedButton(
-              onPressed: () => context.pushNamed('signup'),
-              child: const Text('Login'),
-            ),
-          ],
-        ),
-      );
-    }
+  Future<void> _fetchChatrooms() async {
+    setState(() => _chatrooms = null);
 
-    final profile = Profile(
-      blurPhotos: false,
-      location: 'Test',
-      name: 'Test user',
-      photo: 'https://sample-videos.com/img/Sample-png-image-100kb.png',
-      gallery: [
-        'https://sample-videos.com/img/Sample-png-image-100kb.png',
-        'https://sample-videos.com/img/Sample-png-image-100kb.png',
-      ],
-      topic: Topic.backpacking,
-      uid: 'abcd',
-      favorite: false,
-      mutualFriends: [],
-    );
-
-    return Screenshot(
-      controller: _screenshotController,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).padding.top,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18.0),
-            child: ShaderMask(
-              blendMode: BlendMode.srcIn,
-              shaderCallback: (bounds) {
-                return const LinearGradient(
-                  colors: [
-                    Color.fromRGBO(0xFF, 0x76, 0x76, 1.0),
-                    Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
-                  ],
-                ).createShader(bounds);
-              },
-              child: Text(
-                'Growing Relationships',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 28, fontWeight: FontWeight.w300),
-              ),
-            ),
-          ),
-          Container(
-            height: 31,
-            margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color.fromRGBO(0xD9, 0xD9, 0xD9, 0.1),
-              border: Border.all(),
-              borderRadius: const BorderRadius.all(Radius.circular(5)),
-            ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Row(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6.0),
-                    child: Icon(
-                      Icons.search,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 6.0),
-                      child: TextFormField(
-                        controller: _searchController,
-                        focusNode: _searchFocusNode,
-                        decoration: InputDecoration.collapsed(
-                          hintText: 'Search',
-                          hintStyle:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white,
-                                  ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (_filterString.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16.0),
-                      child: Button(
-                        onPressed: () {
-                          setState(() => _searchController.text = "");
-                        },
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          if (_filterString.isEmpty)
-            SizedBox(
-              height: 150,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: 20,
-                itemBuilder: (context, index) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 82,
-                        height: 110,
-                        clipBehavior: Clip.hardEdge,
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: const Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
-                            width: 2,
-                          ),
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(11)),
-                        ),
-                        margin: const EdgeInsets.all(9),
-                        child: Image.network(
-                          profile.photo,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        width: 82,
-                        child: Text(
-                          profile.name,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w200,
-                                    color: Colors.white,
-                                  ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          if (_filterString.isEmpty) const SizedBox(height: 16),
-          Expanded(
-            child: Stack(
-              children: [
-                _ConversationList(
-                  filterString: _filterString,
-                  tempRefresh: widget.tempRefresh,
-                ),
-                Positioned(
-                  right: 25,
-                  bottom: 40 + MediaQuery.of(context).padding.bottom,
-                  child: const MenuButton(),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ConversationList extends ConsumerStatefulWidget {
-  final String filterString;
-  final TempFriendshipsRefresh tempRefresh;
-
-  const _ConversationList({
-    Key? key,
-    this.filterString = "",
-    required this.tempRefresh,
-  }) : super(key: key);
-
-  @override
-  ConsumerState<_ConversationList> createState() => _ConversationListState();
-}
-
-class _ConversationListState extends ConsumerState<_ConversationList> {
-  bool _loading = true;
-  var _chatrooms = <Chatroom>[];
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchConversations();
-    widget.tempRefresh.addListener(_tempRefreshListener);
-  }
-
-  @override
-  void dispose() {
-    widget.tempRefresh.removeListener(_tempRefreshListener);
-    super.dispose();
-  }
-
-  Future<void> _fetchConversations() async {
     final api = GetIt.instance.get<Api>();
     final uid = ref.read(userProvider).uid;
     final result = await api.getChatrooms(uid);
@@ -284,7 +77,6 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
     if (!mounted) {
       return;
     }
-    setState(() => _loading = false);
 
     result.fold(
       (l) {
@@ -299,22 +91,298 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
     );
   }
 
-  String _waitDurationText(String name, Duration waitDuration) {
-    final hoursInt = waitDuration.inHours;
-    final hours = hoursInt <= 1 ? '1' : hoursInt.toString();
-    return 'You can invite $name again in $hours ${hoursInt <= 1 ? 'hour' : 'hours'}';
+  @override
+  Widget build(BuildContext context) {
+    final loggedIn = FirebaseAuth.instance.currentUser != null;
+    if (!loggedIn) {
+      return DecoratedBox(
+        decoration: const BoxDecoration(color: Colors.black),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Login to create relationships'),
+                ElevatedButton(
+                  onPressed: () => context.pushNamed('signup'),
+                  child: const Text('Login'),
+                ),
+              ],
+            ),
+            Positioned(
+              right: 25,
+              bottom: 40 + MediaQuery.of(context).padding.bottom,
+              child: const MenuButton(),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: MediaQuery.of(context).padding.top + 16,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18.0),
+          child: ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) {
+              return const LinearGradient(
+                colors: [
+                  Color.fromRGBO(0xFF, 0x76, 0x76, 1.0),
+                  Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
+                ],
+              ).createShader(bounds);
+            },
+            child: Text(
+              'Growing Relationships',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 28, fontWeight: FontWeight.w300),
+            ),
+          ),
+        ),
+        Container(
+          height: 31,
+          margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(0xD9, 0xD9, 0xD9, 0.1),
+            border: Border.all(),
+            borderRadius: const BorderRadius.all(Radius.circular(5)),
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6.0),
+                  child: Icon(
+                    Icons.search,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 6.0),
+                    child: TextFormField(
+                      controller: _searchController,
+                      focusNode: _searchFocusNode,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w300,
+                            color: Colors.white,
+                          ),
+                      decoration: InputDecoration.collapsed(
+                        hintText: 'Search',
+                        hintStyle:
+                            Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w300,
+                                  color: Colors.white,
+                                ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (_filterString.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16.0),
+                    child: Button(
+                      onPressed: () {
+                        setState(() => _searchController.text = "");
+                        FocusScope.of(context).unfocus();
+                      },
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        TabBar(
+          indicatorColor: Theme.of(context).primaryColor,
+          controller: _tabController,
+          tabs: const [
+            Tab(
+              child: Text('Friends'),
+            ),
+            Tab(
+              child: Text('Invites'),
+            ),
+          ],
+        ),
+        if (_filterString.isEmpty)
+          Visibility(
+            visible: false,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: SizedBox(
+                height: 150,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  itemCount: _collections.length,
+                  itemBuilder: (context, index) {
+                    final collection = _collections[index];
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 82,
+                          height: 110,
+                          clipBehavior: Clip.hardEdge,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color:
+                                  const Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
+                              width: 2,
+                            ),
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(11)),
+                          ),
+                          margin: const EdgeInsets.all(9),
+                          child: Image.network(
+                            collection.photos.first.url,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        SizedBox(
+                          width: 82,
+                          child: Text(
+                            'Name',
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w200,
+                                  color: Colors.white,
+                                ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        Expanded(
+          child: Stack(
+            children: [
+              Builder(
+                builder: (context) {
+                  final filteredChatrooms = _chatrooms?.where((c) => c
+                      .profile.name
+                      .toLowerCase()
+                      .contains(_filterString.toLowerCase()));
+                  return TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _ConversationList(
+                        chatrooms: filteredChatrooms
+                            ?.where((chatroom) =>
+                                chatroom.state == ChatroomState.accepted)
+                            .toList(),
+                        emptyLabel:
+                            'Invite someone to chat,\nthen continue the conversation here',
+                        filtered: _filterString.isNotEmpty,
+                        onRefresh: _fetchChatrooms,
+                        onOpen: _openChat,
+                      ),
+                      _ConversationList(
+                        chatrooms: filteredChatrooms
+                            ?.where((chatroom) =>
+                                chatroom.state == ChatroomState.invitation)
+                            .toList(),
+                        emptyLabel: 'You have no pending invites',
+                        filtered: _filterString.isNotEmpty,
+                        onRefresh: _fetchChatrooms,
+                        onOpen: _openChat,
+                      ),
+                    ],
+                  );
+                },
+              ),
+              Positioned(
+                right: 25,
+                bottom: 40 + MediaQuery.of(context).padding.bottom,
+                child: const MenuButton(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
-  void _tempRefreshListener() {
-    if (mounted) {
-      setState(() => _loading = true);
-      _fetchConversations();
+  void _openChat(Chatroom chatroom) {
+    FocusScope.of(context).unfocus();
+
+    if (chatroom.state == ChatroomState.accepted) {
+      context.pushNamed(
+        'chat',
+        params: {'uid': chatroom.profile.uid},
+        extra: ChatPageArguments(
+          otherUid: chatroom.profile.uid,
+          otherProfile: chatroom.profile,
+        ),
+      );
+    } else if (chatroom.state == ChatroomState.invitation) {
+      context.goNamed(
+        'invite',
+        params: {'uid': chatroom.profile.uid},
+        extra: chatroom.invitationAudio != null
+            ? InvitePageArgs(
+                chatroom.profile,
+                chatroom.invitationAudio!,
+              )
+            : null,
+      );
+    }
+
+    final index = _chatrooms?.indexOf(chatroom);
+    if (index != null && index != -1) {
+      setState(() => _chatrooms?[index] = chatroom.copyWith(unreadCount: 0));
     }
   }
+}
+
+class _ConversationList extends StatelessWidget {
+  final List<Chatroom>? chatrooms;
+  final String emptyLabel;
+  final bool filtered;
+  final Future<void> Function() onRefresh;
+  final void Function(Chatroom chatroom) onOpen;
+
+  const _ConversationList({
+    Key? key,
+    required this.chatrooms,
+    required this.emptyLabel,
+    required this.filtered,
+    required this.onRefresh,
+    required this.onOpen,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
+    final chatrooms = this.chatrooms;
+    if (chatrooms == null) {
       return const SafeArea(
         child: Center(
           child: LoadingIndicator(),
@@ -322,73 +390,39 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
       );
     }
 
-    final profile = Profile(
-      blurPhotos: false,
-      location: 'Test',
-      name: 'Test user',
-      photo: 'https://sample-videos.com/img/Sample-png-image-100kb.png',
-      gallery: [
-        'https://sample-videos.com/img/Sample-png-image-100kb.png',
-        'https://sample-videos.com/img/Sample-png-image-100kb.png',
-      ],
-      topic: Topic.backpacking,
-      uid: 'abcd',
-      favorite: false,
-      mutualFriends: [],
-    );
-
-    const count = 3;
-    _chatrooms = List.generate(count + 3, (index) {
-      return Chatroom(
-        invitationAudio: null,
-        endTime: DateTime.now().add(const Duration(days: 3)),
-        location: 'Location',
-        profile: profile,
-        state: ChatroomState.accepted,
-        unreadCount: 0,
-      );
-    });
-
-    if (_chatrooms.isEmpty) {
+    if (chatrooms.isEmpty) {
       return SafeArea(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Invite someone to chat,\nthen continue the conversation here',
+                filtered ? 'No results' : emptyLabel,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() => _loading = true);
-                  _fetchConversations();
-                },
-                child: Text(
-                  'Refresh',
-                  style: Theme.of(context).textTheme.bodyMedium,
+              if (!filtered)
+                ElevatedButton(
+                  onPressed: onRefresh,
+                  child: Text(
+                    'Refresh',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
       );
     }
 
-    final filteredChatrooms = _chatrooms
-        .where((c) => c.profile.name
-            .toLowerCase()
-            .contains(widget.filterString.toLowerCase()))
-        .toList();
-
     return RefreshIndicator(
-      onRefresh: _fetchConversations,
+      onRefresh: onRefresh,
       child: ListView.separated(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-        itemCount: filteredChatrooms.length,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        itemCount: chatrooms.length,
         separatorBuilder: (_, index) {
-          final suggestedFriendDivider = index == count;
+          final suggestedFriendDivider = index == chatrooms.length;
           return Divider(
             color: suggestedFriendDivider
                 ? const Color.fromRGBO(0x99, 0x91, 0x91, 1.0)
@@ -398,66 +432,10 @@ class _ConversationListState extends ConsumerState<_ConversationList> {
           );
         },
         itemBuilder: (context, index) {
-          final suggestedFriend = index > count;
-
-          final chatroom = filteredChatrooms[index];
+          const suggestedFriend = false;
+          final chatroom = chatrooms[index];
           return Button(
-            onPressed: () async {
-              bool open = false;
-              final index = _chatrooms.indexOf(chatroom);
-
-              final now = DateTime.now();
-              final inviteAgainTime =
-                  chatroom.endTime.subtract(const Duration(days: 2));
-              if (chatroom.state == ChatroomState.accepted ||
-                  now.isAfter(inviteAgainTime)) {
-                open = true;
-              } else if (chatroom.state == ChatroomState.pending &&
-                  inviteAgainTime.isAfter(now)) {
-                final waitDuration = inviteAgainTime.difference(now).abs();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                        _waitDurationText(chatroom.profile.name, waitDuration)),
-                  ),
-                );
-              } else if (chatroom.state == ChatroomState.invitation) {
-                context.goNamed(
-                  'invite',
-                  params: {'uid': chatroom.profile.uid},
-                  extra: chatroom.invitationAudio != null
-                      ? InvitePageArgs(
-                          chatroom.profile,
-                          chatroom.invitationAudio!,
-                        )
-                      : null,
-                );
-              }
-
-              if (open && mounted) {
-                setState(() {
-                  _chatrooms[index] =
-                      _chatrooms[index].copyWith(unreadCount: 0);
-                });
-                FocusScope.of(context).unfocus();
-                // ignore: unused_local_variable
-                context.pushNamed(
-                  'chat',
-                  params: {'uid': 'ZASK6WFfS0VmJJboUxTzxQYFP212'},
-                  extra: ChatPageArguments(
-                    otherUid: 'ZASK6WFfS0VmJJboUxTzxQYFP212',
-                    otherProfile: chatroom.profile
-                        .copyWith(uid: 'ZASK6WFfS0VmJJboUxTzxQYFP212'),
-                  ),
-                );
-                // Auto-refresh when coming back from chat
-                // TODO: When a chat push notificaiton can refresh the conversations, we SHOULD check the refreshChat variable
-                if (mounted) {
-                  setState(() => _loading = true);
-                  _fetchConversations();
-                }
-              }
-            },
+            onPressed: () => onOpen(chatroom),
             child: Stack(
               children: [
                 SizedBox(
