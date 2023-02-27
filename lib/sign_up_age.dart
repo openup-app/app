@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/policies.dart';
@@ -36,24 +37,31 @@ class _SignUpScreenState extends ConsumerState<SignUpAge> {
               height: MediaQuery.of(context).padding.top,
             ),
             const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 24.0),
-                child: Button(
-                  onPressed: () {},
+            Row(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(left: 8.0),
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'Log in',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium!
-                          .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                    padding: EdgeInsets.all(8.0),
+                    child: BackIconButton(),
+                  ),
+                ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.only(right: 24.0),
+                  child: Button(
+                    onPressed: () => context.pushNamed('signup_phone'),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Log in',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 16, fontWeight: FontWeight.w300),
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
             const Spacer(),
             Text(
