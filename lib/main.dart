@@ -629,7 +629,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         GoRoute(
           path: '/collections',
           name: 'view_collection',
-          parentNavigatorKey: rootNavigatorKey,
           builder: (context, state) {
             final args = state.extra as ViewCollectionPageArguments;
             return ViewCollectionPage(
