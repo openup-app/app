@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
+import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/online_users_api.dart';
@@ -484,6 +485,15 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           ],
         ),
         StatefulShellRoute(
+          builder: (builder) {
+            return builder.buildShell(
+              (context, state, child) {
+                return _MenuPageNavigation(
+                  children: child.children,
+                );
+              },
+            );
+          },
           branches: [
             StatefulShellBranch(
               navigatorKey: _discoverKey,
@@ -569,17 +579,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ],
             ),
           ],
-          builder: (context, state, child) {
-            return CurrentRouteSystemUiStyling.light(
-              child: _StatefulShellRouteChildren(
-                builder: (context, children) {
-                  return _MenuPageNavigation(
-                    children: children,
-                  );
-                },
-              ),
-            );
-          },
         ),
         GoRoute(
           path: '/collections',
@@ -603,6 +602,16 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               child: ReportScreen(
                 uid: args.uid,
               ),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/account',
+          name: 'account_settings',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) {
+            return const CurrentRouteSystemUiStyling.light(
+              child: AccountSettingsScreen(),
             );
           },
         ),
@@ -654,47 +663,9 @@ class _MenuPageNavigationState extends State<_MenuPageNavigation> {
       currentIndex: _currentIndex,
       onItemPressed: (index) {
         setState(() => _currentIndex = index);
-        final navigationFunctions = [
-          () => context.goNamed('discover'),
-          () => context.goNamed('relationships'),
-          () => context.goNamed('profile'),
-          () => context.goNamed('people'),
-        ];
-        navigationFunctions[index]();
+        StatefulShellRouteState.of(context).goBranch(index: index);
       },
       children: widget.children,
     );
-  }
-}
-
-class _StatefulShellRouteChildren extends StatefulWidget {
-  final Widget Function(
-    BuildContext context,
-    List<Widget> children,
-  ) builder;
-
-  const _StatefulShellRouteChildren({
-    super.key,
-    required this.builder,
-  });
-
-  @override
-  State<_StatefulShellRouteChildren> createState() =>
-      _StatefulShellRouteChildrenState();
-}
-
-class _StatefulShellRouteChildrenState
-    extends State<_StatefulShellRouteChildren> {
-  late List<Widget> _children;
-
-  @override
-  void didChangeDependencies() {
-    _children = StatefulShellRouteState.of(context).children;
-    super.didChangeDependencies();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.builder(context, _children);
   }
 }

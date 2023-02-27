@@ -50,7 +50,7 @@ packages:
     source: hosted
     version: "2.10.0"
   audio_session:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: audio_session
       sha256: e4acc4e9eaa32436dfc5d7aed7f0a370f2d7bb27ee27de30d6c4f220c2a05c73
@@ -583,8 +583,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/go_router"
-      ref: f9a26084d264b0a0b98211f168455232e96698b9
-      resolved-ref: f9a26084d264b0a0b98211f168455232e96698b9
+      ref: fd5412f9bad9d511778b06e66a754454a409feea
+      resolved-ref: fd5412f9bad9d511778b06e66a754454a409feea
       url: "https://github.com/tolo/flutter_packages"
     source: git
     version: "6.1.0"
@@ -743,26 +743,23 @@ packages:
   just_audio:
     dependency: "direct main"
     description:
-      name: just_audio
-      sha256: "7a5057a4d05c8f88ee968cec6fdfe1015577d5184e591d5ac15ab16d8f5ecb17"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.9.31"
+      path: "../just_audio-visualizer/just_audio"
+      relative: true
+    source: path
+    version: "0.10.1"
   just_audio_platform_interface:
     dependency: transitive
     description:
-      name: just_audio_platform_interface
-      sha256: eff112d5138bea3ba544b6338b1e0537a32b5e1425e4d0dc38f732771cda7c84
-      url: "https://pub.dev"
-    source: hosted
+      path: "../just_audio-visualizer/just_audio_platform_interface"
+      relative: true
+    source: path
     version: "4.2.0"
   just_audio_web:
     dependency: transitive
     description:
-      name: just_audio_web
-      sha256: "89d8db6f19f3821bb6bf908c4bfb846079afb2ab575b783d781a6bf119e3abaf"
-      url: "https://pub.dev"
-    source: hosted
+      path: "../just_audio-visualizer/just_audio_web"
+      relative: true
+    source: path
     version: "0.4.7"
   lints:
     dependency: transitive

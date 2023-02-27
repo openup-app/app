@@ -57,7 +57,6 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
   @override
   void didUpdateWidget(covariant _KeyedMenuPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    print('widget index is ${widget.currentIndex}');
     if (widget.currentIndex != oldWidget.currentIndex) {
       _animationController.reverse();
     }

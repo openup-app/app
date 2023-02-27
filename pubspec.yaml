@@ -52,7 +52,7 @@ dependencies:
     # Persistent sibling navigators
     git:
       url: https://github.com/tolo/flutter_packages
-      ref: f9a26084d264b0a0b98211f168455232e96698b9
+      ref: fd5412f9bad9d511778b06e66a754454a409feea
       path: packages/go_router
   image_cropper: ^3.0.0
   image_picker: ^0.8.6
@@ -72,6 +72,7 @@ dependencies:
   fftea: ^1.2.0+1
   photo_manager: ^2.5.2
   flutter_contacts: ^1.1.6
+  audio_session: ^0.1.13
 
 dev_dependencies:
   flutter_test:
