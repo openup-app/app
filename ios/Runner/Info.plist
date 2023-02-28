@@ -41,6 +41,10 @@
 	<string>Take profile photos</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Discover people nearby</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Discover people nearby (won't be used in the background)</string>
+	<key>NSLocationUsageDescription</key>
+	<string>Discover people nearby</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Send audio invites and chat with new friends</string>
 	<key>NSPhotoLibraryUsageDescription</key>
