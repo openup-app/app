@@ -42,11 +42,11 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Discover people nearby</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Send audio invites, messages and make calls</string>
+	<string>Send audio invites and chat with new friends</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Add profile photos from your gallery</string>
-	 <key>NSContactsUsageDescription</key>
-     <string>Invite your friends to Openup, and see who's already here</string>
+	<key>NSContactsUsageDescription</key>
+    <string>Invite your friends to Openup, and see who's already here</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
@@ -77,5 +77,7 @@
 	<!-- Allows Firebase to be used alongside package:flutter_apns -->
 	<key>flutter_apns.disable_firebase_core</key>
 	<false/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 </dict>
 </plist>
