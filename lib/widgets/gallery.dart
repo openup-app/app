@@ -118,7 +118,7 @@ class _CinematicGalleryState extends State<CinematicGallery> {
     }
     if (_ready) {
       _slideshowTimer?.cancel();
-      _slideshowTimer = Timer(const Duration(seconds: 3), () {
+      _slideshowTimer = Timer(const Duration(seconds: 4), () {
         setState(() {
           _index++;
           _ready = false;

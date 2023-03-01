@@ -923,7 +923,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
     final photoBytes = await Future.wait(photos.map((f) => f.readAsBytes()));
     final images = await Future.wait(photoBytes.map(decodeImageFromList));
     final resized =
-        await Future.wait(images.map((i) => downscaleImage(i, 800)));
+        await Future.wait(images.map((i) => downscaleImage(i, 2000)));
     final jpgs = await Future.wait(resized.map(encodeJpg));
     if (jpgs.contains(null)) {
       if (mounted) {
@@ -981,7 +981,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
     return picture.toImage(targetWidth, targetHeight);
   }
 
-  Future<Uint8List?> encodeJpg(ui.Image image) async {
+  Future<Uint8List?> encodeJpg(ui.Image image, {int quality = 80}) async {
     final bytes = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))
         ?.buffer
         .asUint8List();
@@ -991,6 +991,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
 
     final jpg = img.encodeJpg(
       img.Image.fromBytes(image.width, image.height, bytes),
+      quality: quality,
     );
     return Uint8List.fromList(jpg);
   }
