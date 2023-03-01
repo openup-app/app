@@ -551,7 +551,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                     if (_showPhotoGallery)
                       Center(
                         child: Text(
-                          '${_selectedFiles.length}/6',
+                          '${_selectedFiles.length}/3',
                           textAlign: TextAlign.center,
                           style: Theme.of(context)
                               .textTheme
@@ -793,7 +793,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                 color: const Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
                 child: Center(
                   child: Text(
-                    'Add up to six photos in a collection',
+                    'Add up to three photos in a collection',
                     textAlign: TextAlign.center,
                     style: Theme.of(context)
                         .textTheme
@@ -828,7 +828,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                       itemBuilder: (context, index) {
                         final file = files[index];
                         return Button(
-                          onPressed: _selectedFiles.length >= 6
+                          onPressed: _selectedFiles.length >= 3
                               ? () {}
                               : () => setState(() => _selectedFiles.add(file)),
                           child: Image.file(
