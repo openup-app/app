@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/back_button.dart';
-import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -14,8 +13,6 @@ class SignUpPermissionsScreen extends StatefulWidget {
 }
 
 class _SignUpPermissionsState extends State<SignUpPermissionsScreen> {
-  static const _permissionGreen = Color.fromRGBO(0x06, 0xD9, 0x1B, 0.8);
-
   bool _hasLocationPermission = false;
   bool _hasContactsPermission = false;
 
@@ -73,61 +70,22 @@ class _SignUpPermissionsState extends State<SignUpPermissionsScreen> {
                     .copyWith(fontSize: 16, fontWeight: FontWeight.w400),
               ),
               const Spacer(),
-              Button(
+              PermissionButton(
+                icon: const Icon(Icons.public),
+                label: const Text('Enable Location'),
+                granted: _hasLocationPermission,
                 onPressed: () {
                   Permission.location.request().then(_updateLocationStatus);
                 },
-                child: RoundedRectangleContainer(
-                  color: _hasLocationPermission ? _permissionGreen : null,
-                  child: SizedBox(
-                    width: 180,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.public),
-                        const SizedBox(width: 13),
-                        Text(
-                          'Enable Location',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w300,
-                                  color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ),
               const SizedBox(height: 19),
-              Button(
-                onPressed: () =>
-                    Permission.contacts.request().then(_updateContactsStatus),
-                child: RoundedRectangleContainer(
-                  color: _hasContactsPermission ? _permissionGreen : null,
-                  child: SizedBox(
-                    width: 180,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.import_contacts),
-                        const SizedBox(width: 13),
-                        Text(
-                          'Enable Contacts',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w300,
-                                  color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              PermissionButton(
+                icon: const Icon(Icons.import_contacts),
+                label: const Text('Enable Contacts'),
+                granted: _hasContactsPermission,
+                onPressed: () {
+                  Permission.location.request().then(_updateContactsStatus);
+                },
               ),
               const Spacer(),
               Text(

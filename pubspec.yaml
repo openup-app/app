@@ -74,6 +74,7 @@ dependencies:
   photo_manager: ^2.5.2
   flutter_contacts: ^1.1.6
   audio_session: ^0.1.13
+  infinite_scroll_pagination: ^3.2.0
 
 dev_dependencies:
   flutter_test:

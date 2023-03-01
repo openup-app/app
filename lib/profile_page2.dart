@@ -5,12 +5,14 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:dartz/dartz.dart' show Either;
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:intl/intl.dart';
 import 'package:image/image.dart' as img;
 import 'package:openup/api/api.dart';
@@ -25,6 +27,7 @@ import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/screenshot.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
@@ -466,30 +469,8 @@ class __CollectionCreationState extends State<_CollectionCreation> {
   bool _showPhotoGallery = true;
   bool _readyToUpload = false;
 
-  List<File>? _allFiles;
   final _selectedFiles = <File>[];
   File? _audioFile;
-
-  @override
-  void initState() {
-    super.initState();
-
-    PhotoManager.getAssetPathList(type: RequestType.image)
-        .then((assetPaths) async {
-      final assetEntityListFutures = <Future<List<AssetEntity>>>[];
-      for (var assetPath in assetPaths) {
-        assetEntityListFutures
-            .add(assetPath.getAssetListRange(start: 0, end: 80));
-      }
-      final assetEntityLists = await Future.wait(assetEntityListFutures);
-      final nullableFiles = await Future.wait(
-          assetEntityLists.expand((e) => [...e]).map((e) => e.file));
-      final files = List<File>.from(nullableFiles.where((e) => e != null));
-      if (mounted) {
-        setState(() => _allFiles = files);
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -626,6 +607,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                 aspectRatio: 9 / 16,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    const cacheWidth = 800;
                     return Button(
                       onPressed: _selectedFiles.isEmpty || !_showPhotoGallery
                           ? null
@@ -677,7 +659,8 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                                 child: Image.file(
                                   _selectedFiles[i],
                                   fit: BoxFit.cover,
-                                  filterQuality: FilterQuality.medium,
+                                  filterQuality: FilterQuality.high,
+                                  cacheWidth: cacheWidth,
                                 ),
                               ),
                             ),
@@ -802,46 +785,13 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                   ),
                 ),
               ),
-              Container(
+              SizedBox(
                 height: 300,
-                color: Colors.black,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final files = _allFiles
-                        ?.where((file) => !_selectedFiles.contains(file))
-                        .toList();
-                    if (files == null) {
-                      return const Center(
-                        child: LoadingIndicator(size: 35),
-                      );
-                    }
-
-                    final width = constraints.maxWidth / 3;
-
-                    return GridView.builder(
-                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: width,
-                        childAspectRatio: 9 / 16,
-                      ),
-                      padding: EdgeInsets.zero,
-                      itemCount: files.length,
-                      itemBuilder: (context, index) {
-                        final file = files[index];
-                        return Button(
-                          onPressed: _selectedFiles.length >= 3
-                              ? () {}
-                              : () => setState(() => _selectedFiles.add(file)),
-                          child: Image.file(
-                            file,
-                            fit: BoxFit.cover,
-                            filterQuality: FilterQuality.medium,
-                            width: width,
-                            cacheWidth: width.toInt(),
-                          ),
-                        );
-                      },
-                    );
-                  },
+                child: _PhotoPickerGrid(
+                  selected: _selectedFiles,
+                  onPicked: _selectedFiles.length >= 3
+                      ? null
+                      : (file) => setState(() => _selectedFiles.add(file)),
                 ),
               ),
             ],
@@ -994,5 +944,239 @@ class __CollectionCreationState extends State<_CollectionCreation> {
       quality: quality,
     );
     return Uint8List.fromList(jpg);
+  }
+}
+
+class _PhotoPickerGrid extends StatefulWidget {
+  final List<File> selected;
+  final void Function(File file)? onPicked;
+  const _PhotoPickerGrid({
+    required this.selected,
+    required this.onPicked,
+  });
+
+  @override
+  State<_PhotoPickerGrid> createState() => _PhotoPickerGridState();
+}
+
+class _PhotoPickerGridState extends State<_PhotoPickerGrid> {
+  final _pagingController = PagingController<int, File>(firstPageKey: 0);
+  final _allFiles = <File>[];
+  bool _needsPermission = false;
+  final _oldSelected = <File>[];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pagingController.addPageRequestListener((pageKey) async {
+      final end = pageKey + 24;
+      try {
+        final files = await _fetchGallery(pageKey, end);
+        if (mounted) {
+          _allFiles.addAll(files);
+          if (files.isNotEmpty) {
+            _pagingController.appendPage(files, end);
+          } else {
+            _pagingController.appendLastPage(files);
+          }
+        }
+      } catch (e) {
+        _pagingController.error = e;
+      }
+    });
+
+    _requestPermission().then((granted) {
+      if (!granted) {
+        _pagingController.appendPage([], 0);
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _PhotoPickerGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_oldSelected.length != widget.selected.length) {
+      final newFiles = List.of(_allFiles);
+      newFiles.removeWhere((file) => widget.selected.contains(file));
+      setState(() => _pagingController.itemList = newFiles);
+    }
+    _oldSelected
+      ..clear()
+      ..addAll(widget.selected);
+  }
+
+  @override
+  void dispose() {
+    _pagingController.dispose();
+    super.dispose();
+  }
+
+  Future<bool> _requestPermission({
+    bool canShowOpenSettingsDialog = true,
+  }) async {
+    final PermissionStatus status;
+    if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt < 33) {
+        status = await Permission.storage.request();
+      } else {
+        status = await Permission.photos.request();
+      }
+    } else {
+      status = await Permission.photos.request();
+    }
+
+    if (status == PermissionStatus.permanentlyDenied ||
+        status == PermissionStatus.restricted) {
+      if (mounted) {
+        setState(() {
+          _needsPermission = true;
+        });
+      }
+
+      if (status == PermissionStatus.permanentlyDenied &&
+          mounted &&
+          canShowOpenSettingsDialog) {
+        final shown = await showCupertinoDialog(
+          context: context,
+          builder: (context) {
+            return CupertinoAlertDialog(
+              title: const Text('Photos access required'),
+              content: const Text('Enable photos access for Openup'),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: Navigator.of(context).pop,
+                  child: const Text('Deny'),
+                ),
+                CupertinoDialogAction(
+                  onPressed: () async {
+                    final result = await openAppSettings();
+                    if (mounted) {
+                      Navigator.of(context).pop(result);
+                    }
+                  },
+                  child: const Text('Open settings'),
+                ),
+              ],
+            );
+          },
+        );
+        if (!mounted || !shown) {
+          return false;
+        }
+        return _requestPermission(canShowOpenSettingsDialog: false);
+      }
+
+      return false;
+    }
+    if (status == PermissionStatus.denied) {
+      if (mounted) {
+        setState(() => _needsPermission = true);
+      }
+      return false;
+    }
+
+    if (mounted) {
+      setState(() => _needsPermission = false);
+    }
+
+    return true;
+  }
+
+  Future<List<File>> _fetchGallery(int start, int end) async {
+    final albums = await PhotoManager.getAssetPathList(
+      type: RequestType.image,
+      onlyAll: true, // Only "Recents" album
+      filterOption: FilterOptionGroup(
+        orders: const [OrderOption(asc: false)],
+      ),
+    );
+
+    if (albums.isEmpty) {
+      return [];
+    }
+
+    final recentsAlbum = albums.first;
+    final photoEntities =
+        await recentsAlbum.getAssetListRange(start: start, end: end);
+    final photoFiles =
+        await Future.wait(photoEntities.map((photoEntity) => photoEntity.file));
+    final nonNullPhotoFiles =
+        List<File>.from(photoFiles.where((f) => f != null));
+    return nonNullPhotoFiles;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: Colors.black,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth / 3;
+          final cacheWidth =
+              (width * MediaQuery.of(context).devicePixelRatio).toInt();
+          return PagedGridView<int, File>(
+            pagingController: _pagingController,
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: width,
+              childAspectRatio: 9 / 16,
+            ),
+            padding: EdgeInsets.zero,
+            builderDelegate: PagedChildBuilderDelegate(
+              itemBuilder: (context, file, index) {
+                final onPicked = widget.onPicked;
+                return Button(
+                  onPressed: onPicked == null ? null : () => onPicked(file),
+                  useFadeWheNoPressedCallback: false,
+                  child: Image.file(
+                    file,
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
+                    cacheWidth: cacheWidth,
+                  ),
+                );
+              },
+              firstPageProgressIndicatorBuilder: (context) {
+                return const Center(
+                  child: LoadingIndicator(size: 35),
+                );
+              },
+              newPageProgressIndicatorBuilder: (context) {
+                return const Center(
+                  child: LoadingIndicator(size: 35),
+                );
+              },
+              noItemsFoundIndicatorBuilder: (context) {
+                if (!_needsPermission) {
+                  return Center(
+                    child: Text(
+                      'No photos found',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium!
+                          .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+                    ),
+                  );
+                }
+                return Center(
+                  child: PermissionButton(
+                    icon: const Icon(Icons.photo),
+                    label: const Text('Enable Photos'),
+                    granted: !_needsPermission,
+                    onPressed: () {
+                      _requestPermission().then((value) {
+                        _pagingController.notifyPageRequestListeners(
+                            _pagingController.nextPageKey ?? 0);
+                      });
+                    },
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
   }
 }

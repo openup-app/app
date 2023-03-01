@@ -1614,6 +1614,47 @@ class Chip extends StatelessWidget {
   }
 }
 
+class PermissionButton extends StatelessWidget {
+  final Widget icon;
+  final Text label;
+  final bool granted;
+  final VoidCallback onPressed;
+
+  const PermissionButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.granted,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onPressed,
+      child: RoundedRectangleContainer(
+        color: granted ? const Color.fromRGBO(0x06, 0xD9, 0x1B, 0.8) : null,
+        child: SizedBox(
+          width: 180,
+          child: Row(
+            children: [
+              icon,
+              const SizedBox(width: 13),
+              DefaultTextStyle(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.white),
+                child: label,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class RoundedRectangleContainer extends StatelessWidget {
   final Color color;
   final Widget child;
