@@ -13,7 +13,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
-import 'package:intl/intl.dart';
 import 'package:image/image.dart' as img;
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -21,8 +20,8 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/menu_page.dart';
+import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/screenshot.dart';
 import 'package:path/path.dart' as path;
@@ -160,82 +159,42 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                         builder: (context) {
                           final collections = ref
                               .watch(userProvider.select((p) => p.collections));
-                          return ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 7),
-                            itemCount: 2 + collections.length,
-                            itemBuilder: (context, index) {
-                              return Container(
-                                width: 106,
-                                height: 189,
-                                clipBehavior: Clip.hardEdge,
-                                margin: const EdgeInsets.all(7),
-                                decoration: const BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15)),
-                                ),
-                                child: _PreviewBackground(
-                                  child: Builder(
-                                    builder: (context) {
-                                      if (index == 0) {
-                                        return _BottomButton(
-                                          label: 'Update voice bio',
-                                          icon: const Icon(
-                                            Icons.mic_none,
-                                            color: Color.fromRGBO(
-                                                0xFF, 0x5C, 0x5C, 1.0),
-                                          ),
-                                          onPressed: () async {
-                                            final audio =
-                                                await _showRecordPanel(context);
-                                            if (mounted && audio != null) {
-                                              _upload(audio);
-                                            }
-                                          },
-                                        );
-                                      } else if (index == 1) {
-                                        return _BottomButton(
-                                          label: 'Upload new collection',
-                                          icon: const Icon(Icons.upload),
-                                          onPressed: () => setState(() =>
-                                              _showCollectionCreation = true),
-                                        );
-                                      }
-                                      final realIndex = index - 2;
-                                      final collection = collections[realIndex];
-                                      return _CollectionPreview(
-                                        collection: collection,
-                                        onView: () {
-                                          context.pushNamed(
-                                            'view_collection',
-                                            extra: ViewCollectionPageArguments(
-                                              collections: collections,
-                                              collectionIndex: realIndex,
-                                            ),
-                                          );
-                                        },
-                                        onDelete: () {
-                                          GetIt.instance
-                                              .get<Api>()
-                                              .deleteCollection(collection.uid,
-                                                  collection.collectionId);
-                                          final collections = ref.read(
-                                              userProvider.select(
-                                                  (p) => p.collections));
-                                          final newCollections =
-                                              List.of(collections)
-                                                ..removeAt(realIndex);
-                                          ref
-                                              .read(userProvider.notifier)
-                                              .collections(newCollections);
-                                        },
-                                      );
-                                    },
+                          return CollectionsPreviewList(
+                              collections: collections,
+                              leadingChildren: [
+                                _BottomButton(
+                                  label: 'Update voice bio',
+                                  icon: const Icon(
+                                    Icons.mic_none,
+                                    color:
+                                        Color.fromRGBO(0xFF, 0x5C, 0x5C, 1.0),
                                   ),
+                                  onPressed: () async {
+                                    final audio =
+                                        await _showRecordPanel(context);
+                                    if (mounted && audio != null) {
+                                      _upload(audio);
+                                    }
+                                  },
                                 ),
-                              );
-                            },
-                          );
+                                _BottomButton(
+                                  label: 'Upload new collection',
+                                  icon: const Icon(Icons.upload),
+                                  onPressed: () => setState(
+                                      () => _showCollectionCreation = true),
+                                ),
+                              ],
+                              onView: (index) {
+                                context.pushNamed(
+                                  'view_collection',
+                                  extra: ViewCollectionPageArguments(
+                                    relatedCollections: collections,
+                                    relatedCollectionIndex: index,
+                                  ),
+                                );
+                              },
+                              onLongPress: (index) =>
+                                  _showDeleteDialog(collections[index]));
                         },
                       ),
                     ),
@@ -260,9 +219,12 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
             ),
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
-              curve: Curves.bounceOut,
+              curve: Curves.easeOut,
               right: 22,
-              bottom: 12 + MediaQuery.of(context).padding.bottom + 120,
+              bottom: 12 +
+                  MediaQuery.of(context).padding.bottom +
+                  120 +
+                  (_showCollectionCreation ? 140 : 0),
               height: 184,
               child: const MenuButton(
                 color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
@@ -335,73 +297,8 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
       },
     );
   }
-}
 
-class _CollectionPreview extends StatefulWidget {
-  final Collection collection;
-  final VoidCallback onView;
-  final VoidCallback onDelete;
-
-  const _CollectionPreview({
-    super.key,
-    required this.collection,
-    required this.onView,
-    required this.onDelete,
-  });
-
-  @override
-  State<_CollectionPreview> createState() => _CollectionPreviewState();
-}
-
-class _CollectionPreviewState extends State<_CollectionPreview> {
-  @override
-  Widget build(BuildContext context) {
-    final format = DateFormat.yMd();
-    final isReady = widget.collection.state == CollectionState.ready;
-    return Button(
-      onLongPressStart: _showDeleteDialog,
-      onPressed: isReady ? widget.onView : null,
-      useFadeWheNoPressedCallback: false,
-      child: Stack(
-        children: [
-          if (!isReady)
-            Center(
-              child: Text(
-                'Processing...',
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
-              ),
-            )
-          else
-            Positioned.fill(
-              child: CinematicGallery(
-                slideshow: true,
-                gallery: widget.collection.photos,
-              ),
-            ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 11.0),
-              child: Text(
-                format.format(widget.collection.date),
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteDialog() async {
+  void _showDeleteDialog(Collection collection) async {
     final result = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) {
@@ -422,27 +319,18 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
       },
     );
     if (result == true && mounted) {
-      widget.onDelete();
+      _deleteCollection(collection);
     }
   }
-}
 
-class _PreviewBackground extends StatelessWidget {
-  final Widget child;
-
-  const _PreviewBackground({
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: const Color.fromRGBO(0x13, 0x13, 0x13, 0.5),
-      child: BlurredSurface(
-        blur: 2.0,
-        child: child,
-      ),
-    );
+  void _deleteCollection(Collection collection) {
+    GetIt.instance
+        .get<Api>()
+        .deleteCollection(collection.uid, collection.collectionId);
+    final collections = ref.read(userProvider.select((p) => p.collections));
+    final newCollections = List.of(collections)
+      ..removeWhere((c) => c == collection);
+    ref.read(userProvider.notifier).collections(newCollections);
   }
 }
 
@@ -779,7 +667,12 @@ class __CollectionCreationState extends State<_CollectionCreation> {
               ),
             if (!_showPhotoGallery)
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: EdgeInsets.only(
+                  left: 8,
+                  right: 8,
+                  top: 8,
+                  bottom: 8 + MediaQuery.of(context).padding.bottom,
+                ),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 346),
                   child: Text(

@@ -617,6 +617,26 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, CollectionWithRelated>> getCollection(
+    String uid,
+    String collectionId, {
+    RelatedCollectionsType? withRelated,
+  }) {
+    return _request(
+      makeRequest: () {
+        final query = withRelated == null ? '' : '?related=${withRelated.name}';
+        return http.get(
+          Uri.parse('$_urlBase/collections/$collectionId$query'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(CollectionWithRelated.fromJson(json['collection']));
+      },
+    );
+  }
+
   Future<Either<ApiError, List<SimpleProfile>>> getBlockedUsers(String uid) {
     return _request(
       makeRequest: () {
@@ -891,6 +911,19 @@ class Collection with _$Collection {
 }
 
 enum CollectionState { processing, ready }
+
+@freezed
+class CollectionWithRelated with _$CollectionWithRelated {
+  const factory CollectionWithRelated({
+    required Collection collection,
+    @Default(null) List<Collection>? related,
+  }) = _CollectionWithRelated;
+
+  factory CollectionWithRelated.fromJson(Map<String, dynamic> json) =>
+      _$CollectionWithRelatedFromJson(json);
+}
+
+enum RelatedCollectionsType { user }
 
 @freezed
 class Chatroom with _$Chatroom {

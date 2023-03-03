@@ -106,6 +106,24 @@ class _CinematicGalleryState extends State<CinematicGallery> {
   int _index = 0;
   bool _ready = false;
 
+  bool _initialDidChangeDependencies = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialDidChangeDependencies) {
+      _initialDidChangeDependencies = false;
+      _precache();
+    }
+  }
+
+  void _precache() {
+    widget.gallery.forEach((photo3d) {
+      precacheImage(NetworkImage(photo3d.url), context);
+      precacheImage(NetworkImage(photo3d.depthUrl), context);
+    });
+  }
+
   @override
   void dispose() {
     _slideshowTimer?.cancel();
@@ -130,6 +148,11 @@ class _CinematicGalleryState extends State<CinematicGallery> {
   @override
   void didUpdateWidget(covariant CinematicGallery oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.gallery != widget.gallery) {
+      _precache();
+      _index = 0;
+      _maybeStartSlideshowTimer();
+    }
     if (oldWidget.slideshow != widget.slideshow) {
       if (widget.slideshow) {
         _maybeStartSlideshowTimer();
@@ -153,7 +176,7 @@ class _CinematicGalleryState extends State<CinematicGallery> {
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 800),
             child: CinematicPhoto(
-              key: ValueKey(_index),
+              key: ValueKey('${_index}_${photo3d.url}'),
               photo3d: photo3d,
               animate: _slideshowTimer?.isActive == true,
               onLoaded: () {

@@ -132,13 +132,16 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                   collectionId: '',
                   uid: _otherProfile!.uid,
                   date: DateTime.now(),
+                  state: CollectionState.processing,
                   photos: [],
                 )
               ];
               context.pushNamed(
                 'view_collection',
                 extra: ViewCollectionPageArguments(
-                    collections: collections, collectionIndex: 0),
+                  relatedCollections: collections,
+                  relatedCollectionIndex: 0,
+                ),
               );
             },
             child: Row(
