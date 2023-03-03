@@ -37,7 +37,7 @@ class RecorderWithWaveforms {
     _micStreamSubscription?.cancel();
 
     final encoder = _AacEncoder(
-      Int8List.fromList(_totalSamples),
+      Uint8List.fromList(_totalSamples),
       _bitDepth,
       _sampleRate,
       _channels,
@@ -162,7 +162,7 @@ class _AacEncoder {
 
   final _completer = Completer<File>();
 
-  _AacEncoder(Int8List pcm, int bitDepth, int rate, int channels) {
+  _AacEncoder(Uint8List pcm, int bitDepth, int rate, int channels) {
     _encode(pcm, bitDepth, rate, channels);
   }
 
@@ -172,7 +172,7 @@ class _AacEncoder {
     _session?.cancel();
   }
 
-  void _encode(Int8List samples, int bitDepth, int rate, int channels) async {
+  void _encode(Uint8List samples, int bitDepth, int rate, int channels) async {
     final dir = await getTemporaryDirectory();
     final id = DateTime.now().toIso8601String();
     final input = await File(join(dir.path, '$id.pcm')).create(recursive: true);
@@ -180,7 +180,7 @@ class _AacEncoder {
     await input.writeAsBytes(samples);
     final String format;
     if (bitDepth == 8) {
-      format = 's8';
+      format = 'u8';
     } else if (bitDepth == 16) {
       format = 's16${Endian.host == Endian.little ? 'le' : 'be'}';
     } else {
