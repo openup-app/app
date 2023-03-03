@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
@@ -58,7 +59,10 @@ class JustAudioAudioPlayer {
           state.processingState != ProcessingState.idle &&
           state.processingState != ProcessingState.completed) {
         _fftSubscription?.cancel();
-        _player.startVisualizer();
+
+        if (Platform.isAndroid) {
+          _player.startVisualizer();
+        }
         _fftSubscription = _player.visualizerFftStream.listen((capture) {
           final magnitudes = List<double>.generate(capture.length, (_) => 0);
           for (var i = 0; i < capture.length; i++) {
@@ -69,7 +73,9 @@ class JustAudioAudioPlayer {
         });
       } else {
         _fftSubscription?.cancel();
-        _player.stopVisualizer();
+        if (Platform.isAndroid) {
+          _player.stopVisualizer();
+        }
       }
 
       _playbackInfoController.add(_playbackInfo);

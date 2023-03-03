@@ -12,8 +12,6 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 class RecorderWithWaveforms {
-  static const _kChunkSize = 2048;
-
   bool _recording = false;
   StreamSubscription? _micStreamSubscription;
 
@@ -39,7 +37,7 @@ class RecorderWithWaveforms {
     _micStreamSubscription?.cancel();
 
     final encoder = _AacEncoder(
-      Uint8List.fromList(_totalSamples),
+      Int8List.fromList(_totalSamples),
       _bitDepth,
       _sampleRate,
       _channels,
@@ -81,45 +79,33 @@ class RecorderWithWaveforms {
     _sampleRate = sampleRate.toInt();
     _channels = 1;
 
-    final fft = FFT(micBufferSize);
-    final stft = STFT(_kChunkSize, Window.hanning(_kChunkSize));
+    final bytesPerSample = bitDepth ~/ 8;
+    final fft = FFT(micBufferSize ~/ bytesPerSample);
 
     _micStreamSubscription = micStream.listen((samples) {
-      if (bitDepth == 16) {
-        final newSamples = samples.map((e) => e ~/ 256).toList();
-        _onMicData(newSamples, fft, stft);
-      } else {
-        _onMicData(samples, fft, stft);
-      }
+      _totalSamples.addAll(samples);
+      final output = samplesToFft(samples, fft);
+      return _onFrequencies?.call(output);
     });
   }
 
-  void _onMicData(List<int> samples, FFT fft, STFT stft) {
-    _totalSamples.addAll(samples);
-    final doubles =
-        Float64List.fromList(samples.map((s) => s.toDouble()).toList());
+  Float64x2List samplesToFft(Uint8List samples, FFT fft) {
+    final doubles = Float64List(fft.size);
+    for (var i = 0; i < doubles.length; i++) {
+      doubles[i] = samples[i].toDouble();
+    }
     final normalized = normalizeRmsVolume(doubles, 0.5);
-    final frequencies = fft.realFft(normalized);
-    _onFrequencies?.call(frequencies);
+    return fft.realFft(normalized);
   }
 
-  Float64List normalizeRmsVolume(List<double> samples, double target) {
-    final samplesF64List = Float64List.fromList(samples);
-    final squareSum = samplesF64List.fold<double>(0, (p, e) => p + e * e);
-    final factor = target * sqrt(samplesF64List.length / squareSum);
-    for (int i = 0; i < samplesF64List.length; ++i) {
-      samplesF64List[i] *= factor;
+  Float64List normalizeRmsVolume(Float64List samples, double target) {
+    final samplesNormalized = Float64List.fromList(samples);
+    final squareSum = samplesNormalized.fold<double>(0, (p, e) => p + e * e);
+    final factor = target * sqrt(samplesNormalized.length / squareSum);
+    for (int i = 0; i < samplesNormalized.length; ++i) {
+      samplesNormalized[i] *= factor;
     }
-    return samplesF64List;
-  }
-
-  Uint64List linSpace(int end, int steps) {
-    final iterations = Uint64List(steps);
-    for (int i = 1; i < steps; i++) {
-      iterations[i - 1] = (end * i) ~/ steps;
-    }
-    iterations[steps - 1] = end;
-    return iterations;
+    return samplesNormalized;
   }
 }
 
@@ -176,7 +162,7 @@ class _AacEncoder {
 
   final _completer = Completer<File>();
 
-  _AacEncoder(Uint8List pcm, int bitDepth, int rate, int channels) {
+  _AacEncoder(Int8List pcm, int bitDepth, int rate, int channels) {
     _encode(pcm, bitDepth, rate, channels);
   }
 
@@ -186,14 +172,22 @@ class _AacEncoder {
     _session?.cancel();
   }
 
-  void _encode(Uint8List samples, int bitDepth, int rate, int channels) async {
+  void _encode(Int8List samples, int bitDepth, int rate, int channels) async {
     final dir = await getTemporaryDirectory();
     final id = DateTime.now().toIso8601String();
     final input = await File(join(dir.path, '$id.pcm')).create(recursive: true);
-    final output = File(join(dir.path, '$id.aac'));
+    final output = File(join(dir.path, '$id.m4a'));
     await input.writeAsBytes(samples);
+    final String format;
+    if (bitDepth == 8) {
+      format = 's8';
+    } else if (bitDepth == 16) {
+      format = 's16${Endian.host == Endian.little ? 'le' : 'be'}';
+    } else {
+      throw 'Unable to encode audio with bit depth $bitDepth';
+    }
     _session = await ffmpeg.FFmpegKit.executeAsync(
-      '-f u$bitDepth -ar $rate -ac $channels -i ${input.path} ${output.path}',
+      '-f $format -ar $rate -ac $channels -i ${input.path} -codec:a aac ${output.path}',
       (session) async {
         final res = await session.getAllLogs();
 
