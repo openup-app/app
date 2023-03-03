@@ -174,62 +174,64 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(15)),
                                 ),
-                                child: Builder(
-                                  builder: (context) {
-                                    if (index == 0) {
-                                      return _BottomButton(
-                                        label: 'Update voice bio',
-                                        icon: const Icon(
-                                          Icons.mic_none,
-                                          color: Color.fromRGBO(
-                                              0xFF, 0x5C, 0x5C, 1.0),
-                                        ),
-                                        onPressed: () async {
-                                          final audio =
-                                              await _showRecordPanel(context);
-                                          if (mounted && audio != null) {
-                                            _upload(audio);
-                                          }
+                                child: _PreviewBackground(
+                                  child: Builder(
+                                    builder: (context) {
+                                      if (index == 0) {
+                                        return _BottomButton(
+                                          label: 'Update voice bio',
+                                          icon: const Icon(
+                                            Icons.mic_none,
+                                            color: Color.fromRGBO(
+                                                0xFF, 0x5C, 0x5C, 1.0),
+                                          ),
+                                          onPressed: () async {
+                                            final audio =
+                                                await _showRecordPanel(context);
+                                            if (mounted && audio != null) {
+                                              _upload(audio);
+                                            }
+                                          },
+                                        );
+                                      } else if (index == 1) {
+                                        return _BottomButton(
+                                          label: 'Upload new collection',
+                                          icon: const Icon(Icons.upload),
+                                          onPressed: () => setState(() =>
+                                              _showCollectionCreation = true),
+                                        );
+                                      }
+                                      final realIndex = index - 2;
+                                      final collection = collections[realIndex];
+                                      return _CollectionPreview(
+                                        collection: collection,
+                                        onView: () {
+                                          context.pushNamed(
+                                            'view_collection',
+                                            extra: ViewCollectionPageArguments(
+                                              collections: collections,
+                                              collectionIndex: realIndex,
+                                            ),
+                                          );
+                                        },
+                                        onDelete: () {
+                                          GetIt.instance
+                                              .get<Api>()
+                                              .deleteCollection(collection.uid,
+                                                  collection.collectionId);
+                                          final collections = ref.read(
+                                              userProvider.select(
+                                                  (p) => p.collections));
+                                          final newCollections =
+                                              List.of(collections)
+                                                ..removeAt(realIndex);
+                                          ref
+                                              .read(userProvider.notifier)
+                                              .collections(newCollections);
                                         },
                                       );
-                                    } else if (index == 1) {
-                                      return _BottomButton(
-                                        label: 'Upload new collection',
-                                        icon: const Icon(Icons.upload),
-                                        onPressed: () => setState(() =>
-                                            _showCollectionCreation = true),
-                                      );
-                                    }
-                                    final realIndex = index - 2;
-                                    final collection = collections[realIndex];
-                                    return _CollectionPreview(
-                                      collection: collection,
-                                      onView: () {
-                                        context.pushNamed(
-                                          'view_collection',
-                                          extra: ViewCollectionPageArguments(
-                                            collections: collections,
-                                            collectionIndex: realIndex,
-                                          ),
-                                        );
-                                      },
-                                      onDelete: () {
-                                        GetIt.instance
-                                            .get<Api>()
-                                            .deleteCollection(collection.uid,
-                                                collection.collectionId);
-                                        final collections = ref.read(
-                                            userProvider
-                                                .select((p) => p.collections));
-                                        final newCollections =
-                                            List.of(collections)
-                                              ..removeAt(realIndex);
-                                        ref
-                                            .read(userProvider.notifier)
-                                            .collections(newCollections);
-                                      },
-                                    );
-                                  },
+                                    },
+                                  ),
                                 ),
                               );
                             },
@@ -355,17 +357,31 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
   @override
   Widget build(BuildContext context) {
     final format = DateFormat.yMd();
+    final isReady = widget.collection.state == CollectionState.ready;
     return Button(
       onLongPressStart: _showDeleteDialog,
-      onPressed: widget.onView,
+      onPressed: isReady ? widget.onView : null,
+      useFadeWheNoPressedCallback: false,
       child: Stack(
         children: [
-          Positioned.fill(
-            child: CinematicGallery(
-              slideshow: true,
-              gallery: widget.collection.photos,
+          if (!isReady)
+            Center(
+              child: Text(
+                'Processing...',
+                textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
+              ),
+            )
+          else
+            Positioned.fill(
+              child: CinematicGallery(
+                slideshow: true,
+                gallery: widget.collection.photos,
+              ),
             ),
-          ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -411,6 +427,25 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
   }
 }
 
+class _PreviewBackground extends StatelessWidget {
+  final Widget child;
+
+  const _PreviewBackground({
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: const Color.fromRGBO(0x13, 0x13, 0x13, 0.5),
+      child: BlurredSurface(
+        blur: 2.0,
+        child: child,
+      ),
+    );
+  }
+}
+
 class _BottomButton extends StatelessWidget {
   final String label;
   final Icon icon;
@@ -424,28 +459,22 @@ class _BottomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: const Color.fromRGBO(0x13, 0x13, 0x13, 0.5),
-      child: BlurredSurface(
-        blur: 2.0,
-        child: Button(
-          onPressed: onPressed,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 15, fontWeight: FontWeight.w400),
-              ),
-              const SizedBox(height: 15),
-              icon,
-            ],
+    return Button(
+      onPressed: onPressed,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium!
+                .copyWith(fontSize: 15, fontWeight: FontWeight.w400),
           ),
-        ),
+          const SizedBox(height: 15),
+          icon,
+        ],
       ),
     );
   }
@@ -842,7 +871,9 @@ class __CollectionCreationState extends State<_CollectionCreation> {
           context: context,
           builder: (context) {
             return CupertinoAlertDialog(
-              title: const Text('Successfully uploaded collection'),
+              title: const Text('Collection uploaded'),
+              content: const Text(
+                  'You will be notified when it has finished processing'),
               actions: [
                 CupertinoDialogAction(
                   onPressed: Navigator.of(context).pop,

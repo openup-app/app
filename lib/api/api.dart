@@ -425,7 +425,7 @@ class Api {
     final uri = Uri.parse('$_urlBase/chats/$uid/$otherUid');
     switch (type) {
       case ChatType.audio:
-        return _requestStreamedResponse(
+        return _requestStreamedResponseAsFuture(
           makeRequest: () async {
             final request = http.MultipartRequest('POST', uri);
             request.headers.addAll(_headers);
@@ -568,7 +568,7 @@ class Api {
     List<String> photos,
     String? audio,
   ) {
-    return _requestStreamedResponse(
+    return _requestStreamedResponseAsFuture(
       makeRequest: () async {
         final uri = Uri.parse('$_urlBase/users/$uid/profile/collections');
         final request = http.MultipartRequest('POST', uri);
@@ -582,7 +582,7 @@ class Api {
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body);
-        return Right(Collection.fromJson(json));
+        return Right(Collection.fromJson(json['collection']));
       },
     );
   }
@@ -701,7 +701,7 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, T>> _requestStreamedResponse<T>({
+  Future<Either<ApiError, T>> _requestStreamedResponseAsFuture<T>({
     required Future<http.StreamedResponse> Function() makeRequest,
     required Either<ApiError, T> Function(http.Response response) handleSuccess,
   }) async {
@@ -881,6 +881,7 @@ class Collection with _$Collection {
     required String collectionId,
     required String uid,
     required DateTime date,
+    required CollectionState state,
     required List<Photo3d> photos,
     @Default(null) String? audio,
   }) = _Collection;
@@ -888,6 +889,8 @@ class Collection with _$Collection {
   factory Collection.fromJson(Map<String, dynamic> json) =>
       _$CollectionFromJson(json);
 }
+
+enum CollectionState { processing, ready }
 
 @freezed
 class Chatroom with _$Chatroom {
