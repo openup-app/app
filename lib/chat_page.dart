@@ -291,9 +291,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                         child: _RecordButton(
                           onPressed: () async {
                             _audio.stop();
-                            final audioFile = await _showRecordPanel(context);
-                            if (audioFile != null && mounted) {
-                              _submit(audioFile.path);
+                            final result = await _showRecordPanel(context);
+                            if (result != null && mounted) {
+                              _submit(result.audio, result.duration);
                             }
                           },
                         ),
@@ -316,32 +316,32 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     );
   }
 
-  Future<File?> _showRecordPanel(BuildContext context) async {
-    final audio = await showModalBottomSheet<Uint8List>(
+  Future<RecordingResult?> _showRecordPanel(BuildContext context) async {
+    return showModalBottomSheet<RecordingResult>(
       backgroundColor: Colors.transparent,
       context: context,
       builder: (context) {
         return Surface(
           child: RecordPanelContents(
-            onSubmit: (audio) => Navigator.of(context).pop(audio),
+            onSubmit: (audio, duration) =>
+                Navigator.of(context).pop(RecordingResult(audio, duration)),
           ),
         );
       },
     );
+  }
 
-    if (audio == null || !mounted) {
-      return null;
-    }
-
+  void _submit(Uint8List audio, Duration duration) async {
     final tempDir = await getTemporaryDirectory();
     final file = await File(path.join(
             tempDir.path, 'chats', '${DateTime.now().toIso8601String()}.m4a'))
         .create(recursive: true);
     await file.writeAsBytes(audio);
-    return file;
-  }
 
-  void _submit(String content) async {
+    if (!mounted) {
+      return;
+    }
+
     const uuid = Uuid();
     final pendingId = uuid.v4();
     final uid = ref.read(userProvider).uid;
@@ -351,8 +351,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         uid: uid,
         date: DateTime.now().toUtc(),
         type: ChatType.audio,
-        content: content,
-        duration: Duration.zero,
+        content: file.path,
+        duration: duration,
         waveform: [],
       );
     });
@@ -369,8 +369,12 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     }
 
     final api = GetIt.instance.get<Api>();
-    final result =
-        await api.sendMessage(uid, widget.otherUid, ChatType.audio, content);
+    final result = await api.sendMessage(
+      uid,
+      widget.otherUid,
+      ChatType.audio,
+      file.path,
+    );
 
     GetIt.instance.get<Mixpanel>().track("send_message");
 
@@ -378,9 +382,10 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       return;
     }
 
-    result.fold((l) {
-      // TODO;
-    }, (r) => setState(() => _messages[pendingId] = r));
+    result.fold(
+      (l) => displayError(context, l),
+      (r) => setState(() => _messages[pendingId] = r),
+    );
   }
 
   void _scrollListener() {
@@ -436,6 +441,12 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       },
     );
   }
+}
+
+class RecordingResult {
+  final Uint8List audio;
+  final Duration duration;
+  RecordingResult(this.audio, this.duration);
 }
 
 class _ChatMessage extends StatelessWidget {

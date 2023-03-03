@@ -243,7 +243,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
       builder: (context) {
         return Surface(
           child: RecordPanelContents(
-            onSubmit: (audio) => Navigator.of(context).pop(audio),
+            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
           ),
         );
       },
@@ -730,7 +730,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
       builder: (context) {
         return Surface(
           child: RecordPanelContents(
-            onSubmit: (audio) => Navigator.of(context).pop(audio),
+            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
           ),
         );
       },

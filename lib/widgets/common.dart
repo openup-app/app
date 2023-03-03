@@ -931,7 +931,7 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
 
 class RecordPanelContents extends StatefulWidget {
   final Duration? maxDuration;
-  final void Function(Uint8List audio) onSubmit;
+  final void Function(Uint8List audio, Duration duration) onSubmit;
 
   const RecordPanelContents({
     super.key,
@@ -955,21 +955,6 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
   @override
   void initState() {
     super.initState();
-
-    // _recorder = AudioBioController(
-    //   onRecordingComplete: (path) {
-    //     if (mounted) {
-    //       setState(() => _recordingPath = path);
-    //     }
-    //   },
-    // );
-
-    // _recorder.recordInfoStream.listen((recordInfo) {
-    //   if (_recording != recordInfo.recording) {
-    //     setState(() => _recording = recordInfo.recording);
-    //   }
-    // });
-
     _restartCountdown();
   }
 
@@ -1157,8 +1142,12 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                                 ),
                               ),
                               Button(
-                                onPressed: () =>
-                                    widget.onSubmit(_recordingBytes!),
+                                onPressed: () {
+                                  widget.onSubmit(
+                                    _recordingBytes!,
+                                    _recordingDurationNotifier.value,
+                                  );
+                                },
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: Column(

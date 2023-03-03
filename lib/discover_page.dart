@@ -436,7 +436,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       builder: (context) {
         return Surface(
           child: RecordPanelContents(
-            onSubmit: (audio) => Navigator.of(context).pop(audio),
+            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
           ),
         );
       },
