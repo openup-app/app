@@ -13,12 +13,14 @@ import 'package:openup/widgets/gallery.dart';
 
 class ViewCollectionPage extends ConsumerStatefulWidget {
   final String? collectionId;
+  final String? collectionsOfUid;
   final List<Collection>? relatedCollections;
   final int? relatedCollectionIndex;
 
   const ViewCollectionPage({
     super.key,
     required this.collectionId,
+    this.collectionsOfUid,
     required this.relatedCollections,
     required this.relatedCollectionIndex,
   });
@@ -36,7 +38,6 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
   @override
   void initState() {
     super.initState();
-
     _relatedCollections = widget.relatedCollections;
     _relatedCollectionIndex = widget.relatedCollectionIndex;
     if (_relatedCollections == null || _relatedCollectionIndex == null) {
@@ -48,36 +49,59 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
 
   void _fetchCollection() async {
     final collectionId = widget.collectionId;
-    if (collectionId == null) {
+    final collectionsOfUid = widget.collectionsOfUid;
+    if (collectionId == null && collectionsOfUid == null) {
       setState(() => _error = true);
       return;
     }
 
     final api = GetIt.instance.get<Api>();
     final uid = ref.read(userProvider).uid;
-    final collectionWithRelated = await api.getCollection(
-      uid,
-      collectionId,
-      withRelated: RelatedCollectionsType.user,
-    );
 
-    if (!mounted) {
-      return;
+    if (collectionId != null) {
+      final collectionWithRelated = await api.getCollection(
+        uid,
+        collectionId,
+        withRelated: RelatedCollectionsType.user,
+      );
+
+      if (!mounted) {
+        return;
+      }
+      collectionWithRelated.fold(
+        (l) {
+          setState(() => _error = true);
+          displayError(context, l);
+        },
+        (r) {
+          setState(() {
+            _collection = r.collection;
+            _relatedCollections = r.related;
+            _relatedCollectionIndex =
+                r.related?.indexWhere((c) => c == r.collection);
+          });
+        },
+      );
+    } else if (collectionsOfUid != null) {
+      final collections = await api.getCollections(collectionsOfUid);
+
+      if (!mounted) {
+        return;
+      }
+      collections.fold(
+        (l) {
+          setState(() => _error = true);
+          displayError(context, l);
+        },
+        (r) {
+          setState(() {
+            _collection = r.isEmpty ? null : r.first;
+            _relatedCollections = r;
+            _relatedCollectionIndex = 0;
+          });
+        },
+      );
     }
-    collectionWithRelated.fold(
-      (l) {
-        setState(() => _error = true);
-        displayError(context, l);
-      },
-      (r) {
-        setState(() {
-          _collection = r.collection;
-          _relatedCollections = r.related;
-          _relatedCollectionIndex =
-              r.related?.indexWhere((c) => c == r.collection);
-        });
-      },
-    );
   }
 
   bool _showing = false;

@@ -19,7 +19,6 @@ import 'package:openup/home_screen.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_view.dart';
-import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -127,21 +126,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
           ),
           title: Button(
             onPressed: () {
-              final collections = [
-                Collection(
-                  collectionId: '',
-                  uid: _otherProfile!.uid,
-                  date: DateTime.now(),
-                  state: CollectionState.processing,
-                  photos: [],
-                )
-              ];
               context.pushNamed(
                 'view_collection',
-                extra: ViewCollectionPageArguments(
-                  relatedCollections: collections,
-                  relatedCollectionIndex: 0,
-                ),
+                queryParams: {'uid': _otherProfile!.uid},
               );
             },
             child: Row(

@@ -631,11 +631,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           name: 'view_collection',
           builder: (context, state) {
             final collectionId = state.queryParams['collection_id'];
-            final args = state.extra as ViewCollectionPageArguments;
+            final uid = state.queryParams['uid'];
+            final args = state.extra as ViewCollectionPageArguments?;
             return ViewCollectionPage(
               collectionId: collectionId,
-              relatedCollections: args.relatedCollections,
-              relatedCollectionIndex: args.relatedCollectionIndex,
+              collectionsOfUid: uid,
+              relatedCollections: args?.relatedCollections,
+              relatedCollectionIndex: args?.relatedCollectionIndex,
             );
           },
         ),
