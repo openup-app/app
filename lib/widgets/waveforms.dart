@@ -1,10 +1,15 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:fftea/fftea.dart';
+import 'package:ffmpeg_kit_flutter_audio/ffmpeg_kit.dart' as ffmpeg;
+import 'package:ffmpeg_kit_flutter_audio/ffmpeg_session.dart' as ffmpeg_session;
 import 'package:flutter/rendering.dart';
 import 'package:mic_stream/mic_stream.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 class RecorderWithWaveforms {
   static const _kChunkSize = 2048;
@@ -16,11 +21,15 @@ class RecorderWithWaveforms {
   void Function(Float64x2List frequencies)? _onFrequencies;
   final _totalSamples = <int>[];
 
+  int _bitDepth = 0;
+  int _sampleRate = 0;
+  int _channels = 0;
+
   void dispose() {
     _micStreamSubscription?.cancel();
   }
 
-  void stopRecording() {
+  Future<void> stopRecording() async {
     if (!_recording) {
       // throw 'Not recording';
       return;
@@ -29,7 +38,15 @@ class RecorderWithWaveforms {
     _recording = false;
     _micStreamSubscription?.cancel();
 
-    _onComplete?.call(Uint8List.fromList(_totalSamples));
+    final encoder = _AacEncoder(
+      Uint8List.fromList(_totalSamples),
+      _bitDepth,
+      _sampleRate,
+      _channels,
+    );
+    final aacFile = await encoder.result;
+    final bytes = await aacFile.readAsBytes();
+    _onComplete?.call(Uint8List.fromList(bytes));
     _totalSamples.clear();
 
     _onComplete = null;
@@ -49,21 +66,35 @@ class RecorderWithWaveforms {
     _onComplete = onComplete;
 
     final micStream = await MicStream.microphone();
+    final bitDepth = await MicStream.bitDepth;
     final micBufferSize = await MicStream.bufferSize;
     final sampleRate = await MicStream.sampleRate;
 
-    if (micStream == null || micBufferSize == null || sampleRate == null) {
+    if (micStream == null ||
+        bitDepth == null ||
+        micBufferSize == null ||
+        sampleRate == null) {
       return;
     }
+
+    _bitDepth = bitDepth.toInt();
+    _sampleRate = sampleRate.toInt();
+    _channels = 1;
 
     final fft = FFT(micBufferSize);
     final stft = STFT(_kChunkSize, Window.hanning(_kChunkSize));
 
-    _micStreamSubscription =
-        micStream.listen((samples) => _onMicData(samples, fft, stft));
+    _micStreamSubscription = micStream.listen((samples) {
+      if (bitDepth == 16) {
+        final newSamples = samples.map((e) => e ~/ 256).toList();
+        _onMicData(newSamples, fft, stft);
+      } else {
+        _onMicData(samples, fft, stft);
+      }
+    });
   }
 
-  void _onMicData(Uint8List samples, FFT fft, STFT stft) {
+  void _onMicData(List<int> samples, FFT fft, STFT stft) {
     _totalSamples.addAll(samples);
     final doubles =
         Float64List.fromList(samples.map((s) => s.toDouble()).toList());
@@ -137,5 +168,48 @@ class FrequenciesPainter extends CustomPainter {
   bool shouldRepaint(covariant FrequenciesPainter oldDelegate) {
     return oldDelegate.barCount != barCount ||
         oldDelegate.frequencies != frequencies;
+  }
+}
+
+class _AacEncoder {
+  ffmpeg_session.FFmpegSession? _session;
+
+  final _completer = Completer<File>();
+
+  _AacEncoder(Uint8List pcm, int bitDepth, int rate, int channels) {
+    _encode(pcm, bitDepth, rate, channels);
+  }
+
+  Future<File> get result => _completer.future;
+
+  void dispose() {
+    _session?.cancel();
+  }
+
+  void _encode(Uint8List samples, int bitDepth, int rate, int channels) async {
+    final dir = await getTemporaryDirectory();
+    final id = DateTime.now().toIso8601String();
+    final input = await File(join(dir.path, '$id.pcm')).create(recursive: true);
+    final output = File(join(dir.path, '$id.aac'));
+    await input.writeAsBytes(samples);
+    _session = await ffmpeg.FFmpegKit.executeAsync(
+      '-f u$bitDepth -ar $rate -ac $channels -i ${input.path} ${output.path}',
+      (session) async {
+        final res = await session.getAllLogs();
+
+        final logs = res.where((log) => log.getLevel() <= 16);
+        for (final log in logs) {
+          debugPrint('Log ${log.getLevel()}) ${log.getMessage()}');
+        }
+
+        final returnCode = await session.getReturnCode();
+        if (returnCode == null || returnCode.isValueError()) {
+          _completer
+              .completeError('FFmpeg error ${returnCode?.getValue() ?? -1}');
+        } else if (returnCode.isValueSuccess()) {
+          _completer.complete(output);
+        }
+      },
+    );
   }
 }

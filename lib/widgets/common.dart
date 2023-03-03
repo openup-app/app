@@ -1009,6 +1009,13 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
     _controller.startRecording(
       maxDuration: widget.maxDuration,
       onComplete: (recordingBytes) {
+        if (recordingBytes.isEmpty) {
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+          return;
+        }
+
         _recordingDurationTicker?.dispose();
         _recordingDurationTicker = null;
         setState(() => _recordingBytes = recordingBytes);
@@ -1028,6 +1035,7 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
             if (!recordingInfo.recording && _recordingBytes == null) {
               Navigator.of(context).pop();
             } else {
+              _recordingDurationTicker?.stop();
               _controller.stopRecording();
             }
           },
@@ -1298,9 +1306,9 @@ class PlaybackRecorderController extends ChangeNotifier {
     });
   }
 
-  void stopRecording() {
+  void stopRecording() async {
     _recordingLimitTimer?.cancel();
-    _recorder.stopRecording();
+    await _recorder.stopRecording();
 
     final value = _combinedController.value;
     final recordingInfo = RecordingInfo.none();

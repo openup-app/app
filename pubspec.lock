@@ -305,6 +305,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
+  ffmpeg_kit_flutter_audio:
+    dependency: "direct main"
+    description:
+      name: ffmpeg_kit_flutter_audio
+      sha256: c32df0575c222a653e1c32695ac8992ef659d5926c9396f6be80b01749f97211
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.0-LTS"
+  ffmpeg_kit_flutter_platform_interface:
+    dependency: transitive
+    description:
+      name: ffmpeg_kit_flutter_platform_interface
+      sha256: addf046ae44e190ad0101b2fde2ad909a3cd08a2a109f6106d2f7048b7abedee
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.1"
   fftea:
     dependency: "direct main"
     description:
@@ -1575,5 +1591,5 @@ packages:
     source: hosted
     version: "3.1.1"
 sdks:
-  dart: ">=2.19.0 <4.0.0"
+  dart: ">=2.19.0 <3.0.0"
   flutter: ">=3.3.0"
