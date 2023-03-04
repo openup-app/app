@@ -324,9 +324,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
   }
 
   void _deleteCollection(Collection collection) {
-    GetIt.instance
-        .get<Api>()
-        .deleteCollection(collection.uid, collection.collectionId);
+    GetIt.instance.get<Api>().deleteCollection(collection.collectionId);
     final collections = ref.read(userProvider.select((p) => p.collections));
     final newCollections = List.of(collections)
       ..removeWhere((c) => c == collection);
@@ -788,12 +786,6 @@ class __CollectionCreationState extends State<_CollectionCreation> {
     List<File> photos,
     File? audio,
   ) async {
-    final api = GetIt.instance.get<Api>();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      return null;
-    }
-
     final photoBytes = await Future.wait(photos.map((f) => f.readAsBytes()));
     final images = await Future.wait(photoBytes.map(decodeImageFromList));
     final resized =
@@ -819,8 +811,8 @@ class __CollectionCreationState extends State<_CollectionCreation> {
       jpgFiles.add(await file.writeAsBytes(jpgs[i]!));
     }
 
+    final api = GetIt.instance.get<Api>();
     return api.createCollection(
-      uid,
       jpgFiles.map((e) => e.path).toList(),
       audio?.path,
     );
@@ -894,7 +886,7 @@ class _PhotoPickerGridState extends State<_PhotoPickerGrid> {
     super.initState();
 
     _pagingController.addPageRequestListener((pageKey) async {
-      final end = pageKey + 24;
+      final end = pageKey + 18;
       try {
         final files = await _fetchGallery(pageKey, end);
         if (mounted) {
@@ -1039,7 +1031,7 @@ class _PhotoPickerGridState extends State<_PhotoPickerGrid> {
         builder: (context, constraints) {
           final width = constraints.maxWidth / 3;
           final cacheWidth =
-              (width * MediaQuery.of(context).devicePixelRatio).toInt();
+              (width / 1.5 * MediaQuery.of(context).devicePixelRatio).toInt();
           return PagedGridView<int, File>(
             pagingController: _pagingController,
             gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(

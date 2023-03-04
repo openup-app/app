@@ -56,11 +56,8 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
     }
 
     final api = GetIt.instance.get<Api>();
-    final uid = ref.read(userProvider).uid;
-
     if (collectionId != null) {
       final collectionWithRelated = await api.getCollection(
-        uid,
         collectionId,
         withRelated: RelatedCollectionsType.user,
       );

@@ -564,13 +564,12 @@ class Api {
   }
 
   Future<Either<ApiError, Collection>> createCollection(
-    String uid,
     List<String> photos,
     String? audio,
   ) {
     return _requestStreamedResponseAsFuture(
       makeRequest: () async {
-        final uri = Uri.parse('$_urlBase/users/$uid/profile/collections');
+        final uri = Uri.parse('$_urlBase/collections');
         final request = http.MultipartRequest('POST', uri);
         request.headers.addAll(_headers);
         request.files.addAll([
@@ -587,12 +586,11 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> deleteCollection(
-      String uid, String collectionId) {
+  Future<Either<ApiError, void>> deleteCollection(String collectionId) {
     return _request(
       makeRequest: () {
         return http.delete(
-          Uri.parse('$_urlBase/users/$uid/profile/collections/$collectionId'),
+          Uri.parse('$_urlBase/collections/$collectionId'),
           headers: _headers,
         );
       },
@@ -604,7 +602,7 @@ class Api {
     return _request(
       makeRequest: () {
         return http.get(
-          Uri.parse('$_urlBase/users/$uid/profile/collections'),
+          Uri.parse('$_urlBase/users/$uid/collections'),
           headers: _headers,
         );
       },
@@ -618,7 +616,6 @@ class Api {
   }
 
   Future<Either<ApiError, CollectionWithRelated>> getCollection(
-    String uid,
     String collectionId, {
     RelatedCollectionsType? withRelated,
   }) {
@@ -632,7 +629,7 @@ class Api {
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body);
-        return Right(CollectionWithRelated.fromJson(json['collection']));
+        return Right(CollectionWithRelated.fromJson(json));
       },
     );
   }
@@ -916,7 +913,7 @@ enum CollectionState { processing, ready }
 class CollectionWithRelated with _$CollectionWithRelated {
   const factory CollectionWithRelated({
     required Collection collection,
-    @Default(null) List<Collection>? related,
+    required List<Collection> related,
   }) = _CollectionWithRelated;
 
   factory CollectionWithRelated.fromJson(Map<String, dynamic> json) =>
