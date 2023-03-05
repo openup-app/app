@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -12,7 +15,7 @@ import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/phone_number_input.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-class SignUpPhone extends StatefulWidget {
+class SignUpPhone extends ConsumerStatefulWidget {
   final String? verifiedUid;
   const SignUpPhone({
     Key? key,
@@ -20,10 +23,10 @@ class SignUpPhone extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<SignUpPhone> createState() => _SignUpPhoneState();
+  ConsumerState<SignUpPhone> createState() => _SignUpPhoneState();
 }
 
-class _SignUpPhoneState extends State<SignUpPhone> {
+class _SignUpPhoneState extends ConsumerState<SignUpPhone> {
   String? _phoneErrorText;
   String? _phoneNumber;
   bool _valid = false;
@@ -43,20 +46,23 @@ class _SignUpPhoneState extends State<SignUpPhone> {
     _handleVerification();
   }
 
-  void _handleVerification() {
+  void _handleVerification() async {
     final verifiedUid = widget.verifiedUid;
     if (verifiedUid != null && !_submitting) {
       setState(() => _submitting = true);
-      _createUser(verifiedUid).then((result) {
-        if (!mounted) {
-          return;
-        }
-        setState(() => _submitting = false);
+      final creationResult = await _createUser(verifiedUid);
+      if (!mounted || creationResult == null) {
+        return;
+      }
 
-        if (result == _CreateResult.created || result == _CreateResult.exists) {
-          context.goNamed('initialLoading');
-        }
-      });
+      final notifier = ref.read(userProvider.notifier);
+      notifier.uid(verifiedUid);
+      notifier.profile(creationResult.profile);
+      if (creationResult.created || creationResult.needsOnboarding) {
+        context.goNamed('signup_name');
+      } else {
+        context.goNamed('initialLoading');
+      }
     }
   }
 
@@ -156,6 +162,7 @@ class _SignUpPhoneState extends State<SignUpPhone> {
 
     final phoneNumber = _phoneNumber;
     if (_valid && phoneNumber != null) {
+      GetIt.instance.get<Mixpanel>().track("sign_up_submit_phone");
       setState(() => _submitting = true);
       await _sendVerificationCode(phoneNumber);
       if (mounted) {
@@ -235,7 +242,7 @@ class _SignUpPhoneState extends State<SignUpPhone> {
     return completer.future;
   }
 
-  Future<_CreateResult> _createUser(String uid) async {
+  Future<UserCreationResult?> _createUser(String uid) async {
     final api = GetIt.instance.get<Api>();
     final result = await api.createUser(uid: uid);
     return result.fold(
@@ -252,11 +259,9 @@ class _SignUpPhoneState extends State<SignUpPhone> {
             ),
           );
         }
-        return _CreateResult.failed;
+        return null;
       },
-      (r) => r ? _CreateResult.created : _CreateResult.exists,
+      (r) => r,
     );
   }
 }
-
-enum _CreateResult { created, exists, failed }

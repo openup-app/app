@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/common.dart';
@@ -149,6 +151,7 @@ class _SignUpPermissionsState extends State<SignUpPermissionsScreen> {
       return;
     }
     if (_hasLocationPermission && _hasContactsPermission) {
+      GetIt.instance.get<Mixpanel>().track("sign_up_grant_permissions");
       context.pushReplacementNamed('signup_phone');
     }
   }

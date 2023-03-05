@@ -37,7 +37,7 @@ class Api {
     _headers['Authorization'] = 'Bearer $value';
   }
 
-  Future<Either<ApiError, bool>> createUser({
+  Future<Either<ApiError, UserCreationResult>> createUser({
     required String uid,
   }) {
     return _request(
@@ -48,7 +48,8 @@ class Api {
         );
       },
       handleSuccess: (response) {
-        return Right(jsonDecode(response.body)['created'] == true);
+        final json = jsonDecode(response.body);
+        return Right(UserCreationResult.fromJson(json));
       },
     );
   }
@@ -815,11 +816,24 @@ class ServerError with _$ServerError {
 }
 
 @freezed
+class UserCreationResult with _$UserCreationResult {
+  const factory UserCreationResult({
+    required bool created,
+    required bool needsOnboarding,
+    required Profile profile,
+  }) = _UserCreationResult;
+
+  factory UserCreationResult.fromJson(Map<String, dynamic> json) =>
+      _$UserCreationResultFromJson(json);
+}
+
+@freezed
 class Profile with _$Profile {
   const factory Profile({
     required String uid,
     required String name,
     String? audio,
+    Gender? gender,
     required String photo,
     required List<String> gallery,
     required bool blurPhotos,
@@ -868,6 +882,8 @@ class ProfileWithOnline with _$ProfileWithOnline {
   factory ProfileWithOnline.fromJson(Map<String, dynamic> json) =>
       _$ProfileWithOnlineFromJson(json);
 }
+
+enum Gender { male, female, nonBinary }
 
 @freezed
 class DiscoverResults with _$DiscoverResults {

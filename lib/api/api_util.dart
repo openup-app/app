@@ -49,6 +49,23 @@ Future<Either<ApiError, void>> updateName({
   return result;
 }
 
+Future<Either<ApiError, void>> updateGender({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Gender gender,
+}) async {
+  final api = GetIt.instance.get<Api>();
+  final userState = ref.read(userProvider);
+  final newProfile = userState.profile!.copyWith(gender: gender);
+  final result = await api.updateProfile(userState.uid, newProfile);
+
+  if (result.isRight()) {
+    ref.read(userProvider.notifier).profile(newProfile);
+  }
+
+  return result;
+}
+
 Future<Either<ApiError, void>> updateTopic({
   required BuildContext context,
   required WidgetRef ref,

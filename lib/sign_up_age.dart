@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -128,7 +130,13 @@ class _SignUpScreenState extends ConsumerState<SignUpAge> {
             Button(
               onPressed: _age < 18
                   ? null
-                  : () => context.pushNamed('signup_permissions'),
+                  : () {
+                      GetIt.instance.get<Mixpanel>().track(
+                        "sign_up_submit_age",
+                        properties: {'age': _age},
+                      );
+                      context.pushNamed('signup_permissions');
+                    },
               child: RoundedRectangleContainer(
                 child: Text(
                   'Get started',

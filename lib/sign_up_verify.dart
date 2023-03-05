@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -119,6 +121,7 @@ class _SignUpVerifyState extends State<SignUpVerify> {
   }
 
   void _submit() async {
+    GetIt.instance.get<Mixpanel>().track("sign_up_submit_phone_verification");
     FocusScope.of(context).unfocus();
     setState(() => _submitting = true);
     final smsCode = _smsCodeController.text;

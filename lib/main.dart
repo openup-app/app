@@ -32,6 +32,8 @@ import 'package:openup/profile_page2.dart';
 import 'package:openup/relationships_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
+import 'package:openup/sign_up_gender.dart';
+import 'package:openup/sign_up_name.dart';
 import 'package:openup/sign_up_name_screen.dart';
 import 'package:openup/sign_up_permissions.dart';
 import 'package:openup/sign_up_phone.dart';
@@ -463,6 +465,26 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   },
                 ),
               ],
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/signup_name',
+          name: 'signup_name',
+          builder: (context, state) {
+            return const CurrentRouteSystemUiStyling.light(
+              child: SignUpName(),
+            );
+          },
+          routes: [
+            GoRoute(
+              path: 'signup_gender',
+              name: 'signup_gender',
+              builder: (context, state) {
+                return const CurrentRouteSystemUiStyling.light(
+                  child: SignUpGender(),
+                );
+              },
             ),
           ],
         ),
