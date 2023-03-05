@@ -79,10 +79,10 @@ class _SignUpVerifyState extends State<SignUpVerify> {
                     color: Colors.white),
                 decoration: InputDecoration.collapsed(
                   hintText: 'Code',
-                  hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white.withOpacity(0.6)),
+                  hintStyle: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 32, color: Colors.white),
                 ),
               ),
             ),

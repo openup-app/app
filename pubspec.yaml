@@ -107,11 +107,13 @@ flutter:
     - assets/images/online.json
     - assets/images/people_background.png
     - assets/images/preferences_icon.png
+    - assets/images/tutorial_photo.jpg
     - assets/images/signup_background.png
     - assets/images/earth.svg
     - assets/images/loading_icon.png
     - assets/images/videocam.svg
     - assets/videos/welcome.mp4
+    - assets/images/welcome_background.png
 
   shaders:
     - assets/shaders/depth.frag

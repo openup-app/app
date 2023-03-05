@@ -41,6 +41,9 @@ import 'package:openup/sign_up_photos_screen.dart';
 import 'package:openup/sign_up_start_animation.dart';
 import 'package:openup/sign_up_topic_screen.dart';
 import 'package:openup/sign_up_verify.dart';
+import 'package:openup/signup_collection.dart';
+import 'package:openup/signup_friends.dart';
+import 'package:openup/signup_tutorial.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/sign_up_age.dart';
 import 'package:openup/view_collection_page.dart';
@@ -478,13 +481,46 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           },
           routes: [
             GoRoute(
-              path: 'signup_gender',
+              path: 'gender',
               name: 'signup_gender',
               builder: (context, state) {
                 return const CurrentRouteSystemUiStyling.light(
                   child: SignUpGender(),
                 );
               },
+              routes: [
+                GoRoute(
+                  path: 'tutorial',
+                  name: 'signup_tutorial',
+                  builder: (context, state) {
+                    return const CurrentRouteSystemUiStyling.light(
+                      child: SignUpTutorial(),
+                    );
+                  },
+                  routes: [
+                    GoRoute(
+                      path: 'collection',
+                      name: 'signup_collection',
+                      builder: (context, state) {
+                        return const CurrentRouteSystemUiStyling.light(
+                          child: SignUpCollection(),
+                        );
+                      },
+                      routes: [
+                        GoRoute(
+                          path: 'friends',
+                          name: 'signup_friends',
+                          builder: (context, state) {
+                            return const CurrentRouteSystemUiStyling.light(
+                              child: SignUpFriends(),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
@@ -571,8 +607,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   path: '/discover',
                   name: 'discover',
                   builder: (context, state) {
+                    final showWelcome = state.queryParams['welcome'] == 'true';
                     return DiscoverPage(
                       scrollToTopNotifier: _scrollToDiscoverTopNotifier,
+                      showWelcome: showWelcome,
                     );
                   },
                   routes: [

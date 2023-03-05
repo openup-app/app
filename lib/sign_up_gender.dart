@@ -141,13 +141,16 @@ class _SignUpGenderState extends ConsumerState<SignUpGender> {
       return;
     }
 
+    precacheImage(
+        const AssetImage('assets/images/tutorial_photo.jpg'), context);
+
     result.fold(
       (l) => displayError(context, l),
       (r) {
         GetIt.instance.get<Mixpanel>()
           ..track("sign_up_submit_gender")
           ..getPeople().set('gender', gender.name);
-        // context.goNamed('signup');
+        context.goNamed('signup_tutorial');
       },
     );
 
