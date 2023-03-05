@@ -125,6 +125,7 @@ class _SignUpPermissionsState extends State<SignUpPermissionsScreen> {
 
     if (status.isGranted || status.isLimited) {
       setState(() => _hasLocationPermission = true);
+      _maybeNavigate();
     } else if (status.isPermanentlyDenied) {
       openAppSettings();
     }
@@ -137,6 +138,7 @@ class _SignUpPermissionsState extends State<SignUpPermissionsScreen> {
 
     if (status.isGranted || status.isLimited) {
       setState(() => _hasContactsPermission = true);
+      _maybeNavigate();
     } else if (status.isPermanentlyDenied) {
       openAppSettings();
     }
