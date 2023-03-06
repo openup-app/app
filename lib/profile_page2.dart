@@ -5,14 +5,12 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:dartz/dartz.dart' show Either;
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:image/image.dart' as img;
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -20,15 +18,14 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/menu_page.dart';
+import 'package:openup/widgets/collection_photo_picker.dart';
+import 'package:openup/widgets/collection_photo_stack.dart';
 import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/screenshot.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 class ProfilePage2 extends ConsumerStatefulWidget {
   const ProfilePage2({super.key});
@@ -200,9 +197,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                     ),
                     if (_showCollectionCreation)
                       _CollectionCreation(
-                        onCancel: () =>
-                            setState(() => _showCollectionCreation = false),
-                        onDone: (collection) {
+                        onCreated: (collection) {
                           final collections = ref
                               .read(userProvider.select((p) => p.collections));
                           final newCollections = List.of(collections)
@@ -212,6 +207,8 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                               .collections(newCollections);
                           setState(() => _showCollectionCreation = false);
                         },
+                        onCancel: () =>
+                            setState(() => _showCollectionCreation = false),
                       ),
                   ],
                 );
@@ -367,13 +364,13 @@ class _BottomButton extends StatelessWidget {
 }
 
 class _CollectionCreation extends StatefulWidget {
+  final void Function(Collection collection) onCreated;
   final VoidCallback onCancel;
-  final void Function(Collection collection) onDone;
 
   const _CollectionCreation({
     super.key,
+    required this.onCreated,
     required this.onCancel,
-    required this.onDone,
   });
 
   @override
@@ -381,11 +378,9 @@ class _CollectionCreation extends StatefulWidget {
 }
 
 class __CollectionCreationState extends State<_CollectionCreation> {
-  bool _showPhotoGallery = true;
-  bool _readyToUpload = false;
-
-  final _selectedFiles = <File>[];
-  File? _audioFile;
+  final _photos = <File>[];
+  File? _audio;
+  _CreationStep _step = _CreationStep.photos;
 
   @override
   Widget build(BuildContext context) {
@@ -411,14 +406,16 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                       alignment: Alignment.centerLeft,
                       child: Button(
                         onPressed: () {
-                          if (_showPhotoGallery) {
-                            widget.onCancel();
-                          } else {
-                            if (!_readyToUpload) {
-                              setState(() => _showPhotoGallery = true);
-                            } else {
-                              setState(() => _readyToUpload = false);
-                            }
+                          switch (_step) {
+                            case _CreationStep.photos:
+                              widget.onCancel();
+                              break;
+                            case _CreationStep.audio:
+                              setState(() => _step = _CreationStep.photos);
+                              break;
+                            case _CreationStep.upload:
+                              setState(() => _step = _CreationStep.audio);
+                              break;
                           }
                         },
                         child: Padding(
@@ -426,12 +423,14 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (!_showPhotoGallery) ...[
+                              if (_step != _CreationStep.photos) ...[
                                 const Icon(Icons.chevron_left),
                                 const SizedBox(width: 8),
                               ],
                               Text(
-                                _showPhotoGallery ? 'Cancel' : 'Back',
+                                _step == _CreationStep.photos
+                                    ? 'Cancel'
+                                    : 'Back',
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium!
@@ -444,10 +443,10 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                         ),
                       ),
                     ),
-                    if (_showPhotoGallery)
+                    if (_step == _CreationStep.photos)
                       Center(
                         child: Text(
-                          '${_selectedFiles.length}/3',
+                          '${_photos.length}/3',
                           textAlign: TextAlign.center,
                           style: Theme.of(context)
                               .textTheme
@@ -459,15 +458,23 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: Visibility(
-                        visible: !_readyToUpload,
+                        visible: _step != _CreationStep.upload,
                         child: Button(
-                          onPressed: _selectedFiles.isEmpty
+                          onPressed: _photos.isEmpty
                               ? null
                               : () {
-                                  if (_showPhotoGallery) {
-                                    setState(() => _showPhotoGallery = false);
-                                  } else {
-                                    setState(() => _readyToUpload = true);
+                                  switch (_step) {
+                                    case _CreationStep.photos:
+                                      setState(
+                                          () => _step = _CreationStep.audio);
+                                      break;
+                                    case _CreationStep.audio:
+                                      setState(
+                                          () => _step = _CreationStep.upload);
+                                      break;
+                                    case _CreationStep.upload:
+                                      // Ignore
+                                      break;
                                   }
                                 },
                           child: Padding(
@@ -496,252 +503,38 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            if (!_showPhotoGallery && !_readyToUpload)
-              SizedBox(
-                width: 249,
-                child: Text(
-                  'Want to say something\nabout this collection?',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 20, fontWeight: FontWeight.w500, height: 1.5),
-                ),
-              )
-            else if (!_showPhotoGallery && _readyToUpload)
-              SizedBox(
-                width: 249,
-                child: Text(
-                  'Upload as a new\ncollection?',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 20, fontWeight: FontWeight.w500, height: 1.5),
-                ),
-              ),
             Expanded(
-              child: AspectRatio(
-                aspectRatio: 9 / 16,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    const cacheWidth = 800;
-                    return Button(
-                      onPressed: _selectedFiles.isEmpty || !_showPhotoGallery
-                          ? null
-                          : () {},
-                      useFadeWheNoPressedCallback: false,
-                      onLongPressStart:
-                          _selectedFiles.isEmpty || !_showPhotoGallery
-                              ? null
-                              : () {
-                                  setState(() => _selectedFiles.removeLast());
-                                },
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          for (var i = 0; i < _selectedFiles.length; i++)
-                            AnimatedContainer(
-                              key: ValueKey(_selectedFiles[i].path),
-                              duration: const Duration(milliseconds: 200),
-                              transform: Matrix4.identity()
-                                ..scale(1.0 -
-                                    0.05 * (_selectedFiles.length - i - 1))
-                                ..translate(
-                                    constraints.maxWidth, constraints.maxHeight)
-                                ..rotateZ(radians(
-                                    -5.12 * (_selectedFiles.length - i - 1)))
-                                ..translate(-constraints.maxWidth,
-                                    -constraints.maxHeight),
-                              child: Container(
-                                clipBehavior: Clip.hardEdge,
-                                margin: const EdgeInsets.all(7),
-                                decoration: _selectedFiles.isEmpty
-                                    ? const BoxDecoration()
-                                    : const BoxDecoration(
-                                        color: Colors.black,
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(15)),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            offset: Offset(
-                                              0.0,
-                                              4.0,
-                                            ),
-                                            blurRadius: 8,
-                                            color: Color.fromRGBO(
-                                                0x00, 0x00, 0x00, 0.25),
-                                          ),
-                                        ],
-                                      ),
-                                child: Image.file(
-                                  _selectedFiles[i],
-                                  fit: BoxFit.cover,
-                                  filterQuality: FilterQuality.high,
-                                  cacheWidth: cacheWidth,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+              child: Builder(
+                builder: (context) {
+                  switch (_step) {
+                    case _CreationStep.photos:
+                      return CollectionPhotoPicker(
+                        photos: _photos,
+                        onPhotosUpdated: (photos) {
+                          setState(() => _photos
+                            ..clear()
+                            ..addAll(photos));
+                        },
+                      );
+                    case _CreationStep.audio:
+                      return _AudioStep(
+                        photos: _photos,
+                        onAudio: (audio) => setState(() => _audio = audio),
+                      );
+                    case _CreationStep.upload:
+                      return _UploadStep(
+                        photos: _photos,
+                        onUpload: () => _upload(_photos, _audio),
+                        onDelete: widget.onCancel,
+                      );
+                  }
+                },
               ),
             ),
-            if (!_showPhotoGallery)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (!_readyToUpload)
-                      Button(
-                        onPressed: () async {
-                          final result = await _showRecordPanel(context);
-                          if (mounted && result != null) {
-                            setState(() => _audioFile = result);
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 4.0, horizontal: 8.0),
-                          decoration: const BoxDecoration(
-                            color: Color.fromRGBO(0x80, 0x0B, 0x06, 1.0),
-                            borderRadius: BorderRadius.all(Radius.circular(6)),
-                          ),
-                          child: Text(
-                            'Record',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 16, fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                      )
-                    else ...[
-                      Button(
-                        onPressed: widget.onCancel,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 4.0, horizontal: 8.0),
-                          child: Text(
-                            'Delete',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    color: const Color.fromRGBO(
-                                        0xFF, 0x00, 0x00, 1.0),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 100),
-                      Button(
-                        onPressed: () => _upload(_selectedFiles, _audioFile),
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-                            borderRadius: BorderRadius.all(Radius.circular(6)),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 4.0, horizontal: 8.0),
-                            child: Text(
-                              'Upload',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ]
-                  ],
-                ),
-              ),
-            if (!_showPhotoGallery)
-              Padding(
-                padding: EdgeInsets.only(
-                  left: 8,
-                  right: 8,
-                  top: 8,
-                  bottom: 8 + MediaQuery.of(context).padding.bottom,
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 346),
-                  child: Text(
-                    'A professional photographer will check your images and make sure they are edited to the highest quality. We will have this collection up as soon as possible.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 13, fontWeight: FontWeight.w500, height: 1.7),
-                  ),
-                ),
-              )
-            else ...[
-              Text(
-                'hold down image to remove from collection',
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                height: 32,
-                color: const Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                child: Center(
-                  child: Text(
-                    'Add up to three photos in a collection',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 14, fontWeight: FontWeight.w300),
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 300,
-                child: _PhotoPickerGrid(
-                  selected: _selectedFiles,
-                  onPicked: _selectedFiles.length >= 3
-                      ? null
-                      : (file) => setState(() => _selectedFiles.add(file)),
-                ),
-              ),
-            ],
           ],
         ),
       ),
     );
-  }
-
-  Future<File?> _showRecordPanel(BuildContext context) async {
-    final audio = await showModalBottomSheet<Uint8List>(
-      backgroundColor: Colors.transparent,
-      context: context,
-      builder: (context) {
-        return Surface(
-          child: RecordPanelContents(
-            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
-          ),
-        );
-      },
-    );
-
-    if (audio == null || !mounted) {
-      return null;
-    }
-
-    final tempDir = await getTemporaryDirectory();
-    final file = File(path.join(tempDir.path, 'collection_audio.m4a'));
-    await file.writeAsBytes(audio);
-    return file;
   }
 
   void _upload(List<File> photos, File? audio) async {
@@ -776,7 +569,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
         );
 
         if (mounted) {
-          widget.onDone(r);
+          widget.onCreated(r);
         }
       },
     );
@@ -863,236 +656,209 @@ class __CollectionCreationState extends State<_CollectionCreation> {
   }
 }
 
-class _PhotoPickerGrid extends StatefulWidget {
-  final List<File> selected;
-  final void Function(File file)? onPicked;
-  const _PhotoPickerGrid({
-    required this.selected,
-    required this.onPicked,
+class _AudioStep extends StatefulWidget {
+  final List<File> photos;
+  final void Function(File audio) onAudio;
+  const _AudioStep({
+    super.key,
+    required this.photos,
+    required this.onAudio,
   });
 
   @override
-  State<_PhotoPickerGrid> createState() => _PhotoPickerGridState();
+  State<_AudioStep> createState() => _AudioStepState();
 }
 
-class _PhotoPickerGridState extends State<_PhotoPickerGrid> {
-  final _pagingController = PagingController<int, File>(firstPageKey: 0);
-  final _allFiles = <File>[];
-  bool _needsPermission = false;
-  final _oldSelected = <File>[];
-
+class _AudioStepState extends State<_AudioStep> {
   @override
-  void initState() {
-    super.initState();
-
-    _pagingController.addPageRequestListener((pageKey) async {
-      final end = pageKey + 18;
-      try {
-        final files = await _fetchGallery(pageKey, end);
-        if (mounted) {
-          _allFiles.addAll(files);
-          if (files.isNotEmpty) {
-            _pagingController.appendPage(files, end);
-          } else {
-            _pagingController.appendLastPage(files);
-          }
-        }
-      } catch (e) {
-        _pagingController.error = e;
-      }
-    });
-
-    _requestPermission().then((granted) {
-      if (!granted) {
-        _pagingController.appendPage([], 0);
-      }
-    });
-  }
-
-  @override
-  void didUpdateWidget(covariant _PhotoPickerGrid oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_oldSelected.length != widget.selected.length) {
-      final newFiles = List.of(_allFiles);
-      newFiles.removeWhere((file) => widget.selected.contains(file));
-      setState(() => _pagingController.itemList = newFiles);
-    }
-    _oldSelected
-      ..clear()
-      ..addAll(widget.selected);
-  }
-
-  @override
-  void dispose() {
-    _pagingController.dispose();
-    super.dispose();
-  }
-
-  Future<bool> _requestPermission({
-    bool canShowOpenSettingsDialog = true,
-  }) async {
-    final PermissionStatus status;
-    if (Platform.isAndroid) {
-      final androidInfo = await DeviceInfoPlugin().androidInfo;
-      if (androidInfo.version.sdkInt < 33) {
-        status = await Permission.storage.request();
-      } else {
-        status = await Permission.photos.request();
-      }
-    } else {
-      status = await Permission.photos.request();
-    }
-
-    if (status == PermissionStatus.permanentlyDenied ||
-        status == PermissionStatus.restricted) {
-      if (mounted) {
-        setState(() {
-          _needsPermission = true;
-        });
-      }
-
-      if (status == PermissionStatus.permanentlyDenied &&
-          mounted &&
-          canShowOpenSettingsDialog) {
-        final shown = await showCupertinoDialog(
-          context: context,
-          builder: (context) {
-            return CupertinoAlertDialog(
-              title: const Text('Photos access required'),
-              content: const Text('Enable photos access for Openup'),
-              actions: [
-                CupertinoDialogAction(
-                  onPressed: Navigator.of(context).pop,
-                  child: const Text('Deny'),
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        SizedBox(
+          width: 249,
+          child: Text(
+            'Want to say something\nabout this collection?',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                fontSize: 20, fontWeight: FontWeight.w500, height: 1.5),
+          ),
+        ),
+        Expanded(
+          child: CollectionPhotoStack(
+            photos: widget.photos,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Button(
+                onPressed: () async {
+                  final result = await _showRecordPanel(context);
+                  if (result != null) {
+                    widget.onAudio(result);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 4.0, horizontal: 8.0),
+                  decoration: const BoxDecoration(
+                    color: Color.fromRGBO(0x80, 0x0B, 0x06, 1.0),
+                    borderRadius: BorderRadius.all(Radius.circular(6)),
+                  ),
+                  child: Text(
+                    'Record',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
                 ),
-                CupertinoDialogAction(
-                  onPressed: () async {
-                    final result = await openAppSettings();
-                    if (mounted) {
-                      Navigator.of(context).pop(result);
-                    }
-                  },
-                  child: const Text('Open settings'),
-                ),
-              ],
-            );
-          },
+              )
+            ],
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(
+            left: 8,
+            right: 8,
+            top: 8,
+            bottom: 8 + MediaQuery.of(context).padding.bottom,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 346),
+            child: Text(
+              'A professional photographer will check your images and make sure they are edited to the highest quality. We will have this collection up as soon as possible.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  fontSize: 13, fontWeight: FontWeight.w500, height: 1.7),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
+  Future<File?> _showRecordPanel(BuildContext context) async {
+    final audio = await showModalBottomSheet<Uint8List>(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Surface(
+          child: RecordPanelContents(
+            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
+          ),
         );
-        if (!mounted || !shown) {
-          return false;
-        }
-        return _requestPermission(canShowOpenSettingsDialog: false);
-      }
-
-      return false;
-    }
-    if (status == PermissionStatus.denied) {
-      if (mounted) {
-        setState(() => _needsPermission = true);
-      }
-      return false;
-    }
-
-    if (mounted) {
-      setState(() => _needsPermission = false);
-    }
-
-    return true;
-  }
-
-  Future<List<File>> _fetchGallery(int start, int end) async {
-    final albums = await PhotoManager.getAssetPathList(
-      type: RequestType.image,
-      onlyAll: true, // Only "Recents" album
-      filterOption: FilterOptionGroup(
-        orders: const [OrderOption(asc: false)],
-      ),
+      },
     );
 
-    if (albums.isEmpty) {
-      return [];
+    if (audio == null || !mounted) {
+      return null;
     }
 
-    final recentsAlbum = albums.first;
-    final photoEntities =
-        await recentsAlbum.getAssetListRange(start: start, end: end);
-    final photoFiles =
-        await Future.wait(photoEntities.map((photoEntity) => photoEntity.file));
-    final nonNullPhotoFiles =
-        List<File>.from(photoFiles.where((f) => f != null));
-    return nonNullPhotoFiles;
+    final tempDir = await getTemporaryDirectory();
+    final file = File(path.join(tempDir.path, 'collection_audio.m4a'));
+    await file.writeAsBytes(audio);
+    return file;
   }
+}
+
+class _UploadStep extends StatelessWidget {
+  final List<File> photos;
+  final VoidCallback onUpload;
+  final VoidCallback onDelete;
+
+  const _UploadStep({
+    super.key,
+    required this.photos,
+    required this.onUpload,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Colors.black,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth / 3;
-          final cacheWidth =
-              (width / 1.5 * MediaQuery.of(context).devicePixelRatio).toInt();
-          return PagedGridView<int, File>(
-            pagingController: _pagingController,
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: width,
-              childAspectRatio: 9 / 16,
-            ),
-            padding: EdgeInsets.zero,
-            builderDelegate: PagedChildBuilderDelegate(
-              itemBuilder: (context, file, index) {
-                final onPicked = widget.onPicked;
-                return Button(
-                  onPressed: onPicked == null ? null : () => onPicked(file),
-                  useFadeWheNoPressedCallback: false,
-                  child: Image.file(
-                    file,
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.high,
-                    cacheWidth: cacheWidth,
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        SizedBox(
+          width: 249,
+          child: Text(
+            'Upload as a new\ncollection?',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                fontSize: 20, fontWeight: FontWeight.w500, height: 1.5),
+          ),
+        ),
+        Expanded(
+          child: CollectionPhotoStack(
+            photos: photos,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Button(
+                onPressed: onDelete,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 4.0, horizontal: 8.0),
+                  child: Text(
+                    'Delete',
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500),
                   ),
-                );
-              },
-              firstPageProgressIndicatorBuilder: (context) {
-                return const Center(
-                  child: LoadingIndicator(size: 35),
-                );
-              },
-              newPageProgressIndicatorBuilder: (context) {
-                return const Center(
-                  child: LoadingIndicator(size: 35),
-                );
-              },
-              noItemsFoundIndicatorBuilder: (context) {
-                if (!_needsPermission) {
-                  return Center(
+                ),
+              ),
+              const SizedBox(width: 100),
+              Button(
+                onPressed: onUpload,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+                    borderRadius: BorderRadius.all(Radius.circular(6)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 4.0, horizontal: 8.0),
                     child: Text(
-                      'No photos found',
+                      'Upload',
                       style: Theme.of(context)
                           .textTheme
                           .bodyMedium!
-                          .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+                          .copyWith(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
-                  );
-                }
-                return Center(
-                  child: PermissionButton(
-                    icon: const Icon(Icons.photo),
-                    label: const Text('Enable Photos'),
-                    granted: !_needsPermission,
-                    onPressed: () {
-                      _requestPermission().then((value) {
-                        _pagingController.notifyPageRequestListeners(
-                            _pagingController.nextPageKey ?? 0);
-                      });
-                    },
                   ),
-                );
-              },
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(
+            left: 8,
+            right: 8,
+            top: 8,
+            bottom: 8 + MediaQuery.of(context).padding.bottom,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 346),
+            child: Text(
+              'A professional photographer will check your images and make sure they are edited to the highest quality. We will have this collection up as soon as possible.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  fontSize: 13, fontWeight: FontWeight.w500, height: 1.7),
             ),
-          );
-        },
-      ),
+          ),
+        )
+      ],
     );
   }
 }
+
+enum _CreationStep { photos, audio, upload }
