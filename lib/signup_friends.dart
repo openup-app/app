@@ -26,11 +26,10 @@ class _SignUpFriendsState extends State<SignUpFriends> {
         ),
         child: Stack(
           children: [
-            Positioned.fill(
-              child: Padding(
-                padding: EdgeInsets.only(
-                    top: 72 + MediaQuery.of(context).padding.top),
-                child: const InviteFriends(),
+            InviteFriends(
+              padding: EdgeInsets.only(
+                top: 72 + MediaQuery.of(context).padding.top,
+                bottom: MediaQuery.of(context).padding.bottom,
               ),
             ),
             Container(

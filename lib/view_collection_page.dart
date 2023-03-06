@@ -75,7 +75,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
             _collection = r.collection;
             _relatedCollections = r.related;
             _relatedCollectionIndex =
-                r.related?.indexWhere((c) => c == r.collection);
+                r.related.indexWhere((c) => c == r.collection);
           });
         },
       );

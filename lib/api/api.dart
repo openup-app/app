@@ -635,6 +635,26 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, List<KnownContactProfile>>> getKnownContactProfiles(
+    List<String> phoneNumbers,
+  ) {
+    return _request(
+      makeRequest: () {
+        return http.post(
+          Uri.parse('$_urlBase/known_contact_profiles'),
+          headers: _headers,
+          body: jsonEncode({'phoneNumbers': phoneNumbers}),
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        final list = json['knownContactProfiles'] as List<dynamic>;
+        return Right(List<KnownContactProfile>.from(
+            list.map((e) => KnownContactProfile.fromJson(e))));
+      },
+    );
+  }
+
   Future<Either<ApiError, List<SimpleProfile>>> getBlockedUsers(String uid) {
     return _request(
       makeRequest: () {
@@ -884,6 +904,17 @@ class ProfileWithOnline with _$ProfileWithOnline {
 }
 
 enum Gender { male, female, nonBinary }
+
+@freezed
+class KnownContactProfile with _$KnownContactProfile {
+  const factory KnownContactProfile({
+    required Profile profile,
+    required String phoneNumber,
+  }) = _KnownContactProfile;
+
+  factory KnownContactProfile.fromJson(Map<String, dynamic> json) =>
+      _$KnownContactProfileFromJson(json);
+}
 
 @freezed
 class DiscoverResults with _$DiscoverResults {

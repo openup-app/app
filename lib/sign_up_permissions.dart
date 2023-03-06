@@ -86,7 +86,7 @@ class _SignUpPermissionsState extends State<SignUpPermissionsScreen> {
                 label: const Text('Enable Contacts'),
                 granted: _hasContactsPermission,
                 onPressed: () {
-                  Permission.location.request().then(_updateContactsStatus);
+                  Permission.contacts.request().then(_updateContactsStatus);
                 },
               ),
               const Spacer(),
