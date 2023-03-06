@@ -41,7 +41,9 @@ import 'package:openup/sign_up_photos_screen.dart';
 import 'package:openup/sign_up_start_animation.dart';
 import 'package:openup/sign_up_topic_screen.dart';
 import 'package:openup/sign_up_verify.dart';
-import 'package:openup/signup_collection.dart';
+import 'package:openup/signup_collection_audio.dart';
+import 'package:openup/signup_collection_photos.dart';
+import 'package:openup/signup_collection_photos_preview.dart';
 import 'package:openup/signup_friends.dart';
 import 'package:openup/signup_tutorial.dart';
 import 'package:openup/util/page_transition.dart';
@@ -499,22 +501,53 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   },
                   routes: [
                     GoRoute(
-                      path: 'collection',
-                      name: 'signup_collection',
+                      path: 'photos',
+                      name: 'signup_collection_photos',
                       builder: (context, state) {
                         return const CurrentRouteSystemUiStyling.light(
-                          child: SignUpCollection(),
+                          child: SignupCollectionPhotos(),
                         );
                       },
                       routes: [
                         GoRoute(
-                          path: 'friends',
-                          name: 'signup_friends',
+                          path: 'preview',
+                          name: 'signup_collection_photos_preview',
                           builder: (context, state) {
-                            return const CurrentRouteSystemUiStyling.light(
-                              child: SignUpFriends(),
+                            final args = state.extra
+                                as SignupCollectionPhotosPreviewArgs;
+                            return CurrentRouteSystemUiStyling.light(
+                              child: SignupCollectionPhotosPreview(
+                                photos: args.photos,
+                              ),
                             );
                           },
+                          routes: [
+                            GoRoute(
+                              path: 'audio',
+                              name: 'signup_collection_audio',
+                              builder: (context, state) {
+                                final args =
+                                    state.extra as SignupCollectionAudioArgs;
+                                return CurrentRouteSystemUiStyling.light(
+                                  child: SignupCollectionAudio(
+                                    photos: args.photos,
+                                  ),
+                                );
+                              },
+                              routes: [
+                                GoRoute(
+                                  path: 'friends',
+                                  name: 'signup_friends',
+                                  builder: (context, state) {
+                                    return const CurrentRouteSystemUiStyling
+                                        .light(
+                                      child: SignUpFriends(),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),

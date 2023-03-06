@@ -150,7 +150,8 @@ class _SignUpTutorialState extends State<SignUpTutorial> {
                   padding: EdgeInsets.only(
                       bottom: MediaQuery.of(context).padding.bottom + 16),
                   child: Button(
-                    onPressed: () => context.goNamed('signup_collection'),
+                    onPressed: () =>
+                        context.pushNamed('signup_collection_photos'),
                     child: RoundedRectangleContainer(
                       color: Colors.white.withOpacity(0.2),
                       child: SizedBox(

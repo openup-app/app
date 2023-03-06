@@ -1,12 +1,18 @@
+import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:image/image.dart' as img;
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/loading_dialog.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
 void displayError(BuildContext context, ApiError error) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -175,6 +181,80 @@ Future<Either<ApiError, Profile>> deletePhoto({
   );
 
   return result;
+}
+
+Future<Either<ApiError, Collection>?> uploadCollection({
+  required BuildContext context,
+  required List<File> photos,
+  required File? audio,
+}) async {
+  final photoBytes = await Future.wait(photos.map((f) => f.readAsBytes()));
+  final images = await Future.wait(photoBytes.map(decodeImageFromList));
+  final resized =
+      await Future.wait(images.map((i) => _downscaleImage(i, 2000)));
+  final jpgs = await Future.wait(resized.map(_encodeJpg));
+  if (jpgs.contains(null)) {
+    return null;
+  }
+  final tempDir = await getTemporaryDirectory();
+
+  final jpgFiles = <File>[];
+  for (var i = 0; i < jpgs.length; i++) {
+    final file =
+        await File(path.join(tempDir.path, 'upload', 'collection_photo_$i.jpg'))
+            .create(recursive: true);
+    jpgFiles.add(await file.writeAsBytes(jpgs[i]!));
+  }
+
+  final api = GetIt.instance.get<Api>();
+  return api.createCollection(
+    jpgFiles.map((e) => e.path).toList(),
+    audio?.path,
+  );
+}
+
+Future<ui.Image> _downscaleImage(ui.Image image, int targetSide) async {
+  if (max(image.width, image.height) < targetSide) {
+    return image;
+  }
+
+  final aspect = image.width / image.height;
+  final int targetWidth;
+  final int targetHeight;
+  if (aspect < 1) {
+    targetWidth = targetSide;
+    targetHeight = targetWidth ~/ aspect;
+  } else {
+    targetHeight = targetSide;
+    targetWidth = (targetHeight * aspect).toInt();
+  }
+
+  final pictureRecorder = ui.PictureRecorder();
+  final canvas = ui.Canvas(pictureRecorder);
+  canvas.drawImageRect(
+    image,
+    Offset.zero & Size(image.width.toDouble(), image.height.toDouble()),
+    Offset.zero & Size(targetWidth.toDouble(), targetHeight.toDouble()),
+    Paint(),
+  );
+
+  final picture = pictureRecorder.endRecording();
+  return picture.toImage(targetWidth, targetHeight);
+}
+
+Future<Uint8List?> _encodeJpg(ui.Image image, {int quality = 80}) async {
+  final bytes = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))
+      ?.buffer
+      .asUint8List();
+  if (bytes == null) {
+    return null;
+  }
+
+  final jpg = img.encodeJpg(
+    img.Image.fromBytes(image.width, image.height, bytes),
+    quality: quality,
+  );
+  return Uint8List.fromList(jpg);
 }
 
 Future<T> withBlockingModal<T>({

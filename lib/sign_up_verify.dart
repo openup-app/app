@@ -94,7 +94,7 @@ class _SignUpVerifyState extends State<SignUpVerify> {
                   width: 171,
                   child: Center(
                     child: _submitting
-                        ? const LoadingIndicator(size: 24)
+                        ? const LoadingIndicator(size: 27)
                         : Text(
                             'Next',
                             textAlign: TextAlign.center,

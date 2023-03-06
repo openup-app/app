@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
-import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 
@@ -31,6 +31,9 @@ class _SignUpNameState extends ConsumerState<SignUpName> {
   @override
   void initState() {
     super.initState();
+    final name = ref.read(userProvider).profile?.name ?? '';
+    _nameController.text = name;
+    _valid = _nameValidator(name) == null;
   }
 
   @override
@@ -41,16 +44,15 @@ class _SignUpNameState extends ConsumerState<SignUpName> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/signup_background.png'),
-          fit: BoxFit.cover,
+    return Scaffold(
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/signup_background.png'),
+            fit: BoxFit.cover,
+          ),
         ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(
@@ -102,7 +104,7 @@ class _SignUpNameState extends ConsumerState<SignUpName> {
                   width: 171,
                   child: Center(
                     child: _uploading
-                        ? const LoadingIndicator(size: 24)
+                        ? const LoadingIndicator(size: 27)
                         : Text(
                             'Next',
                             textAlign: TextAlign.center,
@@ -165,7 +167,7 @@ class _SignUpNameState extends ConsumerState<SignUpName> {
         GetIt.instance.get<Mixpanel>()
           ..track("sign_up_submit_name")
           ..getPeople().set('name', newName);
-        context.goNamed('signup_gender');
+        context.pushNamed('signup_gender');
       },
     );
 

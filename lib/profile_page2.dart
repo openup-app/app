@@ -515,6 +515,10 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                             ..clear()
                             ..addAll(photos));
                         },
+                        belowPhotoLabel:
+                            'hold down image to remove from collection',
+                        aboveGalleryLabel:
+                            'Add up to three photos in a collection',
                       );
                     case _CreationStep.audio:
                       return _AudioStep(
@@ -524,7 +528,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                     case _CreationStep.upload:
                       return _UploadStep(
                         photos: _photos,
-                        onUpload: () => _upload(_photos, _audio),
+                        onUpload: _uploadCollection,
                         onDelete: widget.onCancel,
                       );
                   }
@@ -537,14 +541,17 @@ class __CollectionCreationState extends State<_CollectionCreation> {
     );
   }
 
-  void _upload(List<File> photos, File? audio) async {
-    final result = await withBlockingModal(
+  void _uploadCollection() async {
+    final result = await uploadCollection(
       context: context,
-      label: 'Uploading collection...',
-      future: _uploadCore(photos, audio),
+      photos: _photos,
+      audio: _audio,
     );
+    if (!mounted) {
+      return;
+    }
 
-    if (!mounted || result == null) {
+    if (result == null) {
       return;
     }
 
@@ -573,86 +580,6 @@ class __CollectionCreationState extends State<_CollectionCreation> {
         }
       },
     );
-  }
-
-  Future<Either<ApiError, Collection>?> _uploadCore(
-    List<File> photos,
-    File? audio,
-  ) async {
-    final photoBytes = await Future.wait(photos.map((f) => f.readAsBytes()));
-    final images = await Future.wait(photoBytes.map(decodeImageFromList));
-    final resized =
-        await Future.wait(images.map((i) => downscaleImage(i, 2000)));
-    final jpgs = await Future.wait(resized.map(encodeJpg));
-    if (jpgs.contains(null)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to prepare photos'),
-          ),
-        );
-      }
-      return null;
-    }
-    final tempDir = await getTemporaryDirectory();
-
-    final jpgFiles = <File>[];
-    for (var i = 0; i < jpgs.length; i++) {
-      final file = await File(
-              path.join(tempDir.path, 'upload', 'collection_photo_$i.jpg'))
-          .create(recursive: true);
-      jpgFiles.add(await file.writeAsBytes(jpgs[i]!));
-    }
-
-    final api = GetIt.instance.get<Api>();
-    return api.createCollection(
-      jpgFiles.map((e) => e.path).toList(),
-      audio?.path,
-    );
-  }
-
-  Future<ui.Image> downscaleImage(ui.Image image, int targetSide) async {
-    if (max(image.width, image.height) < targetSide) {
-      return image;
-    }
-
-    final aspect = image.width / image.height;
-    final int targetWidth;
-    final int targetHeight;
-    if (aspect < 1) {
-      targetWidth = targetSide;
-      targetHeight = targetWidth ~/ aspect;
-    } else {
-      targetHeight = targetSide;
-      targetWidth = (targetHeight * aspect).toInt();
-    }
-
-    final pictureRecorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(pictureRecorder);
-    canvas.drawImageRect(
-      image,
-      Offset.zero & Size(image.width.toDouble(), image.height.toDouble()),
-      Offset.zero & Size(targetWidth.toDouble(), targetHeight.toDouble()),
-      Paint(),
-    );
-
-    final picture = pictureRecorder.endRecording();
-    return picture.toImage(targetWidth, targetHeight);
-  }
-
-  Future<Uint8List?> encodeJpg(ui.Image image, {int quality = 80}) async {
-    final bytes = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))
-        ?.buffer
-        .asUint8List();
-    if (bytes == null) {
-      return null;
-    }
-
-    final jpg = img.encodeJpg(
-      img.Image.fromBytes(image.width, image.height, bytes),
-      quality: quality,
-    );
-    return Uint8List.fromList(jpg);
   }
 }
 

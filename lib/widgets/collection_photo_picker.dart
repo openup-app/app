@@ -12,14 +12,20 @@ import 'package:photo_manager/photo_manager.dart';
 
 class CollectionPhotoPicker extends StatefulWidget {
   final List<File> photos;
-  final int max;
   final void Function(List<File> photos) onPhotosUpdated;
+  final int max;
+  final String? behindPhotoLabel;
+  final String belowPhotoLabel;
+  final String aboveGalleryLabel;
 
   const CollectionPhotoPicker({
     super.key,
     required this.photos,
-    this.max = 3,
     required this.onPhotosUpdated,
+    this.max = 3,
+    this.behindPhotoLabel,
+    required this.belowPhotoLabel,
+    required this.aboveGalleryLabel,
   });
 
   @override
@@ -40,31 +46,46 @@ class _CollectionPhotoPickerState extends State<CollectionPhotoPicker> {
                 ? null
                 : () => widget
                     .onPhotosUpdated(List.of(widget.photos)..removeLast()),
-            child: CollectionPhotoStack(
-              photos: widget.photos,
+            child: Stack(
+              children: [
+                if (widget.photos.isEmpty && widget.behindPhotoLabel != null)
+                  Center(
+                    child: Text(
+                      widget.behindPhotoLabel!,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium!
+                          .copyWith(fontSize: 16, fontWeight: FontWeight.w400),
+                    ),
+                  ),
+                CollectionPhotoStack(
+                  photos: widget.photos,
+                ),
+              ],
             ),
           ),
         ),
-        Text(
-          'hold down image to remove from collection',
-          textAlign: TextAlign.center,
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium!
-              .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
-        ),
+        if (widget.photos.isNotEmpty)
+          Text(
+            widget.belowPhotoLabel,
+            textAlign: TextAlign.center,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium!
+                .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
+          ),
         const SizedBox(height: 10),
         Container(
           height: 32,
           color: const Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
           child: Center(
             child: Text(
-              'Add up to three photos in a collection',
+              widget.aboveGalleryLabel,
               textAlign: TextAlign.center,
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium!
-                  .copyWith(fontSize: 14, fontWeight: FontWeight.w300),
+                  .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
             ),
           ),
         ),

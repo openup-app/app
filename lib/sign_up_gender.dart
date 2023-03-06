@@ -23,16 +23,6 @@ class _SignUpGenderState extends ConsumerState<SignUpGender> {
   Gender? _gender;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -98,7 +88,7 @@ class _SignUpGenderState extends ConsumerState<SignUpGender> {
                   width: 171,
                   child: Center(
                     child: _uploading
-                        ? const LoadingIndicator(size: 24)
+                        ? const LoadingIndicator(size: 27)
                         : Text(
                             'Next',
                             textAlign: TextAlign.center,
@@ -150,7 +140,7 @@ class _SignUpGenderState extends ConsumerState<SignUpGender> {
         GetIt.instance.get<Mixpanel>()
           ..track("sign_up_submit_gender")
           ..getPeople().set('gender', gender.name);
-        context.goNamed('signup_tutorial');
+        context.pushNamed('signup_tutorial');
       },
     );
 
