@@ -4,9 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/home_screen.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
-import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/common.dart';
@@ -42,7 +40,6 @@ class UserProfileInfoDisplay extends StatefulWidget {
   final Profile profile;
   final bool play;
   final VoidCallback onRecordInvite;
-  final VoidCallback onMenu;
   final Widget Function(BuildContext context, bool play) builder;
 
   const UserProfileInfoDisplay({
@@ -50,7 +47,6 @@ class UserProfileInfoDisplay extends StatefulWidget {
     required this.profile,
     required this.play,
     required this.onRecordInvite,
-    required this.onMenu,
     required this.builder,
   });
 
@@ -59,8 +55,6 @@ class UserProfileInfoDisplay extends StatefulWidget {
 }
 
 class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
-  bool _uploading = false;
-
   final _player = JustAudioAudioPlayer();
   bool _audioPaused = false;
 
@@ -83,8 +77,6 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
         setState(() => _audioPaused = false);
       }
     });
-
-    currentTabNotifier.addListener(_currentTabListener);
   }
 
   @override
@@ -109,7 +101,6 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
   void dispose() {
     _player.stop();
     _player.dispose();
-    currentTabNotifier.removeListener(_currentTabListener);
     super.dispose();
   }
 
@@ -117,231 +108,212 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
 
   void pause() => _player.pause();
 
-  void _currentTabListener() {
-    if (currentTabNotifier.value != HomeTab.discover) {
-      _player.pause();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (ModalRoute.of(context)?.isCurrent == false) {
-      _player.stop();
-    }
-    return AppLifecycle(
-      onPaused: _player.pause,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          widget.builder(context, widget.play && !_audioPaused),
-          Positioned(
-            left: 24,
-            right: 24,
-            bottom: 48 + MediaQuery.of(context).padding.bottom,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    OnlineIndicatorBuilder(
-                      uid: widget.profile.uid,
-                      builder: (context, online) {
-                        return online
-                            ? const OnlineIndicator()
-                            : const SizedBox.shrink();
-                      },
-                    ),
-                    if (widget.profile.mutualFriends.isNotEmpty)
-                      Button(
-                        onPressed: () => _showMutualFriendsModal(context),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(
-                            widget.profile.mutualFriends.length == 1
-                                ? '1 mutual friend'
-                                : '${widget.profile.mutualFriends.length} mutual friends',
-                            textAlign: TextAlign.left,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              shadows: [
-                                const Shadow(
-                                  blurRadius: 4,
-                                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                                )
-                              ],
-                            ),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        widget.builder(context, widget.play && !_audioPaused),
+        Positioned(
+          left: 24,
+          right: 24,
+          bottom: 48 + MediaQuery.of(context).padding.bottom,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  OnlineIndicatorBuilder(
+                    uid: widget.profile.uid,
+                    builder: (context, online) {
+                      return online
+                          ? const OnlineIndicator()
+                          : const SizedBox.shrink();
+                    },
+                  ),
+                  if (widget.profile.mutualFriends.isNotEmpty)
+                    Button(
+                      onPressed: () => _showMutualFriendsModal(context),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text(
+                          widget.profile.mutualFriends.length == 1
+                              ? '1 mutual friend'
+                              : '${widget.profile.mutualFriends.length} mutual friends',
+                          textAlign: TextAlign.left,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            shadows: [
+                              const Shadow(
+                                blurRadius: 4,
+                                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                              )
+                            ],
                           ),
                         ),
                       ),
-                    const Spacer(),
-                    SizedBox(
-                      width: 44,
-                      height: 46,
-                      child: Stack(
-                        children: [
-                          Align(
-                            alignment: Alignment.bottomLeft,
-                            child: MenuButton(
-                              onShowMenu: widget.onMenu,
-                            ),
-                          ),
-                          Align(
-                            alignment: Alignment.topRight,
-                            child: Button(
-                              onPressed: () {},
-                              child: Container(
-                                width: 18,
-                                height: 18,
-                                alignment: Alignment.center,
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                    colors: [
-                                      Color.fromRGBO(0xC6, 0x0A, 0x0A, 1.0),
-                                      Color.fromRGBO(0xFA, 0x4F, 0x4F, 1.0),
-                                    ],
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  '2',
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(fontSize: 14),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                if (widget.play)
-                  Container(
-                    height: 4,
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(2)),
-                      color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: StreamBuilder<PlaybackInfo>(
-                        stream: _player.playbackInfoStream,
-                        initialData: const PlaybackInfo(),
-                        builder: (context, snapshot) {
-                          final value = snapshot.requireData;
-                          final position = value.position.inMilliseconds;
-                          final duration = value.duration.inMilliseconds;
-                          final ratio =
-                              duration == 0 ? 0.0 : position / duration;
-                          return FractionallySizedBox(
-                            widthFactor: ratio < 0 ? 0 : ratio,
-                            alignment: Alignment.centerLeft,
+                  const Spacer(),
+                  SizedBox(
+                    width: 44,
+                    height: 46,
+                    child: Stack(
+                      children: [
+                        const Align(
+                          alignment: Alignment.bottomLeft,
+                          child: MenuButton(),
+                        ),
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: Button(
+                            onPressed: () {},
                             child: Container(
+                              width: 18,
+                              height: 18,
+                              alignment: Alignment.center,
                               decoration: const BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(2)),
-                                color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 1.0),
+                                gradient: LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: [
+                                    Color.fromRGBO(0xC6, 0x0A, 0x0A, 1.0),
+                                    Color.fromRGBO(0xFA, 0x4F, 0x4F, 1.0),
+                                  ],
+                                ),
+                                shape: BoxShape.circle,
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              AutoSizeText(
-                                widget.profile.name,
-                                maxFontSize: 26,
-                                minFontSize: 18,
+                              child: Text(
+                                '2',
+                                textAlign: TextAlign.center,
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium!
-                                    .copyWith(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                    .copyWith(fontSize: 14),
                               ),
-                              const SizedBox(width: 8),
-                              OnlineIndicatorBuilder(
-                                uid: widget.profile.uid,
-                                builder: (context, online) {
-                                  return online
-                                      ? const OnlineIndicator()
-                                      : const SizedBox.shrink();
-                                },
-                              ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          AutoSizeText(
-                            widget.profile.location,
-                            overflow: TextOverflow.ellipsis,
-                            minFontSize: 2,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: 15,
-                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              if (widget.play)
+                Container(
+                  height: 4,
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(2)),
+                    color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: StreamBuilder<PlaybackInfo>(
+                      stream: _player.playbackInfoStream,
+                      initialData: const PlaybackInfo(),
+                      builder: (context, snapshot) {
+                        final value = snapshot.requireData;
+                        final position = value.position.inMilliseconds;
+                        final duration = value.duration.inMilliseconds;
+                        final ratio = duration == 0 ? 0.0 : position / duration;
+                        return FractionallySizedBox(
+                          widthFactor: ratio < 0 ? 0 : ratio,
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(2)),
+                              color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 1.0),
+                            ),
                           ),
-                          const SizedBox(width: 8),
-                        ],
-                      ),
+                        );
+                      },
                     ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: _RecordButton(
-                        onPressed: widget.onRecordInvite,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (!kReleaseMode)
-            Positioned(
-              left: 8,
-              right: 8,
-              bottom: 8 + MediaQuery.of(context).padding.bottom,
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(24),
                   ),
                 ),
-                padding: const EdgeInsets.all(8),
-                alignment: Alignment.center,
-                child: AutoSizeText(
-                  widget.profile.uid,
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            AutoSizeText(
+                              widget.profile.name,
+                              maxFontSize: 26,
+                              minFontSize: 18,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            OnlineIndicatorBuilder(
+                              uid: widget.profile.uid,
+                              builder: (context, online) {
+                                return online
+                                    ? const OnlineIndicator()
+                                    : const SizedBox.shrink();
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        AutoSizeText(
+                          widget.profile.location,
+                          overflow: TextOverflow.ellipsis,
+                          minFontSize: 2,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    fontWeight: FontWeight.w300,
+                                    fontSize: 15,
+                                  ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: _RecordButton(
+                      onPressed: widget.onRecordInvite,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        if (!kReleaseMode)
+          Positioned(
+            left: 8,
+            right: 8,
+            bottom: 8 + MediaQuery.of(context).padding.bottom,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(24),
                 ),
               ),
+              padding: const EdgeInsets.all(8),
+              alignment: Alignment.center,
+              child: AutoSizeText(
+                widget.profile.uid,
+              ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 

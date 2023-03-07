@@ -1,19 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 
-class CollectionsPreviewList extends StatelessWidget {
+class CollectionsPreviewList extends StatefulWidget {
   final List<Collection> collections;
+  final bool play;
   final int index;
   final List<Widget> leadingChildren;
   final void Function(int index) onView;
   final void Function(int index)? onLongPress;
+
   const CollectionsPreviewList({
     super.key,
     required this.collections,
+    this.play = true,
+    this.index = -1,
+    this.leadingChildren = const <Widget>[],
+    required this.onView,
+    this.onLongPress,
+  });
+
+  @override
+  State<CollectionsPreviewList> createState() => _CollectionsPreviewListState();
+}
+
+class _CollectionsPreviewListState extends State<CollectionsPreviewList> {
+  bool _active = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return ActivePage(
+      onActivate: () {
+        if (mounted) {
+          setState(() => _active = true);
+        }
+      },
+      onDeactivate: () {
+        if (mounted) {
+          setState(() => _active = false);
+        }
+      },
+      child: _CollectionsPreviewList(
+        collections: widget.collections,
+        play: _active && widget.play,
+        index: widget.index,
+        leadingChildren: widget.leadingChildren,
+        onView: widget.onView,
+        onLongPress: widget.onLongPress,
+      ),
+    );
+  }
+}
+
+class _CollectionsPreviewList extends StatelessWidget {
+  final List<Collection> collections;
+  final bool play;
+  final int index;
+  final List<Widget> leadingChildren;
+  final void Function(int index) onView;
+  final void Function(int index)? onLongPress;
+
+  const _CollectionsPreviewList({
+    super.key,
+    required this.collections,
+    required this.play,
     this.index = -1,
     this.leadingChildren = const <Widget>[],
     required this.onView,
@@ -45,6 +99,7 @@ class CollectionsPreviewList extends StatelessWidget {
                 final collection = collections[realIndex];
                 return _CollectionPreview(
                   collection: collection,
+                  play: play,
                   onView: () => onView(realIndex),
                   onLongPress: onLongPress == null
                       ? null
@@ -80,12 +135,14 @@ class _BlurredBackground extends StatelessWidget {
 
 class _CollectionPreview extends StatefulWidget {
   final Collection collection;
+  final bool play;
   final VoidCallback onView;
   final VoidCallback? onLongPress;
 
   const _CollectionPreview({
     super.key,
     required this.collection,
+    required this.play,
     required this.onView,
     required this.onLongPress,
   });
@@ -119,7 +176,7 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
           else
             Positioned.fill(
               child: CinematicGallery(
-                slideshow: true,
+                slideshow: widget.play,
                 gallery: widget.collection.photos,
               ),
             ),

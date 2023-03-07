@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
@@ -34,6 +33,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
   List<Collection>? _relatedCollections;
   int? _relatedCollectionIndex;
   bool _error = false;
+  bool _play = true;
 
   @override
   void initState() {
@@ -108,66 +108,70 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
     final collections = _relatedCollections;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (collection == null && !_error)
-            const Center(
-              child: LoadingIndicator(),
-            )
-          else if (collection == null && _error)
-            Center(
-              child: Text(
-                'Unable to load Collection',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 20, fontWeight: FontWeight.w400),
+      body: ActivePage(
+        onActivate: () => setState(() => _play = true),
+        onDeactivate: () => setState(() => _play = false),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (collection == null && !_error)
+              const Center(
+                child: LoadingIndicator(),
+              )
+            else if (collection == null && _error)
+              Center(
+                child: Text(
+                  'Unable to load Collection',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 20, fontWeight: FontWeight.w400),
+                ),
               ),
-            ),
-          if (collection != null)
-            Button(
-              onPressed: () {
-                setState(() => _showing = !_showing);
-              },
-              child: CinematicGallery(
-                slideshow: true,
-                gallery: collection.photos,
+            if (collection != null)
+              Button(
+                onPressed: () {
+                  setState(() => _showing = !_showing);
+                },
+                child: CinematicGallery(
+                  slideshow: _play,
+                  gallery: collection.photos,
+                ),
               ),
+            if (collections != null)
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                left: 0,
+                right: 0,
+                bottom: _showing ? 0 : -200,
+                height: 200,
+                child: CollectionsPreviewList(
+                  collections: collections,
+                  index: collections.indexWhere((c) => c == collection),
+                  onView: (index) {
+                    setState(() => _collection = collections[index]);
+                  },
+                ),
+              ),
+            Positioned(
+              left: 8,
+              top: MediaQuery.of(context).padding.top + 8,
+              child: const BackIconButton(),
             ),
-          if (collections != null)
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
-              left: 0,
-              right: 0,
-              bottom: _showing ? 0 : -200,
-              height: 200,
-              child: CollectionsPreviewList(
-                collections: collections,
-                index: collections.indexWhere((c) => c == collection),
-                onView: (index) {
-                  setState(() => _collection = collections[index]);
-                },
+              right: 22,
+              bottom: 12 +
+                  MediaQuery.of(context).padding.bottom +
+                  (_showing ? 200 : 0),
+              child: const MenuButton(
+                color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
               ),
             ),
-          Positioned(
-            left: 8,
-            top: MediaQuery.of(context).padding.top + 8,
-            child: const BackIconButton(),
-          ),
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-            right: 22,
-            bottom: 12 +
-                MediaQuery.of(context).padding.bottom +
-                (_showing ? 200 : 0),
-            child: const MenuButton(
-              color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

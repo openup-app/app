@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:go_router/go_router.dart';
+import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 
 final _menuKey = GlobalKey<_KeyedMenuPageState>();
+
+final _menuOpenNotifier = ValueNotifier<bool>(false);
 
 class MenuPage extends StatefulWidget {
   final int currentIndex;
@@ -26,7 +31,13 @@ class _MenuPageState extends State<MenuPage> {
       key: _menuKey,
       currentIndex: widget.currentIndex,
       onItemPressed: widget.onItemPressed,
-      children: widget.children,
+      children: [
+        for (var i = 0; i < widget.children.length; i++)
+          _BranchIndex(
+            index: i,
+            child: widget.children[i],
+          ),
+      ],
     );
   }
 }
@@ -53,6 +64,18 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
     vsync: this,
     duration: const Duration(milliseconds: 250),
   );
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _menuOpenNotifier.value = true;
+      } else if (status == AnimationStatus.dismissed) {
+        _menuOpenNotifier.value = false;
+      }
+    });
+  }
 
   @override
   void didUpdateWidget(covariant _KeyedMenuPage oldWidget) {
@@ -283,5 +306,117 @@ class __KeepAliveState extends State<_KeepAlive>
   Widget build(BuildContext context) {
     super.build(context);
     return widget.child;
+  }
+}
+
+class _BranchIndex extends InheritedWidget {
+  final int index;
+
+  const _BranchIndex({
+    super.key,
+    required this.index,
+    required super.child,
+  });
+
+  @override
+  bool updateShouldNotify(covariant _BranchIndex oldWidget) =>
+      index != oldWidget.index;
+
+  static int? of(BuildContext context) {
+    final widget = context.dependOnInheritedWidgetOfExactType<_BranchIndex>();
+    return widget?.index;
+  }
+}
+
+class ActivePage extends StatefulWidget {
+  final VoidCallback onActivate;
+  final VoidCallback onDeactivate;
+  final Widget child;
+  const ActivePage({
+    super.key,
+    required this.onActivate,
+    required this.onDeactivate,
+    required this.child,
+  });
+
+  @override
+  State<ActivePage> createState() => _ActivePageState();
+}
+
+class _ActivePageState extends State<ActivePage> {
+  int? _myBranchIndex;
+  int? _currentIndex;
+  bool _menuOpen = false;
+  bool _active = false;
+  bool _appResumed = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _menuOpenNotifier.addListener(_onMenuOpen);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _myBranchIndex = _BranchIndex.of(context) ?? _myBranchIndex;
+    final oldCurrentIndex = _currentIndex;
+    try {
+      _currentIndex = StatefulShellRouteState.of(context).currentIndex;
+      if (oldCurrentIndex != _currentIndex) {
+        _updateActivation();
+      }
+    } catch (e) {
+      // Not a branch route
+    }
+  }
+
+  @override
+  void dispose() {
+    _menuOpenNotifier.removeListener(_onMenuOpen);
+    super.dispose();
+  }
+
+  void _onMenuOpen() {
+    _menuOpen = _menuOpenNotifier.value;
+    _updateActivation();
+  }
+
+  void _updateActivation() {
+    final isBranchRoute = _myBranchIndex != null;
+    final onCurrentBranch = _currentIndex == _myBranchIndex;
+    final routeActive = ModalRoute.of(context)?.isActive == true;
+    final visible = isBranchRoute ? onCurrentBranch : routeActive;
+    final shouldBeActive = visible && !_menuOpen && _appResumed;
+    if (!_active && shouldBeActive) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          widget.onActivate();
+          setState(() => _active = true);
+        }
+      });
+    } else if (_active && !shouldBeActive) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          widget.onDeactivate();
+          setState(() => _active = false);
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppLifecycle(
+      onResumed: () {
+        setState(() => _appResumed = true);
+        _updateActivation();
+      },
+      onPaused: () {
+        setState(() => _appResumed = false);
+        _updateActivation();
+      },
+      child: widget.child,
+    );
   }
 }

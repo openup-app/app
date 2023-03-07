@@ -12,7 +12,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/main.dart';
+import 'package:openup/menu_page.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -27,10 +27,12 @@ import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
   final ScrollToDiscoverTopNotifier scrollToTopNotifier;
+  final bool showWelcome;
 
   const DiscoverPage({
     Key? key,
     required this.scrollToTopNotifier,
+    required this.showWelcome,
   }) : super(key: key);
 
   @override
@@ -40,6 +42,7 @@ class DiscoverPage extends ConsumerStatefulWidget {
 class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _loading = false;
   bool _hasLocation = false;
+  bool _errorLoadingProfiles = false;
 
   CancelableOperation<Either<ApiError, DiscoverResults>>? _discoverOperation;
   final _profiles = <Profile>[];
@@ -226,6 +229,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
     profiles.fold(
       (l) {
+        if (_profiles.isEmpty) {
+          setState(() => _errorLoadingProfiles = true);
+        }
         var message = errorToMessage(l);
         message = l.when(
           network: (_) => message,
@@ -314,92 +320,98 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       controller: _screenshotController,
       child: Stack(
         children: [
-          Positioned.fill(
-            child: ValueListenableBuilder<double>(
-              valueListenable: _pageListener,
-              builder: (context, page, child) {
-                final index = page.round();
-                final profile = _profiles[index];
-                return UserProfileInfoDisplay(
-                  key: _userProfileInfoDisplayKey,
-                  profile: profile,
-                  // invited: _invitedUsers.contains(profile.uid),
-                  play: index == _currentProfileIndex,
-                  onRecordInvite: () => _showRecordPanel(context, profile.uid),
-                  onMenu: () async {
-                    _userProfileInfoDisplayKey.currentState?.pause();
-                  },
-                  builder: (context, play) {
-                    return PageView.builder(
-                      controller: _pageController,
-                      scrollDirection: Axis.vertical,
-                      itemCount: _profiles.length,
-                      itemBuilder: (context, index) {
-                        final profile = _profiles[index];
-                        return ValueListenableBuilder<double>(
-                          valueListenable: _pageListener,
-                          builder: (context, page, child) {
-                            final pageIndex = page.floor();
-                            final opacity =
-                                (page - pageIndex) * (page - pageIndex);
-                            if (index <= pageIndex) {
-                              return ColorFiltered(
-                                colorFilter: ColorFilter.mode(
-                                  Color.fromRGBO(0x00, 0x00, 0x00, opacity),
-                                  BlendMode.srcOver,
+          ActivePage(
+            onActivate: () {},
+            onDeactivate: () {
+              print('pause');
+              _userProfileInfoDisplayKey.currentState?.pause();
+            },
+            child: Positioned.fill(
+              child: ValueListenableBuilder<double>(
+                valueListenable: _pageListener,
+                builder: (context, page, child) {
+                  final index = page.round();
+                  final profile = _profiles[index];
+                  return UserProfileInfoDisplay(
+                    key: _userProfileInfoDisplayKey,
+                    profile: profile,
+                    // invited: _invitedUsers.contains(profile.uid),
+                    play: index == _currentProfileIndex,
+                    onRecordInvite: () =>
+                        _showRecordPanel(context, profile.uid),
+                    builder: (context, play) {
+                      return PageView.builder(
+                        controller: _pageController,
+                        scrollDirection: Axis.vertical,
+                        itemCount: _profiles.length,
+                        itemBuilder: (context, index) {
+                          final profile = _profiles[index];
+                          return ValueListenableBuilder<double>(
+                            valueListenable: _pageListener,
+                            builder: (context, page, child) {
+                              final pageIndex = page.floor();
+                              final opacity =
+                                  (page - pageIndex) * (page - pageIndex);
+                              if (index <= pageIndex) {
+                                return ColorFiltered(
+                                  colorFilter: ColorFilter.mode(
+                                    Color.fromRGBO(0x00, 0x00, 0x00, opacity),
+                                    BlendMode.srcOver,
+                                  ),
+                                  child: child!,
+                                );
+                              } else {
+                                return ColorFiltered(
+                                  colorFilter: ColorFilter.mode(
+                                    Color.fromRGBO(
+                                        0x00, 0x00, 0x00, 1 - opacity),
+                                    BlendMode.srcOver,
+                                  ),
+                                  child: child!,
+                                );
+                              }
+                            },
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Button(
+                                  onPressed: () {
+                                    if (!play) {
+                                      _userProfileInfoDisplayKey.currentState
+                                          ?.play();
+                                    } else {
+                                      _userProfileInfoDisplayKey.currentState
+                                          ?.pause();
+                                    }
+                                  },
+                                  child: UserProfileDisplay(
+                                    key: ValueKey(profile.uid),
+                                    profile: profile,
+                                    playSlideshow: play,
+                                    invited: false,
+                                  ),
                                 ),
-                                child: child!,
-                              );
-                            } else {
-                              return ColorFiltered(
-                                colorFilter: ColorFilter.mode(
-                                  Color.fromRGBO(0x00, 0x00, 0x00, 1 - opacity),
-                                  BlendMode.srcOver,
-                                ),
-                                child: child!,
-                              );
-                            }
-                          },
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Button(
-                                onPressed: () {
-                                  if (!play) {
-                                    _userProfileInfoDisplayKey.currentState
-                                        ?.play();
-                                  } else {
-                                    _userProfileInfoDisplayKey.currentState
-                                        ?.pause();
-                                  }
-                                },
-                                child: UserProfileDisplay(
-                                  key: ValueKey(profile.uid),
-                                  profile: profile,
-                                  playSlideshow: play,
-                                  invited: false,
-                                ),
-                              ),
-                              if (!play)
-                                const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(bottom: 72.0),
-                                    child: IgnorePointer(
-                                      child: IconWithShadow(
-                                        Icons.play_arrow,
-                                        size: 80,
+                                if (!play)
+                                  const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(bottom: 72.0),
+                                      child: IgnorePointer(
+                                        child: IconWithShadow(
+                                          Icons.play_arrow,
+                                          size: 80,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
           ValueListenableBuilder<double>(
@@ -714,7 +726,6 @@ class _SharedProfilePageState extends State<SharedProfilePage> {
                 );
                 setState(() => _invited = true);
               },
-              onMenu: () {},
               builder: (context, play) {
                 return UserProfileDisplay(
                   profile: profile,
@@ -743,4 +754,41 @@ class ScrollToDiscoverTopNotifier extends ValueNotifier<void> {
   ScrollToDiscoverTopNotifier() : super(null);
 
   void scrollToTop() => notifyListeners();
+}
+
+class _Welcome extends StatelessWidget {
+  const _Welcome({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('welcome_background'),
+          fit: BoxFit.fill,
+        ),
+      ),
+      child: Column(
+        children: [
+          const Spacer(),
+          Text('Welcome',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 40, fontWeight: FontWeight.w400)),
+          const SizedBox(height: 8),
+          Text('swipe up to begin',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 16, fontWeight: FontWeight.w300)),
+          const SizedBox(height: 97),
+          Image.asset(
+            'assets/images/app_logo.png',
+          ),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
 }

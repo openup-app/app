@@ -1,17 +1,13 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
-import 'package:dartz/dartz.dart' show Either;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image/image.dart' as img;
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -158,6 +154,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                               .watch(userProvider.select((p) => p.collections));
                           return CollectionsPreviewList(
                               collections: collections,
+                              play: _showCollectionCreation == false,
                               leadingChildren: [
                                 _BottomButton(
                                   label: 'Update voice bio',
