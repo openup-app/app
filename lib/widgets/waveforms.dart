@@ -79,12 +79,20 @@ class RecorderWithWaveforms {
     _sampleRate = sampleRate.toInt();
     _channels = 1;
 
-    final bytesPerSample = bitDepth ~/ 8;
-    final fft = FFT(micBufferSize ~/ bytesPerSample);
+    final fft = FFT(1024);
 
-    _micStreamSubscription = micStream.listen((samples) {
-      _totalSamples.addAll(samples);
-      final output = samplesToFft(samples, fft);
+    _micStreamSubscription = micStream.listen((inputSamples) {
+      final samples = _bitDepth == 8
+          ? inputSamples
+          : Uint8List.fromList(inputSamples.buffer.asUint16List().map((e) {
+              final upper = (e & 0xFF00) >> 8;
+              final lower = (e & 0x00FF);
+              final littleEndian = (lower << 8) | upper;
+              return littleEndian ~/ 256;
+            }).toList());
+      _totalSamples.addAll(inputSamples);
+      final output = samplesToFft(
+          Uint8List.fromList(samples.take(fft.size).toList()), fft);
       return _onFrequencies?.call(output);
     });
   }
