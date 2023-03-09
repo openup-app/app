@@ -27,9 +27,7 @@ class RelationshipsPage extends ConsumerStatefulWidget {
 
 class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
     with SingleTickerProviderStateMixin {
-  final _searchFocusNode = FocusNode();
   final _searchController = TextEditingController();
-  bool _hasFocus = false;
   String _filterString = "";
 
   final _collections = <Collection>[];
@@ -49,12 +47,6 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
       }
     });
 
-    _searchFocusNode.addListener(() {
-      if (_searchFocusNode.hasFocus != _hasFocus) {
-        setState(() => _hasFocus = _searchFocusNode.hasFocus);
-      }
-    });
-
     widget.tempRefresh.addListener(_fetchChatrooms);
     _fetchChatrooms();
   }
@@ -63,7 +55,6 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
   void dispose() {
     widget.tempRefresh.removeListener(_fetchChatrooms);
     _searchController.dispose();
-    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -177,7 +168,6 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
                     padding: const EdgeInsets.only(right: 6.0),
                     child: TextFormField(
                       controller: _searchController,
-                      focusNode: _searchFocusNode,
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                             fontSize: 14,
                             fontWeight: FontWeight.w300,

@@ -15,10 +15,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 class InviteFriends extends StatefulWidget {
   final EdgeInsets padding;
+  final String filter;
 
   const InviteFriends({
     super.key,
     this.padding = EdgeInsets.zero,
+    this.filter = '',
   });
 
   @override
@@ -82,8 +84,14 @@ class _InviteFriendsState extends State<InviteFriends> {
       );
     }
 
-    final knownProfiles = _knownProfiles;
-    final contacts = _contacts;
+    final knownProfiles = _knownProfiles
+        ?.where((c) =>
+            c.profile.name.toLowerCase().contains(widget.filter.toLowerCase()))
+        .toList();
+    final contacts = _contacts
+        ?.where((c) =>
+            c.displayName.toLowerCase().contains(widget.filter.toLowerCase()))
+        .toList();
     if (knownProfiles == null || contacts == null) {
       return const Center(
         child: LoadingIndicator(),
