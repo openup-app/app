@@ -135,12 +135,6 @@ class _InviteFriendsState extends State<InviteFriends> {
                         phoneNumber: knownProfile.phoneNumber,
                       ),
                     ),
-                    SizedBox(
-                      height: 167,
-                      child: _LoadCollectionList(
-                        uid: knownProfile.profile.uid,
-                      ),
-                    ),
                   ],
                 );
               },
