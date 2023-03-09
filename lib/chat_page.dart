@@ -107,7 +107,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   void dispose() {
     _chatApi.dispose();
     _audio.dispose();
-    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -488,7 +488,7 @@ class _ChatMessage extends StatelessWidget {
                   child: SizedBox(
                     width: 200,
                     child: CustomPaint(
-                      size: const Size.fromHeight(148),
+                      size: const Size.fromHeight(140),
                       painter: FrequenciesPainter(
                         frequencies: frequencies ??
                             message.waveform.map((e) => e.toDouble()).toList(),

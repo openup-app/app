@@ -1067,7 +1067,7 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                                   painter: FrequenciesPainter(
                                     frequencies: recordingInfo.frequencies
                                         .map((e) => e.y),
-                                    barCount: 54,
+                                    barCount: 30,
                                     color: Colors.white,
                                   ),
                                 ),

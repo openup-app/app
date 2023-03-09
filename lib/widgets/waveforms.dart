@@ -79,8 +79,6 @@ class RecorderWithWaveforms {
     _sampleRate = sampleRate.toInt();
     _channels = 1;
 
-    final fft = FFT(1024);
-
     _micStreamSubscription = micStream.listen((inputSamples) {
       final samples = _bitDepth == 8
           ? inputSamples
@@ -91,8 +89,17 @@ class RecorderWithWaveforms {
               return littleEndian ~/ 256;
             }).toList());
       _totalSamples.addAll(inputSamples);
-      final output = samplesToFft(
-          Uint8List.fromList(samples.take(fft.size).toList()), fft);
+
+      final average =
+          (samples.fold<int>(0, (p, e) => p + e - 128) / samples.length).abs();
+
+      const count = 128;
+      final magnitudes = List.generate(count, (i) {
+        final x = (i - count / 2) / count * 5;
+        final magnitude = (average * exp((-x * x))).clamp(0.0, 1.0);
+        return Float64x2(magnitude, magnitude);
+      });
+      final output = Float64x2List.fromList(magnitudes);
       return _onFrequencies?.call(output);
     });
   }

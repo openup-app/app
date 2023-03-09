@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
@@ -25,7 +26,7 @@ class JustAudioAudioPlayer {
   late final StreamSubscription _stateSubscription;
   late final StreamSubscription _positionSubscription;
   late final StreamSubscription _durationSubscription;
-  StreamSubscription? _fftSubscription;
+  StreamSubscription? _visualizerSubscription;
 
   PlaybackInfo _playbackInfo = const PlaybackInfo();
 
@@ -42,7 +43,7 @@ class JustAudioAudioPlayer {
           break;
         case ProcessingState.ready:
         case ProcessingState.completed:
-          _fftSubscription?.cancel();
+          _visualizerSubscription?.cancel();
           _playbackInfo = _playbackInfo.copyWith(
               state: state.playing &&
                       state.processingState == ProcessingState.ready
@@ -58,21 +59,26 @@ class JustAudioAudioPlayer {
       if (state.playing &&
           state.processingState != ProcessingState.idle &&
           state.processingState != ProcessingState.completed) {
-        _fftSubscription?.cancel();
+        _visualizerSubscription?.cancel();
 
         if (Platform.isAndroid) {
-          _player.startVisualizer();
+          _player.startVisualizer(enableFft: false);
         }
-        _fftSubscription = _player.visualizerFftStream.listen((capture) {
-          final magnitudes = List<double>.generate(capture.length, (_) => 0);
-          for (var i = 0; i < capture.length; i++) {
-            magnitudes[i] = capture.getMagnitude(i) / 128;
-          }
+        _visualizerSubscription =
+            _player.visualizerWaveformStream.listen((capture) {
+          final average = (capture.data.fold<int>(0, (p, e) => p + e - 128) /
+                  capture.data.length)
+              .abs();
+          const count = 128;
+          final magnitudes = List.generate(count, (i) {
+            final x = (i / count - 0.5) * 5;
+            return (average / 64 * exp((-x * x))).clamp(0.0, 1.0);
+          });
           _playbackInfo = _playbackInfo.copyWith(frequencies: magnitudes);
           _playbackInfoController.add(_playbackInfo);
         });
       } else {
-        _fftSubscription?.cancel();
+        _visualizerSubscription?.cancel();
         if (Platform.isAndroid) {
           _player.stopVisualizer();
         }
@@ -132,7 +138,7 @@ class JustAudioAudioPlayer {
 
   Future<void> stop() async {
     // Calling justAudio.AudioPlayer.stop() seems to unload the audio sometimes
-    _fftSubscription?.cancel();
+    _visualizerSubscription?.cancel();
     _player.stopVisualizer();
     await pause();
     return seek(Duration.zero);
