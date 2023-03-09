@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -6,7 +8,6 @@ import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 
@@ -117,7 +118,7 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
         Positioned(
           left: 24,
           right: 24,
-          bottom: 48 + MediaQuery.of(context).padding.bottom,
+          bottom: 24 + MediaQuery.of(context).padding.bottom,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -156,6 +157,28 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
                         ),
                       ),
                     ),
+                ],
+              ),
+              Row(
+                children: [
+                  AutoSizeText(
+                    widget.profile.name,
+                    maxFontSize: 32,
+                    minFontSize: 26,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(width: 8),
+                  OnlineIndicatorBuilder(
+                    uid: widget.profile.uid,
+                    builder: (context, online) {
+                      return online
+                          ? const OnlineIndicator()
+                          : const SizedBox.shrink();
+                    },
+                  ),
                 ],
               ),
               const SizedBox(height: 14),
@@ -199,31 +222,6 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            AutoSizeText(
-                              widget.profile.name,
-                              maxFontSize: 26,
-                              minFontSize: 18,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                            ),
-                            const SizedBox(width: 8),
-                            OnlineIndicatorBuilder(
-                              uid: widget.profile.uid,
-                              builder: (context, online) {
-                                return online
-                                    ? const OnlineIndicator()
-                                    : const SizedBox.shrink();
-                              },
-                            ),
-                          ],
-                        ),
                         const SizedBox(height: 4),
                         AutoSizeText(
                           widget.profile.location,
@@ -248,28 +246,23 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
                   ),
                 ],
               ),
+              if (!kReleaseMode)
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(24),
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  alignment: Alignment.center,
+                  child: AutoSizeText(
+                    widget.profile.uid,
+                  ),
+                ),
             ],
           ),
         ),
-        if (!kReleaseMode)
-          Positioned(
-            left: 8,
-            right: 8,
-            bottom: 8 + MediaQuery.of(context).padding.bottom,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
-                borderRadius: BorderRadius.all(
-                  Radius.circular(24),
-                ),
-              ),
-              padding: const EdgeInsets.all(8),
-              alignment: Alignment.center,
-              child: AutoSizeText(
-                widget.profile.uid,
-              ),
-            ),
-          ),
       ],
     );
   }
@@ -298,34 +291,39 @@ class _RecordButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onPressed,
-      child: Container(
-        width: 156,
-        height: 50,
-        decoration: const BoxDecoration(
-          color: Color.fromRGBO(0xFF, 0x00, 0x00, 0.5),
-          borderRadius: BorderRadius.all(
-            Radius.circular(72),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(72)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12.5, sigmaY: 12.5),
+          child: Container(
+            width: 156,
+            height: 50,
+            clipBehavior: Clip.hardEdge,
+            decoration: const BoxDecoration(
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.45),
+              borderRadius: BorderRadius.all(Radius.circular(72)),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 14,
+                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.mic_none),
+                const SizedBox(width: 4),
+                Text(
+                  'send invitation',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                ),
+              ],
+            ),
           ),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 14,
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.mic_none),
-            const SizedBox(width: 4),
-            Text(
-              'send invitation',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
-            ),
-          ],
         ),
       ),
     );
