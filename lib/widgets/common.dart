@@ -946,8 +946,6 @@ class RecordPanelContents extends StatefulWidget {
 class _RecordPanelContentsState extends State<RecordPanelContents> {
   final _controller = PlaybackRecorderController();
 
-  late Ticker _countdownTicker;
-  var _countdown = Duration.zero;
   Uint8List? _recordingBytes;
   final _recordingDurationNotifier = RecordingDurationNotifier(Duration.zero);
   Ticker? _recordingDurationTicker;
@@ -955,36 +953,19 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
   @override
   void initState() {
     super.initState();
-    _restartCountdown();
+    _startRecording();
   }
 
   @override
   void dispose() {
     _recordingDurationNotifier.dispose();
     _recordingDurationTicker?.dispose();
-    _countdownTicker.dispose();
     _controller.dispose();
     super.dispose();
   }
 
-  void _restartCountdown() async {
-    setState(() {
-      _recordingBytes = null;
-      _countdown = const Duration(seconds: 3);
-    });
-    _countdownTicker = Ticker(
-      (duration) {
-        setState(() => _countdown = duration);
-        if (duration >= const Duration(seconds: 3)) {
-          _countdownTicker.stop();
-        }
-      },
-    );
-    await _countdownTicker.start();
-    _startRecording();
-  }
-
   void _startRecording() {
+    setState(() => _recordingBytes = null);
     _recordingDurationTicker = Ticker((d) {
       final start = (_controller._combinedController.value).item1.start;
       _recordingDurationNotifier.value = DateTime.now().difference(start);
@@ -1058,7 +1039,9 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                     child: Builder(
                       builder: (context) {
                         if (_recordingBytes == null) {
-                          if (recordingInfo.recording) {
+                          if (!recordingInfo.recording) {
+                            return const SizedBox.shrink();
+                          } else {
                             return Center(
                               child: SizedBox(
                                 width: 345,
@@ -1074,21 +1057,6 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                               ),
                             );
                           }
-
-                          return Text(
-                            ((const Duration(seconds: 3) - _countdown)
-                                        .inSeconds +
-                                    1)
-                                .toString(),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w300,
-                                    color: const Color.fromRGBO(
-                                        0xFF, 0x00, 0x00, 1.0)),
-                          );
                         } else {
                           return Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1120,7 +1088,7 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                                 ),
                               ),
                               Button(
-                                onPressed: () => _restartCountdown(),
+                                onPressed: () => _startRecording(),
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: Column(
