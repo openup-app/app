@@ -217,9 +217,9 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
               right: 22,
               bottom: 12 +
                   MediaQuery.of(context).padding.bottom +
-                  120 +
+                  200 +
                   (_showCollectionCreation ? 140 : 0),
-              height: 184,
+              height: 56,
               child: const MenuButton(
                 color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
               ),

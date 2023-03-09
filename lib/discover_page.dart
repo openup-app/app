@@ -316,128 +316,155 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       }
     }
 
-    return Screenshot(
-      controller: _screenshotController,
-      child: Stack(
-        children: [
-          ActivePage(
-            onActivate: () {},
-            onDeactivate: () {
-              print('pause');
-              _userProfileInfoDisplayKey.currentState?.pause();
-            },
-            child: Positioned.fill(
-              child: ValueListenableBuilder<double>(
-                valueListenable: _pageListener,
-                builder: (context, page, child) {
-                  final index = page.round();
-                  final profile = _profiles[index];
-                  return UserProfileInfoDisplay(
-                    key: _userProfileInfoDisplayKey,
-                    profile: profile,
-                    // invited: _invitedUsers.contains(profile.uid),
-                    play: index == _currentProfileIndex,
-                    onRecordInvite: () =>
-                        _showRecordPanel(context, profile.uid),
-                    builder: (context, play) {
-                      return PageView.builder(
-                        controller: _pageController,
-                        scrollDirection: Axis.vertical,
-                        itemCount: _profiles.length,
-                        itemBuilder: (context, index) {
-                          final profile = _profiles[index];
-                          return ValueListenableBuilder<double>(
-                            valueListenable: _pageListener,
-                            builder: (context, page, child) {
-                              final pageIndex = page.floor();
-                              final opacity =
-                                  (page - pageIndex) * (page - pageIndex);
-                              if (index <= pageIndex) {
-                                return ColorFiltered(
-                                  colorFilter: ColorFilter.mode(
-                                    Color.fromRGBO(0x00, 0x00, 0x00, opacity),
-                                    BlendMode.srcOver,
-                                  ),
-                                  child: child!,
-                                );
-                              } else {
-                                return ColorFiltered(
-                                  colorFilter: ColorFilter.mode(
-                                    Color.fromRGBO(
-                                        0x00, 0x00, 0x00, 1 - opacity),
-                                    BlendMode.srcOver,
-                                  ),
-                                  child: child!,
-                                );
-                              }
-                            },
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Button(
-                                  onPressed: () {
-                                    if (!play) {
-                                      _userProfileInfoDisplayKey.currentState
-                                          ?.play();
-                                    } else {
-                                      _userProfileInfoDisplayKey.currentState
-                                          ?.pause();
-                                    }
-                                  },
-                                  child: UserProfileDisplay(
-                                    key: ValueKey(profile.uid),
-                                    profile: profile,
-                                    playSlideshow: play,
-                                    invited: false,
-                                  ),
+    return Stack(
+      children: [
+        ActivePage(
+          onActivate: () {},
+          onDeactivate: () => _userProfileInfoDisplayKey.currentState?.pause(),
+          child: Positioned.fill(
+            child: ValueListenableBuilder<double>(
+              valueListenable: _pageListener,
+              builder: (context, page, child) {
+                final index = page.round();
+                final profile = _profiles[index];
+                return UserProfileInfoDisplay(
+                  key: _userProfileInfoDisplayKey,
+                  profile: profile,
+                  // invited: _invitedUsers.contains(profile.uid),
+                  play: index == _currentProfileIndex,
+                  onRecordInvite: () => _showRecordPanel(context, profile.uid),
+                  builder: (context, play) {
+                    return PageView.builder(
+                      controller: _pageController,
+                      scrollDirection: Axis.vertical,
+                      itemCount: _profiles.length,
+                      itemBuilder: (context, index) {
+                        final profile = _profiles[index];
+                        return ValueListenableBuilder<double>(
+                          valueListenable: _pageListener,
+                          builder: (context, page, child) {
+                            final pageIndex = page.floor();
+                            final opacity =
+                                (page - pageIndex) * (page - pageIndex);
+                            if (index <= pageIndex) {
+                              return ColorFiltered(
+                                colorFilter: ColorFilter.mode(
+                                  Color.fromRGBO(0x00, 0x00, 0x00, opacity),
+                                  BlendMode.srcOver,
                                 ),
-                                if (!play)
-                                  const Center(
-                                    child: Padding(
-                                      padding: EdgeInsets.only(bottom: 72.0),
-                                      child: IgnorePointer(
-                                        child: IconWithShadow(
-                                          Icons.play_arrow,
-                                          size: 80,
-                                        ),
+                                child: child!,
+                              );
+                            } else {
+                              return ColorFiltered(
+                                colorFilter: ColorFilter.mode(
+                                  Color.fromRGBO(0x00, 0x00, 0x00, 1 - opacity),
+                                  BlendMode.srcOver,
+                                ),
+                                child: child!,
+                              );
+                            }
+                          },
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Button(
+                                onPressed: () {
+                                  if (!play) {
+                                    _userProfileInfoDisplayKey.currentState
+                                        ?.play();
+                                  } else {
+                                    _userProfileInfoDisplayKey.currentState
+                                        ?.pause();
+                                  }
+                                },
+                                child: UserProfileDisplay(
+                                  key: ValueKey(profile.uid),
+                                  profile: profile,
+                                  playSlideshow: play,
+                                  invited: false,
+                                ),
+                              ),
+                              if (!play)
+                                const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(bottom: 72.0),
+                                    child: IgnorePointer(
+                                      child: IconWithShadow(
+                                        Icons.play_arrow,
+                                        size: 80,
                                       ),
                                     ),
                                   ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                    },
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+        ValueListenableBuilder<double>(
+          valueListenable: _pageListener,
+          builder: (context, page, child) {
+            final index = page.toInt();
+            final profile = _profiles[index];
+            return Positioned(
+              right: 16,
+              top: 16 + MediaQuery.of(context).padding.top,
+              child: _PageControls(
+                profile: profile,
+                onNext: () {
+                  _pageController.nextPage(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOut,
                   );
                 },
+                onBlocked: () => setState(
+                    () => _profiles.removeWhere(((p) => p.uid == profile.uid))),
+              ),
+            );
+          },
+        ),
+        Positioned(
+          right: 25,
+          bottom: 137 + MediaQuery.of(context).padding.bottom,
+          child: const MenuButton(),
+        ),
+        Align(
+          alignment: Alignment.topRight,
+          child: Button(
+            onPressed: () {},
+            child: Container(
+              width: 18,
+              height: 18,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Color.fromRGBO(0xC6, 0x0A, 0x0A, 1.0),
+                    Color.fromRGBO(0xFA, 0x4F, 0x4F, 1.0),
+                  ],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '2',
+                textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(fontSize: 14),
               ),
             ),
           ),
-          ValueListenableBuilder<double>(
-            valueListenable: _pageListener,
-            builder: (context, page, child) {
-              final index = page.toInt();
-              final profile = _profiles[index];
-              return Positioned(
-                right: 16,
-                top: 16 + MediaQuery.of(context).padding.top,
-                child: _PageControls(
-                  profile: profile,
-                  onNext: () {
-                    _pageController.nextPage(
-                      duration: const Duration(milliseconds: 350),
-                      curve: Curves.easeOut,
-                    );
-                  },
-                  onBlocked: () => setState(() =>
-                      _profiles.removeWhere(((p) => p.uid == profile.uid))),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

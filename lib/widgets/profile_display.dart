@@ -156,49 +156,6 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
                         ),
                       ),
                     ),
-                  const Spacer(),
-                  SizedBox(
-                    width: 44,
-                    height: 46,
-                    child: Stack(
-                      children: [
-                        const Align(
-                          alignment: Alignment.bottomLeft,
-                          child: MenuButton(),
-                        ),
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: Button(
-                            onPressed: () {},
-                            child: Container(
-                              width: 18,
-                              height: 18,
-                              alignment: Alignment.center,
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                  colors: [
-                                    Color.fromRGBO(0xC6, 0x0A, 0x0A, 1.0),
-                                    Color.fromRGBO(0xFA, 0x4F, 0x4F, 1.0),
-                                  ],
-                                ),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                '2',
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .copyWith(fontSize: 14),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 14),
