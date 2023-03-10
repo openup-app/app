@@ -109,6 +109,7 @@ flutter:
     - assets/images/preferences_icon.png
     - assets/images/tutorial_photo.jpg
     - assets/images/signup_background.png
+    - assets/images/signup_friends_background.png
     - assets/images/earth.svg
     - assets/images/loading_icon.png
     - assets/images/videocam.svg
