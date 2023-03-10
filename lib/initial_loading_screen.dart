@@ -158,9 +158,11 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     if (mounted) {
       if (!_deepLinked && mounted) {
         // Standard app entry or sign up onboarding
-        final noAudio = ref.read(userProvider).profile?.audio == null;
-        if (widget.needsOnboarding || noAudio) {
-          context.goNamed('onboarding');
+        final noCollection =
+            ref.read(userProvider).profile?.collection.collectionId.isEmpty ==
+                true;
+        if (widget.needsOnboarding || noCollection) {
+          context.goNamed('signup_name');
         } else {
           context.goNamed('discover');
         }

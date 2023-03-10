@@ -187,6 +187,7 @@ Future<Either<ApiError, Collection>?> uploadCollection({
   required BuildContext context,
   required List<File> photos,
   required File? audio,
+  bool useAsProfile = false,
 }) async {
   final photoBytes = await Future.wait(photos.map((f) => f.readAsBytes()));
   final images = await Future.wait(photoBytes.map(decodeImageFromList));
@@ -210,6 +211,7 @@ Future<Either<ApiError, Collection>?> uploadCollection({
   return api.createCollection(
     jpgFiles.map((e) => e.path).toList(),
     audio?.path,
+    useAsProfile: useAsProfile,
   );
 }
 

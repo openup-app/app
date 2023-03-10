@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,9 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
 class SignupCollectionAudio extends ConsumerStatefulWidget {
   final List<File> photos;
@@ -59,7 +63,7 @@ class _SignupCollectionAudioState extends ConsumerState<SignupCollectionAudio> {
                         ),
                         Center(
                           child: Text(
-                            'Let\'s record your voice bio?',
+                            'Let\'s record your voice bio',
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
@@ -70,9 +74,11 @@ class _SignupCollectionAudioState extends ConsumerState<SignupCollectionAudio> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: Button(
-                            onPressed: _uploaded
-                                ? () => context.pushNamed('signup_friends')
-                                : () => _uploadCollection(context),
+                            onPressed: _audio == null
+                                ? null
+                                : (_uploaded
+                                    ? () => context.pushNamed('signup_friends')
+                                    : () => _uploadCollection(context)),
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
@@ -94,9 +100,58 @@ class _SignupCollectionAudioState extends ConsumerState<SignupCollectionAudio> {
               ),
             ),
           ),
+          Center(
+            child: Button(
+              onPressed: () async {
+                final result = await _showRecordPanel(context);
+                if (result != null) {
+                  setState(() => _audio = result);
+                }
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(0x80, 0x0B, 0x06, 1.0),
+                  borderRadius: BorderRadius.all(Radius.circular(6)),
+                ),
+                child: Text(
+                  'Record',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+          )
         ],
       ),
     );
+  }
+
+  Future<File?> _showRecordPanel(BuildContext context) async {
+    final audio = await showModalBottomSheet<Uint8List>(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Surface(
+          child: RecordPanelContents(
+            submitAction: RecordPanelSubmitAction.done,
+            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
+          ),
+        );
+      },
+    );
+
+    if (audio == null || !mounted) {
+      return null;
+    }
+
+    final tempDir = await getTemporaryDirectory();
+    final file = File(path.join(tempDir.path, 'collection_audio.m4a'));
+    await file.writeAsBytes(audio);
+    return file;
   }
 
   void _uploadCollection(BuildContext context) async {
@@ -107,6 +162,7 @@ class _SignupCollectionAudioState extends ConsumerState<SignupCollectionAudio> {
         context: context,
         photos: widget.photos,
         audio: _audio,
+        useAsProfile: true,
       ),
     );
     if (!mounted) {
@@ -130,8 +186,11 @@ class _SignupCollectionAudioState extends ConsumerState<SignupCollectionAudio> {
             setState(() => _uploaded = true);
 
             final profile = ref.read(userProvider).profile;
-            // TODO: Set profile collection when it ready
-            // ref.read(userProvider.notifier).profile(profile.copyWith())
+            if (profile != null) {
+              ref
+                  .read(userProvider.notifier)
+                  .profile(profile.copyWith(collection: r));
+            }
 
             context.pushNamed('signup_friends');
           },

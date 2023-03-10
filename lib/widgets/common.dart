@@ -929,12 +929,16 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
   }
 }
 
+enum RecordPanelSubmitAction { send, done }
+
 class RecordPanelContents extends StatefulWidget {
+  final RecordPanelSubmitAction submitAction;
   final Duration? maxDuration;
   final void Function(Uint8List audio, Duration duration) onSubmit;
 
   const RecordPanelContents({
     super.key,
+    this.submitAction = RecordPanelSubmitAction.send,
     this.maxDuration,
     required this.onSubmit,
   });
@@ -1121,10 +1125,16 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.send),
+                                      widget.submitAction ==
+                                              RecordPanelSubmitAction.send
+                                          ? const Icon(Icons.send)
+                                          : const Icon(Icons.done),
                                       const SizedBox(height: 12),
                                       Text(
-                                        'send',
+                                        widget.submitAction ==
+                                                RecordPanelSubmitAction.send
+                                            ? 'send'
+                                            : 'done',
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium!

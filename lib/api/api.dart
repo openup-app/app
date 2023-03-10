@@ -566,11 +566,13 @@ class Api {
 
   Future<Either<ApiError, Collection>> createCollection(
     List<String> photos,
-    String? audio,
-  ) {
+    String? audio, {
+    bool useAsProfile = false,
+  }) {
     return _requestStreamedResponseAsFuture(
       makeRequest: () async {
-        final uri = Uri.parse('$_urlBase/collections');
+        final query = useAsProfile ? '?use_as_profile=true' : '';
+        final uri = Uri.parse('$_urlBase/collections$query');
         final request = http.MultipartRequest('POST', uri);
         request.headers.addAll(_headers);
         request.files.addAll([
@@ -853,8 +855,10 @@ class Profile with _$Profile {
     required String uid,
     required String name,
     String? audio,
-    Gender? gender,
+    int? age,
+    required Gender gender,
     required String photo,
+    required Collection collection,
     required List<String> gallery,
     required bool blurPhotos,
     @Default([]) List<String> mutualFriends,
