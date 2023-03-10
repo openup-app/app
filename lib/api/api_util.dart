@@ -110,6 +110,25 @@ Future<Either<ApiError, String>> updateLocation({
   return result;
 }
 
+Future<Either<ApiError, void>> updateProfileCollection({
+  required WidgetRef ref,
+  required Collection collection,
+}) async {
+  final api = GetIt.instance.get<Api>();
+  final userState = ref.read(userProvider);
+  final newProfile = userState.profile!.copyWith(collection: collection);
+  final result = await api.updateProfileCollection(
+    collectionId: collection.collectionId,
+    uid: ref.read(userProvider).uid,
+  );
+
+  if (result.isRight()) {
+    ref.read(userProvider.notifier).profile(newProfile);
+  }
+
+  return result;
+}
+
 Future<Either<ApiError, void>> updateBlurPhotos({
   required BuildContext context,
   required WidgetRef ref,

@@ -73,7 +73,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                   children: [
                     Positioned.fill(
                       child: Image.network(
-                        profile.photo,
+                        profile.collection.photos.first.url,
                         fit: BoxFit.cover,
                         loadingBuilder: loadingBuilder,
                         errorBuilder: iconErrorBuilder,
@@ -94,7 +94,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                               shape: BoxShape.circle,
                             ),
                             child: Image.network(
-                              profile.photo,
+                              profile.collection.photos.first.url,
                               fit: BoxFit.cover,
                             ),
                           ),

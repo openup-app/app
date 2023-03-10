@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -34,6 +35,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
   int? _relatedCollectionIndex;
   bool _error = false;
   bool _play = true;
+  bool _showCollectionPreviews = false;
 
   @override
   void initState() {
@@ -101,7 +103,6 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
     }
   }
 
-  bool _showing = false;
   @override
   Widget build(BuildContext context) {
     final collection = _collection;
@@ -130,9 +131,8 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
               ),
             if (collection != null)
               Button(
-                onPressed: () {
-                  setState(() => _showing = !_showing);
-                },
+                onPressed: () => setState(
+                    () => _showCollectionPreviews = !_showCollectionPreviews),
                 child: CinematicGallery(
                   slideshow: _play,
                   gallery: collection.photos,
@@ -144,7 +144,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
                 curve: Curves.easeOut,
                 left: 0,
                 right: 0,
-                bottom: _showing ? 0 : -200,
+                bottom: _showCollectionPreviews ? 0 : -200,
                 height: 200,
                 child: CollectionsPreviewList(
                   collections: collections,
@@ -159,13 +159,29 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
               top: MediaQuery.of(context).padding.top + 8,
               child: const BackIconButton(),
             ),
+            if (collection != null)
+              Positioned(
+                right: 8,
+                top: MediaQuery.of(context).padding.top + 8,
+                child: PopupMenuButton(
+                  icon: const Icon(Icons.more_horiz),
+                  itemBuilder: (context) {
+                    return [
+                      PopupMenuItem(
+                        onTap: () => _showSetAsProfileDialog(collection),
+                        child: const Text('Set as profile'),
+                      ),
+                    ];
+                  },
+                ),
+              ),
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
               right: 22,
               bottom: 12 +
                   MediaQuery.of(context).padding.bottom +
-                  (_showing ? 200 : 0),
+                  (_showCollectionPreviews ? 200 : 0),
               child: const MenuButton(
                 color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
               ),
@@ -173,6 +189,47 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showSetAsProfileDialog(Collection collection) async {
+    final replace = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: const Text('Set as profile?'),
+          content: const Text('This will replace your existing audio bio.'),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Replace'),
+            ),
+            CupertinoDialogAction(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted || replace != true) {
+      return;
+    }
+
+    final api = GetIt.instance.get<Api>();
+    final result = await withBlockingModal(
+      context: context,
+      label: 'Setting as profile',
+      future: updateProfileCollection(ref: ref, collection: collection),
+    );
+
+    if (!mounted) {
+      return;
+    }
+    result.fold(
+      (l) => displayError(context, l),
+      (r) {},
     );
   }
 }

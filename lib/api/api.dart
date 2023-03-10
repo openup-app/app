@@ -637,6 +637,21 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, void>> updateProfileCollection({
+    required String collectionId,
+    required String uid,
+  }) {
+    return _request(
+      makeRequest: () {
+        return http.put(
+          Uri.parse('$_urlBase/users/$uid/profile/collection/$collectionId'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
   Future<Either<ApiError, List<KnownContactProfile>>> getKnownContactProfiles(
     List<String> phoneNumbers,
   ) {

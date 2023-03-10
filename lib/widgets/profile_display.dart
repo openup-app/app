@@ -407,7 +407,7 @@ class _MutualFriendsModalState extends State<_MutualFriendsModal> {
                     shape: BoxShape.circle,
                   ),
                   child: Image.network(
-                    profile.photo,
+                    profile.collection.photos.first.url,
                     fit: BoxFit.cover,
                   ),
                 ),
