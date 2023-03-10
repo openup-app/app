@@ -30,9 +30,9 @@ class UserProfileDisplay extends StatefulWidget {
 class _UserProfileDisplayState extends State<UserProfileDisplay> {
   @override
   Widget build(BuildContext context) {
-    return Gallery(
+    return CinematicGallery(
       slideshow: widget.playSlideshow,
-      gallery: widget.profile.gallery,
+      gallery: widget.profile.collection.photos,
     );
   }
 }
