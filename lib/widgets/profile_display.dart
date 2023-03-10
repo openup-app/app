@@ -125,42 +125,6 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  OnlineIndicatorBuilder(
-                    uid: widget.profile.uid,
-                    builder: (context, online) {
-                      return online
-                          ? const OnlineIndicator()
-                          : const SizedBox.shrink();
-                    },
-                  ),
-                  if (widget.profile.mutualFriends.isNotEmpty)
-                    Button(
-                      onPressed: () => _showMutualFriendsModal(context),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          widget.profile.mutualFriends.length == 1
-                              ? '1 mutual friend'
-                              : '${widget.profile.mutualFriends.length} mutual friends',
-                          textAlign: TextAlign.left,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            shadows: [
-                              const Shadow(
-                                blurRadius: 4,
-                                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              Row(
-                children: [
                   AutoSizeText(
                     widget.profile.name,
                     maxFontSize: 32,
@@ -168,6 +132,14 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 32,
                           fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.profile.age.toString(),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w500,
                         ),
                   ),
                   const SizedBox(width: 8),
@@ -214,27 +186,56 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        AutoSizeText(
-                          widget.profile.location,
-                          overflow: TextOverflow.ellipsis,
-                          minFontSize: 2,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    fontWeight: FontWeight.w300,
-                                    fontSize: 15,
-                                  ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
+                    child: Button(
+                      onPressed: widget.profile.mutualFriends.isEmpty
+                          ? null
+                          : () => _showMutualFriendsModal(context),
+                      useFadeWheNoPressedCallback: false,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (widget.profile.mutualFriends.isNotEmpty)
+                            Text(
+                              widget.profile.mutualFriends.length == 1
+                                  ? '1 mutual friend'
+                                  : '${widget.profile.mutualFriends.length} mutual friends',
+                              textAlign: TextAlign.left,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                shadows: [
+                                  const Shadow(
+                                    blurRadius: 4,
+                                    color:
+                                        Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                                  )
+                                ],
+                              ),
+                            ),
+                          AutoSizeText(
+                            widget.profile.location,
+                            overflow: TextOverflow.ellipsis,
+                            minFontSize: 2,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontWeight: FontWeight.w300,
+                                  fontSize: 15,
+                                ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
