@@ -85,7 +85,6 @@ class _CollectionsPreviewList extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 7),
       itemCount: leadingChildren.length + collections.length,
-      itemExtent: 106,
       itemBuilder: (context, index) {
         final isProfileIndex = index == profileCollectionIndex;
         return Container(

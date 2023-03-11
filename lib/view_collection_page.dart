@@ -1,17 +1,26 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/menu_page.dart';
+import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
+import 'package:openup/widgets/profile_display.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
 part 'view_collection_page.freezed.dart';
 
@@ -28,6 +37,7 @@ class ViewCollectionPage extends ConsumerStatefulWidget {
 }
 
 class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
+  Profile? _profile;
   int? _profileCollectionIndex;
   List<Collection>? _collections;
   int _index = 0;
@@ -36,10 +46,18 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
   bool _play = true;
   bool _showCollectionPreviews = false;
 
+  final _player = JustAudioAudioPlayer();
+
   @override
   void initState() {
     super.initState();
     _init();
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
   }
 
   void _init() async {
@@ -54,6 +72,8 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
             ];
             // Index was relative to incoming collection
             _index = index == null ? _index : (index + 1);
+            _profile = profile;
+            _playAudio();
           });
         } else {
           final result = await _fetchCollections(profile.uid);
@@ -64,7 +84,9 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
                 profile.collection,
                 ...result,
               ];
+              _profile = profile;
             });
+            _playAudio();
           }
         }
       },
@@ -81,13 +103,24 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
               profile.collection,
               ...collections,
             ];
+            _profile = profile;
           });
+          _playAudio();
         }
       },
       collectionId: (collectionId) async {
         final collection = await _fetchCollection(collectionId);
+        Profile? profile;
+        if (collection != null && collection.photos.isNotEmpty) {
+          profile = await _fetchProfile(collection.uid);
+        }
         if (collection != null && mounted) {
-          setState(() => _collections = [collection]);
+          setState(() {
+            _collections = [collection];
+            _profile = profile;
+          });
+
+          _playAudio();
         }
       },
     );
@@ -141,6 +174,16 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
     );
   }
 
+  void _playAudio() {
+    _player.stop();
+    final audio = _collections?[_index].audio;
+    if (audio != null) {
+      _player
+        ..setUrl(audio)
+        ..play(loop: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final collections = _collections;
@@ -149,8 +192,14 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: ActivePage(
-        onActivate: () => setState(() => _play = true),
-        onDeactivate: () => setState(() => _play = false),
+        onActivate: () {
+          setState(() => _play = true);
+          _player.play();
+        },
+        onDeactivate: () {
+          setState(() => _play = false);
+          _player.stop();
+        },
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -170,11 +219,36 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
               ),
             if (collections != null)
               Button(
-                onPressed: () => setState(
-                    () => _showCollectionPreviews = !_showCollectionPreviews),
+                onPressed: () {
+                  if (_showCollectionPreviews) {
+                    _player.play(loop: true);
+                  } else {
+                    _player.pause();
+                  }
+                  setState(
+                      () => _showCollectionPreviews = !_showCollectionPreviews);
+                },
                 child: CinematicGallery(
                   slideshow: _play,
                   gallery: collections[_index].photos,
+                ),
+              ),
+            if (_profile != null)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: _showCollectionPreviews ? 0.0 : 1.0,
+                  curve: Curves.easeOut,
+                  child: UserDetails(
+                    profile: _profile!,
+                    playbackStream: _player.playbackInfoStream,
+                    showRecordButton:
+                        ref.read(userProvider).uid != _profile!.uid,
+                    recordButtonLabel: 'reply to this',
+                    onRecordPressed: () =>
+                        _showRecordPanel(context, _profile!.uid),
+                  ),
                 ),
               ),
             if (collections != null)
@@ -190,8 +264,12 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
                 child: CollectionsPreviewList(
                   profileCollectionIndex: _profileCollectionIndex,
                   collections: collections,
+                  play: _showCollectionPreviews,
                   index: _index,
-                  onView: (index) => setState(() => _index = index),
+                  onView: (index) {
+                    setState(() => _index = index);
+                    _playAudio();
+                  },
                 ),
               ),
             Positioned(
@@ -270,6 +348,46 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
     result.fold(
       (l) => displayError(context, l),
       (r) {},
+    );
+  }
+
+  void _showRecordPanel(BuildContext context, String uid) async {
+    final audio = await showModalBottomSheet<Uint8List>(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Surface(
+          child: RecordPanelContents(
+            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
+          ),
+        );
+      },
+    );
+
+    if (audio == null || !mounted) {
+      return;
+    }
+
+    GetIt.instance.get<Mixpanel>().track(
+      "send_message",
+      properties: {"type": "collection"},
+    );
+
+    final tempDir = await getTemporaryDirectory();
+    final file = File(path.join(tempDir.path, 'chat.m4a'));
+    await file.writeAsBytes(audio);
+    if (!mounted) {
+      return;
+    }
+
+    final myUid = ref.read(userProvider).uid;
+    final future = GetIt.instance
+        .get<Api>()
+        .sendMessage(myUid, uid, ChatType.audio, file.path);
+    await withBlockingModal(
+      context: context,
+      label: 'Sending message...',
+      future: future,
     );
   }
 }
