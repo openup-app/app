@@ -22,6 +22,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/profile_display.dart';
+// ignore: unused_import
 import 'package:openup/widgets/screenshot.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -45,6 +46,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _loading = false;
   bool _hasLocation = false;
   bool _errorLoadingProfiles = false;
+  Gender? _genderPreference;
 
   CancelableOperation<Either<ApiError, DiscoverResults>>? _discoverOperation;
   final _profiles = <Profile>[];
@@ -58,8 +60,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   final _pageListener = ValueNotifier<double>(0);
   final _pageController = PageController();
   final _userProfileInfoDisplayKey = GlobalKey<UserProfileInfoDisplayState>();
-
-  final _screenshotController = ScreenshotController();
 
   @override
   void initState() {
@@ -217,6 +217,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       location.latitude,
       location.longitude,
       seed: Api.seed,
+      gender: _genderPreference,
       topic: _selectedTopic,
       minRadius: _nextMinRadius,
       page: _nextPage,
@@ -264,179 +265,196 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_profiles.isEmpty) {
-      if (_loading) {
-        return const Center(
-          child: LoadingIndicator(),
-        );
-      } else {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: !_hasLocation
-                    ? Text(
-                        'Unable to get location',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      )
-                    : Text(
-                        _selectedTopic == null
-                            ? 'Couldn\'t find any profiles'
-                            : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  // Location needed at least once for nearby users
-                  // (may not have granted location during onboarding)
-                  setState(() => _loading = true);
-                  final locationService = LocationService();
-                  if (!await locationService.hasPermission()) {
-                    final status = await locationService.requestPermission();
-                    if (status) {
-                      await _updateLocation();
-                    }
-                  }
-
-                  if (!mounted) {
-                    return;
-                  }
-                  setState(() {
-                    _nextMinRadius = 0;
-                    _nextPage = 0;
-                  });
-                  _fetchPageOfProfiles();
-                },
-                child: const Text('Refresh'),
-              ),
-            ],
-          ),
-        );
-      }
+    if (_loading && _profiles.isEmpty) {
+      return const Center(
+        child: LoadingIndicator(),
+      );
     }
 
     return Stack(
       children: [
-        ActivePage(
-          onActivate: () {},
-          onDeactivate: () => _userProfileInfoDisplayKey.currentState?.pause(),
-          child: Positioned.fill(
-            child: ValueListenableBuilder<double>(
-              valueListenable: _pageListener,
-              builder: (context, page, child) {
-                final index = page.round();
-                final profile = _profiles[index];
-                return UserProfileInfoDisplay(
-                  key: _userProfileInfoDisplayKey,
-                  profile: profile,
-                  // invited: _invitedUsers.contains(profile.uid),
-                  play: index == _currentProfileIndex,
-                  onRecordInvite: () {
-                    if (FirebaseAuth.instance.currentUser == null) {
-                      _showSignInDialog();
-                    } else {
-                      _showRecordPanel(context, profile.uid);
-                    }
-                  },
-                  builder: (context, play) {
-                    return PageView.builder(
-                      controller: _pageController,
-                      scrollDirection: Axis.vertical,
-                      itemCount: _profiles.length,
-                      itemBuilder: (context, index) {
-                        final profile = _profiles[index];
-                        return ValueListenableBuilder<double>(
-                          valueListenable: _pageListener,
-                          builder: (context, page, child) {
-                            final pageIndex = page.floor();
-                            final opacity =
-                                (page - pageIndex) * (page - pageIndex);
-                            if (index <= pageIndex) {
-                              return ColorFiltered(
-                                colorFilter: ColorFilter.mode(
-                                  Color.fromRGBO(0x00, 0x00, 0x00, opacity),
-                                  BlendMode.srcOver,
+        if (_profiles.isNotEmpty)
+          ActivePage(
+            onActivate: () {},
+            onDeactivate: () =>
+                _userProfileInfoDisplayKey.currentState?.pause(),
+            child: Positioned.fill(
+              child: ValueListenableBuilder<double>(
+                valueListenable: _pageListener,
+                builder: (context, page, child) {
+                  final index = page.round();
+                  final profile = _profiles[index];
+                  return UserProfileInfoDisplay(
+                    key: _userProfileInfoDisplayKey,
+                    profile: profile,
+                    // invited: _invitedUsers.contains(profile.uid),
+                    play: index == _currentProfileIndex,
+                    onRecordInvite: () {
+                      if (FirebaseAuth.instance.currentUser == null) {
+                        _showSignInDialog();
+                      } else {
+                        _showRecordPanel(context, profile.uid);
+                      }
+                    },
+                    builder: (context, play) {
+                      return PageView.builder(
+                        controller: _pageController,
+                        scrollDirection: Axis.vertical,
+                        itemCount: _profiles.length,
+                        itemBuilder: (context, index) {
+                          final profile = _profiles[index];
+                          return ValueListenableBuilder<double>(
+                            valueListenable: _pageListener,
+                            builder: (context, page, child) {
+                              final pageIndex = page.floor();
+                              final opacity =
+                                  (page - pageIndex) * (page - pageIndex);
+                              if (index <= pageIndex) {
+                                return ColorFiltered(
+                                  colorFilter: ColorFilter.mode(
+                                    Color.fromRGBO(0x00, 0x00, 0x00, opacity),
+                                    BlendMode.srcOver,
+                                  ),
+                                  child: child!,
+                                );
+                              } else {
+                                return ColorFiltered(
+                                  colorFilter: ColorFilter.mode(
+                                    Color.fromRGBO(
+                                        0x00, 0x00, 0x00, 1 - opacity),
+                                    BlendMode.srcOver,
+                                  ),
+                                  child: child!,
+                                );
+                              }
+                            },
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Button(
+                                  onPressed: () {
+                                    if (!play) {
+                                      _userProfileInfoDisplayKey.currentState
+                                          ?.play();
+                                    } else {
+                                      _userProfileInfoDisplayKey.currentState
+                                          ?.pause();
+                                    }
+                                  },
+                                  child: UserProfileDisplay(
+                                    key: ValueKey(profile.uid),
+                                    profile: profile,
+                                    playSlideshow: play,
+                                    invited: false,
+                                  ),
                                 ),
-                                child: child!,
-                              );
-                            } else {
-                              return ColorFiltered(
-                                colorFilter: ColorFilter.mode(
-                                  Color.fromRGBO(0x00, 0x00, 0x00, 1 - opacity),
-                                  BlendMode.srcOver,
-                                ),
-                                child: child!,
-                              );
-                            }
-                          },
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Button(
-                                onPressed: () {
-                                  if (!play) {
-                                    _userProfileInfoDisplayKey.currentState
-                                        ?.play();
-                                  } else {
-                                    _userProfileInfoDisplayKey.currentState
-                                        ?.pause();
-                                  }
-                                },
-                                child: UserProfileDisplay(
-                                  key: ValueKey(profile.uid),
-                                  profile: profile,
-                                  playSlideshow: play,
-                                  invited: false,
-                                ),
-                              ),
-                              if (!play)
-                                const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(bottom: 72.0),
-                                    child: IgnorePointer(
-                                      child: IconWithShadow(
-                                        Icons.play_arrow,
-                                        size: 80,
+                                if (!play)
+                                  const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(bottom: 72.0),
+                                      child: IgnorePointer(
+                                        child: IconWithShadow(
+                                          Icons.play_arrow,
+                                          size: 80,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
-        ),
         ValueListenableBuilder<double>(
           valueListenable: _pageListener,
           builder: (context, page, child) {
-            final index = page.toInt();
-            final profile = _profiles[index];
+            Profile? profile;
+            if (_profiles.isNotEmpty) {
+              final index = page.toInt();
+              profile = _profiles[index];
+            }
             return Positioned(
               right: 16,
               top: 16 + MediaQuery.of(context).padding.top,
               child: _PageControls(
                 profile: profile,
+                preference: _genderPreference,
                 onNext: () {
                   _pageController.nextPage(
                     duration: const Duration(milliseconds: 350),
                     curve: Curves.easeOut,
                   );
                 },
-                onBlocked: () => setState(
-                    () => _profiles.removeWhere(((p) => p.uid == profile.uid))),
+                onBlocked: () => setState(() =>
+                    _profiles.removeWhere(((p) => p.uid == profile?.uid))),
+                onPreference: (gender) {
+                  if (gender == _genderPreference) {
+                    return;
+                  }
+                  setState(() {
+                    _genderPreference = gender;
+                    _nextMinRadius = 0;
+                    _nextPage = 0;
+                    _profiles.clear();
+                  });
+                  _fetchPageOfProfiles();
+                },
               ),
             );
           },
         ),
+        if (_profiles.isEmpty)
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: !_hasLocation
+                      ? Text(
+                          'Unable to get location',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        )
+                      : Text(
+                          _selectedTopic == null
+                              ? 'Couldn\'t find any profiles'
+                              : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Location needed at least once for nearby users
+                    // (may not have granted location during onboarding)
+                    setState(() => _loading = true);
+                    final locationService = LocationService();
+                    if (!await locationService.hasPermission()) {
+                      final status = await locationService.requestPermission();
+                      if (status) {
+                        await _updateLocation();
+                      }
+                    }
+
+                    if (!mounted) {
+                      return;
+                    }
+                    setState(() {
+                      _nextMinRadius = 0;
+                      _nextPage = 0;
+                    });
+                    _fetchPageOfProfiles();
+                  },
+                  child: const Text('Refresh'),
+                ),
+              ],
+            ),
+          ),
         Positioned(
           right: 25,
           bottom: 137 + MediaQuery.of(context).padding.bottom,
@@ -546,41 +564,46 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 }
 
 class _PageControls extends StatelessWidget {
-  final Profile profile;
+  final Profile? profile;
+  final Gender? preference;
   final VoidCallback? onNext;
   final VoidCallback onBlocked;
+  final void Function(Gender? preference) onPreference;
 
   const _PageControls({
     super.key,
     required this.profile,
+    required this.preference,
     required this.onNext,
     required this.onBlocked,
+    required this.onPreference,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Button(
-          onPressed: onNext,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
-              width: 26,
-              height: 26,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.close,
-                color: Colors.white,
-                size: 14,
+        if (profile != null)
+          Button(
+            onPressed: onNext,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                width: 26,
+                height: 26,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close,
+                  color: Colors.white,
+                  size: 14,
+                ),
               ),
             ),
           ),
-        ),
         const SizedBox(height: 13),
         Button(
           onPressed: () => _showPreferencesSheet(context),
@@ -604,36 +627,37 @@ class _PageControls extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 13),
-        ReportBlockPopupMenu2(
-          uid: profile.uid,
-          name: profile.name,
-          onBlock: onBlocked,
-          builder: (context) {
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                width: 26,
-                height: 26,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                  shape: BoxShape.circle,
+        if (profile != null)
+          ReportBlockPopupMenu2(
+            uid: profile!.uid,
+            name: profile!.name,
+            onBlock: onBlocked,
+            builder: (context) {
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    CupertinoIcons.ellipsis,
+                    color: Colors.white,
+                    size: 14,
+                  ),
                 ),
-                child: const Icon(
-                  CupertinoIcons.ellipsis,
-                  color: Colors.white,
-                  size: 14,
-                ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
       ],
     );
   }
 
-  void _showPreferencesSheet(BuildContext context) {
-    showModalBottomSheet(
+  void _showPreferencesSheet(BuildContext context) async {
+    final genderString = await showModalBottomSheet<String>(
       backgroundColor: Colors.transparent,
       context: context,
       builder: (context) {
@@ -657,7 +681,8 @@ class _PageControls extends StatelessWidget {
                 const SizedBox(height: 16),
                 RadioTile(
                   label: 'Men',
-                  onTap: () {},
+                  selected: preference == Gender.male,
+                  onTap: () => Navigator.of(context).pop('male'),
                   radioAtEnd: true,
                   style: Theme.of(context)
                       .textTheme
@@ -666,7 +691,8 @@ class _PageControls extends StatelessWidget {
                 ),
                 RadioTile(
                   label: 'Women',
-                  onTap: () {},
+                  selected: preference == Gender.female,
+                  onTap: () => Navigator.of(context).pop('female'),
                   radioAtEnd: true,
                   style: Theme.of(context)
                       .textTheme
@@ -675,8 +701,18 @@ class _PageControls extends StatelessWidget {
                 ),
                 RadioTile(
                   label: 'Non-Binary',
-                  selected: true,
-                  onTap: () {},
+                  selected: preference == Gender.nonBinary,
+                  onTap: () => Navigator.of(context).pop('nonBinary'),
+                  radioAtEnd: true,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                ),
+                RadioTile(
+                  label: 'Any',
+                  selected: preference == null,
+                  onTap: () => Navigator.of(context).pop('any'),
                   radioAtEnd: true,
                   style: Theme.of(context)
                       .textTheme
@@ -692,6 +728,16 @@ class _PageControls extends StatelessWidget {
         );
       },
     );
+    if (genderString != null) {
+      Gender? gender;
+      try {
+        gender =
+            Gender.values.firstWhere((element) => element.name == genderString);
+      } on StateError {
+        // Ignore
+      }
+      onPreference(gender);
+    }
   }
 }
 

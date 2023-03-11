@@ -464,6 +464,7 @@ class Api {
     double? latitude,
     double? longitude, {
     String? seed,
+    Gender? gender,
     Topic? topic,
     double? minRadius,
     int? page,
@@ -475,12 +476,14 @@ class Api {
             : 'lat=$latitude&long=$longitude';
         final seedQuery = seed == null ? null : 'seed=$seed';
         final topicQuery = topic == null ? null : 'topic=${topic.name}';
+        final genderQuery = gender == null ? null : 'gender=${gender.name}';
         final minRadiusQuery =
             minRadius == null ? null : 'minRadius=$minRadius';
         final pageQuery = page == null ? null : 'page=$page';
         final hasOptions = latitude != null ||
             longitude != null ||
             seedQuery != null ||
+            genderQuery != null ||
             topicQuery != null ||
             minRadiusQuery != null ||
             pageQuery != null;
@@ -488,6 +491,7 @@ class Api {
           Uri.parse('$_urlBase/users/discover${hasOptions ? '?' : ''}${[
             locationQuery,
             seedQuery,
+            genderQuery,
             topicQuery,
             minRadiusQuery,
             pageQuery,
