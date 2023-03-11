@@ -12,7 +12,7 @@ layout(location=5)uniform vec2 canvasSize;
 layout(location=6)uniform float xDisp;
 layout(location=7)uniform float yDisp;
 layout(location=8)uniform float zDisp;
-layout(location=9)uniform float scale;
+layout(location=9)uniform float effectIntensity;
 
 void main() {
     // Box fit: cover
@@ -35,8 +35,8 @@ void main() {
     // -1 to 1 so that close/far points go in different directions
     float depth = (depthAverage - 0.5) * 2.0;
 
-    // Image sample at the displaced point in XY
-    vec2 displacedUv = (imageCoord.xy - depth * vec2(xDisp, yDisp)) / fittedImageSize;
+    // Image sample at the displaced point in XY (depth amplifies the displacement)
+    vec2 displacedUv = (imageCoord.xy - depth * vec2(xDisp, yDisp)*effectIntensity) / fittedImageSize;
 
     // Z displacement
     displacedUv = (displacedUv - vec2(0.5)) * 2.0;

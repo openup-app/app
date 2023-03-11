@@ -188,7 +188,9 @@ class _DisplacedImageState extends State<_DisplacedImage> {
                 xDisp: widget.displacementX,
                 yDisp: widget.displacementY,
                 zDisp: widget.displacementZ,
-                scale: 1.0,
+                // Reduces the effect if the widget is small
+                effectIntensity:
+                    constraints.maxWidth / MediaQuery.of(context).size.width,
               ),
             ),
           ),
@@ -219,7 +221,7 @@ class _DisplacedImagePainter extends CustomPainter {
   final double xDisp;
   final double yDisp;
   final double zDisp;
-  final double scale;
+  final double effectIntensity;
 
   _DisplacedImagePainter({
     required this.fragmentProgram,
@@ -228,7 +230,7 @@ class _DisplacedImagePainter extends CustomPainter {
     required this.xDisp,
     required this.yDisp,
     required this.zDisp,
-    required this.scale,
+    required this.effectIntensity,
   });
 
   @override
@@ -243,7 +245,7 @@ class _DisplacedImagePainter extends CustomPainter {
       ..setFloat(4, xDisp)
       ..setFloat(5, yDisp)
       ..setFloat(6, zDisp)
-      ..setFloat(7, scale);
+      ..setFloat(7, effectIntensity);
     canvas.drawRect(
       Offset.zero & size,
       Paint()..shader = shader,
