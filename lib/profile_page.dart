@@ -38,10 +38,10 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Login to create a profile'),
+            const Text('Log in to create a profile'),
             ElevatedButton(
               onPressed: () => context.pushNamed('signup'),
-              child: const Text('Login'),
+              child: const Text('Log in'),
             ),
           ],
         ),

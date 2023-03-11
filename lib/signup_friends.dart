@@ -74,7 +74,7 @@ class _SignUpFriendsState extends State<SignUpFriends> {
                           child: Button(
                             onPressed: () {
                               context.goNamed(
-                                'discover',
+                                'initialLoading',
                                 queryParams: {'welcome': 'true'},
                               );
                             },

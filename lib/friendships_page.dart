@@ -62,10 +62,10 @@ class _FriendshipsPageState extends State<FriendshipsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Login to create friendships'),
+            const Text('Log in to create friendships'),
             ElevatedButton(
               onPressed: () => context.pushNamed('signup'),
-              child: const Text('Login'),
+              child: const Text('Log in'),
             ),
           ],
         ),

@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import 'package:async/async.dart';
 import 'package:dartz/dartz.dart' show Either;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -332,7 +334,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                   profile: profile,
                   // invited: _invitedUsers.contains(profile.uid),
                   play: index == _currentProfileIndex,
-                  onRecordInvite: () => _showRecordPanel(context, profile.uid),
+                  onRecordInvite: () {
+                    if (FirebaseAuth.instance.currentUser == null) {
+                      _showSignInDialog();
+                    } else {
+                      _showRecordPanel(context, profile.uid);
+                    }
+                  },
                   builder: (context, play) {
                     return PageView.builder(
                       controller: _pageController,
@@ -510,6 +518,30 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     if (mounted) {
       setState(() => _invitedUsers.add(uid));
     }
+  }
+
+  void _showSignInDialog() {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: const Text('Log in to send an invite'),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('Cancel'),
+            ),
+            CupertinoDialogAction(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.pushNamed('signup');
+              },
+              child: const Text('Log in'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

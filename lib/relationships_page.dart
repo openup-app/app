@@ -100,10 +100,10 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('Login to create relationships'),
+                const Text('Log in to create relationships'),
                 ElevatedButton(
                   onPressed: () => context.pushNamed('signup'),
-                  child: const Text('Login'),
+                  child: const Text('Log in'),
                 ),
               ],
             ),
