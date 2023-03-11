@@ -267,10 +267,16 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       const SizedBox(width: 16),
-                      const Icon(
-                        Icons.fingerprint,
-                        size: 48,
-                        color: Color.fromRGBO(0xFF, 0xC7, 0xC7, 1.0),
+                      const Visibility(
+                        visible: false,
+                        maintainSize: true,
+                        maintainAnimation: true,
+                        maintainState: true,
+                        child: Icon(
+                          Icons.fingerprint,
+                          size: 48,
+                          color: Color.fromRGBO(0xFF, 0xC7, 0xC7, 1.0),
+                        ),
                       ),
                       const Spacer(),
                       SizedBox(
