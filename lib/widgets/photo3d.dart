@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'dart:ui' hide Image;
 import 'dart:ui' as ui;
 
@@ -11,12 +12,14 @@ class Photo3dDisplay extends StatefulWidget {
   final ImageProvider image;
   final ImageProvider? depth;
   final bool animate;
+  final Duration duration;
 
   const Photo3dDisplay({
     super.key,
     required this.image,
     this.depth,
     this.animate = true,
+    required this.duration,
   });
 
   @override
@@ -29,18 +32,19 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
 
   FragmentProgram? _fragmentProgram;
 
-  var _secondsWhenPaused = 0.0;
+  Duration _ellaspedWhenPaused = Duration.zero;
   var _start = DateTime.now();
+
+  double _xIntensity = 1.0;
+  double _yIntensity = 1.0;
 
   @override
   void initState() {
     super.initState();
     _decodeImage(widget.image).then((image) {
       if (mounted) {
-        setState(() {
-          _image = image;
-          _start = DateTime.now();
-        });
+        setState(() => _image = image);
+        _startAnimation();
       }
     });
     final depth = widget.depth;
@@ -48,10 +52,8 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
       _decodeImage(depth).then((image) {
         _blurDepthMap(image, 30).then((image) {
           if (mounted) {
-            setState(() {
-              _depth = image;
-              _start = DateTime.now();
-            });
+            setState(() => _depth = image);
+            _startAnimation();
           }
         });
       });
@@ -65,19 +67,23 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
     }
   }
 
+  void _startAnimation() {
+    _start = DateTime.now();
+
+    const intensity = 20.0;
+    final angle = Random().nextDouble() * 2 * pi;
+    _xIntensity = cos(angle) * intensity;
+    _yIntensity = sin(angle) * intensity;
+  }
+
   @override
   void didUpdateWidget(Photo3dDisplay oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.animate != widget.animate) {
       if (!widget.animate) {
-        final time = DateTime.now().difference(_start);
-        setState(() {
-          _secondsWhenPaused =
-              time.inSeconds + (time.inMilliseconds % 1000) / 1000;
-        });
+        setState(() => _ellaspedWhenPaused = DateTime.now().difference(_start));
       } else {
-        setState(() => _start = DateTime.now().subtract(
-            Duration(milliseconds: (_secondsWhenPaused * 1000).toInt())));
+        setState(() => _start = DateTime.now().subtract(_ellaspedWhenPaused));
       }
     }
   }
@@ -116,19 +122,24 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
         }
       });
 
-      final time = DateTime.now().difference(_start);
-      final seconds = widget.animate
-          ? (time.inSeconds + (time.inMilliseconds % 1000) / 1000)
-          : _secondsWhenPaused;
+      final ellapsed = widget.animate
+          ? DateTime.now().difference(_start)
+          : _ellaspedWhenPaused;
+      final ratio = (ellapsed.inMilliseconds / widget.duration.inMilliseconds)
+          .clamp(0.0, 1.0);
+      final t = CurvedAnimation(
+              parent: AlwaysStoppedAnimation(ratio), curve: Curves.easeInOut)
+          .value;
+      const zIntensity = 0.1;
       return Transform.scale(
         scale: 1.1,
         child: _DisplacedImage(
           image: _image!,
           depth: _depth!,
           fragmentProgram: _fragmentProgram!,
-          displacementX: 0.01 * seconds - 0.05,
-          displacementY: 0,
-          displacementZ: (0.05 * seconds - 0.20).clamp(-0.3, 0.3),
+          displacementX: -_xIntensity / 2 + t * _xIntensity,
+          displacementY: -_yIntensity / 2 + t * _yIntensity,
+          displacementZ: 0.0, //-zIntensity / 2 + t * zIntensity,
         ),
       );
     } else {
@@ -174,10 +185,10 @@ class _DisplacedImageState extends State<_DisplacedImage> {
                 fragmentProgram: widget.fragmentProgram,
                 image: widget.image,
                 depth: widget.depth,
-                scale: 1.0,
                 xDisp: widget.displacementX,
                 yDisp: widget.displacementY,
                 zDisp: widget.displacementZ,
+                scale: 1.0,
               ),
             ),
           ),

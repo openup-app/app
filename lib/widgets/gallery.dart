@@ -108,6 +108,8 @@ class _CinematicGalleryState extends State<CinematicGallery> {
 
   bool _initialDidChangeDependencies = true;
 
+  static const _duration = const Duration(seconds: 4);
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -136,7 +138,7 @@ class _CinematicGalleryState extends State<CinematicGallery> {
     }
     if (_ready) {
       _slideshowTimer?.cancel();
-      _slideshowTimer = Timer(const Duration(seconds: 4), () {
+      _slideshowTimer = Timer(_duration, () {
         setState(() {
           _index++;
           _ready = false;
@@ -183,6 +185,7 @@ class _CinematicGalleryState extends State<CinematicGallery> {
                 setState(() => _ready = true);
                 _maybeStartSlideshowTimer();
               },
+              duration: _duration,
             ),
           );
         },

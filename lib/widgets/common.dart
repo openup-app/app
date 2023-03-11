@@ -250,7 +250,8 @@ class _ProfileImageState extends State<ProfileImage> {
         Photo3dDisplay(
           image: _photoImageProvider,
           depth: _depthImageProvider,
-          animate: widget.animate,
+          animate: false,
+          duration: Duration.zero,
         ),
         if (_loading)
           const Center(
@@ -266,6 +267,7 @@ class CinematicPhoto extends StatefulWidget {
   final BoxFit fit;
   final bool animate;
   final VoidCallback? onLoaded;
+  final Duration duration;
 
   const CinematicPhoto({
     super.key,
@@ -273,6 +275,7 @@ class CinematicPhoto extends StatefulWidget {
     this.fit = BoxFit.cover,
     this.animate = true,
     this.onLoaded,
+    required this.duration,
   });
 
   @override
@@ -322,6 +325,7 @@ class _CinematicPhotoState extends State<CinematicPhoto> {
           image: _photoImageProvider,
           depth: _depthImageProvider,
           animate: widget.animate,
+          duration: widget.duration,
         ),
         if (_loading)
           const Center(

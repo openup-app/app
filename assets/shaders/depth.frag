@@ -34,17 +34,17 @@ void main() {
 
     // -1 to 1 so that close/far points go in different directions
     float depth = (depthAverage - 0.5) * 2.0;
-    vec2 depthScaled = scale * depth * vec2(xDisp, yDisp);
 
     // Image sample at the displaced point in XY
-    vec2 displacedUv = (imageCoord.xy - depthScaled) / fittedImageSize;
+    vec2 displacedUv = (imageCoord.xy - depth * vec2(xDisp, yDisp)) / fittedImageSize;
 
     // Z displacement
     displacedUv = (displacedUv - vec2(0.5)) * 2.0;
     displacedUv =  displacedUv * (1.0 - depthAverage * zDisp);
     displacedUv = (displacedUv) / 2.0 + vec2(0.5);
 
-    vec4 imageSample = texture(image, uv);
+    // Sample image at displaced location
+    // vec4 imageSample = texture(image, uv);
     vec4 displacedImageSample = texture(image, displacedUv);
     fragColor = displacedImageSample;
 }
