@@ -92,6 +92,22 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, ProfileWithCollections>> getProfileWithCollections(
+      String uid) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/users/$uid/profile?collections=true'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        return Right(
+            ProfileWithCollections.fromJson(jsonDecode(response.body)));
+      },
+    );
+  }
+
   Future<Either<ApiError, void>> updateProfile(String uid, Profile profile) {
     return _request(
       makeRequest: () {
@@ -920,6 +936,17 @@ class ProfileWithOnline with _$ProfileWithOnline {
 
   factory ProfileWithOnline.fromJson(Map<String, dynamic> json) =>
       _$ProfileWithOnlineFromJson(json);
+}
+
+@freezed
+class ProfileWithCollections with _$ProfileWithCollections {
+  const factory ProfileWithCollections({
+    required Profile profile,
+    required List<Collection> collections,
+  }) = _ProfileWithCollections;
+
+  factory ProfileWithCollections.fromJson(Map<String, dynamic> json) =>
+      _$ProfileWithCollectionsFromJson(json);
 }
 
 enum Gender { male, female, nonBinary }

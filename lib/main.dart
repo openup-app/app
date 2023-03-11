@@ -726,12 +726,21 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             final collectionId = state.queryParams['collection_id'];
             final uid = state.queryParams['uid'];
             final args = state.extra as ViewCollectionPageArguments?;
-            return ViewCollectionPage(
-              collectionId: collectionId,
-              collectionsOfUid: uid,
-              relatedCollections: args?.relatedCollections,
-              relatedCollectionIndex: args?.relatedCollectionIndex,
-            );
+            if (args != null) {
+              return ViewCollectionPage(args: args);
+            } else if (uid != null) {
+              return ViewCollectionPage(
+                args: ViewCollectionPageArguments.uid(uid: uid),
+              );
+            } else if (collectionId != null) {
+              return ViewCollectionPage(
+                args: ViewCollectionPageArguments.collectionId(
+                  collectionId: collectionId,
+                ),
+              );
+            } else {
+              throw 'Missing page arguments';
+            }
           },
         ),
         GoRoute(

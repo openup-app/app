@@ -181,9 +181,10 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                               onView: (index) {
                                 context.pushNamed(
                                   'view_collection',
-                                  extra: ViewCollectionPageArguments(
-                                    relatedCollections: collections,
-                                    relatedCollectionIndex: index,
+                                  extra: ViewCollectionPageArguments.profile(
+                                    profile: profile,
+                                    collections: collections,
+                                    index: index,
                                   ),
                                 );
                               },

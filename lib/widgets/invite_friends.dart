@@ -3,12 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:get_it/get_it.dart';
-import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -355,25 +352,10 @@ class _LoadCollectionListState extends State<_LoadCollectionList> {
             fontWeight: FontWeight.w300, fontSize: 12, color: Colors.white),
       );
     }
-    final collections = _collections;
-    if (collections == null) {
-      return const Center(
-        child: LoadingIndicator(
-          size: 32,
-        ),
-      );
-    }
-    return CollectionsPreviewList(
-      collections: collections,
-      onView: (index) {
-        context.pushNamed(
-          'view_collection',
-          extra: ViewCollectionPageArguments(
-            relatedCollections: collections,
-            relatedCollectionIndex: index,
-          ),
-        );
-      },
+    return const Center(
+      child: LoadingIndicator(
+        size: 32,
+      ),
     );
   }
 }

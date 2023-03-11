@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
@@ -11,18 +13,14 @@ import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 
+part 'view_collection_page.freezed.dart';
+
 class ViewCollectionPage extends ConsumerStatefulWidget {
-  final String? collectionId;
-  final String? collectionsOfUid;
-  final List<Collection>? relatedCollections;
-  final int? relatedCollectionIndex;
+  final ViewCollectionPageArguments args;
 
   const ViewCollectionPage({
     super.key,
-    required this.collectionId,
-    this.collectionsOfUid,
-    required this.relatedCollections,
-    required this.relatedCollectionIndex,
+    required this.args,
   });
 
   @override
@@ -30,9 +28,10 @@ class ViewCollectionPage extends ConsumerStatefulWidget {
 }
 
 class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
-  Collection? _collection;
-  List<Collection>? _relatedCollections;
-  int? _relatedCollectionIndex;
+  int? _profileCollectionIndex;
+  List<Collection>? _collections;
+  int _index = 0;
+
   bool _error = false;
   bool _play = true;
   bool _showCollectionPreviews = false;
@@ -40,73 +39,113 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
   @override
   void initState() {
     super.initState();
-    _relatedCollections = widget.relatedCollections;
-    _relatedCollectionIndex = widget.relatedCollectionIndex;
-    if (_relatedCollections == null || _relatedCollectionIndex == null) {
-      _fetchCollection();
-    } else {
-      _collection = _relatedCollections![_relatedCollectionIndex!];
-    }
+    _init();
   }
 
-  void _fetchCollection() async {
-    final collectionId = widget.collectionId;
-    final collectionsOfUid = widget.collectionsOfUid;
-    if (collectionId == null && collectionsOfUid == null) {
-      setState(() => _error = true);
-      return;
-    }
+  void _init() async {
+    widget.args.when(
+      profile: (profile, collections, index) async {
+        if (collections != null) {
+          setState(() {
+            _profileCollectionIndex = 0;
+            _collections = [
+              profile.collection,
+              ...collections,
+            ];
+            // Index was relative to incoming collection
+            _index = index == null ? _index : (index + 1);
+          });
+        } else {
+          final result = await _fetchCollections(profile.uid);
+          if (result != null && mounted) {
+            _profileCollectionIndex = 0;
+            setState(() {
+              _collections = [
+                profile.collection,
+                ...result,
+              ];
+            });
+          }
+        }
+      },
+      uid: (uid) async {
+        final profileFuture = _fetchProfile(uid);
+        final collectionsFuture = _fetchCollections(uid);
+        final results = await Future.wait([profileFuture, collectionsFuture]);
+        final profile = results[0] as Profile?;
+        final collections = results[1] as List<Collection>?;
+        if (profile != null && collections != null && mounted) {
+          setState(() {
+            _profileCollectionIndex = 0;
+            _collections = [
+              profile.collection,
+              ...collections,
+            ];
+          });
+        }
+      },
+      collectionId: (collectionId) async {
+        final collection = await _fetchCollection(collectionId);
+        if (collection != null && mounted) {
+          setState(() => _collections = [collection]);
+        }
+      },
+    );
+  }
 
+  Future<List<Collection>?> _fetchCollections(String uid) async {
     final api = GetIt.instance.get<Api>();
-    if (collectionId != null) {
-      final collectionWithRelated = await api.getCollection(
-        collectionId,
-        withRelated: RelatedCollectionsType.user,
-      );
+    final collections = await api.getCollections(uid);
 
-      if (!mounted) {
-        return;
-      }
-      collectionWithRelated.fold(
-        (l) {
-          setState(() => _error = true);
-          displayError(context, l);
-        },
-        (r) {
-          setState(() {
-            _collection = r.collection;
-            _relatedCollections = r.related;
-            _relatedCollectionIndex =
-                r.related.indexWhere((c) => c == r.collection);
-          });
-        },
-      );
-    } else if (collectionsOfUid != null) {
-      final collections = await api.getCollections(collectionsOfUid);
-
-      if (!mounted) {
-        return;
-      }
-      collections.fold(
-        (l) {
-          setState(() => _error = true);
-          displayError(context, l);
-        },
-        (r) {
-          setState(() {
-            _collection = r.isEmpty ? null : r.first;
-            _relatedCollections = r;
-            _relatedCollectionIndex = 0;
-          });
-        },
-      );
+    if (!mounted) {
+      return null;
     }
+    return collections.fold(
+      (l) {
+        displayError(context, l);
+        return null;
+      },
+      (r) => r,
+    );
+  }
+
+  Future<Collection?> _fetchCollection(String collectionId) async {
+    final api = GetIt.instance.get<Api>();
+    final collection = await api.getCollection(collectionId);
+
+    if (!mounted) {
+      return null;
+    }
+    return collection.fold(
+      (l) {
+        displayError(context, l);
+        return null;
+      },
+      (r) => r.collection,
+    );
+  }
+
+  Future<Profile?> _fetchProfile(String uid) async {
+    final api = GetIt.instance.get<Api>();
+    final profile = await api.getProfile(uid);
+
+    if (!mounted) {
+      return null;
+    }
+    return profile.fold(
+      (l) {
+        displayError(context, l);
+        return null;
+      },
+      (r) => r,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final collection = _collection;
-    final collections = _relatedCollections;
+    final collections = _collections;
+    const listHeight = 200.0;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 16;
     return Scaffold(
       backgroundColor: Colors.black,
       body: ActivePage(
@@ -115,11 +154,11 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (collection == null && !_error)
+            if (collections == null && !_error)
               const Center(
                 child: LoadingIndicator(),
               )
-            else if (collection == null && _error)
+            else if (collections == null && _error)
               Center(
                 child: Text(
                   'Unable to load Collection',
@@ -129,13 +168,13 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
                       .copyWith(fontSize: 20, fontWeight: FontWeight.w400),
                 ),
               ),
-            if (collection != null)
+            if (collections != null)
               Button(
                 onPressed: () => setState(
                     () => _showCollectionPreviews = !_showCollectionPreviews),
                 child: CinematicGallery(
                   slideshow: _play,
-                  gallery: collection.photos,
+                  gallery: collections[_index].photos,
                 ),
               ),
             if (collections != null)
@@ -144,14 +183,15 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
                 curve: Curves.easeOut,
                 left: 0,
                 right: 0,
-                bottom: _showCollectionPreviews ? 0 : -200,
-                height: 200,
+                bottom: _showCollectionPreviews
+                    ? bottomPadding
+                    : -(listHeight + bottomPadding),
+                height: listHeight,
                 child: CollectionsPreviewList(
+                  profileCollectionIndex: _profileCollectionIndex,
                   collections: collections,
-                  index: collections.indexWhere((c) => c == collection),
-                  onView: (index) {
-                    setState(() => _collection = collections[index]);
-                  },
+                  index: _index,
+                  onView: (index) => setState(() => _index = index),
                 ),
               ),
             Positioned(
@@ -159,7 +199,8 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
               top: MediaQuery.of(context).padding.top + 8,
               child: const BackIconButton(),
             ),
-            if (collection != null)
+            if (collections != null &&
+                collections[_index].uid == ref.read(userProvider).uid)
               Positioned(
                 right: 8,
                 top: MediaQuery.of(context).padding.top + 8,
@@ -168,7 +209,8 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
                   itemBuilder: (context) {
                     return [
                       PopupMenuItem(
-                        onTap: () => _showSetAsProfileDialog(collection),
+                        onTap: () =>
+                            _showSetAsProfileDialog(collections[_index]),
                         child: const Text('Set as profile'),
                       ),
                     ];
@@ -179,9 +221,8 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
               right: 22,
-              bottom: 12 +
-                  MediaQuery.of(context).padding.bottom +
-                  (_showCollectionPreviews ? 200 : 0),
+              bottom:
+                  bottomPadding + (_showCollectionPreviews ? listHeight : 0),
               child: const MenuButton(
                 color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
               ),
@@ -217,7 +258,6 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
       return;
     }
 
-    final api = GetIt.instance.get<Api>();
     final result = await withBlockingModal(
       context: context,
       label: 'Setting as profile',
@@ -234,12 +274,19 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
   }
 }
 
-class ViewCollectionPageArguments {
-  final List<Collection> relatedCollections;
-  final int relatedCollectionIndex;
+@freezed
+class ViewCollectionPageArguments with _$ViewCollectionPageArguments {
+  const factory ViewCollectionPageArguments.profile({
+    required Profile profile,
+    @Default(null) List<Collection>? collections,
+    @Default(null) int? index,
+  }) = _Profile;
 
-  const ViewCollectionPageArguments({
-    required this.relatedCollections,
-    required this.relatedCollectionIndex,
-  });
+  const factory ViewCollectionPageArguments.uid({
+    required String uid,
+  }) = _Uid;
+
+  const factory ViewCollectionPageArguments.collectionId({
+    required String collectionId,
+  }) = _CollectionId;
 }

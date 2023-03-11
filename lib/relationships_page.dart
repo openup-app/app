@@ -10,6 +10,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/invite_page.dart';
 import 'package:openup/main.dart';
 import 'package:openup/menu_page.dart';
+import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
@@ -429,53 +430,63 @@ class _ConversationList extends StatelessWidget {
         itemBuilder: (context, index) {
           const suggestedFriend = false;
           final chatroom = chatrooms[index];
-          return Button(
-            onPressed: () => onOpen(chatroom),
-            child: Stack(
-              children: [
-                SizedBox(
-                  height: 140,
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 29,
-                        child: Center(
-                          child: Builder(
-                            builder: (context) {
-                              if (chatroom.unreadCount != 0) {
-                                return Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Color.fromRGBO(0xF6, 0x28, 0x28, 1.0),
-                                        Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
-                                      ],
-                                    ),
+          return Stack(
+            children: [
+              SizedBox(
+                height: 140,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 29,
+                      child: Center(
+                        child: Builder(
+                          builder: (context) {
+                            if (chatroom.unreadCount != 0) {
+                              return Container(
+                                width: 10,
+                                height: 10,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color.fromRGBO(0xF6, 0x28, 0x28, 1.0),
+                                      Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
+                                    ],
                                   ),
-                                );
-                              }
-                              return const SizedBox.shrink();
-                            },
-                          ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
                         ),
                       ),
-                      Container(
-                        width: 82,
-                        height: 110,
-                        clipBehavior: Clip.hardEdge,
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(11)),
-                        ),
+                    ),
+                    Container(
+                      width: 82,
+                      height: 110,
+                      clipBehavior: Clip.hardEdge,
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(11)),
+                      ),
+                      child: Button(
+                        onPressed: () {
+                          context.pushNamed(
+                            'view_collection',
+                            extra: ViewCollectionPageArguments.profile(
+                              profile: chatroom.profile,
+                            ),
+                          );
+                        },
                         child: Image.network(
                           chatroom.profile.photo,
                           fit: BoxFit.cover,
                         ),
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Button(
+                        onPressed: () => onOpen(chatroom),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -501,45 +512,45 @@ class _ConversationList extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const Icon(
-                        Icons.chevron_right,
-                        color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
-                        size: 32,
-                      ),
-                      const SizedBox(width: 12),
-                    ],
-                  ),
-                ),
-                if (suggestedFriend || chatroom.unreadCount > 0)
-                  Positioned(
-                    right: 41,
-                    bottom: 16,
-                    child: Text(
-                      suggestedFriend ? 'Suggested Friend' : 'New message',
-                      textAlign: TextAlign.right,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontWeight: FontWeight.w300,
-                            fontSize: 16,
-                            fontStyle: FontStyle.italic,
-                          ),
                     ),
-                  ),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+                      size: 32,
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                ),
+              ),
+              if (suggestedFriend || chatroom.unreadCount > 0)
                 Positioned(
-                  left: 58,
-                  top: -18,
-                  width: 78,
-                  height: 78,
-                  child: OnlineIndicatorBuilder(
-                    uid: chatroom.profile.uid,
-                    builder: (context, online) {
-                      return online
-                          ? const OnlineIndicator()
-                          : const SizedBox.shrink();
-                    },
+                  right: 41,
+                  bottom: 16,
+                  child: Text(
+                    suggestedFriend ? 'Suggested Friend' : 'New message',
+                    textAlign: TextAlign.right,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontWeight: FontWeight.w300,
+                          fontSize: 16,
+                          fontStyle: FontStyle.italic,
+                        ),
                   ),
                 ),
-              ],
-            ),
+              Positioned(
+                left: 58,
+                top: -18,
+                width: 78,
+                height: 78,
+                child: OnlineIndicatorBuilder(
+                  uid: chatroom.profile.uid,
+                  builder: (context, online) {
+                    return online
+                        ? const OnlineIndicator()
+                        : const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),

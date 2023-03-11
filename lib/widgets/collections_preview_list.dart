@@ -7,6 +7,7 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 
 class CollectionsPreviewList extends StatefulWidget {
+  final int? profileCollectionIndex;
   final List<Collection> collections;
   final bool play;
   final int index;
@@ -16,6 +17,7 @@ class CollectionsPreviewList extends StatefulWidget {
 
   const CollectionsPreviewList({
     super.key,
+    this.profileCollectionIndex,
     required this.collections,
     this.play = true,
     this.index = -1,
@@ -45,6 +47,7 @@ class _CollectionsPreviewListState extends State<CollectionsPreviewList> {
         }
       },
       child: _CollectionsPreviewList(
+        profileCollectionIndex: widget.profileCollectionIndex,
         collections: widget.collections,
         play: _active && widget.play,
         index: widget.index,
@@ -57,6 +60,7 @@ class _CollectionsPreviewListState extends State<CollectionsPreviewList> {
 }
 
 class _CollectionsPreviewList extends StatelessWidget {
+  final int? profileCollectionIndex;
   final List<Collection> collections;
   final bool play;
   final int index;
@@ -66,6 +70,7 @@ class _CollectionsPreviewList extends StatelessWidget {
 
   const _CollectionsPreviewList({
     super.key,
+    this.profileCollectionIndex,
     required this.collections,
     required this.play,
     this.index = -1,
@@ -80,32 +85,42 @@ class _CollectionsPreviewList extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 7),
       itemCount: leadingChildren.length + collections.length,
+      itemExtent: 106,
       itemBuilder: (context, index) {
+        final isProfileIndex = index == profileCollectionIndex;
         return Container(
           width: 106,
           height: 189,
-          clipBehavior: Clip.hardEdge,
-          margin: const EdgeInsets.all(7),
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(15)),
+          margin: const EdgeInsets.all(7) +
+              (isProfileIndex
+                  ? const EdgeInsets.symmetric(horizontal: 32)
+                  : EdgeInsets.zero),
+          foregroundDecoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(Radius.circular(15)),
+            border: this.index == index
+                ? Border.all(color: Colors.white, width: 2)
+                : null,
           ),
-          child: _BlurredBackground(
-            child: Builder(
-              builder: (context) {
-                if (index < leadingChildren.length) {
-                  return leadingChildren[index];
-                }
-                final realIndex = index - leadingChildren.length;
-                final collection = collections[realIndex];
-                return _CollectionPreview(
-                  collection: collection,
-                  play: play,
-                  onView: () => onView(realIndex),
-                  onLongPress: onLongPress == null
-                      ? null
-                      : () => onLongPress!(realIndex),
-                );
-              },
+          child: ClipRRect(
+            borderRadius: const BorderRadius.all(Radius.circular(15)),
+            child: _BlurredBackground(
+              child: Builder(
+                builder: (context) {
+                  if (index < leadingChildren.length) {
+                    return leadingChildren[index];
+                  }
+                  final realIndex = index - leadingChildren.length;
+                  final collection = collections[realIndex];
+                  return _CollectionPreview(
+                    collection: collection,
+                    play: play,
+                    onView: () => onView(realIndex),
+                    onLongPress: (onLongPress == null || isProfileIndex)
+                        ? null
+                        : () => onLongPress!(realIndex),
+                  );
+                },
+              ),
             ),
           ),
         );
