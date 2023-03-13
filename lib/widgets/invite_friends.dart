@@ -94,93 +94,84 @@ class _InviteFriendsState extends State<InviteFriends> {
         child: LoadingIndicator(),
       );
     }
-    return SingleChildScrollView(
-      padding: widget.padding,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const _Heading(label: 'Contacts using Openup'),
-          Flexible(
-            fit: FlexFit.loose,
-            child: ListView.builder(
-              itemCount: knownProfiles.length,
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              itemBuilder: (context, index) {
-                final knownProfile = knownProfiles[index];
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ListTile(
-                      title: Text(
-                        knownProfile.profile.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontWeight: FontWeight.w300,
-                            fontSize: 20,
-                            color: Colors.white),
-                      ),
-                      subtitle: Text(
-                        'Friends ${knownProfile.profile.friendCount}',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontWeight: FontWeight.w300,
-                            fontSize: 12,
-                            color: Colors.white),
-                      ),
-                      trailing: _InviteButton(
-                        phoneNumber: knownProfile.phoneNumber,
-                      ),
+    return CustomScrollView(
+      slivers: [
+        const SliverToBoxAdapter(
+          child: _Heading(label: 'Contacts using Openup'),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            childCount: knownProfiles.length,
+            (context, index) {
+              final knownProfile = knownProfiles[index];
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    title: Text(
+                      knownProfile.profile.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontWeight: FontWeight.w300,
+                          fontSize: 20,
+                          color: Colors.white),
                     ),
-                  ],
-                );
-              },
-            ),
-          ),
-          _Heading(label: 'Invite your contacts'),
-          Flexible(
-            fit: FlexFit.loose,
-            child: ListView.builder(
-              itemCount: contacts.length,
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              itemBuilder: (context, index) {
-                final contact = contacts[index];
-                final phoneNumber =
-                    contact.phones.isEmpty ? '' : contact.phones.first.number;
-                return ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    clipBehavior: Clip.hardEdge,
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
+                    subtitle: Text(
+                      'Friends ${knownProfile.profile.friendCount}',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontWeight: FontWeight.w300,
+                          fontSize: 12,
+                          color: Colors.white),
                     ),
-                    child: contact.photoOrThumbnail != null
-                        ? Image.memory(contact.photoOrThumbnail!)
-                        : const SizedBox.shrink(),
+                    trailing: _InviteButton(
+                      phoneNumber: knownProfile.phoneNumber,
+                    ),
                   ),
-                  title: Text(
-                    contact.displayName,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontWeight: FontWeight.w300,
-                        fontSize: 20,
-                        color: Colors.white),
-                  ),
-                  trailing: _InviteButton(
-                    phoneNumber: contact.phones.isEmpty
-                        ? ''
-                        : contact.phones.first.number,
-                  ),
-                );
-              },
-            ),
+                ],
+              );
+            },
           ),
-        ],
-      ),
+        ),
+        const SliverToBoxAdapter(
+          child: _Heading(label: 'Invite your contacts'),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            childCount: contacts.length,
+            (context, index) {
+              final contact = contacts[index];
+              final phoneNumber =
+                  contact.phones.isEmpty ? '' : contact.phones.first.number;
+              return ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  clipBehavior: Clip.hardEdge,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                  ),
+                  child: contact.photoOrThumbnail != null
+                      ? Image.memory(contact.photoOrThumbnail!)
+                      : const SizedBox.shrink(),
+                ),
+                title: Text(
+                  contact.displayName,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontWeight: FontWeight.w300,
+                      fontSize: 20,
+                      color: Colors.white),
+                ),
+                trailing: _InviteButton(
+                  phoneNumber:
+                      contact.phones.isEmpty ? '' : contact.phones.first.number,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
