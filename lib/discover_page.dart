@@ -401,6 +401,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     _genderPreference = gender;
                     _nextMinRadius = 0;
                     _nextPage = 0;
+                    _pageController.jumpTo(0);
                     _profiles.clear();
                   });
                   _fetchPageOfProfiles();
