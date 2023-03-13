@@ -136,6 +136,12 @@ class _SignUpVerifyState extends State<SignUpVerify> {
       if (user == null) {
         throw 'No user is logged in';
       }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sucessfully verified code'),
+        ),
+      );
       context.goNamed(
         'signup_phone',
         queryParams: {

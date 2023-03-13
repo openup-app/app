@@ -51,7 +51,12 @@ class _SignUpPhoneState extends ConsumerState<SignUpPhone> {
     if (verifiedUid != null && !_submitting) {
       setState(() => _submitting = true);
       final creationResult = await _createUser(verifiedUid);
-      if (!mounted || creationResult == null) {
+      if (!mounted) {
+        return;
+      }
+
+      if (creationResult == null) {
+        setState(() => _submitting = false);
         return;
       }
 
