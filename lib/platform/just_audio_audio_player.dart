@@ -61,9 +61,9 @@ class JustAudioAudioPlayer {
           state.processingState != ProcessingState.completed) {
         _visualizerSubscription?.cancel();
 
-        if (Platform.isAndroid) {
-          _player.startVisualizer(enableFft: false);
-        }
+        await _player.startVisualizer(
+            enableFft: false, enableWaveform: true, captureRate: 25000);
+
         _visualizerSubscription =
             _player.visualizerWaveformStream.listen((capture) {
           final average = (capture.data.fold<int>(0, (p, e) => p + e - 128) /
@@ -72,16 +72,18 @@ class JustAudioAudioPlayer {
           const count = 128;
           final magnitudes = List.generate(count, (i) {
             final x = (i / count - 0.5) * 5;
-            return (average / 64 * exp((-x * x))).clamp(0.0, 1.0);
+            if (Platform.isAndroid) {
+              return (average / 64 * exp((-x * x))).clamp(0.0, 1.0);
+            } else {
+              return (average / 8 * exp((-x * x))).clamp(0.0, 1.0);
+            }
           });
           _playbackInfo = _playbackInfo.copyWith(frequencies: magnitudes);
           _playbackInfoController.add(_playbackInfo);
         });
       } else {
         _visualizerSubscription?.cancel();
-        if (Platform.isAndroid) {
-          _player.stopVisualizer();
-        }
+        _player.stopVisualizer();
       }
 
       _playbackInfoController.add(_playbackInfo);

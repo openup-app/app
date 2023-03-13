@@ -95,8 +95,13 @@ class RecorderWithWaveforms {
 
       const count = 128;
       final magnitudes = List.generate(count, (i) {
-        final x = (i - count / 2) / count * 5;
-        final magnitude = (average * exp((-x * x))).clamp(0.0, 1.0);
+        final x = (i / count - 0.5) * 5;
+        final double magnitude;
+        if (Platform.isAndroid) {
+          magnitude = (average * exp((-x * x))).clamp(0.0, 1.0);
+        } else {
+          magnitude = (average / 64 * exp((-x * x))).clamp(0.0, 1.0);
+        }
         return Float64x2(magnitude, magnitude);
       });
       final output = Float64x2List.fromList(magnitudes);
