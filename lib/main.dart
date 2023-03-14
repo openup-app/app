@@ -16,6 +16,7 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/call_manager.dart';
+import 'package:openup/api/in_app_notifications.dart';
 import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -153,6 +154,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   final _scrollToDiscoverTopNotifier = ScrollToDiscoverTopNotifier();
 
+  InAppNotificationsApi? _inAppNotificationsApi;
+
   PageRoute _buildPageRoute<T>({
     required RouteSettings settings,
     PageTransitionBuilder? transitionsBuilder,
@@ -217,6 +220,35 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         } else {
           mixpanel.reset();
           Sentry.configureScope((scope) => scope.setUser(null));
+        }
+
+        if (loggedIn) {
+          _inAppNotificationsApi = InAppNotificationsApi(
+            host: host,
+            port: socketPort,
+            uid: user.uid,
+            onCollectionReady: (collectionId) async {
+              ref
+                  .read(collectionReadyProvider.notifier)
+                  .collectionId(collectionId);
+              final result = await api.getCollection(collectionId);
+              result.fold(
+                (l) => null,
+                (r) {
+                  final collections =
+                      List.of(ref.read(userProvider).collections);
+                  final index = collections
+                      .indexWhere((c) => c.collectionId == collectionId);
+                  if (index != -1) {
+                    collections[index] = r.collection;
+                  }
+                  ref.read(userProvider.notifier).collections(collections);
+                },
+              );
+            },
+          );
+        } else {
+          _inAppNotificationsApi?.dispose();
         }
       }
 
@@ -283,6 +315,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
     GetIt.instance.unregister<OnlineUsersApi>();
     onlineUsersApi.dispose();
+
+    _inAppNotificationsApi?.dispose();
     super.dispose();
   }
 

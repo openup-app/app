@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 import 'package:openup/api/chat_api.dart';
@@ -844,6 +845,16 @@ class Api {
       rethrow;
     }
   }
+}
+
+final collectionReadyProvider =
+    StateNotifierProvider<CollectionReadyStateNotifier, String?>(
+        (ref) => CollectionReadyStateNotifier(null));
+
+class CollectionReadyStateNotifier extends StateNotifier<String?> {
+  CollectionReadyStateNotifier(super.state);
+
+  void collectionId(String collectionId) => state = collectionId;
 }
 
 @freezed
