@@ -540,10 +540,14 @@ class __CollectionCreationState extends State<_CollectionCreation> {
   }
 
   void _uploadCollection() async {
-    final result = await uploadCollection(
+    final result = await withBlockingModal(
       context: context,
-      photos: _photos,
-      audio: _audio,
+      label: 'Uploading',
+      future: uploadCollection(
+        context: context,
+        photos: _photos,
+        audio: _audio,
+      ),
     );
     if (!mounted) {
       return;
