@@ -682,14 +682,28 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   },
                   routes: [
                     GoRoute(
-                      path: ':uid',
-                      name: 'shared-profile',
-                      parentNavigatorKey: rootNavigatorKey,
+                      path: 'collections',
+                      name: 'view_collection',
                       builder: (context, state) {
-                        final uid = state.params['uid']!;
-                        return SharedProfilePage(
-                          uid: uid,
-                        );
+                        final collectionId = state.queryParams['collection_id'];
+                        final uid = state.queryParams['uid'];
+                        final args =
+                            state.extra as ViewCollectionPageArguments?;
+                        if (args != null) {
+                          return ViewCollectionPage(args: args);
+                        } else if (uid != null) {
+                          return ViewCollectionPage(
+                            args: ViewCollectionPageArguments.uid(uid: uid),
+                          );
+                        } else if (collectionId != null) {
+                          return ViewCollectionPage(
+                            args: ViewCollectionPageArguments.collectionId(
+                              collectionId: collectionId,
+                            ),
+                          );
+                        } else {
+                          throw 'Missing page arguments';
+                        }
                       },
                     ),
                   ],
@@ -752,30 +766,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ],
             ),
           ],
-        ),
-        GoRoute(
-          path: '/collections',
-          name: 'view_collection',
-          builder: (context, state) {
-            final collectionId = state.queryParams['collection_id'];
-            final uid = state.queryParams['uid'];
-            final args = state.extra as ViewCollectionPageArguments?;
-            if (args != null) {
-              return ViewCollectionPage(args: args);
-            } else if (uid != null) {
-              return ViewCollectionPage(
-                args: ViewCollectionPageArguments.uid(uid: uid),
-              );
-            } else if (collectionId != null) {
-              return ViewCollectionPage(
-                args: ViewCollectionPageArguments.collectionId(
-                  collectionId: collectionId,
-                ),
-              );
-            } else {
-              throw 'Missing page arguments';
-            }
-          },
         ),
         GoRoute(
           path: '/report',
