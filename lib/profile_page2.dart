@@ -13,7 +13,6 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/collection_photo_picker.dart';
 import 'package:openup/widgets/collection_photo_stack.dart';
 import 'package:openup/widgets/collections_preview_list.dart';
@@ -211,19 +210,6 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                   ],
                 );
               },
-            ),
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              right: 22,
-              bottom: 12 +
-                  MediaQuery.of(context).padding.bottom +
-                  200 +
-                  (_showCollectionCreation ? 140 : 0),
-              height: 56,
-              child: const MenuButton(
-                color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-              ),
             ),
           ],
         ),

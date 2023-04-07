@@ -9,7 +9,6 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/invite_page.dart';
 import 'package:openup/main.dart';
-import 'package:openup/menu_page.dart';
 import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
@@ -106,11 +105,6 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
                   child: const Text('Log in'),
                 ),
               ],
-            ),
-            Positioned(
-              right: 25,
-              bottom: 40 + MediaQuery.of(context).padding.bottom,
-              child: const MenuButton(),
             ),
           ],
         ),
@@ -314,11 +308,6 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
                     ],
                   );
                 },
-              ),
-              Positioned(
-                right: 25,
-                bottom: 40 + MediaQuery.of(context).padding.bottom,
-                child: const MenuButton(),
               ),
             ],
           ),

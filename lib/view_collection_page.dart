@@ -295,16 +295,6 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
                   },
                 ),
               ),
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              right: 22,
-              bottom:
-                  bottomPadding + (_showCollectionPreviews ? listHeight : 0),
-              child: const MenuButton(
-                color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-              ),
-            ),
           ],
         ),
       ),

@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
@@ -842,6 +843,8 @@ class _MenuPageNavigationState extends State<_MenuPageNavigation> {
           onConversationsPressed: () => setState(() => _currentIndex = 1),
           onProfilePressed: () => setState(() => _currentIndex = 2),
           onContactsPressed: () => setState(() => _currentIndex = 3),
+          onSettingsPressed: () => context.goNamed('account_settings'),
+          onContactUsPressed: () => context.goNamed('contact_us'),
         );
       },
       children: widget.children,
@@ -854,6 +857,8 @@ class _MenuTiles extends StatelessWidget {
   final VoidCallback onConversationsPressed;
   final VoidCallback onProfilePressed;
   final VoidCallback onContactsPressed;
+  final VoidCallback onSettingsPressed;
+  final VoidCallback onContactUsPressed;
 
   const _MenuTiles({
     super.key,
@@ -861,81 +866,273 @@ class _MenuTiles extends StatelessWidget {
     required this.onConversationsPressed,
     required this.onProfilePressed,
     required this.onContactsPressed,
+    required this.onSettingsPressed,
+    required this.onContactUsPressed,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top,
+        bottom: MediaQuery.of(context).padding.bottom,
+      ),
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Button(
-                onPressed: onDiscoverPressed,
-                child: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                    color: Colors.lightGreen.shade900,
+        const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 7.0, horizontal: 14),
+          child: _MenuTileBorder(
+            child: SizedBox(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 7),
+                  Text(
+                    'Welcome',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
                   ),
-                  alignment: Alignment.center,
-                  height: 200,
-                  child: Text('Discover'),
-                ),
+                  const SizedBox(height: 7),
+                  Text(
+                    'Longhorns!',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 40, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'We want to thank you for joining Openup, please let us know how we can improve your experience of meeting new people! Any feedback is welcome, just tap the “send message” button.',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                  ),
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Button(
+                      onPressed: onContactUsPressed,
+                      child: Container(
+                        width: 121,
+                        height: 37,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(18.5),
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'send message',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(fontSize: 14, color: Colors.black),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Expanded(
-              child: Button(
-                onPressed: onConversationsPressed,
-                child: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                    color: Colors.lightGreen.shade900,
-                  ),
-                  alignment: Alignment.center,
-                  height: 200,
-                  child: Text('Conversations'),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-        Row(
-          children: [
-            Expanded(
-              child: Button(
-                onPressed: onProfilePressed,
-                child: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                    color: Colors.lightGreen.shade900,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 7.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(7),
+                  child: _MenuTileBorder(
+                    child: _MenuTile(
+                      title: 'Discover',
+                      subtitle: 'meet new people',
+                      icon: LottieBuilder.asset(
+                        'assets/images/friends.json',
+                        height: 50,
+                      ),
+                      onPressed: onDiscoverPressed,
+                    ),
                   ),
-                  alignment: Alignment.center,
-                  height: 200,
-                  child: Text('Profile'),
                 ),
               ),
-            ),
-            Expanded(
-              child: Button(
-                onPressed: onContactsPressed,
-                child: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                    color: Colors.lightGreen.shade900,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(7),
+                  child: _MenuTileBorder(
+                    child: _MenuTile(
+                      title: 'Conversations',
+                      subtitle: 'talk to people',
+                      icon: const Icon(Icons.chat_bubble, size: 50),
+                      badge: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.red,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          '1',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      onPressed: onConversationsPressed,
+                    ),
                   ),
-                  alignment: Alignment.center,
-                  height: 200,
-                  child: Text('Contacts'),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 7.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(7),
+                  child: _MenuTileBorder(
+                    child: _MenuTile(
+                      title: 'My Profile',
+                      subtitle: 'update your pics and bio',
+                      icon: const Icon(Icons.face, size: 50),
+                      onPressed: onProfilePressed,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(7),
+                  child: _MenuTileBorder(
+                    child: _MenuTile(
+                      title: 'Contacts',
+                      subtitle: 'add people u know',
+                      icon: const Icon(Icons.person_add, size: 50),
+                      onPressed: onContactsPressed,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 7.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(7),
+                  child: _MenuTileBorder(
+                    child: _MenuTile(
+                      title: 'My Profile',
+                      subtitle: 'update your pics and bio',
+                      icon: const Icon(Icons.settings, size: 50),
+                      onPressed: onProfilePressed,
+                    ),
+                  ),
+                ),
+              ),
+              const Expanded(
+                child: SizedBox.shrink(),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
       ],
+    );
+  }
+}
+
+class _MenuTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final Widget icon;
+  final Widget? badge;
+  final VoidCallback onPressed;
+
+  const _MenuTile({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    this.badge,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onPressed,
+      child: SizedBox(
+        height: 219,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (badge != null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: badge,
+              ),
+            const Spacer(),
+            icon,
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 16, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              subtitle,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 12, fontWeight: FontWeight.w300),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuTileBorder extends StatelessWidget {
+  final Widget child;
+
+  const _MenuTileBorder({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 21),
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(24)),
+        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+        boxShadow: [
+          BoxShadow(
+            offset: Offset(0.0, 2.0),
+            blurRadius: 7,
+            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+          )
+        ],
+      ),
+      child: child,
     );
   }
 }

@@ -15,9 +15,7 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/menu_page.dart';
-import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/util/location_service.dart';
-import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
@@ -455,11 +453,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
               ],
             ),
           ),
-        Positioned(
-          right: 25,
-          bottom: 137 + MediaQuery.of(context).padding.bottom,
-          child: const MenuButton(),
-        ),
         Align(
           alignment: Alignment.topRight,
           child: Button(

@@ -16,7 +16,6 @@ import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/home_screen.dart';
-import 'package:openup/menu_page.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -292,7 +291,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                         ),
                       ),
                       const Spacer(),
-                      const MenuButton(),
                       const SizedBox(width: 16),
                     ],
                   ),

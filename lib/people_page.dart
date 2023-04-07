@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/invite_friends.dart';
 
@@ -124,13 +123,6 @@ class _PeoplePageState extends State<PeoplePage> {
                   ),
                 ),
               ],
-            ),
-            const Positioned(
-              right: 32,
-              bottom: 32,
-              child: MenuButton(
-                color: Color.fromRGBO(0xD3, 0x00, 0x00, 0.5),
-              ),
             ),
           ],
         ),
