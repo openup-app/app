@@ -12,13 +12,13 @@ final _menuOpenNotifier = ValueNotifier<bool>(false);
 
 class MenuPage extends StatefulWidget {
   final int currentIndex;
-  final void Function(int index) onItemPressed;
+  final WidgetBuilder menuBuilder;
   final List<Widget> children;
 
   const MenuPage({
     super.key,
     required this.currentIndex,
-    required this.onItemPressed,
+    required this.menuBuilder,
     required this.children,
   });
 
@@ -32,7 +32,7 @@ class _MenuPageState extends State<MenuPage> {
     return _KeyedMenuPage(
       key: _menuKey,
       currentIndex: widget.currentIndex,
-      onItemPressed: widget.onItemPressed,
+      menuBuilder: widget.menuBuilder,
       children: [
         for (var i = 0; i < widget.children.length; i++)
           _BranchIndex(
@@ -46,13 +46,13 @@ class _MenuPageState extends State<MenuPage> {
 
 class _KeyedMenuPage extends StatefulWidget {
   final int currentIndex;
-  final void Function(int index) onItemPressed;
+  final WidgetBuilder menuBuilder;
   final List<Widget> children;
 
   const _KeyedMenuPage({
     super.key,
     required this.currentIndex,
-    required this.onItemPressed,
+    required this.menuBuilder,
     required this.children,
   }) : assert(children.length == 4, 'Must have four menu pages');
 
@@ -62,78 +62,42 @@ class _KeyedMenuPage extends StatefulWidget {
 
 class _KeyedMenuPageState extends State<_KeyedMenuPage>
     with SingleTickerProviderStateMixin {
-  late final _animationController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 250),
-  );
+  final _keys = <GlobalKey>[];
+  final _draggableScrollableController = DraggableScrollableController();
 
   @override
   void initState() {
     super.initState();
-    _animationController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
+    _draggableScrollableController.addListener(() {
+      final fullyOpen = _draggableScrollableController.size == 1.0;
+      if (fullyOpen) {
         _menuOpenNotifier.value = true;
-      } else if (status == AnimationStatus.dismissed) {
+      } else {
         _menuOpenNotifier.value = false;
       }
     });
+
+    _keys.addAll(List.generate(widget.children.length, (_) => GlobalKey()));
   }
 
   @override
   void didUpdateWidget(covariant _KeyedMenuPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.currentIndex != oldWidget.currentIndex) {
-      _animationController.reverse();
-    }
+    _draggableScrollableController.animateTo(
+      1.0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _draggableScrollableController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final previews = [
-      _PageDisplay(
-        key: const ValueKey('0'),
-        alignment: Alignment.topLeft,
-        animation: _animationController,
-        selected: widget.currentIndex == 0,
-        onPressed: () => widget.onItemPressed(0),
-        child: widget.children[0],
-      ),
-      _PageDisplay(
-        key: const ValueKey('1'),
-        alignment: Alignment.topRight,
-        animation: _animationController,
-        selected: widget.currentIndex == 1,
-        onPressed: () => widget.onItemPressed(1),
-        child: widget.children[1],
-      ),
-      _PageDisplay(
-        key: const ValueKey('2'),
-        alignment: Alignment.bottomLeft,
-        animation: _animationController,
-        selected: widget.currentIndex == 2,
-        onPressed: () => widget.onItemPressed(2),
-        child: widget.children[2],
-      ),
-      _PageDisplay(
-        key: const ValueKey('3'),
-        alignment: Alignment.bottomRight,
-        animation: _animationController,
-        selected: widget.currentIndex == 3,
-        onPressed: () => widget.onItemPressed(3),
-        child: widget.children[3],
-      ),
-    ];
-
-    // Display on top of other pages in case its full screen
-    final selectedPage = previews.removeAt(widget.currentIndex);
-    previews.add(selectedPage);
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: DecoratedBox(
@@ -145,14 +109,48 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
         ),
         child: Stack(
           children: [
-            ...previews,
+            // All the children are in the widget tree, but most are Offstage
+            for (var i = 0; i < widget.children.length; i++)
+              Offstage(
+                offstage: i != widget.currentIndex,
+                child: i != widget.currentIndex
+                    ? Offstage(child: widget.children[i])
+                    : const SizedBox.shrink(),
+              ),
+            widget.menuBuilder(context),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: DraggableScrollableSheet(
+                controller: _draggableScrollableController,
+                minChildSize: 0.0,
+                maxChildSize: 0.9,
+                initialChildSize: 0.9,
+                snap: true,
+                builder: (context, controller) {
+                  return SingleChildScrollView(
+                    controller: controller,
+                    child: Container(
+                      height: 600,
+                      color: Colors.black,
+                      child: widget.children[widget.currentIndex],
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  void showMenu() => _animationController.forward();
+  void showMenu() {
+    _draggableScrollableController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+  }
 }
 
 class MenuButton extends StatefulWidget {

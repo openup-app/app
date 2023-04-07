@@ -836,11 +836,106 @@ class _MenuPageNavigationState extends State<_MenuPageNavigation> {
   Widget build(BuildContext context) {
     return MenuPage(
       currentIndex: _currentIndex,
-      onItemPressed: (index) {
-        setState(() => _currentIndex = index);
-        StatefulShellRouteState.of(context).goBranch(index: index);
+      menuBuilder: (context) {
+        return _MenuTiles(
+          onDiscoverPressed: () => setState(() => _currentIndex = 0),
+          onConversationsPressed: () => setState(() => _currentIndex = 1),
+          onProfilePressed: () => setState(() => _currentIndex = 2),
+          onContactsPressed: () => setState(() => _currentIndex = 3),
+        );
       },
       children: widget.children,
+    );
+  }
+}
+
+class _MenuTiles extends StatelessWidget {
+  final VoidCallback onDiscoverPressed;
+  final VoidCallback onConversationsPressed;
+  final VoidCallback onProfilePressed;
+  final VoidCallback onContactsPressed;
+
+  const _MenuTiles({
+    super.key,
+    required this.onDiscoverPressed,
+    required this.onConversationsPressed,
+    required this.onProfilePressed,
+    required this.onContactsPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Button(
+                onPressed: onDiscoverPressed,
+                child: Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    color: Colors.lightGreen.shade900,
+                  ),
+                  alignment: Alignment.center,
+                  height: 200,
+                  child: Text('Discover'),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Button(
+                onPressed: onConversationsPressed,
+                child: Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    color: Colors.lightGreen.shade900,
+                  ),
+                  alignment: Alignment.center,
+                  height: 200,
+                  child: Text('Conversations'),
+                ),
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: Button(
+                onPressed: onProfilePressed,
+                child: Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    color: Colors.lightGreen.shade900,
+                  ),
+                  alignment: Alignment.center,
+                  height: 200,
+                  child: Text('Profile'),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Button(
+                onPressed: onContactsPressed,
+                child: Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    color: Colors.lightGreen.shade900,
+                  ),
+                  alignment: Alignment.center,
+                  height: 200,
+                  child: Text('Contacts'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

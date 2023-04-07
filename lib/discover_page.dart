@@ -299,7 +299,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     builder: (context, play) {
                       return PageView.builder(
                         controller: _pageController,
-                        scrollDirection: Axis.vertical,
                         itemCount: _profiles.length,
                         itemBuilder: (context, index) {
                           final profile = _profiles[index];
