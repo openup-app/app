@@ -123,22 +123,6 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                               ],
                             ),
                           ),
-                          PopupMenuButton(
-                            padding: const EdgeInsets.only(left: 8, right: 16),
-                            child: const Icon(
-                              Icons.more_horiz,
-                              size: 32,
-                            ),
-                            itemBuilder: (context) {
-                              return [
-                                PopupMenuItem(
-                                  onTap: () =>
-                                      context.pushNamed('account_settings'),
-                                  child: const Text('Account Settings'),
-                                ),
-                              ];
-                            },
-                          ),
                         ],
                       ),
                     ),

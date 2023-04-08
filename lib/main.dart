@@ -783,7 +783,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         ),
         GoRoute(
           path: '/account',
-          name: 'account_settings',
+          name: 'account-settings',
           parentNavigatorKey: rootNavigatorKey,
           builder: (context, state) {
             return const CurrentRouteSystemUiStyling.light(
@@ -855,8 +855,8 @@ class _MenuPageNavigationState extends State<_MenuPageNavigation> {
             setState(() => _currentIndex = 3);
             StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
           },
-          onSettingsPressed: () => context.goNamed('account_settings'),
-          onContactUsPressed: () => context.goNamed('contact_us'),
+          onSettingsPressed: () => context.pushNamed('account-settings'),
+          onContactUsPressed: () => context.pushNamed('contact-us'),
         );
       },
       children: widget.children,
@@ -1044,10 +1044,10 @@ class _MenuTiles extends StatelessWidget {
                   padding: const EdgeInsets.all(7),
                   child: _MenuTileBorder(
                     child: _MenuTile(
-                      title: 'My Profile',
-                      subtitle: 'update your pics and bio',
+                      title: 'Settings',
+                      subtitle: 'change your account info',
                       icon: const Icon(Icons.settings, size: 50),
-                      onPressed: onProfilePressed,
+                      onPressed: onSettingsPressed,
                     ),
                   ),
                 ),
