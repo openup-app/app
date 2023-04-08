@@ -839,10 +839,22 @@ class _MenuPageNavigationState extends State<_MenuPageNavigation> {
       currentIndex: _currentIndex,
       menuBuilder: (context) {
         return _MenuTiles(
-          onDiscoverPressed: () => setState(() => _currentIndex = 0),
-          onConversationsPressed: () => setState(() => _currentIndex = 1),
-          onProfilePressed: () => setState(() => _currentIndex = 2),
-          onContactsPressed: () => setState(() => _currentIndex = 3),
+          onDiscoverPressed: () {
+            setState(() => _currentIndex = 0);
+            StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
+          },
+          onConversationsPressed: () {
+            setState(() => _currentIndex = 1);
+            StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
+          },
+          onProfilePressed: () {
+            setState(() => _currentIndex = 2);
+            StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
+          },
+          onContactsPressed: () {
+            setState(() => _currentIndex = 3);
+            StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
+          },
           onSettingsPressed: () => context.goNamed('account_settings'),
           onContactUsPressed: () => context.goNamed('contact_us'),
         );
