@@ -23,10 +23,10 @@ class MenuPage extends StatefulWidget {
   });
 
   @override
-  State<MenuPage> createState() => _MenuPageState();
+  State<MenuPage> createState() => MenuPageState();
 }
 
-class _MenuPageState extends State<MenuPage> {
+class MenuPageState extends State<MenuPage> {
   @override
   Widget build(BuildContext context) {
     return _KeyedMenuPage(
@@ -42,6 +42,8 @@ class _MenuPageState extends State<MenuPage> {
       ],
     );
   }
+
+  void open() => _menuKey.currentState?._open();
 }
 
 class _KeyedMenuPage extends StatefulWidget {
@@ -69,7 +71,8 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
   void initState() {
     super.initState();
     _draggableScrollableController.addListener(() {
-      final fullyOpen = _draggableScrollableController.size == 1.0;
+      // Never reports a size beyond 0.9625 for some reason, treat this as open
+      final fullyOpen = _draggableScrollableController.size >= 0.95;
       if (fullyOpen) {
         _menuOpenNotifier.value = true;
       } else {
@@ -83,6 +86,12 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
   @override
   void didUpdateWidget(covariant _KeyedMenuPage oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentIndex != widget.currentIndex) {
+      _open();
+    }
+  }
+
+  void _open() {
     _draggableScrollableController.animateTo(
       1.0,
       duration: const Duration(milliseconds: 250),
@@ -493,7 +502,7 @@ class _ActivePageState extends State<ActivePage> {
     final onCurrentBranch = _currentIndex == _myBranchIndex;
     final routeActive = ModalRoute.of(context)?.isActive == true;
     final visible = isBranchRoute ? onCurrentBranch : routeActive;
-    final shouldBeActive = visible && !_menuOpen && _appResumed;
+    final shouldBeActive = visible && _menuOpen && _appResumed;
     if (!_active && shouldBeActive) {
       SchedulerBinding.instance.addPostFrameCallback((_) {
         if (mounted) {

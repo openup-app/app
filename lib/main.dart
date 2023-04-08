@@ -832,28 +832,35 @@ class _MenuPageNavigation extends StatefulWidget {
 }
 
 class _MenuPageNavigationState extends State<_MenuPageNavigation> {
+  final _menuPageKey = GlobalKey<MenuPageState>();
   int _currentIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     return MenuPage(
+      key: _menuPageKey,
       currentIndex: _currentIndex,
       menuBuilder: (context) {
         return _MenuTiles(
           onDiscoverPressed: () {
             setState(() => _currentIndex = 0);
             StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
+            _menuPageKey.currentState?.open();
           },
           onConversationsPressed: () {
             setState(() => _currentIndex = 1);
             StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
+            _menuPageKey.currentState?.open();
           },
           onProfilePressed: () {
             setState(() => _currentIndex = 2);
             StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
+            _menuPageKey.currentState?.open();
           },
           onContactsPressed: () {
             setState(() => _currentIndex = 3);
             StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
+            _menuPageKey.currentState?.open();
           },
           onSettingsPressed: () => context.pushNamed('account-settings'),
           onContactUsPressed: () => context.pushNamed('contact-us'),
