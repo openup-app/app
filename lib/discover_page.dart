@@ -20,8 +20,6 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/profile_display.dart';
-// ignore: unused_import
-import 'package:openup/widgets/screenshot.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -287,80 +285,144 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     profile: profile,
                     // invited: _invitedUsers.contains(profile.uid),
                     play: index == _currentProfileIndex,
-                    onRecordInvite: () {
-                      if (FirebaseAuth.instance.currentUser == null) {
-                        _showSignInDialog();
-                      } else {
-                        _showRecordPanel(context, profile.uid);
-                      }
-                    },
-                    builder: (context, play) {
-                      return PageView.builder(
-                        controller: _pageController,
-                        itemCount: _profiles.length,
-                        itemBuilder: (context, index) {
-                          final profile = _profiles[index];
-                          return ValueListenableBuilder<double>(
-                            valueListenable: _pageListener,
-                            builder: (context, page, child) {
-                              final pageIndex = page.floor();
-                              final opacity =
-                                  (page - pageIndex) * (page - pageIndex);
-                              if (index <= pageIndex) {
-                                return ColorFiltered(
-                                  colorFilter: ColorFilter.mode(
-                                    Color.fromRGBO(0x00, 0x00, 0x00, opacity),
-                                    BlendMode.srcOver,
+                    builder: (context, play, playbackInfoStream) {
+                      return ColoredBox(
+                        color: Colors.white,
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: _profiles.length,
+                          itemBuilder: (context, index) {
+                            final profile = _profiles[index];
+                            return ClipRRect(
+                              clipBehavior: Clip.hardEdge,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(32),
+                                topRight: Radius.circular(32),
+                              ),
+                              child: ValueListenableBuilder<double>(
+                                valueListenable: _pageListener,
+                                builder: (context, page, child) {
+                                  final pageIndex = page.floor();
+                                  final t =
+                                      (page - pageIndex) * (page - pageIndex);
+                                  if (index <= pageIndex) {
+                                    return Transform.scale(
+                                      scale: 1.0 - 0.25 * t,
+                                      child: child!,
+                                    );
+                                  } else {
+                                    return Transform.scale(
+                                      scale: 0.75 + 0.25 * t,
+                                      child: child!,
+                                    );
+                                  }
+                                },
+                                child: ClipRRect(
+                                  clipBehavior: Clip.hardEdge,
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(32),
+                                    topRight: Radius.circular(32),
                                   ),
-                                  child: child!,
-                                );
-                              } else {
-                                return ColorFiltered(
-                                  colorFilter: ColorFilter.mode(
-                                    Color.fromRGBO(
-                                        0x00, 0x00, 0x00, 1 - opacity),
-                                    BlendMode.srcOver,
-                                  ),
-                                  child: child!,
-                                );
-                              }
-                            },
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Button(
-                                  onPressed: () {
-                                    if (!play) {
-                                      _userProfileInfoDisplayKey.currentState
-                                          ?.play();
-                                    } else {
-                                      _userProfileInfoDisplayKey.currentState
-                                          ?.pause();
-                                    }
-                                  },
-                                  child: UserProfileDisplay(
-                                    key: ValueKey(profile.uid),
-                                    profile: profile,
-                                    playSlideshow: play,
-                                    invited: false,
-                                  ),
-                                ),
-                                if (!play)
-                                  const Center(
-                                    child: Padding(
-                                      padding: EdgeInsets.only(bottom: 72.0),
-                                      child: IgnorePointer(
-                                        child: IconWithShadow(
-                                          Icons.play_arrow,
-                                          size: 80,
+                                  child: Column(
+                                    children: [
+                                      Expanded(
+                                        child: Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            Button(
+                                              onPressed: () {
+                                                if (!play) {
+                                                  _userProfileInfoDisplayKey
+                                                      .currentState
+                                                      ?.play();
+                                                } else {
+                                                  _userProfileInfoDisplayKey
+                                                      .currentState
+                                                      ?.pause();
+                                                }
+                                              },
+                                              child: UserProfileDisplay(
+                                                key: ValueKey(profile.uid),
+                                                profile: profile,
+                                                playSlideshow: play,
+                                                invited: false,
+                                              ),
+                                            ),
+                                            if (!play)
+                                              const Center(
+                                                child: IgnorePointer(
+                                                  child: IconWithShadow(
+                                                    Icons.play_arrow,
+                                                    size: 80,
+                                                  ),
+                                                ),
+                                              ),
+                                            Positioned(
+                                              left: 16,
+                                              top: 16 +
+                                                  MediaQuery.of(context)
+                                                      .padding
+                                                      .top,
+                                              child: _PageControls(
+                                                profile: profile,
+                                                preference: _genderPreference,
+                                                onNext: () {
+                                                  _pageController.nextPage(
+                                                    duration: const Duration(
+                                                        milliseconds: 350),
+                                                    curve: Curves.easeOut,
+                                                  );
+                                                },
+                                                onBlocked: () => setState(() =>
+                                                    _profiles.removeWhere(
+                                                        ((p) =>
+                                                            p.uid ==
+                                                            profile.uid))),
+                                                onPreference: (gender) {
+                                                  if (gender ==
+                                                      _genderPreference) {
+                                                    return;
+                                                  }
+                                                  setState(() {
+                                                    _genderPreference = gender;
+                                                    _nextMinRadius = 0;
+                                                    _nextPage = 0;
+                                                    _pageController.jumpTo(0);
+                                                    _profiles.clear();
+                                                  });
+                                                  _fetchPageOfProfiles();
+                                                },
+                                              ),
+                                            ),
+                                            Align(
+                                              alignment: Alignment.bottomCenter,
+                                              child: PlaybackBar(
+                                                  playbackInfoStream:
+                                                      playbackInfoStream),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ),
+                                      UserNameAndInvite(
+                                        profile: profile,
+                                        onRecordInvite: () {
+                                          if (FirebaseAuth
+                                                  .instance.currentUser ==
+                                              null) {
+                                            _showSignInDialog();
+                                          } else {
+                                            _showRecordPanel(
+                                                context, profile.uid);
+                                          }
+                                        },
+                                      ),
+                                    ],
                                   ),
-                              ],
-                            ),
-                          );
-                        },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       );
                     },
                   );
@@ -368,45 +430,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
               ),
             ),
           ),
-        ValueListenableBuilder<double>(
-          valueListenable: _pageListener,
-          builder: (context, page, child) {
-            Profile? profile;
-            if (_profiles.isNotEmpty) {
-              final index = page.toInt();
-              profile = _profiles[index];
-            }
-            return Positioned(
-              right: 16,
-              top: 16 + MediaQuery.of(context).padding.top,
-              child: _PageControls(
-                profile: profile,
-                preference: _genderPreference,
-                onNext: () {
-                  _pageController.nextPage(
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeOut,
-                  );
-                },
-                onBlocked: () => setState(() =>
-                    _profiles.removeWhere(((p) => p.uid == profile?.uid))),
-                onPreference: (gender) {
-                  if (gender == _genderPreference) {
-                    return;
-                  }
-                  setState(() {
-                    _genderPreference = gender;
-                    _nextMinRadius = 0;
-                    _nextPage = 0;
-                    _pageController.jumpTo(0);
-                    _profiles.clear();
-                  });
-                  _fetchPageOfProfiles();
-                },
-              ),
-            );
-          },
-        ),
         if (_profiles.isEmpty)
           Center(
             child: Column(

@@ -107,38 +107,83 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
             fit: BoxFit.fill,
           ),
         ),
-        child: Stack(
-          children: [
-            // All the children are in the widget tree, but most are Offstage
-            for (var i = 0; i < widget.children.length; i++)
-              Offstage(
-                offstage: i != widget.currentIndex,
-                child: i != widget.currentIndex
-                    ? Offstage(child: widget.children[i])
-                    : const SizedBox.shrink(),
-              ),
-            widget.menuBuilder(context),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: DraggableScrollableSheet(
-                controller: _draggableScrollableController,
-                minChildSize: 0.0,
-                maxChildSize: 0.9,
-                initialChildSize: 0.9,
-                snap: true,
-                builder: (context, controller) {
-                  return SingleChildScrollView(
-                    controller: controller,
-                    child: Container(
-                      height: 600,
-                      color: Colors.black,
-                      child: widget.children[widget.currentIndex],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final maxHeight = constraints.maxHeight;
+            final maxContentHeight =
+                constraints.maxHeight - MediaQuery.of(context).padding.top;
+            final maxContentRatio = maxContentHeight / maxHeight;
+            return Stack(
+              children: [
+                // All the children are in the widget tree, but most are Offstage
+                for (var i = 0; i < widget.children.length; i++)
+                  Offstage(
+                    offstage: i != widget.currentIndex,
+                    child: i != widget.currentIndex
+                        ? Offstage(child: widget.children[i])
+                        : const SizedBox.shrink(),
+                  ),
+                widget.menuBuilder(context),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: DraggableScrollableSheet(
+                    controller: _draggableScrollableController,
+                    minChildSize: 0.0,
+                    maxChildSize: maxContentRatio,
+                    initialChildSize: maxContentRatio,
+                    snap: true,
+                    builder: (context, controller) {
+                      return SingleChildScrollView(
+                        controller: controller,
+                        child: Container(
+                          height: maxContentHeight,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: const BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(32),
+                              topRight: Radius.circular(32),
+                            ),
+                          ),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              widget.children[widget.currentIndex],
+                              const Align(
+                                alignment: Alignment.topCenter,
+                                child: Padding(
+                                  padding: EdgeInsets.only(top: 23.0),
+                                  child: SizedBox(
+                                    width: 37,
+                                    height: 6,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(2.5)),
+                                        color: Colors.white,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            offset: Offset(0, 1),
+                                            blurRadius: 4,
+                                            color: Color.fromRGBO(
+                                                0x00, 0x00, 0x00, 0.25),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

@@ -40,14 +40,14 @@ class _UserProfileDisplayState extends State<UserProfileDisplay> {
 class UserProfileInfoDisplay extends StatefulWidget {
   final Profile profile;
   final bool play;
-  final VoidCallback onRecordInvite;
-  final Widget Function(BuildContext context, bool play) builder;
+  final Widget Function(
+          BuildContext context, bool play, Stream<PlaybackInfo> playbackInfo)
+      builder;
 
   const UserProfileInfoDisplay({
     super.key,
     required this.profile,
     required this.play,
-    required this.onRecordInvite,
     required this.builder,
   });
 
@@ -111,159 +111,194 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        widget.builder(context, widget.play && !_audioPaused),
-        Positioned(
-          left: 24,
-          right: 24,
-          bottom: 24 + MediaQuery.of(context).padding.bottom,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  AutoSizeText(
-                    widget.profile.name,
-                    maxFontSize: 32,
-                    minFontSize: 26,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                        ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    widget.profile.age.toString(),
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                  const SizedBox(width: 8),
-                  OnlineIndicatorBuilder(
-                    uid: widget.profile.uid,
-                    builder: (context, online) {
-                      return online
-                          ? const OnlineIndicator()
-                          : const SizedBox.shrink();
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              if (widget.play)
-                Container(
-                  height: 4,
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(2)),
-                    color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: StreamBuilder<PlaybackInfo>(
-                      stream: _player.playbackInfoStream,
-                      initialData: const PlaybackInfo(),
-                      builder: (context, snapshot) {
-                        final value = snapshot.requireData;
-                        final position = value.position.inMilliseconds;
-                        final duration = value.duration.inMilliseconds;
-                        final ratio = duration == 0 ? 0.0 : position / duration;
-                        return FractionallySizedBox(
-                          widthFactor: ratio < 0 ? 0 : ratio,
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(2)),
-                              color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 1.0),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+    return widget.builder(
+      context,
+      widget.play && !_audioPaused,
+      _player.playbackInfoStream,
+    );
+  }
+}
+
+class PlaybackBar extends StatelessWidget {
+  final Stream<PlaybackInfo> playbackInfoStream;
+
+  const PlaybackBar({
+    super.key,
+    required this.playbackInfoStream,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<PlaybackInfo>(
+      stream: playbackInfoStream,
+      initialData: const PlaybackInfo(),
+      builder: (context, snapshot) {
+        final value = snapshot.requireData;
+        final position = value.position.inMilliseconds;
+        final duration = value.duration.inMilliseconds;
+        final ratio = duration == 0 ? 0.0 : position / duration;
+        return ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
+            child: Container(
+              height: 8,
+              color: const Color.fromRGBO(0xD7, 0xD7, 0xD7, 0.50),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FractionallySizedBox(
+                  widthFactor: ratio < 0 ? 0 : ratio,
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    color: const Color.fromRGBO(0xE7, 0xE7, 0xE7, 0.75),
                   ),
                 ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Button(
-                      onPressed: widget.profile.mutualFriends.isEmpty
-                          ? null
-                          : () => _showMutualFriendsModal(context),
-                      useFadeWheNoPressedCallback: false,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class UserNameAndInvite extends StatelessWidget {
+  final Profile profile;
+  final VoidCallback onRecordInvite;
+
+  const UserNameAndInvite({
+    super.key,
+    required this.profile,
+    required this.onRecordInvite,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          color: Colors.white,
+          padding: EdgeInsets.only(
+            left: 34.0,
+            right: 34.0,
+            top: 26,
+            bottom: 26 + MediaQuery.of(context).padding.bottom,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        AutoSizeText(
+                          profile.name,
+                          maxFontSize: 32,
+                          minFontSize: 26,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    color: Colors.black,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          profile.age.toString(),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    color: Colors.black,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                        ),
+                        const SizedBox(width: 8),
+                        OnlineIndicatorBuilder(
+                          uid: profile.uid,
+                          builder: (context, online) {
+                            return online
+                                ? const OnlineIndicator()
+                                : const SizedBox.shrink();
+                          },
+                        ),
+                      ],
+                    ),
+                    if (profile.mutualFriends.isNotEmpty)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          if (widget.profile.mutualFriends.isNotEmpty)
-                            Text(
-                              widget.profile.mutualFriends.length == 1
-                                  ? '1 mutual friend'
-                                  : '${widget.profile.mutualFriends.length} mutual friends',
-                              textAlign: TextAlign.left,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                shadows: [
-                                  const Shadow(
-                                    blurRadius: 4,
-                                    color:
-                                        Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                                  )
-                                ],
+                          const Icon(
+                            Icons.info,
+                            color: Color.fromRGBO(0x38, 0x7B, 0xFF, 1.0),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Button(
+                              onPressed: profile.mutualFriends.isEmpty
+                                  ? null
+                                  : () => _showMutualFriendsModal(context),
+                              useFadeWheNoPressedCallback: false,
+                              child: Text(
+                                profile.mutualFriends.length == 1
+                                    ? '1 mutual friend'
+                                    : '${profile.mutualFriends.length} mutual friends',
+                                textAlign: TextAlign.left,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                  shadows: [
+                                    const Shadow(
+                                      blurRadius: 4,
+                                      color: Color.fromRGBO(
+                                          0x00, 0x00, 0x00, 0.25),
+                                    )
+                                  ],
+                                ),
                               ),
                             ),
-                          AutoSizeText(
-                            widget.profile.location,
-                            overflow: TextOverflow.ellipsis,
-                            minFontSize: 2,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: 15,
-                                ),
                           ),
-                          const SizedBox(width: 8),
                         ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: _RecordButton(
-                      onPressed: widget.onRecordInvite,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              if (!kReleaseMode)
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(24),
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  alignment: Alignment.center,
-                  child: AutoSizeText(
-                    widget.profile.uid,
+              Expanded(
+                child: Center(
+                  child: _RecordButton(
+                    onPressed: onRecordInvite,
                   ),
                 ),
+              ),
             ],
           ),
         ),
+        if (!kReleaseMode)
+          ColoredBox(
+            color: Colors.white,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(24),
+                ),
+              ),
+              padding: const EdgeInsets.all(8),
+              alignment: Alignment.center,
+              child: AutoSizeText(
+                profile.uid,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(color: Colors.black),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -273,7 +308,7 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
       context: context,
       builder: (context) {
         return _MutualFriendsModal(
-          uids: widget.profile.mutualFriends,
+          uids: profile.mutualFriends,
         );
       },
     );
@@ -472,47 +507,47 @@ class _RecordButton extends StatelessWidget {
 
   const _RecordButton({
     super.key,
-    this.label = 'send invitation',
+    this.label = 'send invite',
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(72)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12.5, sigmaY: 12.5),
-          child: Container(
-            width: 156,
-            height: 50,
-            clipBehavior: Clip.hardEdge,
-            decoration: const BoxDecoration(
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.45),
-              borderRadius: BorderRadius.all(Radius.circular(72)),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 14,
-                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.mic_none),
-                const SizedBox(width: 4),
-                Text(
-                  label,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
-                ),
-              ],
-            ),
+    return Button(
+      onPressed: onPressed,
+      child: Container(
+        width: 145,
+        height: 51,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(0xEA, 0x6B, 0x6B, 1.0),
+              Color.fromRGBO(0xF1, 0x3B, 0x3B, 1.0),
+            ],
           ),
+          borderRadius: BorderRadius.all(Radius.circular(9)),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 20,
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.15),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.mic),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
+            ),
+          ],
         ),
       ),
     );
