@@ -114,30 +114,7 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          height: MediaQuery.of(context).padding.top + 16,
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18.0),
-          child: ShaderMask(
-            blendMode: BlendMode.srcIn,
-            shaderCallback: (bounds) {
-              return const LinearGradient(
-                colors: [
-                  Color.fromRGBO(0xFF, 0x76, 0x76, 1.0),
-                  Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
-                ],
-              ).createShader(bounds);
-            },
-            child: Text(
-              'Growing Relationships',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 28, fontWeight: FontWeight.w300),
-            ),
-          ),
-        ),
+        const SizedBox(height: 40),
         Container(
           height: 31,
           margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),

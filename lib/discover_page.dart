@@ -403,9 +403,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                           ],
                                         ),
                                       ),
-                                      UserNameAndInvite(
+                                      UserNameAndRecordButton(
                                         profile: profile,
-                                        onRecordInvite: () {
+                                        recordButtonLabel: 'send invite',
+                                        onRecordPressed: () {
                                           if (FirebaseAuth
                                                   .instance.currentUser ==
                                               null) {

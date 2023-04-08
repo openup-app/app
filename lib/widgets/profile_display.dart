@@ -161,14 +161,18 @@ class PlaybackBar extends StatelessWidget {
   }
 }
 
-class UserNameAndInvite extends StatelessWidget {
+class UserNameAndRecordButton extends StatelessWidget {
   final Profile profile;
-  final VoidCallback onRecordInvite;
+  final bool showRecordButton;
+  final String recordButtonLabel;
+  final VoidCallback onRecordPressed;
 
-  const UserNameAndInvite({
+  const UserNameAndRecordButton({
     super.key,
     required this.profile,
-    required this.onRecordInvite,
+    this.showRecordButton = true,
+    required this.recordButtonLabel,
+    required this.onRecordPressed,
   });
 
   @override
@@ -268,13 +272,15 @@ class UserNameAndInvite extends StatelessWidget {
                   ],
                 ),
               ),
-              Expanded(
-                child: Center(
-                  child: _RecordButton(
-                    onPressed: onRecordInvite,
+              if (showRecordButton)
+                Expanded(
+                  child: Center(
+                    child: _RecordButton(
+                      label: recordButtonLabel,
+                      onPressed: onRecordPressed,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),

@@ -866,6 +866,48 @@ class _MenuPageNavigationState extends State<_MenuPageNavigation> {
           onContactUsPressed: () => context.pushNamed('contact-us'),
         );
       },
+      pageTitleBuilder: (context) {
+        final style = Theme.of(context).textTheme.bodyMedium!.copyWith(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          shadows: const [
+            Shadow(
+              offset: Offset(0, 1),
+              blurRadius: 4,
+              color: Color.fromRGBO(
+                0x00,
+                0x00,
+                0x00,
+                0.25,
+              ),
+            ),
+          ],
+        );
+        if (_currentIndex == 0) {
+          return Text(
+            'Discovery',
+            style: style,
+          );
+        } else if (_currentIndex == 1) {
+          return Text(
+            'Conversations',
+            style: style.copyWith(
+              color: const Color.fromRGBO(0xFF, 0x71, 0x71, 1.0),
+            ),
+          );
+        } else if (_currentIndex == 2) {
+          return Text(
+            'My Profile',
+            style: style,
+          );
+        } else if (_currentIndex == 3) {
+          return Text(
+            'Contacts',
+            style: style,
+          );
+        }
+        return const SizedBox.shrink();
+      },
       children: widget.children,
     );
   }

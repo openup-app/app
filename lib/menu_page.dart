@@ -13,12 +13,14 @@ final _menuOpenNotifier = ValueNotifier<bool>(false);
 class MenuPage extends StatefulWidget {
   final int currentIndex;
   final WidgetBuilder menuBuilder;
+  final WidgetBuilder? pageTitleBuilder;
   final List<Widget> children;
 
   const MenuPage({
     super.key,
     required this.currentIndex,
     required this.menuBuilder,
+    this.pageTitleBuilder,
     required this.children,
   });
 
@@ -33,6 +35,7 @@ class MenuPageState extends State<MenuPage> {
       key: _menuKey,
       currentIndex: widget.currentIndex,
       menuBuilder: widget.menuBuilder,
+      pageTitleBuilder: widget.pageTitleBuilder,
       children: [
         for (var i = 0; i < widget.children.length; i++)
           _BranchIndex(
@@ -49,12 +52,14 @@ class MenuPageState extends State<MenuPage> {
 class _KeyedMenuPage extends StatefulWidget {
   final int currentIndex;
   final WidgetBuilder menuBuilder;
+  final WidgetBuilder? pageTitleBuilder;
   final List<Widget> children;
 
   const _KeyedMenuPage({
     super.key,
     required this.currentIndex,
     required this.menuBuilder,
+    this.pageTitleBuilder,
     required this.children,
   }) : assert(children.length == 4, 'Must have four menu pages');
 
@@ -183,6 +188,12 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
                                   ),
                                 ),
                               ),
+                              if (widget.pageTitleBuilder != null)
+                                Positioned(
+                                  left: 32,
+                                  top: 18,
+                                  child: widget.pageTitleBuilder!(context),
+                                ),
                             ],
                           ),
                         ),

@@ -18,6 +18,7 @@ import 'package:openup/widgets/collection_photo_stack.dart';
 import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/image_builder.dart';
+import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/screenshot.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -68,129 +69,83 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                   );
                 }
 
-                return Stack(
+                return Column(
                   children: [
-                    Positioned.fill(
-                      child: Image.network(
-                        profile.collection.photos.first.url,
-                        fit: BoxFit.cover,
-                        loadingBuilder: loadingBuilder,
-                        errorBuilder: iconErrorBuilder,
-                      ),
-                    ),
-                    Positioned(
-                      left: 0,
-                      top: 16 + MediaQuery.of(context).padding.top,
-                      right: 0,
-                      child: Row(
+                    Expanded(
+                      child: Stack(
                         children: [
-                          Container(
-                            width: 45,
-                            height: 45,
-                            margin: const EdgeInsets.only(left: 13, right: 7),
-                            clipBehavior: Clip.hardEdge,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                            ),
+                          Positioned.fill(
                             child: Image.network(
                               profile.collection.photos.first.url,
                               fit: BoxFit.cover,
+                              loadingBuilder: loadingBuilder,
+                              errorBuilder: iconErrorBuilder,
                             ),
                           ),
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  profile.name,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w300),
-                                ),
-                                Text(
-                                  'Friends ${profile.friendCount}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w300),
-                                ),
-                              ],
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 12 + MediaQuery.of(context).padding.bottom,
+                            height: 189,
+                            child: Builder(
+                              builder: (context) {
+                                final collections = ref.watch(
+                                    userProvider.select((p) => p.collections));
+                                return CollectionsPreviewList(
+                                    collections: collections,
+                                    play: _showCollectionCreation == false,
+                                    leadingChildren: [
+                                      _BottomButton(
+                                        label: 'Create Collection',
+                                        icon: const Icon(Icons.upload),
+                                        onPressed: () => setState(() =>
+                                            _showCollectionCreation = true),
+                                      ),
+                                    ],
+                                    onView: (index) {
+                                      context.pushNamed(
+                                        'view_collection',
+                                        extra:
+                                            ViewCollectionPageArguments.profile(
+                                          profile: profile,
+                                          collections: collections,
+                                          index: index,
+                                        ),
+                                      );
+                                    },
+                                    onLongPress: (index) =>
+                                        _showDeleteDialog(collections[index]));
+                              },
                             ),
                           ),
+                          if (_showCollectionCreation)
+                            _CollectionCreation(
+                              onCreated: (collection) {
+                                final collections = ref.read(
+                                    userProvider.select((p) => p.collections));
+                                final newCollections = List.of(collections)
+                                  ..insert(0, collection);
+                                ref
+                                    .read(userProvider.notifier)
+                                    .collections(newCollections);
+                                setState(() => _showCollectionCreation = false);
+                              },
+                              onCancel: () => setState(
+                                  () => _showCollectionCreation = false),
+                            ),
                         ],
                       ),
                     ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 12 + MediaQuery.of(context).padding.bottom,
-                      height: 189,
-                      child: Builder(
-                        builder: (context) {
-                          final collections = ref
-                              .watch(userProvider.select((p) => p.collections));
-                          return CollectionsPreviewList(
-                              collections: collections,
-                              play: _showCollectionCreation == false,
-                              leadingChildren: [
-                                _BottomButton(
-                                  label: 'Update voice bio',
-                                  icon: const Icon(
-                                    Icons.mic_none,
-                                    color:
-                                        Color.fromRGBO(0xFF, 0x5C, 0x5C, 1.0),
-                                  ),
-                                  onPressed: () async {
-                                    final audio =
-                                        await _showRecordPanel(context);
-                                    if (mounted && audio != null) {
-                                      _upload(audio);
-                                    }
-                                  },
-                                ),
-                                _BottomButton(
-                                  label: 'Upload new collection',
-                                  icon: const Icon(Icons.upload),
-                                  onPressed: () => setState(
-                                      () => _showCollectionCreation = true),
-                                ),
-                              ],
-                              onView: (index) {
-                                context.pushNamed(
-                                  'view_collection',
-                                  extra: ViewCollectionPageArguments.profile(
-                                    profile: profile,
-                                    collections: collections,
-                                    index: index,
-                                  ),
-                                );
-                              },
-                              onLongPress: (index) =>
-                                  _showDeleteDialog(collections[index]));
-                        },
-                      ),
+                    UserNameAndRecordButton(
+                      profile: profile,
+                      recordButtonLabel: 'Update Voice Bio',
+                      onRecordPressed: () async {
+                        final audio = await _showRecordPanel(context);
+                        if (mounted && audio != null) {
+                          _upload(audio);
+                        }
+                      },
                     ),
-                    if (_showCollectionCreation)
-                      _CollectionCreation(
-                        onCreated: (collection) {
-                          final collections = ref
-                              .read(userProvider.select((p) => p.collections));
-                          final newCollections = List.of(collections)
-                            ..insert(0, collection);
-                          ref
-                              .read(userProvider.notifier)
-                              .collections(newCollections);
-                          setState(() => _showCollectionCreation = false);
-                        },
-                        onCancel: () =>
-                            setState(() => _showCollectionCreation = false),
-                      ),
                   ],
                 );
               },
@@ -312,20 +267,27 @@ class _BottomButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Button(
       onPressed: onPressed,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium!
-                .copyWith(fontSize: 15, fontWeight: FontWeight.w400),
+      child: Align(
+        alignment: Alignment.bottomLeft,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.start,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 15, fontWeight: FontWeight.w400),
+                ),
+              ),
+              const SizedBox(width: 4),
+              icon,
+            ],
           ),
-          const SizedBox(height: 15),
-          icon,
-        ],
+        ),
       ),
     );
   }

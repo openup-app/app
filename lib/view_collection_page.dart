@@ -240,14 +240,21 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
                   duration: const Duration(milliseconds: 300),
                   opacity: _showCollectionPreviews ? 0.0 : 1.0,
                   curve: Curves.easeOut,
-                  child: UserDetails(
-                    profile: _profile!,
-                    playbackStream: _player.playbackInfoStream,
-                    showRecordButton:
-                        ref.read(userProvider).uid != _profile!.uid,
-                    recordButtonLabel: 'reply to this',
-                    onRecordPressed: () =>
-                        _showRecordPanel(context, _profile!.uid),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      PlaybackBar(
+                        playbackInfoStream: _player.playbackInfoStream,
+                      ),
+                      UserNameAndRecordButton(
+                        profile: _profile!,
+                        showRecordButton:
+                            ref.read(userProvider).uid != _profile!.uid,
+                        recordButtonLabel: 'Reply to this',
+                        onRecordPressed: () =>
+                            _showRecordPanel(context, _profile!.uid),
+                      ),
+                    ],
                   ),
                 ),
               ),
