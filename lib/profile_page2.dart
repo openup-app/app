@@ -42,6 +42,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
         return SingleChildScrollView(
           controller:
               currentRoute ? PrimaryScrollControllerTemp.of(context) : null,
+          physics: const ClampingScrollPhysics(),
           child: ColoredBox(
             color: Colors.white,
             child: SizedBox(

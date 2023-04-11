@@ -266,6 +266,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         builder: (context, constraints) {
           return SingleChildScrollView(
             controller: PrimaryScrollControllerTemp.of(context),
+            physics: const ClampingScrollPhysics(),
             child: SizedBox.fromSize(
               size: constraints.biggest,
               child: const LoadingIndicator(
@@ -282,6 +283,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       builder: (context, constraints) {
         return SingleChildScrollView(
           controller: PrimaryScrollControllerTemp.of(context),
+          physics: const ClampingScrollPhysics(),
           child: SizedBox(
             height: constraints.maxHeight,
             child: Builder(

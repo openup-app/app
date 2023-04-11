@@ -193,6 +193,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
       builder: (context, constraints) {
         return SingleChildScrollView(
           controller: PrimaryScrollControllerTemp.of(context),
+          physics: const ClampingScrollPhysics(),
           child: Container(
             height: constraints.maxHeight,
             color: Colors.black,
