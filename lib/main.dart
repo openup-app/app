@@ -908,7 +908,7 @@ class _MenuPageShellState extends State<_MenuPageShell> {
         }
         return const SizedBox.shrink();
       },
-      child: widget.children[_currentIndex],
+      children: widget.children,
     );
   }
 }

@@ -12,14 +12,14 @@ class MenuPage extends StatefulWidget {
   final int currentIndex;
   final WidgetBuilder menuBuilder;
   final WidgetBuilder? pageTitleBuilder;
-  final Widget child;
+  final List<Widget> children;
 
   const MenuPage({
     super.key,
     required this.currentIndex,
     required this.menuBuilder,
     this.pageTitleBuilder,
-    required this.child,
+    required this.children,
   });
 
   @override
@@ -43,7 +43,7 @@ class MenuPageState extends State<MenuPage> {
       }
     });
 
-    _keys.addAll(List.generate(1, (_) => GlobalKey()));
+    _keys.addAll(List.generate(widget.children.length, (_) => GlobalKey()));
   }
 
   @override
@@ -132,7 +132,10 @@ class MenuPageState extends State<MenuPage> {
                                   minHeight: maxContentHeight,
                                   maxHeight: maxContentHeight,
                                   alignment: Alignment.topCenter,
-                                  child: widget.child,
+                                  child: KeyedSubtree(
+                                    key: _keys[widget.currentIndex],
+                                    child: widget.children[widget.currentIndex],
+                                  ),
                                 ),
                               ),
                               const Align(
@@ -186,100 +189,6 @@ class MenuPageState extends State<MenuPage> {
       0,
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
-    );
-  }
-}
-
-class MenuButton extends StatefulWidget {
-  final Color color;
-  final VoidCallback? onShowMenu;
-  const MenuButton({
-    super.key,
-    this.color = const Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-    this.onShowMenu,
-  });
-
-  @override
-  State<MenuButton> createState() => _MenuButtonState();
-}
-
-class _MenuButtonState extends State<MenuButton> {
-  bool _visible = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 58,
-      height: 56,
-      child: ActivePage(
-        onActivate: () => setState(() => _visible = true),
-        onDeactivate: () => setState(() => _visible = false),
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInExpo,
-          opacity: _visible ? 1.0 : 0.0,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              ClipRRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-                  child: SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: widget.color,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Button(
-                        onPressed: () {
-                          widget.onShowMenu?.call();
-                        },
-                        child: Image.asset(
-                          'assets/images/menu_button.png',
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 2,
-                right: 6,
-                child: Button(
-                  onPressed: () {},
-                  child: Container(
-                    width: 18,
-                    height: 18,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Color.fromRGBO(0xC6, 0x0A, 0x0A, 1.0),
-                          Color.fromRGBO(0xFA, 0x4F, 0x4F, 1.0),
-                        ],
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '2',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium!
-                          .copyWith(fontSize: 14),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -535,6 +444,7 @@ class PrimaryScrollControllerTemp extends InheritedWidget {
   static ScrollController? of(BuildContext context) {
     final primaryScrollControllerTemp = context
         .dependOnInheritedWidgetOfExactType<PrimaryScrollControllerTemp>();
-    return primaryScrollControllerTemp?.controller;
+    final currentRoute = ModalRoute.of(context)?.isCurrent == true;
+    return currentRoute ? primaryScrollControllerTemp?.controller : null;
   }
 }
