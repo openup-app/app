@@ -36,10 +36,12 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
   @override
   Widget build(BuildContext context) {
     final loggedIn = FirebaseAuth.instance.currentUser != null;
+    final currentRoute = ModalRoute.of(context)?.isCurrent == true;
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
-          controller: PrimaryScrollControllerTemp.of(context),
+          controller:
+              currentRoute ? PrimaryScrollControllerTemp.of(context) : null,
           child: ColoredBox(
             color: Colors.white,
             child: SizedBox(
@@ -351,11 +353,8 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                             case _CreationStep.photos:
                               widget.onCancel();
                               break;
-                            case _CreationStep.audio:
-                              setState(() => _step = _CreationStep.photos);
-                              break;
                             case _CreationStep.upload:
-                              setState(() => _step = _CreationStep.audio);
+                              setState(() => _step = _CreationStep.photos);
                               break;
                           }
                         },
@@ -407,10 +406,6 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                                   switch (_step) {
                                     case _CreationStep.photos:
                                       setState(
-                                          () => _step = _CreationStep.audio);
-                                      break;
-                                    case _CreationStep.audio:
-                                      setState(
                                           () => _step = _CreationStep.upload);
                                       break;
                                     case _CreationStep.upload:
@@ -460,11 +455,6 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                             'hold down image to remove from collection',
                         aboveGalleryLabel:
                             'Add up to three photos in a collection',
-                      );
-                    case _CreationStep.audio:
-                      return _AudioStep(
-                        photos: _photos,
-                        onAudio: (audio) => setState(() => _audio = audio),
                       );
                     case _CreationStep.upload:
                       return _UploadStep(
@@ -525,115 +515,6 @@ class __CollectionCreationState extends State<_CollectionCreation> {
         }
       },
     );
-  }
-}
-
-class _AudioStep extends StatefulWidget {
-  final List<File> photos;
-  final void Function(File audio) onAudio;
-  const _AudioStep({
-    super.key,
-    required this.photos,
-    required this.onAudio,
-  });
-
-  @override
-  State<_AudioStep> createState() => _AudioStepState();
-}
-
-class _AudioStepState extends State<_AudioStep> {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        SizedBox(
-          width: 249,
-          child: Text(
-            'Want to say something\nabout this collection?',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                fontSize: 20, fontWeight: FontWeight.w500, height: 1.5),
-          ),
-        ),
-        Expanded(
-          child: CollectionPhotoStack(
-            photos: widget.photos,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Button(
-                onPressed: () async {
-                  final result = await _showRecordPanel(context);
-                  if (result != null) {
-                    widget.onAudio(result);
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 4.0, horizontal: 8.0),
-                  decoration: const BoxDecoration(
-                    color: Color.fromRGBO(0x80, 0x0B, 0x06, 1.0),
-                    borderRadius: BorderRadius.all(Radius.circular(6)),
-                  ),
-                  child: Text(
-                    'Record',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              )
-            ],
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(
-            left: 8,
-            right: 8,
-            top: 8,
-            bottom: 8 + MediaQuery.of(context).padding.bottom,
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 346),
-            child: Text(
-              'A professional photographer will check your images and make sure they are edited to the highest quality. We will have this collection up as soon as possible.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 13, fontWeight: FontWeight.w500, height: 1.7),
-            ),
-          ),
-        )
-      ],
-    );
-  }
-
-  Future<File?> _showRecordPanel(BuildContext context) async {
-    final audio = await showModalBottomSheet<Uint8List>(
-      backgroundColor: Colors.transparent,
-      context: context,
-      builder: (context) {
-        return Surface(
-          child: RecordPanelContents(
-            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
-          ),
-        );
-      },
-    );
-
-    if (audio == null || !mounted) {
-      return null;
-    }
-
-    final tempDir = await getTemporaryDirectory();
-    final file = File(path.join(tempDir.path, 'collection_audio.m4a'));
-    await file.writeAsBytes(audio);
-    return file;
   }
 }
 
@@ -733,4 +614,4 @@ class _UploadStep extends StatelessWidget {
   }
 }
 
-enum _CreationStep { photos, audio, upload }
+enum _CreationStep { photos, upload }
