@@ -180,13 +180,12 @@ class UserNameAndRecordButton extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          color: Colors.white,
-          padding: EdgeInsets.only(
+        Padding(
+          padding: const EdgeInsets.only(
             left: 34.0,
             right: 34.0,
             top: 26,
-            bottom: 26 + MediaQuery.of(context).padding.bottom,
+            bottom: 26,
           ),
           child: Row(
             children: [
@@ -285,25 +284,12 @@ class UserNameAndRecordButton extends StatelessWidget {
           ),
         ),
         if (!kReleaseMode)
-          ColoredBox(
-            color: Colors.white,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
-                borderRadius: BorderRadius.all(
-                  Radius.circular(24),
-                ),
-              ),
-              padding: const EdgeInsets.all(8),
-              alignment: Alignment.center,
-              child: AutoSizeText(
-                profile.uid,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(color: Colors.black),
-              ),
-            ),
+          AutoSizeText(
+            profile.uid,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium!
+                .copyWith(color: Colors.black, fontSize: 12),
           ),
       ],
     );

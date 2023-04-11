@@ -16,6 +16,7 @@ import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/home_screen.dart';
+import 'package:openup/menu_page.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -52,7 +53,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     with SingleTickerProviderStateMixin {
   late final ChatApi _chatApi;
   final _messages = <String, ChatMessage>{};
-  final _scrollController = ScrollController();
+  ScrollController? _scrollController;
   bool _loading = true;
 
   Profile? _otherProfile;
@@ -71,7 +72,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       uid: ref.read(userProvider).uid,
       otherUid: widget.otherUid,
       onMessage: (message) {
-        setState(() => _messages[message.messageId!] = message);
+        if (mounted) {
+          setState(() => _messages[message.messageId!] = message);
+        }
       },
       onConnectionError: () {
         // TODO: Deal with connection error
@@ -85,9 +88,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       if (mounted) {
         setState(() => _loading = false);
         WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-          if (mounted && _scrollController.hasClients) {
-            _scrollController
-                .jumpTo(_scrollController.position.maxScrollExtent);
+          if (mounted && _scrollController?.hasClients == true) {
+            _scrollController!
+                .jumpTo(_scrollController!.position.maxScrollExtent);
           }
         });
       }
@@ -98,164 +101,181 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     } else {
       _fetchOtherProfile();
     }
+  }
 
-    _scrollController.addListener(_scrollListener);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scrollController?.removeListener(_scrollListener);
+    final controller = PrimaryScrollControllerTemp.of(context);
+    _scrollController = controller;
+    controller?.addListener(_scrollListener);
   }
 
   @override
   void dispose() {
     _chatApi.dispose();
     _audio.dispose();
-    _scrollController.dispose();
+    _scrollController?.removeListener(_scrollListener);
+    _scrollController = null;
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     const innerItemSize = 250.0;
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(45),
-        child: AppBar(
-          centerTitle: true,
-          backgroundColor: Colors.black,
-          leading: const BackIconButton(
-            color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
-          ),
-          title: Button(
-            onPressed: () {
-              context.pushNamed(
-                'view_collection',
-                queryParams: {'uid': _otherProfile!.uid},
-              );
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 45,
-                  height: 45,
-                  clipBehavior: Clip.hardEdge,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Colors.black),
+      child: Column(
+        children: [
+          Expanded(
+            child: CustomScrollView(
+              controller: PrimaryScrollControllerTemp.of(context),
+              slivers: [
+                SliverAppBar(
+                  centerTitle: true,
+                  pinned: true,
+                  backgroundColor: Colors.black,
+                  leading: const BackIconButton(
+                    color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
                   ),
-                  child: _otherProfile?.photo == null
-                      ? const SizedBox.shrink()
-                      : Image.network(
-                          widget.otherProfile!.photo,
-                          fit: BoxFit.cover,
+                  title: Button(
+                    onPressed: () {
+                      context.pushNamed(
+                        'view_collection',
+                        queryParams: {'uid': _otherProfile!.uid},
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 45,
+                          height: 45,
+                          clipBehavior: Clip.hardEdge,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                          ),
+                          child: _otherProfile?.photo == null
+                              ? const SizedBox.shrink()
+                              : Image.network(
+                                  widget.otherProfile!.photo,
+                                  fit: BoxFit.cover,
+                                ),
                         ),
+                        const SizedBox(width: 9),
+                        Text(
+                          _otherProfile?.name ?? '',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w300,
+                                  color: const Color.fromRGBO(
+                                      0x96, 0x96, 0x96, 1.0)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    PopupMenuButton(
+                      icon: const Icon(
+                        Icons.more_horiz,
+                        color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+                      ),
+                      itemBuilder: (context) {
+                        return [];
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 9),
-                Text(
-                  _otherProfile?.name ?? '',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w300,
-                      color: const Color.fromRGBO(0x96, 0x96, 0x96, 1.0)),
-                ),
+                if (!_loading && _messages.isEmpty && _otherProfile != null)
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Text(
+                          'Send your first message to ${_otherProfile!.name}',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    fontSize: 23,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      childCount: _messages.length,
+                      //    padding: EdgeInsets.only(
+                      //   top:
+                      //       MediaQuery.of(context).padding.top + 64 + innerItemSize,
+                      // ),
+                      (context, index) {
+                        final message = _messages.values.toList()[index];
+                        final myUid = ref.read(userProvider).uid;
+                        final fromMe = message.uid == myUid;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: fromMe ? 64.0 : 0.0,
+                              right: fromMe ? 0.0 : 64.0,
+                            ),
+                            child: StreamBuilder<PlaybackInfo>(
+                              initialData: const PlaybackInfo(),
+                              stream: _audio.playbackInfoStream,
+                              builder: (context, snapshot) {
+                                final playbackInfo = snapshot.requireData;
+                                final isCurrent =
+                                    _playbackMessageId == message.messageId;
+                                final isPlaying = isCurrent &&
+                                    playbackInfo.state == PlaybackState.playing;
+                                final isLoading = isCurrent &&
+                                    playbackInfo.state == PlaybackState.loading;
+                                return _ChatMessage(
+                                  photo:
+                                      fromMe ? _myPhoto : _otherProfile?.photo,
+                                  fromMe: fromMe,
+                                  message: message,
+                                  height: innerItemSize,
+                                  isLoading: isLoading,
+                                  frequenciesColor: isPlaying
+                                      ? const Color.fromRGBO(
+                                          0x00, 0xff, 0xef, 1.0)
+                                      : const Color.fromRGBO(
+                                          0xAF, 0xAF, 0xAF, 1.0),
+                                  frequencies: isPlaying
+                                      ? playbackInfo.frequencies
+                                      : null,
+                                  onPressed: () async {
+                                    if (isPlaying) {
+                                      _audio.stop();
+                                      setState(() => _playbackMessageId = null);
+                                    } else {
+                                      setState(() => _playbackMessageId =
+                                          message.messageId);
+                                      await _audio.setUrl(message.content);
+                                      if (mounted) {
+                                        _audio.play();
+                                      }
+                                    }
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
               ],
             ),
           ),
-          actions: [
-            PopupMenuButton(
-              icon: const Icon(
-                Icons.more_horiz,
-                color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
-              ),
-              itemBuilder: (context) {
-                return [];
-              },
-            ),
-          ],
-        ),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          if (!_loading && _messages.isEmpty && _otherProfile != null)
-            Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    'Send your first message to ${_otherProfile!.name}',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 23,
-                          fontWeight: FontWeight.w400,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            )
-          else
-            Expanded(
-              child: Scrollbar(
-                controller: _scrollController,
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: EdgeInsets.only(
-                    top:
-                        MediaQuery.of(context).padding.top + 64 + innerItemSize,
-                  ),
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    final message = _messages.values.toList()[index];
-                    final myUid = ref.read(userProvider).uid;
-                    final fromMe = message.uid == myUid;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          left: fromMe ? 64.0 : 0.0,
-                          right: fromMe ? 0.0 : 64.0,
-                        ),
-                        child: StreamBuilder<PlaybackInfo>(
-                          initialData: const PlaybackInfo(),
-                          stream: _audio.playbackInfoStream,
-                          builder: (context, snapshot) {
-                            final playbackInfo = snapshot.requireData;
-                            final isCurrent =
-                                _playbackMessageId == message.messageId;
-                            final isPlaying = isCurrent &&
-                                playbackInfo.state == PlaybackState.playing;
-                            final isLoading = isCurrent &&
-                                playbackInfo.state == PlaybackState.loading;
-                            return _ChatMessage(
-                              photo: fromMe ? _myPhoto : _otherProfile?.photo,
-                              fromMe: fromMe,
-                              message: message,
-                              height: innerItemSize,
-                              isLoading: isLoading,
-                              frequenciesColor: isPlaying
-                                  ? const Color.fromRGBO(0x00, 0xff, 0xef, 1.0)
-                                  : const Color.fromRGBO(0xAF, 0xAF, 0xAF, 1.0),
-                              frequencies:
-                                  isPlaying ? playbackInfo.frequencies : null,
-                              onPressed: () async {
-                                if (isPlaying) {
-                                  _audio.stop();
-                                  setState(() => _playbackMessageId = null);
-                                } else {
-                                  setState(() =>
-                                      _playbackMessageId = message.messageId);
-                                  await _audio.setUrl(message.content);
-                                  if (mounted) {
-                                    _audio.play();
-                                  }
-                                }
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
           Container(
             height: 95,
             margin: const EdgeInsets.symmetric(vertical: 8),
@@ -336,7 +356,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     const uuid = Uuid();
     final pendingId = uuid.v4();
     final uid = ref.read(userProvider).uid;
-    final atEnd = _scrollController.position.extentAfter == 0;
+    final atEnd = _scrollController?.position.extentAfter == 0;
     setState(() {
       _messages[pendingId] = ChatMessage(
         uid: uid,
@@ -349,9 +369,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     });
     if (atEnd) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
+        if (mounted && _scrollController?.hasClients == true) {
+          _scrollController!.animateTo(
+            _scrollController!.position.maxScrollExtent,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOut,
           );
@@ -381,9 +401,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
   void _scrollListener() {
     final startDate = _messages.values.first.date;
-    if (_scrollController.position.userScrollDirection ==
+    if (_scrollController?.position.userScrollDirection ==
             ScrollDirection.forward &&
-        _scrollController.position.extentBefore < 400 &&
+        _scrollController!.position.extentBefore < 400 &&
         _messages.isNotEmpty &&
         !_loading) {
       setState(() => _loading = true);

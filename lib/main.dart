@@ -660,7 +660,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           builder: (builder) {
             return builder.buildShell(
               (context, state, child) {
-                return _MenuPageNavigation(
+                return _MenuPageShell(
                   children: child.children,
                 );
               },
@@ -819,19 +819,19 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   }
 }
 
-class _MenuPageNavigation extends StatefulWidget {
+class _MenuPageShell extends StatefulWidget {
   final List<Widget> children;
 
-  const _MenuPageNavigation({
+  const _MenuPageShell({
     super.key,
     required this.children,
   });
 
   @override
-  State<_MenuPageNavigation> createState() => _MenuPageNavigationState();
+  State<_MenuPageShell> createState() => _MenuPageShellState();
 }
 
-class _MenuPageNavigationState extends State<_MenuPageNavigation> {
+class _MenuPageShellState extends State<_MenuPageShell> {
   final _menuPageKey = GlobalKey<MenuPageState>();
   int _currentIndex = 0;
 
@@ -908,7 +908,7 @@ class _MenuPageNavigationState extends State<_MenuPageNavigation> {
         }
         return const SizedBox.shrink();
       },
-      children: widget.children,
+      child: widget.children[_currentIndex],
     );
   }
 }

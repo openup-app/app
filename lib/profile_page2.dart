@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/menu_page.dart';
 import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/collection_photo_picker.dart';
@@ -19,7 +20,6 @@ import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/profile_display.dart';
-import 'package:openup/widgets/screenshot.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -33,126 +33,137 @@ class ProfilePage2 extends ConsumerStatefulWidget {
 class _ProfilePage2State extends ConsumerState<ProfilePage2> {
   bool _showCollectionCreation = false;
 
-  final _screenshotController = ScreenshotController();
-
   @override
   Widget build(BuildContext context) {
     final loggedIn = FirebaseAuth.instance.currentUser != null;
-    return Screenshot(
-      controller: _screenshotController,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Stack(
-          children: [
-            Builder(
-              builder: (context) {
-                if (!loggedIn) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Log in to create a profile'),
-                        ElevatedButton(
-                          onPressed: () => context.pushNamed('signup'),
-                          child: const Text('Log in'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          controller: PrimaryScrollControllerTemp.of(context),
+          child: ColoredBox(
+            color: Colors.white,
+            child: SizedBox(
+              height: constraints.maxHeight,
+              child: Stack(
+                children: [
+                  Builder(
+                    builder: (context) {
+                      if (!loggedIn) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('Log in to create a profile'),
+                              ElevatedButton(
+                                onPressed: () => context.pushNamed('signup'),
+                                child: const Text('Log in'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
 
-                final profile =
-                    ref.watch(userProvider.select((p) => p.profile));
-                if (profile == null) {
-                  return const Center(
-                    child: LoadingIndicator(),
-                  );
-                }
+                      final profile =
+                          ref.watch(userProvider.select((p) => p.profile));
+                      if (profile == null) {
+                        return const Center(
+                          child: LoadingIndicator(),
+                        );
+                      }
 
-                return Column(
-                  children: [
-                    Expanded(
-                      child: Stack(
+                      return Column(
                         children: [
-                          Positioned.fill(
-                            child: Image.network(
-                              profile.collection.photos.first.url,
-                              fit: BoxFit.cover,
-                              loadingBuilder: loadingBuilder,
-                              errorBuilder: iconErrorBuilder,
-                            ),
-                          ),
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: 12 + MediaQuery.of(context).padding.bottom,
-                            height: 189,
-                            child: Builder(
-                              builder: (context) {
-                                final collections = ref.watch(
-                                    userProvider.select((p) => p.collections));
-                                return CollectionsPreviewList(
-                                    collections: collections,
-                                    play: _showCollectionCreation == false,
-                                    leadingChildren: [
-                                      _BottomButton(
-                                        label: 'Create Collection',
-                                        icon: const Icon(Icons.upload),
-                                        onPressed: () => setState(() =>
-                                            _showCollectionCreation = true),
-                                      ),
-                                    ],
-                                    onView: (index) {
-                                      context.pushNamed(
-                                        'view_collection',
-                                        extra:
-                                            ViewCollectionPageArguments.profile(
-                                          profile: profile,
+                          Expanded(
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: Image.network(
+                                    profile.collection.photos.first.url,
+                                    fit: BoxFit.cover,
+                                    loadingBuilder: loadingBuilder,
+                                    errorBuilder: iconErrorBuilder,
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 12 +
+                                      MediaQuery.of(context).padding.bottom,
+                                  height: 189,
+                                  child: Builder(
+                                    builder: (context) {
+                                      final collections = ref.watch(userProvider
+                                          .select((p) => p.collections));
+                                      return CollectionsPreviewList(
                                           collections: collections,
-                                          index: index,
-                                        ),
-                                      );
+                                          play:
+                                              _showCollectionCreation == false,
+                                          leadingChildren: [
+                                            _BottomButton(
+                                              label: 'Create Collection',
+                                              icon: const Icon(Icons.upload),
+                                              onPressed: () => setState(() =>
+                                                  _showCollectionCreation =
+                                                      true),
+                                            ),
+                                          ],
+                                          onView: (index) {
+                                            context.pushNamed(
+                                              'view_collection',
+                                              extra: ViewCollectionPageArguments
+                                                  .profile(
+                                                profile: profile,
+                                                collections: collections,
+                                                index: index,
+                                              ),
+                                            );
+                                          },
+                                          onLongPress: (index) =>
+                                              _showDeleteDialog(
+                                                  collections[index]));
                                     },
-                                    onLongPress: (index) =>
-                                        _showDeleteDialog(collections[index]));
-                              },
+                                  ),
+                                ),
+                                if (_showCollectionCreation)
+                                  _CollectionCreation(
+                                    onCreated: (collection) {
+                                      final collections = ref.read(userProvider
+                                          .select((p) => p.collections));
+                                      final newCollections =
+                                          List.of(collections)
+                                            ..insert(0, collection);
+                                      ref
+                                          .read(userProvider.notifier)
+                                          .collections(newCollections);
+                                      setState(() =>
+                                          _showCollectionCreation = false);
+                                    },
+                                    onCancel: () => setState(
+                                        () => _showCollectionCreation = false),
+                                  ),
+                              ],
                             ),
                           ),
-                          if (_showCollectionCreation)
-                            _CollectionCreation(
-                              onCreated: (collection) {
-                                final collections = ref.read(
-                                    userProvider.select((p) => p.collections));
-                                final newCollections = List.of(collections)
-                                  ..insert(0, collection);
-                                ref
-                                    .read(userProvider.notifier)
-                                    .collections(newCollections);
-                                setState(() => _showCollectionCreation = false);
-                              },
-                              onCancel: () => setState(
-                                  () => _showCollectionCreation = false),
-                            ),
+                          UserNameAndRecordButton(
+                            profile: profile,
+                            recordButtonLabel: 'Update Voice Bio',
+                            onRecordPressed: () async {
+                              final audio = await _showRecordPanel(context);
+                              if (mounted && audio != null) {
+                                _upload(audio);
+                              }
+                            },
+                          ),
                         ],
-                      ),
-                    ),
-                    UserNameAndRecordButton(
-                      profile: profile,
-                      recordButtonLabel: 'Update Voice Bio',
-                      onRecordPressed: () async {
-                        final audio = await _showRecordPanel(context);
-                        if (mounted && audio != null) {
-                          _upload(audio);
-                        }
-                      },
-                    ),
-                  ],
-                );
-              },
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

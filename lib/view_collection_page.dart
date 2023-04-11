@@ -189,122 +189,131 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
     final collections = _collections;
     const listHeight = 200.0;
     final bottomPadding = MediaQuery.of(context).padding.bottom + 16;
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: ActivePage(
-        onActivate: () {
-          setState(() => _play = true);
-          _player.play();
-        },
-        onDeactivate: () {
-          setState(() => _play = false);
-          _player.stop();
-        },
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (collections == null && !_error)
-              const Center(
-                child: LoadingIndicator(),
-              )
-            else if (collections == null && _error)
-              Center(
-                child: Text(
-                  'Unable to load Collection',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 20, fontWeight: FontWeight.w400),
-                ),
-              ),
-            if (collections != null)
-              Button(
-                onPressed: () {
-                  if (_showCollectionPreviews) {
-                    _player.play(loop: true);
-                  } else {
-                    _player.pause();
-                  }
-                  setState(
-                      () => _showCollectionPreviews = !_showCollectionPreviews);
-                },
-                child: CinematicGallery(
-                  slideshow: _play,
-                  gallery: collections[_index].photos,
-                ),
-              ),
-            if (_profile != null)
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 300),
-                  opacity: _showCollectionPreviews ? 0.0 : 1.0,
-                  curve: Curves.easeOut,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      PlaybackBar(
-                        playbackInfoStream: _player.playbackInfoStream,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          controller: PrimaryScrollControllerTemp.of(context),
+          child: Container(
+            height: constraints.maxHeight,
+            color: Colors.black,
+            child: ActivePage(
+              onActivate: () {
+                setState(() => _play = true);
+                _player.play();
+              },
+              onDeactivate: () {
+                setState(() => _play = false);
+                _player.stop();
+              },
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (collections == null && !_error)
+                    const Center(
+                      child: LoadingIndicator(),
+                    )
+                  else if (collections == null && _error)
+                    Center(
+                      child: Text(
+                        'Unable to load Collection',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 20, fontWeight: FontWeight.w400),
                       ),
-                      UserNameAndRecordButton(
-                        profile: _profile!,
-                        showRecordButton:
-                            ref.read(userProvider).uid != _profile!.uid,
-                        recordButtonLabel: 'Reply to this',
-                        onRecordPressed: () =>
-                            _showRecordPanel(context, _profile!.uid),
+                    ),
+                  if (collections != null)
+                    Button(
+                      onPressed: () {
+                        if (_showCollectionPreviews) {
+                          _player.play(loop: true);
+                        } else {
+                          _player.pause();
+                        }
+                        setState(() =>
+                            _showCollectionPreviews = !_showCollectionPreviews);
+                      },
+                      child: CinematicGallery(
+                        slideshow: _play,
+                        gallery: collections[_index].photos,
                       ),
-                    ],
+                    ),
+                  if (_profile != null)
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: _showCollectionPreviews ? 0.0 : 1.0,
+                        curve: Curves.easeOut,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            PlaybackBar(
+                              playbackInfoStream: _player.playbackInfoStream,
+                            ),
+                            ColoredBox(
+                              color: Colors.white,
+                              child: UserNameAndRecordButton(
+                                profile: _profile!,
+                                showRecordButton:
+                                    ref.read(userProvider).uid != _profile!.uid,
+                                recordButtonLabel: 'Reply to this',
+                                onRecordPressed: () =>
+                                    _showRecordPanel(context, _profile!.uid),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (collections != null)
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                      left: 0,
+                      right: 0,
+                      bottom: _showCollectionPreviews
+                          ? bottomPadding
+                          : -(listHeight + bottomPadding),
+                      height: listHeight,
+                      child: CollectionsPreviewList(
+                        profileCollectionIndex: _profileCollectionIndex,
+                        collections: collections,
+                        play: _showCollectionPreviews,
+                        index: _index,
+                        onView: (index) {
+                          setState(() => _index = index);
+                          _playAudio();
+                        },
+                      ),
+                    ),
+                  Positioned(
+                    left: 8,
+                    top: MediaQuery.of(context).padding.top + 8,
+                    child: const BackIconButton(),
                   ),
-                ),
-              ),
-            if (collections != null)
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-                left: 0,
-                right: 0,
-                bottom: _showCollectionPreviews
-                    ? bottomPadding
-                    : -(listHeight + bottomPadding),
-                height: listHeight,
-                child: CollectionsPreviewList(
-                  profileCollectionIndex: _profileCollectionIndex,
-                  collections: collections,
-                  play: _showCollectionPreviews,
-                  index: _index,
-                  onView: (index) {
-                    setState(() => _index = index);
-                    _playAudio();
-                  },
-                ),
-              ),
-            Positioned(
-              left: 8,
-              top: MediaQuery.of(context).padding.top + 8,
-              child: const BackIconButton(),
-            ),
-            if (collections != null &&
-                collections[_index].uid == ref.read(userProvider).uid)
-              Positioned(
-                right: 8,
-                top: MediaQuery.of(context).padding.top + 8,
-                child: PopupMenuButton(
-                  icon: const Icon(Icons.more_horiz),
-                  itemBuilder: (context) {
-                    return [
-                      PopupMenuItem(
-                        onTap: () =>
-                            _showSetAsProfileDialog(collections[_index]),
-                        child: const Text('Set as profile'),
+                  if (collections != null &&
+                      collections[_index].uid == ref.read(userProvider).uid)
+                    Positioned(
+                      right: 8,
+                      top: MediaQuery.of(context).padding.top + 8,
+                      child: PopupMenuButton(
+                        icon: const Icon(Icons.more_horiz),
+                        itemBuilder: (context) {
+                          return [
+                            PopupMenuItem(
+                              onTap: () =>
+                                  _showSetAsProfileDialog(collections[_index]),
+                              child: const Text('Set as profile'),
+                            ),
+                          ];
+                        },
                       ),
-                    ];
-                  },
-                ),
+                    ),
+                ],
               ),
-          ],
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 

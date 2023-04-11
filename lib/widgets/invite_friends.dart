@@ -12,11 +12,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 class InviteFriends extends StatefulWidget {
   final EdgeInsets padding;
+  final ScrollController? controller;
   final String filter;
 
   const InviteFriends({
     super.key,
     this.padding = EdgeInsets.zero,
+    this.controller,
     this.filter = '',
   });
 
@@ -45,40 +47,56 @@ class _InviteFriendsState extends State<InviteFriends> {
   @override
   Widget build(BuildContext context) {
     if (!_hasContactsPermission) {
-      return Center(
-        child: PermissionButton(
-          icon: const Icon(Icons.import_contacts),
-          label: const Text('Enable Contacts'),
-          granted: _hasContactsPermission,
-          onPressed: () async {
-            final status = await Permission.contacts.request();
-            if (mounted && status == PermissionStatus.granted) {
-              _fetchContacts();
-            }
-          },
-        ),
-      );
+      return LayoutBuilder(builder: (context, constraints) {
+        return SingleChildScrollView(
+          controller: widget.controller,
+          child: SizedBox(
+            height: constraints.maxHeight,
+            child: Center(
+              child: PermissionButton(
+                icon: const Icon(Icons.import_contacts),
+                label: const Text('Enable Contacts'),
+                granted: _hasContactsPermission,
+                onPressed: () async {
+                  final status = await Permission.contacts.request();
+                  if (mounted && status == PermissionStatus.granted) {
+                    _fetchContacts();
+                  }
+                },
+              ),
+            ),
+          ),
+        );
+      });
     }
 
     if (_error) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Failed to get contacts',
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontWeight: FontWeight.w300,
-                  fontSize: 12,
-                  color: Colors.white),
+      return LayoutBuilder(builder: (context, constraints) {
+        return SingleChildScrollView(
+          controller: widget.controller,
+          child: SizedBox(
+            height: constraints.maxHeight,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Failed to get contacts',
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.w300,
+                        fontSize: 12,
+                        color: Colors.white),
+                  ),
+                  ElevatedButton(
+                    child: const Text('Retry'),
+                    onPressed: () => _fetchContacts(),
+                  ),
+                ],
+              ),
             ),
-            ElevatedButton(
-              child: const Text('Retry'),
-              onPressed: () => _fetchContacts(),
-            ),
-          ],
-        ),
-      );
+          ),
+        );
+      });
     }
 
     final knownProfiles = _knownProfiles
@@ -95,6 +113,7 @@ class _InviteFriendsState extends State<InviteFriends> {
       );
     }
     return CustomScrollView(
+      controller: widget.controller,
       slivers: [
         const SliverToBoxAdapter(
           child: _Heading(label: 'Contacts using Openup'),

@@ -262,252 +262,255 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   @override
   Widget build(BuildContext context) {
     if (_loading && _profiles.isEmpty) {
-      return const Center(
-        child: LoadingIndicator(),
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            controller: PrimaryScrollControllerTemp.of(context),
+            child: SizedBox.fromSize(
+              size: constraints.biggest,
+              child: const LoadingIndicator(
+                color: Colors.black,
+              ),
+            ),
+          );
+        },
       );
     }
 
-    return Stack(
-      children: [
-        if (_profiles.isNotEmpty)
-          ActivePage(
-            onActivate: () {},
-            onDeactivate: () =>
-                _userProfileInfoDisplayKey.currentState?.pause(),
-            child: Positioned.fill(
-              child: ValueListenableBuilder<double>(
-                valueListenable: _pageListener,
-                builder: (context, page, child) {
-                  final index = page.round();
-                  final profile = _profiles[index];
-                  return UserProfileInfoDisplay(
-                    key: _userProfileInfoDisplayKey,
-                    profile: profile,
-                    // invited: _invitedUsers.contains(profile.uid),
-                    play: index == _currentProfileIndex,
-                    builder: (context, play, playbackInfoStream) {
-                      return ColoredBox(
-                        color: Colors.white,
-                        child: PageView.builder(
-                          controller: _pageController,
-                          itemCount: _profiles.length,
-                          itemBuilder: (context, index) {
-                            final profile = _profiles[index];
-                            return ClipRRect(
-                              clipBehavior: Clip.hardEdge,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(32),
-                                topRight: Radius.circular(32),
-                              ),
-                              child: ValueListenableBuilder<double>(
-                                valueListenable: _pageListener,
-                                builder: (context, page, child) {
-                                  final pageIndex = page.floor();
-                                  final t =
-                                      (page - pageIndex) * (page - pageIndex);
-                                  if (index <= pageIndex) {
-                                    return Transform.scale(
-                                      scale: 1.0 - 0.25 * t,
-                                      child: child!,
-                                    );
-                                  } else {
-                                    return Transform.scale(
-                                      scale: 0.75 + 0.25 * t,
-                                      child: child!,
-                                    );
-                                  }
-                                },
-                                child: ClipRRect(
+    final nameSize = 126.0 + MediaQuery.of(context).padding.bottom;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          controller: PrimaryScrollControllerTemp.of(context),
+          child: SizedBox(
+            height: constraints.maxHeight,
+            child: Builder(
+              builder: (context) {
+                if (_profiles.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: !_hasLocation
+                              ? Text(
+                                  'Unable to get location',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                )
+                              : Text(
+                                  _selectedTopic == null
+                                      ? 'Couldn\'t find any profiles'
+                                      : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            // Location needed at least once for nearby users
+                            // (may not have granted location during onboarding)
+                            setState(() => _loading = true);
+                            final locationService = LocationService();
+                            if (!await locationService.hasPermission()) {
+                              final status =
+                                  await locationService.requestPermission();
+                              if (status) {
+                                await _updateLocation();
+                              }
+                            }
+
+                            if (!mounted) {
+                              return;
+                            }
+                            setState(() {
+                              _nextMinRadius = 0;
+                              _nextPage = 0;
+                            });
+                            _fetchPageOfProfiles();
+                          },
+                          child: const Text('Refresh'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ActivePage(
+                  onActivate: () {},
+                  onDeactivate: () =>
+                      _userProfileInfoDisplayKey.currentState?.pause(),
+                  child: ValueListenableBuilder<double>(
+                    valueListenable: _pageListener,
+                    builder: (context, page, child) {
+                      final index = page.round();
+                      final profile = _profiles[index];
+                      return UserProfileInfoDisplay(
+                        key: _userProfileInfoDisplayKey,
+                        profile: profile,
+                        // invited: _invitedUsers.contains(profile.uid),
+                        play: index == _currentProfileIndex,
+                        builder: (context, play, playbackInfoStream) {
+                          return ColoredBox(
+                            color: Colors.white,
+                            child: PageView.builder(
+                              controller: _pageController,
+                              itemCount: _profiles.length,
+                              itemBuilder: (context, index) {
+                                final profile = _profiles[index];
+                                return ClipRRect(
                                   clipBehavior: Clip.hardEdge,
                                   borderRadius: const BorderRadius.only(
                                     topLeft: Radius.circular(32),
                                     topRight: Radius.circular(32),
                                   ),
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                        child: Stack(
-                                          fit: StackFit.expand,
-                                          children: [
-                                            Button(
-                                              onPressed: () {
-                                                if (!play) {
-                                                  _userProfileInfoDisplayKey
-                                                      .currentState
-                                                      ?.play();
-                                                } else {
-                                                  _userProfileInfoDisplayKey
-                                                      .currentState
-                                                      ?.pause();
-                                                }
-                                              },
-                                              child: UserProfileDisplay(
-                                                key: ValueKey(profile.uid),
-                                                profile: profile,
-                                                playSlideshow: play,
-                                                invited: false,
-                                              ),
-                                            ),
-                                            if (!play)
-                                              const Center(
-                                                child: IgnorePointer(
-                                                  child: IconWithShadow(
-                                                    Icons.play_arrow,
-                                                    size: 80,
+                                  child: ValueListenableBuilder<double>(
+                                    valueListenable: _pageListener,
+                                    builder: (context, page, child) {
+                                      final pageIndex = page.floor();
+                                      final t = (page - pageIndex) *
+                                          (page - pageIndex);
+                                      if (index <= pageIndex) {
+                                        return Transform.scale(
+                                          scale: 1.0 - 0.25 * t,
+                                          child: child!,
+                                        );
+                                      } else {
+                                        return Transform.scale(
+                                          scale: 0.75 + 0.25 * t,
+                                          child: child!,
+                                        );
+                                      }
+                                    },
+                                    child: ClipRRect(
+                                      clipBehavior: Clip.hardEdge,
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(32),
+                                        topRight: Radius.circular(32),
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SizedBox(
+                                            height: constraints.maxHeight -
+                                                nameSize,
+                                            child: Stack(
+                                              fit: StackFit.expand,
+                                              children: [
+                                                Button(
+                                                  onPressed: () {
+                                                    if (!play) {
+                                                      _userProfileInfoDisplayKey
+                                                          .currentState
+                                                          ?.play();
+                                                    } else {
+                                                      _userProfileInfoDisplayKey
+                                                          .currentState
+                                                          ?.pause();
+                                                    }
+                                                  },
+                                                  child: UserProfileDisplay(
+                                                    key: ValueKey(profile.uid),
+                                                    profile: profile,
+                                                    playSlideshow: play,
+                                                    invited: false,
                                                   ),
                                                 ),
-                                              ),
-                                            Positioned(
-                                              left: 16,
-                                              top: 16 +
-                                                  MediaQuery.of(context)
-                                                      .padding
-                                                      .top,
-                                              child: _PageControls(
-                                                profile: profile,
-                                                preference: _genderPreference,
-                                                onNext: () {
-                                                  _pageController.nextPage(
-                                                    duration: const Duration(
-                                                        milliseconds: 350),
-                                                    curve: Curves.easeOut,
-                                                  );
-                                                },
-                                                onBlocked: () => setState(() =>
-                                                    _profiles.removeWhere(
-                                                        ((p) =>
-                                                            p.uid ==
-                                                            profile.uid))),
-                                                onPreference: (gender) {
-                                                  if (gender ==
-                                                      _genderPreference) {
-                                                    return;
-                                                  }
-                                                  setState(() {
-                                                    _genderPreference = gender;
-                                                    _nextMinRadius = 0;
-                                                    _nextPage = 0;
-                                                    _pageController.jumpTo(0);
-                                                    _profiles.clear();
-                                                  });
-                                                  _fetchPageOfProfiles();
-                                                },
-                                              ),
+                                                if (!play)
+                                                  const Center(
+                                                    child: IgnorePointer(
+                                                      child: IconWithShadow(
+                                                        Icons.play_arrow,
+                                                        size: 80,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                Positioned(
+                                                  left: 16,
+                                                  top: 16 +
+                                                      MediaQuery.of(context)
+                                                          .padding
+                                                          .top,
+                                                  child: _PageControls(
+                                                    profile: profile,
+                                                    preference:
+                                                        _genderPreference,
+                                                    onNext: () {
+                                                      _pageController.nextPage(
+                                                        duration:
+                                                            const Duration(
+                                                                milliseconds:
+                                                                    350),
+                                                        curve: Curves.easeOut,
+                                                      );
+                                                    },
+                                                    onBlocked: () => setState(
+                                                        () => _profiles
+                                                            .removeWhere(((p) =>
+                                                                p.uid ==
+                                                                profile.uid))),
+                                                    onPreference: (gender) {
+                                                      if (gender ==
+                                                          _genderPreference) {
+                                                        return;
+                                                      }
+                                                      setState(() {
+                                                        _genderPreference =
+                                                            gender;
+                                                        _nextMinRadius = 0;
+                                                        _nextPage = 0;
+                                                        _pageController
+                                                            .jumpTo(0);
+                                                        _profiles.clear();
+                                                      });
+                                                      _fetchPageOfProfiles();
+                                                    },
+                                                  ),
+                                                ),
+                                                Align(
+                                                  alignment:
+                                                      Alignment.bottomCenter,
+                                                  child: PlaybackBar(
+                                                      playbackInfoStream:
+                                                          playbackInfoStream),
+                                                ),
+                                              ],
                                             ),
-                                            Align(
-                                              alignment: Alignment.bottomCenter,
-                                              child: PlaybackBar(
-                                                  playbackInfoStream:
-                                                      playbackInfoStream),
+                                          ),
+                                          SizedBox(
+                                            height: nameSize,
+                                            child: UserNameAndRecordButton(
+                                              profile: profile,
+                                              recordButtonLabel: 'send invite',
+                                              onRecordPressed: () {
+                                                if (FirebaseAuth
+                                                        .instance.currentUser ==
+                                                    null) {
+                                                  _showSignInDialog();
+                                                } else {
+                                                  _showRecordPanel(
+                                                      context, profile.uid);
+                                                }
+                                              },
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                      UserNameAndRecordButton(
-                                        profile: profile,
-                                        recordButtonLabel: 'send invite',
-                                        onRecordPressed: () {
-                                          if (FirebaseAuth
-                                                  .instance.currentUser ==
-                                              null) {
-                                            _showSignInDialog();
-                                          } else {
-                                            _showRecordPanel(
-                                                context, profile.uid);
-                                          }
-                                        },
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                                );
+                              },
+                            ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ),
-        if (_profiles.isEmpty)
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: !_hasLocation
-                      ? Text(
-                          'Unable to get location',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        )
-                      : Text(
-                          _selectedTopic == null
-                              ? 'Couldn\'t find any profiles'
-                              : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    // Location needed at least once for nearby users
-                    // (may not have granted location during onboarding)
-                    setState(() => _loading = true);
-                    final locationService = LocationService();
-                    if (!await locationService.hasPermission()) {
-                      final status = await locationService.requestPermission();
-                      if (status) {
-                        await _updateLocation();
-                      }
-                    }
-
-                    if (!mounted) {
-                      return;
-                    }
-                    setState(() {
-                      _nextMinRadius = 0;
-                      _nextPage = 0;
-                    });
-                    _fetchPageOfProfiles();
-                  },
-                  child: const Text('Refresh'),
-                ),
-              ],
-            ),
-          ),
-        Align(
-          alignment: Alignment.topRight,
-          child: Button(
-            onPressed: () {},
-            child: Container(
-              width: 18,
-              height: 18,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [
-                    Color.fromRGBO(0xC6, 0x0A, 0x0A, 1.0),
-                    Color.fromRGBO(0xFA, 0x4F, 0x4F, 1.0),
-                  ],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '2',
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 14),
-              ),
-            ),
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 

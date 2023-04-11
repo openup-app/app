@@ -6,22 +6,20 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 
-final _menuKey = GlobalKey<_KeyedMenuPageState>();
-
 final _menuOpenNotifier = ValueNotifier<bool>(false);
 
 class MenuPage extends StatefulWidget {
   final int currentIndex;
   final WidgetBuilder menuBuilder;
   final WidgetBuilder? pageTitleBuilder;
-  final List<Widget> children;
+  final Widget child;
 
   const MenuPage({
     super.key,
     required this.currentIndex,
     required this.menuBuilder,
     this.pageTitleBuilder,
-    required this.children,
+    required this.child,
   });
 
   @override
@@ -29,46 +27,6 @@ class MenuPage extends StatefulWidget {
 }
 
 class MenuPageState extends State<MenuPage> {
-  @override
-  Widget build(BuildContext context) {
-    return _KeyedMenuPage(
-      key: _menuKey,
-      currentIndex: widget.currentIndex,
-      menuBuilder: widget.menuBuilder,
-      pageTitleBuilder: widget.pageTitleBuilder,
-      children: [
-        for (var i = 0; i < widget.children.length; i++)
-          _BranchIndex(
-            index: i,
-            child: widget.children[i],
-          ),
-      ],
-    );
-  }
-
-  void open() => _menuKey.currentState?._open();
-}
-
-class _KeyedMenuPage extends StatefulWidget {
-  final int currentIndex;
-  final WidgetBuilder menuBuilder;
-  final WidgetBuilder? pageTitleBuilder;
-  final List<Widget> children;
-
-  const _KeyedMenuPage({
-    super.key,
-    required this.currentIndex,
-    required this.menuBuilder,
-    this.pageTitleBuilder,
-    required this.children,
-  }) : assert(children.length == 4, 'Must have four menu pages');
-
-  @override
-  State<_KeyedMenuPage> createState() => _KeyedMenuPageState();
-}
-
-class _KeyedMenuPageState extends State<_KeyedMenuPage>
-    with SingleTickerProviderStateMixin {
   final _keys = <GlobalKey>[];
   final _draggableScrollableController = DraggableScrollableController();
 
@@ -85,23 +43,23 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
       }
     });
 
-    _keys.addAll(List.generate(widget.children.length, (_) => GlobalKey()));
+    _keys.addAll(List.generate(1, (_) => GlobalKey()));
   }
 
   @override
-  void didUpdateWidget(covariant _KeyedMenuPage oldWidget) {
+  void didUpdateWidget(covariant MenuPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentIndex != widget.currentIndex) {
-      _open();
+      open();
     }
   }
 
-  void _open() {
-    _draggableScrollableController.animateTo(
-      1.0,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
-    );
+  void open() {
+    if (_draggableScrollableController.isAttached) {
+      _draggableScrollableController.jumpTo(1.0);
+    } else {
+      print('DraggableScrollableSheetController is not attached');
+    }
   }
 
   @override
@@ -129,15 +87,20 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
             final maxContentRatio = maxContentHeight / maxHeight;
             return Stack(
               children: [
-                // All the children are in the widget tree, but most are Offstage
-                for (var i = 0; i < widget.children.length; i++)
-                  Offstage(
-                    offstage: i != widget.currentIndex,
-                    child: i != widget.currentIndex
-                        ? Offstage(child: widget.children[i])
-                        : const SizedBox.shrink(),
-                  ),
-                widget.menuBuilder(context),
+                WillPopScope(
+                  onWillPop: () {
+                    if (_draggableScrollableController.size == 0) {
+                      return Future.value(true);
+                    }
+                    _draggableScrollableController.animateTo(
+                      0,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOut,
+                    );
+                    return Future.value(false);
+                  },
+                  child: widget.menuBuilder(context),
+                ),
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: DraggableScrollableSheet(
@@ -147,13 +110,12 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
                     initialChildSize: maxContentRatio,
                     snap: true,
                     builder: (context, controller) {
-                      return SingleChildScrollView(
+                      return PrimaryScrollControllerTemp(
                         controller: controller,
                         child: Container(
                           height: maxContentHeight,
                           clipBehavior: Clip.antiAlias,
                           decoration: const BoxDecoration(
-                            color: Colors.black,
                             borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(32),
                               topRight: Radius.circular(32),
@@ -161,8 +123,18 @@ class _KeyedMenuPageState extends State<_KeyedMenuPage>
                           ),
                           child: Stack(
                             fit: StackFit.expand,
+                            alignment: Alignment.topCenter,
                             children: [
-                              widget.children[widget.currentIndex],
+                              Container(
+                                color: Colors.white,
+                                alignment: Alignment.topCenter,
+                                child: OverflowBox(
+                                  minHeight: maxContentHeight,
+                                  maxHeight: maxContentHeight,
+                                  alignment: Alignment.topCenter,
+                                  child: widget.child,
+                                ),
+                              ),
                               const Align(
                                 alignment: Alignment.topCenter,
                                 child: Padding(
@@ -262,7 +234,6 @@ class _MenuButtonState extends State<MenuButton> {
                       ),
                       child: Button(
                         onPressed: () {
-                          _menuKey.currentState?.showMenu();
                           widget.onShowMenu?.call();
                         },
                         child: Image.asset(
@@ -544,5 +515,26 @@ class _ActivePageState extends State<ActivePage> {
       },
       child: widget.child,
     );
+  }
+}
+
+class PrimaryScrollControllerTemp extends InheritedWidget {
+  final ScrollController controller;
+
+  const PrimaryScrollControllerTemp({
+    super.key,
+    required this.controller,
+    required super.child,
+  });
+
+  @override
+  bool updateShouldNotify(covariant PrimaryScrollControllerTemp oldWidget) {
+    return oldWidget.controller != controller;
+  }
+
+  static ScrollController? of(BuildContext context) {
+    final primaryScrollControllerTemp = context
+        .dependOnInheritedWidgetOfExactType<PrimaryScrollControllerTemp>();
+    return primaryScrollControllerTemp?.controller;
   }
 }
