@@ -27,6 +27,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 
+final _scrollProvider =
+    StateNotifierProvider<_ScrollNotifier, double>((ref) => _ScrollNotifier());
+
 class ChatPage extends ConsumerStatefulWidget {
   final String host;
   final int webPort;
@@ -123,207 +126,329 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
   @override
   Widget build(BuildContext context) {
-    const innerItemSize = 250.0;
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.black),
-      child: Column(
-        children: [
-          Expanded(
-            child: CustomScrollView(
-              controller: PrimaryScrollControllerTemp.of(context),
-              slivers: [
-                SliverAppBar(
-                  centerTitle: true,
-                  pinned: true,
-                  backgroundColor: Colors.black,
-                  leading: const BackIconButton(
-                    color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
-                  ),
-                  title: Button(
-                    onPressed: () {
-                      context.pushNamed(
-                        'view_collection',
-                        queryParams: {'uid': _otherProfile!.uid},
-                      );
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 45,
-                          height: 45,
-                          clipBehavior: Clip.hardEdge,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                          ),
-                          child: _otherProfile?.photo == null
-                              ? const SizedBox.shrink()
-                              : Image.network(
-                                  widget.otherProfile!.photo,
-                                  fit: BoxFit.cover,
-                                ),
+    const innerItemSize = 300.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const bottomBarHeight = 95.0;
+        const bottomBarVerticalMarign = 8.0;
+        const appBarHeight = 48.0;
+        final listHeight = constraints.maxHeight -
+            appBarHeight -
+            (bottomBarHeight + bottomBarVerticalMarign * 2) -
+            MediaQuery.of(context).padding.bottom;
+        return DecoratedBox(
+          decoration: const BoxDecoration(color: Colors.black),
+          child: Column(
+            children: [
+              Expanded(
+                child: CustomScrollView(
+                  controller: PrimaryScrollControllerTemp.of(context),
+                  slivers: [
+                    SliverAppBar(
+                      centerTitle: true,
+                      pinned: true,
+                      backgroundColor: Colors.black,
+                      leading: const BackIconButton(
+                        color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+                      ),
+                      title: Button(
+                        onPressed: () {
+                          context.pushNamed(
+                            'view_collection',
+                            queryParams: {'uid': _otherProfile!.uid},
+                          );
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 45,
+                              height: 45,
+                              clipBehavior: Clip.hardEdge,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                              ),
+                              child: _otherProfile?.photo == null
+                                  ? const SizedBox.shrink()
+                                  : Image.network(
+                                      widget.otherProfile!.photo,
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
+                            const SizedBox(width: 9),
+                            Text(
+                              _otherProfile?.name ?? '',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w300,
+                                      color: const Color.fromRGBO(
+                                          0x96, 0x96, 0x96, 1.0)),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 9),
-                        Text(
-                          _otherProfile?.name ?? '',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w300,
-                                  color: const Color.fromRGBO(
-                                      0x96, 0x96, 0x96, 1.0)),
+                      ),
+                      actions: [
+                        PopupMenuButton(
+                          icon: const Icon(
+                            Icons.more_horiz,
+                            color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+                          ),
+                          itemBuilder: (context) {
+                            return [];
+                          },
                         ),
                       ],
                     ),
-                  ),
-                  actions: [
-                    PopupMenuButton(
-                      icon: const Icon(
-                        Icons.more_horiz,
-                        color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
-                      ),
-                      itemBuilder: (context) {
-                        return [];
-                      },
-                    ),
-                  ],
-                ),
-                if (!_loading && _messages.isEmpty && _otherProfile != null)
-                  SliverFillRemaining(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Text(
-                          'Send your first message to ${_otherProfile!.name}',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    if (!_loading && _messages.isEmpty && _otherProfile != null)
+                      SliverFillRemaining(
+                        child: Center(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Text(
+                              'Send your first message to ${_otherProfile!.name}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
                                     fontSize: 23,
                                     fontWeight: FontWeight.w400,
                                   ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      childCount: _messages.length,
-                      //    padding: EdgeInsets.only(
-                      //   top:
-                      //       MediaQuery.of(context).padding.top + 64 + innerItemSize,
-                      // ),
-                      (context, index) {
-                        final message = _messages.values.toList()[index];
-                        final myUid = ref.read(userProvider).uid;
-                        final fromMe = message.uid == myUid;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              left: fromMe ? 64.0 : 0.0,
-                              right: fromMe ? 0.0 : 64.0,
-                            ),
-                            child: StreamBuilder<PlaybackInfo>(
-                              initialData: const PlaybackInfo(),
-                              stream: _audio.playbackInfoStream,
-                              builder: (context, snapshot) {
-                                final playbackInfo = snapshot.requireData;
-                                final isCurrent =
-                                    _playbackMessageId == message.messageId;
-                                final isPlaying = isCurrent &&
-                                    playbackInfo.state == PlaybackState.playing;
-                                final isLoading = isCurrent &&
-                                    playbackInfo.state == PlaybackState.loading;
-                                return _ChatMessage(
-                                  photo:
-                                      fromMe ? _myPhoto : _otherProfile?.photo,
-                                  fromMe: fromMe,
-                                  message: message,
-                                  height: innerItemSize,
-                                  isLoading: isLoading,
-                                  frequenciesColor: isPlaying
-                                      ? const Color.fromRGBO(
-                                          0x00, 0xff, 0xef, 1.0)
-                                      : const Color.fromRGBO(
-                                          0xAF, 0xAF, 0xAF, 1.0),
-                                  frequencies: isPlaying
-                                      ? playbackInfo.frequencies
-                                      : null,
-                                  onPressed: () async {
-                                    if (isPlaying) {
-                                      _audio.stop();
-                                      setState(() => _playbackMessageId = null);
-                                    } else {
-                                      setState(() => _playbackMessageId =
-                                          message.messageId);
-                                      await _audio.setUrl(message.content);
-                                      if (mounted) {
-                                        _audio.play();
-                                      }
-                                    }
-                                  },
-                                );
-                              },
+                              textAlign: TextAlign.center,
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Container(
-            height: 95,
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              children: [
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      const SizedBox(width: 16),
-                      const Visibility(
-                        visible: false,
-                        maintainSize: true,
-                        maintainAnimation: true,
-                        maintainState: true,
-                        child: Icon(
-                          Icons.fingerprint,
-                          size: 48,
-                          color: Color.fromRGBO(0xFF, 0xC7, 0xC7, 1.0),
                         ),
-                      ),
-                      const Spacer(),
-                      SizedBox(
-                        width: 180,
-                        child: _RecordButton(
-                          onPressed: () async {
-                            _audio.stop();
-                            final result = await _showRecordPanel(context);
-                            if (result != null && mounted) {
-                              _submit(result.audio, result.duration);
-                            }
+                      )
+                    else
+                      SliverFixedExtentList(
+                        itemExtent: innerItemSize + 16,
+                        delegate: SliverChildBuilderDelegate(
+                          childCount: _messages.length,
+                          //    padding: EdgeInsets.only(
+                          //   top:
+                          //       MediaQuery.of(context).padding.top + 64 + innerItemSize,
+                          // ),
+                          (context, fakeIndex) {
+                            // if (fakeIndex < 2) {
+                            //   return const SizedBox.square(
+                            //     dimension: innerItemSize,
+                            //   );
+                            // }
+                            final index = fakeIndex;
+                            final message = _messages.values.toList()[index];
+                            final myUid = ref.read(userProvider).uid;
+                            final fromMe = message.uid == myUid;
+                            return Consumer(
+                              builder: (context, ref, child) {
+                                final height = listHeight;
+                                const itemHeight = innerItemSize + 16;
+                                final itemTopPixels = index * itemHeight;
+                                final scrollPixels =
+                                    ref.watch(_scrollProvider) + listHeight;
+                                itemTopPixels + height + itemHeight;
+                                final runwayLength = height + itemHeight;
+                                final runwayRatio = 1.0 -
+                                    (scrollPixels - itemTopPixels) /
+                                        runwayLength;
+                                // if (index == 3 || index == 4) {
+                                //   print(
+                                //       '$index) Runway ratio is $runwayRatio, shift is ${100 * (0.5 - runwayRatio)}');
+                                // }
+
+                                final t = Matrix4.identity()
+                                  // Shift scaling origin down as it scrolls up, so items don't fly upwards
+                                  ..translate(
+                                      0.0,
+                                      (1 - runwayRatio) *
+                                          0.5 *
+                                          itemHeight *
+                                          (1.0 - runwayRatio))
+                                  // Scale based on distance on the runway
+                                  ..scale(
+                                      runwayRatio.clamp(0.0, double.infinity))
+                                  // Center all items in the list
+                                  ..translate(
+                                      0.0, runwayLength * (0.5 - runwayRatio))
+                                  // Shift the whole thing down
+                                  ..translate(0.0, runwayLength * 0.1);
+
+                                final x = runwayRatio;
+                                final y1 = cos(2 * x - pi / 2);
+                                final y2 = cos(8 * (x - 1 + pi / 16));
+                                final y = x < pi / 4
+                                    ? y1
+                                    : (x < (1 - pi / 16))
+                                        ? 1.0
+                                        : y2;
+                                final blur = 100.0 * (1 - y.clamp(0.0, 1.0));
+                                return Transform(
+                                  transform: t,
+                                  alignment: Alignment.center,
+                                  origin: Offset(
+                                      0.0,
+                                      scrollPixels -
+                                          itemTopPixels -
+                                          runwayLength),
+                                  child: Opacity(
+                                    opacity: y.clamp(0.0, 1.0),
+                                    child: OverflowBox(
+                                      alignment: Alignment.center,
+                                      minWidth: 600,
+                                      minHeight: 600,
+                                      maxWidth: 600,
+                                      maxHeight: 600,
+                                      child: ImageFiltered(
+                                        imageFilter: ImageFilter.blur(
+                                          sigmaX: blur,
+                                          sigmaY: blur,
+                                        ),
+                                        child: child,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                    left: fromMe ? 64.0 : 0.0,
+                                    right: fromMe ? 0.0 : 64.0,
+                                  ),
+                                  child: StreamBuilder<PlaybackInfo>(
+                                    initialData: const PlaybackInfo(),
+                                    stream: _audio.playbackInfoStream,
+                                    builder: (context, snapshot) {
+                                      final playbackInfo = snapshot.requireData;
+                                      final isCurrent = _playbackMessageId ==
+                                          message.messageId;
+                                      final isPlaying = isCurrent &&
+                                          playbackInfo.state ==
+                                              PlaybackState.playing;
+                                      final isLoading = isCurrent &&
+                                          playbackInfo.state ==
+                                              PlaybackState.loading;
+                                      // return ColoredBox(
+                                      //   color: Colors.transparent,
+                                      //   child: Center(
+                                      //     child: Container(
+                                      //       width: innerItemSize,
+                                      //       height: innerItemSize,
+                                      //       decoration: BoxDecoration(
+                                      //         shape: BoxShape.circle,
+                                      //         color: (fromMe
+                                      //             ? Colors.blue
+                                      //             : (index == 4
+                                      //                 ? Colors.orange
+                                      //                 : Colors.pink)),
+                                      //       ),
+                                      //     ),
+                                      //   ),
+                                      // );
+                                      return ColoredBox(
+                                        color: Colors.transparent,
+                                        child: Center(
+                                          child: _ChatMessage(
+                                            photo: fromMe
+                                                ? _myPhoto
+                                                : _otherProfile?.photo,
+                                            fromMe: fromMe,
+                                            message: message,
+                                            height: innerItemSize,
+                                            isLoading: isLoading,
+                                            frequenciesColor: isPlaying
+                                                ? const Color.fromRGBO(
+                                                    0x00, 0xff, 0xef, 1.0)
+                                                : const Color.fromRGBO(
+                                                    0xAF, 0xAF, 0xAF, 1.0),
+                                            frequencies: isPlaying
+                                                ? playbackInfo.frequencies
+                                                : null,
+                                            onPressed: () async {
+                                              if (isPlaying) {
+                                                _audio.stop();
+                                                setState(() =>
+                                                    _playbackMessageId = null);
+                                              } else {
+                                                setState(() =>
+                                                    _playbackMessageId =
+                                                        message.messageId);
+                                                await _audio
+                                                    .setUrl(message.content);
+                                                if (mounted) {
+                                                  _audio.play();
+                                                }
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            );
                           },
                         ),
                       ),
-                      const Spacer(),
-                      const SizedBox(width: 16),
-                    ],
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-              ],
-            ),
+              ),
+              Container(
+                height: bottomBarHeight,
+                margin: const EdgeInsets.symmetric(
+                    vertical: bottomBarVerticalMarign),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          const SizedBox(width: 16),
+                          const Visibility(
+                            visible: false,
+                            maintainSize: true,
+                            maintainAnimation: true,
+                            maintainState: true,
+                            child: Icon(
+                              Icons.fingerprint,
+                              size: 48,
+                              color: Color.fromRGBO(0xFF, 0xC7, 0xC7, 1.0),
+                            ),
+                          ),
+                          const Spacer(),
+                          SizedBox(
+                            width: 180,
+                            child: _RecordButton(
+                              onPressed: () async {
+                                _audio.stop();
+                                final result = await _showRecordPanel(context);
+                                if (result != null && mounted) {
+                                  _submit(result.audio, result.duration);
+                                }
+                              },
+                            ),
+                          ),
+                          const Spacer(),
+                          const SizedBox(width: 16),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).padding.bottom,
+              ),
+            ],
           ),
-          SizedBox(
-            height: MediaQuery.of(context).padding.bottom,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -400,6 +525,11 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   }
 
   void _scrollListener() {
+    final offset = _scrollController?.offset;
+    if (offset != null) {
+      ref.read(_scrollProvider.notifier).update(offset);
+    }
+
     final startDate = _messages.values.first.date;
     if (_scrollController?.position.userScrollDirection ==
             ScrollDirection.forward &&
@@ -1018,6 +1148,12 @@ class _ChatProfilePageState extends State<_ChatProfilePage> {
       ),
     );
   }
+}
+
+class _ScrollNotifier extends StateNotifier<double> {
+  _ScrollNotifier() : super(0.0);
+
+  void update(double offset) => state = offset;
 }
 
 void _call({
