@@ -74,10 +74,7 @@ class MenuPageState extends State<MenuPage> {
       resizeToAvoidBottomInset: false,
       body: DecoratedBox(
         decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/menu_background.png'),
-            fit: BoxFit.fill,
-          ),
+          color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {

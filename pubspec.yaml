@@ -115,6 +115,7 @@ flutter:
     - assets/images/videocam.svg
     - assets/videos/welcome.mp4
     - assets/images/welcome_background.png
+    - assets/images/welcome_tile_background.png
 
   shaders:
     - assets/shaders/depth.frag
