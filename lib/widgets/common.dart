@@ -1021,10 +1021,10 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                 const SizedBox(height: 16),
                 Text(
                   'Recording message',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w300,
+                      color: Colors.white),
                 ),
                 if (recordingInfo.recording) ...[
                   const SizedBox(height: 8),
@@ -1037,7 +1037,9 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                           canBeZero: true,
                         ),
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 16, fontWeight: FontWeight.w300),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300,
+                            color: Colors.white),
                       );
                     },
                   ),
@@ -1089,7 +1091,8 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                                             .bodyMedium!
                                             .copyWith(
                                                 fontSize: 16,
-                                                fontWeight: FontWeight.w300),
+                                                fontWeight: FontWeight.w300,
+                                                color: Colors.white),
                                       ),
                                     ],
                                   ),
@@ -1111,7 +1114,8 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                                             .bodyMedium!
                                             .copyWith(
                                                 fontSize: 16,
-                                                fontWeight: FontWeight.w300),
+                                                fontWeight: FontWeight.w300,
+                                                color: Colors.white),
                                       ),
                                     ],
                                   ),
@@ -1144,7 +1148,8 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                                             .bodyMedium!
                                             .copyWith(
                                                 fontSize: 16,
-                                                fontWeight: FontWeight.w300),
+                                                fontWeight: FontWeight.w300,
+                                                color: Colors.white),
                                       ),
                                     ],
                                   ),
@@ -1161,10 +1166,10 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                   visible: _recordingBytes == null,
                   child: Text(
                     'tap to stop',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -1430,9 +1435,8 @@ class RecordButtonChatState extends State<RecordButtonChat> {
                                   .textTheme
                                   .bodyMedium!
                                   .copyWith(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w300,
-                                  ),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w300),
                             ),
                           ),
                         ),
@@ -2232,7 +2236,7 @@ class LoadingIndicator extends StatelessWidget {
   const LoadingIndicator({
     super.key,
     this.size = 50,
-    this.color = Colors.white,
+    this.color = Colors.black,
   });
 
   @override

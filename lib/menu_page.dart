@@ -34,12 +34,12 @@ class MenuPageState extends State<MenuPage> {
   void initState() {
     super.initState();
     _draggableScrollableController.addListener(() {
-      // Never reports a size beyond 0.9625 for some reason, treat this as open
-      final fullyOpen = _draggableScrollableController.size >= 0.95;
+      final fullyOpen = _draggableScrollableController.size >= 1.0;
       if (fullyOpen) {
         _menuOpenNotifier.value = true;
       } else {
         _menuOpenNotifier.value = false;
+        FocusScope.of(context).unfocus();
       }
     });
 
@@ -78,7 +78,8 @@ class MenuPageState extends State<MenuPage> {
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final maxHeight = constraints.maxHeight;
+            final maxHeight =
+                constraints.maxHeight - MediaQuery.of(context).padding.top;
             final maxContentHeight =
                 constraints.maxHeight - MediaQuery.of(context).padding.top;
             final maxContentRatio = maxContentHeight / maxHeight;
@@ -109,21 +110,34 @@ class MenuPageState extends State<MenuPage> {
                     builder: (context, controller) {
                       return PrimaryScrollControllerTemp(
                         controller: controller,
-                        child: Container(
-                          height: maxContentHeight,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(32),
-                              topRight: Radius.circular(32),
-                            ),
-                          ),
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: _menuOpenNotifier,
+                          builder: (context, open, child) {
+                            return AnimatedContainer(
+                              curve: Curves.easeOut,
+                              duration: const Duration(milliseconds: 200),
+                              height: maxContentHeight,
+                              clipBehavior: Clip.antiAlias,
+                              padding: EdgeInsets.only(
+                                  top: MediaQuery.of(context).padding.top),
+                              decoration: BoxDecoration(
+                                color:
+                                    const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                                borderRadius: open
+                                    ? BorderRadius.zero
+                                    : const BorderRadius.only(
+                                        topLeft: Radius.circular(48),
+                                        topRight: Radius.circular(48),
+                                      ),
+                              ),
+                              child: child,
+                            );
+                          },
                           child: Stack(
                             fit: StackFit.expand,
                             alignment: Alignment.topCenter,
                             children: [
-                              Container(
-                                color: Colors.white,
+                              Align(
                                 alignment: Alignment.topCenter,
                                 child: OverflowBox(
                                   minHeight: maxContentHeight,
@@ -138,7 +152,7 @@ class MenuPageState extends State<MenuPage> {
                               const Align(
                                 alignment: Alignment.topCenter,
                                 child: Padding(
-                                  padding: EdgeInsets.only(top: 23.0),
+                                  padding: EdgeInsets.only(top: 14.0),
                                   child: SizedBox(
                                     width: 37,
                                     height: 6,
@@ -163,7 +177,7 @@ class MenuPageState extends State<MenuPage> {
                               if (widget.pageTitleBuilder != null)
                                 Positioned(
                                   left: 32,
-                                  top: 18,
+                                  top: 10,
                                   child: widget.pageTitleBuilder!(context),
                                 ),
                             ],

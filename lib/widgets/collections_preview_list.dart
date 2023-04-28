@@ -201,10 +201,10 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
               child: Text(
                 format.format(widget.collection.date),
                 textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white),
               ),
             ),
           ),

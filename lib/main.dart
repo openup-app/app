@@ -55,6 +55,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/sign_up_overview_page.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 const host = String.fromEnvironment('HOST');
@@ -343,7 +344,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             ),
           ),
           iconTheme: const IconThemeData(
-            color: Colors.white,
+            color: Colors.black,
           ),
         ),
         builder: (context, child) {
@@ -867,22 +868,10 @@ class _MenuPageShellState extends State<_MenuPageShell> {
         );
       },
       pageTitleBuilder: (context) {
-        final style = Theme.of(context).textTheme.bodyMedium!.copyWith(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          shadows: const [
-            Shadow(
-              offset: Offset(0, 1),
-              blurRadius: 4,
-              color: Color.fromRGBO(
-                0x00,
-                0x00,
-                0x00,
-                0.25,
-              ),
-            ),
-          ],
-        );
+        final style = Theme.of(context)
+            .textTheme
+            .bodyMedium!
+            .copyWith(fontSize: 12, fontWeight: FontWeight.w700);
         if (_currentIndex == 0) {
           return Text(
             'Discovery',
@@ -1092,7 +1081,29 @@ class _MenuTiles extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 5.5),
+        const Spacer(),
+        Padding(
+          padding: const EdgeInsets.only(top: 24.0, bottom: 4),
+          child: Center(
+            child: FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const SizedBox.shrink();
+                }
+                return Text(
+                  'Version: ${snapshot.requireData.version}',
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: const Color.fromRGBO(0xAD, 0xAD, 0xAD, 1.0),
+                      ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
       ],
     );
   }

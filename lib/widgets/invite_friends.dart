@@ -7,6 +7,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/section.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -71,32 +72,34 @@ class _InviteFriendsState extends State<InviteFriends> {
     }
 
     if (_error) {
-      return LayoutBuilder(builder: (context, constraints) {
-        return SingleChildScrollView(
-          controller: widget.controller,
-          child: SizedBox(
-            height: constraints.maxHeight,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Failed to get contacts',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontWeight: FontWeight.w300,
-                        fontSize: 12,
-                        color: Colors.white),
-                  ),
-                  ElevatedButton(
-                    child: const Text('Retry'),
-                    onPressed: () => _fetchContacts(),
-                  ),
-                ],
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            controller: widget.controller,
+            child: SizedBox(
+              height: constraints.maxHeight,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Failed to get contacts',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontWeight: FontWeight.w300,
+                          fontSize: 12,
+                          color: Colors.white),
+                    ),
+                    ElevatedButton(
+                      child: const Text('Retry'),
+                      onPressed: () => _fetchContacts(),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      });
+          );
+        },
+      );
     }
 
     final knownProfiles = _knownProfiles
@@ -108,51 +111,64 @@ class _InviteFriendsState extends State<InviteFriends> {
             c.displayName.toLowerCase().contains(widget.filter.toLowerCase()))
         .toList();
     if (knownProfiles == null || contacts == null) {
-      return const Center(
-        child: LoadingIndicator(),
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            controller: widget.controller,
+            child: SizedBox(
+              height: constraints.maxHeight,
+              child: const Center(
+                child: LoadingIndicator(),
+              ),
+            ),
+          );
+        },
       );
     }
     return CustomScrollView(
       controller: widget.controller,
       slivers: [
         const SliverToBoxAdapter(
-          child: _Heading(label: 'Contacts using Openup'),
+          child: SectionTitle(title: Text('Contacts using bff')),
         ),
         SliverList(
           delegate: SliverChildBuilderDelegate(
             childCount: knownProfiles.length,
             (context, index) {
               final knownProfile = knownProfiles[index];
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    title: Text(
-                      knownProfile.profile.name,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontWeight: FontWeight.w300,
-                          fontSize: 20,
-                          color: Colors.white),
+              return DecoratedBox(
+                decoration: BoxDecoration(color: Colors.white),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      title: Text(
+                        knownProfile.profile.name,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 16,
+                            ),
+                      ),
+                      subtitle: Text(
+                        '${knownProfile.profile.friendCount} friends on bff',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontWeight: FontWeight.w300,
+                              fontSize: 12,
+                            ),
+                      ),
+                      trailing: _InviteButton(
+                        phoneNumber: knownProfile.phoneNumber,
+                      ),
                     ),
-                    subtitle: Text(
-                      'Friends ${knownProfile.profile.friendCount}',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontWeight: FontWeight.w300,
-                          fontSize: 12,
-                          color: Colors.white),
-                    ),
-                    trailing: _InviteButton(
-                      phoneNumber: knownProfile.phoneNumber,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               );
             },
           ),
         ),
         const SliverToBoxAdapter(
-          child: _Heading(label: 'Invite your contacts'),
+          child: SectionTitle(title: Text('Invite contacts')),
         ),
         SliverList(
           delegate: SliverChildBuilderDelegate(
@@ -161,33 +177,71 @@ class _InviteFriendsState extends State<InviteFriends> {
               final contact = contacts[index];
               final phoneNumber =
                   contact.phones.isEmpty ? '' : contact.phones.first.number;
-              return ListTile(
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  clipBehavior: Clip.hardEdge,
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
+              final isFirst = index == 0;
+              final isLast = index == contacts.length - 1;
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: isFirst ? const Radius.circular(16) : Radius.zero,
+                    topRight: isFirst ? const Radius.circular(16) : Radius.zero,
+                    bottomLeft:
+                        isLast ? const Radius.circular(16) : Radius.zero,
+                    bottomRight:
+                        isLast ? const Radius.circular(16) : Radius.zero,
                   ),
-                  child: contact.photoOrThumbnail != null
-                      ? Image.memory(contact.photoOrThumbnail!)
-                      : const SizedBox.shrink(),
                 ),
-                title: Text(
-                  contact.displayName,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontWeight: FontWeight.w300,
-                      fontSize: 20,
-                      color: Colors.white),
-                ),
-                trailing: _InviteButton(
-                  phoneNumber:
-                      contact.phones.isEmpty ? '' : contact.phones.first.number,
+                child: ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    clipBehavior: Clip.hardEdge,
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                    ),
+                    child: contact.photoOrThumbnail != null
+                        ? Image.memory(contact.photoOrThumbnail!)
+                        : Text(
+                            contact.displayName.substring(0, 1).toUpperCase(),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                    fontWeight: FontWeight.w400, fontSize: 16),
+                          ),
+                  ),
+                  title: Text(
+                    contact.displayName,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 16,
+                        color: const Color.fromRGBO(0x34, 0x34, 0x34, 1.0)),
+                  ),
+                  subtitle: Text(
+                    '0 friends on bff',
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.w300,
+                        fontSize: 12,
+                        color: const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0)),
+                  ),
+                  trailing: _InviteButton(
+                    phoneNumber: contact.phones.isEmpty
+                        ? ''
+                        : contact.phones.first.number,
+                  ),
                 ),
               );
             },
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height: 16 + MediaQuery.of(context).padding.bottom,
           ),
         ),
       ],
@@ -256,17 +310,21 @@ class _InviteButton extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: DecoratedBox(
-          decoration: const BoxDecoration(
-              color: Color.fromRGBO(0xD9, 0xD9, 0xD9, 0.25),
-              borderRadius: BorderRadius.all(Radius.circular(4))),
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
+            borderRadius: const BorderRadius.all(Radius.circular(58)),
+            border: Border.all(
+              color: const Color.fromRGBO(0x34, 0x78, 0xF6, 1.0),
+            ),
+          ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Text(
-              'invite',
+              'Add',
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontWeight: FontWeight.w300,
-                  fontSize: 14,
-                  color: Colors.white),
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                  color: const Color.fromRGBO(0x34, 0x78, 0xF6, 1.0)),
             ),
           ),
         ),

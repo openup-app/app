@@ -19,7 +19,6 @@ import 'package:openup/widgets/collection_photo_stack.dart';
 import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/image_builder.dart';
-import 'package:openup/widgets/profile_display.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -32,140 +31,233 @@ class ProfilePage2 extends ConsumerStatefulWidget {
 
 class _ProfilePage2State extends ConsumerState<ProfilePage2> {
   bool _showCollectionCreation = false;
+  final _nameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    ref.listenManual<Profile?>(
+      userProvider.select((p) => p.profile),
+      (previous, next) {
+        if (next != null) {
+          _nameController.text = next.name;
+        }
+      },
+      fireImmediately: true,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final loggedIn = FirebaseAuth.instance.currentUser != null;
     final currentRoute = ModalRoute.of(context)?.isCurrent == true;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          controller:
-              currentRoute ? PrimaryScrollControllerTemp.of(context) : null,
-          child: ColoredBox(
-            color: Colors.white,
+    final profile = ref.watch(userProvider.select((p) => p.profile));
+
+    if (!loggedIn || profile == null) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            controller:
+                currentRoute ? PrimaryScrollControllerTemp.of(context) : null,
             child: SizedBox(
               height: constraints.maxHeight,
-              child: Stack(
-                children: [
-                  Builder(
-                    builder: (context) {
-                      if (!loggedIn) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text('Log in to create a profile'),
-                              ElevatedButton(
-                                onPressed: () => context.pushNamed('signup'),
-                                child: const Text('Log in'),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      final profile =
-                          ref.watch(userProvider.select((p) => p.profile));
-                      if (profile == null) {
-                        return const Center(
-                          child: LoadingIndicator(),
-                        );
-                      }
-
-                      return Column(
+              child: Builder(
+                builder: (context) {
+                  if (!loggedIn) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Expanded(
-                            child: Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: Image.network(
-                                    profile.collection.photos.first.url,
-                                    fit: BoxFit.cover,
-                                    loadingBuilder: loadingBuilder,
-                                    errorBuilder: iconErrorBuilder,
-                                  ),
-                                ),
-                                Positioned(
-                                  left: 0,
-                                  right: 0,
-                                  bottom: 12 +
-                                      MediaQuery.of(context).padding.bottom,
-                                  height: 189,
-                                  child: Builder(
-                                    builder: (context) {
-                                      final collections = ref.watch(userProvider
-                                          .select((p) => p.collections));
-                                      return CollectionsPreviewList(
-                                          collections: collections,
-                                          play:
-                                              _showCollectionCreation == false,
-                                          leadingChildren: [
-                                            _BottomButton(
-                                              label: 'Create Collection',
-                                              icon: const Icon(Icons.upload),
-                                              onPressed: () => setState(() =>
-                                                  _showCollectionCreation =
-                                                      true),
-                                            ),
-                                          ],
-                                          onView: (index) {
-                                            context.pushNamed(
-                                              'view_collection',
-                                              extra: ViewCollectionPageArguments
-                                                  .profile(
-                                                profile: profile,
-                                                collections: collections,
-                                                index: index,
-                                              ),
-                                            );
-                                          },
-                                          onLongPress: (index) =>
-                                              _showDeleteDialog(
-                                                  collections[index]));
-                                    },
-                                  ),
-                                ),
-                                if (_showCollectionCreation)
-                                  _CollectionCreation(
-                                    onCreated: (collection) {
-                                      final collections = ref.read(userProvider
-                                          .select((p) => p.collections));
-                                      final newCollections =
-                                          List.of(collections)
-                                            ..insert(0, collection);
-                                      ref
-                                          .read(userProvider.notifier)
-                                          .collections(newCollections);
-                                      setState(() =>
-                                          _showCollectionCreation = false);
-                                    },
-                                    onCancel: () => setState(
-                                        () => _showCollectionCreation = false),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          UserNameAndRecordButton(
-                            profile: profile,
-                            recordButtonLabel: 'Update Voice Bio',
-                            onRecordPressed: () async {
-                              final audio = await _showRecordPanel(context);
-                              if (mounted && audio != null) {
-                                _upload(audio);
-                              }
-                            },
+                          const Text('Log in to create a profile'),
+                          ElevatedButton(
+                            onPressed: () => context.pushNamed('signup'),
+                            child: const Text('Log in'),
                           ),
                         ],
-                      );
-                    },
-                  ),
-                ],
+                      ),
+                    );
+                  }
+                  return const Center(
+                    child: LoadingIndicator(),
+                  );
+                },
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      );
+    }
+
+    return Container(
+      margin: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 32,
+        bottom: 16 + MediaQuery.of(context).padding.bottom,
+      ),
+      clipBehavior: Clip.hardEdge,
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(48)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            controller:
+                currentRoute ? PrimaryScrollControllerTemp.of(context) : null,
+            child: Builder(
+              builder: (context) {
+                if (!_showCollectionCreation) {
+                  return Column(
+                    children: [
+                      Container(
+                        height: constraints.maxHeight,
+                        clipBehavior: Clip.hardEdge,
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(48)),
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Image.network(
+                                profile.collection.photos.first.url,
+                                fit: BoxFit.cover,
+                                loadingBuilder: loadingBuilder,
+                                errorBuilder: iconErrorBuilder,
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 30),
+                                child: Button(
+                                  onPressed: () async {
+                                    final audio =
+                                        await _showRecordPanel(context);
+                                    if (mounted && audio != null) {
+                                      _upload(audio);
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 146,
+                                    height: 51,
+                                    alignment: Alignment.center,
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Color.fromRGBO(0xF3, 0x49, 0x50, 1.0),
+                                          Color.fromRGBO(0xDF, 0x39, 0x3F, 1.0),
+                                        ],
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(25)),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          offset: Offset(0, 4),
+                                          blurRadius: 4,
+                                          color: Color.fromRGBO(
+                                              0x00, 0x00, 0x00, 0.25),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      'update  bio',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium!
+                                          .copyWith(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 189,
+                        child: Builder(
+                          builder: (context) {
+                            final collections = ref.watch(
+                                userProvider.select((p) => p.collections));
+                            return CollectionsPreviewList(
+                                collections: collections,
+                                play: _showCollectionCreation == false,
+                                leadingChildren: [
+                                  _BottomButton(
+                                    label: 'Create Collection',
+                                    icon: const Icon(Icons.collections),
+                                    onPressed: () => setState(
+                                        () => _showCollectionCreation = true),
+                                  ),
+                                ],
+                                onView: (index) {
+                                  context.pushNamed(
+                                    'view_collection',
+                                    extra: ViewCollectionPageArguments.profile(
+                                      profile: profile,
+                                      collections: collections,
+                                      index: index,
+                                    ),
+                                  );
+                                },
+                                onLongPress: (index) =>
+                                    _showDeleteDialog(collections[index]));
+                          },
+                        ),
+                      ),
+                      const _SectionTitle(label: 'Name'),
+                      Container(
+                        height: 42,
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(64),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _nameController,
+                          decoration:
+                              const InputDecoration.collapsed(hintText: ''),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        height: MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                    ],
+                  );
+                } else {
+                  return SizedBox(
+                    height: constraints.maxHeight,
+                    child: _CollectionCreation(
+                      onCreated: (collection) {
+                        final collections =
+                            ref.read(userProvider.select((p) => p.collections));
+                        final newCollections = List.of(collections)
+                          ..insert(0, collection);
+                        ref
+                            .read(userProvider.notifier)
+                            .collections(newCollections);
+                        setState(() => _showCollectionCreation = false);
+                      },
+                      onCancel: () =>
+                          setState(() => _showCollectionCreation = false),
+                    ),
+                  );
+                }
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -280,26 +372,64 @@ class _BottomButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Button(
       onPressed: onPressed,
-      child: Align(
+      child: Container(
         alignment: Alignment.bottomLeft,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  textAlign: TextAlign.start,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 15, fontWeight: FontWeight.w400),
-                ),
-              ),
-              const SizedBox(width: 4),
-              icon,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(0xFF, 0x7F, 0x7A, 1.0),
+              Color.fromRGBO(0xFC, 0x35, 0x35, 1.0),
             ],
           ),
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: icon,
+            ),
+            Positioned(
+              left: 8,
+              bottom: 8,
+              right: 8,
+              child: Text(
+                label,
+                textAlign: TextAlign.start,
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String label;
+
+  const _SectionTitle({
+    super.key,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Text(
+          label,
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium!
+              .copyWith(fontSize: 12, fontWeight: FontWeight.w400),
         ),
       ),
     );
@@ -336,8 +466,6 @@ class __CollectionCreationState extends State<_CollectionCreation> {
         blur: 25,
         child: Column(
           children: [
-            SizedBox(height: MediaQuery.of(context).padding.top),
-            const SizedBox(height: 16),
             SizedBox(
               height: 40,
               child: Padding(
@@ -364,7 +492,10 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               if (_step != _CreationStep.photos) ...[
-                                const Icon(Icons.chevron_left),
+                                const Icon(
+                                  Icons.chevron_left,
+                                  color: Colors.black,
+                                ),
                                 const SizedBox(width: 8),
                               ],
                               Text(
@@ -428,7 +559,10 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                                           fontWeight: FontWeight.w400),
                                 ),
                                 const SizedBox(width: 8),
-                                const Icon(Icons.chevron_right),
+                                const Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.black,
+                                ),
                               ],
                             ),
                           ),

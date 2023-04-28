@@ -79,14 +79,18 @@ class JustAudioAudioPlayer {
             }
           });
           _playbackInfo = _playbackInfo.copyWith(frequencies: magnitudes);
-          _playbackInfoController.add(_playbackInfo);
+          if (!_playbackInfoController.isClosed) {
+            _playbackInfoController.add(_playbackInfo);
+          }
         });
       } else {
         _visualizerSubscription?.cancel();
         _player.stopVisualizer();
       }
 
-      _playbackInfoController.add(_playbackInfo);
+      if (!_playbackInfoController.isClosed) {
+        _playbackInfoController.add(_playbackInfo);
+      }
     });
 
     _positionSubscription = _player.positionStream.listen((position) {

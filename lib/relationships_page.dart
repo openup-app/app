@@ -14,6 +14,7 @@ import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/section.dart';
 
 class RelationshipsPage extends ConsumerStatefulWidget {
   final TempFriendshipsRefresh tempRefresh;
@@ -29,14 +30,9 @@ class RelationshipsPage extends ConsumerStatefulWidget {
 class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
     with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
-  String _filterString = "";
+  String _filterString = '';
 
   final _collections = <Collection>[];
-  late final _tabController = TabController(
-    length: 2,
-    vsync: this,
-  );
-
   List<Chatroom>? _chatrooms;
 
   @override
@@ -97,66 +93,57 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
           : PrimaryScrollController.of(context),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          return Container(
+          return SizedBox(
             height: constraints.maxHeight,
-            decoration: const BoxDecoration(color: Colors.black),
-            child: Builder(builder: (context) {
-              final loggedIn = FirebaseAuth.instance.currentUser != null;
-              if (!loggedIn) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Log in to create relationships'),
-                    ElevatedButton(
-                      onPressed: () => context.pushNamed('signup'),
-                      child: const Text('Log in'),
-                    ),
-                  ],
-                );
-              }
+            child: Builder(
+              builder: (context) {
+                final loggedIn = FirebaseAuth.instance.currentUser != null;
+                if (!loggedIn) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Log in to create relationships'),
+                      ElevatedButton(
+                        onPressed: () => context.pushNamed('signup'),
+                        child: const Text('Log in'),
+                      ),
+                    ],
+                  );
+                }
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 40),
-                  Container(
-                    height: 31,
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color.fromRGBO(0xD9, 0xD9, 0xD9, 0.1),
-                      border: Border.all(),
-                      borderRadius: const BorderRadius.all(Radius.circular(5)),
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 6.0),
-                            child: Icon(
-                              Icons.search,
-                              color: Colors.white,
-                              size: 16,
-                            ),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 40),
+                    Container(
+                      height: 31,
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 17, vertical: 8),
+                      clipBehavior: Clip.hardEdge,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(7),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            blurRadius: 26,
+                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
                           ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 6.0),
-                              child: TextFormField(
-                                controller: _searchController,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .copyWith(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w300,
-                                      color: Colors.white,
-                                    ),
-                                decoration: InputDecoration.collapsed(
-                                  hintText: 'Search',
-                                  hintStyle: Theme.of(context)
+                        ],
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.only(left: 11, right: 6.0),
+                                child: TextFormField(
+                                  controller: _searchController,
+                                  style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium!
                                       .copyWith(
@@ -164,147 +151,134 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
                                         fontWeight: FontWeight.w300,
                                         color: Colors.white,
                                       ),
+                                  decoration: InputDecoration.collapsed(
+                                    hintText: 'Search',
+                                    hintStyle: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w300,
+                                          color: const Color.fromRGBO(
+                                              0x8D, 0x8D, 0x8D, 1.0),
+                                        ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          if (_filterString.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 16.0),
-                              child: Button(
-                                onPressed: () {
-                                  setState(() => _searchController.text = "");
-                                  FocusScope.of(context).unfocus();
-                                },
-                                child: const Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                  size: 16,
+                            if (_filterString.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 16.0),
+                                child: Button(
+                                  onPressed: () {
+                                    setState(() => _searchController.text = "");
+                                    FocusScope.of(context).unfocus();
+                                  },
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  TabBar(
-                    indicatorColor: Theme.of(context).primaryColor,
-                    controller: _tabController,
-                    tabs: const [
-                      Tab(
-                        child: Text('Friends'),
-                      ),
-                      Tab(
-                        child: Text('Invites'),
-                      ),
-                    ],
-                  ),
-                  if (_filterString.isEmpty)
-                    Visibility(
-                      visible: false,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: SizedBox(
-                          height: 150,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            keyboardDismissBehavior:
-                                ScrollViewKeyboardDismissBehavior.onDrag,
-                            itemCount: _collections.length,
-                            itemBuilder: (context, index) {
-                              final collection = _collections[index];
-                              return Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 82,
-                                    height: 110,
-                                    clipBehavior: Clip.hardEdge,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: const Color.fromRGBO(
-                                            0xFF, 0x5F, 0x5F, 1.0),
-                                        width: 2,
-                                      ),
-                                      borderRadius: const BorderRadius.all(
-                                          Radius.circular(11)),
-                                    ),
-                                    margin: const EdgeInsets.all(9),
-                                    child: Image.network(
-                                      collection.photos.first.url,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  SizedBox(
-                                    width: 82,
-                                    child: Text(
-                                      'Name',
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.center,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium!
-                                          .copyWith(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w200,
-                                            color: Colors.white,
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
+                          ],
                         ),
                       ),
                     ),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        Builder(
+                    if (_filterString.isEmpty)
+                      Visibility(
+                        visible: false,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: SizedBox(
+                            height: 150,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.onDrag,
+                              itemCount: _collections.length,
+                              itemBuilder: (context, index) {
+                                final collection = _collections[index];
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 82,
+                                      height: 110,
+                                      clipBehavior: Clip.hardEdge,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: const Color.fromRGBO(
+                                              0xFF, 0x5F, 0x5F, 1.0),
+                                          width: 2,
+                                        ),
+                                        borderRadius: const BorderRadius.all(
+                                            Radius.circular(11)),
+                                      ),
+                                      margin: const EdgeInsets.all(9),
+                                      child: Image.network(
+                                        collection.photos.first.url,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    SizedBox(
+                                      width: 82,
+                                      child: Text(
+                                        'Name',
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium!
+                                            .copyWith(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w200,
+                                              color: Colors.white,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SectionTitle(
+                      title: Text('MESSAGES'),
+                    ),
+                    Expanded(
+                      child: ColoredBox(
+                        color: Colors.white,
+                        child: Builder(
                           builder: (context) {
                             final filteredChatrooms = _chatrooms?.where((c) => c
                                 .profile.name
                                 .toLowerCase()
                                 .contains(_filterString.toLowerCase()));
-                            return TabBarView(
-                              controller: _tabController,
-                              children: [
-                                _ConversationList(
-                                  chatrooms: filteredChatrooms
-                                      ?.where((chatroom) =>
-                                          chatroom.state ==
-                                          ChatroomState.accepted)
-                                      .toList(),
-                                  emptyLabel:
-                                      'Invite someone to chat,\nthen continue the conversation here',
-                                  filtered: _filterString.isNotEmpty,
-                                  onRefresh: _fetchChatrooms,
-                                  onOpen: _openChat,
-                                ),
-                                _ConversationList(
-                                  chatrooms: filteredChatrooms
-                                      ?.where((chatroom) =>
-                                          chatroom.state ==
-                                          ChatroomState.invitation)
-                                      .toList(),
-                                  emptyLabel: 'You have no pending invites',
-                                  filtered: _filterString.isNotEmpty,
-                                  onRefresh: _fetchChatrooms,
-                                  onOpen: _openChat,
-                                ),
-                              ],
+
+                            return _ConversationList(
+                              chatrooms: filteredChatrooms
+                                  ?.where((chatroom) =>
+                                      chatroom.state == ChatroomState.accepted)
+                                  .toList(),
+                              emptyLabel:
+                                  'Invite someone to chat,\nthen continue the conversation here',
+                              filtered: _filterString.isNotEmpty,
+                              onRefresh: _fetchChatrooms,
+                              onOpen: _openChat,
                             );
                           },
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
-              );
-            }),
+                  ],
+                );
+              },
+            ),
           );
         },
       ),
@@ -406,12 +380,9 @@ class _ConversationList extends StatelessWidget {
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       itemCount: chatrooms.length,
       separatorBuilder: (_, index) {
-        final suggestedFriendDivider = index == chatrooms.length;
-        return Divider(
-          color: suggestedFriendDivider
-              ? const Color.fromRGBO(0x99, 0x91, 0x91, 1.0)
-              : const Color.fromRGBO(0x16, 0x16, 0x16, 1.0),
-          height: suggestedFriendDivider ? 3 : 1,
+        return const Divider(
+          color: Color.fromRGBO(0xDA, 0xDA, 0xDA, 1.0),
+          height: 1,
           indent: 29,
         );
       },
@@ -450,11 +421,11 @@ class _ConversationList extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    width: 82,
-                    height: 110,
+                    width: 63,
+                    height: 63,
                     clipBehavior: Clip.hardEdge,
                     decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(11)),
+                      shape: BoxShape.circle,
                     ),
                     child: Button(
                       onPressed: () {
@@ -481,7 +452,13 @@ class _ConversationList extends StatelessWidget {
                         children: [
                           Text(
                             chatroom.profile.name,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 18,
+                                ),
                           ),
                           const SizedBox(height: 2),
                           AutoSizeText(
@@ -493,18 +470,32 @@ class _ConversationList extends StatelessWidget {
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: 18,
-                                ),
+                                    fontWeight: FontWeight.w300,
+                                    fontSize: 18,
+                                    color: const Color.fromRGBO(
+                                        0x70, 0x70, 0x70, 1.0)),
                           ),
+                          const SizedBox(height: 2),
+                          if (chatroom.state == ChatroomState.pending)
+                            Text(
+                              'New chat invitation',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 12,
+                                      color: const Color.fromRGBO(
+                                          0xFF, 0x00, 0x00, 1.0)),
+                            ),
                         ],
                       ),
                     ),
                   ),
                   const Icon(
                     Icons.chevron_right,
-                    color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
-                    size: 32,
+                    color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                    size: 26,
                   ),
                   const SizedBox(width: 12),
                 ],
