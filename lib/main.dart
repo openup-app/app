@@ -991,15 +991,17 @@ class _MenuTiles extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  Consumer(builder: (context, ref, child) {
-                    return Text(
-                      '${ref.watch(userProvider.select((p) => p.profile?.name)) ?? ''}!',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 40,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white),
-                    );
-                  }),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      return Text(
+                        '${ref.watch(userProvider.select((p) => p.profile?.name)) ?? ''}!',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white),
+                      );
+                    },
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'We want to thank you for joining Openup, please let us know how we can improve your experience of meeting new people! Any feedback is welcome, just tap the “send message” button.',
@@ -1125,7 +1127,6 @@ class _MenuTiles extends StatelessWidget {
             ),
           ),
         ),
-        const Spacer(),
         Padding(
           padding: const EdgeInsets.only(top: 24.0, bottom: 4),
           child: Center(
