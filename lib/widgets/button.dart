@@ -71,10 +71,7 @@ class _ButtonState extends State<Button> with SingleTickerProviderStateMixin {
           onLongPressEnd: widget.onLongPressEnd == null
               ? null
               : (_) => widget.onLongPressEnd?.call(),
-          child: DefaultTextStyle(
-            style: Theme.of(context).textTheme.bodyMedium!,
-            child: widget.child,
-          ),
+          child: widget.child,
         ),
       ),
     );

@@ -13,6 +13,7 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/menu_page.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/settings_phone_verification_screen.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -20,6 +21,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/dialog.dart';
 import 'package:openup/widgets/phone_number_input.dart';
+import 'package:openup/widgets/section.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({Key? key}) : super(key: key);
@@ -37,229 +39,191 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        leading: const BackIconButton(),
-        title: Text(
-          'Account Settings',
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-              ),
+    return LayoutBuilder(builder: (context, constraints) {
+      return Container(
+        height: constraints.maxHeight,
+        margin: EdgeInsets.only(
+          top: 40,
+          bottom: MediaQuery.of(context).padding.bottom,
+          left: 16,
+          right: 16,
         ),
-        centerTitle: true,
-      ),
-      body: Stack(
-        fit: StackFit.loose,
-        children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 362),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    Center(
-                      child: Text(
-                        'Update login information',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w500,
-                            ),
+        clipBehavior: Clip.hardEdge,
+        decoration: const BoxDecoration(
+          color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+          borderRadius: BorderRadius.all(
+            Radius.circular(20),
+          ),
+        ),
+        child: SingleChildScrollView(
+          controller: PrimaryScrollControllerTemp.of(context),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 362),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Button(
+                  onPressed: () {},
+                  child: Container(
+                    height: 343,
+                    clipBehavior: Clip.hardEdge,
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(
+                            'assets/images/subscribe_background.png'),
+                        fit: BoxFit.cover,
+                      ),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(20),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    _InputArea(
-                      child: PhoneInput(
-                        color: Colors.white,
-                        hintTextColor: Colors.grey.shade300,
-                        onChanged: (value, valid) {
-                          setState(() {
-                            _newPhoneNumber = value;
-                            _newPhoneNumberValid = valid;
-                          });
-                        },
-                        onValidationError: (_) {},
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      width: 237,
-                      child: Button(
-                        onPressed: (_submitting | !_newPhoneNumberValid ||
-                                _newPhoneNumber?.isEmpty == true)
-                            ? null
-                            : _updateInformation,
-                        child: _InputArea(
-                          childNeedsOpacity: false,
-                          gradientColors: const [
-                            Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
-                            Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
-                          ],
-                          child: Center(
-                            child: _submitting
-                                ? const LoadingIndicator()
-                                : Text(
-                                    'Update Information',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Button(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) {
-                              return const _BlockedList();
-                            },
-                          ),
-                        );
-                      },
-                      child: _InputArea(
-                        childNeedsOpacity: false,
-                        child: Center(
-                          child: Text(
-                            'Blocked users',
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Subscribe',
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white),
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    Button(
-                      onPressed: () => context.pushNamed('contact-us'),
-                      child: _InputArea(
-                        childNeedsOpacity: false,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Container(
-                                margin: const EdgeInsets.only(left: 16),
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Color.fromRGBO(0xC4, 0xC4, 0xC4, 1.0),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Text(
-                                    '?',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Contact us',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Button(
-                      onPressed: _signOut,
-                      child: _InputArea(
-                        childNeedsOpacity: false,
-                        child: Center(
-                          child: Text(
-                            'Sign Out',
+                          const SizedBox(height: 8),
+                          Text(
+                            '27 days remaining, then \$6.99/month',
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.white),
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 26),
-                    Button(
-                      onPressed: _showDeleteAccountDialog,
-                      child: _InputArea(
-                        gradientColors: const [
-                          Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                          Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
                         ],
-                        childNeedsOpacity: false,
-                        child: Center(
-                          child: Text(
-                            'Delete Account',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                          ),
-                        ),
                       ),
                     ),
-                    const Spacer(flex: 2),
-                    if (kDebugMode)
-                      Container(
-                        margin: EdgeInsets.only(
-                          left: 4,
-                          right: 4,
-                          bottom: 16 + MediaQuery.of(context).padding.bottom,
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('${FirebaseAuth.instance.currentUser?.uid}'),
-                            const Divider(),
-                            Text(
-                                '${FirebaseAuth.instance.currentUser?.phoneNumber}'),
-                          ],
-                        ),
-                      ),
-                  ],
+                  ),
                 ),
-              ),
+                const SectionTitle(
+                  title: Text('Phone Number'),
+                ),
+                const SizedBox(height: 8),
+                _CupertinoButton(
+                  leading: PhoneInput(
+                    onChanged: (value, valid) {
+                      setState(() {
+                        _newPhoneNumber = value;
+                        _newPhoneNumberValid = valid;
+                      });
+                    },
+                    onValidationError: (_) {},
+                  ),
+                  trailing: Button(
+                    onPressed: () {},
+                    child: const Text(
+                      'Edit',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ),
+                // const SizedBox(height: 16),
+                // SizedBox(
+                //   width: 237,
+                //   child: Button(
+                //     onPressed: (_submitting | !_newPhoneNumberValid ||
+                //             _newPhoneNumber?.isEmpty == true)
+                //         ? null
+                //         : _updateInformation,
+                //     child: _InputArea(
+                //       childNeedsOpacity: false,
+                //       gradientColors: const [
+                //         Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
+                //         Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
+                //       ],
+                //       child: Center(
+                //         child: _submitting
+                //             ? const LoadingIndicator()
+                //             : Text(
+                //                 'Update Information',
+                //                 style: Theme.of(context)
+                //                     .textTheme
+                //                     .bodyMedium!
+                //                     .copyWith(
+                //                       fontSize: 24,
+                //                       fontWeight: FontWeight.w500,
+                //                     ),
+                //               ),
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                const SizedBox(height: 16),
+                _CupertinoButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const _BlockedList();
+                        },
+                      ),
+                    );
+                  },
+                  leading: const Text('Blocked users'),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _CupertinoButton(
+                  onPressed: () => context.pushNamed('contact-us'),
+                  leading: const Text('Contact us'),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _CupertinoButton(
+                  onPressed: _signOut,
+                  center: const Text(
+                    'Sign out',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _CupertinoButton(
+                  onPressed: _showDeleteAccountDialog,
+                  center: const Text(
+                    'Delete Account',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+                if (kDebugMode) ...[
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Text(
+                      '${FirebaseAuth.instance.currentUser?.uid}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      '${FirebaseAuth.instance.currentUser?.phoneNumber}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ],
             ),
           ),
-        ],
-      ),
-    );
+        ),
+      );
+    });
   }
 
   void _updateInformation() async {
@@ -446,7 +410,7 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const BoxDecoration(
-        color: Colors.black,
+        color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -454,8 +418,10 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
           leading: const BackIconButton(),
           title: Text(
             'Blocking',
-            style:
-                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium!
+                .copyWith(color: Colors.black),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0.0,
@@ -575,47 +541,58 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
   }
 }
 
-class _InputArea extends StatelessWidget {
-  final Widget child;
-  final List<Color> gradientColors;
-  final bool childNeedsOpacity;
-  const _InputArea({
-    Key? key,
-    required this.child,
-    this.gradientColors = const [
-      Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.65),
-      Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.54),
-    ],
-    this.childNeedsOpacity = true,
-  }) : super(key: key);
+class _CupertinoButton extends StatelessWidget {
+  final Widget? leading;
+  final Widget? center;
+  final Widget? trailing;
+  final VoidCallback? onPressed;
+
+  const _CupertinoButton({
+    super.key,
+    this.leading,
+    this.center,
+    this.trailing,
+    this.onPressed,
+  })  : assert(leading != null || center != null),
+        assert((center == null && trailing == null) ||
+            (center != null && trailing == null) ||
+            (center == null && trailing != null));
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 57,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: gradientColors,
-              ),
-              borderRadius: const BorderRadius.all(Radius.circular(29)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                  offset: Offset(0.0, 4.0),
-                  blurRadius: 4,
-                ),
-              ],
-            ),
-            child: childNeedsOpacity ? child : null,
+    return Button(
+      onPressed: onPressed,
+      useFadeWheNoPressedCallback: false,
+      child: Container(
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        clipBehavior: Clip.hardEdge,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(
+            Radius.circular(8),
           ),
-          if (!childNeedsOpacity) child,
-        ],
+        ),
+        child: DefaultTextStyle(
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium!
+              .copyWith(fontSize: 15, fontWeight: FontWeight.w400),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (leading != null)
+                Expanded(
+                  child: leading!,
+                ),
+              if (center != null)
+                Center(
+                  child: center,
+                ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+        ),
       ),
     );
   }

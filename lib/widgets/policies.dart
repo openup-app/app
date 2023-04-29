@@ -36,29 +36,21 @@ class _PoliciesState extends State<Policies> {
         textAlign: TextAlign.center,
         text: TextSpan(
           style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w300,
+              color: const Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
               height: 1.8),
           children: [
             const TextSpan(
-              text: 'By entering your age, you agree to our\n',
+              text: 'By continuing, you agree to our\n',
             ),
             TextSpan(
               text: 'Privacy Policy',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 13, fontWeight: FontWeight.w300),
               recognizer: _privacyPolicyRecognizer,
             ),
             const TextSpan(text: ' and '),
             TextSpan(
               text: 'Terms of Service',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 13, fontWeight: FontWeight.w300),
               recognizer: _termsRecognizer,
             ),
             const TextSpan(text: '.'),

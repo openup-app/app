@@ -29,9 +29,10 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: const BackIconButton(),
         centerTitle: true,
         title: Text(

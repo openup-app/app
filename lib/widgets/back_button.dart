@@ -8,7 +8,7 @@ class BackIconButton extends StatelessWidget {
   final VoidCallback? onPressed;
   const BackIconButton({
     Key? key,
-    this.color,
+    this.color = const Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
     this.onPressed,
   }) : super(key: key);
 

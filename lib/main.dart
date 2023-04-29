@@ -55,6 +55,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/sign_up_overview_page.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 const host = String.fromEnvironment('HOST');
@@ -74,7 +75,7 @@ void main() async {
     if (!kIsWeb && Platform.isAndroid) {
       final androidInfo = await DeviceInfoPlugin().androidInfo;
       final sdkInt = androidInfo.version.sdkInt;
-      useTransparentSystemUi = sdkInt != null && sdkInt >= 29;
+      useTransparentSystemUi = sdkInt >= 29;
     } else {
       useTransparentSystemUi = true;
     }
@@ -150,6 +151,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   final _relationshipsKey = GlobalKey<NavigatorState>();
   final _profileKey = GlobalKey<NavigatorState>();
   final _peopleKey = GlobalKey<NavigatorState>();
+  final _settingsKey = GlobalKey<NavigatorState>();
 
   final _tempRelationshipsRefresh = TempFriendshipsRefresh();
 
@@ -333,17 +335,17 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             primary: Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
             secondary: Color.fromARGB(0xAA, 0xFF, 0x71, 0x71),
           ),
-          fontFamily: 'Neue Haas Unica W1G',
+          fontFamily: 'Neue Haas Unica',
           textTheme: textTheme.copyWith(
             bodyMedium: textTheme.bodyMedium!.copyWith(
-              fontFamily: 'Neue Haas Unica W1G',
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+              fontFamily: 'Neue Haas Unica',
+              color: Colors.black,
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
             ),
           ),
           iconTheme: const IconThemeData(
-            color: Colors.white,
+            color: Colors.black,
           ),
         ),
         builder: (context, child) {
@@ -766,6 +768,32 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 ),
               ],
             ),
+            StatefulShellBranch(
+              navigatorKey: _settingsKey,
+              preload: true,
+              routes: [
+                GoRoute(
+                  path: '/settings',
+                  name: 'settings',
+                  builder: (context, state) {
+                    return const CurrentRouteSystemUiStyling.light(
+                      child: AccountSettingsScreen(),
+                    );
+                  },
+                  routes: [
+                    GoRoute(
+                      path: 'contact_us',
+                      name: 'contact-us',
+                      builder: (context, state) {
+                        return const CurrentRouteSystemUiStyling.light(
+                          child: ContactUsScreen(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            )
           ],
         ),
         GoRoute(
@@ -778,26 +806,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               child: ReportScreen(
                 uid: args.uid,
               ),
-            );
-          },
-        ),
-        GoRoute(
-          path: '/account',
-          name: 'account-settings',
-          parentNavigatorKey: rootNavigatorKey,
-          builder: (context, state) {
-            return const CurrentRouteSystemUiStyling.light(
-              child: AccountSettingsScreen(),
-            );
-          },
-        ),
-        GoRoute(
-          path: '/contact_us',
-          name: 'contact-us',
-          parentNavigatorKey: rootNavigatorKey,
-          builder: (context, state) {
-            return const CurrentRouteSystemUiStyling.light(
-              child: ContactUsScreen(),
             );
           },
         ),
@@ -862,27 +870,19 @@ class _MenuPageShellState extends State<_MenuPageShell> {
             StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
             _menuPageKey.currentState?.open();
           },
-          onSettingsPressed: () => context.pushNamed('account-settings'),
-          onContactUsPressed: () => context.pushNamed('contact-us'),
+          onSettingsPressed: () {
+            setState(() => _currentIndex = 4);
+            StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
+            _menuPageKey.currentState?.open();
+          },
+          onContactUsPressed: () {},
         );
       },
       pageTitleBuilder: (context) {
         final style = Theme.of(context).textTheme.bodyMedium!.copyWith(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          shadows: const [
-            Shadow(
-              offset: Offset(0, 1),
-              blurRadius: 4,
-              color: Color.fromRGBO(
-                0x00,
-                0x00,
-                0x00,
-                0.25,
-              ),
-            ),
-          ],
-        );
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: const Color.fromRGBO(0x72, 0x72, 0x72, 1.0));
         if (_currentIndex == 0) {
           return Text(
             'Discovery',
@@ -903,6 +903,11 @@ class _MenuPageShellState extends State<_MenuPageShell> {
         } else if (_currentIndex == 3) {
           return Text(
             'Contacts',
+            style: style,
+          );
+        } else if (_currentIndex == 4) {
+          return Text(
+            'Settings',
             style: style,
           );
         }
@@ -939,39 +944,72 @@ class _MenuTiles extends StatelessWidget {
         bottom: MediaQuery.of(context).padding.bottom,
       ),
       children: [
-        const SizedBox(height: 14),
+        const SizedBox(height: 11),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 7.0, horizontal: 14),
+          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
           child: _MenuTileBorder(
-            child: SizedBox(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 21),
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image:
+                      AssetImage('assets/images/welcome_tile_background.png'),
+                  fit: BoxFit.fill,
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 7),
-                  Text(
-                    'Welcome',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Welcome',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          '21 days remaining',
+                          textAlign: TextAlign.right,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 7),
-                  Text(
-                    'Longhorns!',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 40, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 24),
+                  Consumer(builder: (context, ref, child) {
+                    return Text(
+                      '${ref.watch(userProvider.select((p) => p.profile?.name)) ?? ''}!',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white),
+                    );
+                  }),
+                  const SizedBox(height: 16),
                   Text(
                     'We want to thank you for joining Openup, please let us know how we can improve your experience of meeting new people! Any feedback is welcome, just tap the “send message” button.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        height: 1.3,
+                        color: Colors.white),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 12),
                   Align(
                     alignment: Alignment.centerRight,
                     child: Button(
@@ -984,15 +1022,25 @@ class _MenuTiles extends StatelessWidget {
                           borderRadius: BorderRadius.all(
                             Radius.circular(18.5),
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              offset: Offset(0, 2),
+                              blurRadius: 10,
+                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                            ),
+                          ],
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'send message',
+                          'Subscribe now',
                           textAlign: TextAlign.center,
                           style: Theme.of(context)
                               .textTheme
                               .bodyMedium!
-                              .copyWith(fontSize: 14, color: Colors.black),
+                              .copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black),
                         ),
                       ),
                     ),
@@ -1003,111 +1051,103 @@ class _MenuTiles extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 7.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(7),
-                  child: _MenuTileBorder(
-                    child: _MenuTile(
-                      title: 'Discover',
-                      subtitle: 'meet new people',
-                      icon: LottieBuilder.asset(
-                        'assets/images/friends.json',
-                        height: 50,
-                      ),
-                      onPressed: onDiscoverPressed,
-                    ),
-                  ),
-                ),
+          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
+          child: _MenuTileBorder(
+            child: _MenuTile(
+              title: 'Discovery',
+              subtitle: 'meet new people',
+              icon: LottieBuilder.asset(
+                'assets/images/friends.json',
+                height: 42,
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(7),
-                  child: _MenuTileBorder(
-                    child: _MenuTile(
-                      title: 'Conversations',
-                      subtitle: 'talk to people',
-                      icon: const Icon(Icons.chat_bubble, size: 50),
-                      badge: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.red,
-                        ),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          '1',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      onPressed: onConversationsPressed,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              onPressed: onDiscoverPressed,
+            ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 7.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(7),
-                  child: _MenuTileBorder(
-                    child: _MenuTile(
-                      title: 'My Profile',
-                      subtitle: 'update your pics and bio',
-                      icon: const Icon(Icons.face, size: 50),
-                      onPressed: onProfilePressed,
-                    ),
-                  ),
+          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
+          child: _MenuTileBorder(
+            child: _MenuTile(
+              title: 'Conversations',
+              subtitle: 'talk to your new connects',
+              icon: const Icon(Icons.chat_bubble, size: 42),
+              badge: Container(
+                width: 23,
+                height: 23,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '1',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white),
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(7),
-                  child: _MenuTileBorder(
-                    child: _MenuTile(
-                      title: 'Contacts',
-                      subtitle: 'add people u know',
-                      icon: const Icon(Icons.person_add, size: 50),
-                      onPressed: onContactsPressed,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              onPressed: onConversationsPressed,
+            ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 7.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(7),
-                  child: _MenuTileBorder(
-                    child: _MenuTile(
-                      title: 'Settings',
-                      subtitle: 'change your account info',
-                      icon: const Icon(Icons.settings, size: 50),
-                      onPressed: onSettingsPressed,
-                    ),
-                  ),
-                ),
-              ),
-              const Expanded(
-                child: SizedBox.shrink(),
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
+          child: _MenuTileBorder(
+            child: _MenuTile(
+              title: 'My Profile',
+              subtitle: 'update your photos and bio',
+              icon: const Icon(Icons.face, size: 42),
+              onPressed: onProfilePressed,
+            ),
           ),
         ),
-        const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
+          child: _MenuTileBorder(
+            child: _MenuTile(
+              title: 'Contacts',
+              subtitle: 'add people you know',
+              icon: const Icon(Icons.person_add, size: 42),
+              onPressed: onContactsPressed,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
+          child: _MenuTileBorder(
+            child: _MenuTile(
+              title: 'Settings',
+              subtitle: 'account information',
+              icon: const Icon(Icons.settings, size: 42),
+              onPressed: onSettingsPressed,
+            ),
+          ),
+        ),
+        const Spacer(),
+        Padding(
+          padding: const EdgeInsets.only(top: 24.0, bottom: 4),
+          child: Center(
+            child: FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const SizedBox.shrink();
+                }
+                return Text(
+                  'Version: ${snapshot.requireData.version}',
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: const Color.fromRGBO(0xAD, 0xAD, 0xAD, 1.0),
+                      ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
       ],
     );
   }
@@ -1134,34 +1174,50 @@ class _MenuTile extends StatelessWidget {
     return Button(
       onPressed: onPressed,
       child: SizedBox(
-        height: 219,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        height: 77,
+        child: Row(
           children: [
+            const SizedBox(width: 31),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black),
+                  ),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: const Color.fromRGBO(0x94, 0x94, 0x94, 1.0)),
+                  ),
+                ],
+              ),
+            ),
+            ColorFiltered(
+              colorFilter: const ColorFilter.mode(
+                Color.fromRGBO(0x66, 0x66, 0x66, 1.0),
+                BlendMode.srcIn,
+              ),
+              child: icon,
+            ),
             if (badge != null)
               Align(
-                alignment: Alignment.centerRight,
-                child: badge,
-              ),
-            const Spacer(),
-            icon,
-            const SizedBox(height: 14),
-            Text(
-              title,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 16, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 7),
-            Text(
-              subtitle,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 12, fontWeight: FontWeight.w300),
-            ),
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: badge,
+                ),
+              )
+            else
+              const SizedBox(width: 23),
+            const SizedBox(width: 23),
           ],
         ),
       ),
@@ -1181,15 +1237,14 @@ class _MenuTileBorder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       clipBehavior: Clip.antiAlias,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 21),
       decoration: const BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(24)),
-        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+        borderRadius: BorderRadius.all(Radius.circular(14)),
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
-            offset: Offset(0.0, 2.0),
-            blurRadius: 7,
-            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+            offset: Offset(0.0, 0.0),
+            blurRadius: 26,
+            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
           )
         ],
       ),

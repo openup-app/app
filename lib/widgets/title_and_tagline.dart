@@ -13,7 +13,7 @@ class TitleAndTagline extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
-              'openup',
+              'bff',
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 80,
                     fontWeight: FontWeight.w700,

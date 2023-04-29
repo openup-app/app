@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:async/async.dart';
 import 'package:dartz/dartz.dart' show Either;
@@ -281,235 +282,283 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     final nameSize = 126.0 + MediaQuery.of(context).padding.bottom;
     return LayoutBuilder(
       builder: (context, constraints) {
-        return SingleChildScrollView(
-          controller: PrimaryScrollControllerTemp.of(context),
-          physics: const ClampingScrollPhysics(),
-          child: SizedBox(
-            height: constraints.maxHeight,
-            child: Builder(
-              builder: (context) {
-                if (_profiles.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: !_hasLocation
-                              ? Text(
-                                  'Unable to get location',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                )
-                              : Text(
-                                  _selectedTopic == null
-                                      ? 'Couldn\'t find any profiles'
-                                      : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
+        if (_profiles.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: !_hasLocation
+                      ? Text(
+                          'Unable to get location',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        )
+                      : Text(
+                          _selectedTopic == null
+                              ? 'Couldn\'t find any profiles'
+                              : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        ElevatedButton(
-                          onPressed: () async {
-                            // Location needed at least once for nearby users
-                            // (may not have granted location during onboarding)
-                            setState(() => _loading = true);
-                            final locationService = LocationService();
-                            if (!await locationService.hasPermission()) {
-                              final status =
-                                  await locationService.requestPermission();
-                              if (status) {
-                                await _updateLocation();
-                              }
-                            }
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Location needed at least once for nearby users
+                    // (may not have granted location during onboarding)
+                    setState(() => _loading = true);
+                    final locationService = LocationService();
+                    if (!await locationService.hasPermission()) {
+                      final status = await locationService.requestPermission();
+                      if (status) {
+                        await _updateLocation();
+                      }
+                    }
 
-                            if (!mounted) {
-                              return;
-                            }
-                            setState(() {
-                              _nextMinRadius = 0;
-                              _nextPage = 0;
-                            });
-                            _fetchPageOfProfiles();
-                          },
-                          child: const Text('Refresh'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+                    if (!mounted) {
+                      return;
+                    }
+                    setState(() {
+                      _nextMinRadius = 0;
+                      _nextPage = 0;
+                    });
+                    _fetchPageOfProfiles();
+                  },
+                  child: const Text('Refresh'),
+                ),
+              ],
+            ),
+          );
+        }
 
-                return ActivePage(
-                  onActivate: () {},
-                  onDeactivate: () =>
-                      _userProfileInfoDisplayKey.currentState?.pause(),
-                  child: ValueListenableBuilder<double>(
-                    valueListenable: _pageListener,
-                    builder: (context, page, child) {
-                      final index = page.round();
+        return ActivePage(
+          onActivate: () {},
+          onDeactivate: () => _userProfileInfoDisplayKey.currentState?.pause(),
+          child: ValueListenableBuilder<double>(
+            valueListenable: _pageListener,
+            builder: (context, page, child) {
+              final index = page.round();
+              final profile = _profiles[index];
+              return UserProfileInfoDisplay(
+                key: _userProfileInfoDisplayKey,
+                profile: profile,
+                // invited: _invitedUsers.contains(profile.uid),
+                play: index == _currentProfileIndex,
+                builder: (context, play, playbackInfoStream) {
+                  return PageView.builder(
+                    controller: _pageController,
+                    itemCount: _profiles.length,
+                    itemBuilder: (context, index) {
                       final profile = _profiles[index];
-                      return UserProfileInfoDisplay(
-                        key: _userProfileInfoDisplayKey,
-                        profile: profile,
-                        // invited: _invitedUsers.contains(profile.uid),
-                        play: index == _currentProfileIndex,
-                        builder: (context, play, playbackInfoStream) {
-                          return ColoredBox(
-                            color: Colors.white,
-                            child: PageView.builder(
-                              controller: _pageController,
-                              itemCount: _profiles.length,
-                              itemBuilder: (context, index) {
-                                final profile = _profiles[index];
-                                return ClipRRect(
-                                  clipBehavior: Clip.hardEdge,
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(32),
-                                    topRight: Radius.circular(32),
-                                  ),
-                                  child: ValueListenableBuilder<double>(
-                                    valueListenable: _pageListener,
-                                    builder: (context, page, child) {
-                                      final pageIndex = page.floor();
-                                      final t = (page - pageIndex) *
-                                          (page - pageIndex);
-                                      if (index <= pageIndex) {
-                                        return Transform.scale(
-                                          scale: 1.0 - 0.25 * t,
-                                          child: child!,
-                                        );
-                                      } else {
-                                        return Transform.scale(
-                                          scale: 0.75 + 0.25 * t,
-                                          child: child!,
-                                        );
-                                      }
-                                    },
-                                    child: ClipRRect(
-                                      clipBehavior: Clip.hardEdge,
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(32),
-                                        topRight: Radius.circular(32),
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
+                      return ClipRRect(
+                        clipBehavior: Clip.hardEdge,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(32),
+                          topRight: Radius.circular(32),
+                        ),
+                        child: Container(
+                          margin: EdgeInsets.only(
+                            left: 16,
+                            right: 16,
+                            top: 32,
+                            bottom: 16 + MediaQuery.of(context).padding.bottom,
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(48)),
+                          ),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return SingleChildScrollView(
+                                controller:
+                                    PrimaryScrollControllerTemp.of(context),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      height: constraints.maxHeight,
+                                      child: Stack(
+                                        fit: StackFit.expand,
                                         children: [
-                                          SizedBox(
-                                            height: constraints.maxHeight -
-                                                nameSize,
-                                            child: Stack(
-                                              fit: StackFit.expand,
-                                              children: [
-                                                Button(
-                                                  onPressed: () {
-                                                    if (!play) {
-                                                      _userProfileInfoDisplayKey
-                                                          .currentState
-                                                          ?.play();
-                                                    } else {
-                                                      _userProfileInfoDisplayKey
-                                                          .currentState
-                                                          ?.pause();
-                                                    }
-                                                  },
-                                                  child: UserProfileDisplay(
-                                                    key: ValueKey(profile.uid),
-                                                    profile: profile,
-                                                    playSlideshow: play,
-                                                    invited: false,
-                                                  ),
-                                                ),
-                                                if (!play)
-                                                  const Center(
-                                                    child: IgnorePointer(
-                                                      child: IconWithShadow(
-                                                        Icons.play_arrow,
-                                                        size: 80,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                Positioned(
-                                                  left: 16,
-                                                  top: 16 +
-                                                      MediaQuery.of(context)
-                                                          .padding
-                                                          .top,
-                                                  child: _PageControls(
-                                                    profile: profile,
-                                                    preference:
-                                                        _genderPreference,
-                                                    onNext: () {
-                                                      _pageController.nextPage(
-                                                        duration:
-                                                            const Duration(
-                                                                milliseconds:
-                                                                    350),
-                                                        curve: Curves.easeOut,
-                                                      );
-                                                    },
-                                                    onBlocked: () => setState(
-                                                        () => _profiles
-                                                            .removeWhere(((p) =>
-                                                                p.uid ==
-                                                                profile.uid))),
-                                                    onPreference: (gender) {
-                                                      if (gender ==
-                                                          _genderPreference) {
-                                                        return;
-                                                      }
-                                                      setState(() {
-                                                        _genderPreference =
-                                                            gender;
-                                                        _nextMinRadius = 0;
-                                                        _nextPage = 0;
-                                                        _pageController
-                                                            .jumpTo(0);
-                                                        _profiles.clear();
-                                                      });
-                                                      _fetchPageOfProfiles();
-                                                    },
-                                                  ),
-                                                ),
-                                                Align(
-                                                  alignment:
-                                                      Alignment.bottomCenter,
-                                                  child: PlaybackBar(
-                                                      playbackInfoStream:
-                                                          playbackInfoStream),
-                                                ),
-                                              ],
+                                          Container(
+                                            clipBehavior: Clip.hardEdge,
+                                            decoration: const BoxDecoration(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(48)),
                                             ),
-                                          ),
-                                          SizedBox(
-                                            height: nameSize,
-                                            child: UserNameAndRecordButton(
-                                              profile: profile,
-                                              recordButtonLabel: 'send invite',
-                                              onRecordPressed: () {
-                                                if (FirebaseAuth
-                                                        .instance.currentUser ==
-                                                    null) {
-                                                  _showSignInDialog();
+                                            child: Button(
+                                              onPressed: () {
+                                                if (!play) {
+                                                  _userProfileInfoDisplayKey
+                                                      .currentState
+                                                      ?.play();
                                                 } else {
-                                                  _showRecordPanel(
-                                                      context, profile.uid);
+                                                  _userProfileInfoDisplayKey
+                                                      .currentState
+                                                      ?.pause();
                                                 }
                                               },
+                                              child: UserProfileDisplay(
+                                                key: ValueKey(profile.uid),
+                                                profile: profile,
+                                                playSlideshow: play,
+                                                invited: false,
+                                              ),
+                                            ),
+                                          ),
+                                          if (!play)
+                                            const Center(
+                                              child: IgnorePointer(
+                                                child: IconWithShadow(
+                                                  Icons.play_arrow,
+                                                  size: 80,
+                                                ),
+                                              ),
+                                            ),
+                                          Positioned(
+                                            left: 16,
+                                            top: 16,
+                                            child: _PageControls(
+                                              profile: profile,
+                                              preference: _genderPreference,
+                                              onPreference: (gender) {
+                                                if (gender ==
+                                                    _genderPreference) {
+                                                  return;
+                                                }
+                                                setState(() {
+                                                  _genderPreference = gender;
+                                                  _nextMinRadius = 0;
+                                                  _nextPage = 0;
+                                                  _pageController.jumpTo(0);
+                                                  _profiles.clear();
+                                                });
+                                                _fetchPageOfProfiles();
+                                              },
+                                            ),
+                                          ),
+                                          Align(
+                                            alignment: Alignment.bottomCenter,
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  bottom: 31.0),
+                                              child: _RecordButton(
+                                                onPressed: () {
+                                                  if (FirebaseAuth.instance
+                                                          .currentUser ==
+                                                      null) {
+                                                    _showSignInDialog();
+                                                  } else {
+                                                    _showRecordPanel(
+                                                        context, profile.uid);
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            left: 26,
+                                            bottom: 41,
+                                            child: ReportBlockPopupMenu2(
+                                              uid: profile.uid,
+                                              name: profile.name,
+                                              onBlock: () => setState(() =>
+                                                  _profiles.removeWhere(((p) =>
+                                                      p.uid == profile.uid))),
+                                              builder: (context) {
+                                                return Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Container(
+                                                    width: 26,
+                                                    height: 26,
+                                                    alignment: Alignment.center,
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                      color: Color.fromRGBO(
+                                                          0x5A,
+                                                          0x5A,
+                                                          0x5A,
+                                                          0.5),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: const Icon(
+                                                      CupertinoIcons.ellipsis,
+                                                      color: Colors.white,
+                                                      size: 14,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                          Positioned(
+                                            right: 26,
+                                            bottom: 41,
+                                            child: Button(
+                                              onPressed: () {},
+                                              child: Container(
+                                                width: 30,
+                                                height: 30,
+                                                clipBehavior: Clip.hardEdge,
+                                                decoration: const BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: Color.fromRGBO(
+                                                      0xD9, 0xD9, 0xD9, 0.28),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      offset: Offset(0, 2),
+                                                      blurRadius: 4,
+                                                      color: Color.fromRGBO(
+                                                          0x00,
+                                                          0x00,
+                                                          0x00,
+                                                          0.10),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: BackdropFilter(
+                                                  filter: ImageFilter.blur(
+                                                      sigmaX: 10, sigmaY: 10),
+                                                  child: const Icon(
+                                                    Icons.volume_up,
+                                                    size: 13,
+                                                  ),
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
+                                    SizedBox(
+                                      height: nameSize,
+                                      child: UserNameAndRecordButton(
+                                        profile: profile,
+                                        recordButtonLabel: 'send invite',
+                                        onRecordPressed: () {
+                                          if (FirebaseAuth
+                                                  .instance.currentUser ==
+                                              null) {
+                                            _showSignInDialog();
+                                          } else {
+                                            _showRecordPanel(
+                                                context, profile.uid);
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       );
                     },
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              );
+            },
           ),
         );
       },
@@ -585,95 +634,109 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   }
 }
 
+class _RecordButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+
+  const _RecordButton({
+    super.key,
+    this.label = 'send message',
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onPressed,
+      child: Container(
+        width: 146,
+        height: 51,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromRGBO(0xF3, 0x49, 0x50, 1.0),
+              Color.fromRGBO(0xDF, 0x39, 0x3F, 1.0),
+            ],
+          ),
+          borderRadius: BorderRadius.all(Radius.circular(25)),
+          boxShadow: [
+            BoxShadow(
+              offset: Offset(0, 4),
+              blurRadius: 4,
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+            ),
+          ],
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
 class _PageControls extends StatelessWidget {
   final Profile? profile;
   final Gender? preference;
-  final VoidCallback? onNext;
-  final VoidCallback onBlocked;
   final void Function(Gender? preference) onPreference;
 
   const _PageControls({
     super.key,
     required this.profile,
     required this.preference,
-    required this.onNext,
-    required this.onBlocked,
     required this.onPreference,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (profile != null)
-          Button(
-            onPressed: onNext,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                width: 26,
-                height: 26,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 14,
-                ),
-              ),
-            ),
-          ),
-        const SizedBox(height: 13),
         Button(
           onPressed: () => _showPreferencesSheet(context),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Container(
-              width: 26,
-              height: 26,
+              height: 35,
               alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: const BoxDecoration(
-                color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                shape: BoxShape.circle,
-              ),
-              child: Image.asset(
-                'assets/images/preferences_icon.png',
                 color: Colors.white,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.medium,
+                borderRadius: BorderRadius.all(Radius.circular(32)),
+                boxShadow: [
+                  BoxShadow(
+                    offset: Offset(0, 2),
+                    blurRadius: 4,
+                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/images/preferences_icon.png',
+                    color: Colors.black,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.medium,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Filters',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
+                  ),
+                ],
               ),
             ),
           ),
         ),
-        const SizedBox(height: 13),
-        if (profile != null)
-          ReportBlockPopupMenu2(
-            uid: profile!.uid,
-            name: profile!.name,
-            onBlock: onBlocked,
-            builder: (context) {
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  width: 26,
-                  height: 26,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    CupertinoIcons.ellipsis,
-                    color: Colors.white,
-                    size: 14,
-                  ),
-                ),
-              );
-            },
-          ),
       ],
     );
   }
@@ -690,14 +753,14 @@ class _PageControls extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
                 Center(
                   child: Text(
                     'I\'m interested in seeing...',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -706,40 +769,40 @@ class _PageControls extends StatelessWidget {
                   selected: preference == Gender.male,
                   onTap: () => Navigator.of(context).pop('male'),
                   radioAtEnd: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white),
                 ),
                 RadioTile(
                   label: 'Women',
                   selected: preference == Gender.female,
                   onTap: () => Navigator.of(context).pop('female'),
                   radioAtEnd: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white),
                 ),
                 RadioTile(
                   label: 'Non-Binary',
                   selected: preference == Gender.nonBinary,
                   onTap: () => Navigator.of(context).pop('nonBinary'),
                   radioAtEnd: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white),
                 ),
                 RadioTile(
                   label: 'Any',
                   selected: preference == null,
                   onTap: () => Navigator.of(context).pop('any'),
                   radioAtEnd: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white),
                 ),
                 SizedBox(
                   height: MediaQuery.of(context).padding.bottom + 24,
