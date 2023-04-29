@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -30,6 +32,15 @@ class _PhoneInputState extends State<PhoneInput> {
   final _phoneController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    final phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber;
+    if (phoneNumber != null) {
+      _phoneController.text = phoneNumber;
+    }
+  }
+
+  @override
   void dispose() {
     _phoneController.dispose();
     super.dispose();
@@ -40,99 +51,101 @@ class _PhoneInputState extends State<PhoneInput> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SizedBox(
-          width: 60,
-          child: PopupMenuButton<_Country>(
-            child: RichText(
-              textAlign: TextAlign.right,
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: '+ ',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+        if (!kDebugMode) ...[
+          Container(
+            width: 60,
+            height: 48,
+            alignment: Alignment.centerRight,
+            color: Colors.orange,
+            child: PopupMenuButton<_Country>(
+              child: RichText(
+                textAlign: TextAlign.right,
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '+ ',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontWeight: FontWeight.w400,
                           fontSize: 20,
-                          color: widget.hintTextColor ?? Colors.white,
-                        ),
-                  ),
-                  TextSpan(
-                    text: _country.callingCode.toString(),
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: widget.hintTextColor),
+                    ),
+                    TextSpan(
+                      text: _country.callingCode.toString(),
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontWeight: FontWeight.w400,
                           fontSize: 20,
-                          color: widget.color ?? Colors.white,
-                        ),
-                  ),
-                ],
+                          color: widget.color),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            onSelected: (country) {
-              setState(() => _country = country);
-              _validatePhoneNoPrefix(_phoneController.text);
-            },
-            itemBuilder: (context) {
-              return [
-                for (final country in _countries)
-                  PopupMenuItem(
-                    value: country,
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 56,
-                          child: RichText(
-                            textAlign: TextAlign.right,
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: '+ ',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                        fontWeight: FontWeight.w400,
-                                        color: const Color.fromRGBO(
-                                            0x6C, 0x6C, 0x6C, 1.0),
-                                      ),
-                                ),
-                                TextSpan(
-                                  text: country.callingCode.toString(),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
+              onSelected: (country) {
+                setState(() => _country = country);
+                _validatePhoneNoPrefix(_phoneController.text);
+              },
+              itemBuilder: (context) {
+                return [
+                  for (final country in _countries)
+                    PopupMenuItem(
+                      value: country,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 56,
+                            child: RichText(
+                              textAlign: TextAlign.right,
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '+ ',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
                                           fontWeight: FontWeight.w400,
-                                          color: Colors.black),
-                                ),
-                              ],
+                                          color: const Color.fromRGBO(
+                                              0x6C, 0x6C, 0x6C, 1.0),
+                                        ),
+                                  ),
+                                  TextSpan(
+                                    text: country.callingCode.toString(),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                            fontWeight: FontWeight.w400,
+                                            color: Colors.black),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(country.flag),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            country.name,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color.fromRGBO(
-                                      0x6C, 0x6C, 0x6C, 1.0),
-                                ),
+                          const SizedBox(width: 8),
+                          Text(country.flag),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              country.name,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color.fromRGBO(
+                                        0x6C, 0x6C, 0x6C, 1.0),
+                                  ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-              ];
-            },
+                ];
+              },
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 150,
+          const SizedBox(width: 8),
+        ],
+        Expanded(
           child: TextFormField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
@@ -152,18 +165,12 @@ class _PhoneInputState extends State<PhoneInput> {
               FocusScope.of(context).unfocus();
             },
             textAlign: TextAlign.start,
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontWeight: FontWeight.w400,
-                  fontSize: 20,
-                  color: widget.color ?? Colors.white,
-                ),
+            style: TextStyle(color: widget.color),
             decoration: InputDecoration.collapsed(
               hintText: 'Phone Number',
-              hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontWeight: FontWeight.w400,
-                    fontSize: 20,
-                    color: widget.hintTextColor ?? Colors.white,
-                  ),
+              hintStyle: DefaultTextStyle.of(context)
+                  .style
+                  .copyWith(color: widget.hintTextColor),
             ),
           ),
         ),

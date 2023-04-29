@@ -75,7 +75,7 @@ void main() async {
     if (!kIsWeb && Platform.isAndroid) {
       final androidInfo = await DeviceInfoPlugin().androidInfo;
       final sdkInt = androidInfo.version.sdkInt;
-      useTransparentSystemUi = sdkInt != null && sdkInt >= 29;
+      useTransparentSystemUi = sdkInt >= 29;
     } else {
       useTransparentSystemUi = true;
     }
@@ -151,6 +151,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   final _relationshipsKey = GlobalKey<NavigatorState>();
   final _profileKey = GlobalKey<NavigatorState>();
   final _peopleKey = GlobalKey<NavigatorState>();
+  final _settingsKey = GlobalKey<NavigatorState>();
 
   final _tempRelationshipsRefresh = TempFriendshipsRefresh();
 
@@ -334,13 +335,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             primary: Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
             secondary: Color.fromARGB(0xAA, 0xFF, 0x71, 0x71),
           ),
-          fontFamily: 'Neue Haas Unica W1G',
+          fontFamily: 'Neue Haas Unica',
           textTheme: textTheme.copyWith(
             bodyMedium: textTheme.bodyMedium!.copyWith(
-              fontFamily: 'Neue Haas Unica W1G',
+              fontFamily: 'Neue Haas Unica',
               color: Colors.black,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
             ),
           ),
           iconTheme: const IconThemeData(
@@ -767,6 +768,32 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 ),
               ],
             ),
+            StatefulShellBranch(
+              navigatorKey: _settingsKey,
+              preload: true,
+              routes: [
+                GoRoute(
+                  path: '/settings',
+                  name: 'settings',
+                  builder: (context, state) {
+                    return const CurrentRouteSystemUiStyling.light(
+                      child: AccountSettingsScreen(),
+                    );
+                  },
+                  routes: [
+                    GoRoute(
+                      path: 'contact_us',
+                      name: 'contact-us',
+                      builder: (context, state) {
+                        return const CurrentRouteSystemUiStyling.light(
+                          child: ContactUsScreen(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            )
           ],
         ),
         GoRoute(
@@ -779,26 +806,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               child: ReportScreen(
                 uid: args.uid,
               ),
-            );
-          },
-        ),
-        GoRoute(
-          path: '/account',
-          name: 'account-settings',
-          parentNavigatorKey: rootNavigatorKey,
-          builder: (context, state) {
-            return const CurrentRouteSystemUiStyling.light(
-              child: AccountSettingsScreen(),
-            );
-          },
-        ),
-        GoRoute(
-          path: '/contact_us',
-          name: 'contact-us',
-          parentNavigatorKey: rootNavigatorKey,
-          builder: (context, state) {
-            return const CurrentRouteSystemUiStyling.light(
-              child: ContactUsScreen(),
             );
           },
         ),
@@ -863,15 +870,19 @@ class _MenuPageShellState extends State<_MenuPageShell> {
             StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
             _menuPageKey.currentState?.open();
           },
-          onSettingsPressed: () => context.pushNamed('account-settings'),
-          onContactUsPressed: () => context.pushNamed('contact-us'),
+          onSettingsPressed: () {
+            setState(() => _currentIndex = 4);
+            StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
+            _menuPageKey.currentState?.open();
+          },
+          onContactUsPressed: () {},
         );
       },
       pageTitleBuilder: (context) {
-        final style = Theme.of(context)
-            .textTheme
-            .bodyMedium!
-            .copyWith(fontSize: 12, fontWeight: FontWeight.w700);
+        final style = Theme.of(context).textTheme.bodyMedium!.copyWith(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: const Color.fromRGBO(0x72, 0x72, 0x72, 1.0));
         if (_currentIndex == 0) {
           return Text(
             'Discovery',
@@ -892,6 +903,11 @@ class _MenuPageShellState extends State<_MenuPageShell> {
         } else if (_currentIndex == 3) {
           return Text(
             'Contacts',
+            style: style,
+          );
+        } else if (_currentIndex == 4) {
+          return Text(
+            'Settings',
             style: style,
           );
         }
@@ -933,7 +949,7 @@ class _MenuTiles extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
           child: _MenuTileBorder(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 21),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 21),
               decoration: const BoxDecoration(
                 image: DecorationImage(
                   image:
@@ -945,30 +961,55 @@ class _MenuTiles extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 7),
-                  Text(
-                    'Welcome',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w300,
-                        color: Colors.white),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Welcome',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          '21 days remaining',
+                          textAlign: TextAlign.right,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 7),
-                  Text(
-                    'AHS!',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white),
-                  ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 24),
+                  Consumer(builder: (context, ref, child) {
+                    return Text(
+                      '${ref.watch(userProvider.select((p) => p.profile?.name)) ?? ''}!',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white),
+                    );
+                  }),
+                  const SizedBox(height: 16),
                   Text(
                     'We want to thank you for joining Openup, please let us know how we can improve your experience of meeting new people! Any feedback is welcome, just tap the “send message” button.',
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w300,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        height: 1.3,
                         color: Colors.white),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 12),
                   Align(
                     alignment: Alignment.centerRight,
                     child: Button(
@@ -991,12 +1032,15 @@ class _MenuTiles extends StatelessWidget {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'send message',
+                          'Subscribe now',
                           textAlign: TextAlign.center,
                           style: Theme.of(context)
                               .textTheme
                               .bodyMedium!
-                              .copyWith(fontSize: 14, color: Colors.black),
+                              .copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black),
                         ),
                       ),
                     ),
@@ -1150,7 +1194,7 @@ class _MenuTile extends StatelessWidget {
                     subtitle,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 12,
-                        fontWeight: FontWeight.w300,
+                        fontWeight: FontWeight.w400,
                         color: const Color.fromRGBO(0x94, 0x94, 0x94, 1.0)),
                   ),
                 ],

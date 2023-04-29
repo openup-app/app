@@ -155,13 +155,13 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                 fit: BoxFit.cover,
                               ),
                       ),
-                      const SizedBox(width: 9),
+                      const SizedBox(width: 12),
                       Text(
                         _otherProfile?.name ?? '',
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w300,
-                            color: const Color.fromRGBO(0x96, 0x96, 0x96, 1.0)),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: const Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0)),
                       ),
                     ],
                   ),
@@ -947,7 +947,7 @@ class _RecordButton extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               offset: Offset(0, 4),
-              blurRadius: 4,
+              blurRadius: 12,
               color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
             ),
           ],

@@ -111,6 +111,7 @@ flutter:
     - assets/images/tutorial_photo.jpg
     - assets/images/signup_background.png
     - assets/images/signup_friends_background.png
+    - assets/images/subscribe_background.png
     - assets/images/earth.svg
     - assets/images/loading_icon.png
     - assets/images/videocam.svg
@@ -122,30 +123,26 @@ flutter:
     - assets/shaders/depth.frag
 
   fonts:
-    - family: Myriad
+    - family: Neue Haas Unica
       fonts:
-        - asset: assets/fonts/myriad-pro-light.otf
+        - asset: assets/fonts/NeueHaasUnica-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/NeueHaasUnica-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/NeueHaasUnica-Light.ttf
           weight: 300
-        - asset: assets/fonts/myriad-pro-regular.otf
+        - asset: assets/fonts/NeueHaasUnica-Regular.ttf
           weight: 400
-        - asset: assets/fonts/myriad-pro-semibold.otf
-          weight: 600
-        - asset: assets/fonts/myriad-pro-semiboldit.otf
-          weight: 600
-          style: italic
-        - asset: assets/fonts/myriad-pro-bold.otf
-          weight: 700
-        - asset: assets/fonts/myriad-pro-boldit.otf
-          weight: 700
-          style: italic
-    - family: Neue Haas Unica W1G
-      fonts:
-        - asset: assets/fonts/neue-haas-unica-w1g-thin.ttf
-          weight: 300
-        - asset: assets/fonts/neue-haas-unica-w1g.ttf
+        - asset: assets/fonts/NeueHaasUnica-Medium.ttf
           weight: 500
-        - asset: assets/fonts/neue-haas-unica-w1g-heavy.ttf
+        - asset: assets/fonts/NeueHaasUnica-Bold.ttf
+          weight: 600
+        - asset: assets/fonts/NeueHaasUnica-ExtraBold.ttf
           weight: 700
+        - asset: assets/fonts/NeueHaasUnica-Black.ttf
+          weight: 800
+        - asset: assets/fonts/NeueHaasUnica-ExtraBlack.ttf
+          weight: 900
 
 flutter_icons:
   image_path: "assets/images/app_icon.png"

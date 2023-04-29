@@ -160,7 +160,8 @@ class MenuPageState extends State<MenuPage> {
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(2.5)),
-                                        color: Colors.white,
+                                        color: Color.fromRGBO(
+                                            0x71, 0x71, 0x71, 1.0),
                                         boxShadow: [
                                           BoxShadow(
                                             offset: Offset(0, 1),
@@ -177,7 +178,7 @@ class MenuPageState extends State<MenuPage> {
                               if (widget.pageTitleBuilder != null)
                                 Positioned(
                                   left: 32,
-                                  top: 10,
+                                  top: 12,
                                   child: widget.pageTitleBuilder!(context),
                                 ),
                             ],

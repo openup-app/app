@@ -162,7 +162,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                                       ],
                                     ),
                                     child: Text(
-                                      'update  bio',
+                                      'update bio',
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium!
@@ -224,6 +224,11 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
                         ),
                         child: TextField(
                           controller: _nameController,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  fontSize: 16, fontWeight: FontWeight.w400),
                           decoration:
                               const InputDecoration.collapsed(hintText: ''),
                         ),

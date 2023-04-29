@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:async/async.dart';
 import 'package:dartz/dartz.dart' show Either;
@@ -414,23 +415,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                             ),
                                           Positioned(
                                             left: 16,
-                                            top: 16 +
-                                                MediaQuery.of(context)
-                                                    .padding
-                                                    .top,
+                                            top: 16,
                                             child: _PageControls(
                                               profile: profile,
                                               preference: _genderPreference,
-                                              onNext: () {
-                                                _pageController.nextPage(
-                                                  duration: const Duration(
-                                                      milliseconds: 350),
-                                                  curve: Curves.easeOut,
-                                                );
-                                              },
-                                              onBlocked: () => setState(() =>
-                                                  _profiles.removeWhere(((p) =>
-                                                      p.uid == profile.uid))),
                                               onPreference: (gender) {
                                                 if (gender ==
                                                     _genderPreference) {
@@ -467,6 +455,42 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                             ),
                                           ),
                                           Positioned(
+                                            left: 26,
+                                            bottom: 41,
+                                            child: ReportBlockPopupMenu2(
+                                              uid: profile.uid,
+                                              name: profile.name,
+                                              onBlock: () => setState(() =>
+                                                  _profiles.removeWhere(((p) =>
+                                                      p.uid == profile.uid))),
+                                              builder: (context) {
+                                                return Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: Container(
+                                                    width: 26,
+                                                    height: 26,
+                                                    alignment: Alignment.center,
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                      color: Color.fromRGBO(
+                                                          0x5A,
+                                                          0x5A,
+                                                          0x5A,
+                                                          0.5),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: const Icon(
+                                                      CupertinoIcons.ellipsis,
+                                                      color: Colors.white,
+                                                      size: 14,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                          Positioned(
                                             right: 26,
                                             bottom: 41,
                                             child: Button(
@@ -474,13 +498,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                               child: Container(
                                                 width: 30,
                                                 height: 30,
+                                                clipBehavior: Clip.hardEdge,
                                                 decoration: const BoxDecoration(
                                                   shape: BoxShape.circle,
                                                   color: Color.fromRGBO(
-                                                      0xD9, 0xD9, 0xD9, 1.0),
+                                                      0xD9, 0xD9, 0xD9, 0.28),
                                                   boxShadow: [
                                                     BoxShadow(
-                                                      offset: Offset(0, 4),
+                                                      offset: Offset(0, 2),
                                                       blurRadius: 4,
                                                       color: Color.fromRGBO(
                                                           0x00,
@@ -490,9 +515,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                                     ),
                                                   ],
                                                 ),
-                                                child: const Icon(
-                                                  Icons.volume_up,
-                                                  size: 13,
+                                                child: BackdropFilter(
+                                                  filter: ImageFilter.blur(
+                                                      sigmaX: 10, sigmaY: 10),
+                                                  child: const Icon(
+                                                    Icons.volume_up,
+                                                    size: 13,
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -653,92 +682,60 @@ class _RecordButton extends StatelessWidget {
 class _PageControls extends StatelessWidget {
   final Profile? profile;
   final Gender? preference;
-  final VoidCallback? onNext;
-  final VoidCallback onBlocked;
   final void Function(Gender? preference) onPreference;
 
   const _PageControls({
     super.key,
     required this.profile,
     required this.preference,
-    required this.onNext,
-    required this.onBlocked,
     required this.onPreference,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (profile != null)
-          Button(
-            onPressed: onNext,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                width: 26,
-                height: 26,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 14,
-                ),
-              ),
-            ),
-          ),
-        const SizedBox(height: 13),
         Button(
           onPressed: () => _showPreferencesSheet(context),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Container(
-              width: 26,
-              height: 26,
+              height: 35,
               alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: const BoxDecoration(
-                color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                shape: BoxShape.circle,
-              ),
-              child: Image.asset(
-                'assets/images/preferences_icon.png',
                 color: Colors.white,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.medium,
+                borderRadius: BorderRadius.all(Radius.circular(32)),
+                boxShadow: [
+                  BoxShadow(
+                    offset: Offset(0, 2),
+                    blurRadius: 4,
+                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/images/preferences_icon.png',
+                    color: Colors.black,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.medium,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Filters',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
+                  ),
+                ],
               ),
             ),
           ),
         ),
-        const SizedBox(height: 13),
-        if (profile != null)
-          ReportBlockPopupMenu2(
-            uid: profile!.uid,
-            name: profile!.name,
-            onBlock: onBlocked,
-            builder: (context) {
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  width: 26,
-                  height: 26,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    CupertinoIcons.ellipsis,
-                    color: Colors.white,
-                    size: 14,
-                  ),
-                ),
-              );
-            },
-          ),
       ],
     );
   }
@@ -755,14 +752,14 @@ class _PageControls extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
                 Center(
                   child: Text(
                     'I\'m interested in seeing...',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -771,40 +768,40 @@ class _PageControls extends StatelessWidget {
                   selected: preference == Gender.male,
                   onTap: () => Navigator.of(context).pop('male'),
                   radioAtEnd: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white),
                 ),
                 RadioTile(
                   label: 'Women',
                   selected: preference == Gender.female,
                   onTap: () => Navigator.of(context).pop('female'),
                   radioAtEnd: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white),
                 ),
                 RadioTile(
                   label: 'Non-Binary',
                   selected: preference == Gender.nonBinary,
                   onTap: () => Navigator.of(context).pop('nonBinary'),
                   radioAtEnd: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white),
                 ),
                 RadioTile(
                   label: 'Any',
                   selected: preference == null,
                   onTap: () => Navigator.of(context).pop('any'),
                   radioAtEnd: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white),
                 ),
                 SizedBox(
                   height: MediaQuery.of(context).padding.bottom + 24,
