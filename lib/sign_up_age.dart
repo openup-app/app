@@ -8,6 +8,7 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/policies.dart';
+import 'package:openup/widgets/signup_background.dart';
 
 class SignUpAge extends ConsumerStatefulWidget {
   const SignUpAge({Key? key}) : super(key: key);
@@ -23,13 +24,7 @@ class _SignUpScreenState extends ConsumerState<SignUpAge> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/signup_background.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
+    return SignupBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Column(
@@ -39,42 +34,38 @@ class _SignUpScreenState extends ConsumerState<SignUpAge> {
               height: MediaQuery.of(context).padding.top,
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(left: 8.0),
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: BackIconButton(),
-                  ),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: EdgeInsets.only(left: 8.0),
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: BackIconButton(color: Colors.white),
                 ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.only(right: 24.0),
-                  child: Button(
-                    onPressed: () => context.pushNamed('signup_phone'),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'Log in',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 16, fontWeight: FontWeight.w300),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
             const Spacer(),
             Text(
-              'openup',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 40, fontWeight: FontWeight.w700),
+              'Welcome',
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white),
             ),
-            Image.asset(
-              'assets/images/app_logo.png',
+            Button(
+              onPressed: () => context.goNamed('discover'),
+              child: Container(
+                height: 48,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                alignment: Alignment.center,
+                child: Text(
+                  'Continue as guest',
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white),
+                ),
+              ),
             ),
             const Spacer(),
             Text(
@@ -137,13 +128,13 @@ class _SignUpScreenState extends ConsumerState<SignUpAge> {
                       );
                       context.pushNamed('signup_permissions');
                     },
-              child: RoundedRectangleContainer(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  'Get started',
-                  textAlign: TextAlign.center,
+                  'Log in or sign up',
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w300,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
                       color: Colors.white),
                 ),
               ),
