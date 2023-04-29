@@ -279,7 +279,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       );
     }
 
-    final nameSize = 126.0 + MediaQuery.of(context).padding.bottom;
+    final nameSize = 104.0 + MediaQuery.of(context).padding.bottom;
     return LayoutBuilder(
       builder: (context, constraints) {
         if (_profiles.isEmpty) {
@@ -532,19 +532,58 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                     ),
                                     SizedBox(
                                       height: nameSize,
-                                      child: UserNameAndRecordButton(
-                                        profile: profile,
-                                        recordButtonLabel: 'send invite',
-                                        onRecordPressed: () {
-                                          if (FirebaseAuth
-                                                  .instance.currentUser ==
-                                              null) {
-                                            _showSignInDialog();
-                                          } else {
-                                            _showRecordPanel(
-                                                context, profile.uid);
-                                          }
-                                        },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 16.0),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    profile.name,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium!
+                                                        .copyWith(
+                                                            fontSize: 20,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w800),
+                                                  ),
+                                                ),
+                                                const Icon(
+                                                  Icons.info,
+                                                  color: Color.fromRGBO(
+                                                      0xFF, 0x38, 0x38, 1.0),
+                                                  size: 16,
+                                                ),
+                                                Text('1 mutual friends',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium!
+                                                        .copyWith(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w400)),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'Austin High School',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium!
+                                                  .copyWith(
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.w400),
+                                            )
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],
