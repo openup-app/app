@@ -53,7 +53,7 @@ class _SignUpPermissionsState extends State<SignUpPermissionsScreen> {
               ),
               const Spacer(),
               Text(
-                'openup',
+                'bff',
                 style: Theme.of(context)
                     .textTheme
                     .bodyMedium!
@@ -64,7 +64,7 @@ class _SignUpPermissionsState extends State<SignUpPermissionsScreen> {
               ),
               const Spacer(),
               Text(
-                'Openup needs your location and\ncontacts to help you make the best\nconnections.',
+                'bff needs your location and\ncontacts to help you make the best\nconnections.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context)
                     .textTheme
@@ -91,7 +91,7 @@ class _SignUpPermissionsState extends State<SignUpPermissionsScreen> {
               ),
               const Spacer(),
               Text(
-                'Openup cares about your privacy. We will not\ntext, call or spam anyone from your contacts.',
+                'bff cares about your privacy. We will not\ntext, call or spam anyone from your contacts.',
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: Colors.white,
                     fontSize: 14,
