@@ -25,19 +25,22 @@ class _SignupBackgroundState extends State<SignupBackground> {
   @override
   void initState() {
     super.initState();
-    final r = Random();
 
+    final r = Random();
+    // Set all elements to a random position from -1 to 1 in x and y
     for (var i = 0; i < _count; i++) {
       final a = Alignment(r.nextDouble() * 2 - 1, r.nextDouble() * 2 - 1);
       setState(() => _alignments[i] = a);
     }
 
     _timers = List.generate(_count, (i) {
+      // Randomly change direction every 1 to 2 seconds
       final time = const Duration(seconds: 1) +
           Duration(milliseconds: (1000 * r.nextDouble()).toInt());
       return Timer.periodic(
         time,
         (_) {
+          // Set a new random target position for all elements
           final a = Alignment(r.nextDouble() * 2 - 1, r.nextDouble() * 2 - 1);
           setState(() => _alignments[i] = a);
         },
@@ -47,9 +50,7 @@ class _SignupBackgroundState extends State<SignupBackground> {
 
   @override
   void dispose() {
-    _timers.forEach((element) {
-      element.cancel();
-    });
+    _timers.forEach((timer) => timer.cancel());
     super.dispose();
   }
 
