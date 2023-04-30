@@ -2,10 +2,13 @@
 
 Video and voice calling app.
 
-Running the app
-===============
+
+
+## Running the app from Visual Studio Code
+
 1. Install [Flutter](https://flutter.dev/docs/get-started/install)
-2. From the command line, navigate to this directory: `cd path/to/the/app`
-3. Download the app dependencies: `pub get`
-4. Run the code generator: `pub run build_runner build`
-5. Run the app: `flutter run`
+2. Install Visual Studio Code
+3. Install the Dart and Flutter extensions for Visual Studio Code
+4. In the integrated terminal, get the app dependencies: `flutter pub get`
+5. In the integrated terminal, run the code generator: `flutter pub run build_runner build --delete-conflicting-outputs`
+6. Press play to run the app
