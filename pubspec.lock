@@ -442,12 +442,11 @@ packages:
   flutter_callkit_voximplant:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "2b86f6500b1de23ecc22bba2419ae4df461c5448"
-      url: "git@github.com:openup-app/flutter_callkit.git"
-    source: git
-    version: "2.0.2+2"
+      name: flutter_callkit_voximplant
+      sha256: fe2c46e1ff9d12c7b5a1f7ec4c50ac20d42f5abbcb7ac988dc3e18ae09524a03
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   flutter_contacts:
     dependency: "direct main"
     description:
