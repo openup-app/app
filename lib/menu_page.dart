@@ -139,9 +139,15 @@ class MenuPageState extends State<MenuPage> {
                                 minHeight: maxContentHeight,
                                 maxHeight: maxContentHeight,
                                 alignment: Alignment.topCenter,
-                                child: KeyedSubtree(
-                                  key: _keys[widget.currentIndex],
-                                  child: widget.children[widget.currentIndex],
+                                child: IndexedStack(
+                                  index: widget.currentIndex,
+                                  children: [
+                                    for (var i = 0; i < _keys.length; i++)
+                                      KeyedSubtree(
+                                        key: _keys[i],
+                                        child: widget.children[i],
+                                      ),
+                                  ],
                                 ),
                               ),
                             ),
