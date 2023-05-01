@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
@@ -108,81 +106,94 @@ class MenuPageState extends State<MenuPage> {
                     initialChildSize: maxContentRatio,
                     snap: true,
                     builder: (context, controller) {
-                      return PrimaryScrollControllerTemp(
-                        controller: controller,
-                        child: ValueListenableBuilder<bool>(
-                          valueListenable: _menuOpenNotifier,
-                          builder: (context, open, child) {
-                            return AnimatedContainer(
-                              curve: Curves.easeOut,
-                              duration: const Duration(milliseconds: 200),
-                              height: maxContentHeight,
-                              clipBehavior: Clip.antiAlias,
-                              padding: EdgeInsets.only(
-                                  top: MediaQuery.of(context).padding.top),
-                              decoration: BoxDecoration(
-                                color:
-                                    const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-                                borderRadius: open
-                                    ? BorderRadius.zero
-                                    : const BorderRadius.only(
-                                        topLeft: Radius.circular(48),
-                                        topRight: Radius.circular(48),
-                                      ),
-                              ),
-                              child: child,
-                            );
-                          },
-                          child: Stack(
-                            fit: StackFit.expand,
-                            alignment: Alignment.topCenter,
-                            children: [
-                              Align(
+                      return ValueListenableBuilder<bool>(
+                        valueListenable: _menuOpenNotifier,
+                        builder: (context, open, child) {
+                          return AnimatedContainer(
+                            curve: Curves.easeOut,
+                            duration: const Duration(milliseconds: 200),
+                            height: maxContentHeight,
+                            clipBehavior: Clip.antiAlias,
+                            padding: EdgeInsets.only(
+                                top: MediaQuery.of(context).padding.top),
+                            decoration: BoxDecoration(
+                              color:
+                                  const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                              borderRadius: open
+                                  ? BorderRadius.zero
+                                  : const BorderRadius.only(
+                                      topLeft: Radius.circular(48),
+                                      topRight: Radius.circular(48),
+                                    ),
+                            ),
+                            child: child,
+                          );
+                        },
+                        child: Stack(
+                          fit: StackFit.expand,
+                          alignment: Alignment.topCenter,
+                          children: [
+                            Align(
+                              alignment: Alignment.topCenter,
+                              child: OverflowBox(
+                                minHeight: maxContentHeight,
+                                maxHeight: maxContentHeight,
                                 alignment: Alignment.topCenter,
-                                child: OverflowBox(
-                                  minHeight: maxContentHeight,
-                                  maxHeight: maxContentHeight,
-                                  alignment: Alignment.topCenter,
-                                  child: KeyedSubtree(
-                                    key: _keys[widget.currentIndex],
-                                    child: widget.children[widget.currentIndex],
-                                  ),
+                                child: KeyedSubtree(
+                                  key: _keys[widget.currentIndex],
+                                  child: widget.children[widget.currentIndex],
                                 ),
                               ),
-                              const Align(
-                                alignment: Alignment.topCenter,
-                                child: Padding(
-                                  padding: EdgeInsets.only(top: 14.0),
-                                  child: SizedBox(
-                                    width: 37,
-                                    height: 6,
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(2.5)),
-                                        color: Color.fromRGBO(
-                                            0x71, 0x71, 0x71, 1.0),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            offset: Offset(0, 1),
-                                            blurRadius: 4,
-                                            color: Color.fromRGBO(
-                                                0x00, 0x00, 0x00, 0.25),
+                            ),
+                            Align(
+                              alignment: Alignment.topCenter,
+                              child: SingleChildScrollView(
+                                controller: controller,
+                                physics: const NeverScrollableScrollPhysics(),
+                                child: SizedBox(
+                                  height: 48,
+                                  child: Center(
+                                    child: Stack(
+                                      children: [
+                                        const Center(
+                                          child: SizedBox(
+                                            width: 37,
+                                            height: 6,
+                                            child: DecoratedBox(
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(2.5)),
+                                                color: Color.fromRGBO(
+                                                    0x71, 0x71, 0x71, 1.0),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    offset: Offset(0, 1),
+                                                    blurRadius: 4,
+                                                    color: Color.fromRGBO(
+                                                        0x00, 0x00, 0x00, 0.25),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                        if (widget.pageTitleBuilder != null)
+                                          Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 32),
+                                              child: widget
+                                                  .pageTitleBuilder!(context),
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
-                              if (widget.pageTitleBuilder != null)
-                                Positioned(
-                                  left: 32,
-                                  top: 12,
-                                  child: widget.pageTitleBuilder!(context),
-                                ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       );
                     },
@@ -436,27 +447,5 @@ class _ActivePageState extends State<ActivePage> {
       },
       child: widget.child,
     );
-  }
-}
-
-class PrimaryScrollControllerTemp extends InheritedWidget {
-  final ScrollController controller;
-
-  const PrimaryScrollControllerTemp({
-    super.key,
-    required this.controller,
-    required super.child,
-  });
-
-  @override
-  bool updateShouldNotify(covariant PrimaryScrollControllerTemp oldWidget) {
-    return oldWidget.controller != controller;
-  }
-
-  static ScrollController? of(BuildContext context) {
-    final primaryScrollControllerTemp = context
-        .dependOnInheritedWidgetOfExactType<PrimaryScrollControllerTemp>();
-    final currentRoute = ModalRoute.of(context)?.isCurrent == true;
-    return currentRoute ? primaryScrollControllerTemp?.controller : null;
   }
 }

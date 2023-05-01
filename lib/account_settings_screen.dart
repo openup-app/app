@@ -13,7 +13,6 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/menu_page.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/settings_phone_verification_screen.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -56,7 +55,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           ),
         ),
         child: SingleChildScrollView(
-          controller: PrimaryScrollControllerTemp.of(context),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 362),
             child: Column(

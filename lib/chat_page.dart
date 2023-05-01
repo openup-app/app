@@ -16,7 +16,6 @@ import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/home_screen.dart';
-import 'package:openup/menu_page.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -128,252 +127,249 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                 appBarHeight +
                 bottomButtonHeight +
                 MediaQuery.of(context).padding.bottom);
-        return SingleChildScrollView(
-          controller: PrimaryScrollControllerTemp.of(context),
-          child: Column(
-            children: [
-              const SizedBox(height: 32),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const BackIconButton(),
-                  const Spacer(),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 45,
-                        height: 45,
-                        clipBehavior: Clip.hardEdge,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
-                        child: _otherProfile?.photo == null
-                            ? const SizedBox.shrink()
-                            : Image.network(
-                                widget.otherProfile!.photo,
-                                fit: BoxFit.cover,
-                              ),
+        return Column(
+          children: [
+            const SizedBox(height: 32),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const BackIconButton(),
+                const Spacer(),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 45,
+                      height: 45,
+                      clipBehavior: Clip.hardEdge,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        _otherProfile?.name ?? '',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            color: const Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0)),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  PopupMenuButton(
-                    icon: const Icon(
-                      Icons.more_horiz,
-                      color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+                      child: _otherProfile?.photo == null
+                          ? const SizedBox.shrink()
+                          : Image.network(
+                              widget.otherProfile!.photo,
+                              fit: BoxFit.cover,
+                            ),
                     ),
-                    itemBuilder: (context) {
-                      return [];
-                    },
-                  ),
-                ],
-              ),
-              if (!_loading && _messages.isEmpty && _otherProfile != null)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      'Send your first message to ${_otherProfile!.name}',
+                    const SizedBox(width: 12),
+                    Text(
+                      _otherProfile?.name ?? '',
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 23,
-                            fontWeight: FontWeight.w400,
-                          ),
-                      textAlign: TextAlign.center,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: const Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0)),
                     ),
+                  ],
+                ),
+                const Spacer(),
+                PopupMenuButton(
+                  icon: const Icon(
+                    Icons.more_horiz,
+                    color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
                   ),
-                )
-              else
-                SizedBox(
-                  height: listHeight,
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: EdgeInsets.zero,
-                    itemExtent: innerItemSize + 16,
-
-                    itemCount: _messages.length,
-                    //    padding: EdgeInsets.only(
-                    //   top:
-                    //       MediaQuery.of(context).padding.top + 64 + innerItemSize,
-                    // ),
-                    itemBuilder: (context, fakeIndex) {
-                      // if (fakeIndex < 2) {
-                      //   return const SizedBox.square(
-                      //     dimension: innerItemSize,
-                      //   );
-                      // }
-                      final index = fakeIndex;
-                      final message = _messages.values.toList()[index];
-                      final myUid = ref.read(userProvider).uid;
-                      final fromMe = message.uid == myUid;
-                      return Consumer(
-                        builder: (context, ref, child) {
-                          final height = listHeight;
-                          const itemHeight = innerItemSize + 16;
-                          final itemTopPixels = index * itemHeight;
-                          final scrollPixels =
-                              ref.watch(_scrollProvider) + listHeight;
-                          itemTopPixels + height + itemHeight;
-                          final runwayLength = height + itemHeight;
-                          final runwayRatio = 1.0 -
-                              (scrollPixels - itemTopPixels) / runwayLength;
-                          // if (index == 3 || index == 4) {
-                          //   print(
-                          //       '$index) Runway ratio is $runwayRatio, shift is ${100 * (0.5 - runwayRatio)}');
-                          // }
-
-                          final t = Matrix4.identity()
-                            // Shift scaling origin down as it scrolls up, so items don't fly upwards
-                            ..translate(
-                                0.0,
-                                (1 - runwayRatio) *
-                                    0.5 *
-                                    itemHeight *
-                                    (1.0 - runwayRatio))
-                            // Scale based on distance on the runway
-                            ..scale(runwayRatio.clamp(0.0, double.infinity))
-                            // Center all items in the list
-                            ..translate(0.0, runwayLength * (0.5 - runwayRatio))
-                            // Shift the whole thing down
-                            ..translate(0.0, runwayLength * 0.1);
-
-                          final x = runwayRatio;
-                          final y1 = cos(2 * x - pi / 2);
-                          final y2 = cos(8 * (x - 1 + pi / 16));
-                          final y = x < pi / 4
-                              ? y1
-                              : (x < (1 - pi / 16))
-                                  ? 1.0
-                                  : y2;
-                          final blur = 100.0 * (1 - y.clamp(0.0, 1.0));
-                          return Transform(
-                            transform: t,
-                            alignment: Alignment.center,
-                            origin: Offset(0.0,
-                                scrollPixels - itemTopPixels - runwayLength),
-                            child: Opacity(
-                              opacity: y.clamp(0.0, 1.0),
-                              child: OverflowBox(
-                                alignment: Alignment.center,
-                                minWidth: 600,
-                                minHeight: 600,
-                                maxWidth: 600,
-                                maxHeight: 600,
-                                child: ImageFiltered(
-                                  imageFilter: ImageFilter.blur(
-                                    sigmaX: blur,
-                                    sigmaY: blur,
-                                  ),
-                                  child: child,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              left: fromMe ? 64.0 : 0.0,
-                              right: fromMe ? 0.0 : 64.0,
-                            ),
-                            child: StreamBuilder<PlaybackInfo>(
-                              initialData: const PlaybackInfo(),
-                              stream: _audio.playbackInfoStream,
-                              builder: (context, snapshot) {
-                                final playbackInfo = snapshot.requireData;
-                                final isCurrent =
-                                    _playbackMessageId == message.messageId;
-                                final isPlaying = isCurrent &&
-                                    playbackInfo.state == PlaybackState.playing;
-                                final isLoading = isCurrent &&
-                                    playbackInfo.state == PlaybackState.loading;
-                                // return ColoredBox(
-                                //   color: Colors.transparent,
-                                //   child: Center(
-                                //     child: Container(
-                                //       width: innerItemSize,
-                                //       height: innerItemSize,
-                                //       decoration: BoxDecoration(
-                                //         shape: BoxShape.circle,
-                                //         color: (fromMe
-                                //             ? Colors.blue
-                                //             : (index == 4
-                                //                 ? Colors.orange
-                                //                 : Colors.pink)),
-                                //       ),
-                                //     ),
-                                //   ),
-                                // );
-                                return ColoredBox(
-                                  color: Colors.transparent,
-                                  child: Center(
-                                    child: _ChatMessage(
-                                      photo: fromMe
-                                          ? _myPhoto
-                                          : _otherProfile?.photo,
-                                      fromMe: fromMe,
-                                      message: message,
-                                      height: innerItemSize,
-                                      isLoading: isLoading,
-                                      frequenciesColor: isPlaying
-                                          ? const Color.fromRGBO(
-                                              0x00, 0xff, 0xef, 1.0)
-                                          : const Color.fromRGBO(
-                                              0xAF, 0xAF, 0xAF, 1.0),
-                                      frequencies: isPlaying
-                                          ? playbackInfo.frequencies
-                                          : null,
-                                      onPressed: () async {
-                                        if (isPlaying) {
-                                          _audio.stop();
-                                          setState(
-                                              () => _playbackMessageId = null);
-                                        } else {
-                                          setState(() => _playbackMessageId =
-                                              message.messageId);
-                                          await _audio.setUrl(message.content);
-                                          if (mounted) {
-                                            _audio.play();
-                                          }
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                  itemBuilder: (context) {
+                    return [];
+                  },
+                ),
+              ],
+            ),
+            if (!_loading && _messages.isEmpty && _otherProfile != null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'Send your first message to ${_otherProfile!.name}',
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 23,
+                          fontWeight: FontWeight.w400,
                         ),
-                      );
-                    },
+                    textAlign: TextAlign.center,
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: _RecordButton(
-                  onPressed: () async {
-                    _audio.stop();
-                    final result = await _showRecordPanel(context);
-                    if (result != null && mounted) {
-                      _submit(result.audio, result.duration);
-                    }
+              )
+            else
+              SizedBox(
+                height: listHeight,
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: EdgeInsets.zero,
+                  itemExtent: innerItemSize + 16,
+
+                  itemCount: _messages.length,
+                  //    padding: EdgeInsets.only(
+                  //   top:
+                  //       MediaQuery.of(context).padding.top + 64 + innerItemSize,
+                  // ),
+                  itemBuilder: (context, fakeIndex) {
+                    // if (fakeIndex < 2) {
+                    //   return const SizedBox.square(
+                    //     dimension: innerItemSize,
+                    //   );
+                    // }
+                    final index = fakeIndex;
+                    final message = _messages.values.toList()[index];
+                    final myUid = ref.read(userProvider).uid;
+                    final fromMe = message.uid == myUid;
+                    return Consumer(
+                      builder: (context, ref, child) {
+                        final height = listHeight;
+                        const itemHeight = innerItemSize + 16;
+                        final itemTopPixels = index * itemHeight;
+                        final scrollPixels =
+                            ref.watch(_scrollProvider) + listHeight;
+                        itemTopPixels + height + itemHeight;
+                        final runwayLength = height + itemHeight;
+                        final runwayRatio =
+                            1.0 - (scrollPixels - itemTopPixels) / runwayLength;
+                        // if (index == 3 || index == 4) {
+                        //   print(
+                        //       '$index) Runway ratio is $runwayRatio, shift is ${100 * (0.5 - runwayRatio)}');
+                        // }
+
+                        final t = Matrix4.identity()
+                          // Shift scaling origin down as it scrolls up, so items don't fly upwards
+                          ..translate(
+                              0.0,
+                              (1 - runwayRatio) *
+                                  0.5 *
+                                  itemHeight *
+                                  (1.0 - runwayRatio))
+                          // Scale based on distance on the runway
+                          ..scale(runwayRatio.clamp(0.0, double.infinity))
+                          // Center all items in the list
+                          ..translate(0.0, runwayLength * (0.5 - runwayRatio))
+                          // Shift the whole thing down
+                          ..translate(0.0, runwayLength * 0.1);
+
+                        final x = runwayRatio;
+                        final y1 = cos(2 * x - pi / 2);
+                        final y2 = cos(8 * (x - 1 + pi / 16));
+                        final y = x < pi / 4
+                            ? y1
+                            : (x < (1 - pi / 16))
+                                ? 1.0
+                                : y2;
+                        final blur = 100.0 * (1 - y.clamp(0.0, 1.0));
+                        return Transform(
+                          transform: t,
+                          alignment: Alignment.center,
+                          origin: Offset(
+                              0.0, scrollPixels - itemTopPixels - runwayLength),
+                          child: Opacity(
+                            opacity: y.clamp(0.0, 1.0),
+                            child: OverflowBox(
+                              alignment: Alignment.center,
+                              minWidth: 600,
+                              minHeight: 600,
+                              maxWidth: 600,
+                              maxHeight: 600,
+                              child: ImageFiltered(
+                                imageFilter: ImageFilter.blur(
+                                  sigmaX: blur,
+                                  sigmaY: blur,
+                                ),
+                                child: child,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            left: fromMe ? 64.0 : 0.0,
+                            right: fromMe ? 0.0 : 64.0,
+                          ),
+                          child: StreamBuilder<PlaybackInfo>(
+                            initialData: const PlaybackInfo(),
+                            stream: _audio.playbackInfoStream,
+                            builder: (context, snapshot) {
+                              final playbackInfo = snapshot.requireData;
+                              final isCurrent =
+                                  _playbackMessageId == message.messageId;
+                              final isPlaying = isCurrent &&
+                                  playbackInfo.state == PlaybackState.playing;
+                              final isLoading = isCurrent &&
+                                  playbackInfo.state == PlaybackState.loading;
+                              // return ColoredBox(
+                              //   color: Colors.transparent,
+                              //   child: Center(
+                              //     child: Container(
+                              //       width: innerItemSize,
+                              //       height: innerItemSize,
+                              //       decoration: BoxDecoration(
+                              //         shape: BoxShape.circle,
+                              //         color: (fromMe
+                              //             ? Colors.blue
+                              //             : (index == 4
+                              //                 ? Colors.orange
+                              //                 : Colors.pink)),
+                              //       ),
+                              //     ),
+                              //   ),
+                              // );
+                              return ColoredBox(
+                                color: Colors.transparent,
+                                child: Center(
+                                  child: _ChatMessage(
+                                    photo: fromMe
+                                        ? _myPhoto
+                                        : _otherProfile?.photo,
+                                    fromMe: fromMe,
+                                    message: message,
+                                    height: innerItemSize,
+                                    isLoading: isLoading,
+                                    frequenciesColor: isPlaying
+                                        ? const Color.fromRGBO(
+                                            0x00, 0xff, 0xef, 1.0)
+                                        : const Color.fromRGBO(
+                                            0xAF, 0xAF, 0xAF, 1.0),
+                                    frequencies: isPlaying
+                                        ? playbackInfo.frequencies
+                                        : null,
+                                    onPressed: () async {
+                                      if (isPlaying) {
+                                        _audio.stop();
+                                        setState(
+                                            () => _playbackMessageId = null);
+                                      } else {
+                                        setState(() => _playbackMessageId =
+                                            message.messageId);
+                                        await _audio.setUrl(message.content);
+                                        if (mounted) {
+                                          _audio.play();
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    );
                   },
                 ),
               ),
-              SizedBox(
-                height: MediaQuery.of(context).padding.bottom,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: _RecordButton(
+                onPressed: () async {
+                  _audio.stop();
+                  final result = await _showRecordPanel(context);
+                  if (result != null && mounted) {
+                    _submit(result.audio, result.duration);
+                  }
+                },
               ),
-            ],
-          ),
+            ),
+            SizedBox(
+              height: MediaQuery.of(context).padding.bottom,
+            ),
+          ],
         );
       },
     );

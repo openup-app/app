@@ -841,7 +841,7 @@ class _MenuPageShell extends StatefulWidget {
 
 class _MenuPageShellState extends State<_MenuPageShell> {
   final _menuPageKey = GlobalKey<MenuPageState>();
-  int _currentIndex = 0;
+  int _currentIndex = 2;
 
   @override
   Widget build(BuildContext context) {

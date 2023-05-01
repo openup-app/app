@@ -11,7 +11,6 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/menu_page.dart';
 import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/collection_photo_picker.dart';
@@ -50,41 +49,26 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
   @override
   Widget build(BuildContext context) {
     final loggedIn = FirebaseAuth.instance.currentUser != null;
-    final currentRoute = ModalRoute.of(context)?.isCurrent == true;
     final profile = ref.watch(userProvider.select((p) => p.profile));
 
-    if (!loggedIn || profile == null) {
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            controller:
-                currentRoute ? PrimaryScrollControllerTemp.of(context) : null,
-            child: SizedBox(
-              height: constraints.maxHeight,
-              child: Builder(
-                builder: (context) {
-                  if (!loggedIn) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('Log in to create a profile'),
-                          ElevatedButton(
-                            onPressed: () => context.pushNamed('signup'),
-                            child: const Text('Log in'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  return const Center(
-                    child: LoadingIndicator(),
-                  );
-                },
-              ),
+    if (!loggedIn) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Log in to create a profile'),
+            ElevatedButton(
+              onPressed: () => context.pushNamed('signup'),
+              child: const Text('Log in'),
             ),
-          );
-        },
+          ],
+        ),
+      );
+    }
+
+    if (profile == null) {
+      return const Center(
+        child: LoadingIndicator(),
       );
     }
 
@@ -102,8 +86,6 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
-            controller:
-                currentRoute ? PrimaryScrollControllerTemp.of(context) : null,
             child: Builder(
               builder: (context) {
                 if (!_showCollectionCreation) {

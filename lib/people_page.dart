@@ -99,7 +99,6 @@ class _PeoplePageState extends State<PeoplePage> {
                   top: 0,
                   bottom: MediaQuery.of(context).padding.bottom + 72,
                 ),
-                controller: PrimaryScrollControllerTemp.of(context)!,
                 filter: _filterString,
               ),
             ),
