@@ -537,9 +537,9 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: "3eed802a26a221bed8c01e4105b64c94f02a2a2b"
-      url: "git@github.com:openup-app/flutter_voip_push_notification.git"
+      ref: master
+      resolved-ref: bb8c2f42ef030f39562fd9d3425acc9345ec5321
+      url: "https://github.com/peerwaya/flutter_voip_push_notification"
     source: git
     version: "0.0.3"
   flutter_web_plugins:

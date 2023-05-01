@@ -45,7 +45,9 @@ dependencies:
   flutter_spinkit: ^5.1.0
   flutter_svg: ^2.0.5
   flutter_voip_push_notification:
-    git: git@github.com:openup-app/flutter_voip_push_notification.git
+    git:
+      url: https://github.com/peerwaya/flutter_voip_push_notification
+      ref: master
   flutter_webrtc: ^0.9.8
   get_it: ^7.2.0
   go_router:
