@@ -84,195 +84,183 @@ class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SizedBox(
-          height: constraints.maxHeight,
-          child: Builder(
-            builder: (context) {
-              final loggedIn = FirebaseAuth.instance.currentUser != null;
-              if (!loggedIn) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Log in start conversations'),
-                    ElevatedButton(
-                      onPressed: () => context.pushNamed('signup'),
-                      child: const Text('Log in'),
-                    ),
-                  ],
-                );
-              }
+    final loggedIn = FirebaseAuth.instance.currentUser != null;
+    if (!loggedIn) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('Log in start conversations'),
+          ElevatedButton(
+            onPressed: () => context.pushNamed('signup'),
+            child: const Text('Log in'),
+          ),
+        ],
+      );
+    }
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 40),
-                  Container(
-                    height: 31,
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 17, vertical: 8),
-                    clipBehavior: Clip.hardEdge,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(7),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 31,
+          margin: EdgeInsets.only(
+            left: 16,
+            top: 24 + MediaQuery.of(context).padding.top,
+            right: 16,
+            bottom: 16,
+          ),
+          clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.all(
+              Radius.circular(7),
+            ),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 26,
+                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
+              ),
+            ],
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 11, right: 6.0),
+                    child: TextFormField(
+                      controller: _searchController,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w300,
+                            color: Colors.white,
+                          ),
+                      decoration: InputDecoration.collapsed(
+                        hintText: 'Search',
+                        hintStyle: Theme.of(context)
+                            .textTheme
+                            .bodyMedium!
+                            .copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w300,
+                              color:
+                                  const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                            ),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          blurRadius: 26,
-                          color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
+                    ),
+                  ),
+                ),
+                if (_filterString.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16.0),
+                    child: Button(
+                      onPressed: () {
+                        setState(() => _searchController.text = "");
+                        FocusScope.of(context).unfocus();
+                      },
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (_filterString.isEmpty)
+          Visibility(
+            visible: false,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: SizedBox(
+                height: 150,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  itemCount: _collections.length,
+                  itemBuilder: (context, index) {
+                    final collection = _collections[index];
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 82,
+                          height: 110,
+                          clipBehavior: Clip.hardEdge,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color:
+                                  const Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
+                              width: 2,
+                            ),
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(11)),
+                          ),
+                          margin: const EdgeInsets.all(9),
+                          child: Image.network(
+                            collection.photos.first.url,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        SizedBox(
+                          width: 82,
+                          child: Text(
+                            'Name',
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w200,
+                                  color: Colors.white,
+                                ),
+                          ),
                         ),
                       ],
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 11, right: 6.0),
-                              child: TextFormField(
-                                controller: _searchController,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .copyWith(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w300,
-                                      color: Colors.white,
-                                    ),
-                                decoration: InputDecoration.collapsed(
-                                  hintText: 'Search',
-                                  hintStyle: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w300,
-                                        color: const Color.fromRGBO(
-                                            0x8D, 0x8D, 0x8D, 1.0),
-                                      ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (_filterString.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 16.0),
-                              child: Button(
-                                onPressed: () {
-                                  setState(() => _searchController.text = "");
-                                  FocusScope.of(context).unfocus();
-                                },
-                                child: const Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (_filterString.isEmpty)
-                    Visibility(
-                      visible: false,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: SizedBox(
-                          height: 150,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            keyboardDismissBehavior:
-                                ScrollViewKeyboardDismissBehavior.onDrag,
-                            itemCount: _collections.length,
-                            itemBuilder: (context, index) {
-                              final collection = _collections[index];
-                              return Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 82,
-                                    height: 110,
-                                    clipBehavior: Clip.hardEdge,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: const Color.fromRGBO(
-                                            0xFF, 0x5F, 0x5F, 1.0),
-                                        width: 2,
-                                      ),
-                                      borderRadius: const BorderRadius.all(
-                                          Radius.circular(11)),
-                                    ),
-                                    margin: const EdgeInsets.all(9),
-                                    child: Image.network(
-                                      collection.photos.first.url,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  SizedBox(
-                                    width: 82,
-                                    child: Text(
-                                      'Name',
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.center,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium!
-                                          .copyWith(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w200,
-                                            color: Colors.white,
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  const SectionTitle(
-                    title: Text('MESSAGES'),
-                  ),
-                  Expanded(
-                    child: ColoredBox(
-                      color: Colors.white,
-                      child: Builder(
-                        builder: (context) {
-                          final filteredChatrooms = _chatrooms?.where((c) => c
-                              .profile.name
-                              .toLowerCase()
-                              .contains(_filterString.toLowerCase()));
-
-                          return _ConversationList(
-                            chatrooms: filteredChatrooms
-                                ?.where((chatroom) =>
-                                    chatroom.state == ChatroomState.accepted)
-                                .toList(),
-                            emptyLabel:
-                                'Invite someone to chat,\nthen continue the conversation here',
-                            filtered: _filterString.isNotEmpty,
-                            onRefresh: _fetchChatrooms,
-                            onOpen: _openChat,
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
+                    );
+                  },
+                ),
+              ),
+            ),
           ),
-        );
-      },
+        const SectionTitle(
+          title: Text('MESSAGES'),
+        ),
+        Expanded(
+          child: ColoredBox(
+            color: Colors.white,
+            child: Builder(
+              builder: (context) {
+                final filteredChatrooms = _chatrooms?.where((c) => c
+                    .profile.name
+                    .toLowerCase()
+                    .contains(_filterString.toLowerCase()));
+
+                return _ConversationList(
+                  chatrooms: filteredChatrooms
+                      ?.where((chatroom) =>
+                          chatroom.state == ChatroomState.accepted)
+                      .toList(),
+                  emptyLabel:
+                      'Invite someone to chat,\nthen continue the conversation here',
+                  filtered: _filterString.isNotEmpty,
+                  onRefresh: _fetchChatrooms,
+                  onOpen: _openChat,
+                );
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -38,190 +38,175 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      return Container(
-        height: constraints.maxHeight,
-        margin: EdgeInsets.only(
-          top: 40,
-          bottom: MediaQuery.of(context).padding.bottom,
-          left: 16,
-          right: 16,
+    return Container(
+      margin: EdgeInsets.only(
+        top: 24 + MediaQuery.of(context).padding.top,
+        left: 16,
+        right: 16,
+        bottom: 16 + MediaQuery.of(context).padding.bottom,
+      ),
+      clipBehavior: Clip.hardEdge,
+      decoration: const BoxDecoration(
+        color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+        borderRadius: BorderRadius.all(
+          Radius.circular(20),
         ),
-        clipBehavior: Clip.hardEdge,
-        decoration: const BoxDecoration(
-          color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-          borderRadius: BorderRadius.all(
-            Radius.circular(20),
-          ),
-        ),
-        child: SingleChildScrollView(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 362),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Button(
-                  onPressed: () {},
-                  child: Container(
-                    height: 343,
-                    clipBehavior: Clip.hardEdge,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(
-                            'assets/images/subscribe_background.png'),
-                        fit: BoxFit.cover,
-                      ),
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(20),
-                      ),
+      ),
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          Button(
+            onPressed: () {},
+            child: Container(
+              height: 343,
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/subscribe_background.png'),
+                  fit: BoxFit.cover,
+                ),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(20),
+                ),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Subscribe',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white),
                     ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Subscribe',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '27 days remaining, then \$6.99/month',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.white),
-                          ),
-                        ],
-                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '27 days remaining, then \$6.99/month',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white),
                     ),
-                  ),
+                  ],
                 ),
-                const SectionTitle(
-                  title: Text('Phone Number'),
-                ),
-                const SizedBox(height: 8),
-                _CupertinoButton(
-                  leading: PhoneInput(
-                    onChanged: (value, valid) {
-                      setState(() {
-                        _newPhoneNumber = value;
-                        _newPhoneNumberValid = valid;
-                      });
-                    },
-                    onValidationError: (_) {},
-                  ),
-                  trailing: Button(
-                    onPressed: () {},
-                    child: const Text(
-                      'Edit',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ),
-                ),
-                // const SizedBox(height: 16),
-                // SizedBox(
-                //   width: 237,
-                //   child: Button(
-                //     onPressed: (_submitting | !_newPhoneNumberValid ||
-                //             _newPhoneNumber?.isEmpty == true)
-                //         ? null
-                //         : _updateInformation,
-                //     child: _InputArea(
-                //       childNeedsOpacity: false,
-                //       gradientColors: const [
-                //         Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
-                //         Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
-                //       ],
-                //       child: Center(
-                //         child: _submitting
-                //             ? const LoadingIndicator()
-                //             : Text(
-                //                 'Update Information',
-                //                 style: Theme.of(context)
-                //                     .textTheme
-                //                     .bodyMedium!
-                //                     .copyWith(
-                //                       fontSize: 24,
-                //                       fontWeight: FontWeight.w500,
-                //                     ),
-                //               ),
-                //       ),
-                //     ),
-                //   ),
-                // ),
-                const SizedBox(height: 16),
-                _CupertinoButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return const _BlockedList();
-                        },
-                      ),
-                    );
-                  },
-                  leading: const Text('Blocked users'),
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _CupertinoButton(
-                  onPressed: () => context.pushNamed('contact-us'),
-                  leading: const Text('Contact us'),
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _CupertinoButton(
-                  onPressed: _signOut,
-                  center: const Text(
-                    'Sign out',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _CupertinoButton(
-                  onPressed: _showDeleteAccountDialog,
-                  center: const Text(
-                    'Delete Account',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-                if (kDebugMode) ...[
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Text(
-                      '${FirebaseAuth.instance.currentUser?.uid}',
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Center(
-                    child: Text(
-                      '${FirebaseAuth.instance.currentUser?.phoneNumber}',
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ],
+              ),
             ),
           ),
-        ),
-      );
-    });
+          const SectionTitle(
+            title: Text('Phone Number'),
+          ),
+          const SizedBox(height: 8),
+          _CupertinoButton(
+            leading: PhoneInput(
+              onChanged: (value, valid) {
+                setState(() {
+                  _newPhoneNumber = value;
+                  _newPhoneNumberValid = valid;
+                });
+              },
+              onValidationError: (_) {},
+            ),
+            trailing: Button(
+              onPressed: () {},
+              child: const Text(
+                'Edit',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ),
+          // const SizedBox(height: 16),
+          // SizedBox(
+          //   width: 237,
+          //   child: Button(
+          //     onPressed: (_submitting | !_newPhoneNumberValid ||
+          //             _newPhoneNumber?.isEmpty == true)
+          //         ? null
+          //         : _updateInformation,
+          //     child: _InputArea(
+          //       childNeedsOpacity: false,
+          //       gradientColors: const [
+          //         Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
+          //         Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
+          //       ],
+          //       child: Center(
+          //         child: _submitting
+          //             ? const LoadingIndicator()
+          //             : Text(
+          //                 'Update Information',
+          //                 style: Theme.of(context)
+          //                     .textTheme
+          //                     .bodyMedium!
+          //                     .copyWith(
+          //                       fontSize: 24,
+          //                       fontWeight: FontWeight.w500,
+          //                     ),
+          //               ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
+          const SizedBox(height: 16),
+          _CupertinoButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const _BlockedList();
+                  },
+                ),
+              );
+            },
+            leading: const Text('Blocked users'),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _CupertinoButton(
+            onPressed: () => context.pushNamed('contact-us'),
+            leading: const Text('Contact us'),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _CupertinoButton(
+            onPressed: _signOut,
+            center: const Text(
+              'Sign out',
+            ),
+          ),
+          const SizedBox(height: 16),
+          _CupertinoButton(
+            onPressed: _showDeleteAccountDialog,
+            center: const Text(
+              'Delete Account',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+          if (kDebugMode) ...[
+            const SizedBox(height: 16),
+            Center(
+              child: Text(
+                '${FirebaseAuth.instance.currentUser?.uid}',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                '${FirebaseAuth.instance.currentUser?.phoneNumber}',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ],
+      ),
+    );
   }
 
   void _updateInformation() async {

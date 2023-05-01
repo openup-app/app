@@ -76,10 +76,8 @@ class MenuPageState extends State<MenuPage> {
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final maxHeight =
-                constraints.maxHeight - MediaQuery.of(context).padding.top;
-            final maxContentHeight =
-                constraints.maxHeight - MediaQuery.of(context).padding.top;
+            final maxHeight = constraints.maxHeight;
+            final maxContentHeight = constraints.maxHeight;
             final maxContentRatio = maxContentHeight / maxHeight;
             return Stack(
               children: [
@@ -114,8 +112,6 @@ class MenuPageState extends State<MenuPage> {
                             duration: const Duration(milliseconds: 200),
                             height: maxContentHeight,
                             clipBehavior: Clip.antiAlias,
-                            padding: EdgeInsets.only(
-                                top: MediaQuery.of(context).padding.top),
                             decoration: BoxDecoration(
                               color:
                                   const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
@@ -153,42 +149,31 @@ class MenuPageState extends State<MenuPage> {
                             ),
                             Align(
                               alignment: Alignment.topCenter,
-                              child: SingleChildScrollView(
-                                controller: controller,
-                                physics: const NeverScrollableScrollPhysics(),
-                                child: SizedBox(
-                                  height: 48,
-                                  child: Center(
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                    top: MediaQuery.of(context).padding.top),
+                                child: SingleChildScrollView(
+                                  controller: controller,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  child: SizedBox(
+                                    height: 56,
                                     child: Stack(
                                       children: [
-                                        const Center(
-                                          child: SizedBox(
-                                            width: 37,
-                                            height: 6,
-                                            child: DecoratedBox(
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(2.5)),
-                                                color: Color.fromRGBO(
-                                                    0x71, 0x71, 0x71, 1.0),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    offset: Offset(0, 1),
-                                                    blurRadius: 4,
-                                                    color: Color.fromRGBO(
-                                                        0x00, 0x00, 0x00, 0.25),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
+                                        const Align(
+                                          alignment: Alignment.topCenter,
+                                          child: Padding(
+                                            padding: EdgeInsets.only(top: 9.0),
+                                            child: _DragHandle(),
                                           ),
                                         ),
                                         if (widget.pageTitleBuilder != null)
                                           Align(
-                                            alignment: Alignment.centerLeft,
+                                            alignment: Alignment.topLeft,
                                             child: Padding(
                                               padding: const EdgeInsets.only(
-                                                  left: 32),
+                                                left: 32,
+                                                top: 7,
+                                              ),
                                               child: widget
                                                   .pageTitleBuilder!(context),
                                             ),
@@ -218,6 +203,33 @@ class MenuPageState extends State<MenuPage> {
       0,
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
+    );
+  }
+}
+
+class _DragHandle extends StatelessWidget {
+  const _DragHandle({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 37,
+      height: 6,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(2.5)),
+          color: Color.fromRGBO(0x71, 0x71, 0x71, 1.0),
+          boxShadow: [
+            BoxShadow(
+              offset: Offset(0, 1),
+              blurRadius: 4,
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

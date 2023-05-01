@@ -48,27 +48,29 @@ class _InviteFriendsState extends State<InviteFriends> {
   @override
   Widget build(BuildContext context) {
     if (!_hasContactsPermission) {
-      return LayoutBuilder(builder: (context, constraints) {
-        return SingleChildScrollView(
-          controller: widget.controller,
-          child: SizedBox(
-            height: constraints.maxHeight,
-            child: Center(
-              child: PermissionButton(
-                icon: const Icon(Icons.import_contacts),
-                label: const Text('Enable Contacts'),
-                granted: _hasContactsPermission,
-                onPressed: () async {
-                  final status = await Permission.contacts.request();
-                  if (mounted && status == PermissionStatus.granted) {
-                    _fetchContacts();
-                  }
-                },
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            controller: widget.controller,
+            child: SizedBox(
+              height: constraints.maxHeight,
+              child: Center(
+                child: PermissionButton(
+                  icon: const Icon(Icons.import_contacts),
+                  label: const Text('Enable Contacts'),
+                  granted: _hasContactsPermission,
+                  onPressed: () async {
+                    final status = await Permission.contacts.request();
+                    if (mounted && status == PermissionStatus.granted) {
+                      _fetchContacts();
+                    }
+                  },
+                ),
               ),
             ),
-          ),
-        );
-      });
+          );
+        },
+      );
     }
 
     if (_error) {
@@ -128,6 +130,9 @@ class _InviteFriendsState extends State<InviteFriends> {
     return CustomScrollView(
       controller: widget.controller,
       slivers: [
+        SliverToBoxAdapter(
+          child: SizedBox(height: widget.padding.top),
+        ),
         const SliverToBoxAdapter(
           child: SectionTitle(title: Text('Contacts using bff')),
         ),
@@ -137,7 +142,7 @@ class _InviteFriendsState extends State<InviteFriends> {
             (context, index) {
               final knownProfile = knownProfiles[index];
               return DecoratedBox(
-                decoration: BoxDecoration(color: Colors.white),
+                decoration: const BoxDecoration(color: Colors.white),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -241,7 +246,7 @@ class _InviteFriendsState extends State<InviteFriends> {
         ),
         SliverToBoxAdapter(
           child: SizedBox(
-            height: 16 + MediaQuery.of(context).padding.bottom,
+            height: widget.padding.bottom,
           ),
         ),
       ],

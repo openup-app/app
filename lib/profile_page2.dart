@@ -76,7 +76,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage2> {
       margin: EdgeInsets.only(
         left: 16,
         right: 16,
-        top: 32,
+        top: 24 + MediaQuery.of(context).padding.top,
         bottom: 16 + MediaQuery.of(context).padding.bottom,
       ),
       clipBehavior: Clip.hardEdge,

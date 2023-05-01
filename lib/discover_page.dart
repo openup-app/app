@@ -351,7 +351,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                           margin: EdgeInsets.only(
                             left: 16,
                             right: 16,
-                            top: 32,
+                            top: 24 + MediaQuery.of(context).padding.top,
                             bottom: 16 + MediaQuery.of(context).padding.bottom,
                           ),
                           clipBehavior: Clip.hardEdge,
@@ -386,8 +386,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                 },
               ),
               Positioned(
-                left: 32,
-                top: 32 + 14,
+                left: 16 + 20,
+                top: MediaQuery.of(context).padding.top + 24 + 20,
                 child: _PageControls(
                   profile: profile,
                   preference: _genderPreference,
@@ -528,28 +528,26 @@ class _ProfileDisplay extends StatelessWidget {
             ),
           ),
         Positioned(
-          right: 16,
-          top: 20,
+          right: 22,
+          top: 24,
           child: ReportBlockPopupMenu2(
             uid: profile.uid,
             name: profile.name,
             onBlock: onBlock,
             builder: (context) {
-              return Padding(
+              return Container(
+                width: 29,
+                height: 29,
+                alignment: Alignment.center,
                 padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  width: 26,
-                  height: 26,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    CupertinoIcons.ellipsis,
-                    color: Colors.white,
-                    size: 14,
-                  ),
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  CupertinoIcons.ellipsis,
+                  color: Colors.white,
+                  size: 14,
                 ),
               );
             },
@@ -714,41 +712,38 @@ class _PageControls extends StatelessWidget {
       children: [
         Button(
           onPressed: () => _showPreferencesSheet(context),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
-              height: 35,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(32)),
-                boxShadow: [
-                  BoxShadow(
-                    offset: Offset(0, 2),
-                    blurRadius: 4,
-                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/images/preferences_icon.png',
-                    color: Colors.black,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.medium,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Filters',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
-                  ),
-                ],
-              ),
+          child: Container(
+            height: 35,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(32)),
+              boxShadow: [
+                BoxShadow(
+                  offset: Offset(0, 2),
+                  blurRadius: 4,
+                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Image.asset(
+                  'assets/images/preferences_icon.png',
+                  color: Colors.black,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.medium,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Filters',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
+                ),
+              ],
             ),
           ),
         ),

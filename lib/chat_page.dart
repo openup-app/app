@@ -120,59 +120,65 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     const innerItemSize = 300.0;
     return LayoutBuilder(
       builder: (context, constraints) {
+        const dragHandleGap = 24.0;
+        const appBarHeight = 61.0;
         const bottomButtonHeight = 51.0 + 16 * 2;
-        const appBarHeight = 48.0;
         final listHeight = constraints.maxHeight -
             (MediaQuery.of(context).padding.top +
+                dragHandleGap +
                 appBarHeight +
                 bottomButtonHeight +
                 MediaQuery.of(context).padding.bottom);
         return Column(
           children: [
-            const SizedBox(height: 32),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const BackIconButton(),
-                const Spacer(),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 45,
-                      height: 45,
-                      clipBehavior: Clip.hardEdge,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
+            SizedBox(height: MediaQuery.of(context).padding.top),
+            const SizedBox(height: dragHandleGap),
+            SizedBox(
+              height: appBarHeight,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const BackIconButton(),
+                  const Spacer(),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 45,
+                        height: 45,
+                        clipBehavior: Clip.hardEdge,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                        ),
+                        child: _otherProfile?.photo == null
+                            ? const SizedBox.shrink()
+                            : Image.network(
+                                widget.otherProfile!.photo,
+                                fit: BoxFit.cover,
+                              ),
                       ),
-                      child: _otherProfile?.photo == null
-                          ? const SizedBox.shrink()
-                          : Image.network(
-                              widget.otherProfile!.photo,
-                              fit: BoxFit.cover,
-                            ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      _otherProfile?.name ?? '',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: const Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0)),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                PopupMenuButton(
-                  icon: const Icon(
-                    Icons.more_horiz,
-                    color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+                      const SizedBox(width: 12),
+                      Text(
+                        _otherProfile?.name ?? '',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: const Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0)),
+                      ),
+                    ],
                   ),
-                  itemBuilder: (context) {
-                    return [];
-                  },
-                ),
-              ],
+                  const Spacer(),
+                  PopupMenuButton(
+                    icon: const Icon(
+                      Icons.more_horiz,
+                      color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+                    ),
+                    itemBuilder: (context) {
+                      return [];
+                    },
+                  ),
+                ],
+              ),
             ),
             if (!_loading && _messages.isEmpty && _otherProfile != null)
               Center(

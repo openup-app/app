@@ -37,10 +37,14 @@ class _PeoplePageState extends State<PeoplePage> {
       children: [
         Column(
           children: [
-            SizedBox(height: MediaQuery.of(context).padding.top),
             Container(
               height: 32,
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              margin: EdgeInsets.only(
+                left: 16,
+                top: 24 + MediaQuery.of(context).padding.top,
+                right: 16,
+                bottom: 16,
+              ),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -97,7 +101,7 @@ class _PeoplePageState extends State<PeoplePage> {
               child: InviteFriends(
                 padding: EdgeInsets.only(
                   top: 0,
-                  bottom: MediaQuery.of(context).padding.bottom + 72,
+                  bottom: MediaQuery.of(context).padding.bottom + 16,
                 ),
                 filter: _filterString,
               ),
