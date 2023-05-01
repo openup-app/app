@@ -17,7 +17,9 @@ import 'package:openup/widgets/collection_photo_picker.dart';
 import 'package:openup/widgets/collection_photo_stack.dart';
 import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/image_builder.dart';
+import 'package:openup/widgets/profile_display.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -100,11 +102,9 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                         child: Stack(
                           children: [
                             Positioned.fill(
-                              child: Image.network(
-                                profile.collection.photos.first.url,
-                                fit: BoxFit.cover,
-                                loadingBuilder: loadingBuilder,
-                                errorBuilder: iconErrorBuilder,
+                              child: CinematicGallery(
+                                slideshow: true,
+                                gallery: profile.collection.photos,
                               ),
                             ),
                             Align(

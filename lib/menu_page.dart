@@ -156,7 +156,7 @@ class MenuPageState extends State<MenuPage> {
                                   controller: controller,
                                   physics: const NeverScrollableScrollPhysics(),
                                   child: SizedBox(
-                                    height: 56,
+                                    height: 48,
                                     child: Stack(
                                       children: [
                                         const Align(

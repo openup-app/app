@@ -287,14 +287,14 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
                     ),
                   Positioned(
                     left: 8,
-                    top: MediaQuery.of(context).padding.top + 8,
+                    top: MediaQuery.of(context).padding.top + 24,
                     child: const BackIconButton(),
                   ),
                   if (collections != null &&
                       collections[_index].uid == ref.read(userProvider).uid)
                     Positioned(
                       right: 8,
-                      top: MediaQuery.of(context).padding.top + 8,
+                      top: MediaQuery.of(context).padding.top + 16,
                       child: PopupMenuButton(
                         icon: const Icon(Icons.more_horiz),
                         itemBuilder: (context) {
