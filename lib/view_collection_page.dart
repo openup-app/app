@@ -294,7 +294,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
                       collections[_index].uid == ref.read(userProvider).uid)
                     Positioned(
                       right: 8,
-                      top: MediaQuery.of(context).padding.top + 16,
+                      top: MediaQuery.of(context).padding.top + 8,
                       child: PopupMenuButton(
                         icon: const Icon(Icons.more_horiz),
                         itemBuilder: (context) {

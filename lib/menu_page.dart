@@ -151,36 +151,45 @@ class MenuPageState extends State<MenuPage> {
                               alignment: Alignment.topCenter,
                               child: Padding(
                                 padding: EdgeInsets.only(
-                                    top: MediaQuery.of(context).padding.top),
-                                child: SingleChildScrollView(
-                                  controller: controller,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  child: SizedBox(
-                                    height: 48,
-                                    child: Stack(
-                                      children: [
-                                        const Align(
-                                          alignment: Alignment.topCenter,
-                                          child: Padding(
-                                            padding: EdgeInsets.only(top: 9.0),
-                                            child: _DragHandle(),
-                                          ),
-                                        ),
-                                        if (widget.pageTitleBuilder != null)
-                                          Align(
-                                            alignment: Alignment.topLeft,
+                                  top: MediaQuery.of(context).padding.top,
+                                ),
+                                child: Stack(
+                                  children: [
+                                    Positioned(
+                                      // Inset to help user touch back and action buttons
+                                      left: 48,
+                                      right: 48,
+                                      top: 0,
+                                      child: SingleChildScrollView(
+                                        controller: controller,
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        child: const SizedBox(
+                                          height: 48,
+                                          child: Align(
+                                            alignment: Alignment.topCenter,
                                             child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                left: 32,
-                                                top: 7,
-                                              ),
-                                              child: widget
-                                                  .pageTitleBuilder!(context),
+                                              padding:
+                                                  EdgeInsets.only(top: 9.0),
+                                              child: _DragHandle(),
                                             ),
                                           ),
-                                      ],
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    if (widget.pageTitleBuilder != null)
+                                      Align(
+                                        alignment: Alignment.topLeft,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 32,
+                                            top: 7,
+                                          ),
+                                          child:
+                                              widget.pageTitleBuilder!(context),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
                             ),

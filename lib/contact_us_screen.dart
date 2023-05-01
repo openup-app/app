@@ -28,56 +28,60 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: const BackIconButton(),
-        centerTitle: true,
-        title: Text(
-          'Contact us',
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
+    return Padding(
+      padding: const EdgeInsets.only(top: 24.0),
+      child: Scaffold(
+        backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: const BackIconButton(),
+          centerTitle: true,
+          title: Text(
+            'Contact us',
+            style:
+                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
+          ),
         ),
-      ),
-      body: Stack(
-        fit: StackFit.loose,
-        children: [
-          Positioned(
-            left: 16,
-            right: 16,
-            top: MediaQuery.of(context).padding.top + 16,
-            bottom: MediaQuery.of(context).viewPadding.bottom + 16,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 362,
-              ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ContactTextField(
-                      textController: _textController,
-                      hintText: 'Questions and concerns',
+        body: Stack(
+          fit: StackFit.loose,
+          children: [
+            Positioned(
+              left: 16,
+              right: 16,
+              top: MediaQuery.of(context).padding.top + 16,
+              bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 362,
+                ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ContactTextField(
+                        textController: _textController,
+                        hintText: 'Questions and concerns',
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: 162,
-                    height: 43,
-                    child: GradientButton(
-                      onPressed: _uploading ? null : _upload,
-                      white: true,
-                      child: _uploading
-                          ? const LoadingIndicator()
-                          : const Text('send'),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: 162,
+                      height: 43,
+                      child: GradientButton(
+                        onPressed: _uploading ? null : _upload,
+                        white: true,
+                        child: _uploading
+                            ? const LoadingIndicator()
+                            : const Text('send'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -391,135 +391,125 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          leading: const BackIconButton(),
-          title: Text(
-            'Blocking',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium!
-                .copyWith(color: Colors.black),
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 0.0,
-          centerTitle: true,
+    return Scaffold(
+      appBar: AppBar(
+        leading: const BackIconButton(),
+        title: Text(
+          'Blocking',
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
         ),
-        body: StatefulBuilder(builder: (context, setState) {
-          if (_loading) {
-            return const Center(
-              child: LoadingIndicator(),
-            );
-          }
-          if (_blockedUsers.isEmpty) {
-            return Center(
-              child: Text(
-                'You are not blocking anyone',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 20),
+        backgroundColor: Colors.transparent,
+        elevation: 0.0,
+        centerTitle: true,
+      ),
+      body: StatefulBuilder(builder: (context, setState) {
+        if (_loading) {
+          return const Center(
+            child: LoadingIndicator(),
+          );
+        }
+        if (_blockedUsers.isEmpty) {
+          return Center(
+            child: Text(
+              'You are not blocking anyone',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 20),
+            ),
+          );
+        }
+        return ListView.builder(
+          itemCount: _blockedUsers.length,
+          itemBuilder: (context, index) {
+            final user = _blockedUsers[index];
+            return Container(
+              height: 57,
+              margin: const EdgeInsets.symmetric(horizontal: 27, vertical: 7),
+              padding: const EdgeInsets.only(left: 37, right: 29),
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.65),
+                    Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.54),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(29),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 10,
+                    offset: Offset(0.0, 4.0),
+                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AutoSizeText(
+                      user.name,
+                      maxLines: 1,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  ),
+                  TextButton(
+                    child: Text(
+                      'Unblock',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w500,
+                            color: const Color.fromRGBO(0xB6, 0x0B, 0x0B, 1.0),
+                          ),
+                    ),
+                    onPressed: () async {
+                      final result = await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return CupertinoTheme(
+                            data: const CupertinoThemeData(
+                                brightness: Brightness.dark),
+                            child: CupertinoAlertDialog(
+                              title: Text('Unblock ${user.name}?'),
+                              actions: [
+                                CupertinoDialogAction(
+                                  onPressed: Navigator.of(context).pop,
+                                  child: const Text('Cancel'),
+                                ),
+                                CupertinoDialogAction(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
+                                  child: const Text('Unblock'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                      if (result == true) {
+                        final myUid = ref.read(userProvider).uid;
+                        final api = GetIt.instance.get<Api>();
+                        setState(() => _loading = true);
+                        await api.unblockUser(myUid, user.uid);
+                        if (mounted) {
+                          _getBlockedUsers();
+                        }
+                      }
+                    },
+                  ),
+                ],
               ),
             );
-          }
-          return ListView.builder(
-            itemCount: _blockedUsers.length,
-            itemBuilder: (context, index) {
-              final user = _blockedUsers[index];
-              return Container(
-                height: 57,
-                margin: const EdgeInsets.symmetric(horizontal: 27, vertical: 7),
-                padding: const EdgeInsets.only(left: 37, right: 29),
-                clipBehavior: Clip.hardEdge,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.65),
-                      Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.54),
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(29),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: 10,
-                      offset: Offset(0.0, 4.0),
-                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: AutoSizeText(
-                        user.name,
-                        maxLines: 1,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                    ),
-                    TextButton(
-                      child: Text(
-                        'Unblock',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w500,
-                              color:
-                                  const Color.fromRGBO(0xB6, 0x0B, 0x0B, 1.0),
-                            ),
-                      ),
-                      onPressed: () async {
-                        final result = await showDialog(
-                          context: context,
-                          builder: (context) {
-                            return CupertinoTheme(
-                              data: const CupertinoThemeData(
-                                  brightness: Brightness.dark),
-                              child: CupertinoAlertDialog(
-                                title: Text('Unblock ${user.name}?'),
-                                actions: [
-                                  CupertinoDialogAction(
-                                    onPressed: Navigator.of(context).pop,
-                                    child: const Text('Cancel'),
-                                  ),
-                                  CupertinoDialogAction(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(true),
-                                    child: const Text('Unblock'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                        if (result == true) {
-                          final myUid = ref.read(userProvider).uid;
-                          final api = GetIt.instance.get<Api>();
-                          setState(() => _loading = true);
-                          await api.unblockUser(myUid, user.uid);
-                          if (mounted) {
-                            _getBlockedUsers();
-                          }
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        }),
-      ),
+          },
+        );
+      }),
     );
   }
 }
