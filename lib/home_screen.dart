@@ -6,13 +6,13 @@ import 'package:openup/main.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   final int tabIndex;
-  final TempFriendshipsRefresh tempFriendshipsRefresh;
+  final TempConversationsRefresh tempConversationsRefresh;
   final ScrollToDiscoverTopNotifier scrollToDiscoverTopNotifier;
   final Widget child;
   const HomeShell({
     Key? key,
     required this.tabIndex,
-    required this.tempFriendshipsRefresh,
+    required this.tempConversationsRefresh,
     required this.scrollToDiscoverTopNotifier,
     required this.child,
   }) : super(key: key);

@@ -14,18 +14,18 @@ import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/section.dart';
 
-class RelationshipsPage extends ConsumerStatefulWidget {
-  final TempFriendshipsRefresh tempRefresh;
-  const RelationshipsPage({
+class ConversationsPage extends ConsumerStatefulWidget {
+  final TempConversationsRefresh tempRefresh;
+  const ConversationsPage({
     Key? key,
     required this.tempRefresh,
   }) : super(key: key);
 
   @override
-  ConsumerState<RelationshipsPage> createState() => _RelationshipsPageState();
+  ConsumerState<ConversationsPage> createState() => _ConversationsPageState();
 }
 
-class _RelationshipsPageState extends ConsumerState<RelationshipsPage>
+class _ConversationsPageState extends ConsumerState<ConversationsPage>
     with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
   String _filterString = '';

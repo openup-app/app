@@ -31,7 +31,7 @@ import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/people_page.dart';
 import 'package:openup/profile_page.dart';
-import 'package:openup/relationships_page.dart';
+import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
 import 'package:openup/sign_up_gender.dart';
@@ -126,8 +126,8 @@ Future<Mixpanel> _initMixpanel() async {
 
 /// Notifications don't update the conversations list. This noifier lets us
 /// force a refresh programmatically when tapping the Friendships button.
-class TempFriendshipsRefresh extends ValueNotifier<void> {
-  TempFriendshipsRefresh() : super(null);
+class TempConversationsRefresh extends ValueNotifier<void> {
+  TempConversationsRefresh() : super(null);
 
   void refresh() => notifyListeners();
 }
@@ -153,7 +153,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   final _peopleKey = GlobalKey<NavigatorState>();
   final _settingsKey = GlobalKey<NavigatorState>();
 
-  final _tempRelationshipsRefresh = TempFriendshipsRefresh();
+  final _tempConversationsRefresh = TempConversationsRefresh();
 
   final _scrollToDiscoverTopNotifier = ScrollToDiscoverTopNotifier();
 
@@ -312,7 +312,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     _notificationTokenSubscription?.cancel();
     disposeNotifications();
 
-    _tempRelationshipsRefresh.dispose();
+    _tempConversationsRefresh.dispose();
     _scrollToDiscoverTopNotifier.dispose();
 
     final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
@@ -721,8 +721,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   path: '/relationships',
                   name: 'relationships',
                   builder: (context, state) {
-                    return RelationshipsPage(
-                        tempRefresh: _tempRelationshipsRefresh);
+                    return ConversationsPage(
+                      tempRefresh: _tempConversationsRefresh,
+                    );
                   },
                   routes: [
                     GoRoute(
