@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:async/async.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dartz/dartz.dart' show Either;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -585,8 +586,11 @@ class _ProfileDisplay extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AutoSizeText(
                         profile.name,
+                        minFontSize: 15,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
@@ -631,7 +635,7 @@ class _ProfileDisplay extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(width: 8),
                 SizedBox(
                   width: 146,
                   child: _RecordButton(
