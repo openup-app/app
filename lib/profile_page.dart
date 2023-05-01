@@ -21,14 +21,14 @@ import 'package:openup/widgets/image_builder.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
-class ProfilePage2 extends ConsumerStatefulWidget {
-  const ProfilePage2({super.key});
+class ProfilePage extends ConsumerStatefulWidget {
+  const ProfilePage({super.key});
 
   @override
-  ConsumerState<ProfilePage2> createState() => _ProfilePage2State();
+  ConsumerState<ProfilePage> createState() => _ProfilePage2State();
 }
 
-class _ProfilePage2State extends ConsumerState<ProfilePage2> {
+class _ProfilePage2State extends ConsumerState<ProfilePage> {
   bool _showCollectionCreation = false;
   final _nameController = TextEditingController();
 

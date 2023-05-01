@@ -30,7 +30,7 @@ import 'package:openup/invite_page.dart';
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/people_page.dart';
-import 'package:openup/profile_page2.dart';
+import 'package:openup/profile_page.dart';
 import 'package:openup/relationships_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/sign_up_audio_screen.dart';
@@ -751,7 +751,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 GoRoute(
                   path: '/profile',
                   name: 'profile',
-                  builder: (context, state) => const ProfilePage2(),
+                  builder: (context, state) => const ProfilePage(),
                 ),
               ],
             ),
@@ -841,7 +841,7 @@ class _MenuPageShell extends StatefulWidget {
 
 class _MenuPageShellState extends State<_MenuPageShell> {
   final _menuPageKey = GlobalKey<MenuPageState>();
-  int _currentIndex = 2;
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
