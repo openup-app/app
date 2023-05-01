@@ -263,81 +263,74 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   @override
   Widget build(BuildContext context) {
     if (_loading && _profiles.isEmpty) {
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            child: SizedBox.fromSize(
-              size: constraints.biggest,
-              child: const LoadingIndicator(
-                color: Colors.black,
-              ),
-            ),
-          );
-        },
+      return const Center(
+        child: LoadingIndicator(
+          color: Colors.black,
+        ),
       );
     }
 
-    final nameSize = 104.0 + MediaQuery.of(context).padding.bottom;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (_profiles.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: !_hasLocation
-                      ? Text(
-                          'Unable to get location',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        )
-                      : Text(
-                          _selectedTopic == null
-                              ? 'Couldn\'t find any profiles'
-                              : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    // Location needed at least once for nearby users
-                    // (may not have granted location during onboarding)
-                    setState(() => _loading = true);
-                    final locationService = LocationService();
-                    if (!await locationService.hasPermission()) {
-                      final status = await locationService.requestPermission();
-                      if (status) {
-                        await _updateLocation();
-                      }
-                    }
-
-                    if (!mounted) {
-                      return;
-                    }
-                    setState(() {
-                      _nextMinRadius = 0;
-                      _nextPage = 0;
-                    });
-                    _fetchPageOfProfiles();
-                  },
-                  child: const Text('Refresh'),
-                ),
-              ],
+    if (_profiles.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: !_hasLocation
+                  ? Text(
+                      'Unable to get location',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  : Text(
+                      _selectedTopic == null
+                          ? 'Couldn\'t find any profiles'
+                          : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
             ),
-          );
-        }
+            ElevatedButton(
+              onPressed: () async {
+                // Location needed at least once for nearby users
+                // (may not have granted location during onboarding)
+                setState(() => _loading = true);
+                final locationService = LocationService();
+                if (!await locationService.hasPermission()) {
+                  final status = await locationService.requestPermission();
+                  if (status) {
+                    await _updateLocation();
+                  }
+                }
 
-        return ActivePage(
-          onActivate: () {},
-          onDeactivate: () => _userProfileInfoDisplayKey.currentState?.pause(),
-          child: ValueListenableBuilder<double>(
-            valueListenable: _pageListener,
-            builder: (context, page, child) {
-              final index = page.round();
-              final profile = _profiles[index];
-              return UserProfileInfoDisplay(
+                if (!mounted) {
+                  return;
+                }
+                setState(() {
+                  _nextMinRadius = 0;
+                  _nextPage = 0;
+                });
+                _fetchPageOfProfiles();
+              },
+              child: const Text('Refresh'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ActivePage(
+      onActivate: () {},
+      onDeactivate: () => _userProfileInfoDisplayKey.currentState?.pause(),
+      child: ValueListenableBuilder<double>(
+        valueListenable: _pageListener,
+        builder: (context, page, child) {
+          final index = page.round();
+          final profile = _profiles[index];
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // Must live above PageView.builder (otherwise duplicate global key)
+              UserProfileInfoDisplay(
                 key: _userProfileInfoDisplayKey,
                 profile: profile,
                 // invited: _invitedUsers.contains(profile.uid),
@@ -365,239 +358,58 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                           decoration: const BoxDecoration(
                             borderRadius: BorderRadius.all(Radius.circular(48)),
                           ),
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              return SingleChildScrollView(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      height: constraints.maxHeight,
-                                      child: Stack(
-                                        fit: StackFit.expand,
-                                        children: [
-                                          Container(
-                                            clipBehavior: Clip.hardEdge,
-                                            decoration: const BoxDecoration(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(48)),
-                                            ),
-                                            child: Button(
-                                              onPressed: () {
-                                                if (!play) {
-                                                  _userProfileInfoDisplayKey
-                                                      .currentState
-                                                      ?.play();
-                                                } else {
-                                                  _userProfileInfoDisplayKey
-                                                      .currentState
-                                                      ?.pause();
-                                                }
-                                              },
-                                              child: UserProfileDisplay(
-                                                key: ValueKey(profile.uid),
-                                                profile: profile,
-                                                playSlideshow: play,
-                                                invited: false,
-                                              ),
-                                            ),
-                                          ),
-                                          if (!play)
-                                            const Center(
-                                              child: IgnorePointer(
-                                                child: IconWithShadow(
-                                                  Icons.play_arrow,
-                                                  size: 80,
-                                                ),
-                                              ),
-                                            ),
-                                          Positioned(
-                                            left: 16,
-                                            top: 16,
-                                            child: _PageControls(
-                                              profile: profile,
-                                              preference: _genderPreference,
-                                              onPreference: (gender) {
-                                                if (gender ==
-                                                    _genderPreference) {
-                                                  return;
-                                                }
-                                                setState(() {
-                                                  _genderPreference = gender;
-                                                  _nextMinRadius = 0;
-                                                  _nextPage = 0;
-                                                  _pageController.jumpTo(0);
-                                                  _profiles.clear();
-                                                });
-                                                _fetchPageOfProfiles();
-                                              },
-                                            ),
-                                          ),
-                                          Align(
-                                            alignment: Alignment.bottomCenter,
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                  bottom: 31.0),
-                                              child: _RecordButton(
-                                                onPressed: () {
-                                                  if (FirebaseAuth.instance
-                                                          .currentUser ==
-                                                      null) {
-                                                    _showSignInDialog();
-                                                  } else {
-                                                    _showRecordPanel(
-                                                        context, profile.uid);
-                                                  }
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            left: 26,
-                                            bottom: 41,
-                                            child: ReportBlockPopupMenu2(
-                                              uid: profile.uid,
-                                              name: profile.name,
-                                              onBlock: () => setState(() =>
-                                                  _profiles.removeWhere(((p) =>
-                                                      p.uid == profile.uid))),
-                                              builder: (context) {
-                                                return Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: Container(
-                                                    width: 26,
-                                                    height: 26,
-                                                    alignment: Alignment.center,
-                                                    decoration:
-                                                        const BoxDecoration(
-                                                      color: Color.fromRGBO(
-                                                          0x5A,
-                                                          0x5A,
-                                                          0x5A,
-                                                          0.5),
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                    child: const Icon(
-                                                      CupertinoIcons.ellipsis,
-                                                      color: Colors.white,
-                                                      size: 14,
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                          Positioned(
-                                            right: 26,
-                                            bottom: 41,
-                                            child: Button(
-                                              onPressed: () {},
-                                              child: Container(
-                                                width: 30,
-                                                height: 30,
-                                                clipBehavior: Clip.hardEdge,
-                                                decoration: const BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: Color.fromRGBO(
-                                                      0xD9, 0xD9, 0xD9, 0.28),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      offset: Offset(0, 2),
-                                                      blurRadius: 4,
-                                                      color: Color.fromRGBO(
-                                                          0x00,
-                                                          0x00,
-                                                          0x00,
-                                                          0.10),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: BackdropFilter(
-                                                  filter: ImageFilter.blur(
-                                                      sigmaX: 10, sigmaY: 10),
-                                                  child: const Icon(
-                                                    Icons.volume_up,
-                                                    size: 13,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      height: nameSize,
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 16.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    profile.name,
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyMedium!
-                                                        .copyWith(
-                                                            fontSize: 20,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w800),
-                                                  ),
-                                                ),
-                                                const Icon(
-                                                  Icons.info,
-                                                  color: Color.fromRGBO(
-                                                      0xFF, 0x38, 0x38, 1.0),
-                                                  size: 16,
-                                                ),
-                                                Text('1 mutual friends',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyMedium!
-                                                        .copyWith(
-                                                            fontSize: 15,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w400)),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              'Austin High School',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium!
-                                                  .copyWith(
-                                                      fontSize: 15,
-                                                      fontWeight:
-                                                          FontWeight.w400),
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
+                          child: _ProfileDisplay(
+                            profile: profile,
+                            play: play,
+                            onPlayPause: () {
+                              if (!play) {
+                                _userProfileInfoDisplayKey.currentState?.play();
+                              } else {
+                                _userProfileInfoDisplayKey.currentState
+                                    ?.pause();
+                              }
                             },
+                            onRecord: () {
+                              if (FirebaseAuth.instance.currentUser == null) {
+                                _showSignInDialog();
+                              } else {
+                                _showRecordPanel(context, profile.uid);
+                              }
+                            },
+                            onBlock: () => setState(() => _profiles
+                                .removeWhere(((p) => p.uid == profile.uid))),
                           ),
                         ),
                       );
                     },
                   );
                 },
-              );
-            },
-          ),
-        );
-      },
+              ),
+              Positioned(
+                left: 32,
+                top: 32 + 14,
+                child: _PageControls(
+                  profile: profile,
+                  preference: _genderPreference,
+                  onPreference: (gender) {
+                    if (gender == _genderPreference) {
+                      return;
+                    }
+                    setState(() {
+                      _genderPreference = gender;
+                      _nextMinRadius = 0;
+                      _nextPage = 0;
+                      _pageController.jumpTo(0);
+                      _profiles.clear();
+                    });
+                    _fetchPageOfProfiles();
+                  },
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -666,6 +478,173 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
           ],
         );
       },
+    );
+  }
+}
+
+class _ProfileDisplay extends StatelessWidget {
+  final Profile profile;
+  final bool play;
+  final VoidCallback onPlayPause;
+  final VoidCallback onRecord;
+  final VoidCallback onBlock;
+
+  const _ProfileDisplay({
+    super.key,
+    required this.profile,
+    required this.play,
+    required this.onPlayPause,
+    required this.onRecord,
+    required this.onBlock,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(
+          clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(48)),
+          ),
+          child: Button(
+            onPressed: onPlayPause,
+            child: UserProfileDisplay(
+              key: ValueKey(profile.uid),
+              profile: profile,
+              playSlideshow: play,
+              invited: false,
+            ),
+          ),
+        ),
+        if (!play)
+          const Center(
+            child: IgnorePointer(
+              child: IconWithShadow(
+                Icons.play_arrow,
+                size: 80,
+              ),
+            ),
+          ),
+        Positioned(
+          right: 16,
+          top: 20,
+          child: ReportBlockPopupMenu2(
+            uid: profile.uid,
+            name: profile.name,
+            onBlock: onBlock,
+            builder: (context) {
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    CupertinoIcons.ellipsis,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 120,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.5),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            height: 51,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            margin: const EdgeInsets.only(bottom: 38),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.name,
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white),
+                      ),
+                      Row(
+                        children: [
+                          // Info icon with solid white background
+                          Stack(
+                            alignment: Alignment.center,
+                            children: const [
+                              SizedBox(
+                                width: 10,
+                                height: 10,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                Icons.info,
+                                color: Color.fromRGBO(0xFF, 0x38, 0x38, 1.0),
+                                size: 16,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text('1 mutual friends',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w400,
+                                        color: Colors.white)),
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: 146,
+                  child: _RecordButton(
+                    onPressed: onRecord,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
