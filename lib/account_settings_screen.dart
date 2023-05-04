@@ -174,14 +174,14 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           ),
           const SizedBox(height: 16),
           _CupertinoButton(
-            onPressed: _signOut,
+            onPressed: _showSignOutConfirmationModal,
             center: const Text(
               'Sign out',
             ),
           ),
           const SizedBox(height: 16),
           _CupertinoButton(
-            onPressed: _showDeleteAccountDialog,
+            onPressed: _showDeleteAccountConfirmationModal,
             center: const Text(
               'Delete Account',
               style: TextStyle(color: Colors.red),
@@ -280,77 +280,90 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     );
   }
 
-  void _signOut() async {
-    await withBlockingModal(
-      context: context,
-      label: 'Signing out',
-      future: Future(() async {
-        GetIt.instance.get<Mixpanel>().track("sign_out");
-        final uid = ref.read(userProvider).uid;
-        await GetIt.instance.get<Api>().signOut(uid);
-        await dismissAllNotifications();
-        if (Platform.isAndroid) {
-          await FirebaseMessaging.instance.deleteToken();
-        }
-        await FirebaseAuth.instance.signOut();
-      }),
-    );
-
-    if (mounted) {
-      context.goNamed('initialLoading');
-    }
-  }
-
-  void _showDeleteAccountDialog() {
-    showDialog(
+  void _showSignOutConfirmationModal() async {
+    final result = await showCupertinoModalPopup<bool>(
       context: context,
       builder: (context) {
-        return OpenupDialog(
-          title: Text(
-            'Are you sure you want to delete your account?',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                ),
+        return CupertinoActionSheet(
+          title:
+              const Text('Are you sure you want to sign out of your account?'),
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: Navigator.of(context).pop,
+            child: const Text('Cancel'),
           ),
           actions: [
-            TextButton(
-              onPressed: () async {
-                GetIt.instance.get<Mixpanel>().track("delete_account");
-                final uid = ref.read(userProvider).uid;
-                await dismissAllNotifications();
-                GetIt.instance.get<Api>().deleteUser(uid);
-                await FirebaseAuth.instance.signOut();
-                if (mounted) {
-                  context.goNamed('initialLoading');
-                }
-              },
-              child: Text(
-                'Delete',
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.red,
-                    ),
-              ),
-            ),
-            TextButton(
-              onPressed: Navigator.of(context).pop,
-              child: Text(
-                'Cancel',
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
-                    ),
-              ),
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.of(context).pop(true),
+              isDestructiveAction: true,
+              child: const Text('Sign out'),
             ),
           ],
         );
       },
     );
+    if (mounted && result == true) {
+      await withBlockingModal(
+        context: context,
+        label: 'Signing out',
+        future: _signOut(),
+      );
+
+      if (mounted) {
+        context.goNamed('initialLoading');
+      }
+    }
+  }
+
+  Future<void> _signOut() async {
+    GetIt.instance.get<Mixpanel>().track("sign_out");
+    final uid = ref.read(userProvider).uid;
+    await GetIt.instance.get<Api>().signOut(uid);
+    await dismissAllNotifications();
+    if (Platform.isAndroid) {
+      await FirebaseMessaging.instance.deleteToken();
+    }
+    await FirebaseAuth.instance.signOut();
+  }
+
+  void _showDeleteAccountConfirmationModal() async {
+    final result = await showCupertinoModalPopup<bool>(
+      context: context,
+      builder: (context) {
+        return CupertinoActionSheet(
+          title: const Text(
+              'This will permanently delete your bff conversations, contacts and profile'),
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: Navigator.of(context).pop,
+            child: const Text('Cancel'),
+          ),
+          actions: [
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.of(context).pop(true),
+              isDestructiveAction: true,
+              child: const Text('Delete account'),
+            ),
+          ],
+        );
+      },
+    );
+    if (mounted && result == true) {
+      await withBlockingModal(
+        context: context,
+        label: 'Deleting account',
+        future: _deleteAccount(),
+      );
+      if (mounted) {
+        context.goNamed('initialLoading');
+      }
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    GetIt.instance.get<Mixpanel>().track("delete_account");
+    final uid = ref.read(userProvider).uid;
+    await dismissAllNotifications();
+    GetIt.instance.get<Api>().deleteUser(uid);
+    await FirebaseAuth.instance.signOut();
   }
 }
 
