@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -7,7 +8,6 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/contact_text_field.dart';
 
 class ContactUsScreen extends ConsumerStatefulWidget {
   const ContactUsScreen({Key? key}) : super(key: key);
@@ -28,59 +28,91 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 24.0),
-      child: Scaffold(
-        backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: const BackIconButton(),
-          centerTitle: true,
-          title: Text(
-            'Contact us',
-            style:
-                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
+    return Theme(
+      data: ThemeData.dark(),
+      child: CupertinoTheme(
+        data: const CupertinoThemeData(brightness: Brightness.dark),
+        child: Scaffold(
+          // backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: const BackIconButton(),
+            centerTitle: true,
+            title: const Text('Contact us'),
           ),
-        ),
-        body: Stack(
-          fit: StackFit.loose,
-          children: [
-            Positioned(
-              left: 16,
-              right: 16,
-              top: MediaQuery.of(context).padding.top + 16,
-              bottom: MediaQuery.of(context).viewPadding.bottom + 16,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: 362,
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 24,
                 ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ContactTextField(
-                        textController: _textController,
-                        hintText: 'Questions and concerns',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: 162,
-                      height: 43,
-                      child: GradientButton(
-                        onPressed: _uploading ? null : _upload,
-                        white: true,
-                        child: _uploading
-                            ? const LoadingIndicator()
-                            : const Text('send'),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                child: Text(
+                  'We will respond to you via text',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ),
-            ),
-          ],
+              Expanded(
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    color: Color.fromRGBO(0x61, 0x61, 0x61, 0.5),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 24,
+                    ),
+                    child: TextField(
+                      controller: _textController,
+                      textCapitalization: TextCapitalization.sentences,
+                      textInputAction: TextInputAction.done,
+                      maxLines: 10,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      decoration: const InputDecoration.collapsed(
+                        hintText: 'Tell us how we can help you.',
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Button(
+                onPressed: _uploading ? null : _upload,
+                child: SizedBox(
+                  height: 92,
+                  child: Center(
+                    child: Builder(
+                      builder: (context) {
+                        if (_uploading) {
+                          return const LoadingIndicator();
+                        } else {
+                          return const Text(
+                            'Send message',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              color: Color.fromRGBO(0x3F, 0x80, 0xFF, 1.0),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
