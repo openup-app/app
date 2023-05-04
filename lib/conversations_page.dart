@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
@@ -123,52 +125,50 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
               ),
             ],
           ),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 11, right: 6.0),
-                    child: TextFormField(
-                      controller: _searchController,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 11, right: 6),
+                  child: TextFormField(
+                    controller: _searchController,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w300,
+                        ),
+                    textAlignVertical: TextAlignVertical.center,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Search',
+                      hintStyle: Theme.of(context)
+                          .textTheme
+                          .bodyMedium!
+                          .copyWith(
                             fontSize: 14,
                             fontWeight: FontWeight.w300,
-                            color: Colors.white,
+                            color: const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
                           ),
-                      decoration: InputDecoration.collapsed(
-                        hintText: 'Search',
-                        hintStyle: Theme.of(context)
-                            .textTheme
-                            .bodyMedium!
-                            .copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w300,
-                              color:
-                                  const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-                            ),
-                      ),
                     ),
                   ),
                 ),
-                if (_filterString.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 16.0),
-                    child: Button(
-                      onPressed: () {
-                        setState(() => _searchController.text = "");
-                        FocusScope.of(context).unfocus();
-                      },
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 16,
-                      ),
+              ),
+              if (_filterString.isNotEmpty)
+                Button(
+                  onPressed: () {
+                    setState(() => _searchController.text = "");
+                    FocusScope.of(context).unfocus();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.close,
+                      color: Colors.black,
+                      size: 16,
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
         if (_filterString.isEmpty)
@@ -245,20 +245,26 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
                     .toLowerCase()
                     .contains(_filterString.toLowerCase()));
 
+                final acceptedChatrooms = filteredChatrooms
+                    ?.where(
+                        (chatroom) => chatroom.state == ChatroomState.accepted)
+                    .toList();
                 return _ConversationList(
-                  chatrooms: filteredChatrooms
-                      ?.where((chatroom) =>
-                          chatroom.state == ChatroomState.accepted)
-                      .toList(),
+                  chatrooms: acceptedChatrooms,
                   emptyLabel:
                       'Invite someone to chat,\nthen continue the conversation here',
                   filtered: _filterString.isNotEmpty,
                   onRefresh: _fetchChatrooms,
                   onOpen: _openChat,
+                  onDelete: (index) =>
+                      _deleteFriend(acceptedChatrooms![index].profile),
                 );
               },
             ),
           ),
+        ),
+        SizedBox(
+          height: MediaQuery.of(context).viewInsets.bottom,
         ),
       ],
     );
@@ -294,6 +300,20 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
       setState(() => _chatrooms?[index] = chatroom.copyWith(unreadCount: 0));
     }
   }
+
+  void _deleteFriend(Profile profile) async {
+    await withBlockingModal(
+      context: context,
+      label: 'Removing friend',
+      future: Future.delayed(
+        const Duration(seconds: 1),
+      ),
+    );
+
+    if (mounted) {
+      _fetchChatrooms();
+    }
+  }
 }
 
 class _ConversationList extends StatelessWidget {
@@ -302,6 +322,7 @@ class _ConversationList extends StatelessWidget {
   final bool filtered;
   final Future<void> Function() onRefresh;
   final void Function(Chatroom chatroom) onOpen;
+  final void Function(int index) onDelete;
 
   const _ConversationList({
     Key? key,
@@ -310,49 +331,42 @@ class _ConversationList extends StatelessWidget {
     required this.filtered,
     required this.onRefresh,
     required this.onOpen,
+    required this.onDelete,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final chatrooms = this.chatrooms;
     if (chatrooms == null) {
-      return const SafeArea(
-        // Scrollable to use PrimaryScrollController to dismiss draggable sheet
-        child: SingleChildScrollView(
-          child: Center(
-            child: LoadingIndicator(),
-          ),
-        ),
+      return const Center(
+        child: LoadingIndicator(),
       );
     }
 
     if (chatrooms.isEmpty) {
-      return SafeArea(
-        // Scrollable to use PrimaryScrollController to dismiss draggable sheet
-        child: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  filtered ? 'No results' : emptyLabel,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 18, fontWeight: FontWeight.w400),
-                ),
-                if (!filtered)
-                  ElevatedButton(
-                    onPressed: onRefresh,
-                    child: Text(
-                      'Refresh',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              filtered ? 'No results' : emptyLabel,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    height: 1.5,
+                    color: const Color.fromRGBO(0x70, 0x70, 0x70, 1.0),
                   ),
-              ],
             ),
-          ),
+            if (!filtered)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton(
+                  onPressed: onRefresh,
+                  child: const Text('Refresh'),
+                ),
+              ),
+          ],
         ),
       );
     }
@@ -371,143 +385,206 @@ class _ConversationList extends StatelessWidget {
       itemBuilder: (context, index) {
         const suggestedFriend = false;
         final chatroom = chatrooms[index];
-        return Stack(
-          children: [
-            SizedBox(
-              height: 140,
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 29,
-                    child: Center(
-                      child: Builder(
-                        builder: (context) {
-                          if (chatroom.unreadCount != 0) {
-                            return Container(
-                              width: 10,
-                              height: 10,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Color.fromRGBO(0xF6, 0x28, 0x28, 1.0),
-                                    Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 63,
-                    height: 63,
-                    clipBehavior: Clip.hardEdge,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                    ),
-                    child: Button(
-                      onPressed: () {
-                        context.pushNamed(
-                          'view_collection',
-                          extra: ViewCollectionPageArguments.profile(
-                            profile: chatroom.profile,
-                          ),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final actionPaneExtentRatio = 80 / constraints.maxWidth;
+            return SizedBox(
+              height: 84,
+              child: Slidable(
+                key: Key(chatroom.profile.uid),
+                endActionPane: ActionPane(
+                  motion: const ScrollMotion(),
+                  extentRatio: actionPaneExtentRatio,
+                  children: [
+                    SlidableAction(
+                      onPressed: (context) {
+                        _showDeleteConversationConfirmationModal(
+                          context: context,
+                          profile: chatroom.profile,
+                          index: index,
                         );
                       },
-                      child: Image.network(
-                        chatroom.profile.photo,
-                        fit: BoxFit.cover,
-                      ),
+                      backgroundColor:
+                          const Color.fromRGBO(0xFF, 0x07, 0x07, 1.0),
+                      icon: Icons.delete,
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Button(
-                      onPressed: () => onOpen(chatroom),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    SizedBox(
+                      height: 140,
+                      child: Row(
                         children: [
-                          Text(chatroom.profile.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w400)),
-                          const SizedBox(height: 2),
-                          Text(
-                            'yesterday',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 14,
-                                    color: const Color.fromRGBO(
-                                        0x70, 0x70, 0x70, 1.0)),
-                          ),
-                          const SizedBox(height: 2),
-                          if (chatroom.state == ChatroomState.pending)
-                            Text(
-                              'New chat invitation',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 12,
-                                      color: const Color.fromRGBO(
-                                          0xFF, 0x00, 0x00, 1.0)),
+                          SizedBox(
+                            width: 29,
+                            child: Center(
+                              child: Builder(
+                                builder: (context) {
+                                  if (chatroom.unreadCount != 0) {
+                                    return Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Color.fromRGBO(
+                                                0xF6, 0x28, 0x28, 1.0),
+                                            Color.fromRGBO(
+                                                0xFF, 0x5F, 0x5F, 1.0),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
                             ),
+                          ),
+                          Container(
+                            width: 63,
+                            height: 63,
+                            clipBehavior: Clip.hardEdge,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                            ),
+                            child: Button(
+                              onPressed: () {
+                                context.pushNamed(
+                                  'view_collection',
+                                  extra: ViewCollectionPageArguments.profile(
+                                    profile: chatroom.profile,
+                                  ),
+                                );
+                              },
+                              child: Image.network(
+                                chatroom.profile.photo,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Button(
+                              onPressed: () => onOpen(chatroom),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(chatroom.profile.name,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium!
+                                          .copyWith(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w400)),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'yesterday',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 14,
+                                            color: const Color.fromRGBO(
+                                                0x70, 0x70, 0x70, 1.0)),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  if (chatroom.state == ChatroomState.pending)
+                                    Text(
+                                      'New chat invitation',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium!
+                                          .copyWith(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 12,
+                                              color: const Color.fromRGBO(
+                                                  0xFF, 0x00, 0x00, 1.0)),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.chevron_right,
+                            color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                            size: 26,
+                          ),
+                          const SizedBox(width: 12),
                         ],
                       ),
                     ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right,
-                    color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                    size: 26,
-                  ),
-                  const SizedBox(width: 12),
-                ],
-              ),
-            ),
-            if (suggestedFriend || chatroom.unreadCount > 0)
-              Positioned(
-                right: 41,
-                bottom: 16,
-                child: Text(
-                  suggestedFriend ? 'Suggested Friend' : 'New message',
-                  textAlign: TextAlign.right,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontWeight: FontWeight.w300,
-                        fontSize: 16,
-                        fontStyle: FontStyle.italic,
+                    if (suggestedFriend || chatroom.unreadCount > 0)
+                      Positioned(
+                        right: 41,
+                        bottom: 16,
+                        child: Text(
+                          suggestedFriend ? 'Suggested Friend' : 'New message',
+                          textAlign: TextAlign.right,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    fontWeight: FontWeight.w300,
+                                    fontSize: 16,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                        ),
                       ),
+                    Positioned(
+                      left: 58,
+                      top: -18,
+                      width: 78,
+                      height: 78,
+                      child: OnlineIndicatorBuilder(
+                        uid: chatroom.profile.uid,
+                        builder: (context, online) {
+                          return online
+                              ? const OnlineIndicator()
+                              : const SizedBox.shrink();
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            Positioned(
-              left: 58,
-              top: -18,
-              width: 78,
-              height: 78,
-              child: OnlineIndicatorBuilder(
-                uid: chatroom.profile.uid,
-                builder: (context, online) {
-                  return online
-                      ? const OnlineIndicator()
-                      : const SizedBox.shrink();
-                },
-              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showDeleteConversationConfirmationModal({
+    required BuildContext context,
+    required Profile profile,
+    required int index,
+  }) async {
+    final result = await showCupertinoModalPopup<bool>(
+      context: context,
+      builder: (context) {
+        return CupertinoActionSheet(
+          title: Text(
+              'Remove ${profile.name} as a friend and delete this conversation?'),
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: Navigator.of(context).pop,
+            child: const Text('Cancel'),
+          ),
+          actions: [
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.of(context).pop(true),
+              isDestructiveAction: true,
+              child: const Text('Remove friend and delete'),
             ),
           ],
         );
       },
     );
+
+    if (result == true) {
+      onDelete(index);
+    }
   }
 }
