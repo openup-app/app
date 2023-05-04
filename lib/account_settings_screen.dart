@@ -391,125 +391,139 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: const BackIconButton(),
-        title: Text(
-          'Blocking',
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0.0,
-        centerTitle: true,
-      ),
-      body: StatefulBuilder(builder: (context, setState) {
-        if (_loading) {
-          return const Center(
-            child: LoadingIndicator(),
-          );
-        }
-        if (_blockedUsers.isEmpty) {
-          return Center(
-            child: Text(
-              'You are not blocking anyone',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 20),
-            ),
-          );
-        }
-        return ListView.builder(
-          itemCount: _blockedUsers.length,
-          itemBuilder: (context, index) {
-            final user = _blockedUsers[index];
-            return Container(
-              height: 57,
-              margin: const EdgeInsets.symmetric(horizontal: 27, vertical: 7),
-              padding: const EdgeInsets.only(left: 37, right: 29),
-              clipBehavior: Clip.hardEdge,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.65),
-                    Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.54),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                borderRadius: BorderRadius.all(
-                  Radius.circular(29),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 10,
-                    offset: Offset(0.0, 4.0),
-                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+    return Theme(
+      data: ThemeData.dark(),
+      child: CupertinoTheme(
+        data: const CupertinoThemeData(brightness: Brightness.dark),
+        child: Scaffold(
+          appBar: AppBar(
+            leading: const BackIconButton(),
+            title: const Text('Blocked users'),
+            backgroundColor: Colors.transparent,
+            elevation: 0.0,
+            centerTitle: true,
+          ),
+          body: StatefulBuilder(
+            builder: (context, setState) {
+              if (_loading) {
+                return const Center(
+                  child: LoadingIndicator(),
+                );
+              }
+              if (_blockedUsers.isEmpty) {
+                return Center(
+                  child: Text(
+                    'You are not blocking anyone',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 20),
                   ),
-                ],
-              ),
-              child: Row(
+                );
+              }
+              return Column(
                 children: [
-                  Expanded(
-                    child: AutoSizeText(
-                      user.name,
-                      maxLines: 1,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w500,
-                          ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    child: Text(
+                      'Here is the list of users you have blocked on bff',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: Color.fromRGBO(0x9D, 0x9D, 0x9D, 1.0),
+                      ),
                     ),
                   ),
-                  TextButton(
-                    child: Text(
-                      'Unblock',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w500,
-                            color: const Color.fromRGBO(0xB6, 0x0B, 0x0B, 1.0),
-                          ),
-                    ),
-                    onPressed: () async {
-                      final result = await showDialog(
-                        context: context,
-                        builder: (context) {
-                          return CupertinoTheme(
-                            data: const CupertinoThemeData(
-                                brightness: Brightness.dark),
-                            child: CupertinoAlertDialog(
-                              title: Text('Unblock ${user.name}?'),
-                              actions: [
-                                CupertinoDialogAction(
-                                  onPressed: Navigator.of(context).pop,
-                                  child: const Text('Cancel'),
-                                ),
-                                CupertinoDialogAction(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                  child: const Text('Unblock'),
-                                ),
-                              ],
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _blockedUsers.length,
+                      itemBuilder: (context, index) {
+                        final user = _blockedUsers[index];
+                        return ListTile(
+                          leading: Container(
+                            width: 45,
+                            height: 45,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
                             ),
-                          );
-                        },
-                      );
-                      if (result == true) {
-                        final myUid = ref.read(userProvider).uid;
-                        final api = GetIt.instance.get<Api>();
-                        setState(() => _loading = true);
-                        await api.unblockUser(myUid, user.uid);
-                        if (mounted) {
-                          _getBlockedUsers();
-                        }
-                      }
-                    },
+                            clipBehavior: Clip.hardEdge,
+                            child: Image.network(
+                              user.photo,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          title: AutoSizeText(
+                            user.name,
+                            maxLines: 1,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                    fontSize: 16, fontWeight: FontWeight.w400),
+                          ),
+                          trailing: Button(
+                            onPressed: () async {
+                              final result = await showCupertinoModalPopup(
+                                context: context,
+                                builder: (context) {
+                                  return CupertinoActionSheet(
+                                    title: Text('Unblock ${user.name}?'),
+                                    message: Text(
+                                        '${user.name} will be able to send you a friend request again. They won\'t be notified that you unblocked them.'),
+                                    cancelButton: CupertinoActionSheetAction(
+                                      onPressed: Navigator.of(context).pop,
+                                      child: const Text('Cancel'),
+                                    ),
+                                    actions: [
+                                      CupertinoActionSheetAction(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(true),
+                                        isDestructiveAction: true,
+                                        child: const Text('Unblock'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                              if (result == true) {
+                                final myUid = ref.read(userProvider).uid;
+                                final api = GetIt.instance.get<Api>();
+                                setState(() => _loading = true);
+                                await api.unblockUser(myUid, user.uid);
+                                if (mounted) {
+                                  _getBlockedUsers();
+                                }
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 16),
+                              decoration: const BoxDecoration(
+                                color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(8)),
+                              ),
+                              child: Text(
+                                'Unblock',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
-              ),
-            );
-          },
-        );
-      }),
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 }
