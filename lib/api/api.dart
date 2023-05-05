@@ -383,32 +383,10 @@ class Api {
       },
       handleSuccess: (response) {
         final list = jsonDecode(response.body) as List<dynamic>;
-        final now = DateTime.now();
-        return Right(List<Chatroom>.from(list.map((e) {
-          final int timeRemaining = e['timeRemaining'];
-          e['endTime'] =
-              now.add(Duration(milliseconds: timeRemaining)).toIso8601String();
-          return Chatroom.fromJson(e);
-        })));
+        return Right(
+            List<Chatroom>.from(list.map((e) => Chatroom.fromJson(e))));
       },
     );
-  }
-
-  Future<Either<ApiError, Chatroom>> getChatroom(
-      String uid, String otherUid) async {
-    return _request(makeRequest: () {
-      return http.get(
-        Uri.parse('$_urlBase/chats/info/$uid/$otherUid'),
-        headers: _headers,
-      );
-    }, handleSuccess: (response) {
-      final map = jsonDecode(response.body);
-      final now = DateTime.now();
-      final int timeRemaining = map['timeRemaining'];
-      map['endTime'] =
-          now.add(Duration(milliseconds: timeRemaining)).toIso8601String();
-      return Right(Chatroom.fromJson(map));
-    });
   }
 
   Future<Either<ApiError, List<ChatMessage>>> getMessages(
@@ -1034,15 +1012,24 @@ enum RelatedCollectionsType { user }
 class Chatroom with _$Chatroom {
   const factory Chatroom({
     required Profile profile,
-    required String location,
+    @_DateTimeConverter() required DateTime lastUpdated,
     required ChatroomState state,
-    required DateTime endTime,
     required String? invitationAudio,
     required int unreadCount,
   }) = _Chatroom;
 
   factory Chatroom.fromJson(Map<String, dynamic> json) =>
       _$ChatroomFromJson(json);
+}
+
+class _DateTimeConverter implements JsonConverter<DateTime, String> {
+  const _DateTimeConverter();
+
+  @override
+  DateTime fromJson(String value) => DateTime.parse(value);
+
+  @override
+  String toJson(DateTime dateTime) => dateTime.toIso8601String();
 }
 
 enum ChatroomState { invitation, pending, accepted }

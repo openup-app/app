@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -482,7 +483,7 @@ class _ConversationList extends StatelessWidget {
                                               fontWeight: FontWeight.w400)),
                                   const SizedBox(height: 2),
                                   Text(
-                                    'yesterday',
+                                    _formatRelativeDate(chatroom.lastUpdated),
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium!
@@ -586,5 +587,31 @@ class _ConversationList extends StatelessWidget {
     if (result == true) {
       onDelete(index);
     }
+  }
+}
+
+String _formatRelativeDate(DateTime date) {
+  final now = DateTime.now();
+  final diff = now.difference(date);
+  if (diff.isNegative) {
+    return 'now';
+  }
+
+  final localDate = date.toLocal();
+  final yesterday = DateUtils.dateOnly(now).subtract(const Duration(days: 1));
+  if (DateUtils.isSameDay(localDate, now)) {
+    final twentyFourHourMinuteFormat = DateFormat.Hm();
+    return twentyFourHourMinuteFormat.format(localDate);
+  } else if (DateUtils.isSameDay(localDate, yesterday)) {
+    return 'yesterday';
+  } else if (diff.inDays < 7) {
+    final dayNameFormat = DateFormat.EEEE();
+    return dayNameFormat.format(localDate);
+  } else if (localDate.year == now.year) {
+    final shortDateFormat = DateFormat.MMMMd();
+    return shortDateFormat.format(localDate);
+  } else {
+    final longDateFormat = DateFormat.yMMMMd();
+    return longDateFormat.format(localDate);
   }
 }
