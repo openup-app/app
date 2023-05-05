@@ -60,35 +60,6 @@ class _SignUpPhotosScreenState extends State<SignUpPhotosScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Blur Pictures',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                      ),
-                ),
-                const SizedBox(width: 8),
-                Consumer(
-                  builder: (context, ref, _) {
-                    return ToggleButton(
-                      value: _blur,
-                      onChanged: (value) {
-                        setState(() => _blur = value);
-                        updateBlurPhotos(
-                          context: context,
-                          ref: ref,
-                          blur: value,
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: ConstrainedBox(

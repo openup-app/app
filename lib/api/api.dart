@@ -197,62 +197,6 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> updateTopic(String uid, Topic topic) {
-    return _request(
-      makeRequest: () {
-        return http.put(
-          Uri.parse('$_urlBase/users/$uid/profile/topic'),
-          headers: _headers,
-          body: jsonEncode({"topic": topic.name}),
-        );
-      },
-      handleSuccess: (response) => const Right(null),
-    );
-  }
-
-  Future<Either<ApiError, void>> updateBlurPhotos(String uid, bool blur) {
-    return _request(
-      makeRequest: () {
-        return http.put(
-          Uri.parse('$_urlBase/users/$uid/profile/blurPhotos'),
-          headers: _headers,
-          body: jsonEncode({"blur": blur}),
-        );
-      },
-      handleSuccess: (response) => const Right(null),
-    );
-  }
-
-  Future<Either<ApiError, bool>> getUnblurPhotosFor(
-      String uid, String otherUid) {
-    return _request(
-      makeRequest: () {
-        return http.get(
-          Uri.parse('$_urlBase/users/$uid/profile/unblurPhotosFor/$otherUid'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return Right(json["unblur"] ?? false);
-      },
-    );
-  }
-
-  Future<Either<ApiError, void>> updateUnblurPhotosFor(
-      String uid, String otherUid, bool unblur) {
-    return _request(
-      makeRequest: () {
-        return http.put(
-          Uri.parse('$_urlBase/users/$uid/profile/unblurPhotosFor'),
-          headers: _headers,
-          body: jsonEncode({"otherUid": otherUid, "unblur": unblur}),
-        );
-      },
-      handleSuccess: (response) => const Right(null),
-    );
-  }
-
   Future<Either<ApiError, Map<String, int>>> getUnreadMessageCount(String uid) {
     return _request(
       makeRequest: () {
@@ -444,7 +388,6 @@ class Api {
     double? longitude, {
     String? seed,
     Gender? gender,
-    Topic? topic,
     double? minRadius,
     int? page,
   }) {
@@ -454,7 +397,7 @@ class Api {
             ? null
             : 'lat=$latitude&long=$longitude';
         final seedQuery = seed == null ? null : 'seed=$seed';
-        final topicQuery = topic == null ? null : 'topic=${topic.name}';
+        const topicQuery = null;
         final genderQuery = gender == null ? null : 'gender=${gender.name}';
         final minRadiusQuery =
             minRadius == null ? null : 'minRadius=$minRadius';
@@ -463,7 +406,6 @@ class Api {
             longitude != null ||
             seedQuery != null ||
             genderQuery != null ||
-            topicQuery != null ||
             minRadiusQuery != null ||
             pageQuery != null;
         return http.get(
@@ -888,8 +830,6 @@ class Profile with _$Profile {
     @Default([]) List<String> mutualFriends,
     @Default(0) int friendCount,
     required String location,
-    required Topic topic,
-    @Default(false) bool favorite,
   }) = _Profile;
 
   // Private constructor required for adding methods
@@ -1033,20 +973,3 @@ class _DateTimeConverter implements JsonConverter<DateTime, String> {
 }
 
 enum ChatroomState { invitation, pending, accepted }
-
-enum Topic {
-  moved,
-  sports,
-  sleep,
-  books,
-  school,
-  gym,
-  lonely,
-  videoGames,
-  restaurants,
-  tourism,
-  party,
-  backpacking,
-  dance,
-  conversation
-}

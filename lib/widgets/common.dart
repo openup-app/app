@@ -2285,36 +2285,3 @@ String formatCountdown(Duration d) {
     return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
   }
 }
-
-String topicLabel(Topic topic) {
-  switch (topic) {
-    case Topic.moved:
-      return 'Just Moved';
-    case Topic.sports:
-      return 'Sports fan';
-    case Topic.sleep:
-      return 'Can\'t Sleep';
-    case Topic.books:
-      return 'Bookworm';
-    case Topic.school:
-      return 'New to School';
-    case Topic.gym:
-      return 'Gym Fanatic';
-    case Topic.lonely:
-      return 'Lonely';
-    case Topic.videoGames:
-      return 'Video Game Lover';
-    case Topic.restaurants:
-      return 'Restaurant-goer';
-    case Topic.tourism:
-      return 'Tourist';
-    case Topic.party:
-      return 'Partygoer';
-    case Topic.backpacking:
-      return 'Backpacker';
-    case Topic.dance:
-      return 'Dancer';
-    case Topic.conversation:
-      return 'Conversationalist';
-  }
-}

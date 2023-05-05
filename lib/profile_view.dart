@@ -177,17 +177,6 @@ class _ProfileViewState extends State<ProfileView> {
                                   ),
                             ),
                     ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Text(
-                        topicLabel(widget.profile.topic),
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w300,
-                            ),
-                      ),
-                    ),
                   ],
                 ),
               ],

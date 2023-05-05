@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:async/async.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -53,7 +52,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   int _nextPage = 0;
 
   int _currentProfileIndex = 0;
-  Topic? _selectedTopic;
   final _invitedUsers = <String>{};
 
   final _pageListener = ValueNotifier<double>(0);
@@ -217,7 +215,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       location.longitude,
       seed: Api.seed,
       gender: _genderPreference,
-      topic: _selectedTopic,
       minRadius: _nextMinRadius,
       page: _nextPage,
     );
@@ -293,9 +290,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             style: Theme.of(context).textTheme.bodyMedium,
                           )
                         : Text(
-                            _selectedTopic == null
-                                ? 'Couldn\'t find any profiles'
-                                : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
+                            'Couldn\'t find any profiles',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                   ),

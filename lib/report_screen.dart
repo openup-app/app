@@ -5,7 +5,6 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/contact_text_field.dart';
 
 class ReportScreen extends ConsumerStatefulWidget {
   final String uid;
@@ -165,9 +164,12 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                           const SizedBox(height: 8),
                           SizedBox(
                             height: 200,
-                            child: ContactTextField(
-                              textController: _textController,
-                              hintText: 'Explain what happened',
+                            child: TextFormField(
+                              controller: _textController,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Explain what happened',
+                              ),
                             ),
                           ),
                           Center(

@@ -118,7 +118,7 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
         GetIt.instance.get<Mixpanel>()
           ..track("sign_up_submit_name")
           ..getPeople().set('name', newName);
-        context.pushNamed('onboarding-topic');
+        context.pushNamed('onboarding-photos');
       },
     );
 

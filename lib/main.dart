@@ -41,7 +41,6 @@ import 'package:openup/sign_up_permissions.dart';
 import 'package:openup/sign_up_phone.dart';
 import 'package:openup/sign_up_photos_screen.dart';
 import 'package:openup/sign_up_start_animation.dart';
-import 'package:openup/sign_up_topic_screen.dart';
 import 'package:openup/sign_up_verify.dart';
 import 'package:openup/signup_collection_audio.dart';
 import 'package:openup/signup_collection_photos.dart';
@@ -613,42 +612,31 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               },
               routes: [
                 GoRoute(
-                  path: 'topic',
-                  name: 'onboarding-topic',
+                  path: 'photos',
+                  name: 'onboarding-photos',
                   builder: (context, state) {
                     return const CurrentRouteSystemUiStyling.light(
-                      child: SignUpTopicScreen(),
+                      child: SignUpPhotosScreen(),
                     );
                   },
                   routes: [
                     GoRoute(
-                      path: 'photos',
-                      name: 'onboarding-photos',
+                      path: 'audio',
+                      name: 'onboarding-audio',
                       builder: (context, state) {
                         return const CurrentRouteSystemUiStyling.light(
-                          child: SignUpPhotosScreen(),
+                          child: SignUpAudioScreen(),
                         );
                       },
                       routes: [
                         GoRoute(
-                          path: 'audio',
-                          name: 'onboarding-audio',
+                          path: 'welcome',
+                          name: 'onboarding-welcome',
                           builder: (context, state) {
                             return const CurrentRouteSystemUiStyling.light(
-                              child: SignUpAudioScreen(),
+                              child: SignUpStartAnimationScreen(),
                             );
                           },
-                          routes: [
-                            GoRoute(
-                              path: 'welcome',
-                              name: 'onboarding-welcome',
-                              builder: (context, state) {
-                                return const CurrentRouteSystemUiStyling.light(
-                                  child: SignUpStartAnimationScreen(),
-                                );
-                              },
-                            ),
-                          ],
                         ),
                       ],
                     ),
