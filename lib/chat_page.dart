@@ -90,9 +90,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       if (mounted) {
         setState(() => _loading = false);
         WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-          if (mounted && _scrollController?.hasClients == true) {
-            _scrollController!
-                .jumpTo(_scrollController!.position.maxScrollExtent);
+          if (mounted && _scrollController.hasClients) {
+            _scrollController
+                .jumpTo(_scrollController.position.maxScrollExtent);
           }
         });
       }
@@ -121,7 +121,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     return LayoutBuilder(
       builder: (context, constraints) {
         const dragHandleGap = 24.0;
-        const appBarHeight = 61.0;
+        const appBarHeight = 67.0;
         const bottomButtonHeight = 51.0 + 16 * 2;
         final listHeight = constraints.maxHeight -
             (MediaQuery.of(context).padding.top +
@@ -143,19 +143,40 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 45,
-                        height: 45,
-                        clipBehavior: Clip.hardEdge,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
-                        child: _otherProfile?.photo == null
-                            ? const SizedBox.shrink()
-                            : Image.network(
-                                widget.otherProfile!.photo,
-                                fit: BoxFit.cover,
+                      Stack(
+                        alignment: Alignment.center,
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 51,
+                            height: 51,
+                            clipBehavior: Clip.hardEdge,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                            ),
+                            child: _otherProfile?.photo == null
+                                ? const SizedBox.shrink()
+                                : Image.network(
+                                    widget.otherProfile!.photo,
+                                    fit: BoxFit.cover,
+                                  ),
+                          ),
+                          if (_otherProfile != null)
+                            Positioned(
+                              left: 8,
+                              top: -30,
+                              width: 78,
+                              height: 78,
+                              child: OnlineIndicatorBuilder(
+                                uid: _otherProfile!.uid,
+                                builder: (context, online) {
+                                  return online
+                                      ? const OnlineIndicator()
+                                      : const SizedBox.shrink();
+                                },
                               ),
+                            ),
+                        ],
                       ),
                       const SizedBox(width: 12),
                       Text(
@@ -410,7 +431,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     const uuid = Uuid();
     final pendingId = uuid.v4();
     final uid = ref.read(userProvider).uid;
-    final atEnd = _scrollController?.position.extentAfter == 0;
+    final atEnd = _scrollController.position.extentAfter == 0;
     setState(() {
       _messages[pendingId] = ChatMessage(
         uid: uid,
@@ -419,13 +440,14 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         content: file.path,
         duration: duration,
         waveform: [],
+        reactions: {},
       );
     });
     if (atEnd) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _scrollController?.hasClients == true) {
-          _scrollController!.animateTo(
-            _scrollController!.position.maxScrollExtent,
+        if (mounted && _scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOut,
           );
@@ -454,15 +476,13 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   }
 
   void _scrollListener() {
-    final offset = _scrollController?.offset;
-    if (offset != null) {
-      ref.read(_scrollProvider.notifier).update(offset);
-    }
+    final offset = _scrollController.offset;
+    ref.read(_scrollProvider.notifier).update(offset);
 
     final startDate = _messages.values.first.date;
-    if (_scrollController?.position.userScrollDirection ==
+    if (_scrollController.position.userScrollDirection ==
             ScrollDirection.forward &&
-        _scrollController!.position.extentBefore < 400 &&
+        _scrollController.position.extentBefore < 400 &&
         _messages.isNotEmpty &&
         !_loading) {
       setState(() => _loading = true);

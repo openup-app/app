@@ -53,6 +53,7 @@ import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/sign_up_overview_page.dart';
 import 'package:openup/menu_page.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -1062,23 +1063,7 @@ class _MenuTiles extends StatelessWidget {
               title: 'Conversations',
               subtitle: 'talk to your new connects',
               icon: const Icon(Icons.chat_bubble, size: 42),
-              badge: Container(
-                width: 23,
-                height: 23,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '1',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white),
-                ),
-              ),
+              badge: const UnreadIndicator(count: 1),
               onPressed: onConversationsPressed,
             ),
           ),

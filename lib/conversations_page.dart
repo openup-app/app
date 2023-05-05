@@ -246,19 +246,19 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
                     .toLowerCase()
                     .contains(_filterString.toLowerCase()));
 
-                final acceptedChatrooms = filteredChatrooms
+                final nonPendingChatrooms = filteredChatrooms
                     ?.where(
-                        (chatroom) => chatroom.state == ChatroomState.accepted)
+                        (chatroom) => chatroom.state != ChatroomState.pending)
                     .toList();
                 return _ConversationList(
-                  chatrooms: acceptedChatrooms,
+                  chatrooms: nonPendingChatrooms,
                   emptyLabel:
                       'Invite someone to chat,\nthen continue the conversation here',
                   filtered: _filterString.isNotEmpty,
                   onRefresh: _fetchChatrooms,
                   onOpen: _openChat,
                   onDelete: (index) =>
-                      _deleteFriend(acceptedChatrooms![index].profile),
+                      _deleteFriend(nonPendingChatrooms![index].profile),
                 );
               },
             ),
@@ -494,7 +494,7 @@ class _ConversationList extends StatelessWidget {
                                                 0x70, 0x70, 0x70, 1.0)),
                                   ),
                                   const SizedBox(height: 2),
-                                  if (chatroom.state == ChatroomState.pending)
+                                  if (chatroom.state != ChatroomState.accepted)
                                     Text(
                                       'New chat invitation',
                                       style: Theme.of(context)
@@ -510,6 +510,10 @@ class _ConversationList extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (chatroom.unreadCount > 0)
+                            UnreadIndicator(
+                              count: chatroom.unreadCount,
+                            ),
                           const Icon(
                             Icons.chevron_right,
                             color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
@@ -519,23 +523,8 @@ class _ConversationList extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (suggestedFriend || chatroom.unreadCount > 0)
-                      Positioned(
-                        right: 41,
-                        bottom: 16,
-                        child: Text(
-                          suggestedFriend ? 'Suggested Friend' : 'New message',
-                          textAlign: TextAlign.right,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    fontWeight: FontWeight.w300,
-                                    fontSize: 16,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                        ),
-                      ),
                     Positioned(
-                      left: 58,
+                      left: 44,
                       top: -18,
                       width: 78,
                       height: 78,

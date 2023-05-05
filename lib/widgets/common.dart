@@ -12,6 +12,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get_it/get_it.dart';
+import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/online_users_api.dart';
@@ -1764,17 +1765,16 @@ class OnlineIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 19,
-      height: 19,
+      width: 16,
+      height: 16,
       alignment: Alignment.center,
-      child: const SizedBox(
-        width: 7,
-        height: 7,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-          ),
+      child: OverflowBox(
+        minWidth: 77,
+        minHeight: 77,
+        maxWidth: 77,
+        maxHeight: 77,
+        child: Lottie.asset(
+          'assets/images/online.json',
         ),
       ),
     );
@@ -2225,6 +2225,42 @@ class RadioTile extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class UnreadIndicator extends StatelessWidget {
+  final int count;
+
+  const UnreadIndicator({
+    super.key,
+    required this.count,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 23,
+      height: 23,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Color.fromRGBO(0xF6, 0x28, 0x28, 1.0),
+            Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
+          ],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '${count.clamp(1, 9).toString()}${count > 9 ? '+' : ''}',
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
       ),
     );
   }
