@@ -45,6 +45,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _hasLocation = false;
   bool _errorLoadingProfiles = false;
   Gender? _genderPreference;
+  bool _pageActive = false;
 
   CancelableOperation<Either<ApiError, DiscoverResults>>? _discoverOperation;
   final _profiles = <Profile>[];
@@ -263,151 +264,164 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading && _profiles.isEmpty) {
-      return const Center(
-        child: LoadingIndicator(
-          color: Colors.black,
-        ),
-      );
-    }
-
-    if (_profiles.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: !_hasLocation
-                  ? Text(
-                      'Unable to get location',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    )
-                  : Text(
-                      _selectedTopic == null
-                          ? 'Couldn\'t find any profiles'
-                          : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                // Location needed at least once for nearby users
-                // (may not have granted location during onboarding)
-                setState(() => _loading = true);
-                final locationService = LocationService();
-                if (!await locationService.hasPermission()) {
-                  final status = await locationService.requestPermission();
-                  if (status) {
-                    await _updateLocation();
-                  }
-                }
-
-                if (!mounted) {
-                  return;
-                }
-                setState(() {
-                  _nextMinRadius = 0;
-                  _nextPage = 0;
-                });
-                _fetchPageOfProfiles();
-              },
-              child: const Text('Refresh'),
-            ),
-          ],
-        ),
-      );
-    }
-
     return ActivePage(
-      onActivate: () {},
-      onDeactivate: () => _userProfileInfoDisplayKey.currentState?.pause(),
-      child: ValueListenableBuilder<double>(
-        valueListenable: _pageListener,
-        builder: (context, page, child) {
-          final index = page.round();
-          final profile = _profiles[index];
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              // Must live above PageView.builder (otherwise duplicate global key)
-              UserProfileInfoDisplay(
-                key: _userProfileInfoDisplayKey,
-                profile: profile,
-                // invited: _invitedUsers.contains(profile.uid),
-                play: index == _currentProfileIndex,
-                builder: (context, play, playbackInfoStream) {
-                  return PageView.builder(
-                    controller: _pageController,
-                    itemCount: _profiles.length,
-                    itemBuilder: (context, index) {
-                      final profile = _profiles[index];
-                      return ClipRRect(
-                        clipBehavior: Clip.hardEdge,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(32),
-                          topRight: Radius.circular(32),
-                        ),
-                        child: Container(
-                          margin: EdgeInsets.only(
-                            left: 16,
-                            right: 16,
-                            top: 24 + MediaQuery.of(context).padding.top,
-                            bottom: 16 + MediaQuery.of(context).padding.bottom,
+      onActivate: () => setState(() => _pageActive = true),
+      onDeactivate: () {
+        _userProfileInfoDisplayKey.currentState?.pause();
+        setState(() => _pageActive = false);
+      },
+      child: Builder(
+        builder: (context) {
+          if (_loading && _profiles.isEmpty) {
+            return const Center(
+              child: LoadingIndicator(
+                color: Colors.black,
+              ),
+            );
+          }
+
+          if (_profiles.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: !_hasLocation
+                        ? Text(
+                            'Unable to get location',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          )
+                        : Text(
+                            _selectedTopic == null
+                                ? 'Couldn\'t find any profiles'
+                                : 'Couldn\'t find any "${topicLabel(_selectedTopic!)}" profiles',
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
-                          clipBehavior: Clip.hardEdge,
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(48)),
-                          ),
-                          child: _ProfileDisplay(
-                            profile: profile,
-                            play: play,
-                            onPlayPause: () {
-                              if (!play) {
-                                _userProfileInfoDisplayKey.currentState?.play();
-                              } else {
-                                _userProfileInfoDisplayKey.currentState
-                                    ?.pause();
-                              }
-                            },
-                            onRecord: () {
-                              if (FirebaseAuth.instance.currentUser == null) {
-                                _showSignInDialog();
-                              } else {
-                                _showRecordPanel(context, profile.uid);
-                              }
-                            },
-                            onBlock: () => setState(() => _profiles
-                                .removeWhere(((p) => p.uid == profile.uid))),
-                          ),
-                        ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      // Location needed at least once for nearby users
+                      // (may not have granted location during onboarding)
+                      setState(() => _loading = true);
+                      final locationService = LocationService();
+                      if (!await locationService.hasPermission()) {
+                        final status =
+                            await locationService.requestPermission();
+                        if (status) {
+                          await _updateLocation();
+                        }
+                      }
+
+                      if (!mounted) {
+                        return;
+                      }
+                      setState(() {
+                        _nextMinRadius = 0;
+                        _nextPage = 0;
+                      });
+                      _fetchPageOfProfiles();
+                    },
+                    child: const Text('Refresh'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ValueListenableBuilder<double>(
+            valueListenable: _pageListener,
+            builder: (context, page, child) {
+              final index = page.round();
+              final profile = _profiles[index];
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Must live above PageView.builder (otherwise duplicate global key)
+                  UserProfileInfoDisplay(
+                    key: _userProfileInfoDisplayKey,
+                    profile: profile,
+                    // invited: _invitedUsers.contains(profile.uid),
+                    play: index == _currentProfileIndex && _pageActive,
+                    builder: (context, play, playbackInfoStream) {
+                      return PageView.builder(
+                        controller: _pageController,
+                        itemCount: _profiles.length,
+                        itemBuilder: (context, index) {
+                          final profile = _profiles[index];
+                          return ClipRRect(
+                            clipBehavior: Clip.hardEdge,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(32),
+                              topRight: Radius.circular(32),
+                            ),
+                            child: Container(
+                              margin: EdgeInsets.only(
+                                left: 16,
+                                right: 16,
+                                top: 24 + MediaQuery.of(context).padding.top,
+                                bottom:
+                                    16 + MediaQuery.of(context).padding.bottom,
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                              decoration: const BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(48)),
+                              ),
+                              child: _ProfileDisplay(
+                                profile: profile,
+                                play: play,
+                                onPlayPause: () {
+                                  if (!play) {
+                                    _userProfileInfoDisplayKey.currentState
+                                        ?.play();
+                                  } else {
+                                    _userProfileInfoDisplayKey.currentState
+                                        ?.pause();
+                                  }
+                                },
+                                onRecord: () {
+                                  if (FirebaseAuth.instance.currentUser ==
+                                      null) {
+                                    _showSignInDialog();
+                                  } else {
+                                    _showRecordPanel(context, profile.uid);
+                                  }
+                                },
+                                onBlock: () => setState(() =>
+                                    _profiles.removeWhere(
+                                        ((p) => p.uid == profile.uid))),
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
-              Positioned(
-                left: 16 + 20,
-                top: MediaQuery.of(context).padding.top + 24 + 20,
-                child: _PageControls(
-                  profile: profile,
-                  preference: _genderPreference,
-                  onPreference: (gender) {
-                    if (gender == _genderPreference) {
-                      return;
-                    }
-                    setState(() {
-                      _genderPreference = gender;
-                      _nextMinRadius = 0;
-                      _nextPage = 0;
-                      _pageController.jumpTo(0);
-                      _profiles.clear();
-                    });
-                    _fetchPageOfProfiles();
-                  },
-                ),
-              ),
-            ],
+                  ),
+                  Positioned(
+                    left: 16 + 20,
+                    top: MediaQuery.of(context).padding.top + 24 + 20,
+                    child: _PageControls(
+                      profile: profile,
+                      preference: _genderPreference,
+                      onPreference: (gender) {
+                        if (gender == _genderPreference) {
+                          return;
+                        }
+                        setState(() {
+                          _genderPreference = gender;
+                          _nextMinRadius = 0;
+                          _nextPage = 0;
+                          _pageController.jumpTo(0);
+                          _profiles.clear();
+                        });
+                        _fetchPageOfProfiles();
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),

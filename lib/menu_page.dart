@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 
-final _menuOpenNotifier = ValueNotifier<bool>(false);
+final _pageOpenNotifier = ValueNotifier<bool>(false);
 
 class MenuPage extends StatefulWidget {
   final int currentIndex;
@@ -33,15 +33,12 @@ class MenuPageState extends State<MenuPage> {
     super.initState();
     _draggableScrollableController.addListener(() {
       final fullyOpen = _draggableScrollableController.size >= 1.0;
-      if (fullyOpen) {
-        _menuOpenNotifier.value = true;
-      } else {
-        _menuOpenNotifier.value = false;
-        FocusScope.of(context).unfocus();
-      }
+      _pageOpenNotifier.value = fullyOpen;
+      FocusScope.of(context).unfocus();
     });
 
     _keys.addAll(List.generate(widget.children.length, (_) => GlobalKey()));
+    _pageOpenNotifier.value = true;
   }
 
   @override
@@ -105,7 +102,7 @@ class MenuPageState extends State<MenuPage> {
                     snap: true,
                     builder: (context, controller) {
                       return ValueListenableBuilder<bool>(
-                        valueListenable: _menuOpenNotifier,
+                        valueListenable: _pageOpenNotifier,
                         builder: (context, open, child) {
                           return AnimatedContainer(
                             curve: Curves.easeOut,
@@ -141,7 +138,10 @@ class MenuPageState extends State<MenuPage> {
                                     for (var i = 0; i < _keys.length; i++)
                                       KeyedSubtree(
                                         key: _keys[i],
-                                        child: widget.children[i],
+                                        child: _BranchIndex(
+                                          index: i,
+                                          child: widget.children[i],
+                                        ),
                                       ),
                                   ],
                                 ),
@@ -402,24 +402,25 @@ class ActivePage extends StatefulWidget {
 class _ActivePageState extends State<ActivePage> {
   int? _myBranchIndex;
   int? _currentIndex;
-  bool _menuOpen = false;
+  late bool _pageOpen;
   bool _active = false;
   bool _appResumed = true;
 
   @override
   void initState() {
     super.initState();
-    _menuOpenNotifier.addListener(_onMenuOpen);
+    _pageOpenNotifier.addListener(_onPageOpen);
+    _pageOpen = _pageOpenNotifier.value;
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _myBranchIndex = _BranchIndex.of(context) ?? _myBranchIndex;
-    final oldCurrentIndex = _currentIndex;
+    _myBranchIndex ??= _BranchIndex.of(context);
+    final oldIndex = _currentIndex;
     try {
       _currentIndex = StatefulShellRouteState.of(context).currentIndex;
-      if (oldCurrentIndex != _currentIndex) {
+      if (oldIndex != _currentIndex) {
         _updateActivation();
       }
     } catch (e) {
@@ -429,13 +430,17 @@ class _ActivePageState extends State<ActivePage> {
 
   @override
   void dispose() {
-    _menuOpenNotifier.removeListener(_onMenuOpen);
+    _pageOpenNotifier.removeListener(_onPageOpen);
     super.dispose();
   }
 
-  void _onMenuOpen() {
-    _menuOpen = _menuOpenNotifier.value;
-    _updateActivation();
+  void _onPageOpen() {
+    // Delay to allow for navigation to complete, which updates currentIndex.
+    // The delay isn't needed if the menu animates open
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _pageOpen = _pageOpenNotifier.value;
+      _updateActivation();
+    });
   }
 
   void _updateActivation() {
@@ -443,7 +448,7 @@ class _ActivePageState extends State<ActivePage> {
     final onCurrentBranch = _currentIndex == _myBranchIndex;
     final routeActive = ModalRoute.of(context)?.isActive == true;
     final visible = isBranchRoute ? onCurrentBranch : routeActive;
-    final shouldBeActive = visible && _menuOpen && _appResumed;
+    final shouldBeActive = visible && _pageOpen && _appResumed;
     if (!_active && shouldBeActive) {
       SchedulerBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
