@@ -51,7 +51,11 @@ class MenuPageState extends State<MenuPage> {
 
   void open() {
     if (_draggableScrollableController.isAttached) {
-      _draggableScrollableController.jumpTo(1.0);
+      _draggableScrollableController.animateTo(
+        1.0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
     } else {
       print('DraggableScrollableSheetController is not attached');
     }
@@ -435,12 +439,8 @@ class _ActivePageState extends State<ActivePage> {
   }
 
   void _onPageOpen() {
-    // Delay to allow for navigation to complete, which updates currentIndex.
-    // The delay isn't needed if the menu animates open
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      _pageOpen = _pageOpenNotifier.value;
-      _updateActivation();
-    });
+    _pageOpen = _pageOpenNotifier.value;
+    _updateActivation();
   }
 
   void _updateActivation() {
