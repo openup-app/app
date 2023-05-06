@@ -32,6 +32,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
   bool _showCollectionCreation = false;
   final _nameController = TextEditingController();
   bool _initial = true;
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -51,6 +52,12 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
       },
       fireImmediately: true,
     );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -86,6 +93,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
+                controller: _scrollController,
                 child: Builder(
                   builder: (context) {
                     if (!_showCollectionCreation) {
@@ -153,6 +161,50 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.w400,
                                                   color: Colors.white),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 14,
+                                  bottom: 30,
+                                  width: 48,
+                                  height: 48,
+                                  child: Button(
+                                    onPressed: () {
+                                      _scrollController.animateTo(
+                                        _scrollController
+                                            .position.maxScrollExtent,
+                                        duration:
+                                            const Duration(milliseconds: 200),
+                                        curve: Curves.easeOut,
+                                      );
+                                    },
+                                    child: Center(
+                                      child: Container(
+                                        width: 29,
+                                        height: 29,
+                                        alignment: Alignment.center,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              offset: Offset(0, 2),
+                                              blurRadius: 4,
+                                              color: Color.fromRGBO(
+                                                  0x00, 0x00, 0x00, 0.25),
+                                            ),
+                                          ],
+                                        ),
+                                        child: const RotatedBox(
+                                          quarterTurns: 1,
+                                          child: Icon(
+                                            Icons.chevron_right,
+                                            color: Color.fromRGBO(
+                                                0x71, 0x71, 0x71, 1.0),
+                                          ),
                                         ),
                                       ),
                                     ),
