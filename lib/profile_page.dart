@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dartz/dartz.dart' show Either, Left;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -97,13 +98,8 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                                   child: Padding(
                                     padding: const EdgeInsets.only(bottom: 30),
                                     child: Button(
-                                      onPressed: () async {
-                                        final audio =
-                                            await _showRecordPanel(context);
-                                        if (mounted && audio != null) {
-                                          _upload(audio);
-                                        }
-                                      },
+                                      onPressed: () =>
+                                          _showRecordPanel(context),
                                       child: Container(
                                         width: 146,
                                         height: 51,
@@ -263,63 +259,13 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
     );
   }
 
-  Future<File?> _showRecordPanel(BuildContext context) async {
-    final audio = await showModalBottomSheet<Uint8List>(
+  Future<void> _showRecordPanel(BuildContext context) {
+    return showModalBottomSheet<Uint8List>(
       backgroundColor: Colors.transparent,
       context: context,
       builder: (context) {
-        return Surface(
-          child: RecordPanelContents(
-            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
-          ),
-        );
-      },
-    );
-
-    if (audio == null || !mounted) {
-      return null;
-    }
-
-    final tempDir = await getTemporaryDirectory();
-    final file = await File(path.join(
-            tempDir.path, 'audio_bio_${DateTime.now().toIso8601String()}.m4a'))
-        .create();
-    return file.writeAsBytes(audio);
-  }
-
-  void _upload(File audio) async {
-    final api = GetIt.instance.get<Api>();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      return null;
-    }
-
-    final result = await withBlockingModal(
-      context: context,
-      label: 'Uploading voice bio...',
-      future: api.updateProfileAudio(uid, await audio.readAsBytes()),
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    result.fold(
-      (l) => displayError(context, l),
-      (r) {
-        showCupertinoDialog(
-          context: context,
-          builder: (context) {
-            return CupertinoAlertDialog(
-              title: const Text('Successfully uploaded void bio'),
-              actions: [
-                CupertinoDialogAction(
-                  onPressed: Navigator.of(context).pop,
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
+        return const Surface(
+          child: _RecordOrUpload(),
         );
       },
     );
@@ -357,6 +303,101 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
     }
   }
 }
+
+class _RecordOrUpload extends StatefulWidget {
+  const _RecordOrUpload({super.key});
+
+  @override
+  State<_RecordOrUpload> createState() => _RecordOrUploadState();
+}
+
+class _RecordOrUploadState extends State<_RecordOrUpload> {
+  _AudioBioState _audioBioState = _AudioBioState.creating;
+  Timer? _animationTimer;
+
+  @override
+  void dispose() {
+    _animationTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 234,
+      child: Builder(
+        builder: (context) {
+          switch (_audioBioState) {
+            case _AudioBioState.creating:
+              return RecordPanelContents(
+                onSubmit: _submit,
+              );
+            case _AudioBioState.uploading:
+              return const Center(
+                child: LoadingIndicator(color: Colors.white),
+              );
+            case _AudioBioState.uploaded:
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: const [
+                  Icon(
+                    Icons.done,
+                    size: 64,
+                    color: Colors.green,
+                  ),
+                  Text(
+                    'updated',
+                    style: TextStyle(
+                      color: Colors.green,
+                    ),
+                  )
+                ],
+              );
+          }
+        },
+      ),
+    );
+  }
+
+  void _submit(Uint8List audio, Duration duration) async {
+    if (!mounted) {
+      return;
+    }
+    setState(() => _audioBioState = _AudioBioState.uploading);
+    final tempDir = await getTemporaryDirectory();
+    final file = await File(path.join(
+            tempDir.path, 'audio_bio_${DateTime.now().toIso8601String()}.m4a'))
+        .create();
+    await file.writeAsBytes(audio);
+    final result = await _upload(file);
+    if (mounted) {
+      result.fold(
+        (l) => displayError(context, l),
+        (r) => setState(() {
+          _audioBioState = _AudioBioState.uploaded;
+          _animationTimer = Timer(const Duration(milliseconds: 1500), () {
+            if (mounted) {
+              Navigator.of(context).pop();
+            }
+          });
+        }),
+      );
+    }
+  }
+}
+
+Future<Either<ApiError, void>> _upload(File audio) async {
+  final api = GetIt.instance.get<Api>();
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) {
+    return Future.value(const Left(ApiError.client(ClientErrorUnauthorized())));
+  }
+
+  return api.updateProfileAudio(uid, await audio.readAsBytes());
+}
+
+enum _AudioBioState { creating, uploading, uploaded }
 
 class _BottomButton extends StatelessWidget {
   final String label;

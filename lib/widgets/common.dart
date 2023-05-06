@@ -1018,16 +1018,16 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 16),
-                Text(
-                  'Recording message',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w300,
-                      color: Colors.white),
-                ),
-                if (recordingInfo.recording) ...[
-                  const SizedBox(height: 8),
+                const SizedBox(height: 22),
+                if (_recordingBytes == null) ...[
+                  Text(
+                    'Recording message',
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white),
+                  ),
+                  const SizedBox(height: 16),
                   ValueListenableBuilder<Duration>(
                     valueListenable: _recordingDurationNotifier,
                     builder: (context, duration, _) {
@@ -1038,7 +1038,7 @@ class _RecordPanelContentsState extends State<RecordPanelContents> {
                         ),
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                             fontSize: 16,
-                            fontWeight: FontWeight.w300,
+                            fontWeight: FontWeight.w400,
                             color: Colors.white),
                       );
                     },
