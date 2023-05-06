@@ -866,12 +866,7 @@ class _MenuPageShellState extends State<_MenuPageShell> {
             style: style,
           );
         } else if (_currentIndex == 1) {
-          return Text(
-            'Conversations',
-            style: style.copyWith(
-              color: const Color.fromRGBO(0xFF, 0x71, 0x71, 1.0),
-            ),
-          );
+          return const SizedBox.shrink();
         } else if (_currentIndex == 2) {
           return Text(
             'My Profile',

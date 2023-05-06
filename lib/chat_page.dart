@@ -130,8 +130,28 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                 MediaQuery.of(context).padding.bottom);
         return Column(
           children: [
-            SizedBox(height: MediaQuery.of(context).padding.top),
-            const SizedBox(height: dragHandleGap),
+            SizedBox(
+              height: dragHandleGap + MediaQuery.of(context).padding.top,
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    left: 20,
+                    bottom: 4.0,
+                  ),
+                  child: Hero(
+                    tag: 'conversations_title',
+                    child: Text(
+                      'Conversations',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: const Color.fromRGBO(0xFF, 0x40, 0x40, 1.0)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
             SizedBox(
               height: appBarHeight,
               child: Row(
