@@ -1863,19 +1863,21 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'Block "${widget.name}"?',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium!
-                          .copyWith(fontSize: 24, fontWeight: FontWeight.w300),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),
-                  Text(
+                  const Text(
                     'They won\'t see you anywhere on this app, and won\'t be able to send you messages.\n\nYou won\'t see them anywhere, and won\'t be able to send them messages.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w300,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -1885,32 +1887,28 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
                         onPressed: () {
                           Navigator.of(context).pop(true);
                         },
-                        child: Padding(
+                        child: const Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
                             'Block',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    color: const Color.fromRGBO(
-                                        0xFF, 0x07, 0x07, 1.0),
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w300),
+                            style: TextStyle(
+                                color: Color.fromRGBO(0xFF, 0x07, 0x07, 1.0),
+                                fontSize: 20,
+                                fontWeight: FontWeight.w300),
                           ),
                         ),
                       ),
                       Button(
                         onPressed: Navigator.of(context).pop,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
                           child: Text(
                             'Cancel',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 20, fontWeight: FontWeight.w300),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w300,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -1946,6 +1944,7 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
   }) async {
     final reportReason = await showModalBottomSheet<String>(
       context: context,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return Surface(
           child: Padding(
@@ -1956,27 +1955,32 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
               children: [
                 Text(
                   'Why are you reporting this account?',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 24, fontWeight: FontWeight.w300),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w300,
+                      height: 1.5,
+                      color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 RadioTile(
-                  label: 'Impersonation or deceptive identity',
+                  label: 'Spam, impersonation or deception',
                   onTap: () => Navigator.of(context).pop("deceptive"),
+                  style: const TextStyle(color: Colors.white),
                 ),
                 RadioTile(
                   label: 'Nudity or sexual activity',
                   onTap: () => Navigator.of(context).pop("sexual"),
+                  style: const TextStyle(color: Colors.white),
                 ),
                 RadioTile(
                   label: 'Suicide or self-harm',
                   onTap: () => Navigator.of(context).pop("self-harm"),
+                  style: const TextStyle(color: Colors.white),
                 ),
                 RadioTile(
                   label: 'Violence or harmful content',
                   onTap: () => Navigator.of(context).pop("harmful"),
+                  style: const TextStyle(color: Colors.white),
                 ),
               ],
             ),
