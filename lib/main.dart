@@ -33,14 +33,10 @@ import 'package:openup/people_page.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
-import 'package:openup/sign_up_audio_screen.dart';
 import 'package:openup/sign_up_gender.dart';
 import 'package:openup/sign_up_name.dart';
-import 'package:openup/sign_up_name_screen.dart';
 import 'package:openup/sign_up_permissions.dart';
 import 'package:openup/sign_up_phone.dart';
-import 'package:openup/sign_up_photos_screen.dart';
-import 'package:openup/sign_up_start_animation.dart';
 import 'package:openup/sign_up_verify.dart';
 import 'package:openup/signup_collection_audio.dart';
 import 'package:openup/signup_collection_photos.dart';
@@ -51,7 +47,6 @@ import 'package:openup/util/page_transition.dart';
 import 'package:openup/sign_up_age.dart';
 import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/sign_up_overview_page.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
@@ -585,59 +580,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             ),
           ],
         ),
-        GoRoute(
-          path: '/onboarding',
-          name: 'onboarding',
-          builder: (context, state) {
-            return const CurrentRouteSystemUiStyling.light(
-              child: SignUpOverviewPage(),
-            );
-          },
-          routes: [
-            GoRoute(
-              path: 'name',
-              name: 'onboarding-name',
-              builder: (context, state) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpNameScreen(),
-                );
-              },
-              routes: [
-                GoRoute(
-                  path: 'photos',
-                  name: 'onboarding-photos',
-                  builder: (context, state) {
-                    return const CurrentRouteSystemUiStyling.light(
-                      child: SignUpPhotosScreen(),
-                    );
-                  },
-                  routes: [
-                    GoRoute(
-                      path: 'audio',
-                      name: 'onboarding-audio',
-                      builder: (context, state) {
-                        return const CurrentRouteSystemUiStyling.light(
-                          child: SignUpAudioScreen(),
-                        );
-                      },
-                      routes: [
-                        GoRoute(
-                          path: 'welcome',
-                          name: 'onboarding-welcome',
-                          builder: (context, state) {
-                            return const CurrentRouteSystemUiStyling.light(
-                              child: SignUpStartAnimationScreen(),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
         StatefulShellRoute(
           builder: (builder) {
             return builder.buildShell(
@@ -869,7 +811,7 @@ class _MenuPageShellState extends State<_MenuPageShell> {
           return const SizedBox.shrink();
         } else if (_currentIndex == 2) {
           return Text(
-            'My Profile',
+            'Profile',
             style: style,
           );
         } else if (_currentIndex == 3) {
@@ -920,107 +862,122 @@ class _MenuTiles extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
           child: _MenuTileBorder(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 21),
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image:
-                      AssetImage('assets/images/welcome_tile_background.png'),
-                  fit: BoxFit.fill,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 7),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Welcome',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.white),
+            child: Consumer(
+              builder: (context, ref, child) {
+                final userState = ref.watch(userProvider2);
+                return userState.map(
+                  guest: (_) => const SizedBox.shrink(),
+                  signedIn: (signedIn) {
+                    final profile = signedIn.profile;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 21),
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(
+                              'assets/images/welcome_tile_background.png'),
+                          fit: BoxFit.fill,
                         ),
                       ),
-                      Expanded(
-                        child: Text(
-                          '21 days remaining',
-                          textAlign: TextAlign.right,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      return Text(
-                        '${ref.watch(userProvider.select((p) => p.profile?.name)) ?? ''}!',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'We want to thank you for joining Openup, please let us know how we can improve your experience of meeting new people! Any feedback is welcome, just tap the “send message” button.',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        height: 1.3,
-                        color: Colors.white),
-                  ),
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Button(
-                      onPressed: onContactUsPressed,
-                      child: Container(
-                        width: 121,
-                        height: 37,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(18.5),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 7),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Welcome',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.white),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  '21 days remaining',
+                                  textAlign: TextAlign.right,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.white),
+                                ),
+                              ),
+                            ],
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              offset: Offset(0, 2),
-                              blurRadius: 10,
-                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                          const SizedBox(height: 24),
+                          Text(
+                            '${profile.name}!',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'We want to thank you for joining Openup, please let us know how we can improve your experience of meeting new people! Any feedback is welcome, just tap the “send message” button.',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.3,
+                                    color: Colors.white),
+                          ),
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Button(
+                              onPressed: onContactUsPressed,
+                              child: Container(
+                                width: 121,
+                                height: 37,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(18.5),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      offset: Offset(0, 2),
+                                      blurRadius: 10,
+                                      color: Color.fromRGBO(
+                                          0x00, 0x00, 0x00, 0.25),
+                                    ),
+                                  ],
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Subscribe now',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.black),
+                                ),
+                              ),
                             ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Subscribe now',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.black),
-                        ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                ],
-              ),
+                    );
+                  },
+                );
+              },
             ),
           ),
         ),
@@ -1062,7 +1019,7 @@ class _MenuTiles extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
           child: _MenuTileBorder(
             child: _MenuTile(
-              title: 'My Profile',
+              title: 'Profile',
               subtitle: 'update your photos and bio',
               icon: const Icon(Icons.face, size: 42),
               onPressed: onProfilePressed,

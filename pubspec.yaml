@@ -124,7 +124,6 @@ flutter:
     - assets/images/earth.svg
     - assets/images/loading_icon.png
     - assets/images/videocam.svg
-    - assets/videos/welcome.mp4
     - assets/images/welcome_background.png
     - assets/images/welcome_tile_background.png
 
