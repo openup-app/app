@@ -30,29 +30,7 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePage2State extends ConsumerState<ProfilePage> {
   bool _showCollectionCreation = false;
-  final _nameController = TextEditingController();
-  bool _initial = true;
   final _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    ref.listenManual<UserState2?>(
-      userProvider2,
-      (previous, next) {
-        if (_initial && next != null) {
-          next.map(
-            guest: (_) {},
-            signedIn: (signedIn) {
-              _initial = false;
-              _nameController.text = signedIn.profile.name;
-            },
-          );
-        }
-      },
-      fireImmediately: true,
-    );
-  }
 
   @override
   void dispose() {
@@ -258,17 +236,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                                 Radius.circular(64),
                               ),
                             ),
-                            child: TextField(
-                              controller: _nameController,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400),
-                              decoration:
-                                  const InputDecoration.collapsed(hintText: ''),
-                            ),
+                            child: const _NameField(),
                           ),
                           const SizedBox(height: 24),
                           SizedBox(
@@ -432,6 +400,7 @@ class _BottomButton extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
+                    height: 1.5,
                     color: Colors.white),
               ),
             ),
@@ -465,6 +434,137 @@ class _SectionTitle extends StatelessWidget {
               .copyWith(fontSize: 12, fontWeight: FontWeight.w400),
         ),
       ),
+    );
+  }
+}
+
+class _NameField extends ConsumerStatefulWidget {
+  const _NameField({super.key});
+
+  @override
+  ConsumerState<_NameField> createState() => _NameFieldState();
+}
+
+class _NameFieldState extends ConsumerState<_NameField> {
+  bool _editingName = false;
+  final _nameFocusNode = FocusNode();
+  final _nameController = TextEditingController();
+  bool _initial = true;
+  bool _submittingName = false;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.listenManual<UserState2?>(
+      userProvider2,
+      (previous, next) {
+        if (_initial && next != null) {
+          next.map(
+            guest: (_) {},
+            signedIn: (signedIn) {
+              _initial = false;
+              _nameController.text = signedIn.profile.name;
+            },
+          );
+        }
+      },
+      fireImmediately: true,
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameFocusNode.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _nameController,
+              autofocus: true,
+              focusNode: _nameFocusNode,
+              enabled: _editingName,
+              textCapitalization: TextCapitalization.sentences,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontSize: 16, fontWeight: FontWeight.w400),
+              decoration: const InputDecoration.collapsed(
+                hintText: '',
+              ),
+            ),
+          ),
+        ),
+        Button(
+          onPressed: () async {
+            if (!_editingName) {
+              setState(() => _editingName = true);
+              FocusScope.of(context).requestFocus(_nameFocusNode);
+            } else {
+              setState(() => _submittingName = true);
+              final result = await ref
+                  .read(userProvider2.notifier)
+                  .updateName(_nameController.text);
+              if (mounted) {
+                setState(() => _submittingName = false);
+                result.fold(
+                  (l) => displayError(context, l),
+                  (r) {
+                    setState(() => _editingName = false);
+                    _nameFocusNode.unfocus();
+                  },
+                );
+              }
+            }
+          },
+          child: Builder(
+            builder: (context) {
+              if (_submittingName) {
+                return const Padding(
+                  padding: EdgeInsets.only(right: 12.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  ),
+                );
+              }
+              if (!_editingName) {
+                return const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Edit',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Color.fromRGBO(0xFF, 0x03, 0x03, 1.0)),
+                  ),
+                );
+              } else {
+                return const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Done',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Color.fromRGBO(0x03, 0x58, 0xFF, 1.0)),
+                  ),
+                );
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 }

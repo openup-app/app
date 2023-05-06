@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/common.dart';
 
 class SignUpNameScreen extends ConsumerStatefulWidget {
@@ -102,12 +103,7 @@ class _SignUpNameScreenState extends ConsumerState<SignUpNameScreen> {
 
     setState(() => _uploading = true);
 
-    final result = await updateName(
-      context: context,
-      ref: ref,
-      name: newName,
-    );
-
+    final result = await ref.read(userProvider2.notifier).updateName(newName);
     if (!mounted) {
       return;
     }

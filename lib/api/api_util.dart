@@ -38,23 +38,6 @@ String errorToMessage(ApiError error) {
   );
 }
 
-Future<Either<ApiError, void>> updateName({
-  required BuildContext context,
-  required WidgetRef ref,
-  required String name,
-}) async {
-  final api = GetIt.instance.get<Api>();
-  final userState = ref.read(userProvider);
-  final newProfile = userState.profile!.copyWith(name: name);
-  final result = await api.updateProfile(userState.uid, newProfile);
-
-  if (result.isRight()) {
-    ref.read(userProvider.notifier).profile(newProfile);
-  }
-
-  return result;
-}
-
 Future<Either<ApiError, void>> updateGender({
   required BuildContext context,
   required WidgetRef ref,

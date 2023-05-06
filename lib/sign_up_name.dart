@@ -151,12 +151,7 @@ class _SignUpNameState extends ConsumerState<SignUpName> {
 
     setState(() => _uploading = true);
 
-    final result = await updateName(
-      context: context,
-      ref: ref,
-      name: newName,
-    );
-
+    final result = await ref.read(userProvider2.notifier).updateName(newName);
     if (!mounted) {
       return;
     }

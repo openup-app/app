@@ -30,11 +30,6 @@ class AccountSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
-  String? _newPhoneNumber;
-  bool _newPhoneNumberValid = false;
-  bool _submitting = false;
-  int? _forceResendingToken;
-
   @override
   Widget build(BuildContext context) {
     return ref.watch(userProvider2).map(
@@ -119,57 +114,20 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                 title: Text('Phone Number'),
               ),
               const SizedBox(height: 8),
-              _CupertinoButton(
-                leading: PhoneInput(
-                  onChanged: (value, valid) {
-                    setState(() {
-                      _newPhoneNumber = value;
-                      _newPhoneNumberValid = valid;
-                    });
-                  },
-                  onValidationError: (_) {},
-                ),
-                trailing: Button(
-                  onPressed: () {},
-                  child: const Text(
-                    'Edit',
-                    style: TextStyle(color: Colors.red),
+              _PhoneNumberField(),
+              const SizedBox(height: 16),
+              Button(
+                onPressed: () => context.pushNamed('contact-us'),
+                child: const _CupertinoRow(
+                  leading: Text('Contact us'),
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
                   ),
                 ),
               ),
-              // const SizedBox(height: 16),
-              // SizedBox(
-              //   width: 237,
-              //   child: Button(
-              //     onPressed: (_submitting | !_newPhoneNumberValid ||
-              //             _newPhoneNumber?.isEmpty == true)
-              //         ? null
-              //         : _updateInformation,
-              //     child: _InputArea(
-              //       childNeedsOpacity: false,
-              //       gradientColors: const [
-              //         Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
-              //         Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
-              //       ],
-              //       child: Center(
-              //         child: _submitting
-              //             ? const LoadingIndicator()
-              //             : Text(
-              //                 'Update Information',
-              //                 style: Theme.of(context)
-              //                     .textTheme
-              //                     .bodyMedium!
-              //                     .copyWith(
-              //                       fontSize: 24,
-              //                       fontWeight: FontWeight.w500,
-              //                     ),
-              //               ),
-              //       ),
-              //     ),
-              //   ),
-              // ),
               const SizedBox(height: 16),
-              _CupertinoButton(
+              Button(
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -179,34 +137,31 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     ),
                   );
                 },
-                leading: const Text('Blocked users'),
-                trailing: const Icon(
-                  Icons.chevron_right,
-                  color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                child: const _CupertinoRow(
+                  leading: Text('Blocked users'),
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              _CupertinoButton(
-                onPressed: () => context.pushNamed('contact-us'),
-                leading: const Text('Contact us'),
-                trailing: const Icon(
-                  Icons.chevron_right,
-                  color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                ),
-              ),
-              const SizedBox(height: 16),
-              _CupertinoButton(
+              Button(
                 onPressed: _showSignOutConfirmationModal,
-                center: const Text(
-                  'Sign out',
+                child: const _CupertinoRow(
+                  center: Text(
+                    'Sign out',
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              _CupertinoButton(
+              Button(
                 onPressed: _showDeleteAccountConfirmationModal,
-                center: const Text(
-                  'Delete Account',
-                  style: TextStyle(color: Colors.red),
+                child: const _CupertinoRow(
+                  center: Text(
+                    'Delete Account',
+                    style: TextStyle(color: Colors.red),
+                  ),
                 ),
               ),
               if (kDebugMode) ...[
@@ -229,77 +184,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             ],
           ),
         );
-      },
-    );
-  }
-
-  void _updateInformation() async {
-    GetIt.instance.get<Mixpanel>().track("change_phone_number");
-    FocusScope.of(context).unfocus();
-    setState(() => _submitting = true);
-    final newPhoneNumber = _newPhoneNumber;
-    if (newPhoneNumber == null || !_newPhoneNumberValid) {
-      return;
-    }
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw 'No user is logged in';
-    }
-
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: newPhoneNumber,
-      verificationCompleted: (credential) async {
-        try {
-          await user.updatePhoneNumber(credential);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Successfully updated phone number'),
-              ),
-            );
-          }
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Something went wrong'),
-              ),
-            );
-          }
-        }
-
-        setState(() => _submitting = false);
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        debugPrint(e.toString());
-        String message;
-        if (e.code == 'network-request-failed') {
-          message = 'Network error';
-        } else {
-          message = 'Failed to send verification code';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-        setState(() => _submitting = false);
-      },
-      codeSent: (verificationId, forceResendingToken) async {
-        setState(() => _forceResendingToken = forceResendingToken);
-        await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) {
-              return SettingsPhoneVerificationScreen(
-                verificationId: verificationId,
-              );
-            },
-          ),
-        );
-        setState(() => _submitting = false);
-      },
-      forceResendingToken: _forceResendingToken,
-      codeAutoRetrievalTimeout: (verificationId) {
-        // Android SMS auto-fill failed, nothing to do
       },
     );
   }
@@ -393,6 +277,249 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     await dismissAllNotifications();
     GetIt.instance.get<Api>().deleteUser(uid);
     await FirebaseAuth.instance.signOut();
+  }
+}
+
+class _PhoneNumberField extends ConsumerStatefulWidget {
+  const _PhoneNumberField({super.key});
+
+  @override
+  ConsumerState<_PhoneNumberField> createState() => _PhoneNumberFieldState();
+}
+
+class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
+  bool _editing = false;
+  String? _newPhoneNumber;
+  bool _newPhoneNumberValid = false;
+  bool _submitting = false;
+  int? _forceResendingToken;
+  final _verificationCodeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _verificationCodeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+      alignment: Alignment.topCenter,
+      child: !_editing
+          ? _CupertinoRow(
+              leading:
+                  Text(FirebaseAuth.instance.currentUser?.phoneNumber ?? ''),
+              trailing: Button(
+                onPressed: () {
+                  setState(() => _editing = !_editing);
+                },
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Edit',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ),
+            )
+          : DecoratedBox(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _CupertinoRow(
+                    leading: PhoneInput(
+                      onChanged: (value, valid) {
+                        setState(() {
+                          _newPhoneNumber = value;
+                          _newPhoneNumberValid = valid;
+                        });
+                      },
+                      onValidationError: (_) {},
+                    ),
+                    trailing: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'Send code',
+                        style: TextStyle(
+                          color: Color.fromRGBO(0x51, 0xA1, 0xFF, 1.0),
+                        ),
+                      ),
+                    ),
+                    decoration: const BoxDecoration(),
+                  ),
+                  const Divider(
+                    height: 1,
+                    indent: 20,
+                  ),
+                  _CupertinoRow(
+                    leading: TextFormField(
+                      controller: _verificationCodeController,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Verification code',
+                        hintStyle: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          color: Color.fromRGBO(0x9B, 0x9B, 0x9B, 1.0),
+                        ),
+                      ),
+                    ),
+                    decoration: const BoxDecoration(),
+                  ),
+                  const Divider(
+                    height: 1,
+                    indent: 20,
+                  ),
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _verificationCodeController,
+                    builder: (context, value, __) {
+                      return Button(
+                        onPressed: value.text.isEmpty
+                            ? null
+                            : () async {
+                                setState(() => _submitting = true);
+                                await Future.delayed(
+                                    const Duration(seconds: 1));
+                                if (mounted) {
+                                  setState(() {
+                                    _submitting = false;
+                                    _editing = false;
+                                  });
+                                }
+                              },
+                        child: _CupertinoRow(
+                          center: !_submitting
+                              ? const Text(
+                                  'Done',
+                                  style: TextStyle(
+                                    color:
+                                        Color.fromRGBO(0x34, 0x78, 0xF6, 1.0),
+                                  ),
+                                )
+                              : const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                          decoration: const BoxDecoration(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+    );
+    // const SizedBox(height: 16),
+    // SizedBox(
+    //   width: 237,
+    //   child: Button(
+    //     onPressed: (_submitting | !_newPhoneNumberValid ||
+    //             _newPhoneNumber?.isEmpty == true)
+    //         ? null
+    //         : _updateInformation,
+    //     child: _InputArea(
+    //       childNeedsOpacity: false,
+    //       gradientColors: const [
+    //         Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
+    //         Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
+    //       ],
+    //       child: Center(
+    //         child: _submitting
+    //             ? const LoadingIndicator()
+    //             : Text(
+    //                 'Update Information',
+    //                 style: Theme.of(context)
+    //                     .textTheme
+    //                     .bodyMedium!
+    //                     .copyWith(
+    //                       fontSize: 24,
+    //                       fontWeight: FontWeight.w500,
+    //                     ),
+    //               ),
+    //       ),
+    //     ),
+    //   ),
+    // ),
+  }
+
+  void _updateInformation() async {
+    GetIt.instance.get<Mixpanel>().track("change_phone_number");
+    FocusScope.of(context).unfocus();
+    setState(() => _submitting = true);
+    final newPhoneNumber = _newPhoneNumber;
+    if (newPhoneNumber == null || !_newPhoneNumberValid) {
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw 'No user is logged in';
+    }
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: newPhoneNumber,
+      verificationCompleted: (credential) async {
+        try {
+          await user.updatePhoneNumber(credential);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Successfully updated phone number'),
+              ),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Something went wrong'),
+              ),
+            );
+          }
+        }
+
+        setState(() => _submitting = false);
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        debugPrint(e.toString());
+        String message;
+        if (e.code == 'network-request-failed') {
+          message = 'Network error';
+        } else {
+          message = 'Failed to send verification code';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        setState(() => _submitting = false);
+      },
+      codeSent: (verificationId, forceResendingToken) async {
+        setState(() => _forceResendingToken = forceResendingToken);
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) {
+              return SettingsPhoneVerificationScreen(
+                verificationId: verificationId,
+              );
+            },
+          ),
+        );
+        setState(() => _submitting = false);
+      },
+      forceResendingToken: _forceResendingToken,
+      codeAutoRetrievalTimeout: (verificationId) {
+        // Android SMS auto-fill failed, nothing to do
+      },
+    );
   }
 }
 
@@ -570,18 +697,18 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
   }
 }
 
-class _CupertinoButton extends StatelessWidget {
+class _CupertinoRow extends StatelessWidget {
   final Widget? leading;
   final Widget? center;
   final Widget? trailing;
-  final VoidCallback? onPressed;
+  final BoxDecoration? decoration;
 
-  const _CupertinoButton({
+  const _CupertinoRow({
     super.key,
     this.leading,
     this.center,
     this.trailing,
-    this.onPressed,
+    this.decoration,
   })  : assert(leading != null || center != null),
         assert((center == null && trailing == null) ||
             (center != null && trailing == null) ||
@@ -589,38 +716,33 @@ class _CupertinoButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      useFadeWheNoPressedCallback: false,
-      child: Container(
-        height: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        clipBehavior: Clip.hardEdge,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(
-            Radius.circular(8),
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      clipBehavior: Clip.hardEdge,
+      decoration: decoration ??
+          const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
-        ),
-        child: DefaultTextStyle(
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium!
-              .copyWith(fontSize: 15, fontWeight: FontWeight.w400),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (leading != null)
-                Expanded(
-                  child: leading!,
-                ),
-              if (center != null)
-                Center(
-                  child: center,
-                ),
-              if (trailing != null) trailing!,
-            ],
-          ),
+      child: DefaultTextStyle(
+        style: Theme.of(context)
+            .textTheme
+            .bodyMedium!
+            .copyWith(fontSize: 15, fontWeight: FontWeight.w400),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (leading != null)
+              Expanded(
+                child: leading!,
+              ),
+            if (center != null)
+              Center(
+                child: center,
+              ),
+            if (trailing != null) trailing!,
+          ],
         ),
       ),
     );
