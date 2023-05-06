@@ -158,6 +158,8 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
 
 @freezed
 class UserState2 with _$UserState2 {
+  const UserState2._();
+
   const factory UserState2.guest() = _Guest;
 
   const factory UserState2.signedIn({
@@ -165,4 +167,12 @@ class UserState2 with _$UserState2 {
     @Default(null) List<Chatroom>? chatrooms,
     @Default(null) List<Collection>? collections,
   }) = _SignedIn;
+
+  int get unreadCount {
+    return map(
+      guest: (_) => 0,
+      signedIn: (signedIn) =>
+          (signedIn.chatrooms ?? []).fold(0, (p, e) => p + e.unreadCount),
+    );
+  }
 }

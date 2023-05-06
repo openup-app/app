@@ -1050,7 +1050,15 @@ class _MenuTiles extends StatelessWidget {
               title: 'Conversations',
               subtitle: 'talk to your new connects',
               icon: const Icon(Icons.chat_bubble, size: 42),
-              badge: const UnreadIndicator(count: 1),
+              badge: Consumer(
+                builder: (context, ref, child) {
+                  return UnreadIndicator(
+                    count: ref.watch(
+                      userProvider2.select((p) => p.unreadCount),
+                    ),
+                  );
+                },
+              ),
               onPressed: onConversationsPressed,
             ),
           ),

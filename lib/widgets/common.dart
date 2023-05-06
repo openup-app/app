@@ -2174,27 +2174,33 @@ class UnreadIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 23,
-      height: 23,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Color.fromRGBO(0xF6, 0x28, 0x28, 1.0),
-            Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
-          ],
+    return Visibility(
+      visible: count > 0,
+      maintainSize: true,
+      maintainAnimation: true,
+      maintainState: true,
+      child: Container(
+        width: 23,
+        height: 23,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              Color.fromRGBO(0xF6, 0x28, 0x28, 1.0),
+              Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
+            ],
+          ),
         ),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        '${count.clamp(1, 9).toString()}${count > 9 ? '+' : ''}',
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-            fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
+        alignment: Alignment.center,
+        child: Text(
+          '${count.clamp(1, 9).toString()}${count > 9 ? '+' : ''}',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
+        ),
       ),
     );
   }

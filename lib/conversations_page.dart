@@ -474,10 +474,9 @@ class _ConversationList extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            if (chatroom.unreadCount > 0)
-                              UnreadIndicator(
-                                count: chatroom.unreadCount,
-                              ),
+                            UnreadIndicator(
+                              count: chatroom.unreadCount,
+                            ),
                             const Icon(
                               Icons.chevron_right,
                               color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
