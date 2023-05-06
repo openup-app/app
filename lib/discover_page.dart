@@ -788,6 +788,16 @@ class _PageControls extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 RadioTile(
+                  label: 'Everyone',
+                  selected: preference == null,
+                  onTap: () => Navigator.of(context).pop('any'),
+                  radioAtEnd: true,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white),
+                ),
+                RadioTile(
                   label: 'Men',
                   selected: preference == Gender.male,
                   onTap: () => Navigator.of(context).pop('male'),
@@ -811,16 +821,6 @@ class _PageControls extends StatelessWidget {
                   label: 'Non-Binary',
                   selected: preference == Gender.nonBinary,
                   onTap: () => Navigator.of(context).pop('nonBinary'),
-                  radioAtEnd: true,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white),
-                ),
-                RadioTile(
-                  label: 'Any',
-                  selected: preference == null,
-                  onTap: () => Navigator.of(context).pop('any'),
                   radioAtEnd: true,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 19,
