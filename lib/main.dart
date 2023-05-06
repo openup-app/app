@@ -22,7 +22,6 @@ import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/chat_page.dart';
-import 'package:openup/contact_us_screen.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
@@ -699,17 +698,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       child: AccountSettingsScreen(),
                     );
                   },
-                  routes: [
-                    GoRoute(
-                      path: 'contact_us',
-                      name: 'contact-us',
-                      builder: (context, state) {
-                        return const CurrentRouteSystemUiStyling.light(
-                          child: ContactUsScreen(),
-                        );
-                      },
-                    ),
-                  ],
                 ),
               ],
             )

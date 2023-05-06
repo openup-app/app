@@ -17,11 +17,19 @@ class ContactUsScreen extends ConsumerStatefulWidget {
 }
 
 class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
+  final _messageFocusNode = FocusNode();
   final _textController = TextEditingController();
   bool _uploading = false;
 
   @override
+  void initState() {
+    _messageFocusNode.requestFocus();
+    super.initState();
+  }
+
+  @override
   void dispose() {
+    _messageFocusNode.dispose();
     _textController.dispose();
     super.dispose();
   }
@@ -33,17 +41,44 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
       child: CupertinoTheme(
         data: const CupertinoThemeData(brightness: Brightness.dark),
         child: Scaffold(
-          // backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: const BackIconButton(),
-            centerTitle: true,
-            title: const Text('Contact us'),
-          ),
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: Stack(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16.0),
+                        child: Button(
+                          onPressed: Navigator.of(context).pop,
+                          child: const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Center(
+                      child: Text(
+                        'Contact us',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const Padding(
                 padding: EdgeInsets.symmetric(
                   vertical: 16,
@@ -69,6 +104,8 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
                     ),
                     child: TextField(
                       controller: _textController,
+                      autofocus: true,
+                      focusNode: _messageFocusNode,
                       textCapitalization: TextCapitalization.sentences,
                       textInputAction: TextInputAction.done,
                       maxLines: 10,
