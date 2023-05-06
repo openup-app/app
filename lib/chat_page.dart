@@ -15,7 +15,6 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/home_screen.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -140,28 +139,28 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                 children: [
                   const BackIconButton(),
                   const Spacer(),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        clipBehavior: Clip.none,
-                        children: [
-                          Container(
-                            width: 51,
-                            height: 51,
-                            clipBehavior: Clip.hardEdge,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
+                  if (_otherProfile != null) ...[
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Stack(
+                          alignment: Alignment.center,
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: 51,
+                              height: 51,
+                              clipBehavior: Clip.hardEdge,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                              ),
+                              child: _otherProfile?.photo == null
+                                  ? const SizedBox.shrink()
+                                  : Image.network(
+                                      widget.otherProfile!.photo,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
-                            child: _otherProfile?.photo == null
-                                ? const SizedBox.shrink()
-                                : Image.network(
-                                    widget.otherProfile!.photo,
-                                    fit: BoxFit.cover,
-                                  ),
-                          ),
-                          if (_otherProfile != null)
                             Positioned(
                               left: 8,
                               top: -30,
@@ -176,42 +175,55 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                 },
                               ),
                             ),
-                        ],
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        _otherProfile?.name ?? '',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            color: const Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0)),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  PopupMenuButton(
-                    icon: const Icon(
-                      Icons.more_horiz,
-                      color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _otherProfile?.name ?? '',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                  color: const Color.fromRGBO(
+                                      0xFF, 0x3E, 0x3E, 1.0)),
+                        ),
+                      ],
                     ),
-                    itemBuilder: (context) {
-                      return [];
-                    },
-                  ),
+                    const Spacer(),
+                    ReportBlockPopupMenu2(
+                      uid: _otherProfile!.uid,
+                      name: _otherProfile!.name,
+                      onBlock: Navigator.of(context).pop,
+                      builder: (context) {
+                        return const Padding(
+                          padding: EdgeInsets.all(10.0),
+                          child: Icon(
+                            Icons.more_horiz,
+                            color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),
             if (!_loading && _messages.isEmpty && _otherProfile != null)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    'Send your first message to ${_otherProfile!.name}',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 23,
+              SizedBox(
+                height: listHeight,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      'Send your first message to ${_otherProfile!.name}',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 16,
                           fontWeight: FontWeight.w400,
-                        ),
-                    textAlign: TextAlign.center,
+                          color: const Color.fromRGBO(0x70, 0x70, 0x70, 1.0)),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               )
@@ -259,7 +271,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                           ..translate(
                               0.0,
                               (1 - runwayRatio) *
-                                  0.5 *
+                                  0.9 *
                                   itemHeight *
                                   (1.0 - runwayRatio))
                           // Scale based on distance on the runway
@@ -1014,7 +1026,6 @@ class _ChatProfilePageState extends State<_ChatProfilePage> {
             child: ProfileView(
               profile: widget.profile,
               endTime: widget.endTime,
-              interestedTab: HomeTab.friendships,
               play: _play,
             ),
           ),

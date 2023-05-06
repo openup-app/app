@@ -18,8 +18,6 @@ import 'package:openup/widgets/collection_photo_stack.dart';
 import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
-import 'package:openup/widgets/image_builder.dart';
-import 'package:openup/widgets/profile_display.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -33,15 +31,22 @@ class ProfilePage extends ConsumerStatefulWidget {
 class _ProfilePage2State extends ConsumerState<ProfilePage> {
   bool _showCollectionCreation = false;
   final _nameController = TextEditingController();
+  bool _initial = true;
 
   @override
   void initState() {
     super.initState();
-    ref.listenManual<Profile?>(
-      userProvider.select((p) => p.profile),
+    ref.listenManual<UserState2?>(
+      userProvider2,
       (previous, next) {
-        if (next != null) {
-          _nameController.text = next.name;
+        if (_initial && next != null) {
+          next.map(
+            guest: (_) {},
+            signedIn: (signedIn) {
+              _initial = false;
+              _nameController.text = signedIn.profile.name;
+            },
+          );
         }
       },
       fireImmediately: true,
@@ -50,201 +55,191 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final loggedIn = FirebaseAuth.instance.currentUser != null;
-    final profile = ref.watch(userProvider.select((p) => p.profile));
-
-    if (!loggedIn) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Log in to create a profile'),
-            ElevatedButton(
-              onPressed: () => context.pushNamed('signup'),
-              child: const Text('Log in'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (profile == null) {
-      return const Center(
-        child: LoadingIndicator(),
-      );
-    }
-
-    return Container(
-      margin: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 24 + MediaQuery.of(context).padding.top,
-        bottom: 16 + MediaQuery.of(context).padding.bottom,
-      ),
-      clipBehavior: Clip.hardEdge,
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(48)),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: Builder(
-              builder: (context) {
-                if (!_showCollectionCreation) {
-                  return Column(
-                    children: [
-                      Container(
-                        height: constraints.maxHeight,
-                        clipBehavior: Clip.hardEdge,
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(48)),
-                        ),
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: CinematicGallery(
-                                slideshow: true,
-                                gallery: profile.collection.photos,
-                              ),
+    return ref.watch(userProvider2).map(
+      guest: (_) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Log in to create a profile'),
+              ElevatedButton(
+                onPressed: () => context.pushNamed('signup'),
+                child: const Text('Log in'),
+              ),
+            ],
+          ),
+        );
+      },
+      signedIn: (signedIn) {
+        final profile = signedIn.profile;
+        return Container(
+          margin: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 24 + MediaQuery.of(context).padding.top,
+            bottom: 16 + MediaQuery.of(context).padding.bottom,
+          ),
+          clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(48)),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: Builder(
+                  builder: (context) {
+                    if (!_showCollectionCreation) {
+                      return Column(
+                        children: [
+                          Container(
+                            height: constraints.maxHeight,
+                            clipBehavior: Clip.hardEdge,
+                            decoration: const BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(48)),
                             ),
-                            Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 30),
-                                child: Button(
-                                  onPressed: () async {
-                                    final audio =
-                                        await _showRecordPanel(context);
-                                    if (mounted && audio != null) {
-                                      _upload(audio);
-                                    }
-                                  },
-                                  child: Container(
-                                    width: 146,
-                                    height: 51,
-                                    alignment: Alignment.center,
-                                    decoration: const BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Color.fromRGBO(0xF3, 0x49, 0x50, 1.0),
-                                          Color.fromRGBO(0xDF, 0x39, 0x3F, 1.0),
-                                        ],
-                                      ),
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(25)),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          offset: Offset(0, 4),
-                                          blurRadius: 4,
-                                          color: Color.fromRGBO(
-                                              0x00, 0x00, 0x00, 0.25),
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: CinematicGallery(
+                                    slideshow: true,
+                                    gallery: profile.collection.photos,
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 30),
+                                    child: Button(
+                                      onPressed: () async {
+                                        final audio =
+                                            await _showRecordPanel(context);
+                                        if (mounted && audio != null) {
+                                          _upload(audio);
+                                        }
+                                      },
+                                      child: Container(
+                                        width: 146,
+                                        height: 51,
+                                        alignment: Alignment.center,
+                                        decoration: const BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Color.fromRGBO(
+                                                  0xF3, 0x49, 0x50, 1.0),
+                                              Color.fromRGBO(
+                                                  0xDF, 0x39, 0x3F, 1.0),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(25)),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              offset: Offset(0, 4),
+                                              blurRadius: 4,
+                                              color: Color.fromRGBO(
+                                                  0x00, 0x00, 0x00, 0.25),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                    child: Text(
-                                      'update bio',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium!
-                                          .copyWith(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w400,
-                                              color: Colors.white),
+                                        child: Text(
+                                          'update bio',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium!
+                                              .copyWith(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: Colors.white),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: 189,
+                            child: Builder(
+                              builder: (context) {
+                                final collections = signedIn.collections ?? [];
+                                return CollectionsPreviewList(
+                                  collections: collections,
+                                  play: _showCollectionCreation == false,
+                                  leadingChildren: [
+                                    _BottomButton(
+                                      label: 'Create Collection',
+                                      icon: const Icon(Icons.collections),
+                                      onPressed: () => setState(
+                                          () => _showCollectionCreation = true),
+                                    ),
+                                  ],
+                                  onView: (index) {
+                                    context.pushNamed(
+                                      'view_collection',
+                                      extra:
+                                          ViewCollectionPageArguments.profile(
+                                        profile: profile,
+                                        collections: collections,
+                                        index: index,
+                                      ),
+                                    );
+                                  },
+                                  onLongPress: (index) => _showDeleteDialog(
+                                      collections[index].collectionId),
+                                );
+                              },
+                            ),
+                          ),
+                          const _SectionTitle(label: 'Name'),
+                          Container(
+                            height: 42,
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(64),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 189,
-                        child: Builder(
-                          builder: (context) {
-                            final collections = ref.watch(
-                                userProvider.select((p) => p.collections));
-                            return CollectionsPreviewList(
-                                collections: collections,
-                                play: _showCollectionCreation == false,
-                                leadingChildren: [
-                                  _BottomButton(
-                                    label: 'Create Collection',
-                                    icon: const Icon(Icons.collections),
-                                    onPressed: () => setState(
-                                        () => _showCollectionCreation = true),
-                                  ),
-                                ],
-                                onView: (index) {
-                                  context.pushNamed(
-                                    'view_collection',
-                                    extra: ViewCollectionPageArguments.profile(
-                                      profile: profile,
-                                      collections: collections,
-                                      index: index,
-                                    ),
-                                  );
-                                },
-                                onLongPress: (index) =>
-                                    _showDeleteDialog(collections[index]));
-                          },
-                        ),
-                      ),
-                      const _SectionTitle(label: 'Name'),
-                      Container(
-                        height: 42,
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(64),
+                            child: TextField(
+                              controller: _nameController,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w400),
+                              decoration:
+                                  const InputDecoration.collapsed(hintText: ''),
+                            ),
                           ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            height: MediaQuery.of(context).viewInsets.bottom,
+                          ),
+                        ],
+                      );
+                    } else {
+                      return SizedBox(
+                        height: constraints.maxHeight,
+                        child: _CollectionCreation(
+                          onDone: () =>
+                              setState(() => _showCollectionCreation = false),
                         ),
-                        child: TextField(
-                          controller: _nameController,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(
-                                  fontSize: 16, fontWeight: FontWeight.w400),
-                          decoration:
-                              const InputDecoration.collapsed(hintText: ''),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        height: MediaQuery.of(context).viewInsets.bottom,
-                      ),
-                    ],
-                  );
-                } else {
-                  return SizedBox(
-                    height: constraints.maxHeight,
-                    child: _CollectionCreation(
-                      onCreated: (collection) {
-                        final collections =
-                            ref.read(userProvider.select((p) => p.collections));
-                        final newCollections = List.of(collections)
-                          ..insert(0, collection);
-                        ref
-                            .read(userProvider.notifier)
-                            .collections(newCollections);
-                        setState(() => _showCollectionCreation = false);
-                      },
-                      onCancel: () =>
-                          setState(() => _showCollectionCreation = false),
-                    ),
-                  );
-                }
-              },
-            ),
-          );
-        },
-      ),
+                      );
+                    }
+                  },
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -310,7 +305,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
     );
   }
 
-  void _showDeleteDialog(Collection collection) async {
+  void _showDeleteDialog(String collectionId) async {
     final result = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) {
@@ -331,16 +326,15 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
       },
     );
     if (result == true && mounted) {
-      _deleteCollection(collection);
+      final deleteResult =
+          await ref.read(userProvider2.notifier).deleteCollection(collectionId);
+      if (mounted) {
+        deleteResult.fold(
+          (l) => displayError(context, l),
+          (r) {},
+        );
+      }
     }
-  }
-
-  void _deleteCollection(Collection collection) {
-    GetIt.instance.get<Api>().deleteCollection(collection.collectionId);
-    final collections = ref.read(userProvider.select((p) => p.collections));
-    final newCollections = List.of(collections)
-      ..removeWhere((c) => c == collection);
-    ref.read(userProvider.notifier).collections(newCollections);
   }
 }
 
@@ -424,13 +418,11 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _CollectionCreation extends StatefulWidget {
-  final void Function(Collection collection) onCreated;
-  final VoidCallback onCancel;
+  final VoidCallback onDone;
 
   const _CollectionCreation({
     super.key,
-    required this.onCreated,
-    required this.onCancel,
+    required this.onDone,
   });
 
   @override
@@ -446,7 +438,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () {
-        widget.onCancel();
+        widget.onDone();
         return Future.value(false);
       },
       child: BlurredSurface(
@@ -466,7 +458,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                         onPressed: () {
                           switch (_step) {
                             case _CreationStep.photos:
-                              widget.onCancel();
+                              widget.onDone();
                               break;
                             case _CreationStep.upload:
                               setState(() => _step = _CreationStep.photos);
@@ -581,7 +573,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
                       return _UploadStep(
                         photos: _photos,
                         onUpload: _uploadCollection,
-                        onDelete: widget.onCancel,
+                        onDelete: widget.onDone,
                       );
                   }
                 },
@@ -598,16 +590,11 @@ class __CollectionCreationState extends State<_CollectionCreation> {
       context: context,
       label: 'Uploading',
       future: uploadCollection(
-        context: context,
         photos: _photos,
         audio: _audio,
       ),
     );
     if (!mounted) {
-      return;
-    }
-
-    if (result == null) {
       return;
     }
 
@@ -630,10 +617,6 @@ class __CollectionCreationState extends State<_CollectionCreation> {
             );
           },
         );
-
-        if (mounted) {
-          widget.onCreated(r);
-        }
       },
     );
   }

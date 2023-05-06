@@ -168,8 +168,7 @@ Future<Either<ApiError, Profile>> deletePhoto({
   return result;
 }
 
-Future<Either<ApiError, Collection>?> uploadCollection({
-  required BuildContext context,
+Future<Either<ApiError, Collection>> uploadCollection({
   required List<File> photos,
   required File? audio,
   bool useAsProfile = false,
@@ -180,7 +179,7 @@ Future<Either<ApiError, Collection>?> uploadCollection({
       await Future.wait(images.map((i) => _downscaleImage(i, 2000)));
   final jpgs = await Future.wait(resized.map(_encodeJpg));
   if (jpgs.contains(null)) {
-    return null;
+    return Future.value(const Left(ApiError.client(ClientError.badRequest())));
   }
   final tempDir = await getTemporaryDirectory();
 

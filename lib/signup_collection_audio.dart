@@ -159,17 +159,12 @@ class _SignupCollectionAudioState extends ConsumerState<SignupCollectionAudio> {
       context: context,
       label: 'Uploading...',
       future: uploadCollection(
-        context: context,
         photos: widget.photos,
         audio: _audio,
         useAsProfile: true,
       ),
     );
     if (!mounted) {
-      return;
-    }
-
-    if (result == null) {
       return;
     }
 

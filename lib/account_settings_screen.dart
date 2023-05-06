@@ -18,7 +18,6 @@ import 'package:openup/settings_phone_verification_screen.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/dialog.dart';
 import 'package:openup/widgets/phone_number_input.dart';
 import 'package:openup/widgets/section.dart';
 
@@ -317,6 +316,11 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   Future<void> _signOut() async {
     GetIt.instance.get<Mixpanel>().track("sign_out");
     final uid = ref.read(userProvider).uid;
+    ref.read(userProvider.notifier)
+      ..uid('')
+      ..profile(null)
+      ..collections([]);
+    ref.read(userProvider2.notifier).guest();
     await GetIt.instance.get<Api>().signOut(uid);
     await dismissAllNotifications();
     if (Platform.isAndroid) {

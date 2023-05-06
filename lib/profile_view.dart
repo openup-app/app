@@ -3,10 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/home_screen.dart';
-import 'package:openup/main.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
-import 'package:openup/report_screen.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -17,14 +14,12 @@ import 'package:openup/widgets/share_button.dart';
 class ProfileView extends StatefulWidget {
   final Profile profile;
   final DateTime? endTime;
-  final HomeTab interestedTab;
   final bool play;
 
   const ProfileView({
     Key? key,
     required this.profile,
     this.endTime,
-    required this.interestedTab,
     this.play = true,
   }) : super(key: key);
 
@@ -54,8 +49,6 @@ class _ProfileViewState extends State<ProfileView> {
         setState(() => _audioPaused = false);
       }
     });
-
-    currentTabNotifier.addListener(_currentTabListener);
   }
 
   @override
@@ -71,14 +64,7 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   void dispose() {
     _player.dispose();
-    currentTabNotifier.removeListener(_currentTabListener);
     super.dispose();
-  }
-
-  void _currentTabListener() {
-    if (currentTabNotifier.value != widget.interestedTab) {
-      _player.pause();
-    }
   }
 
   @override
@@ -206,18 +192,17 @@ class _ProfileViewState extends State<ProfileView> {
                         Positioned(
                           right: 16,
                           top: 16,
-                          child: ReportBlockPopupMenu(
+                          child: ReportBlockPopupMenu2(
                             uid: widget.profile.uid,
                             name: widget.profile.name,
                             onBlock: () {
                               const refreshChat = true;
                               Navigator.of(context).pop(refreshChat);
                             },
-                            onReport: () {
-                              rootNavigatorKey.currentState?.pushNamed(
-                                'call-report',
-                                arguments: ReportScreenArguments(
-                                    uid: widget.profile.uid),
+                            builder: (context) {
+                              return const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Icon(Icons.more_horiz),
                               );
                             },
                           ),

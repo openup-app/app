@@ -124,14 +124,6 @@ Future<Mixpanel> _initMixpanel() async {
   );
 }
 
-/// Notifications don't update the conversations list. This noifier lets us
-/// force a refresh programmatically when tapping the Friendships button.
-class TempConversationsRefresh extends ValueNotifier<void> {
-  TempConversationsRefresh() : super(null);
-
-  void refresh() => notifyListeners();
-}
-
 class OpenupApp extends ConsumerStatefulWidget {
   const OpenupApp({Key? key}) : super(key: key);
 
@@ -152,8 +144,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   final _profileKey = GlobalKey<NavigatorState>();
   final _peopleKey = GlobalKey<NavigatorState>();
   final _settingsKey = GlobalKey<NavigatorState>();
-
-  final _tempConversationsRefresh = TempConversationsRefresh();
 
   final _scrollToDiscoverTopNotifier = ScrollToDiscoverTopNotifier();
 
@@ -238,8 +228,11 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               result.fold(
                 (l) => null,
                 (r) {
-                  final collections =
-                      List.of(ref.read(userProvider).collections);
+                  final userState = ref.read(userProvider2);
+                  final collections = userState.map(
+                    guest: (_) => <Collection>[],
+                    signedIn: (signedIn) => signedIn.collections ?? [],
+                  );
                   final index = collections
                       .indexWhere((c) => c.collectionId == collectionId);
                   if (index != -1) {
@@ -260,7 +253,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         try {
           final token = await user.getIdToken();
           if (mounted) {
-            ref.read(userProvider.notifier).uid(user.uid);
             api.authToken = token;
           }
         } on FirebaseAuthException catch (e) {
@@ -312,7 +304,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     _notificationTokenSubscription?.cancel();
     disposeNotifications();
 
-    _tempConversationsRefresh.dispose();
     _scrollToDiscoverTopNotifier.dispose();
 
     final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
@@ -709,11 +700,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 GoRoute(
                   path: '/relationships',
                   name: 'relationships',
-                  builder: (context, state) {
-                    return ConversationsPage(
-                      tempRefresh: _tempConversationsRefresh,
-                    );
-                  },
+                  builder: (context, state) => const ConversationsPage(),
                   routes: [
                     GoRoute(
                       path: 'chat/:uid',

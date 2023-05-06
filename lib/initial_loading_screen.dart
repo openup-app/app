@@ -83,11 +83,11 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
     final notifier = ref.read(userProvider.notifier);
     api.authToken = await user.getIdToken();
-    notifier.uid(user.uid);
+    final uid = user.uid;
 
     // Begin caching
     try {
-      await _cacheData(notifier.userState.uid);
+      await _cacheData(uid);
     } catch (e) {
       debugPrint(e.toString());
       // TODO: Deal with onboarding
@@ -97,6 +97,15 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     }
 
+    final profile = ref.read(userProvider2).map(
+          guest: (_) => null,
+          signedIn: (signedIn) => signedIn.profile,
+        );
+    if (profile != null) {
+      ref.read(userProvider.notifier).uid(uid);
+      ref.read(userProvider.notifier).profile(profile);
+    }
+
     // Notificiations (once off notification messaging and voip tokens)
     // Updates to messaging tokens handled in login/logout handler
     final isIOS = Platform.isIOS;
@@ -104,12 +113,11 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       onNotificationMessagingToken.first,
       if (isIOS) ios_voip.getVoipPushNotificationToken(),
     ]).then((tokens) {
-      final uid = ref.read(userProvider).uid;
       if (mounted &&
           (tokens[0] != null || tokens[1] != null) &&
           uid.isNotEmpty) {
         api.addNotificationTokens(
-          ref.read(userProvider).uid,
+          uid,
           fcmMessagingAndVoipToken: isIOS ? null : tokens[0],
           apnMessagingToken: isIOS ? tokens[0] : null,
           apnVoipToken: isIOS ? tokens[1] : null,
@@ -129,26 +137,27 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     }
 
     // Update location
-    final profile = ref.read(userProvider).profile;
-    final latLong = await LocationService().getLatLong();
-    if (mounted) {
-      await latLong.when(
-        value: (lat, long) async {
-          updateLocation(
-            context: context,
-            profile: profile!,
-            notifier: notifier,
-            latitude: lat,
-            longitude: long,
-          );
-        },
-        denied: () {
-          // Nothing to do, request on Discover screen
-        },
-        failure: () {
-          // Nothing to do, request on Discover screen
-        },
-      );
+    if (profile != null) {
+      final latLong = await LocationService().getLatLong();
+      if (mounted) {
+        await latLong.when(
+          value: (lat, long) async {
+            updateLocation(
+              context: context,
+              profile: profile,
+              notifier: notifier,
+              latitude: lat,
+              longitude: long,
+            );
+          },
+          denied: () {
+            // Nothing to do, request on Discover screen
+          },
+          failure: () {
+            // Nothing to do, request on Discover screen
+          },
+        );
+      }
     }
 
     if (!mounted) {
@@ -158,9 +167,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     if (mounted) {
       if (!_deepLinked && mounted) {
         // Standard app entry or sign up onboarding
-        final noCollection =
-            ref.read(userProvider).profile?.collection.collectionId.isEmpty ==
-                true;
+        final noCollection = profile?.collection.collectionId.isEmpty == true;
         if (widget.needsOnboarding || noCollection) {
           context.goNamed('signup_name');
         } else {
@@ -180,18 +187,12 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
   Future<void> _cacheData(String uid) {
     final api = GetIt.instance.get<Api>();
-    final notifier = ref.read(userProvider.notifier);
+    final notifier = ref.read(userProvider2.notifier);
     return Future.wait([
       api.getProfile(uid).then((value) {
         value.fold(
           (l) => throw 'Unable to cache profile',
-          (r) => notifier.profile(r),
-        );
-      }),
-      api.getCollections(uid).then((value) {
-        value.fold(
-          (l) => throw 'Unable to cache collections',
-          (r) => notifier.collections(r),
+          (r) => notifier.signedIn(r),
         );
       }),
     ]);

@@ -21,7 +21,6 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/photo3d.dart';
 import 'package:openup/widgets/waveforms.dart';
 import 'package:rxdart/subjects.dart';
@@ -1781,92 +1780,6 @@ class OnlineIndicator extends StatelessWidget {
   }
 }
 
-class ReportBlockPopupMenu extends ConsumerStatefulWidget {
-  final String uid;
-  final String name;
-  final VoidCallback onBlock;
-  final VoidCallback onReport;
-  const ReportBlockPopupMenu({
-    Key? key,
-    required this.uid,
-    required this.name,
-    required this.onBlock,
-    required this.onReport,
-  }) : super(key: key);
-
-  @override
-  ConsumerState<ReportBlockPopupMenu> createState() =>
-      _ReportBlockPopupMenuState();
-}
-
-class _ReportBlockPopupMenuState extends ConsumerState<ReportBlockPopupMenu> {
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton(
-      padding: EdgeInsets.zero,
-      icon: const IconWithShadow(Icons.more_horiz, size: 32),
-      onSelected: (value) {
-        if (value == 'block') {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return CupertinoTheme(
-                data: const CupertinoThemeData(brightness: Brightness.dark),
-                child: CupertinoAlertDialog(
-                  title: Text('Block ${widget.name}?'),
-                  content: Text(
-                      '${widget.name} will be unable to see or call you, and you will not be able to see or call ${widget.name}.'),
-                  actions: [
-                    CupertinoDialogAction(
-                      onPressed: Navigator.of(context).pop,
-                      child: const Text('Cancel'),
-                    ),
-                    CupertinoDialogAction(
-                      onPressed: () async {
-                        final myUid = ref.read(userProvider).uid;
-                        final api = GetIt.instance.get<Api>();
-                        await api.blockUser(myUid, widget.uid);
-                        if (mounted) {
-                          Navigator.of(context).pop();
-                          widget.onBlock();
-                        }
-                      },
-                      isDestructiveAction: true,
-                      child: const Text('Block'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        } else if (value == 'report') {
-          widget.onReport();
-        }
-      },
-      itemBuilder: (context) {
-        return [
-          const PopupMenuItem(
-            value: 'block',
-            child: ListTile(
-              title: Text('Block user'),
-              trailing: Icon(Icons.block),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ),
-          const PopupMenuItem(
-            value: 'report',
-            child: ListTile(
-              title: Text('Report user'),
-              trailing: Icon(Icons.flag_outlined),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ),
-        ];
-      },
-    );
-  }
-}
-
 class ReportBlockPopupMenu2 extends ConsumerStatefulWidget {
   final String uid;
   final String name;
@@ -1888,32 +1801,53 @@ class ReportBlockPopupMenu2 extends ConsumerStatefulWidget {
 class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
   @override
   Widget build(BuildContext context) {
+    final myUid = ref.watch(userProvider2.select((p) {
+      return p.map(
+        guest: (_) => null,
+        signedIn: (signedIn) => signedIn.profile.uid,
+      );
+    }));
     return Button(
-      onPressed: () {
-        showCupertinoModalPopup(
-          context: context,
-          barrierColor: const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-          builder: (context) {
-            return CupertinoActionSheet(
-              cancelButton: CupertinoActionSheetAction(
-                onPressed: () => _showBlockDialog(context),
-                child: const Text('Block User'),
-              ),
-              actions: [
-                CupertinoActionSheetAction(
-                  onPressed: () => _showReportModal(context),
-                  child: const Text('Report User'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      onPressed: myUid == null
+          ? null
+          : () {
+              showCupertinoModalPopup(
+                context: context,
+                barrierColor: const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                builder: (context) {
+                  return CupertinoActionSheet(
+                    cancelButton: CupertinoActionSheetAction(
+                      onPressed: () {
+                        _showBlockDialog(
+                          context: context,
+                          myUid: myUid,
+                        );
+                      },
+                      child: const Text('Block User'),
+                    ),
+                    actions: [
+                      CupertinoActionSheetAction(
+                        onPressed: () {
+                          _showReportModal(
+                            context: context,
+                            myUid: myUid,
+                          );
+                        },
+                        child: const Text('Report User'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
       child: widget.builder(context),
     );
   }
 
-  void _showBlockDialog(BuildContext context) async {
+  void _showBlockDialog({
+    required BuildContext context,
+    required String myUid,
+  }) async {
     final block = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) {
@@ -1991,7 +1925,6 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
     );
 
     if (block == true && mounted) {
-      final myUid = ref.read(userProvider).uid;
       final api = GetIt.instance.get<Api>();
       final blockFuture = api.blockUser(myUid, widget.uid);
       await withBlockingModal(
@@ -2007,7 +1940,10 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
     }
   }
 
-  void _showReportModal(BuildContext context) async {
+  void _showReportModal({
+    required BuildContext context,
+    required String myUid,
+  }) async {
     final reportReason = await showModalBottomSheet<String>(
       context: context,
       builder: (context) {
@@ -2050,7 +1986,6 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
     );
 
     if (reportReason != null && mounted) {
-      final myUid = ref.read(userProvider).uid;
       final api = GetIt.instance.get<Api>();
       final reportFuture = api.reportUser(
         uid: myUid,
@@ -2141,7 +2076,6 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
       );
 
       if (block == true && mounted) {
-        final myUid = ref.read(userProvider).uid;
         final api = GetIt.instance.get<Api>();
         final blockFuture = api.blockUser(myUid, widget.uid);
         await withBlockingModal(
