@@ -34,13 +34,15 @@ class _SignUpScreenState extends ConsumerState<SignUpAge> {
               height: MediaQuery.of(context).padding.top,
             ),
             const SizedBox(height: 16),
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Padding(
-                padding: EdgeInsets.only(left: 8.0),
+                padding: const EdgeInsets.only(left: 8.0),
                 child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: BackIconButton(color: Colors.white),
+                  padding: const EdgeInsets.all(8.0),
+                  child: context.canPop()
+                      ? const BackIconButton(color: Colors.white)
+                      : const SizedBox.shrink(),
                 ),
               ),
             ),

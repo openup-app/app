@@ -56,7 +56,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     }
 
     if (user == null) {
-      context.goNamed('discover');
+      context.goNamed('signup');
       return;
     }
 
