@@ -1888,7 +1888,7 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
                           Navigator.of(context).pop(true);
                         },
                         child: const Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: EdgeInsets.all(8.0),
                           child: Text(
                             'Block',
                             style: TextStyle(
@@ -1924,7 +1924,7 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
 
     if (block == true && mounted) {
       final api = GetIt.instance.get<Api>();
-      final blockFuture = api.blockUser(myUid, widget.uid);
+      final blockFuture = api.blockUser(widget.uid);
       await withBlockingModal(
         context: context,
         label: 'Blocking...',
@@ -2081,7 +2081,7 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
 
       if (block == true && mounted) {
         final api = GetIt.instance.get<Api>();
-        final blockFuture = api.blockUser(myUid, widget.uid);
+        final blockFuture = api.blockUser(widget.uid);
         await withBlockingModal(
           context: context,
           label: 'Blocking...',

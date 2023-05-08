@@ -269,16 +269,14 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       if (_loggedIn) {
         final isIOS = Platform.isIOS;
         await initializeNotifications();
+        _notificationTokenSubscription?.cancel();
         _notificationTokenSubscription =
             onNotificationMessagingToken.listen((token) async {
           debugPrint('On notification token: $token');
-          final uid = ref.read(userProvider).uid;
-          if (token != null && uid.isNotEmpty) {
+          if (token != null) {
             api.addNotificationTokens(
-              ref.read(userProvider).uid,
               fcmMessagingAndVoipToken: isIOS ? null : token,
               apnMessagingToken: isIOS ? token : null,
-              // Voip token not sending in InitialLoadingScreen, so tries here
               apnVoipToken:
                   isIOS ? await ios_voip.getVoipPushNotificationToken() : null,
             );

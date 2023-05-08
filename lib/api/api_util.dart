@@ -63,7 +63,7 @@ Future<Either<ApiError, String>> updateLocation({
   required double longitude,
 }) async {
   final api = GetIt.instance.get<Api>();
-  final result = await api.updateLocation(profile.uid, latitude, longitude);
+  final result = await api.updateLocation(latitude, longitude);
 
   result.fold(
     (l) {},
@@ -110,42 +110,6 @@ Future<Either<ApiError, void>> updateAudio({
       final profile = userState.profile!.copyWith(audio: url);
       ref.read(userProvider.notifier).profile(profile);
     },
-  );
-
-  return result;
-}
-
-Future<Either<ApiError, Profile>> updatePhoto({
-  required BuildContext context,
-  required WidgetRef ref,
-  required Uint8List bytes,
-  required int index,
-}) async {
-  final api = GetIt.instance.get<Api>();
-  final userState = ref.read(userProvider);
-  final result =
-      await api.updateProfileGalleryPhoto(userState.uid, bytes, index);
-
-  result.fold(
-    (l) {},
-    (profile) => ref.read(userProvider.notifier).profile(profile),
-  );
-
-  return result;
-}
-
-Future<Either<ApiError, Profile>> deletePhoto({
-  required BuildContext context,
-  required WidgetRef ref,
-  required int index,
-}) async {
-  final api = GetIt.instance.get<Api>();
-  final userState = ref.read(userProvider);
-  final result = await api.deleteProfileGalleryPhoto(userState.uid, index);
-
-  result.fold(
-    (l) {},
-    (profile) => ref.read(userProvider.notifier).profile(profile),
   );
 
   return result;

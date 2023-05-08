@@ -16,7 +16,6 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/contact_us_screen.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/settings_phone_verification_screen.dart';
-import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/phone_number_input.dart';
@@ -255,13 +254,12 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
   Future<void> _signOut() async {
     GetIt.instance.get<Mixpanel>().track("sign_out");
-    final uid = ref.read(userProvider).uid;
     ref.read(userProvider.notifier)
       ..uid('')
       ..profile(null)
       ..collections([]);
     ref.read(userProvider2.notifier).guest();
-    await GetIt.instance.get<Api>().signOut(uid);
+    await GetIt.instance.get<Api>().signOut();
     await dismissAllNotifications();
     if (Platform.isAndroid) {
       await FirebaseMessaging.instance.deleteToken();
@@ -304,9 +302,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
   Future<void> _deleteAccount() async {
     GetIt.instance.get<Mixpanel>().track("delete_account");
-    final uid = ref.read(userProvider).uid;
     await dismissAllNotifications();
-    GetIt.instance.get<Api>().deleteUser(uid);
+    GetIt.instance.get<Api>().deleteAccount();
     await FirebaseAuth.instance.signOut();
   }
 }
@@ -572,9 +569,8 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
   }
 
   void _getBlockedUsers() {
-    final uid = ref.read(userProvider).uid;
     final api = GetIt.instance.get<Api>();
-    api.getBlockedUsers(uid).then((value) {
+    api.getBlockedUsers().then((value) {
       if (mounted) {
         value.fold(
           (l) => displayError(context, l),
@@ -726,10 +722,9 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
                                       },
                                     );
                                     if (result == true) {
-                                      final myUid = ref.read(userProvider).uid;
                                       final api = GetIt.instance.get<Api>();
                                       setState(() => _loading = true);
-                                      await api.unblockUser(myUid, user.uid);
+                                      await api.unblockUser(user.uid);
                                       if (mounted) {
                                         _getBlockedUsers();
                                       }

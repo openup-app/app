@@ -38,28 +38,26 @@ class Api {
     _headers['Authorization'] = 'Bearer $value';
   }
 
-  Future<Either<ApiError, UserCreationResult>> createUser({
-    required String uid,
-  }) {
+  Future<Either<ApiError, AccountCreationResult>> createAccount() {
     return _request(
       makeRequest: () {
         return http.post(
-          Uri.parse('$_urlBase/users/$uid'),
+          Uri.parse('$_urlBase/account'),
           headers: _headers,
         );
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body);
-        return Right(UserCreationResult.fromJson(json));
+        return Right(AccountCreationResult.fromJson(json));
       },
     );
   }
 
-  Future<Either<ApiError, void>> deleteUser(String uid) {
+  Future<Either<ApiError, void>> deleteAccount() {
     return _request(
       makeRequest: () {
         return http.delete(
-          Uri.parse('$_urlBase/users/$uid'),
+          Uri.parse('$_urlBase/account'),
           headers: _headers,
         );
       },
@@ -67,11 +65,11 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> signOut(String uid) {
+  Future<Either<ApiError, void>> signOut() {
     return _request(
       makeRequest: () {
         return http.post(
-          Uri.parse('$_urlBase/users/$uid/sign_out'),
+          Uri.parse('$_urlBase/account/sign_out'),
           headers: _headers,
         );
       },
@@ -83,7 +81,7 @@ class Api {
     return _request(
       makeRequest: () {
         return http.get(
-          Uri.parse('$_urlBase/users/$uid/profile'),
+          Uri.parse('$_urlBase/profiles/$uid'),
           headers: _headers,
         );
       },
@@ -98,7 +96,7 @@ class Api {
     return _request(
       makeRequest: () {
         return http.get(
-          Uri.parse('$_urlBase/users/$uid/profile?collections=true'),
+          Uri.parse('$_urlBase/profiles/$uid?collections=true'),
           headers: _headers,
         );
       },
@@ -113,53 +111,12 @@ class Api {
     return _request(
       makeRequest: () {
         return http.put(
-          Uri.parse('$_urlBase/users/$uid/profile'),
+          Uri.parse('$_urlBase/profiles/$uid'),
           headers: _headers,
           body: jsonEncode(profile.toJson()),
         );
       },
       handleSuccess: (response) => const Right(null),
-    );
-  }
-
-  Future<Either<ApiError, Profile>> updateProfileGalleryPhoto(
-    String uid,
-    Uint8List photo,
-    int index,
-  ) {
-    return _request(
-      makeRequest: () {
-        return http.put(
-          Uri.parse('$_urlBase/users/$uid/profile/gallery/$index'),
-          headers: {
-            ..._headers,
-            'Content-Type': 'application/octet-stream',
-          },
-          body: photo,
-        );
-      },
-      handleSuccess: (response) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return Right(Profile.fromJson(json['profile']));
-      },
-    );
-  }
-
-  Future<Either<ApiError, Profile>> deleteProfileGalleryPhoto(
-    String uid,
-    int index,
-  ) {
-    return _request(
-      makeRequest: () {
-        return http.delete(
-          Uri.parse('$_urlBase/users/$uid/profile/gallery/$index'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return Right(Profile.fromJson(json['profile']));
-      },
     );
   }
 
@@ -170,7 +127,7 @@ class Api {
     return _request(
       makeRequest: () {
         return http.put(
-          Uri.parse('$_urlBase/users/$uid/profile/audio'),
+          Uri.parse('$_urlBase/profiles/$uid/audio'),
           headers: {
             ..._headers,
             'Content-Type': 'application/octet-stream',
@@ -185,11 +142,14 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> deleteProfileAudio(String uid) {
+  Future<Either<ApiError, void>> updateProfileCollection({
+    required String collectionId,
+    required String uid,
+  }) {
     return _request(
       makeRequest: () {
-        return http.delete(
-          Uri.parse('$_urlBase/users/$uid/profile/audio'),
+        return http.put(
+          Uri.parse('$_urlBase/profiles/$uid/collection/$collectionId'),
           headers: _headers,
         );
       },
@@ -210,8 +170,7 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> addNotificationTokens(
-    String uid, {
+  Future<Either<ApiError, void>> addNotificationTokens({
     String? fcmMessagingAndVoipToken,
     String? apnMessagingToken,
     String? apnVoipToken,
@@ -219,7 +178,7 @@ class Api {
     return _request(
       makeRequest: () {
         return http.post(
-          Uri.parse('$_urlBase/users/$uid/notification_tokens'),
+          Uri.parse('$_urlBase/accounts/notification_tokens'),
           headers: _headers,
           body: jsonEncode({
             'tokens': [
@@ -419,7 +378,7 @@ class Api {
             minRadiusQuery != null ||
             pageQuery != null;
         return http.get(
-          Uri.parse('$_urlBase/users/discover${hasOptions ? '?' : ''}${[
+          Uri.parse('$_urlBase/discover${hasOptions ? '?' : ''}${[
             locationQuery,
             seedQuery,
             genderQuery,
@@ -432,39 +391,6 @@ class Api {
       },
       handleSuccess: (response) {
         return Right(DiscoverResults.fromJson(jsonDecode(response.body)));
-      },
-    );
-  }
-
-  Future<Either<ApiError, List<ProfileWithOnline>>> getFavorites(String uid) {
-    return _request(
-      makeRequest: () {
-        return http.get(
-          Uri.parse('$_urlBase/users/discover/favorites'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        final list = jsonDecode(response.body) as List<dynamic>;
-        return Right(List<ProfileWithOnline>.from(
-            list.map((e) => ProfileWithOnline.fromJson(e))));
-      },
-    );
-  }
-
-  Future<Either<ApiError, void>> addFavorite(String uid, String otherUid) {
-    return _request(
-      makeRequest: () {
-        return http.put(
-          Uri.parse('$_urlBase/users/discover/favorites'),
-          headers: _headers,
-          body: jsonEncode({
-            'otherUid': otherUid,
-          }),
-        );
-      },
-      handleSuccess: (response) {
-        return const Right(null);
       },
     );
   }
@@ -556,28 +482,13 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> updateProfileCollection({
-    required String collectionId,
-    required String uid,
-  }) {
-    return _request(
-      makeRequest: () {
-        return http.put(
-          Uri.parse('$_urlBase/users/$uid/profile/collection/$collectionId'),
-          headers: _headers,
-        );
-      },
-      handleSuccess: (response) => const Right(null),
-    );
-  }
-
   Future<Either<ApiError, List<KnownContactProfile>>> getKnownContactProfiles(
     List<String> phoneNumbers,
   ) {
     return _request(
       makeRequest: () {
         return http.post(
-          Uri.parse('$_urlBase/known_contact_profiles'),
+          Uri.parse('$_urlBase/account/contacts'),
           headers: _headers,
           body: jsonEncode({'phoneNumbers': phoneNumbers}),
         );
@@ -591,11 +502,11 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, List<SimpleProfile>>> getBlockedUsers(String uid) {
+  Future<Either<ApiError, List<SimpleProfile>>> getBlockedUsers() {
     return _request(
       makeRequest: () {
         return http.get(
-          Uri.parse('$_urlBase/users/$uid/block'),
+          Uri.parse('$_urlBase/account/blocked_users'),
           headers: _headers,
         );
       },
@@ -607,26 +518,23 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> blockUser(String uid, String blockUid) {
+  Future<Either<ApiError, void>> blockUser(String blockUid) {
     return _request(
       makeRequest: () {
-        return http.post(
-          Uri.parse('$_urlBase/users/$uid/block'),
+        return http.put(
+          Uri.parse('$_urlBase/account/blocked_users/$blockUid'),
           headers: _headers,
-          body: jsonEncode({
-            'blockUid': blockUid,
-          }),
         );
       },
       handleSuccess: (response) => const Right(null),
     );
   }
 
-  Future<Either<ApiError, void>> unblockUser(String uid, String unblockUid) {
+  Future<Either<ApiError, void>> unblockUser(String unblockUid) {
     return _request(
       makeRequest: () {
         return http.delete(
-          Uri.parse('$_urlBase/users/$uid/block/$unblockUid'),
+          Uri.parse('$_urlBase/account/blocked_users/$unblockUid'),
           headers: _headers,
         );
       },
@@ -635,11 +543,11 @@ class Api {
   }
 
   Future<Either<ApiError, String>> updateLocation(
-      String uid, double latitude, double longitude) {
+      double latitude, double longitude) {
     return _request(
       makeRequest: () {
         return http.post(
-          Uri.parse('$_urlBase/users/$uid/location'),
+          Uri.parse('$_urlBase/account/location'),
           headers: _headers,
           body: jsonEncode({
             'latitude': latitude,
@@ -782,15 +690,15 @@ class ServerError with _$ServerError {
 }
 
 @freezed
-class UserCreationResult with _$UserCreationResult {
-  const factory UserCreationResult({
+class AccountCreationResult with _$AccountCreationResult {
+  const factory AccountCreationResult({
     required bool created,
     required bool needsOnboarding,
     required Profile profile,
-  }) = _UserCreationResult;
+  }) = _AccountCreationResult;
 
-  factory UserCreationResult.fromJson(Map<String, dynamic> json) =>
-      _$UserCreationResultFromJson(json);
+  factory AccountCreationResult.fromJson(Map<String, dynamic> json) =>
+      _$AccountCreationResultFromJson(json);
 }
 
 @freezed

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,10 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/util/location_service.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Page used for asynchronous initialization.
 ///
@@ -105,27 +102,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       ref.read(userProvider.notifier).uid(uid);
       ref.read(userProvider.notifier).profile(profile);
     }
-
-    // Notificiations (once off notification messaging and voip tokens)
-    // Updates to messaging tokens handled in login/logout handler
-    final isIOS = Platform.isIOS;
-    Future.wait([
-      onNotificationMessagingToken.first,
-      if (isIOS) ios_voip.getVoipPushNotificationToken(),
-    ]).then((tokens) {
-      if (mounted &&
-          (tokens[0] != null || tokens[1] != null) &&
-          uid.isNotEmpty) {
-        api.addNotificationTokens(
-          uid,
-          fcmMessagingAndVoipToken: isIOS ? null : tokens[0],
-          apnMessagingToken: isIOS ? tokens[0] : null,
-          apnVoipToken: isIOS ? tokens[1] : null,
-        );
-      }
-    }).catchError((e, s) {
-      Sentry.captureException(e, stackTrace: s);
-    });
 
     // Handle notifications as early as possible for background notifications.
     // On iOS, initial route is navigated to, but execution may stop due to

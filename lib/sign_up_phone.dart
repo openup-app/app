@@ -50,7 +50,7 @@ class _SignUpPhoneState extends ConsumerState<SignUpPhone> {
     final verifiedUid = widget.verifiedUid;
     if (verifiedUid != null && !_submitting) {
       setState(() => _submitting = true);
-      final creationResult = await _createUser(verifiedUid);
+      final creationResult = await _createAccount(verifiedUid);
       if (!mounted) {
         return;
       }
@@ -247,9 +247,9 @@ class _SignUpPhoneState extends ConsumerState<SignUpPhone> {
     return completer.future;
   }
 
-  Future<UserCreationResult?> _createUser(String uid) async {
+  Future<AccountCreationResult?> _createAccount(String uid) async {
     final api = GetIt.instance.get<Api>();
-    final result = await api.createUser(uid: uid);
+    final result = await api.createAccount();
     return result.fold(
       (l) {
         final message = l.map(
