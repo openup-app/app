@@ -22,8 +22,8 @@ class _SignupBackgroundState extends State<SignupBackground> {
   final bokehBaseSize = 40.0;
   final bokehBaseOpacity = 20.0;
   final bokehBaseBrightness = 100.0;
-  final bokehBaseDuration = Duration(seconds: 16);
-  final colorSet = [
+  final bokehBaseDuration = const Duration(seconds: 16);
+  final colorSet = const [
     Color(0xff0361a4),
     Color(0xff018e6d),
     Color(0xff900005),
@@ -35,8 +35,8 @@ class _SignupBackgroundState extends State<SignupBackground> {
       body: Stack(
         children: [
           AnimatedContainer(
-            duration: Duration(seconds: 20),
-            decoration: BoxDecoration(
+            duration: const Duration(seconds: 20),
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   Color(0xff7b0420),
@@ -51,7 +51,7 @@ class _SignupBackgroundState extends State<SignupBackground> {
             ),
           ),
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   Color(0xff006f8e),
@@ -83,17 +83,19 @@ class _SignupBackgroundState extends State<SignupBackground> {
                             spreadRadius: Random().nextDouble() * 2,
                           )
                         ],
-                        filter: ColorFilter.mode(
+                      ),
+                      child: ImageFiltered(
+                        imageFilter: ColorFilter.mode(
                           Colors.white.withOpacity(
                             bokehBaseOpacity / 100 +
                                 Random().nextDouble() * 0.8 * 0.15,
                           ),
                           BlendMode.modulate,
                         ),
-                      ),
-                      child: RotationTransition(
-                        turns: AlwaysStoppedAnimation(1),
-                        child: SizedBox.expand(),
+                        child: const RotationTransition(
+                          turns: AlwaysStoppedAnimation(1),
+                          child: SizedBox.expand(),
+                        ),
                       ),
                     ),
                   ),
@@ -101,6 +103,7 @@ class _SignupBackgroundState extends State<SignupBackground> {
               ),
             ),
           ),
+          widget.child,
         ],
       ),
     );
