@@ -472,7 +472,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         content: file.path,
         duration: duration,
         waveform: [],
-        reactions: {},
       );
     });
     if (atEnd) {
