@@ -3,19 +3,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/invite_page.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/section.dart';
 
 class ConversationsPage extends ConsumerStatefulWidget {
   const ConversationsPage({
@@ -278,29 +275,11 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
 
   void _openChat(Chatroom chatroom) {
     FocusScope.of(context).unfocus();
-
-    if (chatroom.state == ChatroomState.accepted) {
-      context.pushNamed(
-        'chat',
-        params: {'uid': chatroom.profile.uid},
-        extra: ChatPageArguments(
-          otherUid: chatroom.profile.uid,
-          otherProfile: chatroom.profile,
-        ),
-      );
-    } else if (chatroom.state == ChatroomState.invitation) {
-      context.goNamed(
-        'invite',
-        params: {'uid': chatroom.profile.uid},
-        extra: chatroom.invitationAudio != null
-            ? InvitePageArgs(
-                chatroom.profile,
-                chatroom.invitationAudio!,
-              )
-            : null,
-      );
-    }
-
+    context.pushNamed(
+      'chat',
+      params: {'uid': chatroom.profile.uid},
+      extra: ChatPageArguments(chatroom: chatroom),
+    );
     final index = _chatrooms?.indexOf(chatroom);
     if (index != null && index != -1) {
       setState(() => _chatrooms?[index] = chatroom.copyWith(unreadCount: 0));

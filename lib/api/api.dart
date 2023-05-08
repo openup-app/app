@@ -333,6 +333,22 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, Chatroom>> getChatroom(
+    String uid,
+    String otherUid,
+  ) async {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/chats/$uid/$otherUid/info'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) =>
+          Right(Chatroom.fromJson(jsonDecode(response.body))),
+    );
+  }
+
   Future<Either<ApiError, List<ChatMessage>>> getMessages(
     String uid,
     String otherUid, {
@@ -451,20 +467,6 @@ class Api {
           body: jsonEncode({
             'otherUid': otherUid,
           }),
-        );
-      },
-      handleSuccess: (response) {
-        return const Right(null);
-      },
-    );
-  }
-
-  Future<Either<ApiError, void>> acceptInvitation(String uid, String otherUid) {
-    return _request(
-      makeRequest: () {
-        return http.post(
-          Uri.parse('$_urlBase/chats/$uid/$otherUid/accept'),
-          headers: _headers,
         );
       },
       handleSuccess: (response) {

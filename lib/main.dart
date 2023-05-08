@@ -25,7 +25,6 @@ import 'package:openup/chat_page.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
-import 'package:openup/invite_page.dart';
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/people_page.dart';
@@ -134,7 +133,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   final _routeObserver = RouteObserver<PageRoute>();
 
   final _discoverKey = GlobalKey<NavigatorState>();
-  final _relationshipsKey = GlobalKey<NavigatorState>();
+  final _conversationsKey = GlobalKey<NavigatorState>();
   final _profileKey = GlobalKey<NavigatorState>();
   final _peopleKey = GlobalKey<NavigatorState>();
   final _settingsKey = GlobalKey<NavigatorState>();
@@ -635,16 +634,16 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ],
             ),
             StatefulShellBranch(
-              navigatorKey: _relationshipsKey,
+              navigatorKey: _conversationsKey,
               preload: true,
               routes: [
                 GoRoute(
-                  path: '/relationships',
-                  name: 'relationships',
+                  path: '/chats',
+                  name: 'chats',
                   builder: (context, state) => const ConversationsPage(),
                   routes: [
                     GoRoute(
-                      path: 'chat/:uid',
+                      path: ':uid',
                       name: 'chat',
                       builder: (context, state) {
                         final otherUid = state.params['uid']!;
@@ -654,7 +653,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           webPort: webPort,
                           socketPort: socketPort,
                           otherUid: otherUid,
-                          otherProfile: args?.otherProfile,
+                          chatroom: args?.chatroom,
                         );
                       },
                     ),
@@ -713,19 +712,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               child: ReportScreen(
                 uid: args.uid,
               ),
-            );
-          },
-        ),
-        GoRoute(
-          path: '/invite/:uid',
-          name: 'invite',
-          builder: (context, state) {
-            final uid = state.params['uid']!;
-            final args = state.extra as InvitePageArgs?;
-            return InvitePage(
-              uid: uid,
-              profile: args?.profile,
-              invitationAudio: args?.invitaitonAudio,
             );
           },
         ),
