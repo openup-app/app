@@ -386,10 +386,8 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
       return;
     }
 
-    final myUid = ref.read(userProvider).uid;
-    final future = GetIt.instance
-        .get<Api>()
-        .sendMessage(myUid, uid, ChatType.audio, file.path);
+    final api = GetIt.instance.get<Api>();
+    final future = api.sendMessage(uid, ChatType.audio, file.path);
     await withBlockingModal(
       context: context,
       label: 'Sending message...',

@@ -452,10 +452,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       return;
     }
 
-    final myUid = ref.read(userProvider).uid;
-    final future = GetIt.instance
-        .get<Api>()
-        .sendMessage(myUid, uid, ChatType.audio, file.path);
+    final future =
+        GetIt.instance.get<Api>().sendMessage(uid, ChatType.audio, file.path);
     await withBlockingModal(
       context: context,
       label: 'Sending invite...',

@@ -103,7 +103,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     if (chatroom != null) {
       _otherProfile = chatroom.profile;
     } else {
-      _fetchChatroom(profile.uid, widget.otherUid);
+      _fetchChatroom(widget.otherUid);
     }
 
     _scrollController.addListener(_scrollListener);
@@ -505,7 +505,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
     final api = GetIt.instance.get<Api>();
     final result = await api.sendMessage(
-      uid,
       widget.otherUid,
       ChatType.audio,
       file.path,
@@ -546,9 +545,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     }
   }
 
-  Future<void> _fetchChatroom(String uid, String otherUid) async {
+  Future<void> _fetchChatroom(String otherUid) async {
     final api = GetIt.instance.get<Api>();
-    final result = await api.getChatroom(uid, widget.otherUid);
+    final result = await api.getChatroom(widget.otherUid);
     if (!mounted) {
       return;
     }
@@ -565,7 +564,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   Future<void> _fetchHistory({DateTime? startDate}) async {
     final api = GetIt.instance.get<Api>();
     final result = await api.getMessages(
-      ref.read(userProvider).uid,
       widget.otherUid,
       startDate: startDate,
     );

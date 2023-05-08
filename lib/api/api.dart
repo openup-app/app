@@ -317,11 +317,11 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, List<Chatroom>>> getChatrooms(String uid) async {
+  Future<Either<ApiError, List<Chatroom>>> getChatrooms() async {
     return _request(
       makeRequest: () {
         return http.get(
-          Uri.parse('$_urlBase/chats/$uid'),
+          Uri.parse('$_urlBase/chats'),
           headers: _headers,
         );
       },
@@ -333,14 +333,11 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, Chatroom>> getChatroom(
-    String uid,
-    String otherUid,
-  ) async {
+  Future<Either<ApiError, Chatroom>> getChatroom(String otherUid) async {
     return _request(
       makeRequest: () {
         return http.get(
-          Uri.parse('$_urlBase/chats/$uid/$otherUid/info'),
+          Uri.parse('$_urlBase/chats/$otherUid/info'),
           headers: _headers,
         );
       },
@@ -350,7 +347,6 @@ class Api {
   }
 
   Future<Either<ApiError, List<ChatMessage>>> getMessages(
-    String uid,
     String otherUid, {
     DateTime? startDate,
     int limit = 10,
@@ -360,7 +356,7 @@ class Api {
         final query =
             '${startDate == null ? '' : 'startDate=${startDate.toIso8601String()}&'}limit=$limit';
         return http.get(
-          Uri.parse('$_urlBase/chats/$uid/$otherUid?$query'),
+          Uri.parse('$_urlBase/chats/$otherUid?$query'),
           headers: _headers,
         );
       },
@@ -373,19 +369,17 @@ class Api {
   }
 
   Future<Either<ApiError, ChatMessage>> sendMessage(
-    String uid,
     String otherUid,
     ChatType type,
     String content,
   ) async {
-    final uri = Uri.parse('$_urlBase/chats/$uid/$otherUid');
+    final uri = Uri.parse('$_urlBase/chats/$otherUid');
     switch (type) {
       case ChatType.audio:
         return _requestStreamedResponseAsFuture(
           makeRequest: () async {
             final request = http.MultipartRequest('POST', uri);
             request.headers.addAll(_headers);
-            request.fields['uid'] = uid;
             request.fields['type'] = type.name;
             request.files.add(
               await http.MultipartFile.fromPath('media', content),
@@ -475,30 +469,12 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> declineInvitation(
-      String uid, String otherUid) {
+  Future<Either<ApiError, void>> declineInvitation(String otherUid) {
     return _request(
       makeRequest: () {
         return http.post(
-          Uri.parse('$_urlBase/chats/$uid/$otherUid/decline'),
+          Uri.parse('$_urlBase/chats/$otherUid/decline'),
           headers: _headers,
-        );
-      },
-      handleSuccess: (response) {
-        return const Right(null);
-      },
-    );
-  }
-
-  Future<Either<ApiError, void>> removeFavorite(String uid, String otherUid) {
-    return _request(
-      makeRequest: () {
-        return http.delete(
-          Uri.parse('$_urlBase/users/discover/favorites'),
-          headers: _headers,
-          body: jsonEncode({
-            'otherUid': otherUid,
-          }),
         );
       },
       handleSuccess: (response) {

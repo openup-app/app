@@ -50,12 +50,12 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
   void signedIn(Profile profile) async {
     state = _SignedIn(profile: profile);
 
-    _cacheChatrooms(profile.uid);
+    _cacheChatrooms();
     _cacheCollections(profile.uid);
   }
 
-  Future<void> _cacheChatrooms(String uid) async {
-    final result = await GetIt.instance.get<Api>().getChatrooms(uid);
+  Future<void> _cacheChatrooms() async {
+    final result = await GetIt.instance.get<Api>().getChatrooms();
     result.fold(
       (l) {},
       (r) {
@@ -108,7 +108,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
   Future<void> refreshChatrooms() {
     return state.map(
       guest: (_) => Future.value(),
-      signedIn: (signedIn) => _cacheChatrooms(signedIn.profile.uid),
+      signedIn: (signedIn) => _cacheChatrooms(),
     );
   }
 
