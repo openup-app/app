@@ -314,6 +314,23 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, List<Chatroom>>> deleteChatroom(
+      String otherUid) async {
+    return _request(
+      makeRequest: () {
+        return http.delete(
+          Uri.parse('$_urlBase/chats/$otherUid'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        final chatrooms = json['chatrooms'] as List<dynamic>;
+        return Right(List.from(chatrooms.map((e) => Chatroom.fromJson(e))));
+      },
+    );
+  }
+
   Future<Either<ApiError, List<ChatMessage>>> getMessages(
     String otherUid, {
     DateTime? startDate,
