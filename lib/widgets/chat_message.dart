@@ -9,7 +9,6 @@ class AudioChatMessage extends StatefulWidget {
   final String audioUrl;
   final Duration? duration;
   final String photoUrl;
-  final bool blurPhotos;
   final Widget date;
   final bool fromMe;
   final PlaybackInfo playbackInfo;
@@ -22,7 +21,6 @@ class AudioChatMessage extends StatefulWidget {
     required this.audioUrl,
     this.duration,
     required this.photoUrl,
-    required this.blurPhotos,
     required this.date,
     required this.fromMe,
     required this.playbackInfo,

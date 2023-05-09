@@ -99,9 +99,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     required int count,
   }) {
     profiles.skip(from).take(count).forEach((profile) {
-      profile.gallery.forEach((photo) {
-        precacheImage(NetworkImage(photo), context);
-        precacheImage(NetworkImage('${photo}_depth'), context);
+      profile.collection.photos.forEach((photo3d) {
+        precacheImage(NetworkImage(photo3d.url), context);
+        precacheImage(NetworkImage(photo3d.depthUrl), context);
       });
     });
   }

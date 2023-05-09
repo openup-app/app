@@ -352,7 +352,7 @@ class Api {
     }
   }
 
-  Future<Either<ApiError, DiscoverResults>> getDiscover(
+  Future<Either<ApiError, DiscoverPage>> getDiscover(
     double? latitude,
     double? longitude, {
     String? seed,
@@ -366,7 +366,6 @@ class Api {
             ? null
             : 'lat=$latitude&long=$longitude';
         final seedQuery = seed == null ? null : 'seed=$seed';
-        const topicQuery = null;
         final genderQuery = gender == null ? null : 'gender=${gender.name}';
         final minRadiusQuery =
             minRadius == null ? null : 'minRadius=$minRadius';
@@ -382,7 +381,6 @@ class Api {
             locationQuery,
             seedQuery,
             genderQuery,
-            topicQuery,
             minRadiusQuery,
             pageQuery,
           ].where((q) => q != null).join('&')}'),
@@ -390,7 +388,7 @@ class Api {
         );
       },
       handleSuccess: (response) {
-        return Right(DiscoverResults.fromJson(jsonDecode(response.body)));
+        return Right(DiscoverPage.fromJson(jsonDecode(response.body)));
       },
     );
   }
@@ -693,7 +691,6 @@ class ServerError with _$ServerError {
 class AccountCreationResult with _$AccountCreationResult {
   const factory AccountCreationResult({
     required bool created,
-    required bool needsOnboarding,
     required Profile profile,
   }) = _AccountCreationResult;
 
@@ -706,16 +703,13 @@ class Profile with _$Profile {
   const factory Profile({
     required String uid,
     required String name,
-    String? audio,
     int? age,
     required Gender gender,
     required String photo,
+    String? audio,
     required Collection collection,
-    required List<String> gallery,
-    required bool blurPhotos,
     @Default([]) List<String> mutualFriends,
     @Default(0) int friendCount,
-    required String location,
   }) = _Profile;
 
   // Private constructor required for adding methods
@@ -726,7 +720,6 @@ class Profile with _$Profile {
       uid: uid,
       name: name,
       photo: photo,
-      blurPhotos: blurPhotos,
     );
   }
 
@@ -740,7 +733,6 @@ class SimpleProfile with _$SimpleProfile {
     required String uid,
     required String name,
     required String photo,
-    required bool blurPhotos,
   }) = _SimpleProfile;
 
   factory SimpleProfile.fromJson(Map<String, dynamic> json) =>
@@ -748,13 +740,14 @@ class SimpleProfile with _$SimpleProfile {
 }
 
 @freezed
-class ProfileWithOnline with _$ProfileWithOnline {
-  const factory ProfileWithOnline({
+class DiscoverProfile with _$DiscoverProfile {
+  const factory DiscoverProfile({
     required Profile profile,
-  }) = _ProfileWithOnline;
+    required bool online,
+  }) = _DiscoverProfile;
 
-  factory ProfileWithOnline.fromJson(Map<String, dynamic> json) =>
-      _$ProfileWithOnlineFromJson(json);
+  factory DiscoverProfile.fromJson(Map<String, dynamic> json) =>
+      _$DiscoverProfileFromJson(json);
 }
 
 @freezed
@@ -782,15 +775,15 @@ class KnownContactProfile with _$KnownContactProfile {
 }
 
 @freezed
-class DiscoverResults with _$DiscoverResults {
-  const factory DiscoverResults({
-    required List<ProfileWithOnline> profiles,
+class DiscoverPage with _$DiscoverPage {
+  const factory DiscoverPage({
+    required List<DiscoverProfile> profiles,
     required double nextMinRadius,
     required int nextPage,
-  }) = _DiscoverResults;
+  }) = _DiscoverPage;
 
-  factory DiscoverResults.fromJson(Map<String, dynamic> json) =>
-      _$DiscoverResultsFromJson(json);
+  factory DiscoverPage.fromJson(Map<String, dynamic> json) =>
+      _$DiscoverPageFromJson(json);
 }
 
 @freezed
@@ -812,7 +805,6 @@ class Collection with _$Collection {
     required DateTime date,
     required CollectionState state,
     required List<Photo3d> photos,
-    @Default(null) String? audio,
   }) = _Collection;
 
   factory Collection.fromJson(Map<String, dynamic> json) =>
@@ -840,7 +832,6 @@ class Chatroom with _$Chatroom {
     required Profile profile,
     @_DateTimeConverter() required DateTime lastUpdated,
     required ChatroomState state,
-    required String? invitationAudio,
     required int unreadCount,
   }) = _Chatroom;
 

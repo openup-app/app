@@ -228,7 +228,6 @@ Future<void> _onReceiveNotification(_ParsedMessage parsedMessage) {
         uid: call.uid,
         name: call.name,
         photo: call.photo,
-        blurPhotos: call.blurPhotos,
       );
       if (Platform.isAndroid) {
         return android_voip.displayIncomingCall(
@@ -330,7 +329,6 @@ class _ParsedMessage with _$_ParsedMessage {
     required String name,
     required String photo,
     required String rid,
-    required bool blurPhotos,
   }) = _Call;
 
   const factory _ParsedMessage.callEnded({

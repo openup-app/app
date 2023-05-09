@@ -63,17 +63,7 @@ Future<Either<ApiError, String>> updateLocation({
   required double longitude,
 }) async {
   final api = GetIt.instance.get<Api>();
-  final result = await api.updateLocation(latitude, longitude);
-
-  result.fold(
-    (l) {},
-    (r) {
-      final newProfile = profile.copyWith(location: r);
-      notifier.profile(newProfile);
-    },
-  );
-
-  return result;
+  return api.updateLocation(latitude, longitude);
 }
 
 Future<Either<ApiError, void>> updateProfileCollection({

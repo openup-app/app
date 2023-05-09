@@ -407,12 +407,8 @@ class UserDetails extends StatelessWidget {
                           ? null
                           : () => _showMutualFriendsModal(context),
                       useFadeWheNoPressedCallback: false,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (profile.mutualFriends.isNotEmpty)
-                            Text(
+                      child: profile.mutualFriends.isNotEmpty
+                          ? Text(
                               profile.mutualFriends.length == 1
                                   ? '1 mutual friend'
                                   : '${profile.mutualFriends.length} mutual friends',
@@ -431,22 +427,8 @@ class UserDetails extends StatelessWidget {
                                   )
                                 ],
                               ),
-                            ),
-                          AutoSizeText(
-                            profile.location,
-                            overflow: TextOverflow.ellipsis,
-                            minFontSize: 2,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: 15,
-                                ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                      ),
+                            )
+                          : const SizedBox.shrink(),
                     ),
                   ),
                   const SizedBox(height: 8),

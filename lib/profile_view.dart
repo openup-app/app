@@ -34,7 +34,6 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   void initState() {
     super.initState();
-    print('end time ${widget.endTime}');
     final audio = widget.profile.audio;
     if (audio != null) {
       _player.setUrl(audio);
@@ -113,30 +112,10 @@ class _ProfileViewState extends State<ProfileView> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          SvgPicture.asset(
-                            'assets/images/earth.svg',
-                            width: 16,
-                            height: 16,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: AutoSizeText(
-                              widget.profile.location,
-                              overflow: TextOverflow.ellipsis,
-                              minFontSize: 2,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    fontWeight: FontWeight.w300,
-                                    fontSize: 16,
-                                  ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
+                      SvgPicture.asset(
+                        'assets/images/earth.svg',
+                        width: 16,
+                        height: 16,
                       ),
                     ],
                   ),
@@ -184,8 +163,8 @@ class _ProfileViewState extends State<ProfileView> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Gallery(
-                        gallery: widget.profile.gallery,
+                      CinematicGallery(
+                        gallery: widget.profile.collection.photos,
                         slideshow: !_audioPaused,
                       ),
                       if (!isMe)
@@ -241,54 +220,6 @@ class _ProfileViewState extends State<ProfileView> {
                               child: IconWithShadow(
                                 Icons.play_arrow,
                                 size: 80,
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (widget.profile.blurPhotos && !isMe)
-                        Center(
-                          child: IgnorePointer(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 166.0),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'Hidden pictures',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                      fontSize: 22,
-                                      shadows: [
-                                        const BoxShadow(
-                                          color: Color.fromRGBO(
-                                              0x00, 0x00, 0x00, 0.5),
-                                          offset: Offset(0, 2),
-                                          blurRadius: 6,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'To view pics ask them to show you!',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                      shadows: [
-                                        const BoxShadow(
-                                          color: Color.fromRGBO(
-                                              0x00, 0x00, 0x00, 0.5),
-                                          offset: Offset(0, 2),
-                                          blurRadius: 6,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
                           ),

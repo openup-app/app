@@ -23,8 +23,6 @@ class _CallPageState extends State<CallPage> {
   SimpleProfile? _endedProfile;
   bool _ended = true;
   Timer? _popSoonTimer;
-  bool _gettingLocation = false;
-  String _location = '';
 
   @override
   void initState() {
@@ -35,19 +33,12 @@ class _CallPageState extends State<CallPage> {
       debugPrint('[Calling] CallState event: ${event.runtimeType}');
       event.when(
         none: () {},
-        initializing: (profile, __, ___) {
-          if (!_gettingLocation) {
-            _createLocationFuture(profile.uid);
-          }
-        },
+        initializing: (profile, __, ___) {},
         engaged: (_, __) {
           _popSoon();
         },
         active: (activeCall) {
           setState(() {
-            if (!_gettingLocation) {
-              _createLocationFuture(activeCall.profile.uid);
-            }
             _activeCall = activeCall;
           });
         },
@@ -60,20 +51,6 @@ class _CallPageState extends State<CallPage> {
         },
       );
     });
-  }
-
-  void _createLocationFuture(String uid) async {
-    if (!_gettingLocation) {
-      setState(() => _gettingLocation = true);
-      final api = GetIt.instance.get<Api>();
-      final result = await api.getProfile(uid);
-      if (!mounted) {
-        return;
-      }
-      result.fold((l) {}, (r) {
-        setState(() => _location = r.location);
-      });
-    }
   }
 
   @override
@@ -104,7 +81,6 @@ class _CallPageState extends State<CallPage> {
             if (_ended && endedProfile != null) {
               return _UnconnectedDisplay(
                 profile: endedProfile,
-                location: _location,
                 label: 'call ended',
                 speakerphoneEnabled: false,
                 micEnabled: true,
@@ -123,7 +99,6 @@ class _CallPageState extends State<CallPage> {
             if (outgoing) {
               return _UnconnectedDisplay(
                 profile: profile,
-                location: _location,
                 label: 'ringing...',
                 speakerphoneEnabled: false,
                 micEnabled: true,
@@ -136,7 +111,6 @@ class _CallPageState extends State<CallPage> {
             }
             return _UnconnectedDisplay(
               profile: profile,
-              location: _location,
               label: 'connecting...',
               speakerphoneEnabled: false,
               micEnabled: true,
@@ -150,7 +124,6 @@ class _CallPageState extends State<CallPage> {
           engaged: (profile, video) {
             return _UnconnectedDisplay(
               profile: profile,
-              location: _location,
               label: '${profile.name} is in another call',
               speakerphoneEnabled: false,
               micEnabled: true,
@@ -175,7 +148,6 @@ class _CallPageState extends State<CallPage> {
                   case PhoneConnectionState.complete:
                     return _UnconnectedDisplay(
                       profile: call.profile,
-                      location: _location,
                       label: _stateToMessage(state),
                       speakerphoneEnabled: false,
                       micEnabled: true,
@@ -192,7 +164,6 @@ class _CallPageState extends State<CallPage> {
                       builder: (context, value, child) {
                         return _CallDisplay(
                           activeCall: _activeCall!,
-                          location: _location,
                           speakerphoneEnabled: value.speakerphone,
                           micEnabled: !value.mute,
                           videoEnabled: value.video,
@@ -210,7 +181,6 @@ class _CallPageState extends State<CallPage> {
           ended: (profile) {
             return _UnconnectedDisplay(
               profile: profile,
-              location: _location,
               label: 'call ended',
               speakerphoneEnabled: false,
               micEnabled: true,
@@ -277,7 +247,6 @@ class _CallPageState extends State<CallPage> {
 
 class _UnconnectedDisplay extends StatelessWidget {
   final SimpleProfile profile;
-  final String location;
   final String label;
   final bool speakerphoneEnabled;
   final bool micEnabled;
@@ -290,7 +259,6 @@ class _UnconnectedDisplay extends StatelessWidget {
   const _UnconnectedDisplay({
     Key? key,
     required this.profile,
-    required this.location,
     required this.label,
     required this.speakerphoneEnabled,
     required this.micEnabled,
@@ -309,23 +277,9 @@ class _UnconnectedDisplay extends StatelessWidget {
         backgroundColor: Colors.black,
         leading: const BackIconButton(),
         centerTitle: true,
-        title: Column(
-          children: [
-            Text(
-              profile.name,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 24),
-            ),
-            Text(
-              location,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w300,
-                  ),
-            ),
-          ],
+        title: Text(
+          profile.name,
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
         ),
       ),
       body: Column(
@@ -377,7 +331,6 @@ class _UnconnectedDisplay extends StatelessWidget {
 
 class _CallDisplay extends StatefulWidget {
   final ActiveCall activeCall;
-  final String location;
   final bool speakerphoneEnabled;
   final bool micEnabled;
   final bool videoEnabled;
@@ -389,7 +342,6 @@ class _CallDisplay extends StatefulWidget {
   const _CallDisplay({
     Key? key,
     required this.activeCall,
-    required this.location,
     required this.speakerphoneEnabled,
     required this.micEnabled,
     required this.videoEnabled,
@@ -411,23 +363,9 @@ class __CallDisplayState extends State<_CallDisplay> {
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: Colors.black,
-        title: Column(
-          children: [
-            Text(
-              widget.activeCall.profile.name,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 24),
-            ),
-            Text(
-              widget.location,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w300,
-                  ),
-            ),
-          ],
+        title: Text(
+          widget.activeCall.profile.name,
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 24),
         ),
         leading: const BackIconButton(),
       ),

@@ -42,7 +42,6 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
   List<Collection>? _collections;
   int _index = 0;
 
-  bool _error = false;
   bool _play = true;
   bool _showCollectionPreviews = false;
 
@@ -176,7 +175,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
 
   void _playAudio() {
     _player.stop();
-    final audio = _collections?[_index].audio;
+    final audio = _profile?.audio;
     if (audio != null) {
       _player
         ..setUrl(audio)
@@ -208,11 +207,11 @@ class _ViewCollectionPageState extends ConsumerState<ViewCollectionPage> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  if (collections == null && !_error)
+                  if (collections == null)
                     const Center(
                       child: LoadingIndicator(),
                     )
-                  else if (collections == null && _error)
+                  else
                     Center(
                       child: Text(
                         'Unable to load Collection',

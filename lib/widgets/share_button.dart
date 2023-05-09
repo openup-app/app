@@ -92,23 +92,12 @@ class _SharePageState extends State<_SharePage>
             child: Stack(
               children: [
                 Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        widget.profile.name,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w300,
-                            ),
-                      ),
-                      Text(
-                        widget.profile.location,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w300,
-                            ),
-                      ),
-                    ],
+                  child: Text(
+                    widget.profile.name,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w300,
+                        ),
                   ),
                 ),
                 Positioned(
@@ -136,9 +125,9 @@ class _SharePageState extends State<_SharePage>
                 borderRadius: const BorderRadius.all(
                   Radius.circular(24),
                 ),
-                child: Gallery(
+                child: CinematicGallery(
                   slideshow: true,
-                  gallery: widget.profile.gallery,
+                  gallery: widget.profile.collection.photos,
                 ),
               ),
             ),

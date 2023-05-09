@@ -63,7 +63,7 @@ class _SignUpPhoneState extends ConsumerState<SignUpPhone> {
       final notifier = ref.read(userProvider.notifier);
       notifier.uid(verifiedUid);
       notifier.profile(creationResult.profile);
-      if (creationResult.created || creationResult.needsOnboarding) {
+      if (creationResult.created) {
         context.goNamed('signup_name');
       } else {
         context.goNamed('initialLoading');
