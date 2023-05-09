@@ -78,7 +78,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       }
     }
 
-    final notifier = ref.read(userProvider.notifier);
     api.authToken = await user.getIdToken();
     final uid = user.uid;
 
@@ -87,7 +86,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       await _cacheData(uid);
     } catch (e) {
       debugPrint(e.toString());
-      // TODO: Deal with onboarding
       if (mounted) {
         context.goNamed('discover');
       }
@@ -119,9 +117,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
         await latLong.when(
           value: (lat, long) async {
             updateLocation(
-              context: context,
-              profile: profile,
-              notifier: notifier,
               latitude: lat,
               longitude: long,
             );

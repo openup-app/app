@@ -38,27 +38,27 @@ String errorToMessage(ApiError error) {
   );
 }
 
-Future<Either<ApiError, void>> updateGender({
+Future<Either<ApiError, Profile>> updateGender({
   required BuildContext context,
   required WidgetRef ref,
   required Gender gender,
 }) async {
   final api = GetIt.instance.get<Api>();
   final userState = ref.read(userProvider);
-  final newProfile = userState.profile!.copyWith(gender: gender);
-  final result = await api.updateProfile(userState.uid, newProfile);
-
-  if (result.isRight()) {
-    ref.read(userProvider.notifier).profile(newProfile);
-  }
-
-  return result;
+  final result = await api.updateProfile(
+    userState.uid,
+    userState.profile!.copyWith(gender: gender),
+  );
+  return result.fold(
+    (l) => result,
+    (r) {
+      ref.read(userProvider.notifier).profile(r);
+      return result;
+    },
+  );
 }
 
-Future<Either<ApiError, String>> updateLocation({
-  required BuildContext context,
-  required Profile profile,
-  required UserStateNotifier notifier,
+Future<Either<ApiError, void>> updateLocation({
   required double latitude,
   required double longitude,
 }) async {
@@ -71,38 +71,33 @@ Future<Either<ApiError, void>> updateProfileCollection({
   required Collection collection,
 }) async {
   final api = GetIt.instance.get<Api>();
-  final userState = ref.read(userProvider);
-  final newProfile = userState.profile!.copyWith(collection: collection);
   final result = await api.updateProfileCollection(
     collectionId: collection.collectionId,
     uid: ref.read(userProvider).uid,
   );
-
-  if (result.isRight()) {
-    ref.read(userProvider.notifier).profile(newProfile);
-  }
-
-  return result;
+  return result.fold(
+    (l) => result,
+    (r) {
+      ref.read(userProvider.notifier).profile(r);
+      return result;
+    },
+  );
 }
 
 Future<Either<ApiError, void>> updateAudio({
-  required BuildContext context,
   required WidgetRef ref,
   required Uint8List bytes,
 }) async {
   final api = GetIt.instance.get<Api>();
   final userState = ref.read(userProvider);
   final result = await api.updateProfileAudio(userState.uid, bytes);
-
-  result.fold(
-    (l) {},
-    (url) {
-      final profile = userState.profile!.copyWith(audio: url);
-      ref.read(userProvider.notifier).profile(profile);
+  return result.fold(
+    (l) => result,
+    (r) {
+      ref.read(userProvider.notifier).profile(r);
+      return result;
     },
   );
-
-  return result;
 }
 
 Future<Either<ApiError, Collection>> uploadCollection({

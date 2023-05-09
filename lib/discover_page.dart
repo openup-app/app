@@ -14,7 +14,6 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/button.dart';
@@ -46,7 +45,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   Gender? _genderPreference;
   bool _pageActive = false;
 
-  CancelableOperation<Either<ApiError, DiscoverResults>>? _discoverOperation;
+  CancelableOperation<Either<ApiError, DiscoverResultsPage>>?
+      _discoverOperation;
   final _profiles = <Profile>[];
   double _nextMinRadius = 0.0;
   int _nextPage = 0;
@@ -179,12 +179,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
     final location = await _getLocation();
     if (location != null && mounted) {
-      final profile = ref.read(userProvider).profile;
-      final notifier = ref.read(userProvider.notifier);
       await updateLocation(
-        context: context,
-        profile: profile!,
-        notifier: notifier,
         latitude: location.latitude,
         longitude: location.longitude,
       );

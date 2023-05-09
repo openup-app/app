@@ -723,10 +723,14 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
                                     );
                                     if (result == true) {
                                       final api = GetIt.instance.get<Api>();
-                                      setState(() => _loading = true);
-                                      await api.unblockUser(user.uid);
+                                      final result =
+                                          await api.unblockUser(user.uid);
                                       if (mounted) {
-                                        _getBlockedUsers();
+                                        result.fold(
+                                          (l) => displayError(context, l),
+                                          (r) =>
+                                              setState(() => _blockedUsers = r),
+                                        );
                                       }
                                     }
                                   },

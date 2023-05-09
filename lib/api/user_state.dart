@@ -80,24 +80,23 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     );
   }
 
-  Future<Either<ApiError, void>> updateName(String name) async {
+  Future<Either<ApiError, Profile>> updateName(String name) async {
     return state.map(
       guest: (_) =>
           Future.value(const Left(ApiError.client(ClientErrorUnauthorized()))),
       signedIn: (signedIn) async {
         if (name.isEmpty || name == signedIn.profile.name) {
-          return const Right(null);
+          return Right(signedIn.profile);
         }
         final api = GetIt.instance.get<Api>();
-        final newProfile = signedIn.profile.copyWith(name: name);
         final result = await api.updateProfile(
           signedIn.profile.uid,
-          newProfile,
+          signedIn.profile.copyWith(name: name),
         );
-        return result.fold<Either<ApiError, void>>(
+        return result.fold(
           (l) => Left(l),
           (r) {
-            state = signedIn.copyWith(profile: newProfile);
+            state = signedIn.copyWith(profile: r);
             return Right(r);
           },
         );

@@ -329,8 +329,13 @@ class _RecordOrUploadState extends State<_RecordOrUpload> {
         builder: (context) {
           switch (_audioBioState) {
             case _AudioBioState.creating:
-              return RecordPanelContents(
-                onSubmit: _submit,
+              return Consumer(
+                builder: (context, ref, _) {
+                  return RecordPanelContents(
+                    onSubmit: (audio, duration) =>
+                        _submit(audio, duration, ref),
+                  );
+                },
               );
             case _AudioBioState.uploading:
               return const Center(
@@ -360,7 +365,7 @@ class _RecordOrUploadState extends State<_RecordOrUpload> {
     );
   }
 
-  void _submit(Uint8List audio, Duration duration) async {
+  void _submit(Uint8List audio, Duration duration, WidgetRef ref) async {
     if (!mounted) {
       return;
     }
@@ -370,7 +375,10 @@ class _RecordOrUploadState extends State<_RecordOrUpload> {
             tempDir.path, 'audio_bio_${DateTime.now().toIso8601String()}.m4a'))
         .create();
     await file.writeAsBytes(audio);
-    final result = await _upload(file);
+    final result = await updateAudio(
+      ref: ref,
+      bytes: await file.readAsBytes(),
+    );
     if (mounted) {
       result.fold(
         (l) => displayError(context, l),
@@ -385,16 +393,6 @@ class _RecordOrUploadState extends State<_RecordOrUpload> {
       );
     }
   }
-}
-
-Future<Either<ApiError, void>> _upload(File audio) async {
-  final api = GetIt.instance.get<Api>();
-  final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid == null) {
-    return Future.value(const Left(ApiError.client(ClientErrorUnauthorized())));
-  }
-
-  return api.updateProfileAudio(uid, await audio.readAsBytes());
 }
 
 enum _AudioBioState { creating, uploading, uploaded }

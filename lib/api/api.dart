@@ -48,7 +48,7 @@ class Api {
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body);
-        return Right(AccountCreationResult.fromJson(json));
+        return Right(AccountCreationResult.fromJson(json['creationResult']));
       },
     );
   }
@@ -86,7 +86,8 @@ class Api {
         );
       },
       handleSuccess: (response) {
-        return Right(Profile.fromJson(jsonDecode(response.body)));
+        final json = jsonDecode(response.body);
+        return Right(Profile.fromJson(json['profile']));
       },
     );
   }
@@ -107,7 +108,7 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> updateProfile(String uid, Profile profile) {
+  Future<Either<ApiError, Profile>> updateProfile(String uid, Profile profile) {
     return _request(
       makeRequest: () {
         return http.put(
@@ -116,11 +117,14 @@ class Api {
           body: jsonEncode(profile.toJson()),
         );
       },
-      handleSuccess: (response) => const Right(null),
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(Profile.fromJson(json['profile']));
+      },
     );
   }
 
-  Future<Either<ApiError, String>> updateProfileAudio(
+  Future<Either<ApiError, Profile>> updateProfileAudio(
     String uid,
     Uint8List audio,
   ) {
@@ -136,13 +140,13 @@ class Api {
         );
       },
       handleSuccess: (response) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return Right(json['url']);
+        final json = jsonDecode(response.body);
+        return Right(Profile.fromJson(json['profile']));
       },
     );
   }
 
-  Future<Either<ApiError, void>> updateProfileCollection({
+  Future<Either<ApiError, Profile>> updateProfileCollection({
     required String collectionId,
     required String uid,
   }) {
@@ -153,7 +157,10 @@ class Api {
           headers: _headers,
         );
       },
-      handleSuccess: (response) => const Right(null),
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(Profile.fromJson(json['profile']));
+      },
     );
   }
 
@@ -285,9 +292,9 @@ class Api {
         );
       },
       handleSuccess: (response) {
-        final list = jsonDecode(response.body) as List<dynamic>;
-        return Right(
-            List<Chatroom>.from(list.map((e) => Chatroom.fromJson(e))));
+        final json = jsonDecode(response.body);
+        final chatrooms = json['chatrooms'] as List<dynamic>;
+        return Right(List.from(chatrooms.map((e) => Chatroom.fromJson(e))));
       },
     );
   }
@@ -300,8 +307,10 @@ class Api {
           headers: _headers,
         );
       },
-      handleSuccess: (response) =>
-          Right(Chatroom.fromJson(jsonDecode(response.body))),
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(Chatroom.fromJson(json['chatroom']));
+      },
     );
   }
 
@@ -320,9 +329,9 @@ class Api {
         );
       },
       handleSuccess: (response) {
-        final list = jsonDecode(response.body) as List<dynamic>;
-        return Right(
-            List<ChatMessage>.from(list.map((e) => ChatMessage.fromJson(e))));
+        final json = jsonDecode(response.body);
+        final messages = json['messages'] as List<dynamic>;
+        return Right(List.from(messages.map((e) => ChatMessage.fromJson(e))));
       },
     );
   }
@@ -346,13 +355,14 @@ class Api {
             return request.send();
           },
           handleSuccess: (response) {
-            return Right(ChatMessage.fromJson(jsonDecode(response.body)));
+            final json = jsonDecode(response.body);
+            return Right(ChatMessage.fromJson(json['message']));
           },
         );
     }
   }
 
-  Future<Either<ApiError, DiscoverPage>> getDiscover(
+  Future<Either<ApiError, DiscoverResultsPage>> getDiscover(
     double? latitude,
     double? longitude, {
     String? seed,
@@ -388,12 +398,13 @@ class Api {
         );
       },
       handleSuccess: (response) {
-        return Right(DiscoverPage.fromJson(jsonDecode(response.body)));
+        final json = jsonDecode(response.body);
+        return Right(DiscoverResultsPage.fromJson(json));
       },
     );
   }
 
-  Future<Either<ApiError, void>> declineInvitation(String otherUid) {
+  Future<Either<ApiError, List<Chatroom>>> declineInvitation(String otherUid) {
     return _request(
       makeRequest: () {
         return http.post(
@@ -402,7 +413,9 @@ class Api {
         );
       },
       handleSuccess: (response) {
-        return const Right(null);
+        final json = jsonDecode(response.body);
+        final chatrooms = json['chatrooms'] as List<dynamic>;
+        return Right(List.from(chatrooms.map((e) => Chatroom.fromJson(e))));
       },
     );
   }
@@ -493,9 +506,9 @@ class Api {
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final list = json['knownContactProfiles'] as List<dynamic>;
-        return Right(List<KnownContactProfile>.from(
-            list.map((e) => KnownContactProfile.fromJson(e))));
+        final contacts = json['contacts'] as List<dynamic>;
+        return Right(
+            List.from(contacts.map((e) => KnownContactProfile.fromJson(e))));
       },
     );
   }
@@ -509,14 +522,15 @@ class Api {
         );
       },
       handleSuccess: (response) {
-        final list = jsonDecode(response.body) as List<dynamic>;
-        return Right(List<SimpleProfile>.from(
-            list.map((e) => SimpleProfile.fromJson(e))));
+        final json = jsonDecode(response.body);
+        final blockedUsers = json['blockedUsers'] as List<dynamic>;
+        return Right(
+            List.from(blockedUsers.map((e) => SimpleProfile.fromJson(e))));
       },
     );
   }
 
-  Future<Either<ApiError, void>> blockUser(String blockUid) {
+  Future<Either<ApiError, List<SimpleProfile>>> blockUser(String blockUid) {
     return _request(
       makeRequest: () {
         return http.put(
@@ -524,11 +538,17 @@ class Api {
           headers: _headers,
         );
       },
-      handleSuccess: (response) => const Right(null),
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        final blockedUsers = json['blockedUsers'] as List<dynamic>;
+        ;
+        return Right(
+            List.from(blockedUsers.map((e) => SimpleProfile.fromJson(e))));
+      },
     );
   }
 
-  Future<Either<ApiError, void>> unblockUser(String unblockUid) {
+  Future<Either<ApiError, List<SimpleProfile>>> unblockUser(String unblockUid) {
     return _request(
       makeRequest: () {
         return http.delete(
@@ -536,11 +556,16 @@ class Api {
           headers: _headers,
         );
       },
-      handleSuccess: (response) => const Right(null),
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        final blockedUsers = json['blockedUsers'] as List<dynamic>;
+        return Right(
+            List.from(blockedUsers.map((e) => SimpleProfile.fromJson(e))));
+      },
     );
   }
 
-  Future<Either<ApiError, String>> updateLocation(
+  Future<Either<ApiError, void>> updateLocation(
       double latitude, double longitude) {
     return _request(
       makeRequest: () {
@@ -553,10 +578,7 @@ class Api {
           }),
         );
       },
-      handleSuccess: (response) {
-        final json = jsonDecode(response.body);
-        return Right(json['locationName'] ?? '');
-      },
+      handleSuccess: (response) => const Right(null),
     );
   }
 
@@ -775,15 +797,15 @@ class KnownContactProfile with _$KnownContactProfile {
 }
 
 @freezed
-class DiscoverPage with _$DiscoverPage {
-  const factory DiscoverPage({
+class DiscoverResultsPage with _$DiscoverResultsPage {
+  const factory DiscoverResultsPage({
     required List<DiscoverProfile> profiles,
     required double nextMinRadius,
     required int nextPage,
-  }) = _DiscoverPage;
+  }) = _DiscoverResultsPage;
 
-  factory DiscoverPage.fromJson(Map<String, dynamic> json) =>
-      _$DiscoverPageFromJson(json);
+  factory DiscoverResultsPage.fromJson(Map<String, dynamic> json) =>
+      _$DiscoverResultsPageFromJson(json);
 }
 
 @freezed
