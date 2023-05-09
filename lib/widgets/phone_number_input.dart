@@ -51,7 +51,7 @@ class _PhoneInputState extends State<PhoneInput> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (!kDebugMode) ...[
+        if (!kReleaseMode) ...[
           Container(
             width: 60,
             height: 48,
