@@ -116,16 +116,12 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
       guest: (_) =>
           Future.value(const Left(ApiError.client(ClientErrorUnauthorized()))),
       signedIn: (signedIn) async {
-        final result = await Future.delayed(const Duration(seconds: 1))
-            .then((value) => const Right(null));
+        final api = GetIt.instance.get<Api>();
+        final result = await api.deleteChatroom(uid);
         return result.fold<Either<ApiError, void>>(
           (l) => Left(l),
           (r) {
-            final chatrooms = signedIn.collections == null
-                ? null
-                : List.of(signedIn.chatrooms!);
-            chatrooms?.removeWhere((c) => c.profile.uid == uid);
-            state = signedIn.copyWith(chatrooms: chatrooms);
+            state = signedIn.copyWith(chatrooms: r);
             return const Right(null);
           },
         );
