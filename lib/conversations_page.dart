@@ -245,7 +245,7 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
 
                         final nonPendingChatrooms = filteredChatrooms
                             ?.where((chatroom) =>
-                                chatroom.state != ChatroomState.pending)
+                                chatroom.inviteState != ChatroomState.pending)
                             .toList();
                         return _ConversationList(
                           chatrooms: nonPendingChatrooms,
@@ -461,7 +461,7 @@ class _ConversationList extends StatelessWidget {
                                                   0x70, 0x70, 0x70, 1.0)),
                                     ),
                                     const SizedBox(height: 2),
-                                    if (chatroom.state !=
+                                    if (chatroom.inviteState !=
                                         ChatroomState.accepted)
                                       Text(
                                         'New chat invitation',

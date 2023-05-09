@@ -853,7 +853,7 @@ class Chatroom with _$Chatroom {
   const factory Chatroom({
     required Profile profile,
     @_DateTimeConverter() required DateTime lastUpdated,
-    required ChatroomState state,
+    required ChatroomState inviteState,
     required int unreadCount,
   }) = _Chatroom;
 
@@ -871,4 +871,4 @@ class _DateTimeConverter implements JsonConverter<DateTime, String> {
   String toJson(DateTime dateTime) => dateTime.toIso8601String();
 }
 
-enum ChatroomState { invitation, pending, accepted }
+enum ChatroomState { invited, pending, accepted }

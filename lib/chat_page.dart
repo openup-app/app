@@ -134,7 +134,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                 bottomButtonHeight +
                 MediaQuery.of(context).padding.bottom);
         return ColoredBox(
-          color: chatroom?.state == ChatroomState.invitation
+          color: chatroom?.inviteState == ChatroomState.invited
               ? Colors.black
               : Colors.white,
           child: Column(
@@ -519,8 +519,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     result.fold(
       (l) => displayError(context, l),
       (r) => setState(() {
-        if (_chatroom?.state == ChatroomState.invitation) {
-          _chatroom = _chatroom?.copyWith(state: ChatroomState.accepted);
+        if (_chatroom?.inviteState == ChatroomState.invited) {
+          _chatroom = _chatroom?.copyWith(inviteState: ChatroomState.accepted);
         }
         _messages![pendingId] = r;
       }),
@@ -897,7 +897,7 @@ class _AcceptRejectBanner extends StatelessWidget {
         Positioned.fill(
           child: child,
         ),
-        if (chatroom.state == ChatroomState.invitation)
+        if (chatroom.inviteState == ChatroomState.invited)
           Positioned(
             left: 16,
             top: 16,
