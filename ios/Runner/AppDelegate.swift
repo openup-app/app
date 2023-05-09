@@ -6,6 +6,7 @@ import flutter_voip_push_notification
 import PushKit
 import CallKit
 import AVFAudio
+import GoogleMaps
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate, PKPushRegistryDelegate, FlutterStreamHandler {
@@ -16,6 +17,7 @@ import AVFAudio
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    GMSServices.provideAPIKey("AIzaSyBgwJH4Tz0zMjPJLU5F9n4k2iuneDN1OmM");
     GeneratedPluginRegistrant.register(with: self)
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate

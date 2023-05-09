@@ -10,6 +10,7 @@ import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -44,6 +45,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _errorLoadingProfiles = false;
   Gender? _genderPreference;
   bool _pageActive = false;
+  bool _showingList = true;
+  GoogleMapController? _googleMapController;
+  _LatLong? _location;
 
   CancelableOperation<Either<ApiError, DiscoverResultsPage>>?
       _discoverOperation;
@@ -110,6 +114,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   void dispose() {
     super.dispose();
     _pageController.dispose();
+    _googleMapController?.dispose();
   }
 
   Future<void> _maybeRequestNotification() async {
@@ -179,6 +184,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
     final location = await _getLocation();
     if (location != null && mounted) {
+      setState(() => _location = location);
       await updateLocation(
         latitude: location.latitude,
         longitude: location.longitude,
@@ -334,58 +340,75 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     // invited: _invitedUsers.contains(profile.uid),
                     play: index == _currentProfileIndex && _pageActive,
                     builder: (context, play, playbackInfoStream) {
-                      return PageView.builder(
-                        controller: _pageController,
-                        itemCount: _profiles.length,
-                        itemBuilder: (context, index) {
-                          final profile = _profiles[index];
-                          return ClipRRect(
-                            clipBehavior: Clip.hardEdge,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(32),
-                              topRight: Radius.circular(32),
-                            ),
-                            child: Container(
-                              margin: EdgeInsets.only(
-                                left: 16,
-                                right: 16,
-                                top: 24 + MediaQuery.of(context).padding.top,
-                                bottom:
-                                    16 + MediaQuery.of(context).padding.bottom,
-                              ),
+                      if (_showingList) {
+                        return PageView.builder(
+                          controller: _pageController,
+                          itemCount: _profiles.length,
+                          itemBuilder: (context, index) {
+                            final profile = _profiles[index];
+                            return ClipRRect(
                               clipBehavior: Clip.hardEdge,
-                              decoration: const BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(48)),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(32),
+                                topRight: Radius.circular(32),
                               ),
-                              child: _ProfileDisplay(
-                                profile: profile,
-                                play: play,
-                                onPlayPause: () {
-                                  if (!play) {
-                                    _userProfileInfoDisplayKey.currentState
-                                        ?.play();
-                                  } else {
-                                    _userProfileInfoDisplayKey.currentState
-                                        ?.pause();
-                                  }
-                                },
-                                onRecord: () {
-                                  if (FirebaseAuth.instance.currentUser ==
-                                      null) {
-                                    _showSignInDialog();
-                                  } else {
-                                    _showRecordPanel(context, profile.uid);
-                                  }
-                                },
-                                onBlock: () => setState(() =>
-                                    _profiles.removeWhere(
-                                        ((p) => p.uid == profile.uid))),
+                              child: Container(
+                                margin: EdgeInsets.only(
+                                  left: 16,
+                                  right: 16,
+                                  top: 24 + MediaQuery.of(context).padding.top,
+                                  bottom: 16 +
+                                      MediaQuery.of(context).padding.bottom,
+                                ),
+                                clipBehavior: Clip.hardEdge,
+                                decoration: const BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(48)),
+                                ),
+                                child: _ProfileDisplay(
+                                  profile: profile,
+                                  play: play,
+                                  onPlayPause: () {
+                                    if (!play) {
+                                      _userProfileInfoDisplayKey.currentState
+                                          ?.play();
+                                    } else {
+                                      _userProfileInfoDisplayKey.currentState
+                                          ?.pause();
+                                    }
+                                  },
+                                  onRecord: () {
+                                    if (FirebaseAuth.instance.currentUser ==
+                                        null) {
+                                      _showSignInDialog();
+                                    } else {
+                                      _showRecordPanel(context, profile.uid);
+                                    }
+                                  },
+                                  onBlock: () => setState(() =>
+                                      _profiles.removeWhere(
+                                          ((p) => p.uid == profile.uid))),
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      );
+                            );
+                          },
+                        );
+                      } else {
+                        final latLong = _location == null
+                            ? const LatLng(37.42796133580664, -122.085749655962)
+                            : LatLng(_location!.latitude, _location!.longitude);
+                        final CameraPosition pos = CameraPosition(
+                          target: latLong,
+                          zoom: 14.4746,
+                        );
+                        return GoogleMap(
+                          mapType: MapType.hybrid,
+                          initialCameraPosition: pos,
+                          onMapCreated: (GoogleMapController controller) {
+                            setState(() => _googleMapController = controller);
+                          },
+                        );
+                      }
                     },
                   ),
                   Positioned(
@@ -394,6 +417,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     child: _PageControls(
                       profile: profile,
                       preference: _genderPreference,
+                      showingList: _showingList,
                       onPreference: (gender) {
                         if (gender == _genderPreference) {
                           return;
@@ -406,6 +430,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                           _profiles.clear();
                         });
                         _fetchPageOfProfiles();
+                      },
+                      onMap: () {
+                        setState(() => _showingList = !_showingList);
                       },
                     ),
                   ),
@@ -702,23 +729,29 @@ class _RecordButton extends StatelessWidget {
 class _PageControls extends StatelessWidget {
   final Profile? profile;
   final Gender? preference;
+  final bool showingList;
   final void Function(Gender? preference) onPreference;
+  final VoidCallback onMap;
 
   const _PageControls({
     super.key,
     required this.profile,
     required this.preference,
+    required this.showingList,
     required this.onPreference,
+    required this.onMap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Button(
           onPressed: () => _showPreferencesSheet(context),
           child: Container(
+            width: 96,
             height: 35,
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -734,6 +767,7 @@ class _PageControls extends StatelessWidget {
               ],
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
                   'assets/images/preferences_icon.png',
@@ -744,6 +778,49 @@ class _PageControls extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'Filters',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Button(
+          onPressed: onMap,
+          child: Container(
+            width: 96,
+            height: 35,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(32)),
+              boxShadow: [
+                BoxShadow(
+                  offset: Offset(0, 2),
+                  blurRadius: 4,
+                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                showingList
+                    ? const Icon(
+                        Icons.map,
+                        color: Colors.black,
+                      )
+                    : const Icon(
+                        Icons.list,
+                        color: Colors.black,
+                      ),
+                const SizedBox(width: 8),
+                Text(
+                  showingList ? 'Map' : 'List',
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium!
