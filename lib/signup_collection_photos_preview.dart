@@ -2,20 +2,20 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/signup_collection_audio.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 
-class SignupCollectionPhotosPreview extends StatelessWidget {
-  final List<File> photos;
+class SignupCollectionPhotosPreview extends ConsumerWidget {
   const SignupCollectionPhotosPreview({
     super.key,
-    required this.photos,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final photos = ref.watch(accountCreationParamsProvider).photos ?? [];
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -24,7 +24,7 @@ class SignupCollectionPhotosPreview extends StatelessWidget {
             itemCount: photos.length,
             itemBuilder: (context, index) {
               return Image.file(
-                photos[index],
+                File(photos[index]),
                 fit: BoxFit.cover,
               );
             },
@@ -59,25 +59,25 @@ class SignupCollectionPhotosPreview extends StatelessWidget {
                         ),
                         Align(
                           alignment: Alignment.centerRight,
-                          child: Button(
-                            onPressed: () {
-                              context.pushNamed(
-                                'signup_collection_audio',
-                                extra: SignupCollectionAudioArgs(photos),
+                          child: Consumer(
+                            builder: (context, ref, child) {
+                              return Button(
+                                onPressed: () =>
+                                    context.pushNamed('signup_audio'),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'next',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w400),
+                                  ),
+                                ),
                               );
                             },
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                'next',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .copyWith(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w400),
-                              ),
-                            ),
                           ),
                         ),
                       ],

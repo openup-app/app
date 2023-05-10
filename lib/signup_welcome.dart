@@ -1,27 +1,19 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/policies.dart';
 import 'package:openup/widgets/signup_background.dart';
 
-class SignUpAge extends ConsumerStatefulWidget {
-  const SignUpAge({Key? key}) : super(key: key);
+class SignupWelcome extends ConsumerStatefulWidget {
+  const SignupWelcome({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<SignUpAge> createState() => _SignUpScreenState();
+  ConsumerState<SignupWelcome> createState() => _SignUpWelcomeScreenState();
 }
 
-class _SignUpScreenState extends ConsumerState<SignUpAge> {
-  static const _minAge = 13;
-  static const _maxAge = 99;
-  int _age = _minAge;
-
+class _SignUpWelcomeScreenState extends ConsumerState<SignupWelcome> {
   @override
   Widget build(BuildContext context) {
     return SignupBackground(
@@ -70,66 +62,10 @@ class _SignUpScreenState extends ConsumerState<SignUpAge> {
               ),
             ),
             const Spacer(),
-            Text(
-              'Enter your age',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 20, fontWeight: FontWeight.w300),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: 100,
-              height: 200,
-              child: Stack(
-                children: [
-                  // Underlay for CupertinoPicker
-                  const Center(
-                    child: SizedBox(
-                      width: 71,
-                      height: 40,
-                      child: RoundedRectangleContainer(
-                        child: SizedBox.shrink(),
-                      ),
-                    ),
-                  ),
-                  CupertinoPicker(
-                    itemExtent: 40,
-                    onSelectedItemChanged: (index) {
-                      setState(() => _age = _minAge + index);
-                    },
-                    selectionOverlay: const SizedBox.shrink(),
-                    children: [
-                      for (var age = _minAge; age <= _maxAge; age++)
-                        Center(
-                          child: Text(
-                            age.toString(),
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
             Button(
-              onPressed: _age < 18
-                  ? null
-                  : () {
-                      GetIt.instance.get<Mixpanel>().track(
-                        "sign_up_submit_age",
-                        properties: {'age': _age},
-                      );
-                      context.pushNamed('signup_permissions');
-                    },
+              onPressed: () {
+                context.pushNamed('signup_phone');
+              },
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(

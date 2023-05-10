@@ -6,14 +6,14 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 
-class SignUpTutorial extends StatefulWidget {
-  const SignUpTutorial({super.key});
+class SignupTutorial extends StatefulWidget {
+  const SignupTutorial({super.key});
 
   @override
-  State<SignUpTutorial> createState() => _SignUpTutorialState();
+  State<SignupTutorial> createState() => _SignupTutorialState();
 }
 
-class _SignUpTutorialState extends State<SignUpTutorial> {
+class _SignupTutorialState extends State<SignupTutorial> {
   int _step = 0;
 
   static const _duration = Duration(milliseconds: 300);

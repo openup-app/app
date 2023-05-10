@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -13,32 +14,29 @@ import 'package:openup/widgets/common.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
-class SignupCollectionAudio extends ConsumerStatefulWidget {
-  final List<File> photos;
-  const SignupCollectionAudio({
+class SignupAudio extends ConsumerStatefulWidget {
+  const SignupAudio({
     super.key,
-    required this.photos,
   });
 
   @override
-  ConsumerState<SignupCollectionAudio> createState() =>
-      _SignupCollectionAudioState();
+  ConsumerState<SignupAudio> createState() => _SignupAudioState();
 }
 
-class _SignupCollectionAudioState extends ConsumerState<SignupCollectionAudio> {
+class _SignupAudioState extends ConsumerState<SignupAudio> {
   File? _audio;
-  bool _uploaded = false;
 
   @override
   Widget build(BuildContext context) {
+    final photos = ref.watch(accountCreationParamsProvider).photos ?? [];
     return Scaffold(
       body: Stack(
         children: [
           PageView.builder(
-            itemCount: widget.photos.length,
+            itemCount: photos.length,
             itemBuilder: (context, index) {
               return Image.file(
-                widget.photos[index],
+                File(photos[index]),
                 fit: BoxFit.cover,
               );
             },
@@ -76,9 +74,13 @@ class _SignupCollectionAudioState extends ConsumerState<SignupCollectionAudio> {
                           child: Button(
                             onPressed: _audio == null
                                 ? null
-                                : (_uploaded
-                                    ? () => context.pushNamed('signup_friends')
-                                    : () => _uploadCollection(context)),
+                                : () {
+                                    _signup(
+                                      context: context,
+                                      params: ref
+                                          .read(accountCreationParamsProvider),
+                                    );
+                                  },
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
@@ -105,22 +107,25 @@ class _SignupCollectionAudioState extends ConsumerState<SignupCollectionAudio> {
               onPressed: () async {
                 final result = await _showRecordPanel(context);
                 if (result != null) {
+                  ref
+                      .read(accountCreationParamsProvider.notifier)
+                      .audio(result.path);
                   setState(() => _audio = result);
                 }
               },
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(
+                    vertical: 16.0, horizontal: 20.0),
                 decoration: const BoxDecoration(
                   color: Color.fromRGBO(0x80, 0x0B, 0x06, 1.0),
                   borderRadius: BorderRadius.all(Radius.circular(6)),
                 ),
                 child: Text(
                   'Record',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white),
                 ),
               ),
             ),
@@ -154,15 +159,14 @@ class _SignupCollectionAudioState extends ConsumerState<SignupCollectionAudio> {
     return file;
   }
 
-  void _uploadCollection(BuildContext context) async {
+  void _signup({
+    required BuildContext context,
+    required AccountCreationParams params,
+  }) async {
     final result = await withBlockingModal(
       context: context,
-      label: 'Uploading...',
-      future: uploadCollection(
-        photos: widget.photos,
-        audio: _audio,
-        useAsProfile: true,
-      ),
+      label: 'Creating account...',
+      future: createAccount(params),
     );
     if (!mounted) {
       return;
@@ -174,29 +178,11 @@ class _SignupCollectionAudioState extends ConsumerState<SignupCollectionAudio> {
         if (!mounted) {
           return;
         }
-        result.fold(
-          (l) => displayError(context, l),
-          (r) {
-            // Incase the user navigates back to this page
-            setState(() => _uploaded = true);
 
-            final profile = ref.read(userProvider).profile;
-            if (profile != null) {
-              ref
-                  .read(userProvider.notifier)
-                  .profile(profile.copyWith(collection: r));
-            }
-
-            context.pushNamed('signup_friends');
-          },
-        );
+        ref.read(userProvider.notifier).profile(r);
+        ref.read(userProvider2.notifier).signedIn(r);
+        context.goNamed('signup_friends');
       },
     );
   }
-}
-
-class SignupCollectionAudioArgs {
-  final List<File> photos;
-
-  const SignupCollectionAudioArgs(this.photos);
 }

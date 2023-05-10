@@ -41,7 +41,7 @@ class LocationService {
       if (latitude == null || longitude == null) {
         return const _LatLongFailure();
       }
-      return _LatLongValue(latitude, longitude);
+      return LatLongValue(latitude, longitude);
     } catch (e) {
       debugPrint(e.toString());
       return const _LatLongFailure();
@@ -51,8 +51,7 @@ class LocationService {
 
 @freezed
 class LatLong with _$LatLong {
-  const factory LatLong.value(double latitude, double longitude) =
-      _LatLongValue;
+  const factory LatLong.value(double latitude, double longitude) = LatLongValue;
 
   const factory LatLong.denied() = _LatLongDenied;
 

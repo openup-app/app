@@ -38,17 +38,61 @@ class Api {
     _headers['Authorization'] = 'Bearer $value';
   }
 
-  Future<Either<ApiError, AccountCreationResult>> createAccount() {
+  Future<Either<ApiError, Profile>> createAccount(
+    AccountCreationParams params,
+  ) {
+    final photos = params.photos;
+    final audio = params.audio;
+    final name = params.name;
+    final age = params.age;
+    final gender = params.gender;
+    final location = params.location;
+    if (photos == null ||
+        audio == null ||
+        name == null ||
+        age == null ||
+        gender == null ||
+        location == null) {
+      return Future.value(const Left(ApiError.client(ClientErrorBadRequest())));
+    }
+    return _requestStreamedResponseAsFuture(
+      makeRequest: () async {
+        final uri = Uri.parse('$_urlBase/account');
+        final request = http.MultipartRequest('POST', uri);
+        request.headers.addAll(_headers);
+        request.files.addAll([
+          for (final photo in photos)
+            await http.MultipartFile.fromPath('photos', photo),
+          await http.MultipartFile.fromPath('audio', audio),
+        ]);
+        request.fields.addAll({
+          'account': jsonEncode({
+            'name': name,
+            'age': age,
+            'gender': gender.name,
+            'location': location,
+          }),
+        });
+        return request.send();
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(Profile.fromJson(json['profile']));
+      },
+    );
+  }
+
+  Future<Either<ApiError, Profile>> getAccount() {
     return _request(
       makeRequest: () {
-        return http.post(
+        return http.get(
           Uri.parse('$_urlBase/account'),
           headers: _headers,
         );
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body);
-        return Right(AccountCreationResult.fromJson(json['creationResult']));
+        return Right(Profile.fromJson(json['profile']));
       },
     );
   }
@@ -438,8 +482,7 @@ class Api {
   }
 
   Future<Either<ApiError, Collection>> createCollection(
-    List<String> photos,
-    String? audio, {
+    List<String> photos, {
     bool useAsProfile = false,
   }) {
     return _requestStreamedResponseAsFuture(
@@ -451,7 +494,6 @@ class Api {
         request.files.addAll([
           for (final photo in photos)
             await http.MultipartFile.fromPath('photos', photo),
-          if (audio != null) await http.MultipartFile.fromPath('audio', audio),
         ]);
         return request.send();
       },
@@ -637,9 +679,16 @@ class Api {
     // FirebaseAuth.instance.idTokenChanges does not seem to fire without calling User.getIdToken() first
     // TODO: Can we be notified of an expired token without using it first?
     //  this class should not be tied to Firebase
-    final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
-    if (idToken != null) {
-      authToken = idToken;
+    // TODO: Unify all id token fetches
+    try {
+      final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+      if (idToken != null) {
+        authToken = idToken;
+      }
+    } on FirebaseException catch (e) {
+      if (e.code == 'no-current-user') {
+        // Ignore
+      }
     }
 
     return _staticRequest<T>(
@@ -727,14 +776,26 @@ class ServerError with _$ServerError {
 }
 
 @freezed
-class AccountCreationResult with _$AccountCreationResult {
-  const factory AccountCreationResult({
-    required bool created,
-    required Profile profile,
-  }) = _AccountCreationResult;
+class AccountCreationParams with _$AccountCreationParams {
+  const factory AccountCreationParams({
+    @Default(null) String? name,
+    @Default(null) int? age,
+    @Default(null) Gender? gender,
+    @Default(null) List<String>? photos,
+    @Default(null) String? audio,
+    @Default(null) AccountCreationLocation? location,
+  }) = _AccountCreationParams;
+}
 
-  factory AccountCreationResult.fromJson(Map<String, dynamic> json) =>
-      _$AccountCreationResultFromJson(json);
+@freezed
+class AccountCreationLocation with _$AccountCreationLocation {
+  const factory AccountCreationLocation({
+    required double latitude,
+    required double longitude,
+  }) = _AccountCreationLocation;
+
+  factory AccountCreationLocation.fromJson(Map<String, dynamic> json) =>
+      _$AccountCreationLocationFromJson(json);
 }
 
 @freezed

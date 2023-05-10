@@ -3,23 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
-import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 
-class SignUpName extends ConsumerStatefulWidget {
-  const SignUpName({
-    Key? key,
-  }) : super(key: key);
+class SignupName extends ConsumerStatefulWidget {
+  const SignupName({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<SignUpName> createState() => _SignUpNameState();
+  ConsumerState<SignupName> createState() => _SignUpNameState();
 }
 
-class _SignUpNameState extends ConsumerState<SignUpName> {
+class _SignUpNameState extends ConsumerState<SignupName> {
   final _nameController = TextEditingController();
-  bool _uploading = false;
 
   // Using valid flag rather than using Form validation due to there being no
   // way align error text properly, so we don't even display error text. See:
@@ -31,7 +27,7 @@ class _SignUpNameState extends ConsumerState<SignUpName> {
   @override
   void initState() {
     super.initState();
-    final name = ref.read(userProvider).profile?.name ?? '';
+    final name = ref.read(accountCreationParamsProvider).name ?? '';
     _nameController.text = name;
     _valid = _nameValidator(name) == null;
   }
@@ -98,24 +94,19 @@ class _SignUpNameState extends ConsumerState<SignUpName> {
               ),
             const Spacer(),
             Button(
-              onPressed: _uploading || !_valid ? null : _submit,
+              onPressed: !_valid ? null : _submit,
               child: RoundedRectangleContainer(
                 child: SizedBox(
                   width: 171,
                   child: Center(
-                    child: _uploading
-                        ? const LoadingIndicator(size: 27)
-                        : Text(
-                            'Next',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white),
-                          ),
+                    child: Text(
+                      'Next',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w300,
+                          color: Colors.white),
+                    ),
                   ),
                 ),
               ),
@@ -149,23 +140,10 @@ class _SignUpNameState extends ConsumerState<SignUpName> {
       return;
     }
 
-    setState(() => _uploading = true);
-
-    final result = await ref.read(userProvider2.notifier).updateName(newName);
-    if (!mounted) {
-      return;
-    }
-
-    result.fold(
-      (l) => displayError(context, l),
-      (r) {
-        GetIt.instance.get<Mixpanel>()
-          ..track("sign_up_submit_name")
-          ..getPeople().set('name', newName);
-        context.pushNamed('signup_gender');
-      },
-    );
-
-    setState(() => _uploading = false);
+    GetIt.instance.get<Mixpanel>()
+      ..track("sign_up_submit_name")
+      ..getPeople().set('name', newName);
+    ref.read(accountCreationParamsProvider.notifier).name(newName);
+    context.pushNamed('signup_gender');
   }
 }

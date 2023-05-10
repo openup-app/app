@@ -302,6 +302,11 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
   Future<void> _deleteAccount() async {
     GetIt.instance.get<Mixpanel>().track("delete_account");
+    ref.read(userProvider.notifier)
+      ..uid('')
+      ..profile(null)
+      ..collections([]);
+    ref.read(userProvider2.notifier).guest();
     await dismissAllNotifications();
     GetIt.instance.get<Api>().deleteAccount();
     await FirebaseAuth.instance.signOut();

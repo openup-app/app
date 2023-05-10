@@ -4,22 +4,21 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 
-class SignUpGender extends ConsumerStatefulWidget {
-  const SignUpGender({
+class SignupGender extends ConsumerStatefulWidget {
+  const SignupGender({
     Key? key,
   }) : super(key: key);
 
   @override
-  ConsumerState<SignUpGender> createState() => _SignUpGenderState();
+  ConsumerState<SignupGender> createState() => _SignUpGenderState();
 }
 
-class _SignUpGenderState extends ConsumerState<SignUpGender> {
-  bool _uploading = false;
+class _SignUpGenderState extends ConsumerState<SignupGender> {
   Gender? _gender;
 
   @override
@@ -82,24 +81,19 @@ class _SignUpGenderState extends ConsumerState<SignUpGender> {
             ),
             const Spacer(),
             Button(
-              onPressed: _uploading || _gender == null ? null : _submit,
+              onPressed: _gender == null ? null : _submit,
               child: RoundedRectangleContainer(
                 child: SizedBox(
                   width: 171,
                   child: Center(
-                    child: _uploading
-                        ? const LoadingIndicator(size: 27)
-                        : Text(
-                            'Next',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white),
-                          ),
+                    child: Text(
+                      'Next',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w300,
+                          color: Colors.white),
+                    ),
                   ),
                 ),
               ),
@@ -119,32 +113,15 @@ class _SignUpGenderState extends ConsumerState<SignUpGender> {
     if (gender == null) {
       return;
     }
-    setState(() => _uploading = true);
-
-    final result = await updateGender(
-      context: context,
-      ref: ref,
-      gender: gender,
-    );
-
-    if (!mounted) {
-      return;
-    }
 
     precacheImage(
         const AssetImage('assets/images/tutorial_photo.jpg'), context);
 
-    result.fold(
-      (l) => displayError(context, l),
-      (r) {
-        GetIt.instance.get<Mixpanel>()
-          ..track("sign_up_submit_gender")
-          ..getPeople().set('gender', gender.name);
-        context.pushNamed('signup_tutorial');
-      },
-    );
-
-    setState(() => _uploading = false);
+    GetIt.instance.get<Mixpanel>()
+      ..track("sign_up_submit_gender")
+      ..getPeople().set('gender', gender.name);
+    ref.read(accountCreationParamsProvider.notifier).gender(gender);
+    context.pushNamed('signup_tutorial');
   }
 }
 

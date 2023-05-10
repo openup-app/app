@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -15,18 +16,18 @@ import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/phone_number_input.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-class SignUpPhone extends ConsumerStatefulWidget {
+class SignupPhone extends ConsumerStatefulWidget {
   final String? verifiedUid;
-  const SignUpPhone({
+  const SignupPhone({
     Key? key,
     this.verifiedUid,
   }) : super(key: key);
 
   @override
-  ConsumerState<SignUpPhone> createState() => _SignUpPhoneState();
+  ConsumerState<SignupPhone> createState() => _SignUpPhoneState();
 }
 
-class _SignUpPhoneState extends ConsumerState<SignUpPhone> {
+class _SignUpPhoneState extends ConsumerState<SignupPhone> {
   String? _phoneErrorText;
   String? _phoneNumber;
   bool _valid = false;
@@ -41,7 +42,7 @@ class _SignUpPhoneState extends ConsumerState<SignUpPhone> {
   }
 
   @override
-  void didUpdateWidget(covariant SignUpPhone oldWidget) {
+  void didUpdateWidget(covariant SignupPhone oldWidget) {
     super.didUpdateWidget(oldWidget);
     _handleVerification();
   }
@@ -50,24 +51,54 @@ class _SignUpPhoneState extends ConsumerState<SignUpPhone> {
     final verifiedUid = widget.verifiedUid;
     if (verifiedUid != null && !_submitting) {
       setState(() => _submitting = true);
-      final creationResult = await _createAccount(verifiedUid);
+      final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+      if (token == null) {
+        // TODO: Retry getting id token
+        return null;
+      }
+      final api = GetIt.instance.get<Api>();
+      api.authToken = token;
+
+      final result = await getAccount();
       if (!mounted) {
         return;
       }
+      setState(() => _submitting = false);
 
-      if (creationResult == null) {
-        setState(() => _submitting = false);
-        return;
-      }
-
-      final notifier = ref.read(userProvider.notifier);
-      notifier.uid(verifiedUid);
-      notifier.profile(creationResult.profile);
-      if (creationResult.created) {
-        context.goNamed('signup_name');
-      } else {
-        context.goNamed('initialLoading');
-      }
+      result.when(
+        logIn: (profile) {
+          final notifier = ref.read(userProvider.notifier);
+          notifier.uid(verifiedUid);
+          notifier.profile(profile);
+          ref.read(userProvider2.notifier).signedIn(profile);
+          context.goNamed('initialLoading');
+        },
+        signUp: () {
+          final notifier = ref.read(userProvider.notifier);
+          notifier.uid(verifiedUid);
+          // TODO: Use real age, hook up location more robustly
+          ref.read(accountCreationParamsProvider.notifier).age(30);
+          final locationValue = ref.read(locationProvider);
+          AccountCreationLocation location;
+          if (locationValue != null) {
+            location = AccountCreationLocation(
+              latitude: locationValue.latitude,
+              longitude: locationValue.longitude,
+            );
+          } else {
+            const tempAustinLocation = AccountCreationLocation(
+              latitude: 30.3119,
+              longitude: -97.732,
+            );
+            location = tempAustinLocation;
+          }
+          ref.read(accountCreationParamsProvider.notifier).location(location);
+          context.pushReplacementNamed('signup_permissions');
+        },
+        retry: () {
+          context.pushReplacementNamed('signup_phone');
+        },
+      );
     }
   }
 
@@ -245,28 +276,5 @@ class _SignUpPhoneState extends ConsumerState<SignUpPhone> {
       },
     );
     return completer.future;
-  }
-
-  Future<AccountCreationResult?> _createAccount(String uid) async {
-    final api = GetIt.instance.get<Api>();
-    final result = await api.createAccount();
-    return result.fold(
-      (l) {
-        final message = l.map(
-          network: (_) => 'Network error',
-          client: (_) => 'Failed to create account',
-          server: (_) => 'Something went wrong on our end, please try again',
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-            ),
-          );
-        }
-        return null;
-      },
-      (r) => r,
-    );
   }
 }

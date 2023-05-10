@@ -1,8 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/signup_collection_photos_preview.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/collection_photo_picker.dart';
@@ -64,27 +65,36 @@ class _SignupCollectionPhotosState extends State<SignupCollectionPhotos> {
                           alignment: Alignment.centerRight,
                           child: Visibility(
                             visible: _photos.length == 3,
-                            child: Button(
-                              onPressed: _photos.length != 3
-                                  ? null
-                                  : () => context.pushNamed(
-                                        'signup_collection_photos_preview',
-                                        extra:
-                                            SignupCollectionPhotosPreviewArgs(
-                                                _photos),
-                                      ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  'next',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w400),
-                                ),
-                              ),
+                            child: Consumer(
+                              builder: (context, ref, child) {
+                                return Button(
+                                  onPressed: _photos.length != 3
+                                      ? null
+                                      : () {
+                                          ref
+                                              .read(
+                                                  accountCreationParamsProvider
+                                                      .notifier)
+                                              .photos(_photos
+                                                  .map((e) => e.path)
+                                                  .toList());
+                                          context.pushNamed(
+                                              'signup_collection_photos_preview');
+                                        },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'next',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium!
+                                          .copyWith(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w400),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ),

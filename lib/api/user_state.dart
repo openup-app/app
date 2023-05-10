@@ -6,8 +6,20 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/util/location_service.dart';
 
 part 'user_state.freezed.dart';
+
+final locationProvider =
+    StateNotifierProvider<LocationNotifier, LatLongValue?>((ref) {
+  return LocationNotifier();
+});
+
+class LocationNotifier extends StateNotifier<LatLongValue?> {
+  LocationNotifier() : super(null);
+
+  void update(LatLongValue? value) => state = value;
+}
 
 final userProvider = StateNotifierProvider<UserStateNotifier, UserState>((ref) {
   return UserStateNotifier();
@@ -176,6 +188,28 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
   }
 }
 
+final accountCreationParamsProvider =
+    StateNotifierProvider<AccountCreationParamsNotifier, AccountCreationParams>(
+        (ref) => AccountCreationParamsNotifier());
+
+class AccountCreationParamsNotifier
+    extends StateNotifier<AccountCreationParams> {
+  AccountCreationParamsNotifier() : super(const AccountCreationParams());
+
+  void photos(List<String> photos) => state = state.copyWith(photos: photos);
+
+  void audio(String audio) => state = state.copyWith(audio: audio);
+
+  void name(String name) => state = state.copyWith(name: name);
+
+  void age(int age) => state = state.copyWith(age: age);
+
+  void gender(Gender gender) => state = state.copyWith(gender: gender);
+
+  void location(AccountCreationLocation location) =>
+      state = state.copyWith(location: location);
+}
+
 @freezed
 class UserState2 with _$UserState2 {
   const UserState2._();
@@ -195,4 +229,35 @@ class UserState2 with _$UserState2 {
           (signedIn.chatrooms ?? []).fold(0, (p, e) => p + e.unreadCount),
     );
   }
+}
+
+Future<GetAccountResult> getAccount() async {
+  final api = GetIt.instance.get<Api>();
+  final result = await api.getAccount();
+  return result.fold(
+    (l) {
+      const retry = _Retry();
+      return l.map<GetAccountResult>(
+        network: (_) => retry,
+        client: (apiClientError) {
+          return apiClientError.error.map(
+            badRequest: (_) => retry,
+            unauthorized: (_) => retry,
+            notFound: (_) => const _SignUp(),
+            forbidden: (_) => retry,
+            conflict: (_) => retry,
+          );
+        },
+        server: (_) => retry,
+      );
+    },
+    (r) => _LogIn(r),
+  );
+}
+
+@freezed
+class GetAccountResult with _$GetAccountResult {
+  const factory GetAccountResult.logIn(Profile profile) = _LogIn;
+  const factory GetAccountResult.signUp() = _SignUp;
+  const factory GetAccountResult.retry() = _Retry;
 }

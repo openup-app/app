@@ -44,19 +44,103 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     initializeVoipHandlers(onDeepLink: _onDeepLink);
 
     await Firebase.initializeApp();
-    final auth = FirebaseAuth.instance;
-    final user = auth.currentUser;
-    final api = GetIt.instance.get<Api>();
-
     if (!mounted) {
       return;
     }
 
+    // Update location
+    final latLong = await LocationService().getLatLong();
+    final latLongValue = latLong.map(
+      value: (value) {
+        ref.read(locationProvider.notifier).update(value);
+        return value;
+      },
+      denied: (_) {
+        // Nothing to do, request on Discover screen
+        return null;
+      },
+      failure: (_) {
+        // Nothing to do, request on Discover screen
+        return null;
+      },
+    );
+    if (!mounted) {
+      return;
+    }
+
+    // Anonymous usage of the app
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
+      context.goNamed('discover');
+      return;
+    }
+
+    _setupApiAuthToken(user);
+
+    // Get user profile
+    final getAccountResult = await getAccount();
+    if (!mounted) {
+      return;
+    }
+
+    final navigate = getAccountResult.map(
+      logIn: (_) => false,
+      signUp: (_) => true,
+      retry: (_) => false,
+    );
+    if (navigate) {
       context.goNamed('signup');
       return;
     }
 
+    getAccountResult.when(
+      logIn: (profile) {
+        ref.read(userProvider.notifier).uid(profile.uid);
+        ref.read(userProvider.notifier).profile(profile);
+        ref.read(userProvider2.notifier).signedIn(profile);
+        if (latLongValue != null) {
+          updateLocation(
+            latitude: latLongValue.latitude,
+            longitude: latLongValue.longitude,
+          );
+        }
+      },
+      signUp: () {
+        // Already handled
+      },
+      retry: () {
+        // TODO: Handle error
+      },
+    );
+
+    // Handle notifications as early as possible for background notifications.
+    // On iOS, initial route is navigated to, but execution may stop due to
+    // a user prompt or a second navigation
+    await handleNotifications(onDeepLink: _onDeepLink);
+    if (!mounted) {
+      return;
+    }
+
+    if (!_deepLinked) {
+      // Standard app entry or sign up onboarding
+      if (widget.needsOnboarding) {
+        context.goNamed('signup_name');
+      } else {
+        context.goNamed('discover');
+      }
+    }
+  }
+
+  void _onDeepLink(String path) {
+    final context = widget.navigatorKey.currentContext;
+    if (context != null) {
+      _deepLinked = true;
+      context.go(path);
+    }
+  }
+
+  Future<void> _setupApiAuthToken(User user) async {
+    final api = GetIt.instance.get<Api>();
     for (var retryAttempt = 0; retryAttempt < 3; retryAttempt++) {
       debugPrint('FirebaseAuth getIdToken attempt $retryAttempt');
       try {
@@ -77,96 +161,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
         }
       }
     }
-
-    api.authToken = await user.getIdToken();
-    final uid = user.uid;
-
-    // Begin caching
-    try {
-      await _cacheData(uid);
-    } catch (e) {
-      debugPrint(e.toString());
-      if (mounted) {
-        context.goNamed('discover');
-      }
-      return;
-    }
-
-    final profile = ref.read(userProvider2).map(
-          guest: (_) => null,
-          signedIn: (signedIn) => signedIn.profile,
-        );
-    if (profile != null) {
-      ref.read(userProvider.notifier).uid(uid);
-      ref.read(userProvider.notifier).profile(profile);
-    }
-
-    // Handle notifications as early as possible for background notifications.
-    // On iOS, initial route is navigated to, but execution may stop due to
-    // a user prompt or a second navigation
-    await handleNotifications(onDeepLink: _onDeepLink);
-
-    if (!mounted) {
-      return;
-    }
-
-    // Update location
-    if (profile != null) {
-      final latLong = await LocationService().getLatLong();
-      if (mounted) {
-        await latLong.when(
-          value: (lat, long) async {
-            updateLocation(
-              latitude: lat,
-              longitude: long,
-            );
-          },
-          denied: () {
-            // Nothing to do, request on Discover screen
-          },
-          failure: () {
-            // Nothing to do, request on Discover screen
-          },
-        );
-      }
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    if (mounted) {
-      if (!_deepLinked && mounted) {
-        // Standard app entry or sign up onboarding
-        final noCollection = profile?.collection.collectionId.isEmpty == true;
-        if (widget.needsOnboarding || noCollection) {
-          context.goNamed('signup_name');
-        } else {
-          context.goNamed('discover');
-        }
-      }
-    }
-  }
-
-  void _onDeepLink(String path) {
-    final context = widget.navigatorKey.currentContext;
-    if (context != null) {
-      _deepLinked = true;
-      context.go(path);
-    }
-  }
-
-  Future<void> _cacheData(String uid) {
-    final api = GetIt.instance.get<Api>();
-    final notifier = ref.read(userProvider2.notifier);
-    return Future.wait([
-      api.getProfile(uid).then((value) {
-        value.fold(
-          (l) => throw 'Unable to cache profile',
-          (r) => notifier.signedIn(r),
-        );
-      }),
-    ]);
   }
 
   @override

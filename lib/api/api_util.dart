@@ -38,6 +38,29 @@ String errorToMessage(ApiError error) {
   );
 }
 
+Future<Either<ApiError, Profile>> createAccount(
+  AccountCreationParams params,
+) async {
+  final photos = params.photos?.map((e) => File(e)).toList();
+  if (photos == null) {
+    debugPrint('Photos were null when creating account');
+    return Future.value(const Left(ApiClientError(ClientErrorBadRequest())));
+  }
+
+  final downscaled = await downscaleImages(photos);
+  if (downscaled == null) {
+    debugPrint('Failed to downscale profile images');
+    return Future.value(const Left(ApiClientError(ClientErrorBadRequest())));
+  }
+
+  final api = GetIt.instance.get<Api>();
+  return api.createAccount(
+    params.copyWith(
+      photos: downscaled.map((e) => e.path).toList(),
+    ),
+  );
+}
+
 Future<Either<ApiError, Profile>> updateGender({
   required BuildContext context,
   required WidgetRef ref,
@@ -105,13 +128,26 @@ Future<Either<ApiError, Collection>> uploadCollection({
   required File? audio,
   bool useAsProfile = false,
 }) async {
+  final downscaled = await downscaleImages(photos);
+  if (downscaled == null) {
+    return Future.value(const Left(ApiError.client(ClientError.badRequest())));
+  }
+
+  final api = GetIt.instance.get<Api>();
+  return api.createCollection(
+    downscaled.map((e) => e.path).toList(),
+    useAsProfile: useAsProfile,
+  );
+}
+
+Future<List<File>?> downscaleImages(List<File> photos) async {
   final photoBytes = await Future.wait(photos.map((f) => f.readAsBytes()));
   final images = await Future.wait(photoBytes.map(decodeImageFromList));
   final resized =
       await Future.wait(images.map((i) => _downscaleImage(i, 2000)));
   final jpgs = await Future.wait(resized.map(_encodeJpg));
   if (jpgs.contains(null)) {
-    return Future.value(const Left(ApiError.client(ClientError.badRequest())));
+    return null;
   }
   final tempDir = await getTemporaryDirectory();
 
@@ -122,13 +158,7 @@ Future<Either<ApiError, Collection>> uploadCollection({
             .create(recursive: true);
     jpgFiles.add(await file.writeAsBytes(jpgs[i]!));
   }
-
-  final api = GetIt.instance.get<Api>();
-  return api.createCollection(
-    jpgFiles.map((e) => e.path).toList(),
-    audio?.path,
-    useAsProfile: useAsProfile,
-  );
+  return jpgFiles;
 }
 
 Future<ui.Image> _downscaleImage(ui.Image image, int targetSide) async {

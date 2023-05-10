@@ -11,18 +11,18 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-class SignUpVerify extends StatefulWidget {
+class SignupVerify extends StatefulWidget {
   final String verificationId;
-  const SignUpVerify({
+  const SignupVerify({
     Key? key,
     required this.verificationId,
   }) : super(key: key);
 
   @override
-  State<SignUpVerify> createState() => _SignUpVerifyState();
+  State<SignupVerify> createState() => _SignupVerifyState();
 }
 
-class _SignUpVerifyState extends State<SignUpVerify> {
+class _SignupVerifyState extends State<SignupVerify> {
   final _smsCodeController = TextEditingController();
   bool _submitting = false;
 

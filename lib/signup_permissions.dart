@@ -7,14 +7,14 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class SignUpPermissionsScreen extends StatefulWidget {
-  const SignUpPermissionsScreen({Key? key}) : super(key: key);
+class SignupPermissionsScreen extends StatefulWidget {
+  const SignupPermissionsScreen({Key? key}) : super(key: key);
 
   @override
-  State<SignUpPermissionsScreen> createState() => _SignUpPermissionsState();
+  State<SignupPermissionsScreen> createState() => _SignUpPermissionsState();
 }
 
-class _SignUpPermissionsState extends State<SignUpPermissionsScreen> {
+class _SignUpPermissionsState extends State<SignupPermissionsScreen> {
   bool _hasLocationPermission = false;
   bool _hasContactsPermission = false;
 
@@ -152,7 +152,7 @@ class _SignUpPermissionsState extends State<SignUpPermissionsScreen> {
     }
     if (_hasLocationPermission && _hasContactsPermission) {
       GetIt.instance.get<Mixpanel>().track("sign_up_grant_permissions");
-      context.pushReplacementNamed('signup_phone');
+      context.pushNamed('signup_name');
     }
   }
 }

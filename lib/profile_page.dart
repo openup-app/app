@@ -375,6 +375,9 @@ class _RecordOrUploadState extends State<_RecordOrUpload> {
             tempDir.path, 'audio_bio_${DateTime.now().toIso8601String()}.m4a'))
         .create();
     await file.writeAsBytes(audio);
+    if (!mounted) {
+      return;
+    }
     final result = await updateAudio(
       ref: ref,
       bytes: await file.readAsBytes(),

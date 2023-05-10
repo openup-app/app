@@ -31,18 +31,18 @@ import 'package:openup/people_page.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
-import 'package:openup/sign_up_gender.dart';
-import 'package:openup/sign_up_name.dart';
-import 'package:openup/sign_up_permissions.dart';
-import 'package:openup/sign_up_phone.dart';
-import 'package:openup/sign_up_verify.dart';
-import 'package:openup/signup_collection_audio.dart';
+import 'package:openup/signup_welcome.dart';
+import 'package:openup/signup_gender.dart';
+import 'package:openup/signup_name.dart';
+import 'package:openup/signup_permissions.dart';
+import 'package:openup/signup_phone.dart';
+import 'package:openup/signup_verify.dart';
+import 'package:openup/signup_audio.dart';
 import 'package:openup/signup_collection_photos.dart';
 import 'package:openup/signup_collection_photos_preview.dart';
 import 'package:openup/signup_friends.dart';
 import 'package:openup/signup_tutorial.dart';
 import 'package:openup/util/page_transition.dart';
-import 'package:openup/sign_up_age.dart';
 import 'package:openup/view_collection_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/menu_page.dart';
@@ -445,20 +445,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           parentNavigatorKey: rootNavigatorKey,
           builder: (context, state) {
             return const CurrentRouteSystemUiStyling.light(
-              child: SignUpAge(),
+              child: SignupWelcome(),
             );
           },
           routes: [
-            GoRoute(
-              path: 'permissions',
-              name: 'signup_permissions',
-              parentNavigatorKey: rootNavigatorKey,
-              builder: (context, state) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpPermissionsScreen(),
-                );
-              },
-            ),
             GoRoute(
               path: 'phone',
               name: 'signup_phone',
@@ -466,7 +456,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               builder: (context, state) {
                 final verifiedUid = state.queryParams['verifiedUid'];
                 return CurrentRouteSystemUiStyling.light(
-                  child: SignUpPhone(
+                  child: SignupPhone(
                     verifiedUid: verifiedUid,
                   ),
                 );
@@ -482,87 +472,83 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       throw 'Missing verification ID';
                     }
                     return CurrentRouteSystemUiStyling.light(
-                      child: SignUpVerify(
+                      child: SignupVerify(
                         verificationId: verificationId,
                       ),
                     );
                   },
                 ),
-              ],
-            ),
-          ],
-        ),
-        GoRoute(
-          path: '/signup_name',
-          name: 'signup_name',
-          builder: (context, state) {
-            return const CurrentRouteSystemUiStyling.light(
-              child: SignUpName(),
-            );
-          },
-          routes: [
-            GoRoute(
-              path: 'gender',
-              name: 'signup_gender',
-              builder: (context, state) {
-                return const CurrentRouteSystemUiStyling.light(
-                  child: SignUpGender(),
-                );
-              },
-              routes: [
                 GoRoute(
-                  path: 'tutorial',
-                  name: 'signup_tutorial',
+                  path: 'permissions',
+                  name: 'signup_permissions',
+                  parentNavigatorKey: rootNavigatorKey,
                   builder: (context, state) {
                     return const CurrentRouteSystemUiStyling.light(
-                      child: SignUpTutorial(),
+                      child: SignupPermissionsScreen(),
                     );
                   },
                   routes: [
                     GoRoute(
-                      path: 'photos',
-                      name: 'signup_collection_photos',
+                      path: 'name',
+                      name: 'signup_name',
                       builder: (context, state) {
                         return const CurrentRouteSystemUiStyling.light(
-                          child: SignupCollectionPhotos(),
+                          child: SignupName(),
                         );
                       },
                       routes: [
                         GoRoute(
-                          path: 'preview',
-                          name: 'signup_collection_photos_preview',
+                          path: 'gender',
+                          name: 'signup_gender',
                           builder: (context, state) {
-                            final args = state.extra
-                                as SignupCollectionPhotosPreviewArgs;
-                            return CurrentRouteSystemUiStyling.light(
-                              child: SignupCollectionPhotosPreview(
-                                photos: args.photos,
-                              ),
+                            return const CurrentRouteSystemUiStyling.light(
+                              child: SignupGender(),
                             );
                           },
                           routes: [
                             GoRoute(
-                              path: 'audio',
-                              name: 'signup_collection_audio',
+                              path: 'tutorial',
+                              name: 'signup_tutorial',
                               builder: (context, state) {
-                                final args =
-                                    state.extra as SignupCollectionAudioArgs;
-                                return CurrentRouteSystemUiStyling.light(
-                                  child: SignupCollectionAudio(
-                                    photos: args.photos,
-                                  ),
+                                return const CurrentRouteSystemUiStyling.light(
+                                  child: SignupTutorial(),
                                 );
                               },
                               routes: [
                                 GoRoute(
-                                  path: 'friends',
-                                  name: 'signup_friends',
+                                  path: 'photos',
+                                  name: 'signup_collection_photos',
                                   builder: (context, state) {
                                     return const CurrentRouteSystemUiStyling
                                         .light(
-                                      child: SignUpFriends(),
+                                      child: SignupCollectionPhotos(),
                                     );
                                   },
+                                  routes: [
+                                    GoRoute(
+                                      path: 'preview',
+                                      name: 'signup_collection_photos_preview',
+                                      builder: (context, state) {
+                                        return const CurrentRouteSystemUiStyling
+                                            .light(
+                                          child:
+                                              SignupCollectionPhotosPreview(),
+                                        );
+                                      },
+                                      routes: [
+                                        GoRoute(
+                                          path: 'audio',
+                                          name: 'signup_audio',
+                                          builder: (context, state) {
+                                            return const CurrentRouteSystemUiStyling
+                                                .light(
+                                              child: SignupAudio(),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -571,6 +557,15 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       ],
                     ),
                   ],
+                ),
+                GoRoute(
+                  path: 'friends',
+                  name: 'signup_friends',
+                  builder: (context, state) {
+                    return const CurrentRouteSystemUiStyling.light(
+                      child: SignUpFriends(),
+                    );
+                  },
                 ),
               ],
             ),
