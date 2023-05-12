@@ -27,7 +27,7 @@ import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
 import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
-import 'package:openup/people_page.dart';
+import 'package:openup/contacts_page.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
@@ -649,10 +649,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               preload: true,
               routes: [
                 GoRoute(
-                  path: '/people',
-                  name: 'people',
+                  path: '/contacts',
+                  name: 'contacts',
                   builder: (context, state) {
-                    return const PeoplePage();
+                    return const ContactsPage();
                   },
                 ),
               ],

@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/invite_friends.dart';
 
-class PeoplePage extends StatefulWidget {
-  const PeoplePage({super.key});
+class ContactsPage extends StatefulWidget {
+  const ContactsPage({super.key});
 
   @override
-  State<PeoplePage> createState() => _PeoplePageState();
+  State<ContactsPage> createState() => _ContactsPageState();
 }
 
-class _PeoplePageState extends State<PeoplePage> {
+class _ContactsPageState extends State<ContactsPage> {
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
   String _filterString = '';
