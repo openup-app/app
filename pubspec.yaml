@@ -112,6 +112,8 @@ flutter:
     - assets/images/people_background.png
     - assets/images/preferences_icon.png
     - assets/images/tutorial_photo.jpg
+    - assets/images/tutorial_photo_good.jpg
+    - assets/images/tutorial_photo_bad.jpg
     - assets/images/signup_background.png
     - assets/images/signup_background/0.svg
     - assets/images/signup_background/1.svg

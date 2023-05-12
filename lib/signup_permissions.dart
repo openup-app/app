@@ -28,82 +28,82 @@ class _SignUpPermissionsState extends State<SignupPermissionsScreen> {
   Widget build(BuildContext context) {
     return AppLifecycle(
       onResumed: _checkPermissions,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/signup_background.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(
-                height: MediaQuery.of(context).padding.top,
+      child: Scaffold(
+        backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+        resizeToAvoidBottomInset: true,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).padding.top,
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Stack(
+                alignment: Alignment.center,
+                children: const [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: BackIconButton(
+                      color: Colors.black,
+                    ),
+                  ),
+                  Text(
+                    'Location & Contacts',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: EdgeInsets.only(left: 8.0),
-                  child: BackIconButton(),
-                ),
+            ),
+            const Spacer(),
+            const Text(
+              'BFF needs your location and contacts to help\nyou have the best experience.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                height: 1.6,
               ),
-              const Spacer(),
-              Text(
-                'bff',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 40, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 51),
+            PermissionButton(
+              icon: const Icon(Icons.public),
+              label: const Text('Enable Location'),
+              granted: _hasLocationPermission,
+              onPressed: () {
+                Permission.location.request().then(_updateLocationStatus);
+              },
+            ),
+            const SizedBox(height: 27),
+            PermissionButton(
+              icon: const Icon(Icons.import_contacts),
+              label: const Text('Enable Contacts'),
+              granted: _hasContactsPermission,
+              onPressed: () {
+                Permission.contacts.request().then(_updateContactsStatus);
+              },
+            ),
+            const Spacer(),
+            const Text(
+              'BFF cares about your privacy. We will not\ntext, call or spam anyone from your contacts.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                height: 1.6,
               ),
-              Image.asset(
-                'assets/images/app_logo.png',
-              ),
-              const Spacer(),
-              Text(
-                'bff needs your location and\ncontacts to help you make the best\nconnections.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 16, fontWeight: FontWeight.w400),
-              ),
-              const Spacer(),
-              PermissionButton(
-                icon: const Icon(Icons.public),
-                label: const Text('Enable Location'),
-                granted: _hasLocationPermission,
-                onPressed: () {
-                  Permission.location.request().then(_updateLocationStatus);
-                },
-              ),
-              const SizedBox(height: 19),
-              PermissionButton(
-                icon: const Icon(Icons.import_contacts),
-                label: const Text('Enable Contacts'),
-                granted: _hasContactsPermission,
-                onPressed: () {
-                  Permission.contacts.request().then(_updateContactsStatus);
-                },
-              ),
-              const Spacer(),
-              Text(
-                'bff cares about your privacy. We will not\ntext, call or spam anyone from your contacts.',
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w300,
-                    height: 1.8),
-              ),
-              const SizedBox(height: 36),
-              SizedBox(
-                height: MediaQuery.of(context).padding.bottom,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 36),
+            SizedBox(
+              height: MediaQuery.of(context).padding.bottom,
+            ),
+          ],
         ),
       ),
     );
@@ -151,7 +151,7 @@ class _SignUpPermissionsState extends State<SignupPermissionsScreen> {
       return;
     }
     if (_hasLocationPermission && _hasContactsPermission) {
-      GetIt.instance.get<Mixpanel>().track("sign_up_grant_permissions");
+      GetIt.instance.get<Mixpanel>().track("signup_grant_permissions");
       context.pushNamed('signup_name');
     }
   }

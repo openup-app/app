@@ -52,11 +52,8 @@ class _SignupVerifyState extends State<SignupVerify> {
               children: const [
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 8.0),
-                    child: BackIconButton(
-                      color: Colors.black,
-                    ),
+                  child: BackIconButton(
+                    color: Colors.black,
                   ),
                 ),
                 Text(

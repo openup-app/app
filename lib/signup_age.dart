@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -8,34 +9,17 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 
-class SignupName extends ConsumerStatefulWidget {
-  const SignupName({Key? key}) : super(key: key);
+class SignupAge extends ConsumerStatefulWidget {
+  const SignupAge({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<SignupName> createState() => _SignupNameState();
+  ConsumerState<SignupAge> createState() => _SignupAgeState();
 }
 
-class _SignupNameState extends ConsumerState<SignupName> {
-  final _nameController = TextEditingController();
-
-  // Using valid flag rather than using Form validation due to there being no
-  // way align error text properly, so we don't even display error text. See:
-  // https://github.com/flutter/flutter/issues/11068
-  bool _valid = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final name = ref.read(accountCreationParamsProvider).name ?? '';
-    _nameController.text = name;
-    _valid = _nameValidator(name) == null;
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
+class _SignupAgeState extends ConsumerState<SignupAge> {
+  static const _minAge = 13;
+  static const _maxAge = 99;
+  int _age = _minAge;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +45,7 @@ class _SignupNameState extends ConsumerState<SignupName> {
                   ),
                 ),
                 Text(
-                  'Name',
+                  'Age',
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w500,
@@ -72,7 +56,7 @@ class _SignupNameState extends ConsumerState<SignupName> {
           ),
           const Spacer(),
           const Text(
-            'Enter your first name',
+            'Select your age',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
@@ -83,39 +67,53 @@ class _SignupNameState extends ConsumerState<SignupName> {
           const SizedBox(height: 51),
           RoundedRectangleContainer(
             child: SizedBox(
-              width: 238,
-              height: 42,
-              child: Center(
-                child: TextField(
-                  textAlign: TextAlign.center,
-                  controller: _nameController,
-                  textCapitalization: TextCapitalization.sentences,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
+              width: 100,
+              height: 255,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const IgnorePointer(
+                    child: SizedBox(
+                      width: 71,
+                      height: 38,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                      ),
+                    ),
                   ),
-                  onChanged: (text) =>
-                      setState(() => _valid = _nameValidator(text) == null),
-                  decoration: const InputDecoration.collapsed(
-                    hintText: 'Name',
-                    hintStyle: TextStyle(fontSize: 18),
+                  CupertinoPicker(
+                    itemExtent: 40,
+                    diameterRatio: 40,
+                    squeeze: 1.0,
+                    onSelectedItemChanged: (index) {
+                      setState(() => _age = _minAge + index);
+                    },
+                    selectionOverlay: const SizedBox.shrink(),
+                    children: [
+                      for (var age = _minAge; age <= _maxAge; age++)
+                        Center(
+                          child: Text(
+                            age.toString(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 32),
-          Text(
-            'For safety purposes, kindly refrain\nfrom including your last name.',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                color: const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                height: 1.8),
-          ),
           const Spacer(),
           Button(
-            onPressed: !_valid ? null : _submit,
+            onPressed: _age < 17 ? null : _submit,
             child: RoundedRectangleContainer(
               child: SizedBox(
                 width: 171,
@@ -142,29 +140,11 @@ class _SignupNameState extends ConsumerState<SignupName> {
     );
   }
 
-  String? _nameValidator(String? text) {
-    if (text == null || text.isEmpty) {
-      return 'Enter a name';
-    }
-
-    if (text.length < 3) {
-      return 'Must be at least three characters long';
-    }
-    return null;
-  }
-
   void _submit() async {
-    FocusScope.of(context).unfocus();
-
-    final newName = _nameController.text;
-    if (_nameValidator(newName) != null) {
-      return;
-    }
-
     GetIt.instance.get<Mixpanel>()
-      ..track("signup_submit_name")
-      ..getPeople().set('name', newName);
-    ref.read(accountCreationParamsProvider.notifier).name(newName);
-    context.pushNamed('signup_gender');
+      ..track("signup_submit_age")
+      ..getPeople().set('age', _age);
+    ref.read(accountCreationParamsProvider.notifier).age(_age);
+    context.pushNamed('signup_permissions');
   }
 }

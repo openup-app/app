@@ -70,6 +70,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
           notifier.uid(verifiedUid);
           notifier.profile(profile);
           ref.read(userProvider2.notifier).signedIn(profile);
+          GetIt.instance.get<Mixpanel>().track("login");
           context.goNamed('initialLoading');
         },
         signUp: () {
@@ -92,7 +93,8 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
             location = tempAustinLocation;
           }
           ref.read(accountCreationParamsProvider.notifier).location(location);
-          context.pushReplacementNamed('signup_permissions');
+          GetIt.instance.get<Mixpanel>().track("signup_verified");
+          context.pushReplacementNamed('signup_age');
         },
         retry: () {
           context.pushReplacementNamed('signup_phone');
@@ -120,11 +122,8 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
               children: const [
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 8.0),
-                    child: BackIconButton(
-                      color: Colors.black,
-                    ),
+                  child: BackIconButton(
+                    color: Colors.black,
                   ),
                 ),
                 Text(
@@ -174,14 +173,15 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
               ),
             ),
           ),
-          const SizedBox(height: 32),
-          Text(
+          const Text(
             'Please do not sign up with\n another person\'s number.',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                color: const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                height: 1.8),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              height: 1.6,
+            ),
           ),
           const Spacer(),
           Button(
@@ -287,6 +287,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
           return;
         }
         setState(() => _forceResendingToken = forceResendingToken);
+        GetIt.instance.get<Mixpanel>().track("signup_submit_phone");
         context.pushNamed('signup_verify', queryParams: {
           'verificationId': verificationId,
         });

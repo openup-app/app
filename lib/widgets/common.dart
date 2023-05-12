@@ -1327,225 +1327,6 @@ class RecordingInfo {
   }
 }
 
-class RecordButtonChat extends StatefulWidget {
-  final void Function(String path) onSubmit;
-  final void Function() onBeginRecording;
-  final void Function() onEndRecording;
-
-  const RecordButtonChat({
-    Key? key,
-    required this.onSubmit,
-    required this.onBeginRecording,
-    required this.onEndRecording,
-  }) : super(key: key);
-
-  @override
-  State<RecordButtonChat> createState() => RecordButtonChatState();
-}
-
-class RecordButtonChatState extends State<RecordButtonChat> {
-  late final AudioBioController _recorder;
-  final _audioPlayer = JustAudioAudioPlayer();
-  String? _audioPath;
-  DateTime _recordingStart = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    _recorder = AudioBioController(
-      maxDuration: const Duration(seconds: 60),
-      onRecordingComplete: (path) async {
-        if (mounted) {
-          setState(() => _audioPath = path);
-          _audioPlayer.setPath(path);
-        }
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _recorder.dispose();
-    _audioPlayer.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<RecordInfo>(
-      initialData: const RecordInfo(),
-      stream: _recorder.recordInfoStream,
-      builder: (context, snapshot) {
-        final recordInfo = snapshot.requireData;
-        return Container(
-          height: 87,
-          alignment: Alignment.center,
-          child: Builder(
-            builder: (context) {
-              if (_audioPath == null) {
-                return Button(
-                  onPressed: () {
-                    if (recordInfo.recording) {
-                      widget.onEndRecording();
-                      _recorder.stopRecording();
-                    } else {
-                      widget.onBeginRecording();
-                      _recorder.startRecording();
-                      setState(() {
-                        _recordingStart = DateTime.now();
-                      });
-                    }
-                  },
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        width: 68,
-                        height: 68,
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white, width: 2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: AnimatedContainer(
-                            width: recordInfo.recording ? 35 : 62,
-                            height: recordInfo.recording ? 35 : 62,
-                            duration: const Duration(milliseconds: 200),
-                            decoration: BoxDecoration(
-                              color:
-                                  const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                              shape: BoxShape.rectangle,
-                              borderRadius: recordInfo.recording
-                                  ? const BorderRadius.all(Radius.circular(6))
-                                  : const BorderRadius.all(Radius.circular(30)),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (recordInfo.recording)
-                        Align(
-                          alignment: Alignment.center,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 140.0),
-                            child: Text(
-                              formatDuration(
-                                  DateTime.now().difference(_recordingStart)),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w300),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              }
-
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Button(
-                    onPressed: () {
-                      _audioPlayer.stop();
-                      setState(() => _audioPath = null);
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Icon(
-                        Icons.delete,
-                        size: 34,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ),
-                  Button(
-                    onPressed: () {
-                      _audioPlayer.stop();
-                      widget.onSubmit(_audioPath!);
-                      setState(() => _audioPath = null);
-                    },
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(
-                            color: const Color.fromRGBO(0x82, 0x82, 0x82, 1.0)),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.arrow_upward,
-                          size: 32,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                  StreamBuilder<PlaybackInfo>(
-                    stream: _audioPlayer.playbackInfoStream,
-                    initialData: const PlaybackInfo(),
-                    builder: (context, snapshot) {
-                      final playbackInfo = snapshot.requireData;
-                      return Button(
-                        onPressed: () async {
-                          if (playbackInfo.state == PlaybackState.playing) {
-                            _audioPlayer.stop();
-                          } else {
-                            _audioPlayer.play();
-                          }
-                        },
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 22),
-                            SizedBox(
-                              width: 41,
-                              child: playbackInfo.state == PlaybackState.playing
-                                  ? const Center(
-                                      child: Icon(
-                                        Icons.stop,
-                                        size: 32,
-                                      ),
-                                    )
-                                  : const Center(
-                                      child: Icon(
-                                        Icons.play_arrow,
-                                        size: 32,
-                                      ),
-                                    ),
-                            ),
-                            Text(
-                              playbackInfo.state == PlaybackState.playing
-                                  ? formatDuration(playbackInfo.position)
-                                  : formatDuration(playbackInfo.duration),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-}
-
 class Chip extends StatelessWidget {
   final String label;
   final double? height;
@@ -1618,19 +1399,24 @@ class PermissionButton extends StatelessWidget {
       child: RoundedRectangleContainer(
         color: granted ? const Color.fromRGBO(0x06, 0xD9, 0x1B, 0.8) : null,
         child: SizedBox(
-          width: 180,
-          child: Row(
-            children: [
-              icon,
-              const SizedBox(width: 13),
-              DefaultTextStyle(
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w300,
-                    color: Colors.white),
-                child: label,
-              ),
-            ],
+          width: 238,
+          height: 42,
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                icon,
+                const SizedBox(width: 13),
+                DefaultTextStyle(
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400,
+                    color: granted ? Colors.white : Colors.black,
+                  ),
+                  child: label,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1652,13 +1438,14 @@ class RoundedRectangleContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTextStyle(
       style: const TextStyle(color: Colors.black),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(
+      child: Container(
+        clipBehavior: Clip.hardEdge,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: const BorderRadius.all(
             Radius.circular(8),
           ),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
               color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
               offset: Offset(0, 0),

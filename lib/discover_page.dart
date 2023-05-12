@@ -15,6 +15,7 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/button.dart';
@@ -67,6 +68,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     super.initState();
     _fetchPageOfProfiles().then((_) {
       _maybeRequestNotification();
+    });
+
+    ref.listenManual<LatLongValue?>(locationProvider, (previous, next) {
+      if (next != null) {
+        _googleMapController?.animateCamera(CameraUpdate.newLatLng(
+          LatLng(next.latitude, next.longitude),
+        ));
+      }
     });
 
     _pageController.addListener(() {
@@ -184,6 +193,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
     final location = await _getLocation();
     if (location != null && mounted) {
+      ref
+          .read(locationProvider.notifier)
+          .update(LatLongValue(location.latitude, location.longitude));
       setState(() => _location = location);
       await updateLocation(
         latitude: location.latitude,

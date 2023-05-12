@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/invite_friends.dart';
 
@@ -27,6 +26,7 @@ class _PeoplePageState extends State<PeoplePage> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
@@ -37,64 +37,12 @@ class _PeoplePageState extends State<PeoplePage> {
       children: [
         Column(
           children: [
-            Container(
-              height: 32,
-              margin: EdgeInsets.only(
-                left: 16,
-                top: 24 + MediaQuery.of(context).padding.top,
-                right: 16,
-                bottom: 16,
-              ),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(8)),
-              ),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: TextFormField(
-                          controller: _searchController,
-                          focusNode: _searchFocusNode,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(
-                                  fontSize: 14, fontWeight: FontWeight.w300),
-                          decoration: InputDecoration.collapsed(
-                            hintText: 'Search',
-                            hintStyle: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (_filterString.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16.0),
-                        child: Button(
-                          onPressed: () {
-                            setState(() => _searchController.text = "");
-                            FocusScope.of(context).unfocus();
-                          },
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.black,
-                            size: 16,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+            SizedBox(height: MediaQuery.of(context).padding.top),
+            Padding(
+              padding: const EdgeInsets.only(top: 32, bottom: 16),
+              child: FriendsSearchField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
               ),
             ),
             Expanded(

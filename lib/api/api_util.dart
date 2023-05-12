@@ -213,10 +213,14 @@ Future<T> withBlockingModal<T>({
   final popDialog = showBlockingModalDialog(
     context: context,
     builder: (context) {
-      return Loading(
+      return LoadingDialog(
         title: Text(
           label,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            color: Colors.white,
+          ),
         ),
       );
     },

@@ -15,95 +15,148 @@ class SignupGender extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<SignupGender> createState() => _SignUpGenderState();
+  ConsumerState<SignupGender> createState() => _SignupGenderState();
 }
 
-class _SignUpGenderState extends ConsumerState<SignupGender> {
+class _SignupGenderState extends ConsumerState<SignupGender> {
   Gender? _gender;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/signup_background.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).padding.top,
-            ),
-            const SizedBox(height: 16),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: EdgeInsets.only(left: 8.0),
-                child: BackIconButton(),
-              ),
-            ),
-            const Spacer(),
-            Text(
-              'What\'s your gender?',
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 20, fontWeight: FontWeight.w400),
-            ),
-            const SizedBox(height: 36),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 300),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _RadioButton(
-                    label: 'Male',
-                    selected: _gender == Gender.male,
-                    onPressed: () => setState(() => _gender = Gender.male),
+    const activeColor = Color.fromRGBO(0x06, 0xD9, 0x1B, 0.8);
+    return Scaffold(
+      backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+      resizeToAvoidBottomInset: true,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).padding.top,
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Stack(
+              alignment: Alignment.center,
+              children: const [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: BackIconButton(
+                    color: Colors.black,
                   ),
-                  _RadioButton(
-                    label: 'Female',
-                    selected: _gender == Gender.female,
-                    onPressed: () => setState(() => _gender = Gender.female),
+                ),
+                Text(
+                  'Gender',
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w500,
                   ),
-                  _RadioButton(
-                    label: 'Non-Binary',
-                    selected: _gender == Gender.nonBinary,
-                    onPressed: () => setState(() => _gender = Gender.nonBinary),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const Spacer(),
-            Button(
-              onPressed: _gender == null ? null : _submit,
-              child: RoundedRectangleContainer(
-                child: SizedBox(
-                  width: 171,
-                  child: Center(
-                    child: Text(
-                      'Next',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w300,
-                          color: Colors.white),
+          ),
+          const Spacer(),
+          const Text(
+            'Select your gender',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+            ),
+          ),
+          const SizedBox(height: 51),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 300),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RoundedRectangleContainer(
+                  color: _gender == Gender.male ? activeColor : null,
+                  child: Button(
+                    onPressed: () {
+                      setState(() => _gender = Gender.male);
+                      _submit();
+                    },
+                    child: SizedBox(
+                      width: 238,
+                      height: 42,
+                      child: Center(
+                        child: Text(
+                          'Male',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                            color: _gender == Gender.male
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 27),
+                RoundedRectangleContainer(
+                  color: _gender == Gender.female ? activeColor : null,
+                  child: Button(
+                    onPressed: () {
+                      setState(() => _gender = Gender.female);
+                      _submit();
+                    },
+                    child: SizedBox(
+                      width: 238,
+                      height: 42,
+                      child: Center(
+                        child: Text(
+                          'Female',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                            color: _gender == Gender.female
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 27),
+                RoundedRectangleContainer(
+                  color: _gender == Gender.nonBinary ? activeColor : null,
+                  child: Button(
+                    onPressed: () {
+                      setState(() => _gender = Gender.nonBinary);
+                      _submit();
+                    },
+                    child: SizedBox(
+                      width: 238,
+                      height: 42,
+                      child: Center(
+                        child: Text(
+                          'Non-binary',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                            color: _gender == Gender.nonBinary
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 36),
-            SizedBox(
-              height: MediaQuery.of(context).padding.bottom,
-            ),
-          ],
-        ),
+          ),
+          const Spacer(),
+          const SizedBox(height: 36),
+          SizedBox(
+            height: MediaQuery.of(context).padding.bottom,
+          ),
+        ],
       ),
     );
   }
@@ -115,76 +168,18 @@ class _SignUpGenderState extends ConsumerState<SignupGender> {
     }
 
     precacheImage(
-        const AssetImage('assets/images/tutorial_photo.jpg'), context);
+      const AssetImage('assets/images/tutorial_photo_good.jpg'),
+      context,
+    );
+    precacheImage(
+      const AssetImage('assets/images/tutorial_photo_bad.jpg'),
+      context,
+    );
 
     GetIt.instance.get<Mixpanel>()
-      ..track("sign_up_submit_gender")
+      ..track("signup_submit_gender")
       ..getPeople().set('gender', gender.name);
     ref.read(accountCreationParamsProvider.notifier).gender(gender);
-    context.pushNamed('signup_tutorial');
-  }
-}
-
-class _RadioButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onPressed;
-
-  const _RadioButton({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(label,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 19, fontWeight: FontWeight.w300)),
-            ),
-            CustomPaint(
-              painter: _RadioButtonPainter(
-                selected: selected,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RadioButtonPainter extends CustomPainter {
-  final bool selected;
-
-  const _RadioButtonPainter({
-    required this.selected,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawCircle(
-      size.center(Offset.zero),
-      9,
-      Paint()
-        ..color = Colors.white
-        ..strokeWidth = 1
-        ..style = selected ? PaintingStyle.fill : PaintingStyle.stroke,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _RadioButtonPainter oldDelegate) {
-    return oldDelegate.selected == selected;
+    context.pushNamed('signup_tutorial1');
   }
 }

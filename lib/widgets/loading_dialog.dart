@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:openup/widgets/common.dart';
 
@@ -8,7 +9,7 @@ VoidCallback showBlockingModalDialog({
   required WidgetBuilder builder,
 }) {
   BuildContext? dialogContext;
-  showDialog(
+  showCupertinoDialog(
     context: context,
     barrierDismissible: false,
     builder: (context) {
@@ -29,11 +30,11 @@ VoidCallback showBlockingModalDialog({
 }
 
 /// A dialog to indicate to the user that work is being done.
-class Loading extends StatelessWidget {
+class LoadingDialog extends StatelessWidget {
   final Widget? title;
   final Widget? label;
 
-  const Loading({
+  const LoadingDialog({
     Key? key,
     this.title,
     this.label,
@@ -41,7 +42,7 @@ class Loading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: title,
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -49,9 +50,14 @@ class Loading extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 20),
-          const LoadingIndicator(),
-          if (label != null) const SizedBox(height: 20),
-          if (label != null) label!,
+          const LoadingIndicator(color: Colors.white),
+          if (label != null) ...[
+            const SizedBox(height: 20),
+            DefaultTextStyle(
+              style: const TextStyle(color: Colors.white),
+              child: label!,
+            ),
+          ],
           const SizedBox(height: 20),
         ],
       ),

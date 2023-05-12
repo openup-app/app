@@ -180,8 +180,6 @@ class _InviteFriendsState extends State<InviteFriends> {
             childCount: contacts.length,
             (context, index) {
               final contact = contacts[index];
-              final phoneNumber =
-                  contact.phones.isEmpty ? '' : contact.phones.first.number;
               final isFirst = index == 0;
               final isLast = index == contacts.length - 1;
               return Container(
@@ -341,7 +339,6 @@ class _InviteButton extends StatelessWidget {
     final querySymbol = Platform.isAndroid ? '?' : '&';
     final body = Uri.encodeComponent(
         'I\'m on Openup, a new way to meet online. \nhttps://openupfriends.com');
-    print(body);
     final url = Uri.parse('sms://$phoneNumber/${querySymbol}body=$body');
     launchUrl(url);
   }
@@ -428,6 +425,72 @@ class _LoadCollectionListState extends State<_LoadCollectionList> {
     return const Center(
       child: LoadingIndicator(
         size: 32,
+      ),
+    );
+  }
+}
+
+class FriendsSearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+
+  const FriendsSearchField({
+    super.key,
+    required this.controller,
+    required this.focusNode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 32,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextFormField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontSize: 14, fontWeight: FontWeight.w300),
+                  decoration: InputDecoration.collapsed(
+                    hintText: 'Search',
+                    hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w300,
+                        ),
+                  ),
+                ),
+              ),
+            ),
+            if (controller.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: Button(
+                  onPressed: () {
+                    controller.text = '';
+                    FocusScope.of(context).unfocus();
+                  },
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.black,
+                    size: 16,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -26,13 +26,10 @@ class _SignUpWelcomeScreenState extends ConsumerState<SignupWelcome> {
           Align(
             alignment: Alignment.centerLeft,
             child: Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: context.canPop()
-                    ? const BackIconButton(color: Colors.white)
-                    : const SizedBox.shrink(),
-              ),
+              padding: const EdgeInsets.all(8.0),
+              child: context.canPop()
+                  ? const BackIconButton(color: Colors.white)
+                  : const SizedBox.shrink(),
             ),
           ),
           const Spacer(),

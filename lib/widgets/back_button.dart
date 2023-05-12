@@ -16,10 +16,13 @@ class BackIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Button(
       onPressed: onPressed ?? Navigator.of(context).pop,
-      child: Icon(
-        CupertinoIcons.back,
-        color: color,
-        size: 32,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Icon(
+          CupertinoIcons.back,
+          color: color,
+          size: 32,
+        ),
       ),
     );
   }
