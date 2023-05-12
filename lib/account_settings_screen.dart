@@ -15,7 +15,6 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/contact_us_screen.dart';
 import 'package:openup/notifications/notifications.dart';
-import 'package:openup/settings_phone_verification_screen.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/phone_number_input.dart';
@@ -540,9 +539,8 @@ class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
         await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) {
-              return SettingsPhoneVerificationScreen(
-                verificationId: verificationId,
-              );
+              // Removed settings phone verification screen
+              return const SizedBox.shrink();
             },
           ),
         );
