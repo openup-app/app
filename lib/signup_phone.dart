@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -104,91 +103,114 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/signup_background.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).padding.top,
+    return Scaffold(
+      backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+      resizeToAvoidBottomInset: true,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).padding.top,
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Stack(
+              alignment: Alignment.center,
+              children: const [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 8.0),
+                    child: BackIconButton(
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                Text(
+                  'Log in or sign up',
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: EdgeInsets.only(left: 8.0),
-                child: BackIconButton(),
-              ),
+          ),
+          const Spacer(),
+          const Text(
+            'Enter your phone number',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
             ),
-            const Spacer(),
-            Text(
-              'Enter your phone number',
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 20, fontWeight: FontWeight.w400),
-            ),
-            const SizedBox(height: 61),
-            InputArea(
+          ),
+          const SizedBox(height: 51),
+          Center(
+            child: ErrorText(
               errorText: _phoneErrorText,
-              child: PhoneInput(
-                onChanged: (value, valid) {
-                  setState(() {
-                    _phoneNumber = value;
-                    _valid = valid;
-                  });
-                },
-                onValidationError: (error) =>
-                    setState(() => _phoneErrorText = error),
-              ),
-            ),
-            const SizedBox(height: 52),
-            Text(
-              'Please do not sign up with\n another person\'s number.',
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w300,
-                  height: 1.8),
-            ),
-            const Spacer(),
-            Button(
-              onPressed: _submitting || !_valid ? null : _submit,
               child: RoundedRectangleContainer(
                 child: SizedBox(
-                  width: 171,
-                  child: Center(
-                    child: _submitting
-                        ? const LoadingIndicator(size: 27)
-                        : Text(
-                            'Send code',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white),
-                          ),
+                  width: 238,
+                  height: 42,
+                  child: PhoneInput(
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
+                    ),
+                    onChanged: (value, valid) {
+                      setState(() {
+                        _phoneNumber = value;
+                        _valid = valid;
+                      });
+                    },
+                    onValidationError: (error) =>
+                        setState(() => _phoneErrorText = error),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 36),
-            SizedBox(
-              height: MediaQuery.of(context).padding.bottom,
+          ),
+          const SizedBox(height: 32),
+          Text(
+            'Please do not sign up with\n another person\'s number.',
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                height: 1.8),
+          ),
+          const Spacer(),
+          Button(
+            onPressed: _submitting || !_valid ? null : _submit,
+            child: RoundedRectangleContainer(
+              child: SizedBox(
+                width: 171,
+                height: 42,
+                child: Center(
+                  child: _submitting
+                      ? const LoadingIndicator(size: 27)
+                      : Text(
+                          'Send code',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  fontSize: 20, fontWeight: FontWeight.w400),
+                        ),
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 36),
+          SizedBox(
+            height: MediaQuery.of(context).padding.bottom,
+          ),
+        ],
       ),
     );
   }

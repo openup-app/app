@@ -1,46 +1,43 @@
 import 'package:flutter/material.dart';
 
-class InputArea extends StatelessWidget {
+class ErrorText extends StatelessWidget {
   final String? errorText;
-  final Color color;
   final Widget child;
 
-  const InputArea({
+  const ErrorText({
     Key? key,
     this.errorText,
-    this.color = Colors.white,
     required this.child,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 64.0,
-      margin: const EdgeInsets.symmetric(horizontal: 32),
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          DefaultTextStyle(
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  color: Colors.white,
-                  fontSize: 20,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        child,
+        AnimatedOpacity(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeIn,
+          opacity: errorText == null ? 0.0 : 1.0,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 8),
+              Text(
+                errorText ?? '',
+                style: TextStyle(
+                  color: Colors.red.shade900,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
                 ),
-            child: Center(child: child),
-          ),
-          if (errorText != null)
-            Positioned(
-              bottom: -1,
-              child: Text(
-                errorText!,
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: Colors.red.shade900,
-                      fontSize: 14,
-                    ),
               ),
-            ),
-        ],
-      ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

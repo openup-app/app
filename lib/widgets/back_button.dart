@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:openup/widgets/button.dart';
 
 /// Material Design back button which displays the same icon regardless of the
@@ -17,9 +17,9 @@ class BackIconButton extends StatelessWidget {
     return Button(
       onPressed: onPressed ?? Navigator.of(context).pop,
       child: Icon(
-        Icons.chevron_left,
+        CupertinoIcons.back,
         color: color,
-        size: 46,
+        size: 32,
       ),
     );
   }

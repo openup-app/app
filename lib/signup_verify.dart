@@ -25,6 +25,7 @@ class SignupVerify extends StatefulWidget {
 class _SignupVerifyState extends State<SignupVerify> {
   final _smsCodeController = TextEditingController();
   bool _submitting = false;
+  String? _errorText;
 
   @override
   void dispose() {
@@ -34,88 +35,121 @@ class _SignupVerifyState extends State<SignupVerify> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/signup_background.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).padding.top,
-            ),
-            const SizedBox(height: 16),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: EdgeInsets.only(left: 8.0),
-                child: BackIconButton(),
-              ),
-            ),
-            const Spacer(),
-            Text(
-              'Enter verification code',
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 20, fontWeight: FontWeight.w400),
-            ),
-            const Spacer(),
-            InputArea(
-              child: TextField(
-                controller: _smsCodeController,
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.done,
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white),
-                decoration: InputDecoration.collapsed(
-                  hintText: 'Code',
-                  hintStyle: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 32, color: Colors.white),
+    return Scaffold(
+      backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+      resizeToAvoidBottomInset: true,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).padding.top,
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Stack(
+              alignment: Alignment.center,
+              children: const [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 8.0),
+                    child: BackIconButton(
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
-              ),
+                Text(
+                  'Verify phone number',
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-            const Spacer(),
-            Button(
-              onPressed: _submitting ? null : _submit,
+          ),
+          const Spacer(),
+          const Text(
+            'Enter verification code',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+            ),
+          ),
+          const SizedBox(height: 51),
+          Center(
+            child: ErrorText(
+              errorText: _errorText,
               child: RoundedRectangleContainer(
                 child: SizedBox(
-                  width: 171,
+                  width: 238,
+                  height: 42,
                   child: Center(
-                    child: _submitting
-                        ? const LoadingIndicator(size: 27)
-                        : Text(
-                            'Next',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white),
-                          ),
+                    child: TextField(
+                      controller: _smsCodeController,
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      onChanged: (_) {
+                        setState(() => _errorText = null);
+                      },
+                      decoration: InputDecoration.collapsed(
+                        hintText: 'Code',
+                        hintStyle: Theme.of(context)
+                            .textTheme
+                            .bodyMedium!
+                            .copyWith(fontSize: 18),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 36),
-            SizedBox(
-              height: MediaQuery.of(context).padding.bottom,
+          ),
+          const SizedBox(height: 32),
+          Text(
+            'Code sent to your phone via text message.',
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                height: 1.8),
+          ),
+          const Spacer(),
+          Button(
+            onPressed: _submitting ? null : _submit,
+            child: RoundedRectangleContainer(
+              child: SizedBox(
+                width: 171,
+                height: 42,
+                child: Center(
+                  child: _submitting
+                      ? const LoadingIndicator(size: 27)
+                      : Text(
+                          'Verify',
+                          textAlign: TextAlign.center,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                        ),
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 36),
+          SizedBox(
+            height: MediaQuery.of(context).padding.bottom,
+          ),
+        ],
       ),
     );
   }
@@ -162,6 +196,7 @@ class _SignupVerifyState extends State<SignupVerify> {
     } on FirebaseAuthException catch (e, s) {
       if (e.code == 'invalid-verification-code') {
         if (mounted) {
+          setState(() => _errorText = 'Invalid code');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Invalid code'),

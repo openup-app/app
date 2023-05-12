@@ -1646,17 +1646,26 @@ class RoundedRectangleContainer extends StatelessWidget {
     super.key,
     Color? color,
     required this.child,
-  }) : color = color ?? const Color.fromRGBO(0x00, 0x00, 0x00, 0.25);
+  }) : color = color ?? Colors.white;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(7)),
-        color: color,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 24),
+    return DefaultTextStyle(
+      style: const TextStyle(color: Colors.black),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(
+            Radius.circular(8),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
+              offset: Offset(0, 0),
+              blurRadius: 26,
+            ),
+          ],
+        ),
         child: child,
       ),
     );

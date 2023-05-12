@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,14 +6,18 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'phone_number_input.freezed.dart';
 
 class PhoneInput extends StatefulWidget {
-  final Color? color;
+  final TextStyle? style;
   final Color? hintTextColor;
+  final String? initialValue;
+  final bool showCountryCodePicker;
   final void Function(String value, bool valid) onChanged;
   final void Function(String? error) onValidationError;
   const PhoneInput({
     super.key,
-    this.color,
+    this.style,
     this.hintTextColor,
+    this.initialValue,
+    this.showCountryCodePicker = false,
     required this.onChanged,
     required this.onValidationError,
   });
@@ -34,9 +37,9 @@ class _PhoneInputState extends State<PhoneInput> {
   @override
   void initState() {
     super.initState();
-    final phoneNumber = FirebaseAuth.instance.currentUser?.phoneNumber;
-    if (phoneNumber != null) {
-      _phoneController.text = phoneNumber;
+    final initialValue = widget.initialValue;
+    if (initialValue != null) {
+      _phoneController.text = initialValue;
     }
   }
 
@@ -51,12 +54,11 @@ class _PhoneInputState extends State<PhoneInput> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (!kReleaseMode) ...[
+        if (widget.showCountryCodePicker) ...[
           Container(
             width: 60,
             height: 48,
             alignment: Alignment.centerRight,
-            color: Colors.orange,
             child: PopupMenuButton<_Country>(
               child: RichText(
                 textAlign: TextAlign.right,
@@ -64,17 +66,12 @@ class _PhoneInputState extends State<PhoneInput> {
                   children: [
                     TextSpan(
                       text: '+ ',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontWeight: FontWeight.w400,
-                          fontSize: 20,
-                          color: widget.hintTextColor),
+                      style:
+                          widget.style?.copyWith(color: widget.hintTextColor),
                     ),
                     TextSpan(
                       text: _country.callingCode.toString(),
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontWeight: FontWeight.w400,
-                          fontSize: 20,
-                          color: widget.color),
+                      style: widget.style,
                     ),
                   ],
                 ),
@@ -164,8 +161,10 @@ class _PhoneInputState extends State<PhoneInput> {
             onEditingComplete: () {
               FocusScope.of(context).unfocus();
             },
-            textAlign: TextAlign.start,
-            style: TextStyle(color: widget.color),
+            textAlign: widget.showCountryCodePicker
+                ? TextAlign.start
+                : TextAlign.center,
+            style: widget.style,
             decoration: InputDecoration.collapsed(
               hintText: 'Phone Number',
               hintStyle: DefaultTextStyle.of(context)
