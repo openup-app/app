@@ -1,18 +1,14 @@
-#version 310 es
-
-precision mediump float;
-
 #include <flutter/runtime_effect.glsl>
 
-layout(location=0)out vec4 fragColor;
-layout(location=1)uniform sampler2D image;
-layout(location=2)uniform sampler2D depthImage;
-layout(location=4)uniform vec2 size;
-layout(location=5)uniform vec2 canvasSize;
-layout(location=6)uniform float xDisp;
-layout(location=7)uniform float yDisp;
-layout(location=8)uniform float zDisp;
-layout(location=9)uniform float effectIntensity;
+out vec4 fragColor;
+uniform sampler2D image;
+uniform sampler2D depthImage;
+uniform vec2 size;
+uniform vec2 canvasSize;
+uniform float xDisp;
+uniform float yDisp;
+uniform float zDisp;
+uniform float effectIntensity;
 
 void main() {
     // Box fit: cover

@@ -32,11 +32,13 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
 
   FragmentProgram? _fragmentProgram;
 
-  Duration _ellaspedWhenPaused = Duration.zero;
-  var _start = DateTime.now();
-
   double _xIntensity = 1.0;
   double _yIntensity = 1.0;
+  double _displacementX = 0;
+  double _displacementY = 0;
+  double _displacementZ = 0;
+
+  late final Ticker _ticker;
 
   @override
   void initState() {
@@ -44,7 +46,7 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
     _decodeImage(widget.image).then((image) {
       if (mounted) {
         setState(() => _image = image);
-        _startAnimation();
+        _initAnimation();
       }
     });
     final depth = widget.depth;
@@ -53,7 +55,7 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
         _blurDepthMap(image, 30).then((image) {
           if (mounted) {
             setState(() => _depth = image);
-            _startAnimation();
+            _initAnimation();
           }
         });
       });
@@ -65,15 +67,37 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
     } else {
       _fragmentProgram = _tempFragmentProgram;
     }
+
+    _ticker = Ticker(_tickUpdate);
   }
 
-  void _startAnimation() {
-    _start = DateTime.now();
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
 
+  void _initAnimation() {
     const intensity = 20.0;
     final angle = Random().nextDouble() * 2 * pi;
     _xIntensity = cos(angle) * intensity;
     _yIntensity = sin(angle) * intensity;
+    if (!_ticker.isActive) {
+      _ticker.start();
+    }
+  }
+
+  void _tickUpdate(Duration ellapsed) {
+    final ratio = (ellapsed.inMilliseconds / widget.duration.inMilliseconds)
+        .clamp(0.0, 1.0);
+    final t = CurvedAnimation(
+            parent: AlwaysStoppedAnimation(ratio), curve: Curves.easeInOut)
+        .value;
+    setState(() {
+      _displacementX = -_xIntensity / 2 + t * _xIntensity;
+      _displacementY = -_yIntensity / 2 + t * _yIntensity;
+      _displacementZ = 0.0;
+    });
   }
 
   @override
@@ -81,9 +105,11 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.animate != widget.animate) {
       if (!widget.animate) {
-        setState(() => _ellaspedWhenPaused = DateTime.now().difference(_start));
+        _ticker.stop();
       } else {
-        setState(() => _start = DateTime.now().subtract(_ellaspedWhenPaused));
+        if (!_ticker.isActive) {
+          _ticker.start();
+        }
       }
     }
   }
@@ -115,31 +141,15 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
         fit: BoxFit.cover,
       );
     } else if (_image != null && _depth != null && _fragmentProgram != null) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          // Run animation
-          setState(() {});
-        }
-      });
-
-      final ellapsed = widget.animate
-          ? DateTime.now().difference(_start)
-          : _ellaspedWhenPaused;
-      final ratio = (ellapsed.inMilliseconds / widget.duration.inMilliseconds)
-          .clamp(0.0, 1.0);
-      final t = CurvedAnimation(
-              parent: AlwaysStoppedAnimation(ratio), curve: Curves.easeInOut)
-          .value;
-      const zIntensity = 0.1;
       return Transform.scale(
         scale: 1.1,
         child: _DisplacedImage(
           image: _image!,
           depth: _depth!,
           fragmentProgram: _fragmentProgram!,
-          displacementX: -_xIntensity / 2 + t * _xIntensity,
-          displacementY: -_yIntensity / 2 + t * _yIntensity,
-          displacementZ: 0.0, //-zIntensity / 2 + t * zIntensity,
+          displacementX: _displacementX,
+          displacementY: _displacementY,
+          displacementZ: _displacementZ,
         ),
       );
     } else {
@@ -173,29 +183,34 @@ class _DisplacedImage extends StatefulWidget {
 class _DisplacedImageState extends State<_DisplacedImage> {
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return FittedBox(
-          fit: BoxFit.cover,
-          child: SizedBox(
-            width: constraints.maxWidth,
-            height: constraints.maxHeight,
-            child: CustomPaint(
-              painter: _DisplacedImagePainter(
-                fragmentProgram: widget.fragmentProgram,
-                image: widget.image,
-                depth: widget.depth,
-                xDisp: widget.displacementX,
-                yDisp: widget.displacementY,
-                zDisp: widget.displacementZ,
-                // Reduces the effect if the widget is small
-                effectIntensity:
-                    constraints.maxWidth / MediaQuery.of(context).size.width,
+    return ClipRect(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: constraints.maxWidth,
+              height: constraints.maxHeight,
+              child: ClipRect(
+                clipBehavior: Clip.hardEdge,
+                child: CustomPaint(
+                  painter: _DisplacedImagePainter(
+                    fragmentProgram: widget.fragmentProgram,
+                    image: widget.image,
+                    depth: widget.depth,
+                    xDisp: widget.displacementX,
+                    yDisp: widget.displacementY,
+                    zDisp: widget.displacementZ,
+                    // Reduces the effect if the widget is small
+                    effectIntensity: constraints.maxWidth /
+                        MediaQuery.of(context).size.width,
+                  ),
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
@@ -235,6 +250,7 @@ class _DisplacedImagePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.clipRect(Offset.zero & size);
     final shader = fragmentProgram.fragmentShader()
       ..setImageSampler(0, image)
       ..setImageSampler(1, depth)
@@ -253,5 +269,12 @@ class _DisplacedImagePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _DisplacedImagePainter oldDelegate) =>
+      fragmentProgram != oldDelegate.fragmentProgram ||
+      !image.isCloneOf(oldDelegate.image) ||
+      !depth.isCloneOf(oldDelegate.depth) ||
+      xDisp != oldDelegate.xDisp ||
+      yDisp != oldDelegate.yDisp ||
+      zDisp != oldDelegate.zDisp ||
+      effectIntensity != oldDelegate.effectIntensity;
 }
