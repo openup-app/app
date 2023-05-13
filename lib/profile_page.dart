@@ -2,17 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dartz/dartz.dart' show Either, Left;
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/view_collection_page.dart';
+import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/collection_photo_picker.dart';
 import 'package:openup/widgets/collection_photo_stack.dart';
@@ -206,12 +202,9 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                                   ],
                                   onView: (index) {
                                     context.pushNamed(
-                                      'view_collection',
-                                      extra:
-                                          ViewCollectionPageArguments.profile(
+                                      'view_profile',
+                                      extra: ViewProfilePageArguments.profile(
                                         profile: profile,
-                                        collections: collections,
-                                        index: index,
                                       ),
                                     );
                                   },

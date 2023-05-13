@@ -1,8 +1,5 @@
-import 'dart:ui';
-
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
@@ -10,41 +7,16 @@ import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
+import 'package:openup/widgets/icon_with_shadow.dart';
 
-class UserProfileDisplay extends StatefulWidget {
-  final Profile profile;
-  final bool playSlideshow;
-  final bool invited;
-
-  const UserProfileDisplay({
-    Key? key,
-    required this.profile,
-    required this.playSlideshow,
-    required this.invited,
-  }) : super(key: key);
-
-  @override
-  State<UserProfileDisplay> createState() => _UserProfileDisplayState();
-}
-
-class _UserProfileDisplayState extends State<UserProfileDisplay> {
-  @override
-  Widget build(BuildContext context) {
-    return CinematicGallery(
-      slideshow: widget.playSlideshow,
-      gallery: widget.profile.collection.photos,
-    );
-  }
-}
-
-class UserProfileInfoDisplay extends StatefulWidget {
+class ProfileBuilder extends StatefulWidget {
   final Profile profile;
   final bool play;
   final Widget Function(
           BuildContext context, bool play, Stream<PlaybackInfo> playbackInfo)
       builder;
 
-  const UserProfileInfoDisplay({
+  const ProfileBuilder({
     super.key,
     required this.profile,
     required this.play,
@@ -52,10 +24,10 @@ class UserProfileInfoDisplay extends StatefulWidget {
   });
 
   @override
-  State<UserProfileInfoDisplay> createState() => UserProfileInfoDisplayState();
+  State<ProfileBuilder> createState() => ProfileBuilderState();
 }
 
-class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
+class ProfileBuilderState extends State<ProfileBuilder> {
   final _player = JustAudioAudioPlayer();
   bool _audioPaused = false;
 
@@ -81,7 +53,7 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
   }
 
   @override
-  void didUpdateWidget(covariant UserProfileInfoDisplay oldWidget) {
+  void didUpdateWidget(covariant ProfileBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.profile.audio != widget.profile.audio) {
@@ -119,358 +91,263 @@ class UserProfileInfoDisplayState extends State<UserProfileInfoDisplay> {
   }
 }
 
-class PlaybackBar extends StatelessWidget {
-  final Stream<PlaybackInfo> playbackInfoStream;
-
-  const PlaybackBar({
-    super.key,
-    required this.playbackInfoStream,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<PlaybackInfo>(
-      stream: playbackInfoStream,
-      initialData: const PlaybackInfo(),
-      builder: (context, snapshot) {
-        final value = snapshot.requireData;
-        final position = value.position.inMilliseconds;
-        final duration = value.duration.inMilliseconds;
-        final ratio = duration == 0 ? 0.0 : position / duration;
-        return ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
-            child: Container(
-              height: 8,
-              color: const Color.fromRGBO(0xD7, 0xD7, 0xD7, 0.50),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: FractionallySizedBox(
-                  widthFactor: ratio < 0 ? 0 : ratio,
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    color: const Color.fromRGBO(0xE7, 0xE7, 0xE7, 0.75),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class UserNameAndRecordButton extends StatelessWidget {
+class ProfileDisplay extends StatelessWidget {
   final Profile profile;
-  final bool showRecordButton;
-  final String recordButtonLabel;
-  final VoidCallback onRecordPressed;
+  final bool play;
+  final VoidCallback onPlayPause;
+  final VoidCallback onRecord;
+  final VoidCallback onBlock;
 
-  const UserNameAndRecordButton({
+  const ProfileDisplay({
     super.key,
     required this.profile,
-    this.showRecordButton = true,
-    required this.recordButtonLabel,
-    required this.onRecordPressed,
+    required this.play,
+    required this.onPlayPause,
+    required this.onRecord,
+    required this.onBlock,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(
-            left: 34.0,
-            right: 34.0,
-            top: 26,
-            bottom: 26,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        AutoSizeText(
-                          profile.name,
-                          maxFontSize: 32,
-                          minFontSize: 26,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    color: Colors.black,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ),
-                        const SizedBox(width: 16),
-                        Text(
-                          profile.age.toString(),
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    color: Colors.black,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                        ),
-                        const SizedBox(width: 8),
-                        OnlineIndicatorBuilder(
-                          uid: profile.uid,
-                          builder: (context, online) {
-                            return online
-                                ? const OnlineIndicator()
-                                : const SizedBox.shrink();
-                          },
-                        ),
-                      ],
-                    ),
-                    if (profile.mutualFriends.isNotEmpty)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.info,
-                            color: Color.fromRGBO(0x38, 0x7B, 0xFF, 1.0),
-                            size: 18,
-                          ),
-                          const SizedBox(width: 2),
-                          Expanded(
-                            child: Button(
-                              onPressed: profile.mutualFriends.isEmpty
-                                  ? null
-                                  : () => _showMutualFriendsModal(context),
-                              useFadeWheNoPressedCallback: false,
-                              child: Text(
-                                profile.mutualFriends.length == 1
-                                    ? '1 mutual friend'
-                                    : '${profile.mutualFriends.length} mutual friends',
-                                textAlign: TextAlign.left,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .copyWith(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                  shadows: [
-                                    const Shadow(
-                                      blurRadius: 4,
-                                      color: Color.fromRGBO(
-                                          0x00, 0x00, 0x00, 0.25),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-              if (showRecordButton)
-                Expanded(
-                  child: Center(
-                    child: _RecordButton(
-                      label: recordButtonLabel,
-                      onPressed: onRecordPressed,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        if (!kReleaseMode)
-          AutoSizeText(
-            profile.uid,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium!
-                .copyWith(color: Colors.black, fontSize: 12),
-          ),
-      ],
-    );
-  }
-
-  void _showMutualFriendsModal(BuildContext context) {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) {
-        return _MutualFriendsModal(
-          uids: profile.mutualFriends,
-        );
-      },
-    );
-  }
-}
-
-class UserDetails extends StatelessWidget {
-  final Profile profile;
-  final Stream<PlaybackInfo>? playbackStream;
-  final bool showRecordButton;
-  final String recordButtonLabel;
-  final VoidCallback onRecordPressed;
-
-  const UserDetails({
-    Key? key,
-    required this.profile,
-    required this.playbackStream,
-    required this.showRecordButton,
-    required this.recordButtonLabel,
-    required this.onRecordPressed,
-  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
       children: [
+        Container(
+          clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(48)),
+          ),
+          child: Button(
+            onPressed: onPlayPause,
+            child: KeyedSubtree(
+              key: ValueKey(profile.uid),
+              child: CinematicGallery(
+                slideshow: play,
+                gallery: profile.collection.photos,
+              ),
+            ),
+          ),
+        ),
+        if (!play)
+          const Center(
+            child: IgnorePointer(
+              child: IconWithShadow(
+                Icons.play_arrow,
+                size: 80,
+              ),
+            ),
+          ),
         Positioned(
-          left: 24,
-          right: 24,
-          bottom: 24 + MediaQuery.of(context).padding.bottom,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  AutoSizeText(
-                    profile.name,
-                    maxFontSize: 32,
-                    minFontSize: 26,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                        ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    profile.age.toString(),
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                  const SizedBox(width: 8),
-                  OnlineIndicatorBuilder(
-                    uid: profile.uid,
-                    builder: (context, online) {
-                      return online
-                          ? const OnlineIndicator()
-                          : const SizedBox.shrink();
-                    },
-                  ),
+          right: 22,
+          top: 28,
+          child: ReportBlockPopupMenu2(
+            uid: profile.uid,
+            name: profile.name,
+            onBlock: onBlock,
+            builder: (context) {
+              return const _ProfileButtonContents(
+                icon: Icon(
+                  CupertinoIcons.ellipsis,
+                  color: Colors.black,
+                  size: 20,
+                ),
+                size: 29,
+              );
+            },
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 120,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.5),
                 ],
               ),
-              const SizedBox(height: 14),
-              Container(
-                height: 4,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(2)),
-                  color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: StreamBuilder<PlaybackInfo>(
-                    stream: playbackStream,
-                    initialData: const PlaybackInfo(),
-                    builder: (context, snapshot) {
-                      final value = snapshot.requireData;
-                      final position = value.position.inMilliseconds;
-                      final duration = value.duration.inMilliseconds;
-                      final ratio = duration == 0 ? 0.0 : position / duration;
-                      return FractionallySizedBox(
-                        widthFactor: ratio < 0 ? 0 : ratio,
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(2)),
-                            color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 1.0),
-                          ),
-                        ),
+            ),
+          ),
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            height: 51,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            margin: const EdgeInsets.only(bottom: 38),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Button(
+                    useFadeWheNoPressedCallback: false,
+                    onPressed: () {
+                      showCupertinoModalPopup(
+                        context: context,
+                        builder: (context) {
+                          return _MutualFriendsModal(
+                            uids: [profile.uid],
+                          );
+                        },
                       );
                     },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Button(
-                      onPressed: profile.mutualFriends.isEmpty
-                          ? null
-                          : () => _showMutualFriendsModal(context),
-                      useFadeWheNoPressedCallback: false,
-                      child: profile.mutualFriends.isNotEmpty
-                          ? Text(
-                              profile.mutualFriends.length == 1
-                                  ? '1 mutual friend'
-                                  : '${profile.mutualFriends.length} mutual friends',
-                              textAlign: TextAlign.left,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                shadows: [
-                                  const Shadow(
-                                    blurRadius: 4,
-                                    color:
-                                        Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                                  )
-                                ],
-                              ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AutoSizeText(
+                          profile.name,
+                          minFontSize: 15,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white),
+                        ),
+                        Row(
+                          children: [
+                            // Info icon with solid white background
+                            Stack(
+                              alignment: Alignment.center,
+                              children: const [
+                                SizedBox(
+                                  width: 10,
+                                  height: 10,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.info,
+                                  color: Color.fromRGBO(0xFF, 0x38, 0x38, 1.0),
+                                  size: 16,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text('1 mutual friends',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.white)),
                             )
-                          : const SizedBox.shrink(),
+                          ],
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (showRecordButton)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: _RecordButton(
-                        label: recordButtonLabel,
-                        onPressed: onRecordPressed,
-                      ),
-                    ),
-                ],
-              ),
-              if (!kReleaseMode)
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(24),
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  alignment: Alignment.center,
-                  child: AutoSizeText(
-                    profile.uid,
                   ),
                 ),
-            ],
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 146,
+                  child: _RecordButton(
+                    onPressed: onRecord,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
+}
 
-  void _showMutualFriendsModal(BuildContext context) {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) {
-        return _MutualFriendsModal(
-          uids: profile.mutualFriends,
-        );
-      },
+class ProfileButton extends StatelessWidget {
+  final Widget icon;
+  final Widget? label;
+  final double size;
+  final VoidCallback onPressed;
+
+  const ProfileButton({
+    super.key,
+    required this.icon,
+    this.label,
+    this.size = 35,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: _ProfileButtonContents(
+          icon: icon,
+          label: label,
+          size: size,
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileButtonContents extends StatelessWidget {
+  final Widget icon;
+  final Widget? label;
+  final double size;
+
+  const _ProfileButtonContents({
+    super.key,
+    required this.icon,
+    this.label,
+    this.size = 35,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: label == null ? size : null,
+      height: size,
+      alignment: Alignment.center,
+      padding: label == null
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(horizontal: 16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            offset: Offset(0, 2),
+            blurRadius: 4,
+            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          icon,
+          if (label != null) ...[
+            const SizedBox(width: 8),
+            DefaultTextStyle(
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Colors.black,
+              ),
+              child: label!,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -481,7 +358,7 @@ class _RecordButton extends StatelessWidget {
 
   const _RecordButton({
     super.key,
-    this.label = 'send invite',
+    this.label = 'send message',
     required this.onPressed,
   });
 
@@ -490,38 +367,31 @@ class _RecordButton extends StatelessWidget {
     return Button(
       onPressed: onPressed,
       child: Container(
-        width: 145,
+        width: 146,
         height: 51,
+        alignment: Alignment.center,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color.fromRGBO(0xEA, 0x6B, 0x6B, 1.0),
-              Color.fromRGBO(0xF1, 0x3B, 0x3B, 1.0),
+              Color.fromRGBO(0xF3, 0x49, 0x50, 1.0),
+              Color.fromRGBO(0xDF, 0x39, 0x3F, 1.0),
             ],
           ),
-          borderRadius: BorderRadius.all(Radius.circular(9)),
+          borderRadius: BorderRadius.all(Radius.circular(25)),
           boxShadow: [
             BoxShadow(
-              blurRadius: 20,
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.15),
+              offset: Offset(0, 4),
+              blurRadius: 4,
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
             ),
           ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.mic),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
-            ),
-          ],
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
         ),
       ),
     );

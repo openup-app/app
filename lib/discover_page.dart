@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:async/async.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:dartz/dartz.dart' show Either;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -18,9 +17,7 @@ import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/util/location_service.dart';
-import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -61,7 +58,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   final _pageListener = ValueNotifier<double>(0);
   final _pageController = PageController();
-  final _userProfileInfoDisplayKey = GlobalKey<UserProfileInfoDisplayState>();
+  final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
 
   @override
   void initState() {
@@ -85,7 +82,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       final index = _pageController.page?.round() ?? _currentProfileIndex;
 
       if (oldIndex != index) {
-        _userProfileInfoDisplayKey.currentState?.play();
+        _profileBuilderKey.currentState?.play();
       }
 
       // Prefetching profiles
@@ -277,7 +274,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     return ActivePage(
       onActivate: () => setState(() => _pageActive = true),
       onDeactivate: () {
-        _userProfileInfoDisplayKey.currentState?.pause();
+        _profileBuilderKey.currentState?.pause();
         setState(() => _pageActive = false);
       },
       child: Builder(
@@ -346,10 +343,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                 fit: StackFit.expand,
                 children: [
                   // Must live above PageView.builder (otherwise duplicate global key)
-                  UserProfileInfoDisplay(
-                    key: _userProfileInfoDisplayKey,
+                  ProfileBuilder(
+                    key: _profileBuilderKey,
                     profile: profile,
-                    // invited: _invitedUsers.contains(profile.uid),
                     play: index == _currentProfileIndex && _pageActive,
                     builder: (context, play, playbackInfoStream) {
                       if (_showingList) {
@@ -377,16 +373,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(48)),
                                 ),
-                                child: _ProfileDisplay(
+                                child: ProfileDisplay(
                                   profile: profile,
                                   play: play,
                                   onPlayPause: () {
                                     if (!play) {
-                                      _userProfileInfoDisplayKey.currentState
-                                          ?.play();
+                                      _profileBuilderKey.currentState?.play();
                                     } else {
-                                      _userProfileInfoDisplayKey.currentState
-                                          ?.pause();
+                                      _profileBuilderKey.currentState?.pause();
                                     }
                                   },
                                   onRecord: () {
@@ -426,26 +420,50 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                   Positioned(
                     left: 16 + 20,
                     top: MediaQuery.of(context).padding.top + 24 + 20,
-                    child: _PageControls(
-                      profile: profile,
-                      preference: _genderPreference,
-                      showingList: _showingList,
-                      onPreference: (gender) {
-                        if (gender == _genderPreference) {
-                          return;
-                        }
-                        setState(() {
-                          _genderPreference = gender;
-                          _nextMinRadius = 0;
-                          _nextPage = 0;
-                          _pageController.jumpTo(0);
-                          _profiles.clear();
-                        });
-                        _fetchPageOfProfiles();
-                      },
-                      onMap: () {
-                        setState(() => _showingList = !_showingList);
-                      },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ProfileButton(
+                          onPressed: () async {
+                            final gender = await _showPreferencesSheet();
+                            if (mounted && gender != null) {
+                              setState(() {
+                                _genderPreference = gender;
+                                _nextMinRadius = 0;
+                                _nextPage = 0;
+                                _pageController.jumpTo(0);
+                                _profiles.clear();
+                              });
+                              _fetchPageOfProfiles();
+                            }
+                          },
+                          icon: Image.asset(
+                            'assets/images/preferences_icon.png',
+                            color: Colors.black,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.medium,
+                          ),
+                          label: const Text('Filters'),
+                        ),
+                        const SizedBox(width: 4),
+                        ProfileButton(
+                          onPressed: () =>
+                              setState(() => _showingList = !_showingList),
+                          icon: _showingList
+                              ? const Icon(
+                                  Icons.map,
+                                  color: Colors.black,
+                                )
+                              : const Icon(
+                                  Icons.list,
+                                  color: Colors.black,
+                                ),
+                          label: _showingList
+                              ? const Text('Map')
+                              : const Text('List'),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -522,331 +540,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       },
     );
   }
-}
 
-class _ProfileDisplay extends StatelessWidget {
-  final Profile profile;
-  final bool play;
-  final VoidCallback onPlayPause;
-  final VoidCallback onRecord;
-  final VoidCallback onBlock;
-
-  const _ProfileDisplay({
-    super.key,
-    required this.profile,
-    required this.play,
-    required this.onPlayPause,
-    required this.onRecord,
-    required this.onBlock,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Container(
-          clipBehavior: Clip.hardEdge,
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(48)),
-          ),
-          child: Button(
-            onPressed: onPlayPause,
-            child: UserProfileDisplay(
-              key: ValueKey(profile.uid),
-              profile: profile,
-              playSlideshow: play,
-              invited: false,
-            ),
-          ),
-        ),
-        if (!play)
-          const Center(
-            child: IgnorePointer(
-              child: IconWithShadow(
-                Icons.play_arrow,
-                size: 80,
-              ),
-            ),
-          ),
-        Positioned(
-          right: 22,
-          top: 24,
-          child: ReportBlockPopupMenu2(
-            uid: profile.uid,
-            name: profile.name,
-            onBlock: onBlock,
-            builder: (context) {
-              return Container(
-                width: 29,
-                height: 29,
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(8.0),
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(0x5A, 0x5A, 0x5A, 0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  CupertinoIcons.ellipsis,
-                  color: Colors.white,
-                  size: 14,
-                ),
-              );
-            },
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 120,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.5),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            height: 51,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            margin: const EdgeInsets.only(bottom: 38),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AutoSizeText(
-                        profile.name,
-                        minFontSize: 15,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white),
-                      ),
-                      Row(
-                        children: [
-                          // Info icon with solid white background
-                          Stack(
-                            alignment: Alignment.center,
-                            children: const [
-                              SizedBox(
-                                width: 10,
-                                height: 10,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                              Icon(
-                                Icons.info,
-                                color: Color.fromRGBO(0xFF, 0x38, 0x38, 1.0),
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text('1 mutual friends',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .copyWith(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.white)),
-                          )
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 146,
-                  child: _RecordButton(
-                    onPressed: onRecord,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _RecordButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
-
-  const _RecordButton({
-    super.key,
-    this.label = 'send message',
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      child: Container(
-        width: 146,
-        height: 51,
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromRGBO(0xF3, 0x49, 0x50, 1.0),
-              Color.fromRGBO(0xDF, 0x39, 0x3F, 1.0),
-            ],
-          ),
-          borderRadius: BorderRadius.all(Radius.circular(25)),
-          boxShadow: [
-            BoxShadow(
-              offset: Offset(0, 4),
-              blurRadius: 4,
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-            ),
-          ],
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
-        ),
-      ),
-    );
-  }
-}
-
-class _PageControls extends StatelessWidget {
-  final Profile? profile;
-  final Gender? preference;
-  final bool showingList;
-  final void Function(Gender? preference) onPreference;
-  final VoidCallback onMap;
-
-  const _PageControls({
-    super.key,
-    required this.profile,
-    required this.preference,
-    required this.showingList,
-    required this.onPreference,
-    required this.onMap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Button(
-          onPressed: () => _showPreferencesSheet(context),
-          child: Container(
-            width: 96,
-            height: 35,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(32)),
-              boxShadow: [
-                BoxShadow(
-                  offset: Offset(0, 2),
-                  blurRadius: 4,
-                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  'assets/images/preferences_icon.png',
-                  color: Colors.black,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.medium,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Filters',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Button(
-          onPressed: onMap,
-          child: Container(
-            width: 96,
-            height: 35,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(32)),
-              boxShadow: [
-                BoxShadow(
-                  offset: Offset(0, 2),
-                  blurRadius: 4,
-                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                showingList
-                    ? const Icon(
-                        Icons.map,
-                        color: Colors.black,
-                      )
-                    : const Icon(
-                        Icons.list,
-                        color: Colors.black,
-                      ),
-                const SizedBox(width: 8),
-                Text(
-                  showingList ? 'Map' : 'List',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 14, fontWeight: FontWeight.w400),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showPreferencesSheet(BuildContext context) async {
+  Future<Gender?> _showPreferencesSheet() async {
     final genderString = await showModalBottomSheet<String>(
       backgroundColor: Colors.transparent,
       context: context,
@@ -871,7 +566,7 @@ class _PageControls extends StatelessWidget {
                 const SizedBox(height: 16),
                 RadioTile(
                   label: 'Everyone',
-                  selected: preference == null,
+                  selected: _genderPreference == null,
                   onTap: () => Navigator.of(context).pop('any'),
                   radioAtEnd: true,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -881,7 +576,7 @@ class _PageControls extends StatelessWidget {
                 ),
                 RadioTile(
                   label: 'Men',
-                  selected: preference == Gender.male,
+                  selected: _genderPreference == Gender.male,
                   onTap: () => Navigator.of(context).pop('male'),
                   radioAtEnd: true,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -891,7 +586,7 @@ class _PageControls extends StatelessWidget {
                 ),
                 RadioTile(
                   label: 'Women',
-                  selected: preference == Gender.female,
+                  selected: _genderPreference == Gender.female,
                   onTap: () => Navigator.of(context).pop('female'),
                   radioAtEnd: true,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -901,7 +596,7 @@ class _PageControls extends StatelessWidget {
                 ),
                 RadioTile(
                   label: 'Non-Binary',
-                  selected: preference == Gender.nonBinary,
+                  selected: _genderPreference == Gender.nonBinary,
                   onTap: () => Navigator.of(context).pop('nonBinary'),
                   radioAtEnd: true,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -918,16 +613,17 @@ class _PageControls extends StatelessWidget {
         );
       },
     );
+
+    Gender? gender;
     if (genderString != null) {
-      Gender? gender;
       try {
         gender =
             Gender.values.firstWhere((element) => element.name == genderString);
       } on StateError {
         // Ignore
       }
-      onPreference(gender);
     }
+    return gender;
   }
 }
 

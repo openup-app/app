@@ -44,7 +44,7 @@ import 'package:openup/signup_photos.dart';
 import 'package:openup/signup_friends.dart';
 import 'package:openup/signup_tutorial1.dart';
 import 'package:openup/util/page_transition.dart';
-import 'package:openup/view_collection_page.dart';
+import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/widgets/common.dart';
@@ -577,24 +577,16 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   },
                   routes: [
                     GoRoute(
-                      path: 'collections',
-                      name: 'view_collection',
+                      path: 'view',
+                      name: 'view_profile',
                       builder: (context, state) {
-                        final collectionId = state.queryParams['collection_id'];
                         final uid = state.queryParams['uid'];
-                        final args =
-                            state.extra as ViewCollectionPageArguments?;
+                        final args = state.extra as ViewProfilePageArguments?;
                         if (args != null) {
-                          return ViewCollectionPage(args: args);
+                          return ViewProfilePage(args: args);
                         } else if (uid != null) {
-                          return ViewCollectionPage(
-                            args: ViewCollectionPageArguments.uid(uid: uid),
-                          );
-                        } else if (collectionId != null) {
-                          return ViewCollectionPage(
-                            args: ViewCollectionPageArguments.collectionId(
-                              collectionId: collectionId,
-                            ),
+                          return ViewProfilePage(
+                            args: ViewProfilePageArguments.uid(uid: uid),
                           );
                         } else {
                           throw 'Missing page arguments';

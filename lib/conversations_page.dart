@@ -9,7 +9,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/menu_page.dart';
-import 'package:openup/view_collection_page.dart';
+import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
@@ -351,7 +351,6 @@ class _ConversationList extends StatelessWidget {
           );
         },
         itemBuilder: (context, index) {
-          const suggestedFriend = false;
           final chatroom = chatrooms[index];
           return LayoutBuilder(
             builder: (context, constraints) {
@@ -421,8 +420,8 @@ class _ConversationList extends StatelessWidget {
                               child: Button(
                                 onPressed: () {
                                   context.pushNamed(
-                                    'view_collection',
-                                    extra: ViewCollectionPageArguments.profile(
+                                    'view_profile',
+                                    extra: ViewProfilePageArguments.profile(
                                       profile: chatroom.profile,
                                     ),
                                   );
