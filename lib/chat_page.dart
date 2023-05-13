@@ -446,7 +446,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     );
   }
 
-  void _submit(Uint8List audio, Duration duration) async {
+  Future<void> _submit(Uint8List audio, Duration duration) async {
     final tempDir = await getTemporaryDirectory();
     final file = await File(path.join(
             tempDir.path, 'chats', '${DateTime.now().toIso8601String()}.m4a'))
@@ -460,7 +460,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     const uuid = Uuid();
     final pendingId = uuid.v4();
     final uid = ref.read(userProvider).uid;
-    final atEnd = _scrollController.position.extentAfter == 0;
     setState(() {
       _messages![pendingId] = ChatMessage(
         uid: uid,
@@ -471,16 +470,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         waveform: [],
       );
     });
-    if (atEnd) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      });
+
+    if (mounted && _scrollController.hasClients) {
+      _animateToBottom();
     }
 
     final api = GetIt.instance.get<Api>();
@@ -498,12 +490,26 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
     result.fold(
       (l) => displayError(context, l),
-      (r) => setState(() {
-        if (_chatroom?.inviteState == ChatroomState.invited) {
-          _chatroom = _chatroom?.copyWith(inviteState: ChatroomState.accepted);
+      (r) {
+        final chatroom = _chatroom;
+        if (chatroom != null && chatroom.inviteState == ChatroomState.invited) {
+          setState(() {
+            _chatroom = chatroom.copyWith(inviteState: ChatroomState.accepted);
+            ref
+                .read(userProvider2.notifier)
+                .acceptChatroom(chatroom.profile.uid);
+          });
+          _messages![pendingId] = r;
         }
-        _messages![pendingId] = r;
-      }),
+      },
+    );
+  }
+
+  void _animateToBottom() {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
     );
   }
 

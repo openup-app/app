@@ -141,6 +141,26 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     );
   }
 
+  void acceptChatroom(String uid) {
+    state.map(
+      guest: (_) {},
+      signedIn: (signedIn) {
+        final chatrooms = signedIn.chatrooms;
+        if (chatrooms == null) {
+          return;
+        }
+        final index = chatrooms.indexWhere((c) => c.profile.uid == uid);
+        if (index != -1) {
+          final accepted =
+              chatrooms[index].copyWith(inviteState: ChatroomState.accepted);
+          final newChatrooms = List.of(chatrooms);
+          newChatrooms.replaceRange(index, index + 1, [accepted]);
+          state = signedIn.copyWith(chatrooms: newChatrooms);
+        }
+      },
+    );
+  }
+
   Future<Either<ApiError, Collection>> createCollection({
     required List<File> photos,
     required File? audio,
