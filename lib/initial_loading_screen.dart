@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -9,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/notifications/notifications.dart';
 import 'package:openup/util/location_service.dart';
 
 /// Page used for asynchronous initialization.
@@ -31,8 +29,6 @@ class InitialLoadingScreen extends ConsumerStatefulWidget {
 }
 
 class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
-  bool _deepLinked = false;
-
   @override
   void initState() {
     super.initState();
@@ -40,14 +36,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
   }
 
   void _setup() async {
-    // ConnectionService and CallKit
-    initializeVoipHandlers(onDeepLink: _onDeepLink);
-
-    await Firebase.initializeApp();
-    if (!mounted) {
-      return;
-    }
-
     // Update location
     final latLong = await LocationService().getLatLong();
     final latLongValue = latLong.map(
@@ -113,29 +101,11 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       },
     );
 
-    // Handle notifications as early as possible for background notifications.
-    // On iOS, initial route is navigated to, but execution may stop due to
-    // a user prompt or a second navigation
-    await handleNotifications(onDeepLink: _onDeepLink);
-    if (!mounted) {
-      return;
-    }
-
-    if (!_deepLinked) {
-      // Standard app entry or sign up onboarding
-      if (widget.needsOnboarding) {
-        context.goNamed('signup_name');
-      } else {
-        context.goNamed('discover');
-      }
-    }
-  }
-
-  void _onDeepLink(String path) {
-    final context = widget.navigatorKey.currentContext;
-    if (context != null) {
-      _deepLinked = true;
-      context.go(path);
+    // Standard app entry or sign up onboarding
+    if (widget.needsOnboarding) {
+      context.goNamed('signup_name');
+    } else {
+      context.goNamed('discover');
     }
   }
 

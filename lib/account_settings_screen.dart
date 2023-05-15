@@ -14,7 +14,6 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/contact_us_screen.dart';
-import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/phone_number_input.dart';
@@ -259,7 +258,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       ..collections([]);
     ref.read(userProvider2.notifier).guest();
     await GetIt.instance.get<Api>().signOut();
-    await dismissAllNotifications();
     if (Platform.isAndroid) {
       await FirebaseMessaging.instance.deleteToken();
     }
@@ -306,7 +304,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       ..profile(null)
       ..collections([]);
     ref.read(userProvider2.notifier).guest();
-    await dismissAllNotifications();
     GetIt.instance.get<Api>().deleteAccount();
     await FirebaseAuth.instance.signOut();
   }

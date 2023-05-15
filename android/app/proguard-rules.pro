@@ -6,7 +6,3 @@
 -keep class io.flutter.**  { *; }
 -keep class io.flutter.plugins.**  { *; }
 -dontwarn io.flutter.embedding.**
-
-## Flutter WebRTC
--keep class com.cloudwebrtc.webrtc.** { *; }
--keep class org.webrtc.** { *; } 

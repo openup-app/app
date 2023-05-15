@@ -224,7 +224,6 @@ class Api {
   Future<Either<ApiError, void>> addNotificationTokens({
     String? fcmMessagingAndVoipToken,
     String? apnMessagingToken,
-    String? apnVoipToken,
   }) {
     return _request(
       makeRequest: () {
@@ -245,13 +244,6 @@ class Api {
                   'token': apnMessagingToken,
                   'messaging': true,
                   'voip': false,
-                  'service': 'apn',
-                },
-              if (apnVoipToken != null)
-                {
-                  'token': apnVoipToken,
-                  'messaging': false,
-                  'voip': true,
                   'service': 'apn',
                 },
             ]

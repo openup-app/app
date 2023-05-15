@@ -8,15 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
-import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
-import 'package:openup/profile_view.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -1012,141 +1009,10 @@ class _RecordButton extends StatelessWidget {
   }
 }
 
-class _ChatProfilePage extends StatefulWidget {
-  final Profile profile;
-  final DateTime endTime;
-  final VoidCallback onShowMessages;
-  const _ChatProfilePage({
-    Key? key,
-    required this.profile,
-    required this.endTime,
-    required this.onShowMessages,
-  }) : super(key: key);
-
-  @override
-  State<_ChatProfilePage> createState() => _ChatProfilePageState();
-}
-
-class _ChatProfilePageState extends State<_ChatProfilePage> {
-  bool _play = true;
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        top: 8,
-        bottom: MediaQuery.of(context).padding.bottom,
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: ProfileView(
-              profile: widget.profile,
-              endTime: widget.endTime,
-              play: _play,
-            ),
-          ),
-          Container(
-            height: 72,
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Button(
-                  onPressed: widget.onShowMessages,
-                  child: Container(
-                    width: 64,
-                    height: 46,
-                    decoration: const BoxDecoration(
-                      color: Color.fromRGBO(0x16, 0x16, 0x16, 1.0),
-                      borderRadius: BorderRadius.all(Radius.circular(9)),
-                    ),
-                    child: const Icon(
-                      Icons.message,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Consumer(
-                  builder: (context, ref, _) {
-                    return Button(
-                      onPressed: () {
-                        setState(() => _play = false);
-                        _call(
-                          context: context,
-                          ref: ref,
-                          profile: widget.profile.toSimpleProfile(),
-                          video: false,
-                        );
-                      },
-                      child: Container(
-                        width: 64,
-                        height: 46,
-                        decoration: const BoxDecoration(
-                          color: Color.fromRGBO(0x16, 0x16, 0x16, 1.0),
-                          borderRadius: BorderRadius.all(Radius.circular(9)),
-                        ),
-                        child: const Icon(
-                          Icons.call,
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 16),
-                Button(
-                  onPressed: () {
-                    GetIt.instance.get<Mixpanel>().track("video_call");
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Video calling coming soon'),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: 64,
-                    height: 46,
-                    decoration: const BoxDecoration(
-                      color: Color.fromRGBO(0x16, 0x16, 0x16, 1.0),
-                      borderRadius: BorderRadius.all(Radius.circular(9)),
-                    ),
-                    child: const Icon(
-                      Icons.videocam,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _ScrollNotifier extends StateNotifier<double> {
   _ScrollNotifier() : super(0.0);
 
   void update(double offset) => state = offset;
-}
-
-void _call({
-  required BuildContext context,
-  required WidgetRef ref,
-  required SimpleProfile profile,
-  required bool video,
-}) async {
-  GetIt.instance.get<Mixpanel>().track("audio_call");
-  final callManager = GetIt.instance.get<CallManager>();
-  callManager.call(
-    context: context,
-    uid: ref.read(userProvider).uid,
-    otherProfile: profile,
-    video: video,
-  );
-  context.pushNamed('call');
 }
 
 class ChatPageArguments {

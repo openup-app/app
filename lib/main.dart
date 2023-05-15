@@ -5,7 +5,6 @@ import 'dart:math';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +15,6 @@ import 'package:lottie/lottie.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/account_settings_screen.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/call_manager.dart';
 import 'package:openup/api/in_app_notifications.dart';
 import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/online_users_api_util.dart';
@@ -25,7 +23,6 @@ import 'package:openup/chat_page.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
-import 'package:openup/notifications/ios_voip_handlers.dart' as ios_voip;
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/contacts_page.dart';
 import 'package:openup/profile_page.dart';
@@ -178,8 +175,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     );
     GetIt.instance.registerSingleton<Api>(api);
 
-    GetIt.instance.registerSingleton<CallManager>(CallManager());
-
     GetIt.instance.registerSingleton<OnlineUsersApi>(
       OnlineUsersApi(
         host: host,
@@ -278,8 +273,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             api.addNotificationTokens(
               fcmMessagingAndVoipToken: isIOS ? null : token,
               apnMessagingToken: isIOS ? token : null,
-              apnVoipToken:
-                  isIOS ? await ios_voip.getVoipPushNotificationToken() : null,
             );
           }
         });
@@ -292,7 +285,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   @override
   void dispose() {
-    print('############### Openup app disposed!');
     _idTokenChangesSubscription?.cancel();
     _notificationTokenSubscription?.cancel();
     disposeNotifications();
@@ -332,78 +324,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             color: Colors.black,
           ),
         ),
-        builder: (context, child) {
-          return CupertinoTheme(
-            data: const CupertinoThemeData(
-              brightness: Brightness.dark,
-              primaryColor: Colors.white,
-            ),
-            child: Stack(
-              children: [
-                if (child != null) Positioned.fill(child: child),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  child: StreamBuilder<bool>(
-                    stream:
-                        GetIt.instance.get<CallManager>().callPageActiveStream,
-                    initialData: false,
-                    builder: (context, snapshot) {
-                      final callPageActive = snapshot.requireData;
-                      return StreamBuilder<CallState>(
-                        stream: GetIt.instance.get<CallManager>().callState,
-                        initialData: const CallState.none(),
-                        builder: (context, snapshot) {
-                          final callState = snapshot.requireData;
-                          final display =
-                              !(callState is CallStateNone || callPageActive);
-
-                          return IgnorePointer(
-                            ignoring: !display,
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 150),
-                              opacity: display ? 1.0 : 0.0,
-                              child: Button(
-                                onPressed: () => context.pushNamed('call'),
-                                child: Container(
-                                  height:
-                                      40 + MediaQuery.of(context).padding.top,
-                                  color: const Color.fromRGBO(
-                                      0x03, 0xCB, 0x17, 1.0),
-                                  padding: EdgeInsets.only(
-                                      top: MediaQuery.of(context).padding.top),
-                                  alignment: Alignment.center,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(Icons.call, size: 20),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Tap to return to call',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium!
-                                            .copyWith(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w300,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
       ),
     );
   }
