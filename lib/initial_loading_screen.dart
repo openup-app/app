@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/util/location_service.dart';
@@ -66,7 +64,8 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     _setupApiAuthToken(user);
 
     // Get user profile
-    final getAccountResult = await getAccount();
+    final api = ref.read(apiProvider);
+    final getAccountResult = await getAccount(api);
     if (!mounted) {
       return;
     }
@@ -88,6 +87,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
         ref.read(userProvider2.notifier).signedIn(profile);
         if (latLongValue != null) {
           updateLocation(
+            ref: ref,
             latitude: latLongValue.latitude,
             longitude: latLongValue.longitude,
           );
@@ -110,7 +110,7 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
   }
 
   Future<void> _setupApiAuthToken(User user) async {
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     for (var retryAttempt = 0; retryAttempt < 3; retryAttempt++) {
       debugPrint('FirebaseAuth getIdToken attempt $retryAttempt');
       try {

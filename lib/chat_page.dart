@@ -472,7 +472,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       _animateToBottom();
     }
 
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     final result = await api.sendMessage(
       widget.otherUid,
       ChatType.audio,
@@ -529,7 +529,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   }
 
   Future<void> _fetchChatroom(String otherUid) async {
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     final result = await api.getChatroom(widget.otherUid);
     if (!mounted) {
       return;
@@ -545,7 +545,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   }
 
   Future<void> _fetchHistory({DateTime? startDate}) async {
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     final result = await api.getMessages(
       widget.otherUid,
       startDate: startDate,

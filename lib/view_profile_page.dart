@@ -9,6 +9,7 @@ import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/menu_page.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -66,7 +67,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewProfilePage> {
   }
 
   Future<Profile?> _fetchProfile(String uid) async {
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     final profile = await api.getProfile(uid);
 
     if (!mounted) {
@@ -189,7 +190,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewProfilePage> {
       return;
     }
 
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     final future = api.sendMessage(uid, ChatType.audio, file.path);
     await withBlockingModal(
       context: context,

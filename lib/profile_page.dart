@@ -604,7 +604,7 @@ class _NameFieldState extends ConsumerState<_NameField> {
   }
 }
 
-class _CollectionCreation extends StatefulWidget {
+class _CollectionCreation extends ConsumerStatefulWidget {
   final VoidCallback onDone;
 
   const _CollectionCreation({
@@ -613,10 +613,11 @@ class _CollectionCreation extends StatefulWidget {
   });
 
   @override
-  State<_CollectionCreation> createState() => __CollectionCreationState();
+  ConsumerState<_CollectionCreation> createState() =>
+      __CollectionCreationState();
 }
 
-class __CollectionCreationState extends State<_CollectionCreation> {
+class __CollectionCreationState extends ConsumerState<_CollectionCreation> {
   final _photos = <File>[];
   File? _audio;
   _CreationStep _step = _CreationStep.photos;
@@ -777,6 +778,7 @@ class __CollectionCreationState extends State<_CollectionCreation> {
       context: context,
       label: 'Uploading',
       future: uploadCollection(
+        api: ref.read(apiProvider),
         photos: _photos,
         audio: _audio,
       ),

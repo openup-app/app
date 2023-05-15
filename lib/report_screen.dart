@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
-import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
@@ -219,7 +217,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
   void _upload() async {
     setState(() => _uploading = true);
 
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     final extraText = _textController.text;
     final extra = _reason == _Reason.other
         ? (extraText.isEmpty ? null : extraText)

@@ -195,6 +195,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
           .update(LatLongValue(location.latitude, location.longitude));
       setState(() => _location = location);
       await updateLocation(
+        ref: ref,
         latitude: location.latitude,
         longitude: location.longitude,
       );
@@ -218,7 +219,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     }
     setState(() => _hasLocation = true);
 
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     _discoverOperation?.cancel();
     final discoverFuture = api.getDiscover(
       location.latitude,
@@ -505,7 +506,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     }
 
     final future =
-        GetIt.instance.get<Api>().sendMessage(uid, ChatType.audio, file.path);
+        ref.read(apiProvider).sendMessage(uid, ChatType.audio, file.path);
     await withBlockingModal(
       context: context,
       label: 'Sending invite...',

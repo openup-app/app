@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:openup/api/online_users_api.dart';
 
 part 'online_users_api_util.freezed.dart';
+
+final onlineUsersApiProvider =
+    Provider<OnlineUsersApi>((ref) => throw 'OnlineUsersApi is uninitialized');
 
 final onlineUsersProvider =
     StateNotifierProvider<OnlineUsersStateNotifier, OnlineUsers>((ref) {

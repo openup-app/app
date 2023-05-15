@@ -155,7 +155,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
     final result = await withBlockingModal(
       context: context,
       label: 'Creating account...',
-      future: createAccount(params),
+      future: createAccount(ref: ref, params: params),
     );
     if (!mounted) {
       return;

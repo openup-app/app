@@ -11,11 +11,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:get_it/get_it.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
@@ -1496,7 +1494,7 @@ class OvalButton extends StatelessWidget {
   }
 }
 
-class OnlineIndicatorBuilder extends StatefulWidget {
+class OnlineIndicatorBuilder extends ConsumerStatefulWidget {
   final String uid;
   final Widget Function(BuildContext context, bool online) builder;
 
@@ -1507,10 +1505,12 @@ class OnlineIndicatorBuilder extends StatefulWidget {
   });
 
   @override
-  State<OnlineIndicatorBuilder> createState() => OnlineIndicatorBuilderState();
+  ConsumerState<OnlineIndicatorBuilder> createState() =>
+      OnlineIndicatorBuilderState();
 }
 
-class OnlineIndicatorBuilderState extends State<OnlineIndicatorBuilder> {
+class OnlineIndicatorBuilderState
+    extends ConsumerState<OnlineIndicatorBuilder> {
   @override
   void initState() {
     super.initState();
@@ -1533,12 +1533,12 @@ class OnlineIndicatorBuilderState extends State<OnlineIndicatorBuilder> {
   }
 
   void _subscribe(String uid) {
-    final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
+    final onlineUsersApi = ref.read(onlineUsersApiProvider);
     onlineUsersApi.subscribeToOnlineStatus(uid);
   }
 
   void _unsubscribe(String uid) {
-    final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
+    final onlineUsersApi = ref.read(onlineUsersApiProvider);
     onlineUsersApi.unsubscribeToOnlineStatus(uid);
   }
 
@@ -1613,21 +1613,74 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
                 builder: (context) {
                   return CupertinoActionSheet(
                     cancelButton: CupertinoActionSheetAction(
-                      onPressed: () {
-                        _showBlockDialog(
+                      onPressed: () async {
+                        final block = await _showBlockDialog(
                           context: context,
                           myUid: myUid,
                         );
+
+                        if (block == _BlockResult.block && mounted) {
+                          final blockFuture =
+                              ref.read(apiProvider).blockUser(widget.uid);
+                          await withBlockingModal(
+                            context: context,
+                            label: 'Blocking...',
+                            future: blockFuture,
+                          );
+                          widget.onBlock();
+                        }
+
+                        if (mounted) {
+                          Navigator.of(context).pop();
+                        }
                       },
                       child: const Text('Block User'),
                     ),
                     actions: [
                       CupertinoActionSheetAction(
-                        onPressed: () {
-                          _showReportModal(
+                        onPressed: () async {
+                          final reportReason = await _showReportReasonModal(
                             context: context,
                             myUid: myUid,
                           );
+                          if (reportReason == null || !mounted) {
+                            return;
+                          }
+
+                          // Send report
+                          final api = ref.read(apiProvider);
+                          final reportFuture = api.reportUser(
+                            uid: myUid,
+                            reportedUid: widget.uid,
+                            reason: reportReason.name,
+                          );
+                          await withBlockingModal(
+                            context: context,
+                            label: 'Reporting...',
+                            future: reportFuture,
+                          );
+
+                          if (!mounted) {
+                            return;
+                          }
+
+                          final block = await _showReportSubmittedModal(
+                            context: context,
+                          );
+                          if (block == _BlockResult.block && mounted) {
+                            final api = ref.read(apiProvider);
+                            final blockFuture = api.blockUser(widget.uid);
+                            await withBlockingModal(
+                              context: context,
+                              label: 'Blocking...',
+                              future: blockFuture,
+                            );
+                            widget.onBlock();
+                          }
+
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                          }
                         },
                         child: const Text('Report User'),
                       ),
@@ -1640,11 +1693,11 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
     );
   }
 
-  void _showBlockDialog({
+  Future<_BlockResult> _showBlockDialog({
     required BuildContext context,
     required String myUid,
   }) async {
-    final block = await showCupertinoDialog<bool>(
+    final result = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) {
         return Center(
@@ -1718,23 +1771,13 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
       },
     );
 
-    if (block == true && mounted) {
-      final api = GetIt.instance.get<Api>();
-      final blockFuture = api.blockUser(widget.uid);
-      await withBlockingModal(
-        context: context,
-        label: 'Blocking...',
-        future: blockFuture,
-      );
-      widget.onBlock();
+    if (result != null && result == true) {
+      return _BlockResult.block;
     }
-
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
+    return _BlockResult.noBlock;
   }
 
-  void _showReportModal({
+  Future<_ReportReason?> _showReportReasonModal({
     required BuildContext context,
     required String myUid,
   }) async {
@@ -1786,110 +1829,99 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
     );
 
     if (reportReason != null && mounted) {
-      final api = GetIt.instance.get<Api>();
-      final reportFuture = api.reportUser(
-        uid: myUid,
-        reportedUid: widget.uid,
-        reason: reportReason,
-      );
-      await withBlockingModal(
-        context: context,
-        label: 'Reporting...',
-        future: reportFuture,
-      );
+      final index =
+          _ReportReason.values.indexWhere((r) => r.name == reportReason);
+      if (index == -1) {
+        return null;
+      }
+      return _ReportReason.values[index];
     }
+    return null;
+  }
 
-    if (reportReason != null && mounted) {
-      final block = await showCupertinoDialog<bool>(
-        context: context,
-        builder: (context) {
-          return Center(
-            child: Surface(
-              squareBottom: false,
-              child: Padding(
-                padding: const EdgeInsets.all(36.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Thank you for submitting your report',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 24, fontWeight: FontWeight.w300),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      'We will investigate this issue.\n\nAdditionally you can block the user so they can\'t discover your account.',
+  Future<_BlockResult> _showReportSubmittedModal({
+    required BuildContext context,
+  }) async {
+    final result = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) {
+        return Center(
+          child: Surface(
+            squareBottom: false,
+            child: Padding(
+              padding: const EdgeInsets.all(36.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Thank you for submitting your report',
                       style: Theme.of(context)
                           .textTheme
                           .bodyMedium!
-                          .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
+                          .copyWith(fontSize: 24, fontWeight: FontWeight.w300),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Button(
-                          onPressed: () {
-                            Navigator.of(context).pop(true);
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Block',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      color: const Color.fromRGBO(
-                                          0xFF, 0x07, 0x07, 1.0),
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w300),
-                            ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'We will investigate this issue.\n\nAdditionally you can block the user so they can\'t discover your account.',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Button(
+                        onPressed: () {
+                          Navigator.of(context).pop(true);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            'Block',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                    color: const Color.fromRGBO(
+                                        0xFF, 0x07, 0x07, 1.0),
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w300),
                           ),
                         ),
-                        Button(
-                          onPressed: Navigator.of(context).pop,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Done',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w300),
-                            ),
+                      ),
+                      Button(
+                        onPressed: Navigator.of(context).pop,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            'Done',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                    fontSize: 20, fontWeight: FontWeight.w300),
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          );
-        },
-      );
-
-      if (block == true && mounted) {
-        final api = GetIt.instance.get<Api>();
-        final blockFuture = api.blockUser(widget.uid);
-        await withBlockingModal(
-          context: context,
-          label: 'Blocking...',
-          future: blockFuture,
+          ),
         );
-        widget.onBlock();
-      }
-    }
+      },
+    );
 
-    if (mounted) {
-      Navigator.of(context).pop();
+    if (result != null && result == true) {
+      return _BlockResult.block;
     }
+    return _BlockResult.noBlock;
   }
 }
 
@@ -2061,3 +2093,7 @@ String formatCountdown(Duration d) {
     return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
   }
 }
+
+enum _BlockResult { block, noBlock }
+
+enum _ReportReason { deceptive, sexual, selfHarm, harmful }

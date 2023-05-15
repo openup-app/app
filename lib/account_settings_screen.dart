@@ -257,7 +257,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       ..profile(null)
       ..collections([]);
     ref.read(userProvider2.notifier).guest();
-    await GetIt.instance.get<Api>().signOut();
+    ref.read(apiProvider).signOut();
     if (Platform.isAndroid) {
       await FirebaseMessaging.instance.deleteToken();
     }
@@ -304,7 +304,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       ..profile(null)
       ..collections([]);
     ref.read(userProvider2.notifier).guest();
-    GetIt.instance.get<Api>().deleteAccount();
+    ref.read(apiProvider).deleteAccount();
     await FirebaseAuth.instance.signOut();
   }
 }
@@ -569,7 +569,7 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
   }
 
   void _getBlockedUsers() {
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     api.getBlockedUsers().then((value) {
       if (mounted) {
         value.fold(
@@ -722,7 +722,7 @@ class _BlockedListState extends ConsumerState<_BlockedList> {
                                       },
                                     );
                                     if (result == true) {
-                                      final api = GetIt.instance.get<Api>();
+                                      final api = ref.read(apiProvider);
                                       final result =
                                           await api.unblockUser(user.uid);
                                       if (mounted) {

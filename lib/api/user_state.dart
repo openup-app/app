@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:get_it/get_it.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/util/location_service.dart';
@@ -20,6 +19,8 @@ class LocationNotifier extends StateNotifier<LatLongValue?> {
 
   void update(LatLongValue? value) => state = value;
 }
+
+final apiProvider = Provider<Api>((ref) => throw 'Api is uninitialized');
 
 final userProvider = StateNotifierProvider<UserStateNotifier, UserState>((ref) {
   return UserStateNotifier();
@@ -49,11 +50,14 @@ class UserState with _$UserState {
 
 final userProvider2 =
     StateNotifierProvider<UserStateNotifier2, UserState2>((ref) {
-  return UserStateNotifier2();
+  final api = ref.watch(apiProvider);
+  return UserStateNotifier2(api);
 });
 
 class UserStateNotifier2 extends StateNotifier<UserState2> {
-  UserStateNotifier2() : super(const _Guest());
+  final Api _api;
+
+  UserStateNotifier2(this._api) : super(const _Guest());
 
   UserState2 get userState => state;
 
@@ -67,7 +71,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
   }
 
   Future<void> _cacheChatrooms() async {
-    final result = await GetIt.instance.get<Api>().getChatrooms();
+    final result = await _api.getChatrooms();
     result.fold(
       (l) {},
       (r) {
@@ -80,7 +84,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
   }
 
   Future<void> _cacheCollections(String uid) async {
-    final result = await GetIt.instance.get<Api>().getCollections(uid);
+    final result = await _api.getCollections(uid);
     result.fold(
       (l) {},
       (r) {
@@ -100,8 +104,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
         if (name.isEmpty || name == signedIn.profile.name) {
           return Right(signedIn.profile);
         }
-        final api = GetIt.instance.get<Api>();
-        final result = await api.updateProfile(
+        final result = await _api.updateProfile(
           signedIn.profile.uid,
           signedIn.profile.copyWith(name: name),
         );
@@ -128,8 +131,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
       guest: (_) =>
           Future.value(const Left(ApiError.client(ClientErrorUnauthorized()))),
       signedIn: (signedIn) async {
-        final api = GetIt.instance.get<Api>();
-        final result = await api.deleteChatroom(uid);
+        final result = await _api.deleteChatroom(uid);
         return result.fold<Either<ApiError, void>>(
           (l) => Left(l),
           (r) {
@@ -170,7 +172,8 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
       guest: (_) =>
           Future.value(const Left(ApiError.client(ClientErrorUnauthorized()))),
       signedIn: (signedIn) async {
-        final result = await uploadCollection(photos: photos, audio: audio);
+        final result =
+            await uploadCollection(api: _api, photos: photos, audio: audio);
         return result.fold<Either<ApiError, Collection>>(
           (l) => Left(l),
           (r) {
@@ -191,7 +194,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
       guest: (_) =>
           Future.value(const Left(ApiError.client(ClientErrorUnauthorized()))),
       signedIn: (signedIn) async {
-        final result = await GetIt.instance.get<Api>().deleteCollection(id);
+        final result = await _api.deleteCollection(id);
         return result.fold<Either<ApiError, void>>(
           (l) => Left(l),
           (r) {
@@ -251,8 +254,7 @@ class UserState2 with _$UserState2 {
   }
 }
 
-Future<GetAccountResult> getAccount() async {
-  final api = GetIt.instance.get<Api>();
+Future<GetAccountResult> getAccount(Api api) async {
   final result = await api.getAccount();
   return result.fold(
     (l) {

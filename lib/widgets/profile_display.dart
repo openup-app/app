@@ -1,8 +1,10 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -91,7 +93,7 @@ class ProfileBuilderState extends State<ProfileBuilder> {
   }
 }
 
-class ProfileDisplay extends StatelessWidget {
+class ProfileDisplay extends ConsumerWidget {
   final Profile profile;
   final bool play;
   final VoidCallback onPlayPause;
@@ -108,7 +110,7 @@ class ProfileDisplay extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -257,7 +259,34 @@ class ProfileDisplay extends StatelessWidget {
                 SizedBox(
                   width: 146,
                   child: _RecordButton(
-                    onPressed: onRecord,
+                    onPressed: () {
+                      ref.read(userProvider2).map(
+                        guest: (_) {
+                          showCupertinoDialog(
+                            context: context,
+                            builder: (context) {
+                              return CupertinoAlertDialog(
+                                title: const Text('Log in to send invites'),
+                                actions: [
+                                  CupertinoDialogAction(
+                                    onPressed: Navigator.of(context).pop,
+                                    child: const Text('Cancel'),
+                                  ),
+                                  CupertinoDialogAction(
+                                    onPressed: () =>
+                                        context.pushNamed('signup'),
+                                    child: const Text('Log in'),
+                                  )
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        signedIn: (_) {
+                          onRecord();
+                        },
+                      );
+                    },
                   ),
                 ),
               ],
@@ -398,7 +427,7 @@ class _RecordButton extends StatelessWidget {
   }
 }
 
-class _MutualFriendsModal extends StatefulWidget {
+class _MutualFriendsModal extends ConsumerStatefulWidget {
   final List<String> uids;
 
   const _MutualFriendsModal({
@@ -407,10 +436,11 @@ class _MutualFriendsModal extends StatefulWidget {
   });
 
   @override
-  State<_MutualFriendsModal> createState() => _MutualFriendsModalState();
+  ConsumerState<_MutualFriendsModal> createState() =>
+      _MutualFriendsModalState();
 }
 
-class _MutualFriendsModalState extends State<_MutualFriendsModal> {
+class _MutualFriendsModalState extends ConsumerState<_MutualFriendsModal> {
   bool _loading = true;
 
   final _profiles = <Profile>[];
@@ -418,7 +448,7 @@ class _MutualFriendsModalState extends State<_MutualFriendsModal> {
   @override
   void initState() {
     super.initState();
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     Future.wait(widget.uids.map(api.getProfile)).then((results) {
       if (mounted) {
         final profiles = results.map((result) {

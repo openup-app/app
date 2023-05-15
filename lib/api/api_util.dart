@@ -6,7 +6,6 @@ import 'dart:ui' as ui;
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:image/image.dart' as img;
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
@@ -38,9 +37,10 @@ String errorToMessage(ApiError error) {
   );
 }
 
-Future<Either<ApiError, Profile>> createAccount(
-  AccountCreationParams params,
-) async {
+Future<Either<ApiError, Profile>> createAccount({
+  required WidgetRef ref,
+  required AccountCreationParams params,
+}) async {
   final photos = params.photos?.map((e) => File(e)).toList();
   if (photos == null) {
     debugPrint('Photos were null when creating account');
@@ -53,7 +53,7 @@ Future<Either<ApiError, Profile>> createAccount(
     return Future.value(const Left(ApiClientError(ClientErrorBadRequest())));
   }
 
-  final api = GetIt.instance.get<Api>();
+  final api = ref.read(apiProvider);
   return api.createAccount(
     params.copyWith(
       photos: downscaled.map((e) => e.path).toList(),
@@ -62,11 +62,10 @@ Future<Either<ApiError, Profile>> createAccount(
 }
 
 Future<Either<ApiError, Profile>> updateGender({
-  required BuildContext context,
   required WidgetRef ref,
   required Gender gender,
 }) async {
-  final api = GetIt.instance.get<Api>();
+  final api = ref.read(apiProvider);
   final userState = ref.read(userProvider);
   final result = await api.updateProfile(
     userState.uid,
@@ -82,10 +81,11 @@ Future<Either<ApiError, Profile>> updateGender({
 }
 
 Future<Either<ApiError, void>> updateLocation({
+  required WidgetRef ref,
   required double latitude,
   required double longitude,
 }) async {
-  final api = GetIt.instance.get<Api>();
+  final api = ref.read(apiProvider);
   return api.updateLocation(latitude, longitude);
 }
 
@@ -93,7 +93,7 @@ Future<Either<ApiError, void>> updateProfileCollection({
   required WidgetRef ref,
   required Collection collection,
 }) async {
-  final api = GetIt.instance.get<Api>();
+  final api = ref.read(apiProvider);
   final result = await api.updateProfileCollection(
     collectionId: collection.collectionId,
     uid: ref.read(userProvider).uid,
@@ -111,7 +111,7 @@ Future<Either<ApiError, void>> updateAudio({
   required WidgetRef ref,
   required Uint8List bytes,
 }) async {
-  final api = GetIt.instance.get<Api>();
+  final api = ref.read(apiProvider);
   final userState = ref.read(userProvider);
   final result = await api.updateProfileAudio(userState.uid, bytes);
   return result.fold(
@@ -124,6 +124,7 @@ Future<Either<ApiError, void>> updateAudio({
 }
 
 Future<Either<ApiError, Collection>> uploadCollection({
+  required Api api,
   required List<File> photos,
   required File? audio,
   bool useAsProfile = false,
@@ -133,7 +134,6 @@ Future<Either<ApiError, Collection>> uploadCollection({
     return Future.value(const Left(ApiError.client(ClientError.badRequest())));
   }
 
-  final api = GetIt.instance.get<Api>();
   return api.createCollection(
     downscaled.map((e) => e.path).toList(),
     useAsProfile: useAsProfile,

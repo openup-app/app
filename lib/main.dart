@@ -56,8 +56,6 @@ const socketPort = 8081;
 // TODO: Should be app constant coming from dart defines (to be used in background call handler too)
 const urlBase = 'https://$host:$webPort';
 
-final rootNavigatorKey = GlobalKey<NavigatorState>();
-
 void main() async {
   void appRunner() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -87,8 +85,29 @@ void main() async {
     mixpanel.setLoggingEnabled(!kReleaseMode);
 
     runApp(
-      const ProviderScope(
-        child: OpenupApp(),
+      ProviderScope(
+        overrides: [
+          apiProvider.overrideWith((ref) {
+            Random().nextInt(1 << 32).toString();
+            return Api(
+              host: host,
+              port: webPort,
+            );
+          }),
+          onlineUsersApiProvider.overrideWith((ref) {
+            return OnlineUsersApi(
+              host: host,
+              port: socketPort,
+              onConnectionError: () {},
+              onOnlineStatusChanged: (uid, online) {
+                ref
+                    .read(onlineUsersProvider.notifier)
+                    .onlineChanged(uid, online);
+              },
+            );
+          })
+        ],
+        child: const OpenupApp(),
       ),
     );
   }
@@ -140,6 +159,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   InAppNotificationsApi? _inAppNotificationsApi;
 
+  final rootNavigatorKey = GlobalKey<NavigatorState>();
+
   PageRoute _buildPageRoute<T>({
     required RouteSettings settings,
     PageTransitionBuilder? transitionsBuilder,
@@ -166,24 +187,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
     _goRouter = _initGoRouter(
       observers: [_routeObserver],
-    );
-
-    Api.seed = Random().nextInt(1 << 32).toString();
-    final api = Api(
-      host: host,
-      port: webPort,
-    );
-    GetIt.instance.registerSingleton<Api>(api);
-
-    GetIt.instance.registerSingleton<OnlineUsersApi>(
-      OnlineUsersApi(
-        host: host,
-        port: socketPort,
-        onConnectionError: () {},
-        onOnlineStatusChanged: (uid, online) {
-          ref.read(onlineUsersProvider.notifier).onlineChanged(uid, online);
-        },
-      ),
     );
 
     // Logging in/out triggers
@@ -213,6 +216,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ref
                   .read(collectionReadyProvider.notifier)
                   .collectionId(collectionId);
+              final api = ref.read(apiProvider);
               final result = await api.getCollection(collectionId);
               result.fold(
                 (l) => null,
@@ -242,7 +246,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         try {
           final token = await user.getIdToken();
           if (mounted) {
-            api.authToken = token;
+            ref.read(apiProvider).authToken = token;
           }
         } on FirebaseAuthException catch (e) {
           if (e.code == 'user-not-found') {
@@ -254,7 +258,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       }
 
       // Online indicator
-      final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
+      final onlineUsersApi = ref.read(onlineUsersApiProvider);
       if (_loggedIn) {
         onlineUsersApi.setOnline(ref.read(userProvider).uid, true);
       } else {
@@ -270,10 +274,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             onNotificationMessagingToken.listen((token) async {
           debugPrint('On notification token: $token');
           if (token != null) {
-            api.addNotificationTokens(
-              fcmMessagingAndVoipToken: isIOS ? null : token,
-              apnMessagingToken: isIOS ? token : null,
-            );
+            ref.read(apiProvider).addNotificationTokens(
+                  fcmMessagingAndVoipToken: isIOS ? null : token,
+                  apnMessagingToken: isIOS ? token : null,
+                );
           }
         });
       } else {
@@ -290,10 +294,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     disposeNotifications();
 
     _scrollToDiscoverTopNotifier.dispose();
-
-    final onlineUsersApi = GetIt.instance.get<OnlineUsersApi>();
-    GetIt.instance.unregister<OnlineUsersApi>();
-    onlineUsersApi.dispose();
 
     _inAppNotificationsApi?.dispose();
     super.dispose();

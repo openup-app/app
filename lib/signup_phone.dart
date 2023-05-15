@@ -55,10 +55,10 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
         // TODO: Retry getting id token
         return null;
       }
-      final api = GetIt.instance.get<Api>();
+      final api = ref.read(apiProvider);
       api.authToken = token;
 
-      final result = await getAccount();
+      final result = await getAccount(api);
       if (!mounted) {
         return;
       }

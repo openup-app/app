@@ -2,16 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
-import 'package:get_it/get_it.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/section.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class InviteFriends extends StatefulWidget {
+class InviteFriends extends ConsumerStatefulWidget {
   final EdgeInsets padding;
   final ScrollController? controller;
   final String filter;
@@ -24,10 +25,10 @@ class InviteFriends extends StatefulWidget {
   });
 
   @override
-  State<InviteFriends> createState() => _InviteFriendsState();
+  ConsumerState<InviteFriends> createState() => _InviteFriendsState();
 }
 
-class _InviteFriendsState extends State<InviteFriends> {
+class _InviteFriendsState extends ConsumerState<InviteFriends> {
   bool _hasContactsPermission = false;
   bool _error = false;
 
@@ -271,7 +272,7 @@ class _InviteFriendsState extends State<InviteFriends> {
     }
 
     final contacts = allContacts.where((c) => c.phones.isNotEmpty).toList();
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     final result = await api.getKnownContactProfiles(
         contacts.map((e) => e.phones.first.number).toList());
     if (!mounted) {
@@ -379,7 +380,7 @@ class _Heading extends StatelessWidget {
   }
 }
 
-class _LoadCollectionList extends StatefulWidget {
+class _LoadCollectionList extends ConsumerStatefulWidget {
   final String uid;
   const _LoadCollectionList({
     super.key,
@@ -387,10 +388,11 @@ class _LoadCollectionList extends StatefulWidget {
   });
 
   @override
-  State<_LoadCollectionList> createState() => _LoadCollectionListState();
+  ConsumerState<_LoadCollectionList> createState() =>
+      _LoadCollectionListState();
 }
 
-class _LoadCollectionListState extends State<_LoadCollectionList> {
+class _LoadCollectionListState extends ConsumerState<_LoadCollectionList> {
   List<Collection>? _collections;
   bool _error = false;
 
@@ -401,7 +403,7 @@ class _LoadCollectionListState extends State<_LoadCollectionList> {
   }
 
   void _fetchCollections() async {
-    final api = GetIt.instance.get<Api>();
+    final api = ref.read(apiProvider);
     final result = await api.getCollections(widget.uid);
     if (!mounted) {
       return;
