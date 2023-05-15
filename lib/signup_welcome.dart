@@ -19,20 +19,21 @@ class _SignUpWelcomeScreenState extends ConsumerState<SignupWelcome> {
     return SignupBackground(
       child: Stack(
         children: [
-          SizedBox(
-            height: MediaQuery.of(context).padding.top,
-          ),
-          const SizedBox(height: 16),
           Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: context.canPop()
-                  ? const BackIconButton(color: Colors.white)
-                  : const SizedBox.shrink(),
+            alignment: Alignment.topLeft,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).padding.top,
+                ),
+                const SizedBox(height: 16),
+                const BackIconButton(
+                  color: Colors.white,
+                ),
+              ],
             ),
           ),
-          const Spacer(),
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,

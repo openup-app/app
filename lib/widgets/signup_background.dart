@@ -1,9 +1,6 @@
-import 'dart:async';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class SignupBackground extends StatefulWidget {
   final Widget child;
@@ -29,83 +26,95 @@ class _SignupBackgroundState extends State<SignupBackground> {
     Color(0xff900005),
   ];
 
+  late final List<BokehValues> _bokeh;
+
+  @override
+  void initState() {
+    super.initState();
+    final r = Random();
+    _bokeh = List.generate(bokehCount, (_) {
+      return BokehValues(
+        offset: Offset(r.nextDouble() * 100, r.nextDouble() * 100),
+        size: Size(
+          r.nextDouble() * bokehBaseSize,
+          r.nextDouble() * bokehBaseSize,
+        ),
+        color: colorSet[r.nextInt(colorSet.length)],
+        blurRadius: r.nextDouble() * 10 + 5,
+        spreadRadius: r.nextDouble() * 2,
+        opacity: bokehBaseOpacity / 100 + r.nextDouble() * 0.8 * 0.15,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(seconds: 20),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xff7b0420),
-                  Color(0xff045471),
-                  Color(0xff0262a3),
-                ],
-                stops: [0.0, 0.5, 1.0],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                transform: GradientRotation(-pi / 4),
-              ),
-            ),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xff006f8e),
+              Color(0xff8e000e),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xff006f8e),
-                  Color(0xff8e000e),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: OverflowBox(
-              maxWidth: double.infinity,
-              maxHeight: double.infinity,
-              child: Stack(
-                children: List.generate(
-                  bokehCount,
-                  (index) => Positioned(
-                    left: Random().nextDouble() * 100,
-                    top: Random().nextDouble() * 100,
-                    width: Random().nextDouble() * bokehBaseSize,
-                    height: Random().nextDouble() * bokehBaseSize,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(1),
-                        color: colorSet[Random().nextInt(colorSet.length)],
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black54,
-                            blurRadius: Random().nextDouble() * 10 + 5,
-                            spreadRadius: Random().nextDouble() * 2,
-                          )
-                        ],
-                      ),
-                      child: ImageFiltered(
-                        imageFilter: ColorFilter.mode(
-                          Colors.white.withOpacity(
-                            bokehBaseOpacity / 100 +
-                                Random().nextDouble() * 0.8 * 0.15,
-                          ),
-                          BlendMode.modulate,
-                        ),
-                        child: const RotationTransition(
-                          turns: AlwaysStoppedAnimation(1),
-                          child: SizedBox.expand(),
-                        ),
-                      ),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            for (final bokeh in _bokeh)
+              Positioned(
+                left: bokeh.offset.dx,
+                top: bokeh.offset.dy,
+                width: bokeh.size.width,
+                height: bokeh.size.height,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(1),
+                    color: bokeh.color,
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black54,
+                          blurRadius: bokeh.blurRadius,
+                          spreadRadius: bokeh.spreadRadius)
+                    ],
+                  ),
+                  child: ImageFiltered(
+                    imageFilter: ColorFilter.mode(
+                      Colors.white.withOpacity(bokeh.opacity),
+                      BlendMode.modulate,
+                    ),
+                    child: const RotationTransition(
+                      turns: AlwaysStoppedAnimation(1),
+                      child: SizedBox.expand(),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-          widget.child,
-        ],
+            widget.child,
+          ],
+        ),
       ),
     );
   }
+}
+
+class BokehValues {
+  final Offset offset;
+  final Size size;
+  final Color color;
+  final double blurRadius;
+  final double spreadRadius;
+  final double opacity;
+
+  const BokehValues({
+    required this.offset,
+    required this.size,
+    required this.color,
+    required this.blurRadius,
+    required this.spreadRadius,
+    required this.opacity,
+  });
 }
