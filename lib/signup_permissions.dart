@@ -150,7 +150,9 @@ class _SignUpPermissionsState extends State<SignupPermissionsScreen> {
     if (!mounted) {
       return;
     }
-    if (_hasLocationPermission && _hasContactsPermission) {
+
+    final routeActive = ModalRoute.of(context)?.isActive == true;
+    if (_hasLocationPermission && _hasContactsPermission && routeActive) {
       GetIt.instance.get<Mixpanel>().track("signup_grant_permissions");
       context.pushNamed('signup_name');
     }
