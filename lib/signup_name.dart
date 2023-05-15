@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/user_state.dart';
@@ -161,7 +160,7 @@ class _SignupNameState extends ConsumerState<SignupName> {
       return;
     }
 
-    GetIt.instance.get<Mixpanel>()
+    ref.read(mixpanelProvider)
       ..track("signup_submit_name")
       ..getPeople().set('name', newName);
     ref.read(accountCreationParamsProvider.notifier).name(newName);

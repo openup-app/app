@@ -7,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
@@ -493,7 +492,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       return;
     }
 
-    GetIt.instance.get<Mixpanel>().track(
+    ref.read(mixpanelProvider).track(
       "send_invite",
       properties: {"type": "discover"},
     );

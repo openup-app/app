@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
@@ -70,7 +69,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
           notifier.uid(verifiedUid);
           notifier.profile(profile);
           ref.read(userProvider2.notifier).signedIn(profile);
-          GetIt.instance.get<Mixpanel>().track("login");
+          ref.read(mixpanelProvider).track("login");
           context.goNamed('initialLoading');
         },
         signUp: () {
@@ -93,7 +92,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
             location = tempAustinLocation;
           }
           ref.read(accountCreationParamsProvider.notifier).location(location);
-          GetIt.instance.get<Mixpanel>().track("signup_verified");
+          ref.read(mixpanelProvider).track("signup_verified");
           context.pushReplacementNamed('signup_age');
         },
         retry: () {
@@ -220,7 +219,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
 
     final phoneNumber = _phoneNumber;
     if (_valid && phoneNumber != null) {
-      GetIt.instance.get<Mixpanel>().track("sign_up_submit_phone");
+      ref.read(mixpanelProvider).track("sign_up_submit_phone");
       setState(() => _submitting = true);
       await _sendVerificationCode(phoneNumber);
       if (mounted) {
@@ -287,7 +286,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
           return;
         }
         setState(() => _forceResendingToken = forceResendingToken);
-        GetIt.instance.get<Mixpanel>().track("signup_submit_phone");
+        ref.read(mixpanelProvider).track("signup_submit_phone");
         context.pushNamed('signup_verify', queryParams: {
           'verificationId': verificationId,
         });

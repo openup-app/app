@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/user_state.dart';
@@ -141,7 +140,7 @@ class _SignupAgeState extends ConsumerState<SignupAge> {
   }
 
   void _submit() async {
-    GetIt.instance.get<Mixpanel>()
+    ref.read(mixpanelProvider)
       ..track("signup_submit_age")
       ..getPeople().set('age', _age);
     ref.read(accountCreationParamsProvider.notifier).age(_age);

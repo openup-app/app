@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
@@ -81,12 +80,12 @@ void main() async {
     await Firebase.initializeApp();
 
     final mixpanel = await _initMixpanel();
-    GetIt.instance.registerSingleton<Mixpanel>(mixpanel);
     mixpanel.setLoggingEnabled(!kReleaseMode);
 
     runApp(
       ProviderScope(
         overrides: [
+          mixpanelProvider.overrideWithValue(mixpanel),
           apiProvider.overrideWith((ref) {
             Random().nextInt(1 << 32).toString();
             return Api(
@@ -197,7 +196,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         setState(() => _loggedIn = loggedIn);
 
         // Mixpanel
-        final mixpanel = GetIt.instance.get<Mixpanel>();
+        final mixpanel = ref.read(mixpanelProvider);
         if (user != null) {
           mixpanel.identify(user.uid);
           Sentry.configureScope(

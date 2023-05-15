@@ -7,7 +7,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -479,7 +478,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       file.path,
     );
 
-    GetIt.instance.get<Mixpanel>().track("send_message");
+    ref.read(mixpanelProvider).track("send_message");
 
     if (!mounted) {
       return;

@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
@@ -203,7 +202,7 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
     ref
         .read(accountCreationParamsProvider.notifier)
         .photos(_photos.map((e) => e!.path).toList());
-    GetIt.instance.get<Mixpanel>().track("signup_submit_photos");
+    ref.read(mixpanelProvider).track("signup_submit_photos");
     context.pushNamed('signup_audio');
   }
 }

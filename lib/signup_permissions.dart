@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
@@ -7,14 +7,15 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class SignupPermissionsScreen extends StatefulWidget {
+class SignupPermissionsScreen extends ConsumerStatefulWidget {
   const SignupPermissionsScreen({Key? key}) : super(key: key);
 
   @override
-  State<SignupPermissionsScreen> createState() => _SignUpPermissionsState();
+  ConsumerState<SignupPermissionsScreen> createState() =>
+      _SignUpPermissionsState();
 }
 
-class _SignUpPermissionsState extends State<SignupPermissionsScreen> {
+class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
   bool _hasLocationPermission = false;
   bool _hasContactsPermission = false;
 
@@ -153,7 +154,7 @@ class _SignUpPermissionsState extends State<SignupPermissionsScreen> {
 
     final routeActive = ModalRoute.of(context)?.isActive == true;
     if (_hasLocationPermission && _hasContactsPermission && routeActive) {
-      GetIt.instance.get<Mixpanel>().track("signup_grant_permissions");
+      ref.read(mixpanelProvider).track("signup_grant_permissions");
       context.pushNamed('signup_name');
     }
   }

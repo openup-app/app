@@ -3,7 +3,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -136,7 +135,7 @@ class _SignupTutorial1 extends ConsumerState<SignupTutorial1> {
   }
 
   void _submit() async {
-    GetIt.instance.get<Mixpanel>().track("signup_submit_tutorial1");
+    ref.read(mixpanelProvider).track("signup_submit_tutorial1");
     context.pushNamed('signup_tutorial2');
   }
 }

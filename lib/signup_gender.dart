@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
@@ -176,7 +175,7 @@ class _SignupGenderState extends ConsumerState<SignupGender> {
       context,
     );
 
-    GetIt.instance.get<Mixpanel>()
+    ref.read(mixpanelProvider)
       ..track("signup_submit_gender")
       ..getPeople().set('gender', gender.name);
     ref.read(accountCreationParamsProvider.notifier).gender(gender);

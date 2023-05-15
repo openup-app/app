@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/signup_tutorial1.dart';
@@ -134,7 +133,7 @@ class _SignupTutorial2 extends ConsumerState<SignupTutorial2> {
   }
 
   void _submit() async {
-    GetIt.instance.get<Mixpanel>().track("signup_submit_tutorial2");
+    ref.read(mixpanelProvider).track("signup_submit_tutorial2");
     context.pushNamed('signup_photos');
   }
 }

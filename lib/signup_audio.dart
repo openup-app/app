@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
@@ -150,7 +149,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
   void _signup({
     required AccountCreationParams params,
   }) async {
-    GetIt.instance.get<Mixpanel>().track("signup_submit_audio");
+    ref.read(mixpanelProvider).track("signup_submit_audio");
 
     final result = await withBlockingModal(
       context: context,

@@ -1,7 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/widgets/button.dart';
@@ -40,7 +40,7 @@ class ShareButton extends StatelessWidget {
   }
 }
 
-class _SharePage extends StatefulWidget {
+class _SharePage extends ConsumerStatefulWidget {
   final Profile profile;
   const _SharePage({
     Key? key,
@@ -48,10 +48,10 @@ class _SharePage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<_SharePage> createState() => _SharePageState();
+  ConsumerState<_SharePage> createState() => _SharePageState();
 }
 
-class _SharePageState extends State<_SharePage>
+class _SharePageState extends ConsumerState<_SharePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
@@ -143,7 +143,7 @@ class _SharePageState extends State<_SharePage>
           const SizedBox(height: 13),
           Button(
             onPressed: () {
-              GetIt.instance.get<Mixpanel>().track("share_profile");
+              ref.read(mixpanelProvider).track("share_profile");
               Share.share(
                 url,
                 subject: 'The only app dedicated to making new friends',

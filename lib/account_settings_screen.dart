@@ -7,7 +7,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
@@ -251,7 +250,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   Future<void> _signOut() async {
-    GetIt.instance.get<Mixpanel>().track("sign_out");
+    ref.read(mixpanelProvider).track("sign_out");
     ref.read(userProvider.notifier)
       ..uid('')
       ..profile(null)
@@ -298,7 +297,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   Future<void> _deleteAccount() async {
-    GetIt.instance.get<Mixpanel>().track("delete_account");
+    ref.read(mixpanelProvider).track("delete_account");
     ref.read(userProvider.notifier)
       ..uid('')
       ..profile(null)
@@ -481,7 +480,7 @@ class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
   }
 
   void _updateInformation() async {
-    GetIt.instance.get<Mixpanel>().track("change_phone_number");
+    ref.read(mixpanelProvider).track("change_phone_number");
     FocusScope.of(context).unfocus();
     setState(() => _submitting = true);
     final newPhoneNumber = _newPhoneNumber;

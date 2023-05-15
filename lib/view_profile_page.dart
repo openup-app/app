@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:get_it/get_it.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -178,7 +177,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewProfilePage> {
       return;
     }
 
-    GetIt.instance.get<Mixpanel>().track(
+    ref.read(mixpanelProvider).track(
       "send_message",
       properties: {"type": "collection"},
     );

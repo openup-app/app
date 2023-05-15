@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/widgets/back_button.dart';
@@ -11,7 +11,7 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-class SignupVerify extends StatefulWidget {
+class SignupVerify extends ConsumerStatefulWidget {
   final String verificationId;
   const SignupVerify({
     Key? key,
@@ -19,10 +19,10 @@ class SignupVerify extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<SignupVerify> createState() => _SignupVerifyState();
+  ConsumerState<SignupVerify> createState() => _SignupVerifyState();
 }
 
-class _SignupVerifyState extends State<SignupVerify> {
+class _SignupVerifyState extends ConsumerState<SignupVerify> {
   final _smsCodeController = TextEditingController();
   bool _submitting = false;
   String? _errorText;
@@ -152,7 +152,7 @@ class _SignupVerifyState extends State<SignupVerify> {
   }
 
   void _submit() async {
-    GetIt.instance.get<Mixpanel>().track("sign_up_submit_phone_verification");
+    ref.read(mixpanelProvider).track("sign_up_submit_phone_verification");
     FocusScope.of(context).unfocus();
     setState(() => _submitting = true);
     final smsCode = _smsCodeController.text;
