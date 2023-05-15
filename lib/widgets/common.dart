@@ -177,7 +177,8 @@ class Surface extends StatelessWidget {
           bottomRight: squareBottom ? Radius.zero : const Radius.circular(40),
         ),
       ),
-      child: CupertinoPopupSurface(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Material(
           elevation: 0,
           type: MaterialType.transparency,
