@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -323,6 +324,15 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             color: Colors.black,
           ),
         ),
+        builder: (context, child) {
+          return CupertinoTheme(
+            data: const CupertinoThemeData(
+              brightness: Brightness.dark,
+              primaryColor: Colors.white,
+            ),
+            child: child!,
+          );
+        },
       ),
     );
   }
