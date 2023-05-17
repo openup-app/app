@@ -46,13 +46,13 @@ class Api {
     final name = params.name;
     final age = params.age;
     final gender = params.gender;
-    final location = params.location;
+    final latLong = params.latLong;
     if (photos == null ||
         audio == null ||
         name == null ||
         age == null ||
         gender == null ||
-        location == null) {
+        latLong == null) {
       return Future.value(const Left(ApiError.client(ClientErrorBadRequest())));
     }
     return _requestStreamedResponseAsFuture(
@@ -70,7 +70,7 @@ class Api {
             'name': name,
             'age': age,
             'gender': gender.name,
-            'location': location,
+            'location': latLong,
           }),
         });
         return request.send();
@@ -616,16 +616,15 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> updateLocation(
-      double latitude, double longitude) {
+  Future<Either<ApiError, void>> updateLocation(LatLong latLong) {
     return _request(
       makeRequest: () {
         return http.post(
           Uri.parse('$_urlBase/account/location'),
           headers: _headers,
           body: jsonEncode({
-            'latitude': latitude,
-            'longitude': longitude,
+            'latitude': latLong.latitude,
+            'longitude': latLong.longitude,
           }),
         );
       },
@@ -775,19 +774,8 @@ class AccountCreationParams with _$AccountCreationParams {
     @Default(null) Gender? gender,
     @Default(null) List<String>? photos,
     @Default(null) String? audio,
-    @Default(null) AccountCreationLocation? location,
+    @Default(null) LatLong? latLong,
   }) = _AccountCreationParams;
-}
-
-@freezed
-class AccountCreationLocation with _$AccountCreationLocation {
-  const factory AccountCreationLocation({
-    required double latitude,
-    required double longitude,
-  }) = _AccountCreationLocation;
-
-  factory AccountCreationLocation.fromJson(Map<String, dynamic> json) =>
-      _$AccountCreationLocationFromJson(json);
 }
 
 @freezed
@@ -835,11 +823,33 @@ class SimpleProfile with _$SimpleProfile {
 class DiscoverProfile with _$DiscoverProfile {
   const factory DiscoverProfile({
     required Profile profile,
+    required Location location,
     required bool online,
   }) = _DiscoverProfile;
 
   factory DiscoverProfile.fromJson(Map<String, dynamic> json) =>
       _$DiscoverProfileFromJson(json);
+}
+
+@freezed
+class Location with _$Location {
+  const factory Location({
+    required LatLong latLong,
+  }) = _Location;
+
+  factory Location.fromJson(Map<String, dynamic> json) =>
+      _$LocationFromJson(json);
+}
+
+@freezed
+class LatLong with _$LatLong {
+  const factory LatLong({
+    required double latitude,
+    required double longitude,
+  }) = _LatLong;
+
+  factory LatLong.fromJson(Map<String, dynamic> json) =>
+      _$LatLongFromJson(json);
 }
 
 @freezed

@@ -35,8 +35,8 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
   void _setup() async {
     // Update location
-    final latLong = await LocationService().getLatLong();
-    final latLongValue = latLong.map(
+    final status = await LocationService().getLatLong();
+    final locationValue = status.map(
       value: (value) {
         ref.read(locationProvider.notifier).update(value);
         return value;
@@ -85,11 +85,11 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
         ref.read(userProvider.notifier).uid(profile.uid);
         ref.read(userProvider.notifier).profile(profile);
         ref.read(userProvider2.notifier).signedIn(profile);
-        if (latLongValue != null) {
+        if (locationValue != null) {
+          final latLong = locationValue.latLong;
           updateLocation(
             ref: ref,
-            latitude: latLongValue.latitude,
-            longitude: latLongValue.longitude,
+            latLong: latLong,
           );
         }
       },

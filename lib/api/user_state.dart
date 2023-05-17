@@ -10,14 +10,14 @@ import 'package:openup/util/location_service.dart';
 part 'user_state.freezed.dart';
 
 final locationProvider =
-    StateNotifierProvider<LocationNotifier, LatLongValue?>((ref) {
+    StateNotifierProvider<LocationNotifier, LocationValue?>((ref) {
   return LocationNotifier();
 });
 
-class LocationNotifier extends StateNotifier<LatLongValue?> {
+class LocationNotifier extends StateNotifier<LocationValue?> {
   LocationNotifier() : super(null);
 
-  void update(LatLongValue? value) => state = value;
+  void update(LocationValue? value) => state = value;
 }
 
 final apiProvider = Provider<Api>((ref) => throw 'Api is uninitialized');
@@ -229,8 +229,7 @@ class AccountCreationParamsNotifier
 
   void gender(Gender gender) => state = state.copyWith(gender: gender);
 
-  void location(AccountCreationLocation location) =>
-      state = state.copyWith(location: location);
+  void latLong(LatLong latLong) => state = state.copyWith(latLong: latLong);
 }
 
 @freezed

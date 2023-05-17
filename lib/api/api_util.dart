@@ -82,11 +82,10 @@ Future<Either<ApiError, Profile>> updateGender({
 
 Future<Either<ApiError, void>> updateLocation({
   required WidgetRef ref,
-  required double latitude,
-  required double longitude,
+  required LatLong latLong,
 }) async {
   final api = ref.read(apiProvider);
-  return api.updateLocation(latitude, longitude);
+  return api.updateLocation(latLong);
 }
 
 Future<Either<ApiError, void>> updateProfileCollection({

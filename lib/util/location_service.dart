@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:location/location.dart';
+import 'package:location/location.dart' as loc;
+import 'package:location/location.dart' hide Location;
+import 'package:openup/api/api.dart';
 
 part 'location_service.freezed.dart';
 
 class LocationService {
-  final _location = Location();
+  final _location = loc.Location();
 
   LocationService();
 
@@ -21,16 +23,16 @@ class LocationService {
         status == PermissionStatus.grantedLimited;
   }
 
-  Future<LatLong> getLatLong() async {
+  Future<LocationStatus> getLatLong() async {
     if (!await _location.serviceEnabled()) {
       if (!await _location.requestService()) {
-        return const _LatLongFailure();
+        return const _LocationFailure();
       }
     }
 
     if (!await hasPermission()) {
       if (!await requestPermission()) {
-        return const _LatLongDenied();
+        return const _LocationDenied();
       }
     }
 
@@ -39,21 +41,26 @@ class LocationService {
       final latitude = data.latitude;
       final longitude = data.longitude;
       if (latitude == null || longitude == null) {
-        return const _LatLongFailure();
+        return const _LocationFailure();
       }
-      return LatLongValue(latitude, longitude);
+      return LocationValue(
+        LatLong(
+          latitude: latitude,
+          longitude: longitude,
+        ),
+      );
     } catch (e) {
       debugPrint(e.toString());
-      return const _LatLongFailure();
+      return const _LocationFailure();
     }
   }
 }
 
 @freezed
-class LatLong with _$LatLong {
-  const factory LatLong.value(double latitude, double longitude) = LatLongValue;
+class LocationStatus with _$LocationStatus {
+  const factory LocationStatus.value(LatLong latLong) = LocationValue;
 
-  const factory LatLong.denied() = _LatLongDenied;
+  const factory LocationStatus.denied() = _LocationDenied;
 
-  const factory LatLong.failure() = _LatLongFailure;
+  const factory LocationStatus.failure() = _LocationFailure;
 }

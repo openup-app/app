@@ -217,27 +217,7 @@ class ProfileDisplay extends ConsumerWidget {
                         ),
                         Row(
                           children: [
-                            // Info icon with solid white background
-                            Stack(
-                              alignment: Alignment.center,
-                              children: const [
-                                SizedBox(
-                                  width: 10,
-                                  height: 10,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.info,
-                                  color: Color.fromRGBO(0xFF, 0x38, 0x38, 1.0),
-                                  size: 16,
-                                ),
-                              ],
-                            ),
+                            const InfoIcon(),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text('1 mutual friends',
@@ -292,6 +272,37 @@ class ProfileDisplay extends ConsumerWidget {
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Info icon with solid white background
+class InfoIcon extends StatelessWidget {
+  const InfoIcon({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: const [
+        SizedBox(
+          width: 10,
+          height: 10,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+        Icon(
+          Icons.info,
+          color: Color.fromRGBO(0xFF, 0x38, 0x38, 1.0),
+          size: 16,
         ),
       ],
     );

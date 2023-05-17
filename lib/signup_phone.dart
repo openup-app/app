@@ -75,23 +75,14 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
         signUp: () {
           final notifier = ref.read(userProvider.notifier);
           notifier.uid(verifiedUid);
-          // TODO: Use real age, hook up location more robustly
-          ref.read(accountCreationParamsProvider.notifier).age(30);
+          // TODO: Hook up location more robustly
           final locationValue = ref.read(locationProvider);
-          AccountCreationLocation location;
-          if (locationValue != null) {
-            location = AccountCreationLocation(
-              latitude: locationValue.latitude,
-              longitude: locationValue.longitude,
-            );
-          } else {
-            const tempAustinLocation = AccountCreationLocation(
-              latitude: 30.3119,
-              longitude: -97.732,
-            );
-            location = tempAustinLocation;
-          }
-          ref.read(accountCreationParamsProvider.notifier).location(location);
+          const tempAustinLocation = LatLong(
+            latitude: 30.3119,
+            longitude: -97.732,
+          );
+          final latLong = locationValue?.latLong ?? tempAustinLocation;
+          ref.read(accountCreationParamsProvider.notifier).latLong(latLong);
           ref.read(mixpanelProvider).track("signup_verified");
           context.pushReplacementNamed('signup_age');
         },
