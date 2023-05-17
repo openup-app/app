@@ -116,6 +116,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   @override
   Widget build(BuildContext context) {
     const innerItemSize = 300.0;
+    const itemHeight = innerItemSize + 16;
     final messagesMap = _messages;
     final messages = messagesMap?.values.toList();
     final chatroom = _chatroom;
@@ -124,12 +125,11 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         const dragHandleGap = 24.0;
         const appBarHeight = 67.0;
         const bottomButtonHeight = 51.0 + 16 * 2;
-        final listHeight = constraints.maxHeight -
-            (MediaQuery.of(context).padding.top +
-                dragHandleGap +
-                appBarHeight +
-                bottomButtonHeight +
-                MediaQuery.of(context).padding.bottom);
+        final listBoxHeight = constraints.maxHeight -
+            (MediaQuery.of(context).padding.top + dragHandleGap + appBarHeight);
+        const onScreenItemCount = 4;
+        const listContentsHeight = itemHeight * onScreenItemCount;
+        const fakeIndexCount = onScreenItemCount - 1;
         return ColoredBox(
           color: chatroom?.inviteState == ChatroomState.invited
               ? Colors.black
@@ -237,9 +237,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                 ),
               ),
               SizedBox(
-                height: listHeight +
-                    bottomButtonHeight +
-                    MediaQuery.of(context).padding.bottom,
+                height: listBoxHeight,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -250,7 +248,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                         top: 0,
                         left: 0,
                         right: 0,
-                        height: listHeight,
+                        height: listBoxHeight,
                         child: Center(
                           child: Padding(
                             padding:
@@ -270,127 +268,162 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                           ),
                         ),
                       )
-                    else if (messages != null && chatroom != null)
+                    else if (messages != null && chatroom != null) ...[
                       Positioned(
                         top: 0,
                         left: 0,
                         right: 0,
-                        height: listHeight,
-                        child: _AcceptRejectBanner(
-                          chatroom: _chatroom!,
-                          child: ListView.builder(
-                            clipBehavior: Clip.none,
-                            controller: _scrollController,
-                            padding: EdgeInsets.zero,
-                            itemExtent: innerItemSize + 16,
-                            itemCount: messages.length + 1,
-                            itemBuilder: (context, fakeIndex) {
-                              const itemHeight = innerItemSize + 16;
-
-                              // Invisible item to shift the first bubble closer
-                              if (fakeIndex == 0) {
-                                return IgnorePointer(
-                                  child: _PerspectiveBubble(
-                                    listHeight: listHeight,
-                                    itemHeight: itemHeight,
-                                    topPixels: 0,
-                                    debugIndex: 0,
-                                    child: const SizedBox.shrink(),
-                                  ),
-                                );
-                              }
-                              final index = fakeIndex - 1;
-                              final message = messages[index];
-                              final myUid = ref.read(userProvider).uid;
-                              final fromMe = message.uid == myUid;
-                              final isCurrent =
-                                  _playbackMessageId == message.messageId;
-                              final playbackStream =
-                                  isCurrent ? _audio.playbackInfoStream : null;
-                              return StreamBuilder<PlaybackInfo>(
-                                initialData: const PlaybackInfo(),
-                                stream: playbackStream,
-                                builder: (context, snapshot) {
-                                  final playbackInfo = snapshot.requireData;
-                                  final isPlaying = playbackInfo.state ==
-                                      PlaybackState.playing;
-                                  final isLoading = playbackInfo.state ==
-                                      PlaybackState.loading;
-                                  return _PerspectiveBubble(
-                                    listHeight: listHeight,
-                                    itemHeight: itemHeight,
-                                    topPixels: fakeIndex * itemHeight,
-                                    debugIndex: index,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8.0),
-                                      child: Padding(
-                                        padding: EdgeInsets.only(
-                                          left: fromMe ? 64.0 : 0.0,
-                                          right: fromMe ? 0.0 : 64.0,
-                                        ),
-                                        child: StreamBuilder<PlaybackInfo>(
-                                          initialData: const PlaybackInfo(),
-                                          stream: playbackStream ??
-                                              Stream.fromIterable(
-                                                  [const PlaybackInfo()]),
-                                          builder: (context, snapshot) {
-                                            final playbackInfo =
-                                                snapshot.requireData;
-                                            return ColoredBox(
-                                              color: Colors.transparent,
-                                              child: Center(
-                                                child: _ChatMessage(
-                                                  photo: fromMe
-                                                      ? _myPhoto
-                                                      : _otherProfile?.photo,
-                                                  fromMe: fromMe,
-                                                  message: message,
-                                                  height: itemHeight,
-                                                  isLoading: isLoading,
-                                                  frequenciesColor: isPlaying
-                                                      ? const Color.fromRGBO(
-                                                          0x00, 0xff, 0xef, 1.0)
-                                                      : const Color.fromRGBO(
-                                                          0xAF,
-                                                          0xAF,
-                                                          0xAF,
-                                                          1.0),
-                                                  frequencies: isPlaying
-                                                      ? playbackInfo.frequencies
-                                                      : message.waveform,
-                                                  onPressed: () async {
-                                                    if (isPlaying) {
-                                                      _audio.stop();
-                                                      setState(() =>
-                                                          _playbackMessageId =
-                                                              null);
-                                                    } else {
-                                                      setState(() =>
-                                                          _playbackMessageId =
-                                                              message
-                                                                  .messageId);
-                                                      await _audio.setUrl(
-                                                          message.content);
-                                                      if (mounted) {
-                                                        _audio.play();
-                                                      }
-                                                    }
-                                                  },
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
+                        height: listBoxHeight,
+                        child: OverflowBox(
+                          alignment: Alignment.topCenter,
+                          minHeight: listContentsHeight,
+                          maxHeight: listContentsHeight,
+                          child: _AcceptRejectBanner(
+                            chatroom: _chatroom!,
+                            child: ListView.builder(
+                              clipBehavior: Clip.none,
+                              controller: _scrollController,
+                              padding: EdgeInsets.zero,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              itemExtent: itemHeight,
+                              itemCount: messages.length + fakeIndexCount,
+                              itemBuilder: (context, fakeIndex) {
+                                // Invisible item to shift the first bubble closer
+                                if (fakeIndex < fakeIndexCount) {
+                                  return const IgnorePointer(
+                                    child: _PerspectiveBubble(
+                                      scrollTop: 0,
+                                      listHeight: listContentsHeight,
+                                      itemHeight: itemHeight,
+                                      itemTopInList: 0,
+                                      child: SizedBox.shrink(),
                                     ),
                                   );
-                                },
-                              );
-                            },
+                                }
+                                final index = fakeIndex - fakeIndexCount;
+                                final message = messages[index];
+                                final myUid = ref.read(userProvider).uid;
+                                final fromMe = message.uid == myUid;
+                                final isCurrent =
+                                    _playbackMessageId == message.messageId;
+                                final playbackStream = isCurrent
+                                    ? _audio.playbackInfoStream
+                                    : null;
+                                return IgnorePointer(
+                                  key: ValueKey(message.messageId ?? ''),
+                                  child: StreamBuilder<PlaybackInfo>(
+                                    initialData: const PlaybackInfo(),
+                                    stream: playbackStream,
+                                    builder: (context, snapshot) {
+                                      final playbackInfo = snapshot.requireData;
+                                      final isPlaying = playbackInfo.state ==
+                                          PlaybackState.playing;
+                                      final isLoading = playbackInfo.state ==
+                                          PlaybackState.loading;
+                                      return _PerspectiveBubble(
+                                        scrollTop: ref.watch(_scrollProvider),
+                                        listHeight: listContentsHeight,
+                                        itemHeight: itemHeight,
+                                        itemTopInList: fakeIndex * itemHeight,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 8.0),
+                                          child: Padding(
+                                            padding: EdgeInsets.only(
+                                              left: fromMe ? 64.0 : 0.0,
+                                              right: fromMe ? 0.0 : 64.0,
+                                            ),
+                                            child: StreamBuilder<PlaybackInfo>(
+                                              initialData: const PlaybackInfo(),
+                                              stream: playbackStream ??
+                                                  Stream.fromIterable(
+                                                      [const PlaybackInfo()]),
+                                              builder: (context, snapshot) {
+                                                final playbackInfo =
+                                                    snapshot.requireData;
+                                                // Center in large parent to contain blur
+                                                return ColoredBox(
+                                                  color: Colors.transparent,
+                                                  child: Center(
+                                                    child: _ChatMessage(
+                                                      photo: fromMe
+                                                          ? _myPhoto
+                                                          : _otherProfile
+                                                              ?.photo,
+                                                      fromMe: fromMe,
+                                                      message: message,
+                                                      height: itemHeight,
+                                                      isLoading: isLoading,
+                                                      frequenciesColor:
+                                                          isPlaying
+                                                              ? const Color
+                                                                      .fromRGBO(
+                                                                  0x00,
+                                                                  0xff,
+                                                                  0xef,
+                                                                  1.0)
+                                                              : const Color
+                                                                      .fromRGBO(
+                                                                  0xAF,
+                                                                  0xAF,
+                                                                  0xAF,
+                                                                  1.0),
+                                                      frequencies: isPlaying
+                                                          ? playbackInfo
+                                                              .frequencies
+                                                          : message.waveform,
+                                                      onPressed: () async {
+                                                        if (isPlaying) {
+                                                          _audio.stop();
+                                                          setState(() =>
+                                                              _playbackMessageId =
+                                                                  null);
+                                                        } else {
+                                                          setState(() =>
+                                                              _playbackMessageId =
+                                                                  message
+                                                                      .messageId);
+                                                          await _audio.setUrl(
+                                                              message.content);
+                                                          if (mounted) {
+                                                            _audio.play();
+                                                          }
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ),
+                      _TouchRegion(
+                        scrollTop: ref.watch(_scrollProvider),
+                        listHeight: listContentsHeight,
+                        itemHeight: itemHeight,
+                        itemCount: messages.length + fakeIndexCount,
+                        debugShowBounds: false,
+                        onPressed: (fakeIndex) {
+                          final index = fakeIndex - fakeIndexCount;
+                          if (index > 0 && index < messages.length) {
+                            final message = messages[index];
+                            setState(
+                                () => _playbackMessageId = message.messageId);
+                            _audio.setUrl(message.content);
+                            _audio.play();
+                          }
+                        },
+                      ),
+                    ],
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: Column(
@@ -601,19 +634,40 @@ class _TestChild extends StatelessWidget {
   }
 }
 
+Matrix4 _createTransform({
+  required double scrollTop,
+  required double listHeight,
+  required double itemHeight,
+  required double itemTopInList,
+}) {
+  final scrollBottom = scrollTop + listHeight;
+  final runwayLength = listHeight + itemHeight;
+  final runwayRatio = 1.0 - (scrollBottom - itemTopInList) / runwayLength;
+  final invRatio = 1.0 - runwayRatio;
+  return Matrix4.identity()
+    // Shift scaling origin down as it scrolls up, so items don't fly upwards
+    ..translate(0.0, invRatio * 0.6 * itemHeight * invRatio)
+    // Scale based on distance on the runway
+    ..scale(runwayRatio.clamp(0.0, double.infinity))
+    // Center all items in the list
+    ..translate(0.0, runwayLength * (0.5 - runwayRatio))
+    // Shift the whole thing down
+    ..translate(0.0, -runwayLength * 0.2);
+}
+
 class _PerspectiveBubble extends ConsumerWidget {
+  final double scrollTop;
   final double listHeight;
   final double itemHeight;
-  final double topPixels;
-  final int debugIndex;
+  final double itemTopInList;
   final Widget child;
 
   const _PerspectiveBubble({
     super.key,
+    required this.scrollTop,
     required this.listHeight,
     required this.itemHeight,
-    required this.topPixels,
-    required this.debugIndex,
+    required this.itemTopInList,
     required this.child,
   });
 
@@ -621,35 +675,39 @@ class _PerspectiveBubble extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Consumer(
       builder: (context, ref, child) {
-        final height = listHeight;
-        final scrollPixels = ref.watch(_scrollProvider) + listHeight;
-        final runwayLength = height + itemHeight;
-        final runwayRatio = 1.0 - (scrollPixels - topPixels) / runwayLength;
-        final invRatio = 1.0 - runwayRatio;
-        final t = Matrix4.identity()
-          // Shift scaling origin down as it scrolls up, so items don't fly upwards
-          ..translate(0.0, invRatio * 0.6 * itemHeight * invRatio)
-          // Scale based on distance on the runway
-          ..scale(runwayRatio.clamp(0.0, double.infinity))
-          // Center all items in the list
-          ..translate(0.0, runwayLength * (0.5 - runwayRatio))
-          // Shift the whole thing down
-          ..translate(0.0, runwayLength * 0.1);
+        final scrollTop = ref.watch(_scrollProvider);
+        final scrollBottom = scrollTop + listHeight;
+        final runwayLength = listHeight + itemHeight;
+        final runwayRatio = 1.0 - (scrollBottom - itemTopInList) / runwayLength;
+        // final t = Matrix4.identity()
+        //   // Shift scaling origin down as it scrolls up, so items don't fly upwards
+        //   ..translate(0.0, invRatio * 0.6 * itemHeight * invRatio)
+        //   // Scale based on distance on the runway
+        //   ..scale(runwayRatio.clamp(0.0, double.infinity))
+        //   // Center all items in the list
+        //   ..translate(0.0, runwayLength * (0.5 - runwayRatio))
+        //   // Shift the whole thing down
+        //   ..translate(0.0, runwayLength * 0.1);
+        final t = _createTransform(
+          scrollTop: ref.watch(_scrollProvider),
+          listHeight: listHeight,
+          itemHeight: itemHeight,
+          itemTopInList: itemTopInList,
+        );
 
         final x = runwayRatio;
         const top = 0.6;
-        const bottom = 0.95;
         var y = 1.0;
         y = x < top ? cos(1.5 * (pi / 2) * (1 - x / top)) : y;
-        y = x > bottom ? cos((pi / 2) * (x - bottom) / (1 - bottom)) : y;
         y = y.clamp(0, 1);
         final blur = 100.0 * (1 - y.clamp(0.0, 1.0));
         return Transform(
           transform: t,
           alignment: Alignment.center,
-          origin: Offset(0.0, scrollPixels - topPixels - runwayLength),
+          origin: Offset(0.0, scrollBottom - itemTopInList - runwayLength),
           child: Opacity(
             opacity: y.clamp(0.0, 1.0),
+            // Overflow to contain blur
             child: OverflowBox(
               alignment: Alignment.center,
               minWidth: 600,
@@ -911,6 +969,88 @@ class _BubbleContainer extends StatelessWidget {
             child: childBottomRight,
           ),
       ],
+    );
+  }
+}
+
+class _TouchRegion extends ConsumerWidget {
+  final double scrollTop;
+  final double listHeight;
+  final double itemHeight;
+  final int itemCount;
+  final bool debugShowBounds;
+  final void Function(int index) onPressed;
+
+  const _TouchRegion({
+    super.key,
+    required this.scrollTop,
+    required this.listHeight,
+    required this.itemHeight,
+    required this.itemCount,
+    this.debugShowBounds = false,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SizedBox(
+      height: listHeight,
+      child: Consumer(
+        builder: (context, ref, child) {
+          final maxOnScreenItemCount = (listHeight / itemHeight).ceil() + 1;
+          final topItemIndex = (scrollTop ~/ itemHeight).clamp(0, itemCount);
+          final bottomItemIndex =
+              (topItemIndex + maxOnScreenItemCount).clamp(0, itemCount);
+          final topItemStart =
+              (scrollTop ~/ itemHeight) * itemHeight - scrollTop;
+          final scrollBottom = scrollTop + listHeight;
+          final runwayLength = listHeight + itemHeight;
+          return Stack(
+            children: [
+              for (var i = 0; topItemIndex + i < bottomItemIndex; i++)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: topItemStart + i * itemHeight,
+                  height: itemHeight,
+                  child: Builder(
+                    builder: (context) {
+                      final index = topItemIndex + i;
+                      final itemTopInList = index * itemHeight;
+                      return Transform(
+                        transform: _createTransform(
+                          scrollTop: scrollTop,
+                          listHeight: listHeight,
+                          itemHeight: itemHeight,
+                          itemTopInList: itemTopInList,
+                        ),
+                        alignment: Alignment.center,
+                        origin: Offset(
+                          0.0,
+                          scrollBottom - itemTopInList - runwayLength,
+                        ),
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTap: () => onPressed(index),
+                          child: IgnorePointer(
+                            child: Container(
+                              height: itemHeight,
+                              decoration: BoxDecoration(
+                                color: debugShowBounds
+                                    ? Colors.blue.withOpacity(0.6)
+                                    : Colors.transparent,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
