@@ -15,8 +15,10 @@ class ProfileBuilder extends StatefulWidget {
   final Profile profile;
   final bool play;
   final Widget Function(
-          BuildContext context, bool play, Stream<PlaybackInfo> playbackInfo)
-      builder;
+    BuildContext context,
+    bool play,
+    Stream<PlaybackInfo> playbackInfo,
+  ) builder;
 
   const ProfileBuilder({
     super.key,
