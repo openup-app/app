@@ -49,11 +49,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name="com.yalantis.ucrop.UCropActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
-
         <!-- Google maps -->
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBgwJH4Tz0zMjPJLU5F9n4k2iuneDN1OmM"/>
