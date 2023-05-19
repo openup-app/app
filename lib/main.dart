@@ -14,6 +14,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/account_settings_screen.dart';
+import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/in_app_notifications.dart';
 import 'package:openup/api/online_users_api.dart';
