@@ -63,18 +63,41 @@ class ChatApi {
 class ChatMessage with _$ChatMessage {
   const factory ChatMessage({
     @Default(null) String? messageId,
-    required String uid,
     required DateTime date,
-    required ChatType type,
-    required String content,
-    @JsonKey(name: "durationMillis")
-    @DurationConverter()
-        required Duration duration,
-    required List<double> waveform,
+    required String uid,
+    required Map<String, ReactionType> reactions,
+    required MessageContent content,
   }) = _ChatMessage;
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) =>
       _$ChatMessageFromJson(json);
+}
+
+enum ReactionType { laugh, love, shock }
+
+@freezed
+class MessageContent with _$MessageContent {
+  const factory MessageContent.audio({
+    required ChatType type,
+    required String url,
+    @JsonKey(name: "durationMicros")
+    @DurationConverter()
+        required Duration duration,
+    required AudioMessageWaveform waveform,
+  }) = _AudioMessageContent;
+
+  factory MessageContent.fromJson(Map<String, dynamic> json) =>
+      _$MessageContentFromJson(json);
+}
+
+@freezed
+class AudioMessageWaveform with _$AudioMessageWaveform {
+  const factory AudioMessageWaveform({
+    required List<double> values,
+  }) = _AudioMessageWaveform;
+
+  factory AudioMessageWaveform.fromJson(Map<String, dynamic> json) =>
+      _$AudioMessageWaveformFromJson(json);
 }
 
 class DurationConverter implements JsonConverter<Duration, int> {

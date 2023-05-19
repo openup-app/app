@@ -371,7 +371,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                                       frequencies: isPlaying
                                                           ? playbackInfo
                                                               .frequencies
-                                                          : message.waveform,
+                                                          : message.content
+                                                              .waveform.values,
                                                       onPressed: () async {
                                                         if (isPlaying) {
                                                           _audio.stop();
@@ -384,7 +385,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                                                   message
                                                                       .messageId);
                                                           await _audio.setUrl(
-                                                              message.content);
+                                                              message
+                                                                  .content.url);
                                                           if (mounted) {
                                                             _audio.play();
                                                           }
@@ -418,7 +420,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                             final message = messages[index];
                             setState(
                                 () => _playbackMessageId = message.messageId);
-                            _audio.setUrl(message.content);
+                            _audio.setUrl(message.content.url);
                             _audio.play();
                           }
                         },
@@ -493,10 +495,15 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       _messages![pendingId] = ChatMessage(
         uid: uid,
         date: DateTime.now().toUtc(),
-        type: ChatType.audio,
-        content: file.path,
-        duration: duration,
-        waveform: [],
+        reactions: {},
+        content: MessageContent.audio(
+          type: ChatType.audio,
+          url: file.path,
+          duration: duration,
+          waveform: const AudioMessageWaveform(
+            values: [],
+          ),
+        ),
       );
     });
 
@@ -791,7 +798,9 @@ class _ChatMessage extends StatelessWidget {
                       size: const Size.fromHeight(140),
                       painter: FrequenciesPainter(
                         frequencies: frequencies ??
-                            message.waveform.map((e) => e.toDouble()).toList(),
+                            message.content.waveform.values
+                                .map((e) => e.toDouble())
+                                .toList(),
                         barCount: 30,
                         color: frequenciesColor,
                       ),
@@ -803,7 +812,7 @@ class _ChatMessage extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 20.0),
                     child: Text(
-                      formatDuration(message.duration),
+                      formatDuration(message.content.duration),
                       style: Theme.of(context).textTheme.bodySmall!.copyWith(
                           fontSize: 13,
                           color: const Color.fromRGBO(0xFF, 0xF3, 0xF3, 0.8)),
