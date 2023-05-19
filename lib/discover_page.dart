@@ -298,119 +298,163 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
           }
 
           final profile = _profiles[_profileIndex].profile;
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              // Must live above PageView.builder (otherwise duplicate global key)
-              ProfileBuilder(
-                key: _profileBuilderKey,
-                profile: profile,
-                play: _pageActive,
-                builder: (context, play, playbackInfoStream) {
-                  if (_showingList) {
-                    return DiscoverList(
-                      profiles: _profiles,
-                      profileIndex: _profileIndex,
-                      onProfileChanged: (index) {
-                        final scrollingForward = index > _profileIndex;
-                        final closeToEnd = index > _profiles.length - 4;
-                        _onProfileChanged(index);
-
-                        if (scrollingForward) {
-                          _precacheImageAndDepth(_profiles,
-                              from: index + 1, count: 2);
-
-                          if (closeToEnd) {
-                            _fetchPageOfProfiles();
-                          }
-                        }
-                      },
-                      play: play,
-                      onPlayPause: () {
-                        if (!play) {
-                          _profileBuilderKey.currentState?.play();
-                        } else {
-                          _profileBuilderKey.currentState?.pause();
-                        }
-                      },
-                      showRecordPanel: () {
-                        _showRecordPanelOrSignIn(context, profile.uid);
-                      },
-                      onBlock: () => setState(() => _profiles
-                          .removeWhere(((p) => p.profile.uid == profile.uid))),
-                    );
-                  } else {
-                    return DiscoverMap(
-                      profiles: _profiles,
-                      profileIndex: _profileIndex,
-                      onProfileChanged: _onProfileChanged,
-                      play: play,
-                      onPlayPause: () {
-                        if (!play) {
-                          _profileBuilderKey.currentState?.play();
-                        } else {
-                          _profileBuilderKey.currentState?.pause();
-                        }
-                      },
-                      showRecordPanel: () {
-                        _showRecordPanelOrSignIn(context, profile.uid);
-                      },
-                    );
-                  }
-                },
-              ),
-              Positioned(
-                left: 16 + 20,
-                top: MediaQuery.of(context).padding.top + 24 + 20,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ProfileButton(
-                      onPressed: () async {
-                        final gender = await _showPreferencesSheet();
-                        if (mounted && gender != null) {
-                          setState(() {
-                            _genderPreference = gender;
-                            _nextMinRadius = 0;
-                            _nextPage = 0;
-                            _profileIndex = 0;
-                            _profiles.clear();
-                          });
-                          _fetchPageOfProfiles();
-                        }
-                      },
-                      icon: Image.asset(
-                        'assets/images/preferences_icon.png',
-                        color: Colors.black,
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.medium,
-                      ),
-                      label: const Text('Filters'),
-                    ),
-                    const SizedBox(width: 4),
-                    ProfileButton(
-                      onPressed: () =>
-                          setState(() => _showingList = !_showingList),
-                      icon: _showingList
-                          ? const Icon(
-                              Icons.map,
-                              color: Colors.black,
-                            )
-                          : const Icon(
-                              Icons.list,
-                              color: Colors.black,
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Must live above PageView.builder (otherwise duplicate global key)
+                  ProfileBuilder(
+                    key: _profileBuilderKey,
+                    profile: profile,
+                    play: _pageActive,
+                    builder: (context, play, playbackInfoStream) {
+                      return Stack(
+                        children: [
+                          AnimatedPositioned(
+                            curve: Curves.easeOutQuart,
+                            duration: const Duration(seconds: 1),
+                            left: 0,
+                            right: 0,
+                            bottom: _showingList ? -250 : 0,
+                            height: constraints.maxHeight,
+                            child: _buildMapView(profile, play),
+                          ),
+                          IgnorePointer(
+                            child: AnimatedOpacity(
+                              curve: Curves.easeOutQuart,
+                              duration: const Duration(seconds: 1),
+                              opacity: _showingList ? 0.8 : 0.0,
+                              child: Container(
+                                color: Colors.black,
+                              ),
                             ),
-                      label:
-                          _showingList ? const Text('Map') : const Text('List'),
+                          ),
+                          AnimatedPositioned(
+                            curve: Curves.easeOutQuart,
+                            duration: const Duration(seconds: 1),
+                            left: 0,
+                            right: 0,
+                            top: _showingList ? 0 : -constraints.maxHeight,
+                            height: constraints.maxHeight,
+                            child: _buildListView(profile, play),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  Positioned(
+                    left: 16 + 20,
+                    top: MediaQuery.of(context).padding.top + 24 + 20,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ProfileButton(
+                          onPressed: () async {
+                            final gender = await _showPreferencesSheet();
+                            if (mounted && gender != null) {
+                              setState(() {
+                                _genderPreference = gender;
+                                _nextMinRadius = 0;
+                                _nextPage = 0;
+                                _profileIndex = 0;
+                                _profiles.clear();
+                              });
+                              _fetchPageOfProfiles();
+                            }
+                          },
+                          icon: Image.asset(
+                            'assets/images/preferences_icon.png',
+                            color: Colors.black,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.medium,
+                          ),
+                          label: const Text('Filters'),
+                        ),
+                        const SizedBox(width: 4),
+                        ProfileButton(
+                          onPressed: () =>
+                              setState(() => _showingList = !_showingList),
+                          icon: _showingList
+                              ? const Icon(
+                                  Icons.map,
+                                  color: Colors.black,
+                                )
+                              : const Icon(
+                                  Icons.list,
+                                  color: Colors.black,
+                                ),
+                          label: _showingList
+                              ? const Text('Map')
+                              : const Text('List'),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            ],
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
+    );
+  }
+
+  Widget _buildListView(Profile profile, bool play) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+      ),
+      child: DiscoverList(
+        profiles: _profiles,
+        profileIndex: _profileIndex,
+        onProfileChanged: (index) {
+          final scrollingForward = index > _profileIndex;
+          final closeToEnd = index > _profiles.length - 4;
+          _onProfileChanged(index);
+
+          if (scrollingForward) {
+            _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+
+            if (closeToEnd) {
+              _fetchPageOfProfiles();
+            }
+          }
+        },
+        play: play,
+        onPlayPause: () {
+          if (!play) {
+            _profileBuilderKey.currentState?.play();
+          } else {
+            _profileBuilderKey.currentState?.pause();
+          }
+        },
+        showRecordPanel: () {
+          _showRecordPanelOrSignIn(context, profile.uid);
+        },
+        onBlock: () => setState(
+            () => _profiles.removeWhere(((p) => p.profile.uid == profile.uid))),
+      ),
+    );
+  }
+
+  Widget _buildMapView(Profile profile, bool play) {
+    return DiscoverMap(
+      profiles: _profiles,
+      profileIndex: _profileIndex,
+      onProfileChanged: _onProfileChanged,
+      play: play,
+      onPlayPause: () {
+        if (!play) {
+          _profileBuilderKey.currentState?.play();
+        } else {
+          _profileBuilderKey.currentState?.pause();
+        }
+      },
+      showRecordPanel: () {
+        _showRecordPanelOrSignIn(context, profile.uid);
+      },
     );
   }
 
