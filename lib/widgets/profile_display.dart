@@ -60,6 +60,10 @@ class ProfileBuilderState extends State<ProfileBuilder> {
   void didUpdateWidget(covariant ProfileBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    if (widget.profile?.audio == null) {
+      _player.stop();
+    }
+
     if (oldWidget.profile?.audio != widget.profile?.audio) {
       final audio = widget.profile?.audio;
       if (audio != null) {
@@ -113,15 +117,15 @@ class ProfileDisplay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Container(
-          clipBehavior: Clip.hardEdge,
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(48)),
-          ),
-          child: Button(
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(48)),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Button(
             onPressed: onPlayPause,
             child: KeyedSubtree(
               key: ValueKey(profile.uid),
@@ -131,151 +135,151 @@ class ProfileDisplay extends ConsumerWidget {
               ),
             ),
           ),
-        ),
-        if (!play)
-          const Center(
-            child: IgnorePointer(
-              child: IconWithShadow(
-                Icons.play_arrow,
-                size: 80,
+          if (!play)
+            const Center(
+              child: IgnorePointer(
+                child: IconWithShadow(
+                  Icons.play_arrow,
+                  size: 80,
+                ),
+              ),
+            ),
+          Positioned(
+            right: 22,
+            top: 28,
+            child: ReportBlockPopupMenu2(
+              uid: profile.uid,
+              name: profile.name,
+              onBlock: onBlock,
+              builder: (context) {
+                return const _ProfileButtonContents(
+                  icon: Icon(
+                    CupertinoIcons.ellipsis,
+                    color: Colors.black,
+                    size: 20,
+                  ),
+                  size: 29,
+                );
+              },
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 120,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.5),
+                  ],
+                ),
               ),
             ),
           ),
-        Positioned(
-          right: 22,
-          top: 28,
-          child: ReportBlockPopupMenu2(
-            uid: profile.uid,
-            name: profile.name,
-            onBlock: onBlock,
-            builder: (context) {
-              return const _ProfileButtonContents(
-                icon: Icon(
-                  CupertinoIcons.ellipsis,
-                  color: Colors.black,
-                  size: 20,
-                ),
-                size: 29,
-              );
-            },
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 120,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.5),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: 51,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              margin: const EdgeInsets.only(bottom: 38),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Button(
+                      useFadeWheNoPressedCallback: false,
+                      onPressed: () {
+                        showCupertinoModalPopup(
+                          context: context,
+                          builder: (context) {
+                            return _MutualFriendsModal(
+                              uids: [profile.uid],
+                            );
+                          },
+                        );
+                      },
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AutoSizeText(
+                            profile.name,
+                            minFontSize: 15,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white),
+                          ),
+                          Row(
+                            children: [
+                              const InfoIcon(),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text('1 mutual friends',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w400,
+                                            color: Colors.white)),
+                              )
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 146,
+                    child: _RecordButton(
+                      onPressed: () {
+                        ref.read(userProvider2).map(
+                          guest: (_) {
+                            showCupertinoDialog(
+                              context: context,
+                              builder: (context) {
+                                return CupertinoAlertDialog(
+                                  title: const Text('Log in to send invites'),
+                                  actions: [
+                                    CupertinoDialogAction(
+                                      onPressed: Navigator.of(context).pop,
+                                      child: const Text('Cancel'),
+                                    ),
+                                    CupertinoDialogAction(
+                                      onPressed: () =>
+                                          context.pushNamed('signup'),
+                                      child: const Text('Log in'),
+                                    )
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          signedIn: (_) {
+                            onRecord();
+                          },
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-        ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            height: 51,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            margin: const EdgeInsets.only(bottom: 38),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Button(
-                    useFadeWheNoPressedCallback: false,
-                    onPressed: () {
-                      showCupertinoModalPopup(
-                        context: context,
-                        builder: (context) {
-                          return _MutualFriendsModal(
-                            uids: [profile.uid],
-                          );
-                        },
-                      );
-                    },
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AutoSizeText(
-                          profile.name,
-                          minFontSize: 15,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white),
-                        ),
-                        Row(
-                          children: [
-                            const InfoIcon(),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text('1 mutual friends',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.white)),
-                            )
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 146,
-                  child: _RecordButton(
-                    onPressed: () {
-                      ref.read(userProvider2).map(
-                        guest: (_) {
-                          showCupertinoDialog(
-                            context: context,
-                            builder: (context) {
-                              return CupertinoAlertDialog(
-                                title: const Text('Log in to send invites'),
-                                actions: [
-                                  CupertinoDialogAction(
-                                    onPressed: Navigator.of(context).pop,
-                                    child: const Text('Cancel'),
-                                  ),
-                                  CupertinoDialogAction(
-                                    onPressed: () =>
-                                        context.pushNamed('signup'),
-                                    child: const Text('Log in'),
-                                  )
-                                ],
-                              );
-                            },
-                          );
-                        },
-                        signedIn: (_) {
-                          onRecord();
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -43,7 +43,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   Gender? _genderPreference;
   bool _pageActive = false;
 
-  bool _showingList = false;
+  bool _showDebugUsers = false;
 
   CancelableOperation<Either<ApiError, DiscoverResultsPage>>?
       _discoverOperation;
@@ -52,7 +52,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   Location? _queryLocation;
   static const _kMinRadius = 4000.0;
 
-  int _profileIndex = 0;
+  bool _ignoreNextLocationChange = false;
+
+  int? _profileIndex;
   final _invitedUsers = <String>{};
 
   final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
@@ -176,6 +178,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     final discoverFuture = api.getDiscover(
       location: location,
       gender: _genderPreference,
+      debug: _showDebugUsers,
     );
     _discoverOperation = CancelableOperation.fromFuture(discoverFuture);
     final profiles = await _discoverOperation?.value;
@@ -209,14 +212,21 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         );
       },
       (r) async {
-        setState(() => _profiles
-          ..clear()
-          ..addAll(r.profiles));
+        setState(() {
+          _profileIndex = null;
+          _profiles
+            ..clear()
+            ..addAll(r.profiles);
+        });
       },
     );
   }
 
   void _maybeRefetchProfiles(Location location) {
+    if (_ignoreNextLocationChange) {
+      setState(() => _ignoreNextLocationChange = false);
+      return;
+    }
     final prevLocation = _queryLocation;
     if (prevLocation != null) {
       final panned =
@@ -231,15 +241,27 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     }
   }
 
-  void _onProfileChanged(int index) {
-    setState(() => _profileIndex = index);
+  void _onProfileChanged(int? index) {
+    setState(() {
+      _profileIndex = index;
+      _ignoreNextLocationChange = true;
+      _discoverOperation?.cancel();
+      _fetchingProfiles = false;
+    });
     _profileBuilderKey.currentState?.play();
   }
 
   @override
   Widget build(BuildContext context) {
     return ActivePage(
-      onActivate: () => setState(() => _pageActive = true),
+      onActivate: () {
+        setState(() => _pageActive = true);
+        final queryLocation = _queryLocation;
+        if (queryLocation != null) {
+          _queryProfilesAt(queryLocation);
+        }
+        ;
+      },
       onDeactivate: () {
         _profileBuilderKey.currentState?.pause();
         setState(() => _pageActive = false);
@@ -253,8 +275,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
             );
           }
 
-          final profile =
-              _profiles.isEmpty ? null : _profiles[_profileIndex].profile;
+          final profileIndex = _profileIndex;
+          final profile = (_profiles.isEmpty || profileIndex == null)
+              ? null
+              : _profiles[profileIndex].profile;
           return LayoutBuilder(
             builder: (context, constraints) {
               return Stack(
@@ -268,25 +292,36 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     builder: (context, play, playbackInfoStream) {
                       return Stack(
                         children: [
-                          AnimatedPositioned(
-                            curve: Curves.easeOutQuart,
-                            duration: const Duration(seconds: 1),
-                            left: 0,
-                            right: 0,
-                            bottom: _showingList ? -250 : 0,
-                            height: constraints.maxHeight,
-                            child: _buildMapView(
-                              play: play,
-                              initialLocation: initialLocation,
-                              onLocationChanged: _maybeRefetchProfiles,
-                            ),
+                          _buildMapView(
+                            play: play,
+                            initialLocation: initialLocation,
+                            onLocationChanged: _maybeRefetchProfiles,
+                            bottomBuilder: (context) {
+                              if (profileIndex == null) {
+                                return const SizedBox.shrink();
+                              }
+                              return _buildListView(
+                                profileIndex: profileIndex,
+                                play: play,
+                                onProfilePressed: () {
+                                  if (profile == null) {
+                                    return;
+                                  }
+                                  _showFullProfile(
+                                    context: context,
+                                    profile: profile,
+                                    play: play,
+                                  );
+                                },
+                              );
+                            },
                           ),
                         ],
                       );
                     },
                   ),
                   Positioned(
-                    left: 16 + 20,
+                    left: 16,
                     top: MediaQuery.of(context).padding.top + 24 + 20,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -315,26 +350,44 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                           ),
                           label: const Text('Filters'),
                         ),
-                        const SizedBox(width: 4),
-                        ProfileButton(
-                          onPressed: () =>
-                              setState(() => _showingList = !_showingList),
-                          icon: _showingList
-                              ? const Icon(
-                                  Icons.map,
-                                  color: Colors.black,
-                                )
-                              : const Icon(
-                                  Icons.list,
-                                  color: Colors.black,
-                                ),
-                          label: _showingList
-                              ? const Text('Map')
-                              : const Text('List'),
-                        ),
                       ],
                     ),
                   ),
+                  if (_queryLocation != null)
+                    Positioned(
+                      left: 16 + 100,
+                      top: MediaQuery.of(context).padding.top + 24 + 20,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ProfileButton(
+                            onPressed: () async {
+                              final gender = await _showPreferencesSheet();
+                              if (mounted && gender != null) {
+                                setState(() {
+                                  _genderPreference = gender;
+                                  _profileIndex = 0;
+                                  _profiles.clear();
+                                });
+                                final queryLocation = _queryLocation;
+                                if (queryLocation != null) {
+                                  _queryProfilesAt(queryLocation);
+                                }
+                              }
+                            },
+                            icon: Switch(
+                              value: _showDebugUsers,
+                              onChanged: (show) {
+                                setState(() => _showDebugUsers = show);
+                                _queryProfilesAt(_queryLocation!);
+                              },
+                            ),
+                            label: const Text('Show fake users'),
+                          ),
+                        ],
+                      ),
+                    ),
                   if (_fetchingProfiles)
                     Positioned(
                       left: 0,
@@ -352,48 +405,22 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     );
   }
 
-  Widget _buildListView(Profile profile, bool play) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-      ),
-      child: DiscoverList(
-        profiles: _profiles,
-        profileIndex: _profileIndex,
-        onProfileChanged: (index) {
-          final scrollingForward = index > _profileIndex;
-          _onProfileChanged(index);
-
-          if (scrollingForward) {
-            _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-          }
-        },
-        play: play,
-        onPlayPause: () {
-          if (!play) {
-            _profileBuilderKey.currentState?.play();
-          } else {
-            _profileBuilderKey.currentState?.pause();
-          }
-        },
-        showRecordPanel: () {
-          _showRecordPanelOrSignIn(context, profile.uid);
-        },
-        onBlock: () => setState(
-            () => _profiles.removeWhere(((p) => p.profile.uid == profile.uid))),
-      ),
-    );
-  }
-
-  Widget _buildMapView({
+  Widget _buildListView({
+    required int profileIndex,
     required bool play,
-    required Location initialLocation,
-    required ValueChanged<Location> onLocationChanged,
+    required VoidCallback onProfilePressed,
   }) {
-    return DiscoverMap(
+    final profile = _profiles[profileIndex].profile;
+    return DiscoverList(
       profiles: _profiles,
-      profileIndex: _profileIndex,
-      onProfileChanged: _onProfileChanged,
+      profileIndex: profileIndex,
+      onProfileChanged: (index) {
+        // final scrollingForward = index > _profileIndex;
+        // if (scrollingForward) {
+        //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+        // }
+        _onProfileChanged(index);
+      },
       play: play,
       onPlayPause: () {
         if (!play) {
@@ -402,14 +429,32 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
           _profileBuilderKey.currentState?.pause();
         }
       },
+      onRecord: () {
+        _showRecordPanelOrSignIn(context, profile.uid);
+      },
+      onProfilePressed: onProfilePressed,
+    );
+  }
+
+  Widget _buildMapView({
+    required bool play,
+    required Location initialLocation,
+    required ValueChanged<Location> onLocationChanged,
+    required WidgetBuilder bottomBuilder,
+  }) {
+    return DiscoverMap(
+      profiles: _profiles,
+      profileIndex: _profileIndex,
+      onProfileChanged: _onProfileChanged,
+      bottomBuilder: bottomBuilder,
       initialLocation: initialLocation,
       onLocationChanged: onLocationChanged,
       showRecordPanel: () {
-        final profile =
-            _profiles.isEmpty ? null : _profiles[_profileIndex].profile;
-        if (profile != null) {
-          _showRecordPanelOrSignIn(context, profile.uid);
-        }
+        // final profile =
+        //     _profiles.isEmpty ? null : _profiles[_profileIndex].profile;
+        // if (profile != null) {
+        //   _showRecordPanelOrSignIn(context, profile.uid);
+        // }
       },
     );
   }
@@ -466,6 +511,51 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     if (mounted) {
       setState(() => _invitedUsers.add(uid));
     }
+  }
+
+  void _showFullProfile({
+    required BuildContext context,
+    required Profile profile,
+    required bool play,
+  }) {
+    showBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          margin: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16 + MediaQuery.of(context).padding.top,
+          ),
+          clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.all(Radius.circular(64)),
+          ),
+          child: ProfileDisplay(
+            profile: profile,
+            play: play,
+            onPlayPause: () {
+              if (!play) {
+                _profileBuilderKey.currentState?.play();
+              } else {
+                _profileBuilderKey.currentState?.pause();
+              }
+            },
+            onRecord: () {
+              _showRecordPanelOrSignIn(context, profile.uid);
+            },
+            onBlock: () {
+              setState(() =>
+                  _profiles.removeWhere(((p) => p.profile.uid == profile.uid)));
+              Navigator.of(context).pop();
+            },
+          ),
+        );
+      },
+    );
   }
 
   void _showSignInDialog() {
