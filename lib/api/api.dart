@@ -415,37 +415,22 @@ class Api {
     }
   }
 
-  Future<Either<ApiError, DiscoverResultsPage>> getDiscover(
-    double? latitude,
-    double? longitude, {
-    String? seed,
+  Future<Either<ApiError, DiscoverResultsPage>> getDiscover({
+    required Location location,
     Gender? gender,
-    double? minRadius,
-    int? page,
+    bool? debug,
   }) {
     return _request(
       makeRequest: () {
-        final locationQuery = (latitude == null || longitude == null)
-            ? null
-            : 'lat=$latitude&long=$longitude';
-        final seedQuery = seed == null ? null : 'seed=$seed';
+        final locationQuery =
+            'lat=${location.latLong.latitude}&long=${location.latLong.longitude}&radius=${location.radius}';
         final genderQuery = gender == null ? null : 'gender=${gender.name}';
-        final minRadiusQuery =
-            minRadius == null ? null : 'minRadius=$minRadius';
-        final pageQuery = page == null ? null : 'page=$page';
-        final hasOptions = latitude != null ||
-            longitude != null ||
-            seedQuery != null ||
-            genderQuery != null ||
-            minRadiusQuery != null ||
-            pageQuery != null;
+        final debugQuery = debug == null ? null : 'debug=$debug';
         return http.get(
-          Uri.parse('$_urlBase/discover${hasOptions ? '?' : ''}${[
+          Uri.parse('$_urlBase/discover?${[
             locationQuery,
-            seedQuery,
             genderQuery,
-            minRadiusQuery,
-            pageQuery,
+            debugQuery,
           ].where((q) => q != null).join('&')}'),
           headers: _headers,
         );
@@ -835,6 +820,7 @@ class DiscoverProfile with _$DiscoverProfile {
 class Location with _$Location {
   const factory Location({
     required LatLong latLong,
+    required double radius,
   }) = _Location;
 
   factory Location.fromJson(Map<String, dynamic> json) =>
@@ -880,8 +866,6 @@ class KnownContactProfile with _$KnownContactProfile {
 class DiscoverResultsPage with _$DiscoverResultsPage {
   const factory DiscoverResultsPage({
     required List<DiscoverProfile> profiles,
-    required double nextMinRadius,
-    required int nextPage,
   }) = _DiscoverResultsPage;
 
   factory DiscoverResultsPage.fromJson(Map<String, dynamic> json) =>
@@ -904,7 +888,7 @@ class Collection with _$Collection {
   const factory Collection({
     required String collectionId,
     required String uid,
-    required DateTime date,
+    @_DateTimeConverter() required DateTime date,
     required CollectionState state,
     required List<Photo3d> photos,
   }) = _Collection;

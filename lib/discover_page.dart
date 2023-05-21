@@ -38,19 +38,19 @@ class DiscoverPage extends ConsumerStatefulWidget {
 }
 
 class DiscoverPageState extends ConsumerState<DiscoverPage> {
-  bool _loading = false;
-  bool _hasLocation = false;
+  bool _fetchingProfiles = false;
   bool _errorLoadingProfiles = false;
   Gender? _genderPreference;
   bool _pageActive = false;
 
-  bool _showingList = true;
+  bool _showingList = false;
 
   CancelableOperation<Either<ApiError, DiscoverResultsPage>>?
       _discoverOperation;
   final _profiles = <DiscoverProfile>[];
-  double _nextMinRadius = 0.0;
-  int _nextPage = 0;
+  Location? _initialLocation;
+  Location? _queryLocation;
+  static const _kMinRadius = 4000.0;
 
   int _profileIndex = 0;
   final _invitedUsers = <String>{};
@@ -60,8 +60,19 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   @override
   void initState() {
     super.initState();
-    _fetchPageOfProfiles().then((_) {
-      _maybeRequestNotification();
+    _maybeRequestLocationPermission().then((_) {
+      _updateLocation().then((latLong) {
+        if (mounted && latLong != null) {
+          final location = Location(latLong: latLong, radius: _kMinRadius);
+          setState(() {
+            _queryLocation = location;
+            _initialLocation = location;
+          });
+          _queryProfilesAt(location).then((_) {
+            _maybeRequestNotification();
+          });
+        }
+      });
     });
   }
 
@@ -146,9 +157,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     );
   }
 
-  Future<void> _updateLocation() async {
-    setState(() => _loading = true);
-
+  Future<LatLong?> _updateLocation() async {
     final latLong = await _getLocation();
     if (latLong != null && mounted) {
       ref.read(locationProvider.notifier).update(LocationValue(latLong));
@@ -157,34 +166,16 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         latLong: latLong,
       );
     }
+    return latLong;
   }
 
-  Future<void> _fetchPageOfProfiles() async {
-    final granted = await _maybeRequestLocationPermission();
-    if (!mounted || !granted) {
-      return;
-    }
-
-    setState(() => _loading = true);
-    final location = await _getLocation();
-    if (!mounted) {
-      return;
-    }
-
-    if (location == null) {
-      return;
-    }
-    setState(() => _hasLocation = true);
-
+  Future<void> _queryProfilesAt(Location location) async {
+    setState(() => _fetchingProfiles = true);
     final api = ref.read(apiProvider);
     _discoverOperation?.cancel();
     final discoverFuture = api.getDiscover(
-      location.latitude,
-      location.longitude,
-      seed: Api.seed,
+      location: location,
       gender: _genderPreference,
-      minRadius: _nextMinRadius,
-      page: _nextPage,
     );
     _discoverOperation = CancelableOperation.fromFuture(discoverFuture);
     final profiles = await _discoverOperation?.value;
@@ -192,7 +183,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     if (!mounted || profiles == null) {
       return;
     }
-    setState(() => _loading = false);
+    setState(() => _fetchingProfiles = false);
 
     profiles.fold(
       (l) {
@@ -218,11 +209,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         );
       },
       (r) async {
-        setState(() {
-          _profiles.addAll(r.profiles);
-          _nextMinRadius = r.nextMinRadius;
-          _nextPage = r.nextPage;
-        });
+        setState(() => _profiles
+          ..clear()
+          ..addAll(r.profiles));
       },
     );
   }
@@ -242,62 +231,15 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
       },
       child: Builder(
         builder: (context) {
-          if (_loading && _profiles.isEmpty) {
+          final initialLocation = _initialLocation;
+          if (initialLocation == null) {
             return const Center(
-              child: LoadingIndicator(
-                color: Colors.black,
-              ),
+              child: LoadingIndicator(),
             );
           }
 
-          if (_profiles.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: !_hasLocation
-                        ? Text(
-                            'Unable to get location',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          )
-                        : Text(
-                            'Couldn\'t find any profiles',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      // Location needed at least once for nearby users
-                      // (may not have granted location during onboarding)
-                      setState(() => _loading = true);
-                      final locationService = LocationService();
-                      if (!await locationService.hasPermission()) {
-                        final status =
-                            await locationService.requestPermission();
-                        if (status) {
-                          await _updateLocation();
-                        }
-                      }
-
-                      if (!mounted) {
-                        return;
-                      }
-                      setState(() {
-                        _nextMinRadius = 0;
-                        _nextPage = 0;
-                      });
-                      _fetchPageOfProfiles();
-                    },
-                    child: const Text('Refresh'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final profile = _profiles[_profileIndex].profile;
+          final profile =
+              _profiles.isEmpty ? null : _profiles[_profileIndex].profile;
           return LayoutBuilder(
             builder: (context, constraints) {
               return Stack(
@@ -318,26 +260,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             right: 0,
                             bottom: _showingList ? -250 : 0,
                             height: constraints.maxHeight,
-                            child: _buildMapView(profile, play),
-                          ),
-                          IgnorePointer(
-                            child: AnimatedOpacity(
-                              curve: Curves.easeOutQuart,
-                              duration: const Duration(seconds: 1),
-                              opacity: _showingList ? 0.8 : 0.0,
-                              child: Container(
-                                color: Colors.black,
-                              ),
+                            child: _buildMapView(
+                              play: play,
+                              initialLocation: initialLocation,
+                              onLocationChanged: (location) {
+                                _queryProfilesAt(location);
+                              },
                             ),
-                          ),
-                          AnimatedPositioned(
-                            curve: Curves.easeOutQuart,
-                            duration: const Duration(seconds: 1),
-                            left: 0,
-                            right: 0,
-                            top: _showingList ? 0 : -constraints.maxHeight,
-                            height: constraints.maxHeight,
-                            child: _buildListView(profile, play),
                           ),
                         ],
                       );
@@ -356,12 +285,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             if (mounted && gender != null) {
                               setState(() {
                                 _genderPreference = gender;
-                                _nextMinRadius = 0;
-                                _nextPage = 0;
                                 _profileIndex = 0;
                                 _profiles.clear();
                               });
-                              _fetchPageOfProfiles();
+                              final queryLocation = _queryLocation;
+                              if (queryLocation != null) {
+                                _queryProfilesAt(queryLocation);
+                              }
                             }
                           },
                           icon: Image.asset(
@@ -392,6 +322,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                       ],
                     ),
                   ),
+                  if (_fetchingProfiles)
+                    Positioned(
+                      left: 0,
+                      top: MediaQuery.of(context).padding.top + 24 + 72,
+                      right: 0,
+                      height: 4,
+                      child: const LinearProgressIndicator(),
+                    ),
                 ],
               );
             },
@@ -411,15 +349,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         profileIndex: _profileIndex,
         onProfileChanged: (index) {
           final scrollingForward = index > _profileIndex;
-          final closeToEnd = index > _profiles.length - 4;
           _onProfileChanged(index);
 
           if (scrollingForward) {
             _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-
-            if (closeToEnd) {
-              _fetchPageOfProfiles();
-            }
           }
         },
         play: play,
@@ -439,7 +372,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     );
   }
 
-  Widget _buildMapView(Profile profile, bool play) {
+  Widget _buildMapView({
+    required bool play,
+    required Location initialLocation,
+    required ValueChanged<Location> onLocationChanged,
+  }) {
     return DiscoverMap(
       profiles: _profiles,
       profileIndex: _profileIndex,
@@ -452,8 +389,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
           _profileBuilderKey.currentState?.pause();
         }
       },
+      initialLocation: initialLocation,
+      onLocationChanged: onLocationChanged,
       showRecordPanel: () {
-        _showRecordPanelOrSignIn(context, profile.uid);
+        final profile =
+            _profiles.isEmpty ? null : _profiles[_profileIndex].profile;
+        if (profile != null) {
+          _showRecordPanelOrSignIn(context, profile.uid);
+        }
       },
     );
   }

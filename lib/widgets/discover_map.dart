@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -13,13 +14,16 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/profile_display.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 class DiscoverMap extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
   final int profileIndex;
-  final void Function(int index) onProfileChanged;
+  final ValueChanged<int> onProfileChanged;
   final bool play;
   final VoidCallback onPlayPause;
+  final Location initialLocation;
+  final ValueChanged<Location> onLocationChanged;
   final VoidCallback showRecordPanel;
 
   const DiscoverMap({
@@ -29,6 +33,8 @@ class DiscoverMap extends ConsumerStatefulWidget {
     required this.onProfileChanged(int index),
     required this.play,
     required this.onPlayPause,
+    required this.initialLocation,
+    required this.onLocationChanged,
     required this.showRecordPanel,
   });
 
@@ -37,13 +43,16 @@ class DiscoverMap extends ConsumerStatefulWidget {
 }
 
 class _DiscoverMapState extends ConsumerState<DiscoverMap> {
-  maps.GoogleMapController? _googleMapController;
+  maps.GoogleMapController? _mapController;
   final _mapMarkerImages = <String, Uint8List>{};
   int? _profileIndex;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_mapMarkerImages.isEmpty) {
+      _createAllMapMarkerImages();
+    }
   }
 
   @override
@@ -54,11 +63,25 @@ class _DiscoverMapState extends ConsumerState<DiscoverMap> {
       recenterMap(LocationStatus.value(
           widget.profiles[widget.profileIndex].location.latLong));
     }
+
+    final missingProfiles = <Profile>[];
+    for (final profile in widget.profiles) {
+      if (!_mapMarkerImages.containsKey(profile.profile.uid)) {
+        missingProfiles.add(profile.profile);
+      }
+    }
+    if (missingProfiles.isNotEmpty) {
+      _createMapMarkerImages(missingProfiles).then((mappings) {
+        if (mounted) {
+          setState(() => _mapMarkerImages.addAll(mappings));
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
-    _googleMapController?.dispose();
+    _mapController?.dispose();
     super.dispose();
   }
 
@@ -71,45 +94,45 @@ class _DiscoverMapState extends ConsumerState<DiscoverMap> {
     } else {
       profile = null;
     }
-    final initialLatLong =
-        widget.profiles[widget.profileIndex].location.latLong;
+
     return Stack(
       children: [
         GoogleMap(
           mapType: MapType.normal,
           initialCameraPosition: CameraPosition(
-            target: LatLng(initialLatLong.latitude, initialLatLong.longitude),
+            target: LatLng(
+              widget.initialLocation.latLong.latitude,
+              widget.initialLocation.latLong.longitude,
+            ),
             zoom: 14.4746,
           ),
-          onMapCreated: (controller) async {
-            controller.setMapStyle(_nightMapStyle());
-            setState(() => _googleMapController = controller);
-            _updateImages();
-          },
+          onMapCreated: _initMapController,
           myLocationEnabled: true,
           myLocationButtonEnabled: false,
+          onCameraIdle: _onCameraMoved,
           onTap: (_) => setState(() => _profileIndex = null),
           markers: {
             for (final profile in widget.profiles)
-              Marker(
-                markerId: MarkerId(profile.profile.uid),
-                position: LatLng(
-                  profile.location.latLong.latitude,
-                  profile.location.latLong.longitude,
+              if (_mapMarkerImages[profile.profile.uid] != null)
+                Marker(
+                  markerId: MarkerId(profile.profile.uid),
+                  position: LatLng(
+                    profile.location.latLong.latitude,
+                    profile.location.latLong.longitude,
+                  ),
+                  onTap: () {
+                    final index = widget.profiles.indexOf(profile);
+                    if (_profileIndex == null && widget.profileIndex == index) {
+                      setState(() => _profileIndex = widget.profileIndex);
+                    } else {
+                      widget.onProfileChanged(index);
+                    }
+                  },
+                  icon: _mapMarkerImages[profile.profile.uid] == null
+                      ? BitmapDescriptor.defaultMarker
+                      : BitmapDescriptor.fromBytes(
+                          _mapMarkerImages[profile.profile.uid]!),
                 ),
-                onTap: () {
-                  final index = widget.profiles.indexOf(profile);
-                  if (_profileIndex == null && widget.profileIndex == index) {
-                    setState(() => _profileIndex = widget.profileIndex);
-                  } else {
-                    widget.onProfileChanged(index);
-                  }
-                },
-                icon: _mapMarkerImages[profile.profile.uid] == null
-                    ? BitmapDescriptor.defaultMarker
-                    : BitmapDescriptor.fromBytes(
-                        _mapMarkerImages[profile.profile.uid]!),
-              ),
           },
         ),
         Align(
@@ -161,6 +184,42 @@ class _DiscoverMapState extends ConsumerState<DiscoverMap> {
     );
   }
 
+  void _initMapController(GoogleMapController controller) async {
+    controller.setMapStyle(_nightMapStyle());
+    setState(() => _mapController = controller);
+  }
+
+  void _onCameraMoved() async {
+    final bounds = await _mapController?.getVisibleRegion();
+    if (bounds == null) {
+      return;
+    }
+
+    final centerLatitude =
+        (bounds.northeast.latitude + bounds.southwest.latitude) / 2;
+    final centerLongitude =
+        (bounds.northeast.longitude + bounds.southwest.longitude) / 2;
+
+    // Haversine
+    final lat1 = radians(centerLatitude);
+    final long1 = radians(centerLongitude);
+    final lat2 = radians(bounds.northeast.latitude);
+    final long2 = radians(bounds.northeast.longitude);
+    const earthRadiusMeters = 6378137;
+    final greatCircleDistance = earthRadiusMeters *
+        acos(
+            sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(long2 - long1));
+    widget.onLocationChanged(
+      Location(
+        latLong: LatLong(
+          latitude: centerLatitude,
+          longitude: centerLongitude,
+        ),
+        radius: greatCircleDistance,
+      ),
+    );
+  }
+
   void recenterMap(LocationStatus? status) {
     final latLong = status?.map(
       value: (value) => value.latLong,
@@ -177,17 +236,16 @@ class _DiscoverMapState extends ConsumerState<DiscoverMap> {
           : googleplexLatLong,
       zoom: 14.4746,
     );
-    _googleMapController?.animateCamera(CameraUpdate.newCameraPosition(pos));
+    _mapController?.animateCamera(CameraUpdate.newCameraPosition(pos));
   }
 
-  void _updateImages() async {
-    setState(() => _mapMarkerImages.clear());
-    final images = await _createMapMarkerImages(
+  void _createAllMapMarkerImages() async {
+    final mapping = await _createMapMarkerImages(
         widget.profiles.map((p) => p.profile).toList());
     if (mounted) {
       setState(() {
         _mapMarkerImages.clear();
-        _mapMarkerImages.addAll(images);
+        _mapMarkerImages.addAll(mapping);
       });
     }
   }

@@ -12,7 +12,7 @@ import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 
 class ProfileBuilder extends StatefulWidget {
-  final Profile profile;
+  final Profile? profile;
   final bool play;
   final Widget Function(
     BuildContext context,
@@ -38,7 +38,7 @@ class ProfileBuilderState extends State<ProfileBuilder> {
   @override
   void initState() {
     super.initState();
-    final audio = widget.profile.audio;
+    final audio = widget.profile?.audio;
     if (audio != null) {
       _player.setUrl(audio);
     }
@@ -60,8 +60,8 @@ class ProfileBuilderState extends State<ProfileBuilder> {
   void didUpdateWidget(covariant ProfileBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.profile.audio != widget.profile.audio) {
-      final audio = widget.profile.audio;
+    if (oldWidget.profile?.audio != widget.profile?.audio) {
+      final audio = widget.profile?.audio;
       if (audio != null) {
         _player.setUrl(audio);
       }
