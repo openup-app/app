@@ -195,27 +195,21 @@ class _DiscoverMapState extends ConsumerState<DiscoverMap> {
       return;
     }
 
-    final centerLatitude =
-        (bounds.northeast.latitude + bounds.southwest.latitude) / 2;
-    final centerLongitude =
-        (bounds.northeast.longitude + bounds.southwest.longitude) / 2;
-
-    // Haversine
-    final lat1 = radians(centerLatitude);
-    final long1 = radians(centerLongitude);
-    final lat2 = radians(bounds.northeast.latitude);
-    final long2 = radians(bounds.northeast.longitude);
-    const earthRadiusMeters = 6378137;
-    final greatCircleDistance = earthRadiusMeters *
-        acos(
-            sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(long2 - long1));
+    final center = LatLong(
+      latitude: (bounds.northeast.latitude + bounds.southwest.latitude) / 2,
+      longitude: (bounds.northeast.longitude + bounds.southwest.longitude) / 2,
+    );
+    final distance = greatCircleDistance(
+      center,
+      LatLong(
+        latitude: bounds.northeast.latitude,
+        longitude: bounds.northeast.longitude,
+      ),
+    );
     widget.onLocationChanged(
       Location(
-        latLong: LatLong(
-          latitude: centerLatitude,
-          longitude: centerLongitude,
-        ),
-        radius: greatCircleDistance,
+        latLong: center,
+        radius: distance,
       ),
     );
   }

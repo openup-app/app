@@ -216,6 +216,21 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     );
   }
 
+  void _maybeRefetchProfiles(Location location) {
+    final prevLocation = _queryLocation;
+    if (prevLocation != null) {
+      final panned =
+          greatCircleDistance(prevLocation.latLong, location.latLong) >
+              prevLocation.radius * 1 / 3;
+      final ratio = location.radius / prevLocation.radius;
+      final zoomed = ratio > 2 || ratio < 1 / 2;
+      if (panned || zoomed) {
+        setState(() => _queryLocation = location);
+        _queryProfilesAt(location);
+      }
+    }
+  }
+
   void _onProfileChanged(int index) {
     setState(() => _profileIndex = index);
     _profileBuilderKey.currentState?.play();
@@ -263,9 +278,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                             child: _buildMapView(
                               play: play,
                               initialLocation: initialLocation,
-                              onLocationChanged: (location) {
-                                _queryProfilesAt(location);
-                              },
+                              onLocationChanged: _maybeRefetchProfiles,
                             ),
                           ),
                         ],
