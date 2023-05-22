@@ -40,7 +40,7 @@ class DiscoverPage extends ConsumerStatefulWidget {
 class DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _fetchingProfiles = false;
   bool _errorLoadingProfiles = false;
-  Gender? _genderPreference;
+  Gender? _gender;
   bool _pageActive = false;
 
   bool _showDebugUsers = false;
@@ -177,7 +177,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     _discoverOperation?.cancel();
     final discoverFuture = api.getDiscover(
       location: location,
-      gender: _genderPreference,
+      gender: _gender,
       debug: _showDebugUsers,
     );
     _discoverOperation = CancelableOperation.fromFuture(discoverFuture);
@@ -329,11 +329,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                       children: [
                         ProfileButton(
                           onPressed: () async {
+                            final prevGender = _gender;
                             final gender = await _showPreferencesSheet();
-                            if (mounted && gender != null) {
+                            if (mounted && gender != prevGender) {
                               setState(() {
-                                _genderPreference = gender;
-                                _profileIndex = 0;
+                                _gender = gender;
+                                _profileIndex = null;
                                 _profiles.clear();
                               });
                               final queryLocation = _queryLocation;
@@ -366,7 +367,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                               final gender = await _showPreferencesSheet();
                               if (mounted && gender != null) {
                                 setState(() {
-                                  _genderPreference = gender;
+                                  _gender = gender;
                                   _profileIndex = 0;
                                   _profiles.clear();
                                 });
@@ -607,7 +608,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                 const SizedBox(height: 16),
                 RadioTile(
                   label: 'Everyone',
-                  selected: _genderPreference == null,
+                  selected: _gender == null,
                   onTap: () => Navigator.of(context).pop('any'),
                   radioAtEnd: true,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -617,7 +618,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                 ),
                 RadioTile(
                   label: 'Men',
-                  selected: _genderPreference == Gender.male,
+                  selected: _gender == Gender.male,
                   onTap: () => Navigator.of(context).pop('male'),
                   radioAtEnd: true,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -627,7 +628,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                 ),
                 RadioTile(
                   label: 'Women',
-                  selected: _genderPreference == Gender.female,
+                  selected: _gender == Gender.female,
                   onTap: () => Navigator.of(context).pop('female'),
                   radioAtEnd: true,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -637,7 +638,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                 ),
                 RadioTile(
                   label: 'Non-Binary',
-                  selected: _genderPreference == Gender.nonBinary,
+                  selected: _gender == Gender.nonBinary,
                   onTap: () => Navigator.of(context).pop('nonBinary'),
                   radioAtEnd: true,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
