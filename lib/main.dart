@@ -11,16 +11,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
-import 'package:openup/account_settings_screen.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/in_app_notifications.dart';
 import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/blocked_users_page.dart';
 import 'package:openup/chat_page.dart';
+import 'package:openup/contact_us_screen.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/initial_loading_screen.dart';
@@ -29,6 +29,7 @@ import 'package:openup/contacts_page.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
+import 'package:openup/shell_page.dart';
 import 'package:openup/signup_age.dart';
 import 'package:openup/signup_tutorial2.dart';
 import 'package:openup/signup_welcome.dart';
@@ -43,11 +44,7 @@ import 'package:openup/signup_friends.dart';
 import 'package:openup/signup_tutorial1.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/view_profile_page.dart';
-import 'package:openup/widgets/button.dart';
-import 'package:openup/menu_page.dart';
-import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 const host = String.fromEnvironment('HOST');
@@ -56,6 +53,9 @@ const socketPort = 8081;
 
 // TODO: Should be app constant coming from dart defines (to be used in background call handler too)
 const urlBase = 'https://$host:$webPort';
+
+final _pageNotifierProvider =
+    StateNotifierProvider<_PageNotifier, int>((ref) => _PageNotifier());
 
 void main() async {
   void appRunner() async {
@@ -152,11 +152,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   final _discoverKey = GlobalKey<NavigatorState>();
   final _conversationsKey = GlobalKey<NavigatorState>();
-  final _profileKey = GlobalKey<NavigatorState>();
-  final _peopleKey = GlobalKey<NavigatorState>();
   final _settingsKey = GlobalKey<NavigatorState>();
-
-  final _scrollToDiscoverTopNotifier = ScrollToDiscoverTopNotifier();
 
   InAppNotificationsApi? _inAppNotificationsApi;
 
@@ -293,8 +289,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     _idTokenChangesSubscription?.cancel();
     _notificationTokenSubscription?.cancel();
     disposeNotifications();
-
-    _scrollToDiscoverTopNotifier.dispose();
 
     _inAppNotificationsApi?.dispose();
     super.dispose();
@@ -484,7 +478,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           builder: (builder) {
             return builder.buildShell(
               (context, state, child) {
-                return _MenuPageShell(
+                return _Shell(
                   children: child.children,
                 );
               },
@@ -499,10 +493,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   path: '/discover',
                   name: 'discover',
                   builder: (context, state) {
-                    final showWelcome = state.queryParams['welcome'] == 'true';
                     return DiscoverPage(
-                      scrollToTopNotifier: _scrollToDiscoverTopNotifier,
-                      showWelcome: showWelcome,
+                      onShowConversations: () => ref
+                          .read(_pageNotifierProvider.notifier)
+                          .changePage(1),
+                      onShowSettings: () => ref
+                          .read(_pageNotifierProvider.notifier)
+                          .changePage(2),
                     );
                   },
                   routes: [
@@ -556,44 +553,39 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ],
             ),
             StatefulShellBranch(
-              navigatorKey: _profileKey,
-              preload: true,
-              routes: [
-                GoRoute(
-                  path: '/profile',
-                  name: 'profile',
-                  builder: (context, state) => const ProfilePage(),
-                ),
-              ],
-            ),
-            StatefulShellBranch(
-              navigatorKey: _peopleKey,
-              preload: true,
-              routes: [
-                GoRoute(
-                  path: '/contacts',
-                  name: 'contacts',
-                  builder: (context, state) {
-                    return const ContactsPage();
-                  },
-                ),
-              ],
-            ),
-            StatefulShellBranch(
               navigatorKey: _settingsKey,
               preload: true,
               routes: [
                 GoRoute(
                   path: '/settings',
                   name: 'settings',
-                  builder: (context, state) {
-                    return const CurrentRouteSystemUiStyling.light(
-                      child: AccountSettingsScreen(),
-                    );
-                  },
+                  builder: (context, state) => const ProfilePage(),
+                  routes: [
+                    GoRoute(
+                      path: 'contacts',
+                      name: 'contacts',
+                      builder: (context, state) {
+                        return const ContactsPage();
+                      },
+                    ),
+                    GoRoute(
+                      path: 'blocked',
+                      name: 'blocked',
+                      builder: (context, state) {
+                        return const BlockedUsersPage();
+                      },
+                    ),
+                    GoRoute(
+                      path: 'contact_us',
+                      name: 'contact_us',
+                      builder: (context, state) {
+                        return const ContactUsScreen();
+                      },
+                    ),
+                  ],
                 ),
               ],
-            )
+            ),
           ],
         ),
         GoRoute(
@@ -614,431 +606,53 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   }
 }
 
-class _MenuPageShell extends StatefulWidget {
+class _Shell extends ConsumerStatefulWidget {
   final List<Widget> children;
 
-  const _MenuPageShell({
+  const _Shell({
     super.key,
     required this.children,
   });
 
   @override
-  State<_MenuPageShell> createState() => _MenuPageShellState();
+  ConsumerState<_Shell> createState() => _ShellState();
 }
 
-class _MenuPageShellState extends State<_MenuPageShell> {
-  final _menuPageKey = GlobalKey<MenuPageState>();
-  int _currentIndex = 0;
+class _ShellState extends ConsumerState<_Shell> {
+  int _index = 0;
+  final _shellPageKey = GlobalKey<ShellPageState>();
 
   @override
-  Widget build(BuildContext context) {
-    return MenuPage(
-      key: _menuPageKey,
-      currentIndex: _currentIndex,
-      menuBuilder: (context) {
-        return _MenuTiles(
-          onDiscoverPressed: () {
-            setState(() => _currentIndex = 0);
-            StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
-            _menuPageKey.currentState?.open();
-          },
-          onConversationsPressed: () {
-            setState(() => _currentIndex = 1);
-            StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
-            _menuPageKey.currentState?.open();
-          },
-          onProfilePressed: () {
-            setState(() => _currentIndex = 2);
-            StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
-            _menuPageKey.currentState?.open();
-          },
-          onContactsPressed: () {
-            setState(() => _currentIndex = 3);
-            StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
-            _menuPageKey.currentState?.open();
-          },
-          onSettingsPressed: () {
-            setState(() => _currentIndex = 4);
-            StatefulShellRouteState.of(context).goBranch(index: _currentIndex);
-            _menuPageKey.currentState?.open();
-          },
-          onContactUsPressed: () {},
-        );
-      },
-      pageTitleBuilder: (context) {
-        final style = Theme.of(context).textTheme.bodyMedium!.copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: const Color.fromRGBO(0x72, 0x72, 0x72, 1.0));
-        if (_currentIndex == 0) {
-          return Text(
-            'Discovery',
-            style: style,
-          );
-        } else if (_currentIndex == 1) {
-          return const SizedBox.shrink();
-        } else if (_currentIndex == 2) {
-          return Text(
-            'Profile',
-            style: style,
-          );
-        } else if (_currentIndex == 3) {
-          return Text(
-            'Contacts',
-            style: style,
-          );
-        } else if (_currentIndex == 4) {
-          return Text(
-            'Settings',
-            style: style,
-          );
+  void initState() {
+    super.initState();
+    ref.listenManual<int>(
+      _pageNotifierProvider,
+      (previous, next) {
+        if (next != _index) {
+          setState(() => _index = next);
+          StatefulShellRouteState.of(context).goBranch(index: _index);
+          if (_index != 0) {
+            _shellPageKey.currentState?.showSheet();
+          }
         }
-        return const SizedBox.shrink();
       },
-      children: widget.children,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ShellPage(
+      key: _shellPageKey,
+      currentIndex: _index == 0 ? null : (_index - 1),
+      shellBuilder: (context) => widget.children[0],
+      onClosePage: () => ref.read(_pageNotifierProvider.notifier).changePage(0),
+      children: widget.children.sublist(1),
     );
   }
 }
 
-class _MenuTiles extends StatelessWidget {
-  final VoidCallback onDiscoverPressed;
-  final VoidCallback onConversationsPressed;
-  final VoidCallback onProfilePressed;
-  final VoidCallback onContactsPressed;
-  final VoidCallback onSettingsPressed;
-  final VoidCallback onContactUsPressed;
+class _PageNotifier extends StateNotifier<int> {
+  _PageNotifier() : super(0);
 
-  const _MenuTiles({
-    super.key,
-    required this.onDiscoverPressed,
-    required this.onConversationsPressed,
-    required this.onProfilePressed,
-    required this.onContactsPressed,
-    required this.onSettingsPressed,
-    required this.onContactUsPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top,
-        bottom: MediaQuery.of(context).padding.bottom,
-      ),
-      children: [
-        const SizedBox(height: 11),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
-          child: _MenuTileBorder(
-            child: Consumer(
-              builder: (context, ref, child) {
-                final userState = ref.watch(userProvider2);
-                return userState.map(
-                  guest: (_) => const SizedBox.shrink(),
-                  signedIn: (signedIn) {
-                    final profile = signedIn.profile;
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 21),
-                      decoration: const BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage(
-                              'assets/images/welcome_tile_background.png'),
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 7),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Welcome',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.white),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  '21 days remaining',
-                                  textAlign: TextAlign.right,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.white),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            '${profile.name}!',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 40,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'We want to thank you for joining Openup, please let us know how we can improve your experience of meeting new people! Any feedback is welcome, just tap the “send message” button.',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.3,
-                                    color: Colors.white),
-                          ),
-                          const SizedBox(height: 12),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Button(
-                              onPressed: onContactUsPressed,
-                              child: Container(
-                                width: 121,
-                                height: 37,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(18.5),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      offset: Offset(0, 2),
-                                      blurRadius: 10,
-                                      color: Color.fromRGBO(
-                                          0x00, 0x00, 0x00, 0.25),
-                                    ),
-                                  ],
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  'Subscribe now',
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
-          child: _MenuTileBorder(
-            child: _MenuTile(
-              title: 'Discovery',
-              subtitle: 'meet new people',
-              icon: LottieBuilder.asset(
-                'assets/images/friends.json',
-                height: 42,
-              ),
-              onPressed: onDiscoverPressed,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
-          child: _MenuTileBorder(
-            child: _MenuTile(
-              title: 'Conversations',
-              subtitle: 'talk to your new connects',
-              icon: const Icon(Icons.chat_bubble, size: 42),
-              badge: Consumer(
-                builder: (context, ref, child) {
-                  return UnreadIndicator(
-                    count: ref.watch(
-                      userProvider2.select((p) => p.unreadCount),
-                    ),
-                  );
-                },
-              ),
-              onPressed: onConversationsPressed,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
-          child: _MenuTileBorder(
-            child: _MenuTile(
-              title: 'Profile',
-              subtitle: 'update your photos and bio',
-              icon: const Icon(Icons.face, size: 42),
-              onPressed: onProfilePressed,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
-          child: _MenuTileBorder(
-            child: _MenuTile(
-              title: 'Contacts',
-              subtitle: 'add people you know',
-              icon: const Icon(Icons.person_add, size: 42),
-              onPressed: onContactsPressed,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 16),
-          child: _MenuTileBorder(
-            child: _MenuTile(
-              title: 'Settings',
-              subtitle: 'account information',
-              icon: const Icon(Icons.settings, size: 42),
-              onPressed: onSettingsPressed,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 24.0, bottom: 4),
-          child: Center(
-            child: FutureBuilder<PackageInfo>(
-              future: PackageInfo.fromPlatform(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const SizedBox.shrink();
-                }
-                return Text(
-                  'Version: ${snapshot.requireData.version}',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: const Color.fromRGBO(0xAD, 0xAD, 0xAD, 1.0),
-                      ),
-                );
-              },
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-}
-
-class _MenuTile extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Widget icon;
-  final Widget? badge;
-  final VoidCallback onPressed;
-
-  const _MenuTile({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    this.badge,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      child: SizedBox(
-        height: 77,
-        child: Row(
-          children: [
-            const SizedBox(width: 31),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black),
-                  ),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: const Color.fromRGBO(0x94, 0x94, 0x94, 1.0)),
-                  ),
-                ],
-              ),
-            ),
-            ColorFiltered(
-              colorFilter: const ColorFilter.mode(
-                Color.fromRGBO(0x66, 0x66, 0x66, 1.0),
-                BlendMode.srcIn,
-              ),
-              child: icon,
-            ),
-            if (badge != null)
-              Align(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: badge,
-                ),
-              )
-            else
-              const SizedBox(width: 23),
-            const SizedBox(width: 23),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MenuTileBorder extends StatelessWidget {
-  final Widget child;
-
-  const _MenuTileBorder({
-    super.key,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(14)),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            offset: Offset(0.0, 0.0),
-            blurRadius: 26,
-            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
-          )
-        ],
-      ),
-      child: child,
-    );
-  }
+  void changePage(int index) => state = index;
 }

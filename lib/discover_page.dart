@@ -13,7 +13,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/menu_page.dart';
+import 'package:openup/shell_page.dart';
 import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -25,13 +25,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
-  final ScrollToDiscoverTopNotifier scrollToTopNotifier;
-  final bool showWelcome;
+  final VoidCallback onShowConversations;
+  final VoidCallback onShowSettings;
 
   const DiscoverPage({
     Key? key,
-    required this.scrollToTopNotifier,
-    required this.showWelcome,
+    required this.onShowConversations,
+    required this.onShowSettings,
   }) : super(key: key);
 
   @override
@@ -329,7 +329,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                           children: [
                             if (myProfile != null) ...[
                               Button(
-                                onPressed: () {},
+                                onPressed: widget.onShowSettings,
                                 child: Container(
                                   clipBehavior: Clip.hardEdge,
                                   decoration: BoxDecoration(
@@ -398,6 +398,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         setState(() => _profiles.removeWhere(
                             ((p) => p.profile.uid == profile.uid)));
                       },
+                      onShowConversations: widget.onShowConversations,
                       pageActive: _pageActive,
                     ),
                   ),
@@ -518,12 +519,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
   }
 }
 
-class ScrollToDiscoverTopNotifier extends ValueNotifier<void> {
-  ScrollToDiscoverTopNotifier() : super(null);
-
-  void scrollToTop() => notifyListeners();
-}
-
 class _BottomSheet extends StatefulWidget {
   final Gender? gender;
   final ValueChanged<Gender?> onGenderChanged;
@@ -533,6 +528,7 @@ class _BottomSheet extends StatefulWidget {
   final GlobalKey<ProfileBuilderState> profileBuilderKey;
   final void Function(Profile profile) onRecordInvite;
   final void Function(Profile profile) onBlockUser;
+  final VoidCallback onShowConversations;
   final bool pageActive;
 
   const _BottomSheet({
@@ -545,6 +541,7 @@ class _BottomSheet extends StatefulWidget {
     required this.profileBuilderKey,
     required this.onRecordInvite,
     required this.onBlockUser,
+    required this.onShowConversations,
     required this.pageActive,
   });
 
@@ -594,7 +591,7 @@ class _BottomSheetState extends State<_BottomSheet>
                 ),
                 const SizedBox(width: 8),
                 _MapButton(
-                  onPressed: () {},
+                  onPressed: widget.onShowConversations,
                   child: const Icon(
                     Icons.email,
                     color: Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),

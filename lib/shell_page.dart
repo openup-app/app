@@ -2,29 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
-import 'package:openup/widgets/button.dart';
 
-final _pageOpenNotifier = ValueNotifier<bool>(false);
+final _sheetOpenNotifier = ValueNotifier<bool>(false);
 
-class MenuPage extends StatefulWidget {
-  final int currentIndex;
-  final WidgetBuilder menuBuilder;
-  final WidgetBuilder? pageTitleBuilder;
+class ShellPage extends StatefulWidget {
+  final int? currentIndex;
+  final WidgetBuilder shellBuilder;
+  final VoidCallback onClosePage;
   final List<Widget> children;
 
-  const MenuPage({
+  const ShellPage({
     super.key,
     required this.currentIndex,
-    required this.menuBuilder,
-    this.pageTitleBuilder,
+    required this.shellBuilder,
+    required this.onClosePage,
     required this.children,
   });
 
   @override
-  State<MenuPage> createState() => MenuPageState();
+  State<ShellPage> createState() => ShellPageState();
 }
 
-class MenuPageState extends State<MenuPage> {
+class ShellPageState extends State<ShellPage> {
   final _keys = <GlobalKey>[];
   final _draggableScrollableController = DraggableScrollableController();
 
@@ -33,31 +32,29 @@ class MenuPageState extends State<MenuPage> {
     super.initState();
     _draggableScrollableController.addListener(() {
       final fullyOpen = _draggableScrollableController.size >= 1.0;
-      _pageOpenNotifier.value = fullyOpen;
-      FocusScope.of(context).unfocus();
+      _sheetOpenNotifier.value = fullyOpen;
+      if (fullyOpen) {
+        FocusScope.of(context).unfocus();
+      }
+
+      const epsilon = 0.0001;
+      if (_draggableScrollableController.size <= epsilon) {
+        if (widget.currentIndex != null) {
+          widget.onClosePage();
+        }
+      }
     });
 
     _keys.addAll(List.generate(widget.children.length, (_) => GlobalKey()));
-    _pageOpenNotifier.value = true;
+    _sheetOpenNotifier.value = false;
   }
 
   @override
-  void didUpdateWidget(covariant MenuPage oldWidget) {
+  void didUpdateWidget(covariant ShellPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentIndex != widget.currentIndex) {
-      open();
-    }
-  }
-
-  void open() {
-    if (_draggableScrollableController.isAttached) {
-      _draggableScrollableController.animateTo(
-        1.0,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
-    } else {
-      print('DraggableScrollableSheetController is not attached');
+    if (oldWidget.currentIndex != widget.currentIndex &&
+        widget.currentIndex != null) {
+      showSheet();
     }
   }
 
@@ -78,7 +75,8 @@ class MenuPageState extends State<MenuPage> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final maxHeight = constraints.maxHeight;
-            final maxContentHeight = constraints.maxHeight;
+            final maxContentHeight =
+                constraints.maxHeight - MediaQuery.of(context).padding.top - 16;
             final maxContentRatio = maxContentHeight / maxHeight;
             return Stack(
               children: [
@@ -94,7 +92,7 @@ class MenuPageState extends State<MenuPage> {
                     );
                     return Future.value(false);
                   },
-                  child: widget.menuBuilder(context),
+                  child: widget.shellBuilder(context),
                 ),
                 Align(
                   alignment: Alignment.bottomCenter,
@@ -102,11 +100,11 @@ class MenuPageState extends State<MenuPage> {
                     controller: _draggableScrollableController,
                     minChildSize: 0.0,
                     maxChildSize: maxContentRatio,
-                    initialChildSize: maxContentRatio,
+                    initialChildSize: 0,
                     snap: true,
                     builder: (context, controller) {
                       return ValueListenableBuilder<bool>(
-                        valueListenable: _pageOpenNotifier,
+                        valueListenable: _sheetOpenNotifier,
                         builder: (context, open, child) {
                           return AnimatedContainer(
                             curve: Curves.easeOut,
@@ -127,8 +125,6 @@ class MenuPageState extends State<MenuPage> {
                           );
                         },
                         child: Stack(
-                          fit: StackFit.expand,
-                          alignment: Alignment.topCenter,
                           children: [
                             Align(
                               alignment: Alignment.topCenter,
@@ -153,48 +149,29 @@ class MenuPageState extends State<MenuPage> {
                             ),
                             Align(
                               alignment: Alignment.topCenter,
-                              child: Padding(
-                                padding: EdgeInsets.only(
-                                  top: MediaQuery.of(context).padding.top,
-                                ),
-                                child: Stack(
-                                  children: [
-                                    Positioned(
-                                      // Inset to help user touch back and action buttons
-                                      left: 48,
-                                      right: 48,
-                                      top: 0,
-                                      child: SingleChildScrollView(
-                                        controller: controller,
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        child: const SizedBox(
-                                          height: 48,
-                                          child: Align(
-                                            alignment: Alignment.topCenter,
-                                            child: Padding(
-                                              padding:
-                                                  EdgeInsets.only(top: 9.0),
-                                              child: _DragHandle(),
-                                            ),
+                              child: Stack(
+                                children: [
+                                  Positioned(
+                                    left: 0,
+                                    right: 0,
+                                    top: 0,
+                                    child: SingleChildScrollView(
+                                      controller: controller,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      child: const SizedBox(
+                                        height: 48,
+                                        child: Align(
+                                          alignment: Alignment.topCenter,
+                                          child: Padding(
+                                            padding: EdgeInsets.only(top: 9.0),
+                                            child: _DragHandle(),
                                           ),
                                         ),
                                       ),
                                     ),
-                                    if (widget.pageTitleBuilder != null)
-                                      Align(
-                                        alignment: Alignment.topLeft,
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                            left: 32,
-                                            top: 7,
-                                          ),
-                                          child:
-                                              widget.pageTitleBuilder!(context),
-                                        ),
-                                      ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -211,12 +188,28 @@ class MenuPageState extends State<MenuPage> {
     );
   }
 
-  void showMenu() {
-    _draggableScrollableController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-    );
+  void showSheet() {
+    if (_draggableScrollableController.isAttached) {
+      _draggableScrollableController.animateTo(
+        1.0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    } else {
+      print('DraggableScrollableSheetController is not attached');
+    }
+  }
+
+  void hideSheet() {
+    if (_draggableScrollableController.isAttached) {
+      _draggableScrollableController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    } else {
+      print('DraggableScrollableSheetController is not attached');
+    }
   }
 }
 
@@ -244,128 +237,6 @@ class _DragHandle extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _PageDisplay extends StatefulWidget {
-  final Alignment alignment;
-  final AnimationController animation;
-  final bool selected;
-  final VoidCallback? onPressed;
-  final Widget child;
-
-  const _PageDisplay({
-    super.key,
-    required this.alignment,
-    required this.animation,
-    required this.selected,
-    required this.onPressed,
-    required this.child,
-  });
-
-  @override
-  State<_PageDisplay> createState() => _PageDisplayState();
-}
-
-class _PageDisplayState extends State<_PageDisplay> {
-  @override
-  Widget build(BuildContext context) {
-    final curvedAnimation = CurvedAnimation(
-      parent: widget.animation,
-      curve: widget.animation.status == AnimationStatus.forward
-          ? Curves.easeOut
-          : Curves.easeIn,
-    );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final alignment = widget.alignment - widget.alignment * 0.25;
-        return AnimatedBuilder(
-          animation: curvedAnimation,
-          builder: (context, child) {
-            final scale = widget.selected
-                ? Tween(begin: 1.0, end: 0.4).evaluate(curvedAnimation)
-                : 0.4;
-            final offset = constraints.biggest.center(Offset.zero) +
-                Offset(
-                  constraints.biggest.width / 2 * alignment.x,
-                  constraints.biggest.height / 2 * alignment.y,
-                );
-            return Transform(
-              transform: Matrix4.identity()
-                ..translate(offset.dx, offset.dy)
-                ..scale(scale)
-                ..translate(-offset.dx, -offset.dy),
-              child: ClipRRect(
-                borderRadius: widget.selected
-                    ? Tween<BorderRadius>(
-                        begin: BorderRadius.zero,
-                        end: const BorderRadius.all(Radius.circular(64)),
-                      ).evaluate(curvedAnimation)
-                    : const BorderRadius.all(Radius.circular(64)),
-                child: ColoredBox(
-                  color: Colors.black,
-                  child: Builder(
-                    builder: (context) {
-                      if (widget.selected && widget.animation.value == 0.0) {
-                        return _buildChild(context);
-                      }
-                      return Button(
-                        onPressed: () {
-                          if (widget.animation.value == 0.0 ||
-                              widget.animation.value == 1.0) {
-                            if (widget.selected) {
-                              widget.animation.reverse();
-                            } else {
-                              widget.onPressed?.call();
-                            }
-                          }
-                        },
-                        child: _buildChild(context),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildChild(BuildContext context) {
-    return AnimatedBuilder(
-      animation: widget.animation,
-      builder: (context, child) {
-        return IgnorePointer(
-          ignoring: widget.animation.value != 0.0,
-          child: widget.child,
-        );
-      },
-    );
-  }
-}
-
-class _KeepAlive extends StatefulWidget {
-  final Widget child;
-  const _KeepAlive({
-    super.key,
-    required this.child,
-  });
-
-  @override
-  State<_KeepAlive> createState() => __KeepAliveState();
-}
-
-class __KeepAliveState extends State<_KeepAlive>
-    with AutomaticKeepAliveClientMixin<_KeepAlive> {
-  @override
-  bool get wantKeepAlive => true;
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return widget.child;
   }
 }
 
@@ -413,8 +284,8 @@ class _ActivePageState extends State<ActivePage> {
   @override
   void initState() {
     super.initState();
-    _pageOpenNotifier.addListener(_onPageOpen);
-    _pageOpen = _pageOpenNotifier.value;
+    _sheetOpenNotifier.addListener(_onPageOpen);
+    _pageOpen = _sheetOpenNotifier.value;
   }
 
   @override
@@ -434,12 +305,12 @@ class _ActivePageState extends State<ActivePage> {
 
   @override
   void dispose() {
-    _pageOpenNotifier.removeListener(_onPageOpen);
+    _sheetOpenNotifier.removeListener(_onPageOpen);
     super.dispose();
   }
 
   void _onPageOpen() {
-    _pageOpen = _pageOpenNotifier.value;
+    _pageOpen = _sheetOpenNotifier.value;
     _updateActivation();
   }
 
