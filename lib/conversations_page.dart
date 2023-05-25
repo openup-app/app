@@ -49,227 +49,218 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.white),
-      child: Builder(
-        builder: (context) {
-          final loggedIn = FirebaseAuth.instance.currentUser != null;
-          if (!loggedIn) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('Log in start conversations'),
-                ElevatedButton(
-                  onPressed: () => context.pushNamed('signup'),
-                  child: const Text('Log in'),
-                ),
-              ],
-            );
-          }
+    return Builder(
+      builder: (context) {
+        final loggedIn = FirebaseAuth.instance.currentUser != null;
+        if (!loggedIn) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Log in start conversations'),
+              ElevatedButton(
+                onPressed: () => context.pushNamed('signup'),
+                child: const Text('Log in'),
+              ),
+            ],
+          );
+        }
 
-          return ActivePage(
-            onActivate: () {
-              /// Notifications don't update chats, so refreshe on page activation
-              ref.read(userProvider2.notifier).refreshChatrooms();
-            },
-            onDeactivate: () {},
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: MediaQuery.of(context).padding.top),
-                Padding(
-                  padding: const EdgeInsets.only(top: 30.0, left: 20),
-                  child: Hero(
-                    tag: 'conversations_title',
-                    child: Text(
-                      'Conversations',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w700,
-                          color: const Color.fromRGBO(0xFF, 0x40, 0x40, 1.0)),
-                    ),
+        return ActivePage(
+          onActivate: () {
+            /// Notifications don't update chats, so refreshe on page activation
+            ref.read(userProvider2.notifier).refreshChatrooms();
+          },
+          onDeactivate: () {},
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: MediaQuery.of(context).padding.top),
+              Padding(
+                padding: const EdgeInsets.only(top: 30.0, left: 20),
+                child: Hero(
+                  tag: 'conversations_title',
+                  child: Text(
+                    'Conversations',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 32, fontWeight: FontWeight.w400),
                   ),
                 ),
-                Container(
-                  height: 31,
-                  margin: const EdgeInsets.only(
-                    left: 16,
-                    top: 8,
-                    right: 16,
-                    bottom: 16,
-                  ),
-                  clipBehavior: Clip.hardEdge,
-                  decoration: const BoxDecoration(
-                    color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-                    borderRadius: BorderRadius.all(Radius.circular(11)),
-                    boxShadow: [
-                      BoxShadow(
-                        blurRadius: 26,
-                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 11, right: 6),
-                          child: TextFormField(
-                            controller: _searchController,
-                            style: Theme.of(context)
+              ),
+              Container(
+                height: 31,
+                margin: const EdgeInsets.only(
+                  left: 16,
+                  top: 8,
+                  right: 16,
+                  bottom: 16,
+                ),
+                clipBehavior: Clip.hardEdge,
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                  borderRadius: BorderRadius.all(Radius.circular(11)),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 26,
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 11, right: 6),
+                        child: TextFormField(
+                          controller: _searchController,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                          textAlignVertical: TextAlignVertical.center,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            icon: const Icon(
+                              Icons.search,
+                              size: 16,
+                            ),
+                            hintText: 'Search',
+                            hintStyle: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
                                   fontSize: 14,
-                                  fontWeight: FontWeight.w300,
+                                  fontWeight: FontWeight.w400,
+                                  color: const Color.fromRGBO(
+                                      0x8D, 0x8D, 0x8D, 1.0),
                                 ),
-                            textAlignVertical: TextAlignVertical.center,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              icon: const Icon(
-                                Icons.search,
-                                size: 16,
-                              ),
-                              hintText: 'Search',
-                              hintStyle: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (_filterString.isNotEmpty)
+                      Button(
+                        onPressed: () {
+                          setState(() => _searchController.text = "");
+                          FocusScope.of(context).unfocus();
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Icon(
+                            Icons.close,
+                            color: Colors.black,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (_filterString.isEmpty)
+                Visibility(
+                  visible: false,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: SizedBox(
+                      height: 150,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        itemCount: _collections.length,
+                        itemBuilder: (context, index) {
+                          final collection = _collections[index];
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 82,
+                                height: 110,
+                                clipBehavior: Clip.hardEdge,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
                                     color: const Color.fromRGBO(
-                                        0x8D, 0x8D, 0x8D, 1.0),
+                                        0xFF, 0x5F, 0x5F, 1.0),
+                                    width: 2,
                                   ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_filterString.isNotEmpty)
-                        Button(
-                          onPressed: () {
-                            setState(() => _searchController.text = "");
-                            FocusScope.of(context).unfocus();
-                          },
-                          child: const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Icon(
-                              Icons.close,
-                              color: Colors.black,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                if (_filterString.isEmpty)
-                  Visibility(
-                    visible: false,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: SizedBox(
-                        height: 150,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          keyboardDismissBehavior:
-                              ScrollViewKeyboardDismissBehavior.onDrag,
-                          itemCount: _collections.length,
-                          itemBuilder: (context, index) {
-                            final collection = _collections[index];
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 82,
-                                  height: 110,
-                                  clipBehavior: Clip.hardEdge,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: const Color.fromRGBO(
-                                          0xFF, 0x5F, 0x5F, 1.0),
-                                      width: 2,
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                        Radius.circular(11)),
-                                  ),
-                                  margin: const EdgeInsets.all(9),
-                                  child: Image.network(
-                                    collection.photos.first.url,
-                                    fit: BoxFit.cover,
-                                  ),
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(11)),
                                 ),
-                                const SizedBox(height: 4),
-                                SizedBox(
-                                  width: 82,
-                                  child: Text(
-                                    'Name',
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w200,
-                                          color: Colors.white,
-                                        ),
-                                  ),
+                                margin: const EdgeInsets.all(9),
+                                child: Image.network(
+                                  collection.photos.first.url,
+                                  fit: BoxFit.cover,
                                 ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                Expanded(
-                  child: ColoredBox(
-                    color: Colors.white,
-                    child: Consumer(
-                      builder: (context, ref, child) {
-                        final filteredChatrooms =
-                            ref.watch(userProvider2.select((p) {
-                          return p.map(
-                            guest: (_) => null,
-                            signedIn: (signedIn) =>
-                                signedIn.chatrooms?.where((c) {
-                              return c.profile.name
-                                  .toLowerCase()
-                                  .contains(_filterString.toLowerCase());
-                            }),
+                              ),
+                              const SizedBox(height: 4),
+                              SizedBox(
+                                width: 82,
+                                child: Text(
+                                  'Name',
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w200,
+                                        color: Colors.white,
+                                      ),
+                                ),
+                              ),
+                            ],
                           );
-                        }));
-
-                        final nonPendingChatrooms = filteredChatrooms
-                            ?.where((chatroom) =>
-                                chatroom.inviteState != ChatroomState.pending)
-                            .toList();
-                        return _ConversationList(
-                          chatrooms: nonPendingChatrooms,
-                          emptyLabel:
-                              'Invite someone to chat,\nthen continue the conversation here',
-                          filtered: _filterString.isNotEmpty,
-                          onRefresh:
-                              ref.read(userProvider2.notifier).refreshChatrooms,
-                          onOpen: _openChat,
-                          onDelete: (index) => _deleteChatroom(
-                              nonPendingChatrooms![index].profile),
-                        );
-                      },
+                        },
+                      ),
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: MediaQuery.of(context).viewInsets.bottom,
+              Expanded(
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final filteredChatrooms =
+                        ref.watch(userProvider2.select((p) {
+                      return p.map(
+                        guest: (_) => null,
+                        signedIn: (signedIn) => signedIn.chatrooms?.where((c) {
+                          return c.profile.name
+                              .toLowerCase()
+                              .contains(_filterString.toLowerCase());
+                        }),
+                      );
+                    }));
+
+                    final nonPendingChatrooms = filteredChatrooms
+                        ?.where((chatroom) =>
+                            chatroom.inviteState != ChatroomState.pending)
+                        .toList();
+                    return _ConversationList(
+                      chatrooms: nonPendingChatrooms,
+                      emptyLabel:
+                          'Invite someone to chat,\nthen continue the conversation here',
+                      filtered: _filterString.isNotEmpty,
+                      onRefresh:
+                          ref.read(userProvider2.notifier).refreshChatrooms,
+                      onOpen: _openChat,
+                      onDelete: (index) =>
+                          _deleteChatroom(nonPendingChatrooms![index].profile),
+                    );
+                  },
                 ),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).viewInsets.bottom,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -454,10 +445,9 @@ class _ConversationList extends StatelessWidget {
                                           .textTheme
                                           .bodyMedium!
                                           .copyWith(
-                                              fontWeight: FontWeight.w400,
-                                              fontSize: 14,
-                                              color: const Color.fromRGBO(
-                                                  0x70, 0x70, 0x70, 1.0)),
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 14,
+                                          ),
                                     ),
                                     const SizedBox(height: 2),
                                     if (chatroom.inviteState !=

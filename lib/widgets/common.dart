@@ -2045,7 +2045,7 @@ class LoadingIndicator extends StatelessWidget {
   const LoadingIndicator({
     super.key,
     this.size = 50,
-    this.color = Colors.black,
+    this.color = Colors.white,
   });
 
   @override

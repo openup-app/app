@@ -90,9 +90,6 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
         itemBuilder: (context, index) {
           final profile = widget.profiles[index];
           return Container(
-            margin: EdgeInsets.only(
-              bottom: 16 + MediaQuery.of(context).padding.bottom,
-            ),
             padding: const EdgeInsets.symmetric(horizontal: 5),
             child: _MiniProfile(
               profile: profile,
@@ -132,7 +129,7 @@ class _MiniProfile extends StatelessWidget {
         height: 168,
         decoration: const BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(34)),
-          color: Colors.white,
+          color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
           boxShadow: [
             BoxShadow(
               offset: Offset(0, 4),
@@ -240,11 +237,11 @@ class _MiniProfile extends StatelessWidget {
                     padding: const EdgeInsets.all(8.0),
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.black,
+                      color: Colors.white,
                     ),
                     child: Icon(
                       play ? Icons.pause : Icons.play_arrow,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                   ),
                 ),

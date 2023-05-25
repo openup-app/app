@@ -219,19 +219,10 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                             ),
                           ),
                           const _SectionTitle(label: 'Name'),
-                          Container(
-                            height: 42,
-                            alignment: Alignment.center,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(64),
-                              ),
-                            ),
-                            child: const _NameField(),
+                          const _CupertinoRow(
+                            leading: _NameField(),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           const _SectionTitle(
                             label: 'Phone Number',
                           ),
@@ -291,7 +282,9 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                             child: const _CupertinoRow(
                               center: Text(
                                 'Delete Account',
-                                style: TextStyle(color: Colors.red),
+                                style: TextStyle(
+                                  color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                ),
                               ),
                             ),
                           ),
@@ -740,7 +733,7 @@ class _CupertinoRow extends StatelessWidget {
       clipBehavior: Clip.hardEdge,
       decoration: decoration ??
           const BoxDecoration(
-            color: Colors.white,
+            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
       child: DefaultTextStyle(

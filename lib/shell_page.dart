@@ -70,7 +70,7 @@ class ShellPageState extends State<ShellPage> {
       resizeToAvoidBottomInset: false,
       body: DecoratedBox(
         decoration: const BoxDecoration(
-          color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+          color: Color.fromRGBO(0x44, 0x44, 0x44, 1.0),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -113,7 +113,7 @@ class ShellPageState extends State<ShellPage> {
                             clipBehavior: Clip.antiAlias,
                             decoration: BoxDecoration(
                               color:
-                                  const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                                  const Color.fromRGBO(0x44, 0x44, 0x44, 1.0),
                               borderRadius: open
                                   ? BorderRadius.zero
                                   : const BorderRadius.only(

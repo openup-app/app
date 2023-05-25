@@ -577,7 +577,6 @@ class Api {
       handleSuccess: (response) {
         final json = jsonDecode(response.body);
         final blockedUsers = json['blockedUsers'] as List<dynamic>;
-        ;
         return Right(
             List.from(blockedUsers.map((e) => SimpleProfile.fromJson(e))));
       },

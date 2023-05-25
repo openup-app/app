@@ -40,7 +40,8 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
     super.initState();
     Permission.contacts.status.then((status) {
       if (mounted) {
-        _hasContactsPermission = status == PermissionStatus.granted;
+        setState(
+            () => _hasContactsPermission = status == PermissionStatus.granted);
         _fetchContacts();
       }
     });

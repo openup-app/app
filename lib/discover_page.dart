@@ -299,16 +299,34 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ProfileButton(
-                            onPressed: () {},
-                            icon: Switch(
-                              value: _showDebugUsers,
-                              onChanged: (show) {
-                                setState(() => _showDebugUsers = show);
-                                _queryProfilesAt(_queryLocation!);
-                              },
+                          Button(
+                            onPressed: () {
+                              setState(
+                                  () => _showDebugUsers = !_showDebugUsers);
+                              _queryProfilesAt(_queryLocation!);
+                            },
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(24),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Switch(
+                                    value: _showDebugUsers,
+                                    onChanged: (show) {
+                                      setState(() => _showDebugUsers = show);
+                                      _queryProfilesAt(_queryLocation!);
+                                    },
+                                  ),
+                                  const Text('Fake users'),
+                                  const SizedBox(width: 12),
+                                ],
+                              ),
                             ),
-                            label: const Text('Show fake users'),
                           ),
                         ],
                       ),
@@ -618,29 +636,45 @@ class _BottomSheetState extends State<_BottomSheet>
                           width: 46,
                           height: 5,
                           margin: const EdgeInsets.only(top: 8, bottom: 11),
-                          decoration: const BoxDecoration(
-                            color: Color.fromRGBO(0x6F, 0x72, 0x73, 1.0),
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(2.5),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Button(
+                          onPressed: () async {
+                            final prevGender = widget.gender;
+                            final gender = await _showPreferencesSheet();
+                            if (mounted && gender != prevGender) {
+                              widget.onGenderChanged(gender);
+                            }
+                          },
+                          child: Container(
+                            height: 36,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: const BoxDecoration(
+                              color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(24),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(
+                                  Icons.search,
+                                  size: 20,
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'Who are you searching for?',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ),
-                      ProfileButton(
-                        onPressed: () async {
-                          final prevGender = widget.gender;
-                          final gender = await _showPreferencesSheet();
-                          if (mounted && gender != prevGender) {
-                            widget.onGenderChanged(gender);
-                          }
-                        },
-                        icon: Image.asset(
-                          'assets/images/preferences_icon.png',
-                          color: Colors.black,
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.medium,
-                        ),
-                        label: const Text('Filters'),
                       ),
 
                       // Must live above PageView.builder (otherwise duplicate global key)
@@ -652,22 +686,29 @@ class _BottomSheetState extends State<_BottomSheet>
                           if (profileIndex == null || profile == null) {
                             return const SizedBox.shrink();
                           }
-                          return _buildListView(
-                            profile: profile,
-                            profileIndex: profileIndex,
-                            play: play,
-                            onProfilePressed: () {
-                              if (profile == null) {
-                                return;
-                              }
-                              _showFullProfile(
-                                context: context,
-                                profile: profile,
-                                play: play,
-                              );
-                            },
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 19),
+                            child: _buildListView(
+                              profile: profile,
+                              profileIndex: profileIndex,
+                              play: play,
+                              onProfilePressed: () {
+                                if (profile == null) {
+                                  return;
+                                }
+                                _showFullProfile(
+                                  context: context,
+                                  profile: profile,
+                                  play: play,
+                                );
+                              },
+                            ),
                           );
                         },
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        height: MediaQuery.of(context).padding.bottom,
                       ),
                     ],
                   );
@@ -812,7 +853,7 @@ class _BottomSheetState extends State<_BottomSheet>
           ),
           clipBehavior: Clip.hardEdge,
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: Color.fromRGBO(0x10, 0x12, 0x12, 0.9),
             borderRadius: BorderRadius.all(Radius.circular(64)),
           ),
           child: ProfileDisplay(
