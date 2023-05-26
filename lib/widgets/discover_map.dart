@@ -32,16 +32,30 @@ class DiscoverMap extends ConsumerStatefulWidget {
   ConsumerState<DiscoverMap> createState() => DiscoverMapState();
 }
 
-class DiscoverMapState extends ConsumerState<DiscoverMap> {
+class DiscoverMapState extends ConsumerState<DiscoverMap>
+    with SingleTickerProviderStateMixin {
   maps.GoogleMapController? _mapController;
   double _zoomLevel = 14.4746;
-  final _mapMarkerImages = <String, Uint8List>{};
+  final _mapMarkerAnimations = <String, List<Uint8List>>{};
+  late final _animationController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 250),
+  );
+  late final _frameCount =
+      ((_animationController.duration!.inMilliseconds / 1000) * 60).floor();
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_mapMarkerImages.isEmpty) {
-      _createAllMapMarkerImages();
+    if (_mapMarkerAnimations.isEmpty) {
+      _createMapMarkers(widget.profiles).then((mapping) {
+        if (mounted) {
+          if (!_animationController.isAnimating) {
+            _animationController.forward(from: 0);
+          }
+          setState(() => _mapMarkerAnimations.addAll(mapping));
+        }
+      });
     }
   }
 
@@ -56,24 +70,29 @@ class DiscoverMapState extends ConsumerState<DiscoverMap> {
 
     final removeUids = <String>[];
     final newUids = widget.profiles.map((e) => e.profile.uid).toSet();
-    for (final uid in _mapMarkerImages.keys) {
+    for (final uid in _mapMarkerAnimations.keys) {
       if (!newUids.contains(uid)) {
         removeUids.add(uid);
       }
     }
-    setState(() =>
-        _mapMarkerImages.removeWhere((key, value) => removeUids.contains(key)));
+    setState(() => _mapMarkerAnimations
+        .removeWhere((key, value) => removeUids.contains(key)));
 
-    final missingProfiles = <Profile>[];
+    final missingProfiles = <DiscoverProfile>[];
     for (final profile in widget.profiles) {
-      if (!_mapMarkerImages.containsKey(profile.profile.uid)) {
-        missingProfiles.add(profile.profile);
+      if (!_mapMarkerAnimations.containsKey(profile.profile.uid)) {
+        missingProfiles.add(profile);
       }
     }
     if (missingProfiles.isNotEmpty) {
-      _createMapMarkerImages(missingProfiles).then((mappings) {
+      _createMapMarkers(missingProfiles).then((mappings) {
         if (mounted) {
-          setState(() => _mapMarkerImages.addAll(mappings));
+          if (!_animationController.isAnimating) {
+            _animationController.forward(from: 0);
+          }
+          setState(() => _mapMarkerAnimations
+            ..clear()
+            ..addAll(mappings));
         }
       });
     }
@@ -82,43 +101,50 @@ class DiscoverMapState extends ConsumerState<DiscoverMap> {
   @override
   void dispose() {
     _mapController?.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return GoogleMap(
-      mapType: MapType.normal,
-      initialCameraPosition: CameraPosition(
-        target: LatLng(
-          widget.initialLocation.latLong.latitude,
-          widget.initialLocation.latLong.longitude,
-        ),
-        zoom: 14.4746,
-      ),
-      onMapCreated: _initMapController,
-      myLocationEnabled: true,
-      myLocationButtonEnabled: false,
-      onCameraIdle: _onCameraMoved,
-      onTap: (_) => widget.onProfileChanged(null),
-      markers: {
-        for (final profile in widget.profiles)
-          if (_mapMarkerImages[profile.profile.uid] != null)
-            Marker(
-              markerId: MarkerId(profile.profile.uid),
-              position: LatLng(
-                profile.location.latLong.latitude,
-                profile.location.latLong.longitude,
-              ),
-              onTap: () {
-                final index = widget.profiles.indexOf(profile);
-                widget.onProfileChanged(index);
-              },
-              icon: _mapMarkerImages[profile.profile.uid] == null
-                  ? BitmapDescriptor.defaultMarker
-                  : BitmapDescriptor.fromBytes(
-                      _mapMarkerImages[profile.profile.uid]!),
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final index = (_animationController.value * (_frameCount - 1)).toInt();
+        return GoogleMap(
+          mapType: MapType.normal,
+          initialCameraPosition: CameraPosition(
+            target: LatLng(
+              widget.initialLocation.latLong.latitude,
+              widget.initialLocation.latLong.longitude,
             ),
+            zoom: 14.4746,
+          ),
+          onMapCreated: _initMapController,
+          myLocationEnabled: true,
+          myLocationButtonEnabled: false,
+          onCameraIdle: _onCameraMoved,
+          onTap: (_) => widget.onProfileChanged(null),
+          markers: {
+            for (final profile in widget.profiles)
+              if (_mapMarkerAnimations[profile.profile.uid] != null)
+                Marker(
+                  markerId: MarkerId(profile.profile.uid),
+                  position: LatLng(
+                    profile.location.latLong.latitude,
+                    profile.location.latLong.longitude,
+                  ),
+                  onTap: () {
+                    final index = widget.profiles.indexOf(profile);
+                    widget.onProfileChanged(index);
+                  },
+                  icon: _mapMarkerAnimations[profile.profile.uid] == null
+                      ? BitmapDescriptor.defaultMarker
+                      : BitmapDescriptor.fromBytes(
+                          _mapMarkerAnimations[profile.profile.uid]![index]),
+                ),
+          },
+        );
       },
     );
   }
@@ -174,33 +200,26 @@ class DiscoverMapState extends ConsumerState<DiscoverMap> {
     _mapController?.animateCamera(CameraUpdate.newCameraPosition(pos));
   }
 
-  void _createAllMapMarkerImages() async {
-    final mapping = await _createMapMarkerImages(
-        widget.profiles.map((p) => p.profile).toList());
-    if (mounted) {
-      setState(() {
-        _mapMarkerImages.clear();
-        _mapMarkerImages.addAll(mapping);
-      });
-    }
-  }
-
-  Future<Map<String, Uint8List>> _createMapMarkerImages(
-    List<Profile> profiles,
+  Future<Map<String, List<Uint8List>>> _createMapMarkers(
+    List<DiscoverProfile> profiles,
   ) async {
-    final images = <Uint8List>[];
+    _animationController.stop();
     final pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final mappings = <String, List<Uint8List>>{};
+    final tween = CurveTween(curve: Curves.easeOutQuart);
     for (final profile in profiles) {
-      final image = await _createMapMarkerImage(profile, pixelRatio);
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      images.add(bytes!.buffer.asUint8List());
-      image.dispose();
+      final frames = <Uint8List>[];
+      for (var i = 0; i < _frameCount; i++) {
+        final t = i / _frameCount;
+        final image = await _createMapMarkerFrame(
+            profile, pixelRatio, tween.evaluate(AlwaysStoppedAnimation(t)));
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        image.dispose();
+        frames.add(bytes!.buffer.asUint8List());
+      }
+      mappings[profile.profile.uid] = frames;
     }
-    final mapping = <String, Uint8List>{};
-    for (var i = 0; i < profiles.length; i++) {
-      mapping[profiles[i].uid] = images[i];
-    }
-    return mapping;
+    return mappings;
   }
 
   Future<ui.Image> _fetchImage(ImageProvider provider) {
@@ -214,16 +233,19 @@ class DiscoverMapState extends ConsumerState<DiscoverMap> {
     return completer.future;
   }
 
-  Future<ui.Image> _createMapMarkerImage(
-      Profile profile, double pixelRatio) async {
+  Future<ui.Image> _createMapMarkerFrame(
+    DiscoverProfile profile,
+    double pixelRatio,
+    double t,
+  ) async {
     final builder = ui.ParagraphBuilder(ui.ParagraphStyle(maxLines: 1));
     builder.pushStyle(ui.TextStyle(color: Colors.black));
-    builder.addText(profile.name);
-    final image = await _fetchImage(NetworkImage(profile.photo));
+    builder.addText(profile.profile.name);
+    final image = await _fetchImage(NetworkImage(profile.profile.photo));
 
     final textPainter = TextPainter(
       text: TextSpan(
-        text: profile.name,
+        text: profile.profile.name,
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
@@ -242,11 +264,16 @@ class DiscoverMapState extends ConsumerState<DiscoverMap> {
     const textTopPadding = 10.0;
     final metric = metrics[0];
 
-    canvas.scale(pixelRatio);
-
     final width =
         2 + 34 + 2 + textLeftPadding + metric.width + textRightPadding;
     const height = 36.0;
+
+    final scaleAnimation = Matrix4.identity()
+      ..translate(width / 2, height / 2)
+      ..scale(t)
+      ..translate(-width / 2, -height / 2);
+    canvas.scale(pixelRatio);
+    canvas.transform(scaleAnimation.storage);
 
     canvas.clipRRect(
       RRect.fromRectAndRadius(
