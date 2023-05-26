@@ -406,7 +406,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                       profiles: _profiles,
                       profileIndex: _profileIndex,
                       onProfileIndexChanged: (profileIndex) {
-                        setState(() => _profileIndex = profileIndex);
+                        setState(() {
+                          _ignoreNextLocationChange = true;
+                          _profileIndex = profileIndex;
+                        });
                       },
                       profileBuilderKey: _profileBuilderKey,
                       onRecordInvite: (profile) {
