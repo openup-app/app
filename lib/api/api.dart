@@ -808,6 +808,7 @@ class DiscoverProfile with _$DiscoverProfile {
   const factory DiscoverProfile({
     required Profile profile,
     required Location location,
+    required bool favorite,
     required bool online,
   }) = _DiscoverProfile;
 
