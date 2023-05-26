@@ -38,7 +38,8 @@ class DiscoverPage extends ConsumerStatefulWidget {
   ConsumerState<DiscoverPage> createState() => DiscoverPageState();
 }
 
-class DiscoverPageState extends ConsumerState<DiscoverPage> {
+class DiscoverPageState extends ConsumerState<DiscoverPage>
+    with SingleTickerProviderStateMixin {
   bool _fetchingProfiles = false;
   bool _errorLoadingProfiles = false;
   Gender? _gender;
@@ -62,6 +63,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   final _mapKey = GlobalKey<DiscoverMapState>();
 
+  late final _bottomSheetController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 300),
+  );
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +85,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
         }
       });
     });
+    _bottomSheetController.addListener(_bottomSheetUpdated);
+  }
+
+  @override
+  void dispose() {
+    _bottomSheetController.dispose();
+    super.dispose();
   }
 
   @override
@@ -86,6 +99,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     super.didChangeDependencies();
     _precacheImageAndDepth(_profiles, from: 1, count: 2);
   }
+
+  void _bottomSheetUpdated() {}
 
   void _precacheImageAndDepth(
     List<DiscoverProfile> profiles, {
@@ -365,22 +380,27 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                               ),
                               const SizedBox(height: 20),
                               _MapButton(
-                                onPressed: () => _mapKey.currentState
-                                    ?.recenterMap(ref.read(locationProvider)),
+                                onPressed: () {},
                                 child: const Icon(
                                   Icons.location_on,
                                   color: Color.fromRGBO(0x24, 0xFF, 0x00, 1.0),
                                 ),
                               ),
                             ],
-                            _MapButton(
-                              onPressed: () => _mapKey.currentState
-                                  ?.recenterMap(ref.read(locationProvider)),
-                              child: const Icon(
-                                CupertinoIcons.location_fill,
-                                color: Color.fromRGBO(0x22, 0x53, 0xFF, 1.0),
-                              ),
-                            ),
+                            Consumer(builder: (context, ref, child) {
+                              final latLong =
+                                  ref.watch(locationProvider)?.latLong;
+                              return _MapButton(
+                                onPressed: latLong == null
+                                    ? null
+                                    : () => _mapKey.currentState
+                                        ?.recenterMap(latLong),
+                                child: const Icon(
+                                  CupertinoIcons.location_fill,
+                                  color: Color.fromRGBO(0x22, 0x53, 0xFF, 1.0),
+                                ),
+                              );
+                            }),
                           ],
                         );
                       },
@@ -391,6 +411,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
                     right: 0,
                     bottom: 0,
                     child: _BottomSheet(
+                      animationController: _bottomSheetController,
                       gender: _gender,
                       onGenderChanged: (gender) {
                         setState(() {
@@ -444,19 +465,21 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
     required Location initialLocation,
     required ValueChanged<Location> onLocationChanged,
   }) {
+    final selectedProfile =
+        (_profileIndex == null || _profileIndex! >= _profiles.length)
+            ? null
+            : _profiles[_profileIndex!];
     return DiscoverMap(
       key: _mapKey,
       profiles: _profiles,
-      profileIndex: _profileIndex,
+      selectedProfile: selectedProfile,
       onProfileChanged: _onProfileChanged,
       initialLocation: initialLocation,
       onLocationChanged: onLocationChanged,
       showRecordPanel: () {
-        // final profile =
-        //     _profiles.isEmpty ? null : _profiles[_profileIndex].profile;
-        // if (profile != null) {
-        //   _showRecordPanelOrSignIn(context, profile.uid);
-        // }
+        if (selectedProfile != null) {
+          _showRecordPanelOrSignIn(context, selectedProfile.profile.uid);
+        }
       },
     );
   }
@@ -541,6 +564,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage> {
 }
 
 class _BottomSheet extends StatefulWidget {
+  final AnimationController animationController;
   final Gender? gender;
   final ValueChanged<Gender?> onGenderChanged;
   final List<DiscoverProfile> profiles;
@@ -554,6 +578,7 @@ class _BottomSheet extends StatefulWidget {
 
   const _BottomSheet({
     super.key,
+    required this.animationController,
     required this.gender,
     required this.onGenderChanged,
     required this.profiles,
@@ -570,19 +595,7 @@ class _BottomSheet extends StatefulWidget {
   State<_BottomSheet> createState() => _BottomSheetState();
 }
 
-class _BottomSheetState extends State<_BottomSheet>
-    with SingleTickerProviderStateMixin {
-  late final _animationController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 300),
-  );
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
+class _BottomSheetState extends State<_BottomSheet> {
   @override
   Widget build(BuildContext context) {
     final profileIndex = widget.profileIndex;
@@ -593,7 +606,7 @@ class _BottomSheetState extends State<_BottomSheet>
       profile = widget.profiles[profileIndex].profile;
     }
     return BottomSheet(
-      animationController: _animationController,
+      animationController: widget.animationController,
       backgroundColor: Colors.transparent,
       onClosing: () {},
       builder: (context) {
@@ -886,7 +899,7 @@ class _BottomSheetState extends State<_BottomSheet>
 class _MapButton extends StatelessWidget {
   final Widget child;
   final Color color;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const _MapButton({
     super.key,
