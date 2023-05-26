@@ -3,21 +3,17 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/util/location_service.dart';
-import 'package:openup/widgets/button.dart';
 
 class DiscoverMap extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
   final int? profileIndex;
   final ValueChanged<int?> onProfileChanged;
-  final WidgetBuilder bottomBuilder;
   final Location initialLocation;
   final ValueChanged<Location> onLocationChanged;
   final VoidCallback showRecordPanel;
@@ -27,17 +23,16 @@ class DiscoverMap extends ConsumerStatefulWidget {
     required this.profiles,
     required this.profileIndex,
     required this.onProfileChanged,
-    required this.bottomBuilder,
     required this.initialLocation,
     required this.onLocationChanged,
     required this.showRecordPanel,
   });
 
   @override
-  ConsumerState<DiscoverMap> createState() => _DiscoverMapState();
+  ConsumerState<DiscoverMap> createState() => DiscoverMapState();
 }
 
-class _DiscoverMapState extends ConsumerState<DiscoverMap> {
+class DiscoverMapState extends ConsumerState<DiscoverMap> {
   maps.GoogleMapController? _mapController;
   double _zoomLevel = 14.4746;
   final _mapMarkerImages = <String, Uint8List>{};
@@ -58,6 +53,16 @@ class _DiscoverMapState extends ConsumerState<DiscoverMap> {
       recenterMap(
           LocationStatus.value(widget.profiles[profileIndex].location.latLong));
     }
+
+    final removeUids = <String>[];
+    final newUids = widget.profiles.map((e) => e.profile.uid).toSet();
+    for (final uid in _mapMarkerImages.keys) {
+      if (!newUids.contains(uid)) {
+        removeUids.add(uid);
+      }
+    }
+    setState(() =>
+        _mapMarkerImages.removeWhere((key, value) => removeUids.contains(key)));
 
     final missingProfiles = <Profile>[];
     for (final profile in widget.profiles) {
@@ -82,90 +87,39 @@ class _DiscoverMapState extends ConsumerState<DiscoverMap> {
 
   @override
   Widget build(BuildContext context) {
-    final Profile? profile;
-    final profileIndex = widget.profileIndex;
-    if (profileIndex != null && profileIndex < widget.profiles.length) {
-      profile = widget.profiles[profileIndex].profile;
-    } else {
-      profile = null;
-    }
-
-    return Stack(
-      children: [
-        GoogleMap(
-          mapType: MapType.normal,
-          initialCameraPosition: CameraPosition(
-            target: LatLng(
-              widget.initialLocation.latLong.latitude,
-              widget.initialLocation.latLong.longitude,
+    return GoogleMap(
+      mapType: MapType.normal,
+      initialCameraPosition: CameraPosition(
+        target: LatLng(
+          widget.initialLocation.latLong.latitude,
+          widget.initialLocation.latLong.longitude,
+        ),
+        zoom: 14.4746,
+      ),
+      onMapCreated: _initMapController,
+      myLocationEnabled: true,
+      myLocationButtonEnabled: false,
+      onCameraIdle: _onCameraMoved,
+      onTap: (_) => widget.onProfileChanged(null),
+      markers: {
+        for (final profile in widget.profiles)
+          if (_mapMarkerImages[profile.profile.uid] != null)
+            Marker(
+              markerId: MarkerId(profile.profile.uid),
+              position: LatLng(
+                profile.location.latLong.latitude,
+                profile.location.latLong.longitude,
+              ),
+              onTap: () {
+                final index = widget.profiles.indexOf(profile);
+                widget.onProfileChanged(index);
+              },
+              icon: _mapMarkerImages[profile.profile.uid] == null
+                  ? BitmapDescriptor.defaultMarker
+                  : BitmapDescriptor.fromBytes(
+                      _mapMarkerImages[profile.profile.uid]!),
             ),
-            zoom: 14.4746,
-          ),
-          onMapCreated: _initMapController,
-          myLocationEnabled: true,
-          myLocationButtonEnabled: false,
-          onCameraIdle: _onCameraMoved,
-          onTap: (_) => widget.onProfileChanged(null),
-          markers: {
-            for (final profile in widget.profiles)
-              if (_mapMarkerImages[profile.profile.uid] != null)
-                Marker(
-                  markerId: MarkerId(profile.profile.uid),
-                  position: LatLng(
-                    profile.location.latLong.latitude,
-                    profile.location.latLong.longitude,
-                  ),
-                  onTap: () {
-                    final index = widget.profiles.indexOf(profile);
-                    widget.onProfileChanged(index);
-                  },
-                  icon: _mapMarkerImages[profile.profile.uid] == null
-                      ? BitmapDescriptor.defaultMarker
-                      : BitmapDescriptor.fromBytes(
-                          _mapMarkerImages[profile.profile.uid]!),
-                ),
-          },
-        ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (profile != null)
-                    _CircleButton(
-                      color: const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                      onPressed: () {},
-                      child: const Icon(
-                        Icons.circle,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  const SizedBox(width: 8),
-                  _CircleButton(
-                    onPressed: () => recenterMap(ref.read(locationProvider)),
-                    child: const Icon(
-                      CupertinoIcons.location_fill,
-                      size: 26,
-                      color: Color.fromRGBO(0x22, 0x53, 0xFF, 1.0),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-              ),
-              const SizedBox(height: 24),
-              AnimatedSize(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutQuart,
-                child: widget.bottomBuilder(context),
-              ),
-            ],
-          ),
-        ),
-      ],
+      },
     );
   }
 
@@ -318,43 +272,6 @@ class _DiscoverMapState extends ConsumerState<DiscoverMap> {
     return picture.toImage(
       (pixelRatio * width).toInt(),
       (pixelRatio * height).toInt(),
-    );
-  }
-}
-
-class _CircleButton extends StatelessWidget {
-  final Widget child;
-  final Color color;
-  final VoidCallback onPressed;
-
-  const _CircleButton({
-    super.key,
-    required this.onPressed,
-    this.color = Colors.white,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      child: Container(
-        width: 54,
-        height: 54,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          boxShadow: const [
-            BoxShadow(
-              offset: Offset(0, 2),
-              blurRadius: 10,
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-            )
-          ],
-        ),
-        alignment: Alignment.center,
-        child: child,
-      ),
     );
   }
 }
