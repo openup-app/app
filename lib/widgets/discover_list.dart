@@ -10,6 +10,7 @@ class DiscoverList extends ConsumerStatefulWidget {
   final bool play;
   final VoidCallback onPlayPause;
   final VoidCallback onRecord;
+  final VoidCallback onToggleFavorite;
   final VoidCallback onProfilePressed;
 
   const DiscoverList({
@@ -20,6 +21,7 @@ class DiscoverList extends ConsumerStatefulWidget {
     required this.play,
     required this.onPlayPause,
     required this.onRecord,
+    required this.onToggleFavorite,
     required this.onProfilePressed,
   });
 
@@ -96,6 +98,7 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
               play: widget.play,
               onPlayPause: widget.onPlayPause,
               onRecord: widget.onRecord,
+              onToggleFavorite: widget.onToggleFavorite,
               onProfilePressed: widget.onProfilePressed,
             ),
           );
@@ -110,6 +113,7 @@ class _MiniProfile extends StatelessWidget {
   final bool play;
   final VoidCallback onPlayPause;
   final VoidCallback onRecord;
+  final VoidCallback onToggleFavorite;
   final VoidCallback onProfilePressed;
 
   const _MiniProfile({
@@ -118,6 +122,7 @@ class _MiniProfile extends StatelessWidget {
     required this.play,
     required this.onPlayPause,
     required this.onRecord,
+    required this.onToggleFavorite,
     required this.onProfilePressed,
   });
 
@@ -214,11 +219,16 @@ class _MiniProfile extends StatelessWidget {
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Icon(
-                    Icons.favorite_outline,
-                    color: Color.fromRGBO(0xFF, 0x4F, 0x4F, 1.0),
+                Button(
+                  onPressed: onToggleFavorite,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(
+                      profile.favorite
+                          ? Icons.favorite
+                          : Icons.favorite_outline,
+                      color: const Color.fromRGBO(0xFF, 0x4F, 0x4F, 1.0),
+                    ),
                   ),
                 ),
                 Button(

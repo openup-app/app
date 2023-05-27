@@ -90,15 +90,16 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
 
     // Animate selected profile
     final selectedProfile = widget.selectedProfile;
+    final oldSelectedProfile = oldWidget.selectedProfile;
     if (selectedProfile != null) {
-      if (selectedProfile.profile.uid !=
-          oldWidget.selectedProfile?.profile.uid) {
+      if (selectedProfile.profile.uid != oldSelectedProfile?.profile.uid) {
         setState(() {
           _locationOverridden = false;
           _selectedMapMarkerAnimation.clear();
         });
 
-        _renderSelectedMapMarker(selectedProfile).then((frames) {
+        _renderMapMarker(profile: selectedProfile, selected: true)
+            .then((frames) {
           if (mounted) {
             setState(() {
               _selectedMapMarkerAnimation
@@ -109,6 +110,26 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
             if (!_locationOverridden) {
               recenterMap(selectedProfile.location.latLong);
             }
+          }
+        });
+      } else if (selectedProfile.profile.uid ==
+              oldSelectedProfile?.profile.uid &&
+          selectedProfile.favorite != oldSelectedProfile?.favorite) {
+        // Update the favorite icon
+        final unselectedFramesFuture =
+            _renderMapMarker(profile: selectedProfile, selected: false);
+        final selectedFramesFuture =
+            _renderMapMarker(profile: selectedProfile, selected: true);
+        Future.wait([unselectedFramesFuture, selectedFramesFuture])
+            .then((results) {
+          if (mounted) {
+            setState(() =>
+                _mapMarkerAnimations[selectedProfile.profile.uid] = results[0]);
+            setState(() {
+              _selectedMapMarkerAnimation
+                ..clear()
+                ..addAll(results[1]);
+            });
           }
         });
       }
@@ -221,12 +242,13 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
 
       final hasGeneratedMarker =
           _mapMarkerAnimations[profile.profile.uid] != null;
+      final selected = profile.profile.uid == selectedProfile?.profile.uid;
+      final favorite = profile.favorite;
       if (hasGeneratedMarker) {
         final marker = Marker(
           markerId: MarkerId(profile.profile.uid),
           anchor: const Offset(0.5, 0.5),
-          zIndex:
-              profile.profile.uid == selectedProfile?.profile.uid ? 1.0 : 0.0,
+          zIndex: selected ? 10 : (favorite ? 5 : 0),
           position: LatLng(
             profile.location.latLong.latitude,
             profile.location.latLong.longitude,
@@ -291,25 +313,37 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   }
 
   Future<Map<String, List<Uint8List>>> _renderMapMarkers(
-    List<DiscoverProfile> profiles,
-  ) async {
-    final pixelRatio = MediaQuery.of(context).devicePixelRatio;
+      List<DiscoverProfile> profiles) async {
     final mappings = <String, List<Uint8List>>{};
     for (final profile in profiles) {
-      final frames = <Uint8List>[];
-      for (var i = 0; i < _frameCount; i++) {
-        final t = i / (_frameCount - 1);
-        final animation = CurveTween(curve: Curves.bounceOut)
-            .animate(AlwaysStoppedAnimation(t));
-        final image =
-            await _renderMapMarkerFrame(profile, pixelRatio, animation);
-        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-        image.dispose();
-        frames.add(bytes!.buffer.asUint8List());
-      }
+      final frames = await _renderMapMarker(
+        profile: profile,
+        selected: false,
+      );
       mappings[profile.profile.uid] = frames;
     }
     return mappings;
+  }
+
+  Future<List<Uint8List>> _renderMapMarker({
+    required DiscoverProfile profile,
+    required bool selected,
+  }) async {
+    final pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final frames = <Uint8List>[];
+    for (var i = 0; i < _frameCount; i++) {
+      final t = i / (_frameCount - 1);
+      final animation =
+          CurveTween(curve: selected ? Curves.easeOutQuart : Curves.bounceOut)
+              .animate(AlwaysStoppedAnimation(t));
+      final image = selected
+          ? await _renderSelectedMapMarkerFrame(profile, pixelRatio, animation)
+          : await _renderMapMarkerFrame(profile, pixelRatio, animation);
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      image.dispose();
+      frames.add(bytes!.buffer.asUint8List());
+    }
+    return frames;
   }
 
   Future<ui.Image> _renderMapMarkerFrame(
@@ -344,16 +378,30 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     canvas.scale(pixelRatio);
     canvas.transform(scaleAnimation.storage);
 
+    const icon = Icons.favorite;
+    final favoriteIconPainter = !profile.favorite
+        ? null
+        : _createTextPainter(
+            text: String.fromCharCode(icon.codePoint),
+            style: TextStyle(
+              fontSize: 20,
+              color: const Color.fromRGBO(0xFF, 0x4F, 0x4F, 1.0),
+              fontFamily: icon.fontFamily,
+            ),
+          );
+
     final photo = await _fetchImage(
       NetworkImage(profile.profile.photo),
       size: const Size.square(photoSize),
       pixelRatio: pixelRatio,
     );
+
     _paintProfilePill(
       canvas: canvas,
       textPainter: textPainter,
       metrics: metrics,
       photo: photo,
+      favoriteIconPainter: favoriteIconPainter,
       backgroundColor: Colors.white,
       horizontalPadding: horizontalPadding,
       verticalPadding: verticalPadding,
@@ -366,24 +414,6 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       (pixelRatio * width).toInt(),
       (pixelRatio * height).toInt(),
     );
-  }
-
-  Future<List<Uint8List>> _renderSelectedMapMarker(
-    DiscoverProfile profile,
-  ) async {
-    final pixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final frames = <Uint8List>[];
-    for (var i = 0; i < _frameCount; i++) {
-      final t = i / (_frameCount - 1);
-      final animation = CurveTween(curve: Curves.easeOutQuart)
-          .animate(AlwaysStoppedAnimation(t));
-      final image =
-          await _renderSelectedMapMarkerFrame(profile, pixelRatio, animation);
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      image.dispose();
-      frames.add(bytes!.buffer.asUint8List());
-    }
-    return frames;
   }
 
   Future<ui.Image> _renderSelectedMapMarkerFrame(
@@ -421,6 +451,18 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     canvas.scale(pixelRatio);
     canvas.transform(scaleAnimation.storage);
 
+    const icon = Icons.favorite;
+    final favoriteIconPainter = !profile.favorite
+        ? null
+        : _createTextPainter(
+            text: String.fromCharCode(icon.codePoint),
+            style: TextStyle(
+              fontSize: 20,
+              color: const Color.fromRGBO(0xFF, 0x4F, 0x4F, 1.0),
+              fontFamily: icon.fontFamily,
+            ),
+          );
+
     final photo = await _fetchImage(
       NetworkImage(profile.profile.photo),
       size: const Size.square(photoSize),
@@ -431,6 +473,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       textPainter: textPainter,
       metrics: metrics,
       photo: photo,
+      favoriteIconPainter: favoriteIconPainter,
       backgroundColor: ColorTween(
         begin: Colors.white,
         end: const Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
@@ -457,6 +500,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     required TextPainter textPainter,
     required ui.LineMetrics metrics,
     required ui.Image photo,
+    required TextPainter? favoriteIconPainter,
     required Color backgroundColor,
     Color? profileOutlineColor,
     required double horizontalPadding,
@@ -485,6 +529,17 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       canvas,
       Offset(textLeftPadding, textTopPadding),
     );
+
+    final iconMetrics = favoriteIconPainter?.computeLineMetrics()[0];
+    if (favoriteIconPainter != null && iconMetrics != null) {
+      favoriteIconPainter.paint(
+        canvas,
+        Offset(
+          width - horizontalPadding / 2 - iconMetrics.width * 0.75,
+          verticalPadding / 2 - iconMetrics.height * 0.3,
+        ),
+      );
+    }
 
     final photoCenter = Offset((height - verticalPadding) / 2 + 4, height / 2);
     final photoSize = height - verticalPadding - 7.5;

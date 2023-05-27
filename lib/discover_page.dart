@@ -436,6 +436,16 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       onRecordInvite: (profile) {
                         _showRecordPanelOrSignIn(context, profile.uid);
                       },
+                      onToggleFavorite: () {
+                        final profile = _profiles[_profileIndex!];
+                        setState(() {
+                          _profiles.replaceRange(
+                            _profileIndex!,
+                            _profileIndex! + 1,
+                            [profile.copyWith(favorite: !profile.favorite)],
+                          );
+                        });
+                      },
                       onBlockUser: (profile) {
                         setState(() => _profiles.removeWhere(
                             ((p) => p.profile.uid == profile.uid)));
@@ -572,6 +582,7 @@ class _BottomSheet extends StatefulWidget {
   final ValueChanged<int> onProfileIndexChanged;
   final GlobalKey<ProfileBuilderState> profileBuilderKey;
   final void Function(Profile profile) onRecordInvite;
+  final VoidCallback onToggleFavorite;
   final void Function(Profile profile) onBlockUser;
   final VoidCallback onShowConversations;
   final bool pageActive;
@@ -586,6 +597,7 @@ class _BottomSheet extends StatefulWidget {
     required this.onProfileIndexChanged,
     required this.profileBuilderKey,
     required this.onRecordInvite,
+    required this.onToggleFavorite,
     required this.onBlockUser,
     required this.onShowConversations,
     required this.pageActive,
@@ -846,6 +858,7 @@ class _BottomSheetState extends State<_BottomSheet> {
           widget.profileBuilderKey.currentState?.pause();
         }
       },
+      onToggleFavorite: widget.onToggleFavorite,
       onRecord: () => widget.onRecordInvite(profile),
       onProfilePressed: onProfilePressed,
     );
