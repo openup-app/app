@@ -436,15 +436,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       onRecordInvite: (profile) {
                         _showRecordPanelOrSignIn(context, profile.uid);
                       },
-                      onToggleFavorite: () {
+                      onToggleFavorite: () async {
                         final profile = _profiles[_profileIndex!];
-                        setState(() {
-                          _profiles.replaceRange(
-                            _profileIndex!,
-                            _profileIndex! + 1,
-                            [profile.copyWith(favorite: !profile.favorite)],
-                          );
-                        });
+                        _toggleFavorite(profile);
                       },
                       onBlockUser: (profile) {
                         setState(() => _profiles.removeWhere(
@@ -568,6 +562,49 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
             ),
           ],
         );
+      },
+    );
+  }
+
+  void _toggleFavorite(DiscoverProfile profile) async {
+    final api = ref.read(apiProvider);
+    Either<ApiError, DiscoverProfile> result;
+    setState(() {
+      _profiles.replaceRange(
+        _profileIndex!,
+        _profileIndex! + 1,
+        [profile.copyWith(favorite: !profile.favorite)],
+      );
+    });
+    if (profile.favorite) {
+      result = await api.removeFavorite(profile.profile.uid);
+    } else {
+      result = await api.addFavorite(profile.profile.uid);
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (l) {
+        setState(() {
+          _profiles.replaceRange(
+            _profileIndex!,
+            _profileIndex! + 1,
+            [profile],
+          );
+        });
+        displayError(context, l);
+      },
+      (r) {
+        setState(() {
+          _profiles.replaceRange(
+            _profileIndex!,
+            _profileIndex! + 1,
+            [r],
+          );
+        });
       },
     );
   }

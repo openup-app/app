@@ -442,6 +442,36 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, DiscoverProfile>> addFavorite(String otherUid) {
+    return _request(
+      makeRequest: () {
+        return http.put(
+          Uri.parse('$_urlBase/favorites/$otherUid'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(DiscoverProfile.fromJson(json));
+      },
+    );
+  }
+
+  Future<Either<ApiError, DiscoverProfile>> removeFavorite(String otherUid) {
+    return _request(
+      makeRequest: () {
+        return http.delete(
+          Uri.parse('$_urlBase/favorites/$otherUid'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(DiscoverProfile.fromJson(json));
+      },
+    );
+  }
+
   Future<Either<ApiError, List<Chatroom>>> declineInvitation(String otherUid) {
     return _request(
       makeRequest: () {
