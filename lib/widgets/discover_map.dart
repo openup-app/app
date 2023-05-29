@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -17,6 +18,7 @@ class DiscoverMap extends ConsumerStatefulWidget {
   final Location initialLocation;
   final ValueChanged<Location> onLocationChanged;
   final VoidCallback showRecordPanel;
+  final void Function(MarkerRenderStatus status) onMarkerRenderStatus;
 
   const DiscoverMap({
     super.key,
@@ -26,6 +28,7 @@ class DiscoverMap extends ConsumerStatefulWidget {
     required this.initialLocation,
     required this.onLocationChanged,
     required this.showRecordPanel,
+    required this.onMarkerRenderStatus,
   });
 
   @override
@@ -57,6 +60,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   final _profilesToAnimate = <DiscoverProfile>[];
 
   bool _locationOverridden = false;
+
+  MarkerRenderStatus _markerRenderStatus = MarkerRenderStatus.ready;
 
   @override
   void initState() {
@@ -163,12 +168,22 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     }
     if (newProfiles.isNotEmpty) {
       _staggeredAnimationController.stop();
+      if (_markerRenderStatus == MarkerRenderStatus.ready) {
+        _markerRenderStatus = MarkerRenderStatus.rendering;
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            widget.onMarkerRenderStatus(MarkerRenderStatus.rendering);
+          }
+        });
+      }
       _renderMapMarkers(newProfiles).then((mappings) {
+        _markerRenderStatus = MarkerRenderStatus.ready;
         if (mounted) {
           if (!_staggeredAnimationController.isAnimating) {
             _profilesToAnimate.addAll(newProfiles);
             _staggeredAnimationController.forward(from: 0);
           }
+          widget.onMarkerRenderStatus(MarkerRenderStatus.ready);
           setState(() => _mapMarkerAnimations..addAll(mappings));
         }
       });
@@ -354,7 +369,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     final textPainter = _createTextPainter(
       text: profile.profile.name,
       style: const TextStyle(
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: FontWeight.w700,
         color: Colors.black,
       ),
@@ -367,9 +382,9 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     final textWidth = metrics.width;
     const horizontalPadding = 8.0;
     const verticalPadding = 20.0;
-    const photoSize = 36.0;
-    final width = photoSize + textWidth + horizontalPadding + 18;
-    const height = photoSize + verticalPadding;
+    const photoSize = 24.0;
+    final width = photoSize + 4 + textWidth + horizontalPadding + 8;
+    const height = photoSize + 4 + verticalPadding;
 
     final scaleAnimation = Matrix4.identity()
       ..translate(width / 2, height / 2)
@@ -439,7 +454,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     const horizontalPadding = 8.0;
     const verticalPadding = 20.0;
     const photoSize = 36.0;
-    final width = photoSize + textWidth + horizontalPadding + 18;
+    final width = photoSize + textWidth + horizontalPadding + 8;
     const height = photoSize + verticalPadding;
 
     final scale = 1.0 + 0.33 * animation.value;
@@ -522,8 +537,16 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       8,
       false,
     );
+
+    final extraPhotoPadding = profileOutlineColor == null ? 0 : 2;
+    final photoSize = height - verticalPadding - 7 - extraPhotoPadding;
+    final photoCenter = Offset(
+      horizontalPadding / 2 + 3 + extraPhotoPadding + photoSize / 2,
+      height / 2,
+    );
+
     canvas.drawRRect(rrect, Paint()..color = backgroundColor);
-    const textLeftPadding = 44.0;
+    final textLeftPadding = photoCenter.dx + photoSize / 2 + 4;
     final textTopPadding = (height - metrics.height) / 2;
     textPainter.paint(
       canvas,
@@ -541,8 +564,6 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       );
     }
 
-    final photoCenter = Offset((height - verticalPadding) / 2 + 4, height / 2);
-    final photoSize = height - verticalPadding - 7.5;
     if (profileOutlineColor != null) {
       canvas.drawCircle(
         photoCenter,
@@ -604,6 +625,8 @@ Future<ui.Image> _fetchImage(
       .addListener(listener);
   return completer.future;
 }
+
+enum MarkerRenderStatus { ready, rendering }
 
 String _nightMapStyle() {
   return jsonEncode(

@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -62,6 +63,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
 
   final _mapKey = GlobalKey<DiscoverMapState>();
+  MarkerRenderStatus _markerRenderStatus = MarkerRenderStatus.ready;
 
   late final _bottomSheetController = AnimationController(
     vsync: this,
@@ -448,14 +450,27 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       pageActive: _pageActive,
                     ),
                   ),
-                  if (_fetchingProfiles)
-                    Positioned(
-                      left: 0,
-                      top: MediaQuery.of(context).padding.top + 24 + 72,
-                      right: 0,
-                      height: 4,
-                      child: const LinearProgressIndicator(),
+                  Positioned(
+                    bottom: MediaQuery.of(context).padding.bottom + 72,
+                    left: 0,
+                    right: 0,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 150),
+                      curve: Curves.easeOutQuart,
+                      opacity: (_fetchingProfiles ||
+                              _markerRenderStatus ==
+                                  MarkerRenderStatus.rendering)
+                          ? 1
+                          : 0,
+                      child: Lottie.asset(
+                        'assets/images/map_searching.json',
+                        width: 100,
+                        height: 48,
+                        animate: _fetchingProfiles ||
+                            _markerRenderStatus == MarkerRenderStatus.rendering,
+                      ),
                     ),
+                  ),
                 ],
               );
             },
@@ -484,6 +499,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         if (selectedProfile != null) {
           _showRecordPanelOrSignIn(context, selectedProfile.profile.uid);
         }
+      },
+      onMarkerRenderStatus: (status) {
+        setState(() => _markerRenderStatus = status);
       },
     );
   }
@@ -771,7 +789,7 @@ class _BottomSheetState extends State<_BottomSheet> {
                           );
                         },
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 12),
                       SizedBox(
                         height: MediaQuery.of(context).padding.bottom,
                       ),
