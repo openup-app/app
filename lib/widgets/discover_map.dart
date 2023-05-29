@@ -304,16 +304,19 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       longitude: (bounds.northeast.longitude + bounds.southwest.longitude) / 2,
     );
     final distance = greatCircleDistance(
-      center,
       LatLong(
         latitude: bounds.northeast.latitude,
         longitude: bounds.northeast.longitude,
+      ),
+      LatLong(
+        latitude: bounds.southwest.latitude,
+        longitude: bounds.southwest.longitude,
       ),
     );
     widget.onLocationChanged(
       Location(
         latLong: center,
-        radius: distance,
+        radius: distance / 2,
       ),
     );
     setState(() => _zoomLevel = zoom);

@@ -247,16 +247,20 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       setState(() => _ignoreNextLocationChange = false);
       return;
     }
+
+    // Reduced radius for improved experience when searching
+    final targetLocation = location.copyWith(radius: location.radius * 0.5);
     final prevLocation = _queryLocation;
     if (prevLocation != null) {
-      final panned =
-          greatCircleDistance(prevLocation.latLong, location.latLong) >
-              prevLocation.radius * 1 / 3;
-      final ratio = location.radius / prevLocation.radius;
-      final zoomed = ratio > 2 || ratio < 1 / 2;
+      final panRatio =
+          greatCircleDistance(prevLocation.latLong, targetLocation.latLong) /
+              prevLocation.radius;
+      final zoomRatio = targetLocation.radius / prevLocation.radius;
+      final panned = panRatio > 1 / 3;
+      final zoomed = zoomRatio > 5 / 3 || zoomRatio < 2 / 3;
       if (panned || zoomed) {
-        setState(() => _queryLocation = location);
-        _queryProfilesAt(location);
+        setState(() => _queryLocation = targetLocation);
+        _queryProfilesAt(targetLocation);
       }
     }
   }
