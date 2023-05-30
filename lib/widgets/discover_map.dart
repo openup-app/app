@@ -4,12 +4,12 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/util/location_service.dart';
+import 'package:openup/widgets/map_marker_rendering.dart';
 
 class DiscoverMap extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
@@ -40,7 +40,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   maps.GoogleMapController? _mapController;
   double _zoomLevel = 14.4746;
 
-  final _mapMarkerAnimations = <String, List<Uint8List>>{};
+  final _onscreenMarkers = <RenderedProfile>[];
 
   static const _markerAppearDuration = Duration(milliseconds: 350);
   final _frameCount =
@@ -57,35 +57,60 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     duration: const Duration(milliseconds: 2000),
   );
 
-  final _profilesToAnimate = <DiscoverProfile>[];
+  final _markersReadyToAnimate = <DiscoverProfile>{};
+  final _markersAnimating = <DiscoverProfile>[];
 
   bool _locationOverridden = false;
 
-  MarkerRenderStatus _markerRenderStatus = MarkerRenderStatus.ready;
+  late final MarkerRenderingStateMachine _markerRenderStateMachine;
 
   @override
   void initState() {
     super.initState();
     _staggeredAnimationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        setState(() => _profilesToAnimate.clear());
+        setState(() => _markersAnimating.clear());
+        _maybeStartNextStagger();
       }
     });
+
+    _markerRenderStateMachine = MarkerRenderingStateMachine(
+      onRenderStart: (profiles) {
+        if (!mounted) {
+          return Future.value([]);
+        }
+        widget.onMarkerRenderStatus(MarkerRenderStatus.rendering);
+        return _renderMapMarkers(profiles);
+      },
+      onRenderEnd: _onRenderEnd,
+    );
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_mapMarkerAnimations.isEmpty) {
-      _staggeredAnimationController.stop();
-      _renderMapMarkers(widget.profiles).then((mapping) {
-        if (mounted) {
-          if (!_staggeredAnimationController.isAnimating) {
-            _staggeredAnimationController.forward(from: 0);
-          }
-          setState(() => _mapMarkerAnimations.addAll(mapping));
-        }
+  void _onRenderEnd(List<RenderedProfile> renders) {
+    if (!mounted) {
+      return;
+    }
+
+    final uids = renders.map((e) => e.profile.profile.uid).toList();
+    final onscreenUids = _onscreenMarkers.map((r) => r.profile.profile.uid);
+    setState(() {
+      final profiles =
+          widget.profiles.where((p) => uids.contains(p.profile.uid));
+      _markersReadyToAnimate
+          .addAll(profiles.where((p) => !onscreenUids.contains(p.profile.uid)));
+      _onscreenMarkers.addAll(renders);
+    });
+    _maybeStartNextStagger();
+    widget.onMarkerRenderStatus(MarkerRenderStatus.ready);
+  }
+
+  void _maybeStartNextStagger() {
+    if (_markersReadyToAnimate.isNotEmpty) {
+      setState(() {
+        _markersAnimating.addAll(_markersReadyToAnimate.toList());
+        _markersReadyToAnimate.clear();
       });
+      _staggeredAnimationController.forward(from: 0);
     }
   }
 
@@ -103,6 +128,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
           _selectedMapMarkerAnimation.clear();
         });
 
+        // Re-render selected
         _renderMapMarker(profile: selectedProfile, selected: true)
             .then((frames) {
           if (mounted) {
@@ -120,6 +146,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       } else if (selectedProfile.profile.uid ==
               oldSelectedProfile?.profile.uid &&
           selectedProfile.favorite != oldSelectedProfile?.favorite) {
+        // Re-render selected
         // Update the favorite icon
         final unselectedFramesFuture =
             _renderMapMarker(profile: selectedProfile, selected: false);
@@ -128,8 +155,17 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
         Future.wait([unselectedFramesFuture, selectedFramesFuture])
             .then((results) {
           if (mounted) {
-            setState(() =>
-                _mapMarkerAnimations[selectedProfile.profile.uid] = results[0]);
+            final index = _onscreenMarkers.indexWhere(
+                (r) => r.profile.profile.uid == selectedProfile.profile.uid);
+            if (index != -1) {
+              final r = _onscreenMarkers[index];
+              setState(() {
+                _onscreenMarkers[index] = RenderedProfile(
+                  profile: r.profile,
+                  frames: results[0],
+                );
+              });
+            }
             setState(() {
               _selectedMapMarkerAnimation
                 ..clear()
@@ -140,54 +176,15 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       }
     }
 
-    // Remove remove cached map markers of profiles that aren't in the widget
-    final removeUids = <String>[];
-    final newUids = widget.profiles.map((e) => e.profile.uid).toSet();
-    for (final uid in _mapMarkerAnimations.keys) {
-      if (!newUids.contains(uid)) {
-        removeUids.add(uid);
-      }
-    }
-    if (removeUids.isNotEmpty) {
-      setState(() => _mapMarkerAnimations
-          .removeWhere((key, value) => removeUids.contains(key)));
-    }
-
     // Deselect if selected profile was removed
     if (selectedProfile != null &&
-        removeUids.contains(selectedProfile.profile.uid)) {
+        !widget.profiles
+            .map((e) => e.profile.uid)
+            .contains(selectedProfile.profile.uid)) {
       widget.onProfileChanged(null);
     }
 
-    // Create and animate the newly added profile map markers
-    final newProfiles = <DiscoverProfile>[];
-    for (final profile in widget.profiles) {
-      if (!_mapMarkerAnimations.containsKey(profile.profile.uid)) {
-        newProfiles.add(profile);
-      }
-    }
-    if (newProfiles.isNotEmpty) {
-      _staggeredAnimationController.stop();
-      if (_markerRenderStatus == MarkerRenderStatus.ready) {
-        _markerRenderStatus = MarkerRenderStatus.rendering;
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            widget.onMarkerRenderStatus(MarkerRenderStatus.rendering);
-          }
-        });
-      }
-      _renderMapMarkers(newProfiles).then((mappings) {
-        _markerRenderStatus = MarkerRenderStatus.ready;
-        if (mounted) {
-          if (!_staggeredAnimationController.isAnimating) {
-            _profilesToAnimate.addAll(newProfiles);
-            _staggeredAnimationController.forward(from: 0);
-          }
-          widget.onMarkerRenderStatus(MarkerRenderStatus.ready);
-          setState(() => _mapMarkerAnimations..addAll(mappings));
-        }
-      });
-    }
+    _markerRenderStateMachine.profilesUpdated(profiles: widget.profiles);
   }
 
   @override
@@ -195,6 +192,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     _mapController?.dispose();
     _selectedAnimationController.dispose();
     _staggeredAnimationController.dispose();
+    _markerRenderStateMachine.dispose();
     super.dispose();
   }
 
@@ -235,54 +233,55 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   }
 
   Set<Marker> _buildMapMarkers(DiscoverProfile? selectedProfile) {
-    final selectedIndex =
-        (_selectedAnimationController.value * (_frameCount - 1)).toInt();
-
     final set = <Marker>{};
-    for (final profile in widget.profiles) {
-      int appearIndex = _frameCount - 1;
-      final indexInAnimationList = _profilesToAnimate.indexOf(profile);
-      if (indexInAnimationList != -1) {
-        final ratio = indexInAnimationList / _profilesToAnimate.length;
-        final durationNorm = _frameCount / 60;
+
+    final animationQueue = _markersAnimating.map((e) => e.profile.uid).toList();
+    for (final rendered in _onscreenMarkers) {
+      final profile = rendered.profile;
+      int frameIndex = _frameCount - 1;
+
+      // Some profiles may be animating in
+      final staggerIndex = animationQueue.indexOf(profile.profile.uid);
+      if (staggerIndex != -1) {
+        final ratio =
+            (staggerIndex / (animationQueue.length - 1)).clamp(0.0, 1.0);
+        final durationNormalized = _frameCount / 60;
         final staggeredAnimation = CurvedAnimation(
           parent: _staggeredAnimationController,
           curve: Interval(
-            durationNorm * ratio,
-            durationNorm * ratio + durationNorm,
+            durationNormalized * ratio,
+            durationNormalized * ratio + durationNormalized,
           ),
         );
-        appearIndex = (staggeredAnimation.value * (_frameCount - 1)).toInt();
+        frameIndex = (staggeredAnimation.value * (_frameCount - 1)).toInt();
       }
 
-      final hasGeneratedMarker =
-          _mapMarkerAnimations[profile.profile.uid] != null;
-      final selected = profile.profile.uid == selectedProfile?.profile.uid;
+      Uint8List? frame = rendered.frames.elementAt(frameIndex);
       final favorite = profile.favorite;
-      if (hasGeneratedMarker) {
-        final marker = Marker(
-          markerId: MarkerId(profile.profile.uid),
-          anchor: const Offset(0.5, 0.5),
-          zIndex: selected ? 10 : (favorite ? 5 : 0),
-          position: LatLng(
-            profile.location.latLong.latitude,
-            profile.location.latLong.longitude,
-          ),
-          onTap: () {
-            final index = widget.profiles.indexOf(profile);
-            widget.onProfileChanged(index);
-          },
-          icon: profile != selectedProfile
-              ? BitmapDescriptor.fromBytes(
-                  _mapMarkerAnimations[profile.profile.uid]![appearIndex])
-              : (selectedIndex >= _selectedMapMarkerAnimation.length
-                  ? BitmapDescriptor.fromBytes(_mapMarkerAnimations[
-                      profile.profile.uid]![_frameCount - 1])
-                  : BitmapDescriptor.fromBytes(
-                      _selectedMapMarkerAnimation[selectedIndex])),
-        );
-        set.add(marker);
+      final selected = profile.profile.uid == selectedProfile?.profile.uid;
+      if (selected) {
+        final selectedFrameIndex =
+            (_selectedAnimationController.value * (_frameCount - 1)).toInt();
+        if (selectedFrameIndex < _selectedMapMarkerAnimation.length) {
+          frame = _selectedMapMarkerAnimation[selectedFrameIndex];
+        }
       }
+
+      final marker = Marker(
+        markerId: MarkerId(profile.profile.uid),
+        anchor: const Offset(0.5, 0.5),
+        zIndex: selected ? 10 : (favorite ? 5 : 0),
+        position: LatLng(
+          profile.location.latLong.latitude,
+          profile.location.latLong.longitude,
+        ),
+        onTap: () {
+          final index = widget.profiles.indexOf(profile);
+          widget.onProfileChanged(index);
+        },
+        icon: BitmapDescriptor.fromBytes(frame),
+      );
+      set.add(marker);
     }
     return set;
   }
@@ -295,7 +294,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   void _onCameraMoved() async {
     final bounds = await _mapController?.getVisibleRegion();
     final zoom = await _mapController?.getZoomLevel();
-    if (bounds == null || zoom == null) {
+    if (bounds == null || zoom == null || !mounted) {
       return;
     }
 
@@ -319,7 +318,31 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
         radius: distance / 2,
       ),
     );
+
+    _removeOffscreenProfiles(bounds);
     setState(() => _zoomLevel = zoom);
+  }
+
+  void _removeOffscreenProfiles(LatLngBounds bounds) {
+    final removeUids = <String>[];
+    final longitudeSpan =
+        (bounds.northeast.longitude - bounds.southwest.longitude).abs();
+    final latitudeSpan =
+        (bounds.northeast.latitude - bounds.southwest.latitude).abs();
+    final longitudePadding = longitudeSpan * 0.15;
+    final latitudePadding = latitudeSpan * 0.15;
+    for (final render in _onscreenMarkers) {
+      final latLong = render.profile.location.latLong;
+      if ((latLong.latitude > bounds.northeast.latitude + latitudePadding) ||
+          (latLong.latitude < bounds.southwest.latitude - latitudePadding) ||
+          (latLong.longitude > bounds.northeast.longitude + longitudePadding) ||
+          (latLong.longitude < bounds.southwest.longitude - longitudePadding)) {
+        removeUids.add(render.profile.profile.uid);
+      }
+    }
+    // TODO: Remove them from state machine cache
+    _onscreenMarkers
+        .removeWhere((r) => removeUids.contains(r.profile.profile.uid));
   }
 
   void recenterMap(LatLong latLong) {
@@ -330,17 +353,17 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     _mapController?.animateCamera(CameraUpdate.newCameraPosition(pos));
   }
 
-  Future<Map<String, List<Uint8List>>> _renderMapMarkers(
+  Future<List<RenderedProfile>> _renderMapMarkers(
       List<DiscoverProfile> profiles) async {
-    final mappings = <String, List<Uint8List>>{};
+    final rendered = <RenderedProfile>[];
     for (final profile in profiles) {
       final frames = await _renderMapMarker(
         profile: profile,
         selected: false,
       );
-      mappings[profile.profile.uid] = frames;
+      rendered.add(RenderedProfile(profile: profile, frames: frames));
     }
-    return mappings;
+    return rendered;
   }
 
   Future<List<Uint8List>> _renderMapMarker({
@@ -627,6 +650,16 @@ Future<ui.Image> _fetchImage(
       .resolve(ImageConfiguration(size: size, devicePixelRatio: pixelRatio))
       .addListener(listener);
   return completer.future;
+}
+
+class RenderedProfile {
+  final DiscoverProfile profile;
+  final List<Uint8List> frames;
+
+  RenderedProfile({
+    required this.profile,
+    required this.frames,
+  });
 }
 
 enum MarkerRenderStatus { ready, rendering }
