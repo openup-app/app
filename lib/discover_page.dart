@@ -42,7 +42,6 @@ class DiscoverPage extends ConsumerStatefulWidget {
 class DiscoverPageState extends ConsumerState<DiscoverPage>
     with SingleTickerProviderStateMixin {
   bool _fetchingProfiles = false;
-  bool _errorLoadingProfiles = false;
   Gender? _gender;
   bool _pageActive = false;
 
@@ -57,7 +56,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
 
   bool _ignoreNextLocationChange = false;
 
-  int? _profileIndex;
+  DiscoverProfile? _selectedProfile;
   final _invitedUsers = <String>{};
 
   final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
@@ -210,9 +209,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
 
     profiles.fold(
       (l) {
-        if (_profiles.isEmpty) {
-          setState(() => _errorLoadingProfiles = true);
-        }
         var message = errorToMessage(l);
         message = l.when(
           network: (_) => message,
@@ -233,7 +229,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       },
       (r) async {
         setState(() {
-          _profileIndex = null;
           _profiles
             ..clear()
             ..addAll(r.profiles);
@@ -265,9 +260,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     }
   }
 
-  void _onProfileChanged(int? index) {
+  void _onProfileChanged(DiscoverProfile? selectedProfile) {
     setState(() {
-      _profileIndex = index;
+      _selectedProfile = selectedProfile;
       _ignoreNextLocationChange = true;
       _discoverOperation?.cancel();
       _fetchingProfiles = false;
@@ -284,7 +279,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         if (queryLocation != null) {
           _queryProfilesAt(queryLocation);
         }
-        ;
       },
       onDeactivate: () {
         _profileBuilderKey.currentState?.pause();
@@ -299,6 +293,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
             );
           }
 
+          final profiles = List.of(_profiles);
+          final selectedProfile = _selectedProfile;
           return LayoutBuilder(
             builder: (context, constraints) {
               return Stack(
@@ -422,29 +418,31 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       onGenderChanged: (gender) {
                         setState(() {
                           _gender = gender;
-                          _profileIndex = null;
+                          _selectedProfile = null;
                           _profiles.clear();
                         });
+                        _mapKey.currentState?.resetMarkers();
                         final queryLocation = _queryLocation;
                         if (queryLocation != null) {
                           _queryProfilesAt(queryLocation);
                         }
                       },
-                      profiles: _profiles,
-                      profileIndex: _profileIndex,
-                      onProfileIndexChanged: (profileIndex) {
+                      profiles: profiles,
+                      selectedProfile: selectedProfile,
+                      onProfileChanged: (profile) {
                         setState(() {
                           _ignoreNextLocationChange = true;
-                          _profileIndex = profileIndex;
+                          _selectedProfile = profile;
                         });
                       },
                       profileBuilderKey: _profileBuilderKey,
                       onRecordInvite: (profile) {
                         _showRecordPanelOrSignIn(context, profile.uid);
                       },
-                      onToggleFavorite: () async {
-                        final profile = _profiles[_profileIndex!];
-                        _toggleFavorite(profile);
+                      onToggleFavorite: () {
+                        if (selectedProfile != null) {
+                          _toggleFavorite(selectedProfile);
+                        }
                       },
                       onBlockUser: (profile) {
                         setState(() => _profiles.removeWhere(
@@ -488,18 +486,15 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     required Location initialLocation,
     required ValueChanged<Location> onLocationChanged,
   }) {
-    final selectedProfile =
-        (_profileIndex == null || _profileIndex! >= _profiles.length)
-            ? null
-            : _profiles[_profileIndex!];
     return DiscoverMap(
       key: _mapKey,
       profiles: _profiles,
-      selectedProfile: selectedProfile,
+      selectedProfile: _selectedProfile,
       onProfileChanged: _onProfileChanged,
       initialLocation: initialLocation,
       onLocationChanged: onLocationChanged,
       showRecordPanel: () {
+        final selectedProfile = _selectedProfile;
         if (selectedProfile != null) {
           _showRecordPanelOrSignIn(context, selectedProfile.profile.uid);
         }
@@ -591,12 +586,20 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   void _toggleFavorite(DiscoverProfile profile) async {
     final api = ref.read(apiProvider);
     Either<ApiError, DiscoverProfile> result;
+    var index =
+        _profiles.indexWhere((p) => p.profile.uid == profile.profile.uid);
+    if (index != -1) {
+      setState(() {
+        _profiles.replaceRange(
+          index,
+          index + 1,
+          [profile.copyWith(favorite: !profile.favorite)],
+        );
+      });
+    }
     setState(() {
-      _profiles.replaceRange(
-        _profileIndex!,
-        _profileIndex! + 1,
-        [profile.copyWith(favorite: !profile.favorite)],
-      );
+      _selectedProfile =
+          _selectedProfile?.copyWith(favorite: !_selectedProfile!.favorite);
     });
     if (profile.favorite) {
       result = await api.removeFavorite(profile.profile.uid);
@@ -608,25 +611,18 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       return;
     }
 
+    index = _profiles.indexWhere((p) => p.profile.uid == profile.profile.uid);
     result.fold(
       (l) {
-        setState(() {
-          _profiles.replaceRange(
-            _profileIndex!,
-            _profileIndex! + 1,
-            [profile],
-          );
-        });
+        if (index != -1) {
+          setState(() => _profiles.replaceRange(index, index + 1, [profile]));
+        }
         displayError(context, l);
       },
       (r) {
-        setState(() {
-          _profiles.replaceRange(
-            _profileIndex!,
-            _profileIndex! + 1,
-            [r],
-          );
-        });
+        if (index != -1) {
+          setState(() => _profiles.replaceRange(index, index + 1, [r]));
+        }
       },
     );
   }
@@ -637,8 +633,8 @@ class _BottomSheet extends StatefulWidget {
   final Gender? gender;
   final ValueChanged<Gender?> onGenderChanged;
   final List<DiscoverProfile> profiles;
-  final int? profileIndex;
-  final ValueChanged<int> onProfileIndexChanged;
+  final DiscoverProfile? selectedProfile;
+  final ValueChanged<DiscoverProfile?> onProfileChanged;
   final GlobalKey<ProfileBuilderState> profileBuilderKey;
   final void Function(Profile profile) onRecordInvite;
   final VoidCallback onToggleFavorite;
@@ -652,8 +648,8 @@ class _BottomSheet extends StatefulWidget {
     required this.gender,
     required this.onGenderChanged,
     required this.profiles,
-    required this.profileIndex,
-    required this.onProfileIndexChanged,
+    required this.selectedProfile,
+    required this.onProfileChanged,
     required this.profileBuilderKey,
     required this.onRecordInvite,
     required this.onToggleFavorite,
@@ -669,13 +665,6 @@ class _BottomSheet extends StatefulWidget {
 class _BottomSheetState extends State<_BottomSheet> {
   @override
   Widget build(BuildContext context) {
-    final profileIndex = widget.profileIndex;
-    final Profile? profile;
-    if (profileIndex == null) {
-      profile = null;
-    } else {
-      profile = widget.profiles[profileIndex].profile;
-    }
     return BottomSheet(
       animationController: widget.animationController,
       backgroundColor: Colors.transparent,
@@ -767,25 +756,41 @@ class _BottomSheetState extends State<_BottomSheet> {
                       // Must live above PageView.builder (otherwise duplicate global key)
                       ProfileBuilder(
                         key: widget.profileBuilderKey,
-                        profile: profile,
+                        profile: widget.selectedProfile?.profile,
                         play: widget.pageActive,
                         builder: (context, play, playbackInfoStream) {
-                          if (profileIndex == null || profile == null) {
+                          final selectedProfile = widget.selectedProfile;
+                          if (selectedProfile == null) {
                             return const SizedBox.shrink();
                           }
                           return Padding(
                             padding: const EdgeInsets.only(top: 19),
-                            child: _buildListView(
-                              profile: profile,
-                              profileIndex: profileIndex,
+                            child: DiscoverList(
+                              profiles: widget.profiles,
+                              selectedProfile: selectedProfile,
+                              onProfileChanged: (profile) {
+                                // final scrollingForward = index > _profileIndex;
+                                // if (scrollingForward) {
+                                //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+                                // }
+                                widget.onProfileChanged(profile);
+                              },
                               play: play,
-                              onProfilePressed: () {
-                                if (profile == null) {
-                                  return;
+                              onPlayPause: () {
+                                if (!play) {
+                                  widget.profileBuilderKey.currentState?.play();
+                                } else {
+                                  widget.profileBuilderKey.currentState
+                                      ?.pause();
                                 }
+                              },
+                              onToggleFavorite: widget.onToggleFavorite,
+                              onRecord: () => widget
+                                  .onRecordInvite(selectedProfile.profile),
+                              onProfilePressed: () {
                                 _showFullProfile(
                                   context: context,
-                                  profile: profile,
+                                  profile: selectedProfile.profile,
                                   play: play,
                                 );
                               },
@@ -891,36 +896,6 @@ class _BottomSheetState extends State<_BottomSheet> {
       }
     }
     return gender;
-  }
-
-  Widget _buildListView({
-    required Profile profile,
-    required int profileIndex,
-    required bool play,
-    required VoidCallback onProfilePressed,
-  }) {
-    return DiscoverList(
-      profiles: widget.profiles,
-      profileIndex: profileIndex,
-      onProfileChanged: (index) {
-        // final scrollingForward = index > _profileIndex;
-        // if (scrollingForward) {
-        //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-        // }
-        widget.onProfileIndexChanged(index);
-      },
-      play: play,
-      onPlayPause: () {
-        if (!play) {
-          widget.profileBuilderKey.currentState?.play();
-        } else {
-          widget.profileBuilderKey.currentState?.pause();
-        }
-      },
-      onToggleFavorite: widget.onToggleFavorite,
-      onRecord: () => widget.onRecordInvite(profile),
-      onProfilePressed: onProfilePressed,
-    );
   }
 
   void _showFullProfile({

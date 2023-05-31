@@ -14,7 +14,7 @@ import 'package:openup/widgets/map_marker_rendering.dart';
 class DiscoverMap extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
   final DiscoverProfile? selectedProfile;
-  final ValueChanged<int?> onProfileChanged;
+  final ValueChanged<DiscoverProfile?> onProfileChanged;
   final Location initialLocation;
   final ValueChanged<Location> onLocationChanged;
   final VoidCallback showRecordPanel;
@@ -181,7 +181,11 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
         !widget.profiles
             .map((e) => e.profile.uid)
             .contains(selectedProfile.profile.uid)) {
-      widget.onProfileChanged(null);
+      WidgetsBinding.instance.endOfFrame.then((_) {
+        if (mounted) {
+          widget.onProfileChanged(null);
+        }
+      });
     }
 
     _markerRenderStateMachine.profilesUpdated(profiles: widget.profiles);
@@ -232,6 +236,10 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     );
   }
 
+  void resetMarkers() {
+    _markerRenderStateMachine.reset();
+  }
+
   Set<Marker> _buildMapMarkers(DiscoverProfile? selectedProfile) {
     final set = <Marker>{};
 
@@ -275,10 +283,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
           profile.location.latLong.latitude,
           profile.location.latLong.longitude,
         ),
-        onTap: () {
-          final index = widget.profiles.indexOf(profile);
-          widget.onProfileChanged(index);
-        },
+        onTap: () => widget.onProfileChanged(profile),
         icon: BitmapDescriptor.fromBytes(frame),
       );
       set.add(marker);

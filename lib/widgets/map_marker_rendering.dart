@@ -16,17 +16,21 @@ class MarkerRenderingStateMachine extends StateMachine<void, _MarkerState> {
     required this.onRenderStart,
     required this.onRenderEnd,
   }) {
-    initialState(
-      _Idle(
-        stateMachine: this,
-        profiles: [],
-        cache: {},
-      ),
-    );
+    reset();
   }
 
   Future<void> profilesUpdated({required List<DiscoverProfile> profiles}) =>
       machineState.profilesUpdated(profiles: profiles);
+
+  void reset() {
+    final state = _Idle(
+      stateMachine: this,
+      profiles: [],
+      cache: {},
+    );
+    initialState(state);
+    machineState = state;
+  }
 
   @protected
   Future<void> _transitionTo(_MarkerState state) => transitionTo(state);

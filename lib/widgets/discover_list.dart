@@ -5,8 +5,8 @@ import 'package:openup/widgets/button.dart';
 
 class DiscoverList extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
-  final int profileIndex;
-  final void Function(int index) onProfileChanged;
+  final DiscoverProfile? selectedProfile;
+  final ValueChanged<DiscoverProfile?> onProfileChanged;
   final bool play;
   final VoidCallback onPlayPause;
   final VoidCallback onRecord;
@@ -16,8 +16,8 @@ class DiscoverList extends ConsumerStatefulWidget {
   const DiscoverList({
     super.key,
     required this.profiles,
-    required this.profileIndex,
-    required this.onProfileChanged(int index),
+    required this.selectedProfile,
+    required this.onProfileChanged,
     required this.play,
     required this.onPlayPause,
     required this.onRecord,
@@ -38,17 +38,27 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
   void initState() {
     super.initState();
 
+    final initialSelectedProfile = widget.selectedProfile;
+    final initialIndex = initialSelectedProfile == null
+        ? 0
+        : widget.profiles.indexWhere(
+            (p) => p.profile.uid == initialSelectedProfile.profile.uid);
     _pageController = PageController(
-      initialPage: widget.profileIndex,
+      initialPage: initialIndex,
       viewportFraction: 0.9,
     );
+
     _pageController.addListener(() {
       final page = _pageController.page ?? 0;
       _pageListener.value = page;
-      final index = _pageController.page?.round() ?? widget.profileIndex;
-
-      if (index != widget.profileIndex && _reportPageChange) {
-        widget.onProfileChanged(index);
+      final selectedProfile = widget.selectedProfile;
+      final selectedIndex = selectedProfile == null
+          ? 0
+          : widget.profiles
+              .indexWhere((p) => p.profile.uid == selectedProfile.profile.uid);
+      final index = _pageController.page?.round() ?? selectedIndex;
+      if (index != selectedIndex && _reportPageChange) {
+        widget.onProfileChanged(widget.profiles[index]);
       }
     });
   }
@@ -56,12 +66,17 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
   @override
   void didUpdateWidget(covariant DiscoverList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final index = _pageController.page?.round() ?? widget.profileIndex;
-    if (widget.profileIndex != index) {
+    final selectedProfile = widget.selectedProfile;
+    final selectedIndex = selectedProfile == null
+        ? 0
+        : widget.profiles
+            .indexWhere((p) => p.profile.uid == selectedProfile.profile.uid);
+    final index = _pageController.page?.round() ?? selectedIndex;
+    if (index != selectedIndex) {
       setState(() => _reportPageChange = false);
       _pageController
           .animateToPage(
-        widget.profileIndex.toInt(),
+        selectedIndex,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeOutQuart,
       )
