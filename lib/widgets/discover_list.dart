@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/profile_display.dart';
 
 class DiscoverList extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
@@ -115,6 +116,120 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
               onRecord: widget.onRecord,
               onToggleFavorite: widget.onToggleFavorite,
               onProfilePressed: widget.onProfilePressed,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class DiscoverListFull extends ConsumerStatefulWidget {
+  final List<DiscoverProfile> profiles;
+  final DiscoverProfile? selectedProfile;
+  final ValueChanged<DiscoverProfile?> onProfileChanged;
+  final bool play;
+  final VoidCallback onPlayPause;
+  final VoidCallback onRecord;
+  final VoidCallback onBlock;
+
+  const DiscoverListFull({
+    super.key,
+    required this.profiles,
+    required this.selectedProfile,
+    required this.onProfileChanged,
+    required this.play,
+    required this.onPlayPause,
+    required this.onRecord,
+    required this.onBlock,
+  });
+
+  @override
+  ConsumerState<DiscoverListFull> createState() => _DisoverListFullState();
+}
+
+class _DisoverListFullState extends ConsumerState<DiscoverListFull> {
+  final _pageListener = ValueNotifier<double>(0);
+  late final PageController _pageController;
+  bool _reportPageChange = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final initialSelectedProfile = widget.selectedProfile;
+    final initialIndex = initialSelectedProfile == null
+        ? 0
+        : widget.profiles.indexWhere(
+            (p) => p.profile.uid == initialSelectedProfile.profile.uid);
+    _pageController = PageController(initialPage: initialIndex);
+
+    _pageController.addListener(() {
+      final page = _pageController.page ?? 0;
+      _pageListener.value = page;
+      final selectedProfile = widget.selectedProfile;
+      final selectedIndex = selectedProfile == null
+          ? 0
+          : widget.profiles
+              .indexWhere((p) => p.profile.uid == selectedProfile.profile.uid);
+      final index = _pageController.page?.round() ?? selectedIndex;
+      if (index != selectedIndex && _reportPageChange) {
+        widget.onProfileChanged(widget.profiles[index]);
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant DiscoverListFull oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final selectedProfile = widget.selectedProfile;
+    final selectedIndex = selectedProfile == null
+        ? 0
+        : widget.profiles
+            .indexWhere((p) => p.profile.uid == selectedProfile.profile.uid);
+    final index = _pageController.page?.round() ?? selectedIndex;
+    if (index != selectedIndex) {
+      setState(() => _reportPageChange = false);
+      _pageController
+          .animateToPage(
+        selectedIndex,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutQuart,
+      )
+          .then((_) {
+        if (mounted) {
+          setState(() => _reportPageChange = true);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 168,
+      margin:
+          EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 16),
+      child: PageView.builder(
+        controller: _pageController,
+        padEnds: true,
+        itemCount: widget.profiles.length,
+        itemBuilder: (context, index) {
+          final profile = widget.profiles[index];
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ProfileDisplay(
+              profile: profile.profile,
+              play: widget.play,
+              onPlayPause: widget.onPlayPause,
+              onRecord: widget.onRecord,
+              onBlock: widget.onBlock,
             ),
           );
         },

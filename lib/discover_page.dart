@@ -498,19 +498,21 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                 left: 0,
                 right: 0,
                 bottom: ref.watch(_profilePanelHeightProvider),
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutQuart,
-                  opacity: (_fetchingProfiles ||
-                          _markerRenderStatus == MarkerRenderStatus.rendering)
-                      ? 1
-                      : 0,
-                  child: Lottie.asset(
-                    'assets/images/map_searching.json',
-                    width: 100,
-                    height: 48,
-                    animate: _fetchingProfiles ||
-                        _markerRenderStatus == MarkerRenderStatus.rendering,
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutQuart,
+                    opacity: (_fetchingProfiles ||
+                            _markerRenderStatus == MarkerRenderStatus.rendering)
+                        ? 1
+                        : 0,
+                    child: Lottie.asset(
+                      'assets/images/map_searching.json',
+                      width: 100,
+                      height: 48,
+                      animate: _fetchingProfiles ||
+                          _markerRenderStatus == MarkerRenderStatus.rendering,
+                    ),
                   ),
                 ),
               ),
@@ -708,6 +710,17 @@ class _ProfilePanelState extends State<_ProfilePanel> {
   }
 
   @override
+  void didUpdateWidget(covariant _ProfilePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedProfile == null && widget.selectedProfile != null) {
+      _animateTo(_mediumRatio);
+    } else if (oldWidget.selectedProfile != null &&
+        widget.selectedProfile == null) {
+      _animateTo(_smallRatio);
+    }
+  }
+
+  @override
   void dispose() {
     _draggableController.dispose();
     super.dispose();
@@ -716,6 +729,9 @@ class _ProfilePanelState extends State<_ProfilePanel> {
   void _draggableScrollableUpdated() {
     if (_draggableController.pixels.isFinite) {
       widget.onHeightUpdated?.call(_draggableController.pixels);
+      if (_draggableController.pixels <= _smallSize) {
+        widget.onProfileChanged(null);
+      }
     } else {
       widget.onHeightUpdated?.call(_smallSize);
     }
@@ -759,40 +775,49 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Button(
-                    onPressed: () async {
-                      final prevGender = widget.gender;
-                      final gender = await _showPreferencesSheet();
-                      if (mounted && gender != prevGender) {
-                        widget.onGenderChanged(gender);
-                      }
-                    },
-                    child: Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: const BoxDecoration(
-                        color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(24),
+                AnimatedBuilder(
+                  animation: _draggableController,
+                  builder: (context, child) {
+                    if (_draggableController.pixels <= (_mediumSize + 5)) {
+                      return child!;
+                    }
+                    return const SizedBox.shrink();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Button(
+                      onPressed: () async {
+                        final prevGender = widget.gender;
+                        final gender = await _showPreferencesSheet();
+                        if (mounted && gender != prevGender) {
+                          widget.onGenderChanged(gender);
+                        }
+                      },
+                      child: Container(
+                        height: 36,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: const BoxDecoration(
+                          color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(24),
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(
-                            Icons.search,
-                            size: 20,
-                          ),
-                          Expanded(
-                            child: Text(
-                              'Who are you searching for?',
-                              textAlign: TextAlign.center,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(
+                              Icons.search,
+                              size: 20,
                             ),
-                          ),
-                        ],
+                            Expanded(
+                              child: Text(
+                                'Who are you searching for?',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -808,31 +833,66 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                     if (selectedProfile == null) {
                       return const SizedBox.shrink();
                     }
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 19),
-                      child: DiscoverList(
-                        profiles: widget.profiles,
-                        selectedProfile: selectedProfile,
-                        onProfileChanged: (profile) {
-                          // final scrollingForward = index > _profileIndex;
-                          // if (scrollingForward) {
-                          //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-                          // }
-                          widget.onProfileChanged(profile);
-                        },
-                        play: play,
-                        onPlayPause: () {
-                          if (!play) {
-                            widget.profileBuilderKey.currentState?.play();
-                          } else {
-                            widget.profileBuilderKey.currentState?.pause();
-                          }
-                        },
-                        onToggleFavorite: widget.onToggleFavorite,
-                        onRecord: () =>
-                            widget.onRecordInvite(selectedProfile.profile),
-                        onProfilePressed: () => _animateTo(1.0),
-                      ),
+
+                    return Stack(
+                      children: [
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity:
+                              _draggableController.pixels <= (_mediumSize + 5)
+                                  ? 1
+                                  : 0,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 19.0),
+                            child: DiscoverList(
+                              profiles: widget.profiles,
+                              selectedProfile: selectedProfile,
+                              onProfileChanged: (profile) {
+                                // final scrollingForward = index > _profileIndex;
+                                // if (scrollingForward) {
+                                //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+                                // }
+                                widget.onProfileChanged(profile);
+                              },
+                              play: play,
+                              onPlayPause: () => _onPlayPause(play),
+                              onToggleFavorite: widget.onToggleFavorite,
+                              onRecord: () => widget
+                                  .onRecordInvite(selectedProfile.profile),
+                              onProfilePressed: () => _animateTo(1.0),
+                            ),
+                          ),
+                        ),
+                        IgnorePointer(
+                          ignoring:
+                              _draggableController.pixels <= (_mediumSize + 5),
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 200),
+                            opacity:
+                                _draggableController.pixels <= (_mediumSize + 5)
+                                    ? 0
+                                    : 1,
+                            child: SizedBox(
+                              height: widget.height - 36,
+                              child: DiscoverListFull(
+                                profiles: widget.profiles,
+                                selectedProfile: selectedProfile,
+                                onProfileChanged: (profile) {
+                                  widget.onProfileChanged(profile);
+                                },
+                                play: play,
+                                onPlayPause: () => _onPlayPause(play),
+                                onRecord: () => widget
+                                    .onRecordInvite(selectedProfile.profile),
+                                onBlock: () {
+                                  widget.onBlockUser(selectedProfile.profile);
+                                  widget.onProfileChanged(null);
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -846,6 +906,14 @@ class _ProfilePanelState extends State<_ProfilePanel> {
         );
       },
     );
+  }
+
+  void _onPlayPause(bool playing) {
+    if (!playing) {
+      widget.profileBuilderKey.currentState?.play();
+    } else {
+      widget.profileBuilderKey.currentState?.pause();
+    }
   }
 
   void _animateTo(double ratio) {
@@ -939,50 +1007,6 @@ class _ProfilePanelState extends State<_ProfilePanel> {
       }
     }
     return gender;
-  }
-
-  void _showFullProfile({
-    required BuildContext context,
-    required Profile profile,
-    required bool play,
-  }) {
-    showBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          margin: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16 + MediaQuery.of(context).padding.top,
-          ),
-          clipBehavior: Clip.hardEdge,
-          decoration: const BoxDecoration(
-            color: Color.fromRGBO(0x10, 0x12, 0x12, 0.9),
-            borderRadius: BorderRadius.all(Radius.circular(64)),
-          ),
-          child: ProfileDisplay(
-            profile: profile,
-            play: play,
-            onPlayPause: () {
-              if (!play) {
-                widget.profileBuilderKey.currentState?.play();
-              } else {
-                widget.profileBuilderKey.currentState?.pause();
-              }
-            },
-            onRecord: () {
-              widget.onRecordInvite(profile);
-            },
-            onBlock: () {
-              widget.onBlockUser(profile);
-              Navigator.of(context).pop();
-            },
-          ),
-        );
-      },
-    );
   }
 }
 
