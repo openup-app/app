@@ -25,6 +25,10 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+final _profilePanelHeightProvider =
+    StateNotifierProvider<_ProfilePanelHeightNotifier, double>(
+        (ref) => _ProfilePanelHeightNotifier());
+
 class DiscoverPage extends ConsumerStatefulWidget {
   final VoidCallback onShowConversations;
   final VoidCallback onShowSettings;
@@ -295,125 +299,131 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
 
           final profiles = List.of(_profiles);
           final selectedProfile = _selectedProfile;
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              return Stack(
-                fit: StackFit.expand,
-                children: [
-                  Stack(
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              DiscoverMap(
+                key: _mapKey,
+                profiles: _profiles,
+                selectedProfile: _selectedProfile,
+                onProfileChanged: _onProfileChanged,
+                initialLocation: initialLocation,
+                onLocationChanged: _maybeRefetchProfiles,
+                showRecordPanel: () {
+                  final selectedProfile = _selectedProfile;
+                  if (selectedProfile != null) {
+                    _showRecordPanelOrSignIn(
+                        context, selectedProfile.profile.uid);
+                  }
+                },
+                onMarkerRenderStatus: (status) {
+                  setState(() => _markerRenderStatus = status);
+                },
+              ),
+              if (_queryLocation != null)
+                Positioned(
+                  left: 16,
+                  top: MediaQuery.of(context).padding.top + 16,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildMapView(
-                        initialLocation: initialLocation,
-                        onLocationChanged: _maybeRefetchProfiles,
+                      Button(
+                        onPressed: () {
+                          setState(() => _showDebugUsers = !_showDebugUsers);
+                          _queryProfilesAt(_queryLocation!);
+                        },
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(24),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Switch(
+                                value: _showDebugUsers,
+                                onChanged: (show) {
+                                  setState(() => _showDebugUsers = show);
+                                  _queryProfilesAt(_queryLocation!);
+                                },
+                              ),
+                              const Text('Fake users'),
+                              const SizedBox(width: 12),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  if (_queryLocation != null)
-                    Positioned(
-                      left: 16,
-                      top: MediaQuery.of(context).padding.top + 16,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 16,
+                right: 16,
+                width: 48,
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final myProfile = ref.watch(userProvider2.select(
+                      (p) => p.map(
+                          guest: (_) => null,
+                          signedIn: (signedIn) => signedIn.profile),
+                    ));
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (myProfile != null) ...[
                           Button(
-                            onPressed: () {
-                              setState(
-                                  () => _showDebugUsers = !_showDebugUsers);
-                              _queryProfilesAt(_queryLocation!);
-                            },
+                            onPressed: widget.onShowSettings,
                             child: Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(24),
+                              clipBehavior: Clip.hardEdge,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  width: 2,
+                                  color: Colors.white,
                                 ),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Switch(
-                                    value: _showDebugUsers,
-                                    onChanged: (show) {
-                                      setState(() => _showDebugUsers = show);
-                                      _queryProfilesAt(_queryLocation!);
-                                    },
-                                  ),
-                                  const Text('Fake users'),
-                                  const SizedBox(width: 12),
-                                ],
+                              child: Image.network(
+                                myProfile.photo,
+                                fit: BoxFit.cover,
                               ),
                             ),
                           ),
+                          const SizedBox(height: 20),
+                          _MapButton(
+                            onPressed: () {},
+                            child: const Icon(
+                              Icons.location_on,
+                              color: Color.fromRGBO(0x24, 0xFF, 0x00, 1.0),
+                            ),
+                          ),
                         ],
-                      ),
-                    ),
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 16,
-                    right: 16,
-                    width: 48,
-                    child: Consumer(
-                      builder: (context, ref, child) {
-                        final myProfile = ref.watch(userProvider2.select(
-                          (p) => p.map(
-                              guest: (_) => null,
-                              signedIn: (signedIn) => signedIn.profile),
-                        ));
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            if (myProfile != null) ...[
-                              Button(
-                                onPressed: widget.onShowSettings,
-                                child: Container(
-                                  clipBehavior: Clip.hardEdge,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      width: 2,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  child: Image.network(
-                                    myProfile.photo,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              _MapButton(
-                                onPressed: () {},
-                                child: const Icon(
-                                  Icons.location_on,
-                                  color: Color.fromRGBO(0x24, 0xFF, 0x00, 1.0),
-                                ),
-                              ),
-                            ],
-                            Consumer(builder: (context, ref, child) {
-                              final latLong =
-                                  ref.watch(locationProvider)?.latLong;
-                              return _MapButton(
-                                onPressed: latLong == null
-                                    ? null
-                                    : () => _mapKey.currentState
-                                        ?.recenterMap(latLong),
-                                child: const Icon(
-                                  CupertinoIcons.location_fill,
-                                  color: Color.fromRGBO(0x22, 0x53, 0xFF, 1.0),
-                                ),
-                              );
-                            }),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: _BottomSheet(
-                      animationController: _bottomSheetController,
+                        Consumer(builder: (context, ref, child) {
+                          final latLong = ref.watch(locationProvider)?.latLong;
+                          return _MapButton(
+                            onPressed: latLong == null
+                                ? null
+                                : () =>
+                                    _mapKey.currentState?.recenterMap(latLong),
+                            child: const Icon(
+                              CupertinoIcons.location_fill,
+                              color: Color.fromRGBO(0x22, 0x53, 0xFF, 1.0),
+                            ),
+                          );
+                        }),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              Positioned.fill(
+                top: MediaQuery.of(context).padding.top + 16,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return _ProfilePanel(
+                      height: constraints.maxHeight,
                       gender: _gender,
                       onGenderChanged: (gender) {
                         setState(() {
@@ -448,60 +458,66 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         setState(() => _profiles.removeWhere(
                             ((p) => p.profile.uid == profile.uid)));
                       },
-                      onShowConversations: widget.onShowConversations,
+                      onHeightUpdated: (height) {
+                        ref
+                            .read(_profilePanelHeightProvider.notifier)
+                            .update(height);
+                      },
                       pageActive: _pageActive,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: MediaQuery.of(context).padding.bottom + 72,
-                    left: 0,
-                    right: 0,
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 150),
-                      curve: Curves.easeOutQuart,
-                      opacity: (_fetchingProfiles ||
-                              _markerRenderStatus ==
-                                  MarkerRenderStatus.rendering)
-                          ? 1
-                          : 0,
-                      child: Lottie.asset(
-                        'assets/images/map_searching.json',
-                        width: 100,
-                        height: 48,
-                        animate: _fetchingProfiles ||
-                            _markerRenderStatus == MarkerRenderStatus.rendering,
+                    );
+                  },
+                ),
+              ),
+              Positioned(
+                right: 16,
+                bottom: ref.watch(_profilePanelHeightProvider),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _MapButton(
+                      onPressed: () {},
+                      child: const Icon(
+                        Icons.circle,
+                        size: 16,
+                        color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    _MapButton(
+                      onPressed: widget.onShowConversations,
+                      child: const Icon(
+                        Icons.email,
+                        color: Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: ref.watch(_profilePanelHeightProvider),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutQuart,
+                  opacity: (_fetchingProfiles ||
+                          _markerRenderStatus == MarkerRenderStatus.rendering)
+                      ? 1
+                      : 0,
+                  child: Lottie.asset(
+                    'assets/images/map_searching.json',
+                    width: 100,
+                    height: 48,
+                    animate: _fetchingProfiles ||
+                        _markerRenderStatus == MarkerRenderStatus.rendering,
                   ),
-                ],
-              );
-            },
+                ),
+              ),
+            ],
           );
         },
       ),
-    );
-  }
-
-  Widget _buildMapView({
-    required Location initialLocation,
-    required ValueChanged<Location> onLocationChanged,
-  }) {
-    return DiscoverMap(
-      key: _mapKey,
-      profiles: _profiles,
-      selectedProfile: _selectedProfile,
-      onProfileChanged: _onProfileChanged,
-      initialLocation: initialLocation,
-      onLocationChanged: onLocationChanged,
-      showRecordPanel: () {
-        final selectedProfile = _selectedProfile;
-        if (selectedProfile != null) {
-          _showRecordPanelOrSignIn(context, selectedProfile.profile.uid);
-        }
-      },
-      onMarkerRenderStatus: (status) {
-        setState(() => _markerRenderStatus = status);
-      },
     );
   }
 
@@ -628,8 +644,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 }
 
-class _BottomSheet extends StatefulWidget {
-  final AnimationController animationController;
+class _ProfilePanelHeightNotifier extends StateNotifier<double> {
+  _ProfilePanelHeightNotifier() : super(100);
+  void update(double height) => state = height;
+}
+
+class _ProfilePanel extends StatefulWidget {
+  final double height;
   final Gender? gender;
   final ValueChanged<Gender?> onGenderChanged;
   final List<DiscoverProfile> profiles;
@@ -639,12 +660,12 @@ class _BottomSheet extends StatefulWidget {
   final void Function(Profile profile) onRecordInvite;
   final VoidCallback onToggleFavorite;
   final void Function(Profile profile) onBlockUser;
-  final VoidCallback onShowConversations;
+  final ValueChanged<double>? onHeightUpdated;
   final bool pageActive;
 
-  const _BottomSheet({
+  const _ProfilePanel({
     super.key,
-    required this.animationController,
+    required this.height,
     required this.gender,
     required this.onGenderChanged,
     required this.profiles,
@@ -654,162 +675,184 @@ class _BottomSheet extends StatefulWidget {
     required this.onRecordInvite,
     required this.onToggleFavorite,
     required this.onBlockUser,
-    required this.onShowConversations,
+    this.onHeightUpdated,
     required this.pageActive,
   });
 
   @override
-  State<_BottomSheet> createState() => _BottomSheetState();
+  State<_ProfilePanel> createState() => _ProfilePanelState();
 }
 
-class _BottomSheetState extends State<_BottomSheet> {
+class _ProfilePanelState extends State<_ProfilePanel> {
+  final _draggableController = DraggableScrollableController();
+  double _smallSize = 0;
+  double _mediumSize = 0;
+  double _smallRatio = 0;
+  double _mediumRatio = 0;
+  var _snapSizes = <double>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _draggableController.addListener(_draggableScrollableUpdated);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _smallSize = 98 + MediaQuery.of(context).padding.bottom;
+    _mediumSize = 268 + MediaQuery.of(context).padding.bottom;
+    _smallRatio = _smallSize / widget.height;
+    _mediumRatio = _mediumSize / widget.height;
+    _snapSizes = [_mediumRatio];
+  }
+
+  @override
+  void dispose() {
+    _draggableController.dispose();
+    super.dispose();
+  }
+
+  void _draggableScrollableUpdated() {
+    if (_draggableController.pixels.isFinite) {
+      widget.onHeightUpdated?.call(_draggableController.pixels);
+    } else {
+      widget.onHeightUpdated?.call(_smallSize);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BottomSheet(
-      animationController: widget.animationController,
-      backgroundColor: Colors.transparent,
-      onClosing: () {},
-      builder: (context) {
-        return Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                _MapButton(
-                  onPressed: () {},
-                  child: const Icon(
-                    Icons.circle,
-                    size: 16,
-                    color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _MapButton(
-                  onPressed: widget.onShowConversations,
-                  child: const Icon(
-                    Icons.email,
-                    color: Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
+    return DraggableScrollableSheet(
+      initialChildSize: _smallRatio,
+      minChildSize: _smallRatio,
+      maxChildSize: 1.0,
+      expand: true,
+      snap: true,
+      snapSizes: _snapSizes,
+      controller: _draggableController,
+      builder: (context, controller) {
+        return Container(
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
             ),
-            Container(
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+            color: Color.fromRGBO(0x10, 0x12, 0x12, 0.9),
+          ),
+          child: SingleChildScrollView(
+            controller: controller,
+            physics: const NeverScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: 46,
+                    height: 5,
+                    margin: const EdgeInsets.only(top: 8, bottom: 11),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(4),
+                      ),
+                      color: Color.fromRGBO(0x6F, 0x72, 0x73, 1.0),
+                    ),
+                  ),
                 ),
-                color: Color.fromRGBO(0x10, 0x12, 0x12, 0.9),
-              ),
-              child: Builder(
-                builder: (context) {
-                  return Column(
-                    children: [
-                      Align(
-                        alignment: Alignment.center,
-                        child: Container(
-                          width: 46,
-                          height: 5,
-                          margin: const EdgeInsets.only(top: 8, bottom: 11),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Button(
+                    onPressed: () async {
+                      final prevGender = widget.gender;
+                      final gender = await _showPreferencesSheet();
+                      if (mounted && gender != prevGender) {
+                        widget.onGenderChanged(gender);
+                      }
+                    },
+                    child: Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: const BoxDecoration(
+                        color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(24),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Button(
-                          onPressed: () async {
-                            final prevGender = widget.gender;
-                            final gender = await _showPreferencesSheet();
-                            if (mounted && gender != prevGender) {
-                              widget.onGenderChanged(gender);
-                            }
-                          },
-                          child: Container(
-                            height: 36,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            margin: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: const BoxDecoration(
-                              color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(24),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(
-                                  Icons.search,
-                                  size: 20,
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    'Who are you searching for?',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(
+                            Icons.search,
+                            size: 20,
+                          ),
+                          Expanded(
+                            child: Text(
+                              'Who are you searching for?',
+                              textAlign: TextAlign.center,
                             ),
                           ),
-                        ),
+                        ],
                       ),
+                    ),
+                  ),
+                ),
 
-                      // Must live above PageView.builder (otherwise duplicate global key)
-                      ProfileBuilder(
-                        key: widget.profileBuilderKey,
-                        profile: widget.selectedProfile?.profile,
-                        play: widget.pageActive,
-                        builder: (context, play, playbackInfoStream) {
-                          final selectedProfile = widget.selectedProfile;
-                          if (selectedProfile == null) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 19),
-                            child: DiscoverList(
-                              profiles: widget.profiles,
-                              selectedProfile: selectedProfile,
-                              onProfileChanged: (profile) {
-                                // final scrollingForward = index > _profileIndex;
-                                // if (scrollingForward) {
-                                //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-                                // }
-                                widget.onProfileChanged(profile);
-                              },
-                              play: play,
-                              onPlayPause: () {
-                                if (!play) {
-                                  widget.profileBuilderKey.currentState?.play();
-                                } else {
-                                  widget.profileBuilderKey.currentState
-                                      ?.pause();
-                                }
-                              },
-                              onToggleFavorite: widget.onToggleFavorite,
-                              onRecord: () => widget
-                                  .onRecordInvite(selectedProfile.profile),
-                              onProfilePressed: () {
-                                _showFullProfile(
-                                  context: context,
-                                  profile: selectedProfile.profile,
-                                  play: play,
-                                );
-                              },
-                            ),
-                          );
+                // Must live above PageView.builder (otherwise duplicate global key)
+                ProfileBuilder(
+                  key: widget.profileBuilderKey,
+                  profile: widget.selectedProfile?.profile,
+                  play: widget.pageActive,
+                  builder: (context, play, playbackInfoStream) {
+                    final selectedProfile = widget.selectedProfile;
+                    if (selectedProfile == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 19),
+                      child: DiscoverList(
+                        profiles: widget.profiles,
+                        selectedProfile: selectedProfile,
+                        onProfileChanged: (profile) {
+                          // final scrollingForward = index > _profileIndex;
+                          // if (scrollingForward) {
+                          //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+                          // }
+                          widget.onProfileChanged(profile);
                         },
+                        play: play,
+                        onPlayPause: () {
+                          if (!play) {
+                            widget.profileBuilderKey.currentState?.play();
+                          } else {
+                            widget.profileBuilderKey.currentState?.pause();
+                          }
+                        },
+                        onToggleFavorite: widget.onToggleFavorite,
+                        onRecord: () =>
+                            widget.onRecordInvite(selectedProfile.profile),
+                        onProfilePressed: () => _animateTo(1.0),
                       ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: MediaQuery.of(context).padding.bottom,
-                      ),
-                    ],
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: MediaQuery.of(context).padding.bottom,
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
+    );
+  }
+
+  void _animateTo(double ratio) {
+    _draggableController.animateTo(
+      ratio,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutQuart,
     );
   }
 
