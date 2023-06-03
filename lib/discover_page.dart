@@ -9,6 +9,7 @@ import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -276,249 +277,253 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
 
   @override
   Widget build(BuildContext context) {
-    return ActivePage(
-      onActivate: () {
-        setState(() => _pageActive = true);
-        final queryLocation = _queryLocation;
-        if (queryLocation != null) {
-          _queryProfilesAt(queryLocation);
-        }
-      },
-      onDeactivate: () {
-        _profileBuilderKey.currentState?.pause();
-        setState(() => _pageActive = false);
-      },
-      child: Builder(
-        builder: (context) {
-          final initialLocation = _initialLocation;
-          if (initialLocation == null) {
-            return const Center(
-              child: LoadingIndicator(),
-            );
+    return CupertinoScaffold(
+      body: ActivePage(
+        onActivate: () {
+          setState(() => _pageActive = true);
+          final queryLocation = _queryLocation;
+          if (queryLocation != null) {
+            _queryProfilesAt(queryLocation);
           }
+        },
+        onDeactivate: () {
+          _profileBuilderKey.currentState?.pause();
+          setState(() => _pageActive = false);
+        },
+        child: Builder(
+          builder: (context) {
+            final initialLocation = _initialLocation;
+            if (initialLocation == null) {
+              return const Center(
+                child: LoadingIndicator(),
+              );
+            }
 
-          final profiles = List.of(_profiles);
-          final selectedProfile = _selectedProfile;
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              DiscoverMap(
-                key: _mapKey,
-                profiles: _profiles,
-                selectedProfile: _selectedProfile,
-                onProfileChanged: _onProfileChanged,
-                initialLocation: initialLocation,
-                onLocationChanged: _maybeRefetchProfiles,
-                showRecordPanel: () {
-                  final selectedProfile = _selectedProfile;
-                  if (selectedProfile != null) {
-                    _showRecordPanelOrSignIn(
-                        context, selectedProfile.profile.uid);
-                  }
-                },
-                onMarkerRenderStatus: (status) {
-                  setState(() => _markerRenderStatus = status);
-                },
-              ),
-              if (_queryLocation != null)
-                Positioned(
-                  left: 16,
-                  top: MediaQuery.of(context).padding.top + 16,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Button(
-                        onPressed: () {
-                          setState(() => _showDebugUsers = !_showDebugUsers);
-                          _queryProfilesAt(_queryLocation!);
-                        },
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(24),
+            final profiles = List.of(_profiles);
+            final selectedProfile = _selectedProfile;
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                DiscoverMap(
+                  key: _mapKey,
+                  profiles: _profiles,
+                  selectedProfile: _selectedProfile,
+                  onProfileChanged: _onProfileChanged,
+                  initialLocation: initialLocation,
+                  onLocationChanged: _maybeRefetchProfiles,
+                  showRecordPanel: () {
+                    final selectedProfile = _selectedProfile;
+                    if (selectedProfile != null) {
+                      _showRecordPanelOrSignIn(
+                          context, selectedProfile.profile.uid);
+                    }
+                  },
+                  onMarkerRenderStatus: (status) {
+                    setState(() => _markerRenderStatus = status);
+                  },
+                ),
+                if (_queryLocation != null)
+                  Positioned(
+                    left: 16,
+                    top: MediaQuery.of(context).padding.top + 16,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Button(
+                          onPressed: () {
+                            setState(() => _showDebugUsers = !_showDebugUsers);
+                            _queryProfilesAt(_queryLocation!);
+                          },
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(24),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Switch(
+                                  value: _showDebugUsers,
+                                  onChanged: (show) {
+                                    setState(() => _showDebugUsers = show);
+                                    _queryProfilesAt(_queryLocation!);
+                                  },
+                                ),
+                                const Text('Fake users'),
+                                const SizedBox(width: 12),
+                              ],
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Switch(
-                                value: _showDebugUsers,
-                                onChanged: (show) {
-                                  setState(() => _showDebugUsers = show);
-                                  _queryProfilesAt(_queryLocation!);
-                                },
+                        ),
+                      ],
+                    ),
+                  ),
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  right: 16,
+                  width: 48,
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final myProfile = ref.watch(userProvider2.select(
+                        (p) => p.map(
+                            guest: (_) => null,
+                            signedIn: (signedIn) => signedIn.profile),
+                      ));
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (myProfile != null) ...[
+                            Button(
+                              onPressed: widget.onShowSettings,
+                              child: Container(
+                                clipBehavior: Clip.hardEdge,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    width: 2,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                child: Image.network(
+                                  myProfile.photo,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
-                              const Text('Fake users'),
-                              const SizedBox(width: 12),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 20),
+                            _MapButton(
+                              onPressed: () {},
+                              child: const Icon(
+                                Icons.location_on,
+                                color: Color.fromRGBO(0x24, 0xFF, 0x00, 1.0),
+                              ),
+                            ),
+                          ],
+                          Consumer(builder: (context, ref, child) {
+                            final latLong =
+                                ref.watch(locationProvider)?.latLong;
+                            return _MapButton(
+                              onPressed: latLong == null
+                                  ? null
+                                  : () => _mapKey.currentState
+                                      ?.recenterMap(latLong),
+                              child: const Icon(
+                                CupertinoIcons.location_fill,
+                                color: Color.fromRGBO(0x22, 0x53, 0xFF, 1.0),
+                              ),
+                            );
+                          }),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                Positioned.fill(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return _ProfilePanel(
+                        height: constraints.maxHeight,
+                        gender: _gender,
+                        onGenderChanged: (gender) {
+                          setState(() {
+                            _gender = gender;
+                            _selectedProfile = null;
+                            _profiles.clear();
+                          });
+                          _mapKey.currentState?.resetMarkers();
+                          final queryLocation = _queryLocation;
+                          if (queryLocation != null) {
+                            _queryProfilesAt(queryLocation);
+                          }
+                        },
+                        profiles: profiles,
+                        selectedProfile: selectedProfile,
+                        onProfileChanged: (profile) {
+                          setState(() {
+                            _ignoreNextLocationChange = true;
+                            _selectedProfile = profile;
+                          });
+                        },
+                        profileBuilderKey: _profileBuilderKey,
+                        onRecordInvite: (profile) {
+                          _showRecordPanelOrSignIn(context, profile.uid);
+                        },
+                        onToggleFavorite: () {
+                          if (selectedProfile != null) {
+                            _toggleFavorite(selectedProfile);
+                          }
+                        },
+                        onBlockUser: (profile) {
+                          setState(() => _profiles.removeWhere(
+                              ((p) => p.profile.uid == profile.uid)));
+                        },
+                        onHeightUpdated: (height) {
+                          ref
+                              .read(_profilePanelHeightProvider.notifier)
+                              .update(height);
+                        },
+                        pageActive: _pageActive,
+                      );
+                    },
+                  ),
+                ),
+                Positioned(
+                  right: 16,
+                  bottom: ref.watch(_profilePanelHeightProvider),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _MapButton(
+                        onPressed: () {},
+                        child: const Icon(
+                          Icons.circle,
+                          size: 16,
+                          color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      _MapButton(
+                        onPressed: widget.onShowConversations,
+                        child: const Icon(
+                          Icons.email,
+                          color: Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
                     ],
                   ),
                 ),
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 16,
-                right: 16,
-                width: 48,
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final myProfile = ref.watch(userProvider2.select(
-                      (p) => p.map(
-                          guest: (_) => null,
-                          signedIn: (signedIn) => signedIn.profile),
-                    ));
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        if (myProfile != null) ...[
-                          Button(
-                            onPressed: widget.onShowSettings,
-                            child: Container(
-                              clipBehavior: Clip.hardEdge,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  width: 2,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              child: Image.network(
-                                myProfile.photo,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          _MapButton(
-                            onPressed: () {},
-                            child: const Icon(
-                              Icons.location_on,
-                              color: Color.fromRGBO(0x24, 0xFF, 0x00, 1.0),
-                            ),
-                          ),
-                        ],
-                        Consumer(builder: (context, ref, child) {
-                          final latLong = ref.watch(locationProvider)?.latLong;
-                          return _MapButton(
-                            onPressed: latLong == null
-                                ? null
-                                : () =>
-                                    _mapKey.currentState?.recenterMap(latLong),
-                            child: const Icon(
-                              CupertinoIcons.location_fill,
-                              color: Color.fromRGBO(0x22, 0x53, 0xFF, 1.0),
-                            ),
-                          );
-                        }),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              Positioned.fill(
-                top: MediaQuery.of(context).padding.top + 16,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return _ProfilePanel(
-                      height: constraints.maxHeight,
-                      gender: _gender,
-                      onGenderChanged: (gender) {
-                        setState(() {
-                          _gender = gender;
-                          _selectedProfile = null;
-                          _profiles.clear();
-                        });
-                        _mapKey.currentState?.resetMarkers();
-                        final queryLocation = _queryLocation;
-                        if (queryLocation != null) {
-                          _queryProfilesAt(queryLocation);
-                        }
-                      },
-                      profiles: profiles,
-                      selectedProfile: selectedProfile,
-                      onProfileChanged: (profile) {
-                        setState(() {
-                          _ignoreNextLocationChange = true;
-                          _selectedProfile = profile;
-                        });
-                      },
-                      profileBuilderKey: _profileBuilderKey,
-                      onRecordInvite: (profile) {
-                        _showRecordPanelOrSignIn(context, profile.uid);
-                      },
-                      onToggleFavorite: () {
-                        if (selectedProfile != null) {
-                          _toggleFavorite(selectedProfile);
-                        }
-                      },
-                      onBlockUser: (profile) {
-                        setState(() => _profiles.removeWhere(
-                            ((p) => p.profile.uid == profile.uid)));
-                      },
-                      onHeightUpdated: (height) {
-                        ref
-                            .read(_profilePanelHeightProvider.notifier)
-                            .update(height);
-                      },
-                      pageActive: _pageActive,
-                    );
-                  },
-                ),
-              ),
-              Positioned(
-                right: 16,
-                bottom: ref.watch(_profilePanelHeightProvider),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    _MapButton(
-                      onPressed: () {},
-                      child: const Icon(
-                        Icons.circle,
-                        size: 16,
-                        color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: ref.watch(_profilePanelHeightProvider),
+                  child: IgnorePointer(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutQuart,
+                      opacity: (_fetchingProfiles ||
+                              _markerRenderStatus ==
+                                  MarkerRenderStatus.rendering)
+                          ? 1
+                          : 0,
+                      child: Lottie.asset(
+                        'assets/images/map_searching.json',
+                        width: 100,
+                        height: 48,
+                        animate: _fetchingProfiles ||
+                            _markerRenderStatus == MarkerRenderStatus.rendering,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    _MapButton(
-                      onPressed: widget.onShowConversations,
-                      child: const Icon(
-                        Icons.email,
-                        color: Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: ref.watch(_profilePanelHeightProvider),
-                child: IgnorePointer(
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutQuart,
-                    opacity: (_fetchingProfiles ||
-                            _markerRenderStatus == MarkerRenderStatus.rendering)
-                        ? 1
-                        : 0,
-                    child: Lottie.asset(
-                      'assets/images/map_searching.json',
-                      width: 100,
-                      height: 48,
-                      animate: _fetchingProfiles ||
-                          _markerRenderStatus == MarkerRenderStatus.rendering,
                     ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -729,7 +734,7 @@ class _ProfilePanelState extends State<_ProfilePanel> {
   void _draggableScrollableUpdated() {
     if (_draggableController.pixels.isFinite) {
       widget.onHeightUpdated?.call(_draggableController.pixels);
-      if (_draggableController.pixels <= _smallSize) {
+      if (_draggableController.pixels <= _smallSize + 2) {
         widget.onProfileChanged(null);
       }
     } else {
@@ -742,10 +747,9 @@ class _ProfilePanelState extends State<_ProfilePanel> {
     return DraggableScrollableSheet(
       initialChildSize: _smallRatio,
       minChildSize: _smallRatio,
-      maxChildSize: 1.0,
+      maxChildSize: _mediumRatio,
       expand: true,
       snap: true,
-      snapSizes: _snapSizes,
       controller: _draggableController,
       builder: (context, controller) {
         return Container(
@@ -834,65 +838,57 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                       return const SizedBox.shrink();
                     }
 
-                    return Stack(
-                      children: [
-                        AnimatedOpacity(
-                          duration: const Duration(milliseconds: 200),
-                          opacity:
-                              _draggableController.pixels <= (_mediumSize + 5)
-                                  ? 1
-                                  : 0,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 19.0),
-                            child: DiscoverList(
-                              profiles: widget.profiles,
-                              selectedProfile: selectedProfile,
-                              onProfileChanged: (profile) {
-                                // final scrollingForward = index > _profileIndex;
-                                // if (scrollingForward) {
-                                //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-                                // }
-                                widget.onProfileChanged(profile);
-                              },
-                              play: play,
-                              onPlayPause: () => _onPlayPause(play),
-                              onToggleFavorite: widget.onToggleFavorite,
-                              onRecord: () => widget
-                                  .onRecordInvite(selectedProfile.profile),
-                              onProfilePressed: () => _animateTo(1.0),
-                            ),
-                          ),
-                        ),
-                        IgnorePointer(
-                          ignoring:
-                              _draggableController.pixels <= (_mediumSize + 5),
-                          child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 200),
-                            opacity:
-                                _draggableController.pixels <= (_mediumSize + 5)
-                                    ? 0
-                                    : 1,
-                            child: SizedBox(
-                              height: widget.height - 36,
-                              child: DiscoverListFull(
-                                profiles: widget.profiles,
-                                selectedProfile: selectedProfile,
-                                onProfileChanged: (profile) {
-                                  widget.onProfileChanged(profile);
-                                },
-                                play: play,
-                                onPlayPause: () => _onPlayPause(play),
-                                onRecord: () => widget
-                                    .onRecordInvite(selectedProfile.profile),
-                                onBlock: () {
-                                  widget.onBlockUser(selectedProfile.profile);
-                                  widget.onProfileChanged(null);
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 19.0),
+                      child: DiscoverList(
+                        profiles: widget.profiles,
+                        selectedProfile: selectedProfile,
+                        onProfileChanged: (profile) {
+                          // final scrollingForward = index > _profileIndex;
+                          // if (scrollingForward) {
+                          //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+                          // }
+                          widget.onProfileChanged(profile);
+                        },
+                        play: play,
+                        onPlayPause: () => _onPlayPause(play),
+                        onToggleFavorite: widget.onToggleFavorite,
+                        onRecord: () =>
+                            widget.onRecordInvite(selectedProfile.profile),
+                        onProfilePressed: () {
+                          CupertinoScaffold.showCupertinoModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) {
+                              return Container(
+                                clipBehavior: Clip.hardEdge,
+                                decoration: const BoxDecoration(
+                                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.7),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(56),
+                                    topRight: Radius.circular(56),
+                                  ),
+                                ),
+                                child: DiscoverListFull(
+                                  profiles: widget.profiles,
+                                  selectedProfile: selectedProfile,
+                                  onProfileChanged: (profile) {
+                                    widget.onProfileChanged(profile);
+                                  },
+                                  play: play,
+                                  onPlayPause: () => _onPlayPause(play),
+                                  onRecord: () => widget
+                                      .onRecordInvite(selectedProfile.profile),
+                                  onBlock: () {
+                                    widget.onBlockUser(selectedProfile.profile);
+                                    widget.onProfileChanged(null);
+                                  },
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
                     );
                   },
                 ),

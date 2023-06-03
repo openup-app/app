@@ -212,28 +212,23 @@ class _DisoverListFullState extends ConsumerState<DiscoverListFull> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 168,
-      margin:
-          EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 16),
-      child: PageView.builder(
-        controller: _pageController,
-        padEnds: true,
-        itemCount: widget.profiles.length,
-        itemBuilder: (context, index) {
-          final profile = widget.profiles[index];
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ProfileDisplay(
-              profile: profile.profile,
-              play: widget.play,
-              onPlayPause: widget.onPlayPause,
-              onRecord: widget.onRecord,
-              onBlock: widget.onBlock,
-            ),
-          );
-        },
-      ),
+    return PageView.builder(
+      controller: _pageController,
+      padEnds: true,
+      itemCount: widget.profiles.length,
+      itemBuilder: (context, index) {
+        final profile = widget.profiles[index];
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: ProfileDisplay(
+            profile: profile.profile,
+            play: widget.play,
+            onPlayPause: widget.onPlayPause,
+            onRecord: widget.onRecord,
+            onBlock: widget.onBlock,
+          ),
+        );
+      },
     );
   }
 }
