@@ -219,7 +219,11 @@ class _DisoverListFullState extends ConsumerState<DiscoverListFull> {
       itemBuilder: (context, index) {
         final profile = widget.profiles[index];
         return Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            bottom: 16 + MediaQuery.of(context).padding.bottom,
+          ),
           child: ProfileDisplay(
             profile: profile.profile,
             play: widget.play,

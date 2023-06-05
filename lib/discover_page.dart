@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:async/async.dart';
 import 'package:dartz/dartz.dart' show Either;
@@ -25,10 +26,6 @@ import 'package:openup/widgets/profile_display.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-
-final _profilePanelHeightProvider =
-    StateNotifierProvider<_ProfilePanelHeightNotifier, double>(
-        (ref) => _ProfilePanelHeightNotifier());
 
 class DiscoverPage extends ConsumerStatefulWidget {
   final VoidCallback onShowConversations;
@@ -364,7 +361,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 16,
                   right: 16,
-                  width: 48,
                   child: Consumer(
                     builder: (context, ref, child) {
                       final myProfile = ref.watch(userProvider2.select(
@@ -379,13 +375,24 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                             Button(
                               onPressed: widget.onShowSettings,
                               child: Container(
+                                width: 45,
+                                height: 45,
                                 clipBehavior: Clip.hardEdge,
-                                decoration: BoxDecoration(
+                                foregroundDecoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  border: Border.all(
-                                    width: 2,
-                                    color: Colors.white,
-                                  ),
+                                  border:
+                                      Border.all(width: 2, color: Colors.white),
+                                ),
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      offset: Offset(0, 4),
+                                      blurRadius: 8,
+                                      color: Color.fromRGBO(
+                                          0x00, 0x00, 0x00, 0.25),
+                                    ),
+                                  ],
                                 ),
                                 child: Image.network(
                                   myProfile.photo,
@@ -393,7 +400,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 19),
                             _MapButton(
                               onPressed: () {},
                               child: const Icon(
@@ -401,32 +408,90 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                 color: Color.fromRGBO(0x24, 0xFF, 0x00, 1.0),
                               ),
                             ),
+                            const SizedBox(height: 11),
                           ],
-                          Consumer(builder: (context, ref, child) {
-                            final latLong =
-                                ref.watch(locationProvider)?.latLong;
-                            return _MapButton(
-                              onPressed: latLong == null
-                                  ? null
-                                  : () => _mapKey.currentState
-                                      ?.recenterMap(latLong),
-                              child: const Icon(
-                                CupertinoIcons.location_fill,
-                                color: Color.fromRGBO(0x22, 0x53, 0xFF, 1.0),
-                              ),
-                            );
-                          }),
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final latLong =
+                                  ref.watch(locationProvider)?.latLong;
+                              return _MapButton(
+                                onPressed: latLong == null
+                                    ? null
+                                    : () => _mapKey.currentState
+                                        ?.recenterMap(latLong),
+                                child: const Icon(
+                                  CupertinoIcons.location_fill,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       );
                     },
                   ),
                 ),
-                Positioned.fill(
-                  top: MediaQuery.of(context).padding.top + 16,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return _ProfilePanel(
-                        height: constraints.maxHeight,
+                Positioned(
+                  left: 0,
+                  bottom: 0,
+                  right: 0,
+                  child: Column(
+                    children: [
+                      Stack(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                _MapButton(
+                                  onPressed: () {},
+                                  child: const Icon(
+                                    Icons.circle,
+                                    size: 16,
+                                    color:
+                                        Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                  ),
+                                ),
+                                const SizedBox(width: 13),
+                                _MapButton(
+                                  onPressed: widget.onShowConversations,
+                                  child: const Icon(
+                                    Icons.email,
+                                    color:
+                                        Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                              ],
+                            ),
+                          ),
+                          Center(
+                            child: IgnorePointer(
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutQuart,
+                                opacity: (_fetchingProfiles ||
+                                        _markerRenderStatus ==
+                                            MarkerRenderStatus.rendering)
+                                    ? 1
+                                    : 0,
+                                child: Lottie.asset(
+                                  'assets/images/map_searching.json',
+                                  width: 100,
+                                  height: 48,
+                                  animate: _fetchingProfiles ||
+                                      _markerRenderStatus ==
+                                          MarkerRenderStatus.rendering,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 11),
+                      _ProfilePanel(
                         gender: _gender,
                         onGenderChanged: (gender) {
                           setState(() {
@@ -461,63 +526,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                           setState(() => _profiles.removeWhere(
                               ((p) => p.profile.uid == profile.uid)));
                         },
-                        onHeightUpdated: (height) {
-                          ref
-                              .read(_profilePanelHeightProvider.notifier)
-                              .update(height);
-                        },
                         pageActive: _pageActive,
-                      );
-                    },
-                  ),
-                ),
-                Positioned(
-                  right: 16,
-                  bottom: ref.watch(_profilePanelHeightProvider),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _MapButton(
-                        onPressed: () {},
-                        child: const Icon(
-                          Icons.circle,
-                          size: 16,
-                          color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                        ),
                       ),
-                      const SizedBox(width: 8),
-                      _MapButton(
-                        onPressed: widget.onShowConversations,
-                        child: const Icon(
-                          Icons.email,
-                          color: Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
                     ],
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: ref.watch(_profilePanelHeightProvider),
-                  child: IgnorePointer(
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutQuart,
-                      opacity: (_fetchingProfiles ||
-                              _markerRenderStatus ==
-                                  MarkerRenderStatus.rendering)
-                          ? 1
-                          : 0,
-                      child: Lottie.asset(
-                        'assets/images/map_searching.json',
-                        width: 100,
-                        height: 48,
-                        animate: _fetchingProfiles ||
-                            _markerRenderStatus == MarkerRenderStatus.rendering,
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -651,13 +662,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 }
 
-class _ProfilePanelHeightNotifier extends StateNotifier<double> {
-  _ProfilePanelHeightNotifier() : super(100);
-  void update(double height) => state = height;
-}
-
 class _ProfilePanel extends StatefulWidget {
-  final double height;
   final Gender? gender;
   final ValueChanged<Gender?> onGenderChanged;
   final List<DiscoverProfile> profiles;
@@ -667,12 +672,10 @@ class _ProfilePanel extends StatefulWidget {
   final void Function(Profile profile) onRecordInvite;
   final VoidCallback onToggleFavorite;
   final void Function(Profile profile) onBlockUser;
-  final ValueChanged<double>? onHeightUpdated;
   final bool pageActive;
 
   const _ProfilePanel({
     super.key,
-    required this.height,
     required this.gender,
     required this.onGenderChanged,
     required this.profiles,
@@ -682,7 +685,6 @@ class _ProfilePanel extends StatefulWidget {
     required this.onRecordInvite,
     required this.onToggleFavorite,
     required this.onBlockUser,
-    this.onHeightUpdated,
     required this.pageActive,
   });
 
@@ -691,216 +693,185 @@ class _ProfilePanel extends StatefulWidget {
 }
 
 class _ProfilePanelState extends State<_ProfilePanel> {
-  final _draggableController = DraggableScrollableController();
-  double _smallSize = 0;
-  double _mediumSize = 0;
-  double _smallRatio = 0;
-  double _mediumRatio = 0;
-  var _snapSizes = <double>[];
-
-  @override
-  void initState() {
-    super.initState();
-    _draggableController.addListener(_draggableScrollableUpdated);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _smallSize = 98 + MediaQuery.of(context).padding.bottom;
-    _mediumSize = 268 + MediaQuery.of(context).padding.bottom;
-    _smallRatio = _smallSize / widget.height;
-    _mediumRatio = _mediumSize / widget.height;
-    _snapSizes = [_mediumRatio];
-  }
-
-  @override
-  void didUpdateWidget(covariant _ProfilePanel oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedProfile == null && widget.selectedProfile != null) {
-      _animateTo(_mediumRatio);
-    } else if (oldWidget.selectedProfile != null &&
-        widget.selectedProfile == null) {
-      _animateTo(_smallRatio);
-    }
-  }
-
-  @override
-  void dispose() {
-    _draggableController.dispose();
-    super.dispose();
-  }
-
-  void _draggableScrollableUpdated() {
-    if (_draggableController.pixels.isFinite) {
-      widget.onHeightUpdated?.call(_draggableController.pixels);
-      if (_draggableController.pixels <= _smallSize + 2) {
-        widget.onProfileChanged(null);
-      }
-    } else {
-      widget.onHeightUpdated?.call(_smallSize);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: _smallRatio,
-      minChildSize: _smallRatio,
-      maxChildSize: _mediumRatio,
-      expand: true,
-      snap: true,
-      controller: _draggableController,
-      builder: (context, controller) {
-        return Container(
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-            color: Color.fromRGBO(0x10, 0x12, 0x12, 0.9),
-          ),
-          child: SingleChildScrollView(
-            controller: controller,
-            physics: const NeverScrollableScrollPhysics(),
-            child: Column(
-              children: [
-                Align(
-                  alignment: Alignment.center,
-                  child: Container(
-                    width: 46,
-                    height: 5,
-                    margin: const EdgeInsets.only(top: 8, bottom: 11),
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(4),
-                      ),
-                      color: Color.fromRGBO(0x6F, 0x72, 0x73, 1.0),
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(24),
+        topRight: Radius.circular(24),
+      ),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: Container(
+          color: const Color.fromRGBO(0x10, 0x12, 0x12, 0.5),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 16),
+              Button(
+                onPressed: () async {
+                  final prevGender = widget.gender;
+                  final gender = await _showPreferencesSheet();
+                  if (mounted && gender != prevGender) {
+                    widget.onGenderChanged(gender);
+                  }
+                },
+                child: Container(
+                  height: 36,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  decoration: const BoxDecoration(
+                    color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(24),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        offset: Offset(0, 2),
+                        blurRadius: 12,
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.35),
+                      ),
+                    ],
                   ),
-                ),
-                AnimatedBuilder(
-                  animation: _draggableController,
-                  builder: (context, child) {
-                    if (_draggableController.pixels <= (_mediumSize + 5)) {
-                      return child!;
-                    }
-                    return const SizedBox.shrink();
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Button(
-                      onPressed: () async {
-                        final prevGender = widget.gender;
-                        final gender = await _showPreferencesSheet();
-                        if (mounted && gender != prevGender) {
-                          widget.onGenderChanged(gender);
-                        }
-                      },
-                      child: Container(
-                        height: 36,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: const BoxDecoration(
-                          color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(24),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.search,
+                        size: 20,
+                        color: Color.fromRGBO(0xF4, 0xF4, 0xF4, 1.0),
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Who are you searching for?',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: Color.fromRGBO(0xF4, 0xF4, 0xF4, 1.0),
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(
-                              Icons.search,
-                              size: 20,
-                            ),
-                            Expanded(
-                              child: Text(
-                                'Who are you searching for?',
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
+              ),
 
-                // Must live above PageView.builder (otherwise duplicate global key)
-                ProfileBuilder(
-                  key: widget.profileBuilderKey,
-                  profile: widget.selectedProfile?.profile,
-                  play: widget.pageActive,
-                  builder: (context, play, playbackInfoStream) {
-                    final selectedProfile = widget.selectedProfile;
-                    if (selectedProfile == null) {
-                      return const SizedBox.shrink();
-                    }
-
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 19.0),
-                      child: DiscoverList(
-                        profiles: widget.profiles,
-                        selectedProfile: selectedProfile,
-                        onProfileChanged: (profile) {
-                          // final scrollingForward = index > _profileIndex;
-                          // if (scrollingForward) {
-                          //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-                          // }
-                          widget.onProfileChanged(profile);
-                        },
-                        play: play,
-                        onPlayPause: () => _onPlayPause(play),
-                        onToggleFavorite: widget.onToggleFavorite,
-                        onRecord: () =>
-                            widget.onRecordInvite(selectedProfile.profile),
-                        onProfilePressed: () {
-                          CupertinoScaffold.showCupertinoModalBottomSheet(
-                            context: context,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) {
-                              return Container(
-                                clipBehavior: Clip.hardEdge,
-                                decoration: const BoxDecoration(
-                                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.7),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(56),
-                                    topRight: Radius.circular(56),
-                                  ),
-                                ),
-                                child: DiscoverListFull(
-                                  profiles: widget.profiles,
-                                  selectedProfile: selectedProfile,
-                                  onProfileChanged: (profile) {
-                                    widget.onProfileChanged(profile);
-                                  },
-                                  play: play,
-                                  onPlayPause: () => _onPlayPause(play),
-                                  onRecord: () => widget
-                                      .onRecordInvite(selectedProfile.profile),
-                                  onBlock: () {
-                                    widget.onBlockUser(selectedProfile.profile);
-                                    widget.onProfileChanged(null);
-                                  },
-                                ),
+              // Must live above PageView.builder (otherwise duplicate global key)
+              ProfileBuilder(
+                key: widget.profileBuilderKey,
+                profile: widget.selectedProfile?.profile,
+                play: widget.pageActive,
+                builder: (context, play, playbackInfoStream) {
+                  final selectedProfile = widget.selectedProfile;
+                  return AnimatedSize(
+                    duration: const Duration(milliseconds: 600),
+                    curve: Curves.easeOutQuart,
+                    child: Builder(
+                      builder: (context) {
+                        if (selectedProfile == null) {
+                          return const SizedBox(
+                            height: 0,
+                            width: double.infinity,
+                          );
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 11.0),
+                          child: DiscoverList(
+                            profiles: widget.profiles,
+                            selectedProfile: selectedProfile,
+                            onProfileChanged: (profile) {
+                              // final scrollingForward = index > _profileIndex;
+                              // if (scrollingForward) {
+                              //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+                              // }
+                              widget.onProfileChanged(profile);
+                            },
+                            play: play,
+                            onPlayPause: () => _onPlayPause(play),
+                            onToggleFavorite: widget.onToggleFavorite,
+                            onRecord: () =>
+                                widget.onRecordInvite(selectedProfile.profile),
+                            onProfilePressed: () {
+                              CupertinoScaffold.showCupertinoModalBottomSheet(
+                                context: context,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) {
+                                  return Container(
+                                    clipBehavior: Clip.hardEdge,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(56),
+                                        topRight: Radius.circular(56),
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          offset: Offset(0, 2),
+                                          blurRadius: 12,
+                                          color: Color.fromRGBO(
+                                              0x00, 0x00, 0x00, 0.25),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const SizedBox(height: 9),
+                                        Container(
+                                          width: 37,
+                                          height: 5,
+                                          decoration: const BoxDecoration(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(2.5)),
+                                            color: Color.fromRGBO(
+                                                0xE0, 0xE0, 0xE0, 1.0),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 9),
+                                        Expanded(
+                                          child: DiscoverListFull(
+                                            profiles: widget.profiles,
+                                            selectedProfile: selectedProfile,
+                                            onProfileChanged: (profile) {
+                                              widget.onProfileChanged(profile);
+                                            },
+                                            play: play,
+                                            onPlayPause: () =>
+                                                _onPlayPause(play),
+                                            onRecord: () =>
+                                                widget.onRecordInvite(
+                                                    selectedProfile.profile),
+                                            onBlock: () {
+                                              widget.onBlockUser(
+                                                  selectedProfile.profile);
+                                              widget.onProfileChanged(null);
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: MediaQuery.of(context).padding.bottom,
-                ),
-              ],
-            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: MediaQuery.of(context).padding.bottom,
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -910,14 +881,6 @@ class _ProfilePanelState extends State<_ProfilePanel> {
     } else {
       widget.profileBuilderKey.currentState?.pause();
     }
-  }
-
-  void _animateTo(double ratio) {
-    _draggableController.animateTo(
-      ratio,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOutQuart,
-    );
   }
 
   Future<Gender?> _showPreferencesSheet() async {
@@ -1008,38 +971,48 @@ class _ProfilePanelState extends State<_ProfilePanel> {
 
 class _MapButton extends StatelessWidget {
   final Widget child;
-  final Color color;
   final VoidCallback? onPressed;
 
   const _MapButton({
     super.key,
     required this.onPressed,
-    this.color = const Color.fromRGBO(0x1A, 0x1D, 0x1E, 0.9),
     required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      child: Container(
-        width: 48,
-        height: 48,
-        clipBehavior: Clip.hardEdge,
-        margin: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: const BorderRadius.all(Radius.circular(13)),
-          boxShadow: const [
-            BoxShadow(
-              offset: Offset(0, 2),
-              blurRadius: 13,
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-            )
-          ],
+    return Container(
+      width: 45,
+      height: 45,
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(13)),
+        boxShadow: [
+          BoxShadow(
+            offset: Offset(0, 4),
+            blurRadius: 8,
+            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+          )
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(13)),
+        child: Button(
+          onPressed: onPressed,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 13, sigmaY: 13),
+            child: ColoredBox(
+              color: const Color.fromRGBO(0x1A, 0x1D, 0x1E, 0.9),
+              child: OverflowBox(
+                minWidth: 56,
+                minHeight: 56,
+                maxWidth: 56,
+                maxHeight: 56,
+                alignment: Alignment.center,
+                child: child,
+              ),
+            ),
+          ),
         ),
-        alignment: Alignment.center,
-        child: child,
       ),
     );
   }
