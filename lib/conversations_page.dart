@@ -76,19 +76,7 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: MediaQuery.of(context).padding.top),
-              Padding(
-                padding: const EdgeInsets.only(top: 30.0, left: 20),
-                child: Hero(
-                  tag: 'conversations_title',
-                  child: Text(
-                    'Conversations',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 32, fontWeight: FontWeight.w400),
-                  ),
-                ),
-              ),
+              const SizedBox(height: 8),
               Container(
                 height: 31,
                 margin: const EdgeInsets.only(

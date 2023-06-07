@@ -302,7 +302,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         routerConfig: _goRouter,
         theme: ThemeData(
           primaryColor: const Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
-          colorScheme: const ColorScheme.dark(
+          colorScheme: const ColorScheme.light(
             primary: Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
             secondary: Color.fromARGB(0xAA, 0xFF, 0x71, 0x71),
           ),
@@ -310,7 +310,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           textTheme: textTheme.copyWith(
             bodyMedium: textTheme.bodyMedium!.copyWith(
               fontFamily: 'Neue Haas Unica',
-              color: Colors.white,
+              color: Colors.black,
               fontSize: 15,
               fontWeight: FontWeight.w400,
             ),

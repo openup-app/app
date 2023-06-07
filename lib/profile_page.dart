@@ -218,95 +218,116 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                               },
                             ),
                           ),
-                          const _SectionTitle(label: 'Name'),
-                          const _CupertinoRow(
-                            leading: _NameField(),
-                          ),
-                          const SizedBox(height: 12),
-                          const _SectionTitle(
-                            label: 'Phone Number',
-                          ),
-                          const SizedBox(height: 8),
-                          const _PhoneNumberField(),
-                          const SizedBox(height: 16),
-                          Button(
-                            onPressed: () => context.pushNamed('contacts'),
-                            child: _CupertinoRow(
-                              leading: Row(
-                                children: const [
-                                  Icon(
-                                    CupertinoIcons.book,
-                                    color:
-                                        Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                                  ),
-                                  SizedBox(width: 12),
-                                  Expanded(child: Text(' My Contacts')),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Button(
-                            onPressed: () => context.pushNamed('blocked'),
-                            child: const _CupertinoRow(
-                              leading: Text('Blocked users'),
-                              trailing: Icon(
-                                Icons.chevron_right,
-                                color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Button(
-                            onPressed: () => context.pushNamed('contact_us'),
-                            child: const _CupertinoRow(
-                              leading: Text('Contact us'),
-                              trailing: Icon(
-                                Icons.chevron_right,
-                                color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Button(
-                            onPressed: _showSignOutConfirmationModal,
-                            child: const _CupertinoRow(
-                              center: Text(
-                                'Sign out',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Button(
-                            onPressed: _showDeleteAccountConfirmationModal,
-                            child: const _CupertinoRow(
-                              center: Text(
-                                'Delete Account',
-                                style: TextStyle(
-                                  color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                          DefaultTextStyle(
+                            style: const TextStyle(color: Colors.white),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const _SectionTitle(label: 'Name'),
+                                const _CupertinoRow(
+                                  leading: _NameField(),
                                 ),
-                              ),
+                                const SizedBox(height: 12),
+                                const _SectionTitle(
+                                  label: 'Phone Number',
+                                ),
+                                const SizedBox(height: 8),
+                                const _PhoneNumberField(),
+                                const SizedBox(height: 16),
+                                Button(
+                                  onPressed: () =>
+                                      context.pushNamed('contacts'),
+                                  child: _CupertinoRow(
+                                    leading: Row(
+                                      children: const [
+                                        Icon(
+                                          CupertinoIcons.book,
+                                          color: Color.fromRGBO(
+                                              0xBA, 0xBA, 0xBA, 1.0),
+                                        ),
+                                        SizedBox(width: 12),
+                                        Expanded(child: Text(' My Contacts')),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Button(
+                                  onPressed: () => context.pushNamed('blocked'),
+                                  child: const _CupertinoRow(
+                                    leading: Text('Blocked users'),
+                                    trailing: Icon(
+                                      Icons.chevron_right,
+                                      color:
+                                          Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Button(
+                                  onPressed: () =>
+                                      context.pushNamed('contact_us'),
+                                  child: const _CupertinoRow(
+                                    leading: Text('Contact us'),
+                                    trailing: Icon(
+                                      Icons.chevron_right,
+                                      color:
+                                          Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Button(
+                                  onPressed: _showSignOutConfirmationModal,
+                                  child: const _CupertinoRow(
+                                    center: Text(
+                                      'Sign out',
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Button(
+                                  onPressed:
+                                      _showDeleteAccountConfirmationModal,
+                                  child: const _CupertinoRow(
+                                    center: Text(
+                                      'Delete Account',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w400,
+                                        color: Color.fromRGBO(
+                                            0xFF, 0x00, 0x00, 1.0),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (kDebugMode) ...[
+                                  const SizedBox(height: 16),
+                                  Center(
+                                    child: Text(
+                                      '${FirebaseAuth.instance.currentUser?.uid}',
+                                      textAlign: TextAlign.center,
+                                      style:
+                                          const TextStyle(color: Colors.black),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Center(
+                                    child: Text(
+                                      '${FirebaseAuth.instance.currentUser?.phoneNumber}',
+                                      textAlign: TextAlign.center,
+                                      style:
+                                          const TextStyle(color: Colors.black),
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 32),
+                                SizedBox(
+                                  height:
+                                      MediaQuery.of(context).viewInsets.bottom,
+                                ),
+                              ],
                             ),
-                          ),
-                          if (kDebugMode) ...[
-                            const SizedBox(height: 16),
-                            Center(
-                              child: Text(
-                                '${FirebaseAuth.instance.currentUser?.uid}',
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Center(
-                              child: Text(
-                                '${FirebaseAuth.instance.currentUser?.phoneNumber}',
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 32),
-                          SizedBox(
-                            height: MediaQuery.of(context).viewInsets.bottom,
                           ),
                         ],
                       );
@@ -505,7 +526,9 @@ class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
                   padding: EdgeInsets.all(8.0),
                   child: Text(
                     'Edit',
-                    style: TextStyle(color: Colors.red),
+                    style: TextStyle(
+                      color: Color.fromRGBO(0xFF, 0x74, 0x74, 1.0),
+                    ),
                   ),
                 ),
               ),
@@ -737,10 +760,11 @@ class _CupertinoRow extends StatelessWidget {
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
       child: DefaultTextStyle(
-        style: Theme.of(context)
-            .textTheme
-            .bodyMedium!
-            .copyWith(fontSize: 15, fontWeight: FontWeight.w400),
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+          color: DefaultTextStyle.of(context).style.color,
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -990,10 +1014,11 @@ class _NameFieldState extends ConsumerState<_NameField> {
               focusNode: _nameFocusNode,
               enabled: _editingName,
               textCapitalization: TextCapitalization.sentences,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 16, fontWeight: FontWeight.w400),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: DefaultTextStyle.of(context).style.color,
+              ),
               decoration: const InputDecoration.collapsed(
                 hintText: '',
               ),
@@ -1042,9 +1067,10 @@ class _NameFieldState extends ConsumerState<_NameField> {
                   child: Text(
                     'Edit',
                     style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: Color.fromRGBO(0xFF, 0x03, 0x03, 1.0)),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: Color.fromRGBO(0xFF, 0x74, 0x74, 1.0),
+                    ),
                   ),
                 );
               } else {

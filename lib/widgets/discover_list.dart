@@ -44,10 +44,7 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
         ? 0
         : widget.profiles.indexWhere(
             (p) => p.profile.uid == initialSelectedProfile.profile.uid);
-    _pageController = PageController(
-      initialPage: initialIndex,
-      viewportFraction: 0.9,
-    );
+    _pageController = PageController(initialPage: initialIndex);
 
     _pageController.addListener(() {
       final page = _pageController.page ?? 0;
@@ -97,25 +94,27 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: 168,
-      margin:
-          EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 16),
       child: PageView.builder(
         controller: _pageController,
+        clipBehavior: Clip.none,
         padEnds: true,
         itemCount: widget.profiles.length,
         itemBuilder: (context, index) {
           final profile = widget.profiles[index];
           return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5),
-            child: _MiniProfile(
-              profile: profile,
-              play: widget.play,
-              onPlayPause: widget.onPlayPause,
-              onRecord: widget.onRecord,
-              onToggleFavorite: widget.onToggleFavorite,
-              onProfilePressed: widget.onProfilePressed,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: DefaultTextStyle(
+              style: const TextStyle(color: Colors.white),
+              child: _MiniProfile(
+                profile: profile,
+                play: widget.play,
+                onPlayPause: widget.onPlayPause,
+                onRecord: widget.onRecord,
+                onToggleFavorite: widget.onToggleFavorite,
+                onProfilePressed: widget.onProfilePressed,
+              ),
             ),
           );
         },
@@ -257,13 +256,14 @@ class _MiniProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const lightColor = Color.fromRGBO(0xE3, 0xE3, 0xE3, 1.0);
     return Button(
       onPressed: onProfilePressed,
       child: Container(
-        height: 168,
+        clipBehavior: Clip.hardEdge,
         decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(34)),
           color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
+          borderRadius: BorderRadius.all(Radius.circular(15)),
           boxShadow: [
             BoxShadow(
               offset: Offset(0, 4),
@@ -273,22 +273,22 @@ class _MiniProfile extends StatelessWidget {
           ],
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(width: 16),
             Container(
-              width: 124,
-              height: 124,
+              width: 131,
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(15),
+                ),
               ),
               child: Image.network(
                 profile.profile.photo,
                 fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -307,6 +307,7 @@ class _MiniProfile extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w400,
+                      color: lightColor,
                     ),
                   ),
                   const Divider(color: Color.fromRGBO(0xEB, 0xEB, 0xEB, 1.0)),
@@ -323,6 +324,7 @@ class _MiniProfile extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w400,
+                      color: lightColor,
                     ),
                   ),
                   const Divider(color: Color.fromRGBO(0xEB, 0xEB, 0xEB, 1.0)),
@@ -339,19 +341,23 @@ class _MiniProfile extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w400,
+                      color: lightColor,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Button(
                   onPressed: onToggleFavorite,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    color: Colors.transparent,
+                    alignment: Alignment.center,
                     child: Icon(
                       profile.favorite
                           ? Icons.favorite
@@ -362,9 +368,12 @@ class _MiniProfile extends StatelessWidget {
                 ),
                 Button(
                   onPressed: onRecord,
-                  child: const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Icon(
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    color: Colors.transparent,
+                    alignment: Alignment.center,
+                    child: const Icon(
                       Icons.mic,
                       color: Color.fromRGBO(0xFF, 0x4F, 0x4F, 1.0),
                     ),
@@ -373,20 +382,27 @@ class _MiniProfile extends StatelessWidget {
                 Button(
                   onPressed: onPlayPause,
                   child: Container(
-                    padding: const EdgeInsets.all(8.0),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                    ),
-                    child: Icon(
-                      play ? Icons.pause : Icons.play_arrow,
-                      color: Colors.black,
+                    width: 48,
+                    height: 48,
+                    color: Colors.transparent,
+                    alignment: Alignment.center,
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                      child: Icon(
+                        play ? Icons.pause : Icons.play_arrow,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(width: 24),
+            const SizedBox(width: 12),
           ],
         ),
       ),

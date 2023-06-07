@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 
 final _sheetOpenNotifier = ValueNotifier<bool>(false);
+final _sheetNotifier = ValueNotifier<double>(0.0);
 
 class ShellPage extends StatefulWidget {
   final int? currentIndex;
@@ -31,6 +32,7 @@ class ShellPageState extends State<ShellPage> {
   void initState() {
     super.initState();
     _draggableScrollableController.addListener(() {
+      _sheetNotifier.value = _draggableScrollableController.size;
       final fullyOpen = _draggableScrollableController.size >= 1.0;
       _sheetOpenNotifier.value = fullyOpen;
       if (fullyOpen) {
@@ -68,122 +70,129 @@ class ShellPageState extends State<ShellPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: Color.fromRGBO(0x44, 0x44, 0x44, 1.0),
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final maxHeight = constraints.maxHeight;
-            final maxContentHeight =
-                constraints.maxHeight - MediaQuery.of(context).padding.top - 16;
-            final maxContentRatio = maxContentHeight / maxHeight;
-            return Stack(
-              children: [
-                WillPopScope(
-                  onWillPop: () {
-                    if (_draggableScrollableController.size == 0) {
-                      return Future.value(true);
-                    }
-                    _draggableScrollableController.animateTo(
-                      0,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOut,
-                    );
-                    return Future.value(false);
-                  },
-                  child: widget.shellBuilder(context),
-                ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: DraggableScrollableSheet(
-                    controller: _draggableScrollableController,
-                    minChildSize: 0.0,
-                    maxChildSize: maxContentRatio,
-                    initialChildSize: 0,
-                    snap: true,
-                    builder: (context, controller) {
-                      return ValueListenableBuilder<bool>(
-                        valueListenable: _sheetOpenNotifier,
-                        builder: (context, open, child) {
-                          return AnimatedContainer(
-                            curve: Curves.easeOut,
-                            duration: const Duration(milliseconds: 200),
-                            height: maxContentHeight,
-                            clipBehavior: Clip.antiAlias,
-                            decoration: BoxDecoration(
-                              color:
-                                  const Color.fromRGBO(0x44, 0x44, 0x44, 1.0),
-                              borderRadius: open
-                                  ? BorderRadius.zero
-                                  : const BorderRadius.only(
-                                      topLeft: Radius.circular(48),
-                                      topRight: Radius.circular(48),
-                                    ),
-                            ),
-                            child: child,
-                          );
-                        },
-                        child: Stack(
-                          children: [
-                            Align(
-                              alignment: Alignment.topCenter,
-                              child: OverflowBox(
-                                minHeight: maxContentHeight,
-                                maxHeight: maxContentHeight,
-                                alignment: Alignment.topCenter,
-                                child: IndexedStack(
-                                  index: widget.currentIndex,
-                                  children: [
-                                    for (var i = 0; i < _keys.length; i++)
-                                      KeyedSubtree(
-                                        key: _keys[i],
-                                        child: _BranchIndex(
-                                          index: i,
-                                          child: widget.children[i],
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Align(
-                              alignment: Alignment.topCenter,
-                              child: Stack(
-                                children: [
-                                  Positioned(
-                                    left: 0,
-                                    right: 0,
-                                    top: 0,
-                                    child: SingleChildScrollView(
-                                      controller: controller,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      child: const SizedBox(
-                                        height: 48,
-                                        child: Align(
-                                          alignment: Alignment.topCenter,
-                                          child: Padding(
-                                            padding: EdgeInsets.only(top: 9.0),
-                                            child: _DragHandle(),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxHeight = constraints.maxHeight;
+          final maxContentHeight =
+              constraints.maxHeight - MediaQuery.of(context).padding.top - 16;
+          final maxContentRatio = maxContentHeight / maxHeight;
+          return Stack(
+            children: [
+              WillPopScope(
+                onWillPop: () {
+                  if (_draggableScrollableController.size == 0) {
+                    return Future.value(true);
+                  }
+                  _draggableScrollableController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOut,
+                  );
+                  return Future.value(false);
+                },
+                child: widget.shellBuilder(context),
+              ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedBuilder(
+                    animation: _sheetNotifier,
+                    builder: (context, child) {
+                      return ColoredBox(
+                        color: Color.fromRGBO(
+                            0x00, 0x00, 0x00, _sheetNotifier.value * 0.35),
                       );
                     },
                   ),
                 ),
-              ],
-            );
-          },
-        ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: DraggableScrollableSheet(
+                  controller: _draggableScrollableController,
+                  minChildSize: 0.0,
+                  maxChildSize: maxContentRatio,
+                  initialChildSize: 0,
+                  snap: true,
+                  builder: (context, controller) {
+                    return ValueListenableBuilder<bool>(
+                      valueListenable: _sheetOpenNotifier,
+                      builder: (context, open, child) {
+                        return AnimatedContainer(
+                          curve: Curves.easeOut,
+                          duration: const Duration(milliseconds: 200),
+                          height: maxContentHeight,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: open
+                                ? BorderRadius.zero
+                                : const BorderRadius.only(
+                                    topLeft: Radius.circular(48),
+                                    topRight: Radius.circular(48),
+                                  ),
+                          ),
+                          child: child,
+                        );
+                      },
+                      child: Stack(
+                        children: [
+                          Align(
+                            alignment: Alignment.topCenter,
+                            child: OverflowBox(
+                              minHeight: maxContentHeight,
+                              maxHeight: maxContentHeight,
+                              alignment: Alignment.topCenter,
+                              child: IndexedStack(
+                                index: widget.currentIndex,
+                                children: [
+                                  for (var i = 0; i < _keys.length; i++)
+                                    KeyedSubtree(
+                                      key: _keys[i],
+                                      child: _BranchIndex(
+                                        index: i,
+                                        child: widget.children[i],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.topCenter,
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  top: 0,
+                                  child: SingleChildScrollView(
+                                    controller: controller,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    child: const SizedBox(
+                                      height: 48,
+                                      child: Align(
+                                        alignment: Alignment.topCenter,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(top: 9.0),
+                                          child: _DragHandle(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
