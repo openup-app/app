@@ -51,7 +51,7 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
             height: constraints.maxHeight,
             child: Column(
               children: [
-                const SizedBox(height: 8),
+                const SizedBox(height: 32),
                 SizedBox(
                   height: 44,
                   child: Stack(
@@ -107,13 +107,15 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
                       );
                     }
                     if (_blockedUsers.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'You are not blocking anyone',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(fontSize: 20),
+                      return Expanded(
+                        child: Center(
+                          child: Text(
+                            'You are not blocking anyone',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(fontSize: 20),
+                          ),
                         ),
                       );
                     }

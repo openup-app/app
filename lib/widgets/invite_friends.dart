@@ -449,7 +449,7 @@ class FriendsSearchField extends StatelessWidget {
       height: 32,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
         borderRadius: BorderRadius.all(Radius.circular(8)),
       ),
       child: Align(
@@ -463,16 +463,17 @@ class FriendsSearchField extends StatelessWidget {
                 child: TextFormField(
                   controller: controller,
                   focusNode: focusNode,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(fontSize: 14, fontWeight: FontWeight.w300),
-                  decoration: InputDecoration.collapsed(
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w300,
+                  ),
+                  decoration: const InputDecoration.collapsed(
                     hintText: 'Search',
-                    hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w300,
-                        ),
+                    hintStyle: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w300,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
               ),

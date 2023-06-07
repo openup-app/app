@@ -327,31 +327,38 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Button(
-                          onPressed: () {
-                            setState(() => _showDebugUsers = !_showDebugUsers);
-                            _queryProfilesAt(_queryLocation!);
-                          },
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(24),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Switch(
-                                  value: _showDebugUsers,
-                                  onChanged: (show) {
-                                    setState(() => _showDebugUsers = show);
-                                    _queryProfilesAt(_queryLocation!);
-                                  },
+                        Opacity(
+                          opacity: 0.8,
+                          child: Button(
+                            onPressed: () {
+                              setState(
+                                  () => _showDebugUsers = !_showDebugUsers);
+                              _queryProfilesAt(_queryLocation!);
+                            },
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(24),
                                 ),
-                                const Text('Fake users'),
-                                const SizedBox(width: 12),
-                              ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Switch(
+                                    value: _showDebugUsers,
+                                    onChanged: (show) {
+                                      setState(() => _showDebugUsers = show);
+                                      _queryProfilesAt(_queryLocation!);
+                                    },
+                                  ),
+                                  const Text(
+                                    'Fake users',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  const SizedBox(width: 12),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -707,7 +714,7 @@ class _ProfilePanelState extends State<_ProfilePanel> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Button(
                 onPressed: () async {
                   final prevGender = widget.gender;
@@ -719,8 +726,7 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                 child: Container(
                   height: 36,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
                   decoration: const BoxDecoration(
                     color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
                     borderRadius: BorderRadius.all(
@@ -757,6 +763,7 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                   ),
                 ),
               ),
+              const SizedBox(height: 19),
 
               // Must live above PageView.builder (otherwise duplicate global key)
               ProfileBuilder(
@@ -776,88 +783,82 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                             width: double.infinity,
                           );
                         }
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 11.0),
-                          child: DiscoverList(
-                            profiles: widget.profiles,
-                            selectedProfile: selectedProfile,
-                            onProfileChanged: (profile) {
-                              // final scrollingForward = index > _profileIndex;
-                              // if (scrollingForward) {
-                              //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-                              // }
-                              widget.onProfileChanged(profile);
-                            },
-                            play: play,
-                            onPlayPause: () => _onPlayPause(play),
-                            onToggleFavorite: widget.onToggleFavorite,
-                            onRecord: () =>
-                                widget.onRecordInvite(selectedProfile.profile),
-                            onProfilePressed: () {
-                              CupertinoScaffold.showCupertinoModalBottomSheet(
-                                context: context,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) {
-                                  return Container(
-                                    clipBehavior: Clip.hardEdge,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(56),
-                                        topRight: Radius.circular(56),
+                        return DiscoverList(
+                          profiles: widget.profiles,
+                          selectedProfile: selectedProfile,
+                          onProfileChanged: (profile) {
+                            // final scrollingForward = index > _profileIndex;
+                            // if (scrollingForward) {
+                            //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+                            // }
+                            widget.onProfileChanged(profile);
+                          },
+                          play: play,
+                          onPlayPause: () => _onPlayPause(play),
+                          onToggleFavorite: widget.onToggleFavorite,
+                          onRecord: () =>
+                              widget.onRecordInvite(selectedProfile.profile),
+                          onProfilePressed: () {
+                            CupertinoScaffold.showCupertinoModalBottomSheet(
+                              context: context,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) {
+                                return Container(
+                                  clipBehavior: Clip.hardEdge,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(56),
+                                      topRight: Radius.circular(56),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        offset: Offset(0, 2),
+                                        blurRadius: 12,
+                                        color: Color.fromRGBO(
+                                            0x00, 0x00, 0x00, 0.25),
                                       ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          offset: Offset(0, 2),
-                                          blurRadius: 12,
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const SizedBox(height: 9),
+                                      Container(
+                                        width: 37,
+                                        height: 5,
+                                        decoration: const BoxDecoration(
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(2.5)),
                                           color: Color.fromRGBO(
-                                              0x00, 0x00, 0x00, 0.25),
+                                              0xE0, 0xE0, 0xE0, 1.0),
                                         ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const SizedBox(height: 9),
-                                        Container(
-                                          width: 37,
-                                          height: 5,
-                                          decoration: const BoxDecoration(
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(2.5)),
-                                            color: Color.fromRGBO(
-                                                0xE0, 0xE0, 0xE0, 1.0),
-                                          ),
+                                      ),
+                                      const SizedBox(height: 9),
+                                      Expanded(
+                                        child: DiscoverListFull(
+                                          profiles: widget.profiles,
+                                          selectedProfile: selectedProfile,
+                                          onProfileChanged: (profile) {
+                                            widget.onProfileChanged(profile);
+                                          },
+                                          play: play,
+                                          onPlayPause: () => _onPlayPause(play),
+                                          onRecord: () => widget.onRecordInvite(
+                                              selectedProfile.profile),
+                                          onBlock: () {
+                                            widget.onBlockUser(
+                                                selectedProfile.profile);
+                                            widget.onProfileChanged(null);
+                                          },
                                         ),
-                                        const SizedBox(height: 9),
-                                        Expanded(
-                                          child: DiscoverListFull(
-                                            profiles: widget.profiles,
-                                            selectedProfile: selectedProfile,
-                                            onProfileChanged: (profile) {
-                                              widget.onProfileChanged(profile);
-                                            },
-                                            play: play,
-                                            onPlayPause: () =>
-                                                _onPlayPause(play),
-                                            onRecord: () =>
-                                                widget.onRecordInvite(
-                                                    selectedProfile.profile),
-                                            onBlock: () {
-                                              widget.onBlockUser(
-                                                  selectedProfile.profile);
-                                              widget.onProfileChanged(null);
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                          ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          },
                         );
                       },
                     ),
