@@ -16,6 +16,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/button.dart';
@@ -770,7 +771,7 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                 key: widget.profileBuilderKey,
                 profile: widget.selectedProfile?.profile,
                 play: widget.pageActive,
-                builder: (context, play, playbackInfoStream) {
+                builder: (context, playbackState, playbackInfoStream) {
                   final selectedProfile = widget.selectedProfile;
                   return AnimatedSize(
                     duration: const Duration(milliseconds: 600),
@@ -793,8 +794,8 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                             // }
                             widget.onProfileChanged(profile);
                           },
-                          play: play,
-                          onPlayPause: () => _onPlayPause(play),
+                          playbackState: playbackState,
+                          onPlayPause: () => _onPlayPause(playbackState),
                           onToggleFavorite: widget.onToggleFavorite,
                           onRecord: () =>
                               widget.onRecordInvite(selectedProfile.profile),
@@ -842,8 +843,9 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                                           onProfileChanged: (profile) {
                                             widget.onProfileChanged(profile);
                                           },
-                                          play: play,
-                                          onPlayPause: () => _onPlayPause(play),
+                                          play: true,
+                                          onPlayPause: () =>
+                                              _onPlayPause(playbackState),
                                           onRecord: () => widget.onRecordInvite(
                                               selectedProfile.profile),
                                           onBlock: () {
@@ -876,11 +878,14 @@ class _ProfilePanelState extends State<_ProfilePanel> {
     );
   }
 
-  void _onPlayPause(bool playing) {
-    if (!playing) {
-      widget.profileBuilderKey.currentState?.play();
-    } else {
-      widget.profileBuilderKey.currentState?.pause();
+  void _onPlayPause(PlaybackState playbackState) {
+    switch (playbackState) {
+      case PlaybackState.idle:
+      case PlaybackState.paused:
+        widget.profileBuilderKey.currentState?.play();
+        break;
+      default:
+        widget.profileBuilderKey.currentState?.pause();
     }
   }
 

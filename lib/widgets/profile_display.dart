@@ -16,7 +16,7 @@ class ProfileBuilder extends StatefulWidget {
   final bool play;
   final Widget Function(
     BuildContext context,
-    bool play,
+    PlaybackState playbackState,
     Stream<PlaybackInfo> playbackInfo,
   ) builder;
 
@@ -33,7 +33,7 @@ class ProfileBuilder extends StatefulWidget {
 
 class ProfileBuilderState extends State<ProfileBuilder> {
   final _player = JustAudioAudioPlayer();
-  bool _audioPaused = false;
+  PlaybackState _playbackState = PlaybackState.idle;
 
   @override
   void initState() {
@@ -47,12 +47,7 @@ class ProfileBuilderState extends State<ProfileBuilder> {
       _player.play(loop: true);
     }
     _player.playbackInfoStream.listen((playbackInfo) {
-      final isPaused = playbackInfo.state == PlaybackState.idle;
-      if (!_audioPaused && isPaused) {
-        setState(() => _audioPaused = true);
-      } else if (_audioPaused && !isPaused) {
-        setState(() => _audioPaused = false);
-      }
+      setState(() => _playbackState = playbackInfo.state);
     });
   }
 
@@ -93,7 +88,7 @@ class ProfileBuilderState extends State<ProfileBuilder> {
   Widget build(BuildContext context) {
     return widget.builder(
       context,
-      widget.play && !_audioPaused,
+      _playbackState,
       _player.playbackInfoStream,
     );
   }

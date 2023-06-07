@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/profile_display.dart';
+
+import '../platform/just_audio_audio_player.dart';
 
 class DiscoverList extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
   final DiscoverProfile? selectedProfile;
   final ValueChanged<DiscoverProfile?> onProfileChanged;
-  final bool play;
+  final PlaybackState playbackState;
   final VoidCallback onPlayPause;
   final VoidCallback onRecord;
   final VoidCallback onToggleFavorite;
@@ -19,7 +22,7 @@ class DiscoverList extends ConsumerStatefulWidget {
     required this.profiles,
     required this.selectedProfile,
     required this.onProfileChanged,
-    required this.play,
+    required this.playbackState,
     required this.onPlayPause,
     required this.onRecord,
     required this.onToggleFavorite,
@@ -109,7 +112,7 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
               style: const TextStyle(color: Colors.white),
               child: _MiniProfile(
                 profile: profile,
-                play: widget.play,
+                playbackState: widget.playbackState,
                 onPlayPause: widget.onPlayPause,
                 onRecord: widget.onRecord,
                 onToggleFavorite: widget.onToggleFavorite,
@@ -238,7 +241,7 @@ class _DisoverListFullState extends ConsumerState<DiscoverListFull> {
 
 class _MiniProfile extends StatelessWidget {
   final DiscoverProfile profile;
-  final bool play;
+  final PlaybackState playbackState;
   final VoidCallback onPlayPause;
   final VoidCallback onRecord;
   final VoidCallback onToggleFavorite;
@@ -247,7 +250,7 @@ class _MiniProfile extends StatelessWidget {
   const _MiniProfile({
     super.key,
     required this.profile,
-    required this.play,
+    required this.playbackState,
     required this.onPlayPause,
     required this.onRecord,
     required this.onToggleFavorite,
@@ -393,9 +396,26 @@ class _MiniProfile extends StatelessWidget {
                         shape: BoxShape.circle,
                         color: Colors.white,
                       ),
-                      child: Icon(
-                        play ? Icons.pause : Icons.play_arrow,
-                        color: Colors.black,
+                      child: Builder(
+                        builder: (context) {
+                          switch (playbackState) {
+                            case PlaybackState.playing:
+                              return const Icon(
+                                Icons.pause,
+                                color: Colors.black,
+                              );
+                            case PlaybackState.loading:
+                              return const LoadingIndicator(
+                                size: 16,
+                                color: Colors.black,
+                              );
+                            default:
+                              return const Icon(
+                                Icons.play_arrow,
+                                color: Colors.black,
+                              );
+                          }
+                        },
                       ),
                     ),
                   ),
