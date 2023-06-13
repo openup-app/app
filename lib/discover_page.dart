@@ -628,24 +628,24 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 
   void _showSignInDialog() {
-    showCupertinoDialog(
+    showCupertinoModalBottomSheet(
       context: context,
       builder: (context) {
-        return CupertinoAlertDialog(
-          title: const Text('Log in to send an invite'),
+        return CupertinoActionSheet(
+          title: const Text('Sign up or log in for free to fully access bff'),
           actions: [
-            CupertinoDialogAction(
-              onPressed: Navigator.of(context).pop,
-              child: const Text('Cancel'),
-            ),
-            CupertinoDialogAction(
+            CupertinoActionSheetAction(
               onPressed: () {
                 Navigator.of(context).pop();
                 context.pushNamed('signup');
               },
-              child: const Text('Log in'),
+              child: const Text('Sign up or log in'),
             ),
           ],
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: Navigator.of(context).pop,
+            child: const Text('Cancel'),
+          ),
         );
       },
     );
