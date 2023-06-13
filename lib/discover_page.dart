@@ -72,6 +72,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     duration: const Duration(milliseconds: 300),
   );
 
+  bool _hasShownStartupModals = false;
+
   @override
   void initState() {
     super.initState();
@@ -89,7 +91,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         }
       });
     });
-    _bottomSheetController.addListener(_bottomSheetUpdated);
   }
 
   @override
@@ -102,9 +103,17 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _precacheImageAndDepth(_profiles, from: 1, count: 2);
-  }
 
-  void _bottomSheetUpdated() {}
+    Future.delayed(Duration.zero).then((_) {
+      if (!mounted) {
+        return;
+      }
+      if (!_hasShownStartupModals) {
+        _hasShownStartupModals = true;
+        _showStartupModals();
+      }
+    });
+  }
 
   void _precacheImageAndDepth(
     List<DiscoverProfile> profiles, {
@@ -167,6 +176,23 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       );
       return Future.value(false);
     }
+  }
+
+  void _showStartupModals() async {
+    await showSafetyAndPrivacyModal(context);
+    if (!mounted) {
+      return;
+    }
+    final userState = ref.read(userProvider2);
+    userState.map(
+      guest: (_) {
+        showSignupGuestModal(
+          context,
+          onShowSignup: () => context.pushNamed('signup'),
+        );
+      },
+      signedIn: (_) {},
+    );
   }
 
   Future<LatLong?> _getLocation() async {
@@ -1019,6 +1045,155 @@ class _MapButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+Future<void> showSafetyAndPrivacyModal(BuildContext context) {
+  return showCupertinoModalPopup(
+    context: context,
+    builder: (context) {
+      return CupertinoAlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(
+              Icons.shield,
+              size: 16,
+            ),
+            SizedBox(width: 8),
+            Text('Safety & Privacy'),
+          ],
+        ),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Column(
+            children: const [
+              Text(
+                'Safety and privacy is our top priority:',
+                textAlign: TextAlign.left,
+              ),
+              SizedBox(height: 16),
+              _DotPoint(
+                message: Text(
+                  'The exact location of other people is not shown',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              _DotPoint(
+                message: Text(
+                  'Locations are approximate and within a half-mile radius',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              _DotPoint(
+                message: Text(
+                  'Bff does not share your location with others, only you can',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: Navigator.of(context).pop,
+            child: const Text('I understand'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<void> showSignupGuestModal(
+  BuildContext context, {
+  required VoidCallback onShowSignup,
+}) {
+  return showCupertinoModalPopup(
+    context: context,
+    builder: (context) {
+      return CupertinoAlertDialog(
+        title: const Text('Sign up'),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Column(
+            children: const [
+              Text(
+                'Sign up or log in for free and gain these abilities:',
+                textAlign: TextAlign.left,
+              ),
+              SizedBox(height: 16),
+              _DotPoint(
+                message: Text(
+                  'Let people know what you\'re up to by broadcasting a voice message',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              _DotPoint(
+                message: Text(
+                  'Send messages to anyone, anytime',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              _DotPoint(
+                message: Text(
+                  'Enhance your photos into cinematic photos',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              _DotPoint(
+                message: Text(
+                  'Receive voice messages from other people',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () {
+              Navigator.of(context).pop();
+              onShowSignup();
+            },
+            child: const Text(
+              'Sign up or log in',
+              style: TextStyle(color: Color.fromRGBO(0x2C, 0x80, 0xFF, 1.0)),
+            ),
+          ),
+          CupertinoDialogAction(
+            onPressed: Navigator.of(context).pop,
+            child: const Text('Continue as guest'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+class _DotPoint extends StatelessWidget {
+  final Text message;
+  const _DotPoint({
+    super.key,
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('•'),
+          const SizedBox(width: 8),
+          Expanded(
+            child: message,
+          ),
+        ],
       ),
     );
   }
