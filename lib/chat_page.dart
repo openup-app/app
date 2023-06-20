@@ -443,9 +443,11 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       context: context,
       builder: (context) {
         return Surface(
-          child: RecordPanelContents(
-            onSubmit: (audio, duration) =>
-                Navigator.of(context).pop(RecordingResult(audio, duration)),
+          child: RecordPanel(
+            onSubmit: (audio, duration) {
+              Navigator.of(context).pop(RecordingResult(audio, duration));
+              return Future.value(true);
+            },
           ),
         );
       },

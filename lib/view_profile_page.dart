@@ -166,8 +166,11 @@ class _ViewCollectionPageState extends ConsumerState<ViewProfilePage> {
       context: context,
       builder: (context) {
         return Surface(
-          child: RecordPanelContents(
-            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
+          child: RecordPanel(
+            onSubmit: (audio, duration) {
+              Navigator.of(context).pop(audio);
+              return Future.value(true);
+            },
           ),
         );
       },

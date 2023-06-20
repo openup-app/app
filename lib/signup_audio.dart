@@ -128,9 +128,11 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
       context: context,
       builder: (context) {
         return Surface(
-          child: RecordPanelContents(
-            submitAction: RecordPanelSubmitAction.done,
-            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
+          child: RecordPanel(
+            onSubmit: (audio, duration) {
+              Navigator.of(context).pop(audio);
+              return Future.value(true);
+            },
           ),
         );
       },

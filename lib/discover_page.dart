@@ -74,6 +74,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
 
   bool _hasShownStartupModals = false;
 
+  Timer? _audioBioUpdatedAnimationTimer;
+
   @override
   void initState() {
     super.initState();
@@ -96,6 +98,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   @override
   void dispose() {
     _bottomSheetController.dispose();
+    _audioBioUpdatedAnimationTimer?.cancel();
     super.dispose();
   }
 
@@ -338,7 +341,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                   showRecordPanel: () {
                     final selectedProfile = _selectedProfile;
                     if (selectedProfile != null) {
-                      _showRecordPanelOrSignIn(
+                      _showRecordInvitePanelOrSignIn(
                           context, selectedProfile.profile.uid);
                     }
                   },
@@ -482,7 +485,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   _MapButton(
-                                    onPressed: () {},
+                                    onPressed: () =>
+                                        _showRecordAudioBioPanel(context),
                                     child: const Icon(
                                       Icons.circle,
                                       size: 16,
@@ -552,7 +556,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         },
                         profileBuilderKey: _profileBuilderKey,
                         onRecordInvite: (profile) {
-                          _showRecordPanelOrSignIn(context, profile.uid);
+                          _showRecordInvitePanelOrSignIn(context, profile.uid);
                         },
                         onToggleFavorite: () {
                           if (selectedProfile != null) {
@@ -579,26 +583,29 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     );
   }
 
-  void _showRecordPanelOrSignIn(BuildContext context, String uid) {
+  void _showRecordInvitePanelOrSignIn(BuildContext context, String uid) {
     final userState = ref.read(userProvider2);
     userState.map(
       guest: (_) {
         _showSignInDialog();
       },
       signedIn: (_) {
-        _showRecordPanel(context, uid);
+        _showRecordInvitePanel(context, uid);
       },
     );
   }
 
-  void _showRecordPanel(BuildContext context, String uid) async {
+  void _showRecordInvitePanel(BuildContext context, String uid) async {
     final audio = await showModalBottomSheet<Uint8List>(
       backgroundColor: Colors.transparent,
       context: context,
       builder: (context) {
         return Surface(
-          child: RecordPanelContents(
-            onSubmit: (audio, duration) => Navigator.of(context).pop(audio),
+          child: RecordPanel(
+            onSubmit: (audio, duration) {
+              Navigator.of(context).pop(audio);
+              return Future.value(true);
+            },
           ),
         );
       },
@@ -697,6 +704,38 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         if (index != -1) {
           setState(() => _profiles.replaceRange(index, index + 1, [r]));
         }
+      },
+    );
+  }
+
+  Future<void> _showRecordAudioBioPanel(BuildContext context) async {
+    final record = await _showReplaceBioPopup(context);
+    if (!mounted || record != true) {
+      return Future.value();
+    }
+
+    return showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Surface(
+          child: RecordPanel(
+            onSubmit: (audio, _) async {
+              final userStateNotifier = ref.read(userProvider2.notifier);
+              final success = await userStateNotifier.updateAudioBio(audio);
+              if (success) {
+                _audioBioUpdatedAnimationTimer?.cancel();
+                _audioBioUpdatedAnimationTimer =
+                    Timer(const Duration(milliseconds: 1500), () {
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                  }
+                });
+              }
+              return success;
+            },
+          ),
+        );
       },
     );
   }
@@ -1166,6 +1205,27 @@ Future<void> showSignupGuestModal(
           CupertinoDialogAction(
             onPressed: Navigator.of(context).pop,
             child: const Text('Continue as guest'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<bool?> _showReplaceBioPopup(BuildContext context) {
+  return showCupertinoModalBottomSheet<bool>(
+    context: context,
+    builder: (context) {
+      return CupertinoActionSheet(
+        title: const Text('Replace Audio Bio'),
+        cancelButton: CupertinoDialogAction(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('Cancel'),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Record'),
           ),
         ],
       );

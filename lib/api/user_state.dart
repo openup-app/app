@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,17 @@ class LocationNotifier extends StateNotifier<LocationValue?> {
 }
 
 final apiProvider = Provider<Api>((ref) => throw 'Api is uninitialized');
+
+final messageProvider =
+    StateNotifierProvider<MessageStateNotifier, String?>((ref) {
+  return MessageStateNotifier();
+});
+
+class MessageStateNotifier extends StateNotifier<String?> {
+  MessageStateNotifier() : super(null);
+
+  void emitMessage(String message) => state = message;
+}
 
 final userProvider = StateNotifierProvider<UserStateNotifier, UserState>((ref) {
   return UserStateNotifier();
@@ -50,14 +62,22 @@ class UserState with _$UserState {
 
 final userProvider2 =
     StateNotifierProvider<UserStateNotifier2, UserState2>((ref) {
-  final api = ref.watch(apiProvider);
-  return UserStateNotifier2(api);
+  return UserStateNotifier2(
+    api: ref.watch(apiProvider),
+    messageNotifier: ref.read(messageProvider.notifier),
+  );
 });
 
 class UserStateNotifier2 extends StateNotifier<UserState2> {
   final Api _api;
+  final MessageStateNotifier _messageNotifier;
 
-  UserStateNotifier2(this._api) : super(const _Guest());
+  UserStateNotifier2({
+    required Api api,
+    required MessageStateNotifier messageNotifier,
+  })  : _api = api,
+        _messageNotifier = messageNotifier,
+        super(const _Guest());
 
   UserState2 get userState => state;
 
@@ -113,6 +133,30 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
           (r) {
             state = signedIn.copyWith(profile: r);
             return Right(r);
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool> updateAudioBio(Uint8List bytes) async {
+    return state.map(
+      guest: (_) {
+        _messageNotifier.emitMessage(
+            errorToMessage(const ApiError.client(ClientError.unauthorized())));
+        return false;
+      },
+      signedIn: (signedIn) async {
+        final result =
+            await _api.updateProfileAudio(signedIn.profile.uid, bytes);
+        return result.fold(
+          (l) {
+            _messageNotifier.emitMessage(errorToMessage(l));
+            return false;
+          },
+          (r) {
+            state = signedIn.copyWith(profile: r);
+            return true;
           },
         );
       },

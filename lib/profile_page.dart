@@ -19,8 +19,6 @@ import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/phone_number_input.dart';
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -32,10 +30,12 @@ class ProfilePage extends ConsumerStatefulWidget {
 class _ProfilePage2State extends ConsumerState<ProfilePage> {
   bool _showCollectionCreation = false;
   final _scrollController = ScrollController();
+  Timer? _animationTimer;
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _animationTimer?.cancel();
     super.dispose();
   }
 
@@ -355,8 +355,22 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
       backgroundColor: Colors.transparent,
       context: context,
       builder: (context) {
-        return const Surface(
-          child: _RecordOrUpload(),
+        return Surface(
+          child: RecordPanel(
+            onSubmit: (audio, _) async {
+              final userStateNotifier = ref.read(userProvider2.notifier);
+              final success = await userStateNotifier.updateAudioBio(audio);
+              if (success) {
+                _animationTimer?.cancel();
+                _animationTimer = Timer(const Duration(milliseconds: 1500), () {
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                  }
+                });
+              }
+              return success;
+            },
+          ),
         );
       },
     );
@@ -783,102 +797,6 @@ class _CupertinoRow extends StatelessWidget {
     );
   }
 }
-
-class _RecordOrUpload extends StatefulWidget {
-  const _RecordOrUpload({super.key});
-
-  @override
-  State<_RecordOrUpload> createState() => _RecordOrUploadState();
-}
-
-class _RecordOrUploadState extends State<_RecordOrUpload> {
-  _AudioBioState _audioBioState = _AudioBioState.creating;
-  Timer? _animationTimer;
-
-  @override
-  void dispose() {
-    _animationTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 234,
-      child: Builder(
-        builder: (context) {
-          switch (_audioBioState) {
-            case _AudioBioState.creating:
-              return Consumer(
-                builder: (context, ref, _) {
-                  return RecordPanelContents(
-                    onSubmit: (audio, duration) =>
-                        _submit(audio, duration, ref),
-                  );
-                },
-              );
-            case _AudioBioState.uploading:
-              return const Center(
-                child: LoadingIndicator(color: Colors.white),
-              );
-            case _AudioBioState.uploaded:
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: const [
-                  Icon(
-                    Icons.done,
-                    size: 64,
-                    color: Colors.green,
-                  ),
-                  Text(
-                    'updated',
-                    style: TextStyle(
-                      color: Colors.green,
-                    ),
-                  )
-                ],
-              );
-          }
-        },
-      ),
-    );
-  }
-
-  void _submit(Uint8List audio, Duration duration, WidgetRef ref) async {
-    if (!mounted) {
-      return;
-    }
-    setState(() => _audioBioState = _AudioBioState.uploading);
-    final tempDir = await getTemporaryDirectory();
-    final file = await File(path.join(
-            tempDir.path, 'audio_bio_${DateTime.now().toIso8601String()}.m4a'))
-        .create();
-    await file.writeAsBytes(audio);
-    if (!mounted) {
-      return;
-    }
-    final result = await updateAudio(
-      ref: ref,
-      bytes: await file.readAsBytes(),
-    );
-    if (mounted) {
-      result.fold(
-        (l) => displayError(context, l),
-        (r) => setState(() {
-          _audioBioState = _AudioBioState.uploaded;
-          _animationTimer = Timer(const Duration(milliseconds: 1500), () {
-            if (mounted) {
-              Navigator.of(context).pop();
-            }
-          });
-        }),
-      );
-    }
-  }
-}
-
-enum _AudioBioState { creating, uploading, uploaded }
 
 class _BottomButton extends StatelessWidget {
   final String label;
