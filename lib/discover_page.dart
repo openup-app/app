@@ -439,7 +439,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                               onPressed: () {},
                               child: const Icon(
                                 Icons.location_on,
-                                color: Color.fromRGBO(0x24, 0xFF, 0x00, 1.0),
+                                color: Color.fromRGBO(0x25, 0xB7, 0x00, 1.0),
                               ),
                             ),
                             const SizedBox(height: 11),
@@ -455,8 +455,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                         ?.recenterMap(latLong),
                                 child: const Icon(
                                   CupertinoIcons.location_fill,
-                                  size: 18,
-                                  color: Colors.white,
+                                  size: 20,
+                                  color: Color.fromRGBO(0x1A, 0x71, 0xFF, 1.0),
                                 ),
                               );
                             },
@@ -476,29 +476,32 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         children: [
                           Align(
                             alignment: Alignment.centerRight,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                _MapButton(
-                                  onPressed: () {},
-                                  child: const Icon(
-                                    Icons.circle,
-                                    size: 16,
-                                    color:
-                                        Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 21),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  _MapButton(
+                                    onPressed: () {},
+                                    child: const Icon(
+                                      Icons.circle,
+                                      size: 16,
+                                      color:
+                                          Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 13),
-                                _MapButton(
-                                  onPressed: widget.onShowConversations,
-                                  child: const Icon(
-                                    Icons.email,
-                                    color:
-                                        Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
+                                  const SizedBox(height: 15),
+                                  _MapButton(
+                                    onPressed: widget.onShowConversations,
+                                    child: const Icon(
+                                      Icons.email,
+                                      color:
+                                          Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 16),
-                              ],
+                                  const SizedBox(width: 16),
+                                ],
+                              ),
                             ),
                           ),
                           Center(
@@ -1017,7 +1020,7 @@ class _MapButton extends StatelessWidget {
       width: 45,
       height: 45,
       decoration: const BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(13)),
+        shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
             offset: Offset(0, 4),
@@ -1026,23 +1029,20 @@ class _MapButton extends StatelessWidget {
           )
         ],
       ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(13)),
-        child: Button(
-          onPressed: onPressed,
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 13, sigmaY: 13),
-            child: ColoredBox(
-              color: const Color.fromRGBO(0x1A, 0x1D, 0x1E, 0.9),
-              child: OverflowBox(
-                minWidth: 56,
-                minHeight: 56,
-                maxWidth: 56,
-                maxHeight: 56,
-                alignment: Alignment.center,
-                child: child,
-              ),
-            ),
+      child: Button(
+        onPressed: onPressed,
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+          ),
+          child: OverflowBox(
+            minWidth: 56,
+            minHeight: 56,
+            maxWidth: 56,
+            maxHeight: 56,
+            alignment: Alignment.center,
+            child: child,
           ),
         ),
       ),
