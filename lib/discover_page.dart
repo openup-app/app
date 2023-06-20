@@ -562,6 +562,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         },
                         pageActive: _pageActive,
                       ),
+                      SizedBox(
+                        height: MediaQuery.of(context).padding.bottom,
+                      ),
                     ],
                   ),
                 ),
@@ -729,177 +732,174 @@ class _ProfilePanel extends StatefulWidget {
 class _ProfilePanelState extends State<_ProfilePanel> {
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(24),
-        topRight: Radius.circular(24),
-      ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-        child: Container(
-          color: const Color.fromRGBO(0x10, 0x12, 0x12, 0.5),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 24),
-              Button(
-                onPressed: () async {
-                  final prevGender = widget.gender;
-                  final gender = await _showPreferencesSheet();
-                  if (mounted && gender != prevGender) {
-                    widget.onGenderChanged(gender);
-                  }
-                },
-                child: Container(
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  decoration: const BoxDecoration(
-                    color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(24),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        offset: Offset(0, 2),
-                        blurRadius: 12,
-                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.35),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(
-                        Icons.search,
-                        size: 20,
-                        color: Color.fromRGBO(0xF4, 0xF4, 0xF4, 1.0),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'Who are you searching for?',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: Color.fromRGBO(0xF4, 0xF4, 0xF4, 1.0),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 19),
+    const margin = EdgeInsets.symmetric(
+      horizontal: 24,
+      vertical: 16,
+    );
 
-              // Must live above PageView.builder (otherwise duplicate global key)
-              ProfileBuilder(
-                key: widget.profileBuilderKey,
-                profile: widget.selectedProfile?.profile,
-                play: widget.pageActive,
-                builder: (context, playbackState, playbackInfoStream) {
-                  final selectedProfile = widget.selectedProfile;
-                  return AnimatedSize(
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeOutQuart,
-                    child: Builder(
-                      builder: (context) {
-                        if (selectedProfile == null) {
-                          return const SizedBox(
-                            height: 0,
-                            width: double.infinity,
-                          );
-                        }
-                        return DiscoverList(
-                          profiles: widget.profiles,
-                          selectedProfile: selectedProfile,
-                          onProfileChanged: (profile) {
-                            // final scrollingForward = index > _profileIndex;
-                            // if (scrollingForward) {
-                            //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-                            // }
-                            widget.onProfileChanged(profile);
-                          },
-                          playbackState: playbackState,
-                          onPlayPause: () => _onPlayPause(playbackState),
-                          onToggleFavorite: widget.onToggleFavorite,
-                          onRecord: () =>
-                              widget.onRecordInvite(selectedProfile.profile),
-                          onProfilePressed: () {
-                            CupertinoScaffold.showCupertinoModalBottomSheet(
-                              context: context,
-                              backgroundColor: Colors.transparent,
-                              builder: (context) {
-                                return Container(
-                                  clipBehavior: Clip.hardEdge,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(56),
-                                      topRight: Radius.circular(56),
+    return Button(
+      onPressed: () async {
+        final prevGender = widget.gender;
+        final gender = await _showPreferencesSheet();
+        if (mounted && gender != prevGender) {
+          widget.onGenderChanged(gender);
+        }
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 200),
+            crossFadeState: widget.selectedProfile == null
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
+            firstChild: Container(
+              height: 70,
+              alignment: Alignment.center,
+              margin: margin,
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(35),
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color.fromRGBO(0x37, 0x87, 0xFF, 1.0),
+                    Color.fromRGBO(0x1F, 0x78, 0xFF, 1.0),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    offset: Offset(0, 0),
+                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                    blurRadius: 13,
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.search,
+                    size: 24,
+                    color: Color.fromRGBO(0xF4, 0xF4, 0xF4, 1.0),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Who are you searching for?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: Color.fromRGBO(0xF4, 0xF4, 0xF4, 1.0),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            secondChild: // Must live above PageView.builder (otherwise duplicate global key)
+                ProfileBuilder(
+              key: widget.profileBuilderKey,
+              profile: widget.selectedProfile?.profile,
+              play: widget.pageActive,
+              builder: (context, playbackState, playbackInfoStream) {
+                final selectedProfile = widget.selectedProfile;
+                return Builder(
+                  builder: (context) {
+                    if (selectedProfile == null) {
+                      return const SizedBox(
+                        height: 0,
+                        width: double.infinity,
+                      );
+                    }
+                    return DiscoverList(
+                      profiles: widget.profiles,
+                      selectedProfile: selectedProfile,
+                      itemPadding: margin,
+                      onProfileChanged: (profile) {
+                        // final scrollingForward = index > _profileIndex;
+                        // if (scrollingForward) {
+                        //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+                        // }
+                        widget.onProfileChanged(profile);
+                      },
+                      playbackState: playbackState,
+                      playbackInfoStream: playbackInfoStream,
+                      onPlayPause: () => _onPlayPause(playbackState),
+                      onToggleFavorite: widget.onToggleFavorite,
+                      onRecord: () =>
+                          widget.onRecordInvite(selectedProfile.profile),
+                      onProfilePressed: () {
+                        CupertinoScaffold.showCupertinoModalBottomSheet(
+                          context: context,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) {
+                            return Container(
+                              clipBehavior: Clip.hardEdge,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(56),
+                                  topRight: Radius.circular(56),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    offset: Offset(0, 2),
+                                    blurRadius: 12,
+                                    color:
+                                        Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const SizedBox(height: 9),
+                                  Container(
+                                    width: 37,
+                                    height: 5,
+                                    decoration: const BoxDecoration(
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(2.5)),
+                                      color:
+                                          Color.fromRGBO(0xE0, 0xE0, 0xE0, 1.0),
                                     ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        offset: Offset(0, 2),
-                                        blurRadius: 12,
-                                        color: Color.fromRGBO(
-                                            0x00, 0x00, 0x00, 0.25),
-                                      ),
-                                    ],
                                   ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const SizedBox(height: 9),
-                                      Container(
-                                        width: 37,
-                                        height: 5,
-                                        decoration: const BoxDecoration(
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(2.5)),
-                                          color: Color.fromRGBO(
-                                              0xE0, 0xE0, 0xE0, 1.0),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 9),
-                                      Expanded(
-                                        child: DiscoverListFull(
-                                          profiles: widget.profiles,
-                                          selectedProfile: selectedProfile,
-                                          onProfileChanged: (profile) {
-                                            widget.onProfileChanged(profile);
-                                          },
-                                          play: true,
-                                          onPlayPause: () =>
-                                              _onPlayPause(playbackState),
-                                          onRecord: () => widget.onRecordInvite(
-                                              selectedProfile.profile),
-                                          onBlock: () {
-                                            widget.onBlockUser(
-                                                selectedProfile.profile);
-                                            widget.onProfileChanged(null);
-                                          },
-                                        ),
-                                      ),
-                                    ],
+                                  const SizedBox(height: 9),
+                                  Expanded(
+                                    child: DiscoverListFull(
+                                      profiles: widget.profiles,
+                                      selectedProfile: selectedProfile,
+                                      onProfileChanged: (profile) {
+                                        widget.onProfileChanged(profile);
+                                      },
+                                      play: true,
+                                      onPlayPause: () =>
+                                          _onPlayPause(playbackState),
+                                      onRecord: () => widget.onRecordInvite(
+                                          selectedProfile.profile),
+                                      onBlock: () {
+                                        widget.onBlockUser(
+                                            selectedProfile.profile);
+                                        widget.onProfileChanged(null);
+                                      },
+                                    ),
                                   ),
-                                );
-                              },
+                                ],
+                              ),
                             );
                           },
                         );
                       },
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                height: MediaQuery.of(context).padding.bottom,
-              ),
-            ],
+                    );
+                  },
+                );
+              },
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

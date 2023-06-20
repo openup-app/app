@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
@@ -10,8 +11,10 @@ import '../platform/just_audio_audio_player.dart';
 class DiscoverList extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
   final DiscoverProfile? selectedProfile;
+  final EdgeInsets itemPadding;
   final ValueChanged<DiscoverProfile?> onProfileChanged;
   final PlaybackState playbackState;
+  final Stream<PlaybackInfo> playbackInfoStream;
   final VoidCallback onPlayPause;
   final VoidCallback onRecord;
   final VoidCallback onToggleFavorite;
@@ -21,8 +24,10 @@ class DiscoverList extends ConsumerStatefulWidget {
     super.key,
     required this.profiles,
     required this.selectedProfile,
+    this.itemPadding = EdgeInsets.zero,
     required this.onProfileChanged,
     required this.playbackState,
+    required this.playbackInfoStream,
     required this.onPlayPause,
     required this.onRecord,
     required this.onToggleFavorite,
@@ -98,7 +103,7 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 168,
+      height: 168 + widget.itemPadding.vertical,
       child: PageView.builder(
         controller: _pageController,
         clipBehavior: Clip.none,
@@ -106,18 +111,44 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
         itemCount: widget.profiles.length,
         itemBuilder: (context, index) {
           final profile = widget.profiles[index];
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: DefaultTextStyle(
-              style: const TextStyle(color: Colors.white),
-              child: _MiniProfile(
-                profile: profile,
-                playbackState: widget.playbackState,
-                onPlayPause: widget.onPlayPause,
-                onRecord: widget.onRecord,
-                onToggleFavorite: widget.onToggleFavorite,
-                onProfilePressed: widget.onProfilePressed,
-              ),
+          return Padding(
+            padding: widget.itemPadding,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _MiniProfile(
+                  profile: profile,
+                  playbackState: widget.playbackState,
+                  onProfileChanged: widget.onProfileChanged,
+                  onPlayPause: widget.onPlayPause,
+                  onRecord: widget.onRecord,
+                  onToggleFavorite: widget.onToggleFavorite,
+                  onProfilePressed: widget.onProfilePressed,
+                ),
+                Positioned(
+                  left: 33,
+                  right: 33,
+                  bottom: 0,
+                  child: StreamBuilder<double>(
+                    stream: widget.playbackInfoStream.map((e) =>
+                        e.position.inMilliseconds / e.duration.inMilliseconds),
+                    initialData: 0.0,
+                    builder: (context, snapshot) {
+                      return FractionallySizedBox(
+                        widthFactor: snapshot.requireData,
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          height: 3,
+                          decoration: const BoxDecoration(
+                              color: Color.fromRGBO(0x3E, 0x97, 0xFF, 1.0),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(2))),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -242,6 +273,7 @@ class _DisoverListFullState extends ConsumerState<DiscoverListFull> {
 class _MiniProfile extends StatelessWidget {
   final DiscoverProfile profile;
   final PlaybackState playbackState;
+  final ValueChanged<DiscoverProfile?> onProfileChanged;
   final VoidCallback onPlayPause;
   final VoidCallback onRecord;
   final VoidCallback onToggleFavorite;
@@ -251,6 +283,7 @@ class _MiniProfile extends StatelessWidget {
     super.key,
     required this.profile,
     required this.playbackState,
+    required this.onProfileChanged,
     required this.onPlayPause,
     required this.onRecord,
     required this.onToggleFavorite,
@@ -259,14 +292,16 @@ class _MiniProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const lightColor = Color.fromRGBO(0xE3, 0xE3, 0xE3, 1.0);
+    const lightColor = Color.fromRGBO(0x45, 0x45, 0x45, 1.0);
     return Button(
       onPressed: onProfilePressed,
       child: Container(
+        width: 200,
+        height: 200,
         clipBehavior: Clip.hardEdge,
         decoration: const BoxDecoration(
-          color: Color.fromRGBO(0x29, 0x2C, 0x2E, 1.0),
-          borderRadius: BorderRadius.all(Radius.circular(15)),
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(34)),
           boxShadow: [
             BoxShadow(
               offset: Offset(0, 4),
@@ -278,20 +313,69 @@ class _MiniProfile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 131,
-              clipBehavior: Clip.hardEdge,
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(15),
-                ),
-              ),
-              child: Image.network(
-                profile.profile.photo,
-                fit: BoxFit.cover,
+            SizedBox(
+              width: 22 + 100 + 22,
+              child: Stack(
+                alignment: Alignment.topCenter,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      clipBehavior: Clip.hardEdge,
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Image.network(
+                        profile.profile.photo,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    child: Button(
+                      onPressed: () => onProfileChanged(null),
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        padding: const EdgeInsets.all(12),
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Color.fromRGBO(0x3D, 0x3D, 0x3D, 1.0),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 4,
+                    right: 4,
+                    bottom: 22,
+                    child: AutoSizeText(
+                      profile.profile.name,
+                      textAlign: TextAlign.center,
+                      minFontSize: 16,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 20),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
