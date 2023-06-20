@@ -104,11 +104,11 @@ class DurationConverter implements JsonConverter<Duration, int> {
   const DurationConverter();
 
   @override
-  Duration fromJson(int durationMillis) =>
-      Duration(milliseconds: durationMillis);
+  Duration fromJson(int durationMicros) =>
+      Duration(microseconds: durationMicros);
 
   @override
-  int toJson(Duration duration) => duration.inMilliseconds;
+  int toJson(Duration duration) => duration.inMicroseconds;
 }
 
 enum ChatType {
