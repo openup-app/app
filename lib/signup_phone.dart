@@ -257,7 +257,9 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
         Sentry.captureException(e);
 
         final String message;
-        if (e.code == 'network-request-failed') {
+        if (e.code == 'invalid-phone-number') {
+          message = 'Unsupported phone number';
+        } else if (e.code == 'network-request-failed') {
           message = 'Network error';
         } else {
           debugPrint(e.code);
