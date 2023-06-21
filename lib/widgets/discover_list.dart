@@ -130,8 +130,12 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
                   right: 33,
                   bottom: 0,
                   child: StreamBuilder<double>(
-                    stream: widget.playbackInfoStream.map((e) =>
-                        e.position.inMilliseconds / e.duration.inMilliseconds),
+                    stream: widget.playbackInfoStream.map((e) {
+                      return e.duration.inMilliseconds == 0
+                          ? 0
+                          : e.position.inMilliseconds /
+                              e.duration.inMilliseconds;
+                    }),
                     initialData: 0.0,
                     builder: (context, snapshot) {
                       return FractionallySizedBox(
