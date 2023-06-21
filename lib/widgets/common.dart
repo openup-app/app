@@ -14,6 +14,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
@@ -1581,9 +1582,12 @@ class OnlineIndicatorBuilder extends ConsumerStatefulWidget {
 
 class OnlineIndicatorBuilderState
     extends ConsumerState<OnlineIndicatorBuilder> {
+  late final OnlineUsersApi _onlineUsersApi;
+
   @override
   void initState() {
     super.initState();
+    _onlineUsersApi = ref.read(onlineUsersApiProvider);
     _subscribe(widget.uid);
   }
 
@@ -1602,15 +1606,10 @@ class OnlineIndicatorBuilderState
     super.dispose();
   }
 
-  void _subscribe(String uid) {
-    final onlineUsersApi = ref.read(onlineUsersApiProvider);
-    onlineUsersApi.subscribeToOnlineStatus(uid);
-  }
+  void _subscribe(String uid) => _onlineUsersApi.subscribeToOnlineStatus(uid);
 
-  void _unsubscribe(String uid) {
-    final onlineUsersApi = ref.read(onlineUsersApiProvider);
-    onlineUsersApi.unsubscribeToOnlineStatus(uid);
-  }
+  void _unsubscribe(String uid) =>
+      _onlineUsersApi.unsubscribeToOnlineStatus(uid);
 
   @override
   Widget build(BuildContext context) {
