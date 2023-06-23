@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:async/async.dart';
 import 'package:dartz/dartz.dart' show Either;
@@ -67,11 +66,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   final _mapKey = GlobalKey<DiscoverMapState>();
   MarkerRenderStatus _markerRenderStatus = MarkerRenderStatus.ready;
 
-  late final _bottomSheetController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 300),
-  );
-
   bool _hasShownStartupModals = false;
 
   Timer? _audioBioUpdatedAnimationTimer;
@@ -97,7 +91,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
 
   @override
   void dispose() {
-    _bottomSheetController.dispose();
     _audioBioUpdatedAnimationTimer?.cancel();
     super.dispose();
   }
