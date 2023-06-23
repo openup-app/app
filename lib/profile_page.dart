@@ -57,7 +57,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
         );
       },
       signedIn: (signedIn) {
-        final profile = signedIn.profile;
+        final profile = signedIn.account.profile;
         return Container(
           margin: EdgeInsets.only(
             left: 16,
@@ -903,7 +903,7 @@ class _NameFieldState extends ConsumerState<_NameField> {
             guest: (_) {},
             signedIn: (signedIn) {
               _initial = false;
-              _nameController.text = signedIn.profile.name;
+              _nameController.text = signedIn.account.profile.name;
             },
           );
         }

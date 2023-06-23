@@ -38,7 +38,7 @@ class Api {
     _headers['Authorization'] = 'Bearer $value';
   }
 
-  Future<Either<ApiError, Profile>> createAccount(
+  Future<Either<ApiError, Account>> createAccount(
     AccountCreationParams params,
   ) {
     final photos = params.photos;
@@ -77,12 +77,12 @@ class Api {
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body);
-        return Right(Profile.fromJson(json['profile']));
+        return Right(Account.fromJson(json));
       },
     );
   }
 
-  Future<Either<ApiError, Profile>> getAccount() {
+  Future<Either<ApiError, Account>> getAccount() {
     return _request(
       makeRequest: () {
         return http.get(
@@ -92,7 +92,7 @@ class Api {
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body);
-        return Right(Profile.fromJson(json['profile']));
+        return Right(Account.fromJson(json));
       },
     );
   }
@@ -646,6 +646,20 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, void>> updateLocationVisibility(
+      LocationVisibility visibility) {
+    return _request(
+      makeRequest: () {
+        return http.put(
+          Uri.parse('$_urlBase/account/location/visibility'),
+          headers: _headers,
+          body: jsonEncode({'visibility': visibility.name}),
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
   static Future<Either<ApiError, void>> rejectCall(
     String uid,
     String rid,
@@ -744,6 +758,8 @@ class Api {
   }
 }
 
+enum LocationVisibility { public, private }
+
 final collectionReadyProvider =
     StateNotifierProvider<CollectionReadyStateNotifier, String?>(
         (ref) => CollectionReadyStateNotifier(null));
@@ -790,6 +806,27 @@ class AccountCreationParams with _$AccountCreationParams {
     @Default(null) String? audio,
     @Default(null) LatLong? latLong,
   }) = _AccountCreationParams;
+}
+
+@freezed
+class Account with _$Account {
+  const factory Account({
+    required Profile profile,
+    required AccountLocation location,
+  }) = _Account;
+
+  factory Account.fromJson(Map<String, dynamic> json) =>
+      _$AccountFromJson(json);
+}
+
+@freezed
+class AccountLocation with _$AccountLocation {
+  const factory AccountLocation({
+    required LocationVisibility visibility,
+  }) = _AccountLocation;
+
+  factory AccountLocation.fromJson(Map<String, dynamic> json) =>
+      _$AccountLocationFromJson(json);
 }
 
 @freezed

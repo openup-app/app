@@ -37,7 +37,7 @@ String errorToMessage(ApiError error) {
   );
 }
 
-Future<Either<ApiError, Profile>> createAccount({
+Future<Either<ApiError, Account>> createAccount({
   required WidgetRef ref,
   required AccountCreationParams params,
 }) async {

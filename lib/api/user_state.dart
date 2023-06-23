@@ -83,11 +83,11 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
 
   void guest() => state = const _Guest();
 
-  void signedIn(Profile profile) async {
-    state = _SignedIn(profile: profile);
+  void signedIn(Account account) async {
+    state = _SignedIn(account: account);
 
     _cacheChatrooms();
-    _cacheCollections(profile.uid);
+    _cacheCollections(account.profile.uid);
   }
 
   Future<void> _cacheChatrooms() async {
@@ -121,17 +121,17 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
       guest: (_) =>
           Future.value(const Left(ApiError.client(ClientErrorUnauthorized()))),
       signedIn: (signedIn) async {
-        if (name.isEmpty || name == signedIn.profile.name) {
-          return Right(signedIn.profile);
+        if (name.isEmpty || name == signedIn.account.profile.name) {
+          return Right(signedIn.account.profile);
         }
         final result = await _api.updateProfile(
-          signedIn.profile.uid,
-          signedIn.profile.copyWith(name: name),
+          signedIn.account.profile.uid,
+          signedIn.account.profile.copyWith(name: name),
         );
         return result.fold(
           (l) => Left(l),
           (r) {
-            state = signedIn.copyWith(profile: r);
+            state = signedIn.copyWith.account(profile: r);
             return Right(r);
           },
         );
@@ -148,16 +148,30 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
       },
       signedIn: (signedIn) async {
         final result =
-            await _api.updateProfileAudio(signedIn.profile.uid, bytes);
+            await _api.updateProfileAudio(signedIn.account.profile.uid, bytes);
         return result.fold(
           (l) {
             _messageNotifier.emitMessage(errorToMessage(l));
             return false;
           },
           (r) {
-            state = signedIn.copyWith(profile: r);
+            state = signedIn.copyWith.account(profile: r);
             return true;
           },
+        );
+      },
+    );
+  }
+
+  void updateLocationVisibility(LocationVisibility visibility) {
+    state.map(
+      guest: (_) => Future.value(),
+      signedIn: (signedIn) async {
+        state = signedIn.copyWith.account.location(visibility: visibility);
+        final result = await _api.updateLocationVisibility(visibility);
+        result.fold(
+          (l) => _messageNotifier.emitMessage(errorToMessage(l)),
+          (r) {},
         );
       },
     );
@@ -283,7 +297,7 @@ class UserState2 with _$UserState2 {
   const factory UserState2.guest() = _Guest;
 
   const factory UserState2.signedIn({
-    required Profile profile,
+    required Account account,
     @Default(null) List<Chatroom>? chatrooms,
     @Default(null) List<Collection>? collections,
   }) = _SignedIn;
@@ -322,7 +336,7 @@ Future<GetAccountResult> getAccount(Api api) async {
 
 @freezed
 class GetAccountResult with _$GetAccountResult {
-  const factory GetAccountResult.logIn(Profile profile) = _LogIn;
+  const factory GetAccountResult.logIn(Account account) = _LogIn;
   const factory GetAccountResult.signUp() = _SignUp;
   const factory GetAccountResult.retry() = _Retry;
 }

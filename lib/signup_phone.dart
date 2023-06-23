@@ -64,11 +64,11 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
       setState(() => _submitting = false);
 
       result.when(
-        logIn: (profile) {
+        logIn: (account) {
           final notifier = ref.read(userProvider.notifier);
           notifier.uid(verifiedUid);
-          notifier.profile(profile);
-          ref.read(userProvider2.notifier).signedIn(profile);
+          notifier.profile(account.profile);
+          ref.read(userProvider2.notifier).signedIn(account);
           ref.read(mixpanelProvider).track("login");
           context.goNamed('initialLoading');
         },

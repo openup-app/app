@@ -81,10 +81,10 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
     }
 
     getAccountResult.when(
-      logIn: (profile) {
-        ref.read(userProvider.notifier).uid(profile.uid);
-        ref.read(userProvider.notifier).profile(profile);
-        ref.read(userProvider2.notifier).signedIn(profile);
+      logIn: (account) {
+        ref.read(userProvider.notifier).uid(account.profile.uid);
+        ref.read(userProvider.notifier).profile(account.profile);
+        ref.read(userProvider2.notifier).signedIn(account);
         if (locationValue != null) {
           final latLong = locationValue.latLong;
           updateLocation(

@@ -393,11 +393,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                   right: 16,
                   child: Consumer(
                     builder: (context, ref, child) {
-                      final myProfile = ref.watch(userProvider2.select(
+                      final myAccount = ref.watch(userProvider2.select(
                         (p) => p.map(
                             guest: (_) => null,
-                            signedIn: (signedIn) => signedIn.profile),
+                            signedIn: (signedIn) => signedIn.account),
                       ));
+                      final myProfile = myAccount?.profile;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -432,11 +433,28 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                             ),
                             const SizedBox(height: 19),
                             _MapButton(
-                              onPressed: () {},
-                              child: const Icon(
-                                Icons.location_on,
-                                color: Color.fromRGBO(0x25, 0xB7, 0x00, 1.0),
-                              ),
+                              onPressed: () {
+                                final newVisibility =
+                                    myAccount!.location.visibility ==
+                                            LocationVisibility.public
+                                        ? LocationVisibility.private
+                                        : LocationVisibility.public;
+                                ref
+                                    .read(userProvider2.notifier)
+                                    .updateLocationVisibility(newVisibility);
+                              },
+                              child: myAccount!.location.visibility ==
+                                      LocationVisibility.public
+                                  ? const Icon(
+                                      Icons.location_on,
+                                      color:
+                                          Color.fromRGBO(0x25, 0xB7, 0x00, 1.0),
+                                    )
+                                  : const Icon(
+                                      Icons.location_off,
+                                      color:
+                                          Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                    ),
                             ),
                             const SizedBox(height: 11),
                           ],

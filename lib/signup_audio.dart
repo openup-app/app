@@ -169,7 +169,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
           return;
         }
 
-        ref.read(userProvider.notifier).profile(r);
+        ref.read(userProvider.notifier).profile(r.profile);
         ref.read(userProvider2.notifier).signedIn(r);
         context.goNamed('signup_friends');
       },

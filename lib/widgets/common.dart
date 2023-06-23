@@ -1669,7 +1669,7 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
     final myUid = ref.watch(userProvider2.select((p) {
       return p.map(
         guest: (_) => null,
-        signedIn: (signedIn) => signedIn.profile.uid,
+        signedIn: (signedIn) => signedIn.account.profile.uid,
       );
     }));
     return Button(
