@@ -487,11 +487,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                   child: Column(
                     children: [
                       Stack(
+                        alignment: Alignment.bottomCenter,
                         children: [
                           Align(
                             alignment: Alignment.centerRight,
                             child: Padding(
-                              padding: const EdgeInsets.only(right: 21),
+                              padding: const EdgeInsets.only(right: 16),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
@@ -514,35 +515,32 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                           Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
+                                  const SizedBox(height: 18),
                                 ],
                               ),
                             ),
                           ),
-                          Center(
-                            child: IgnorePointer(
-                              child: AnimatedOpacity(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOutQuart,
-                                opacity: (_fetchingProfiles ||
-                                        _markerRenderStatus ==
-                                            MarkerRenderStatus.rendering)
-                                    ? 1
-                                    : 0,
-                                child: Lottie.asset(
-                                  'assets/images/map_searching.json',
-                                  width: 100,
-                                  height: 48,
-                                  animate: _fetchingProfiles ||
+                          IgnorePointer(
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutQuart,
+                              opacity: (_fetchingProfiles ||
                                       _markerRenderStatus ==
-                                          MarkerRenderStatus.rendering,
-                                ),
+                                          MarkerRenderStatus.rendering)
+                                  ? 1
+                                  : 0,
+                              child: Lottie.asset(
+                                'assets/images/map_searching.json',
+                                width: 100,
+                                height: 48,
+                                animate: _fetchingProfiles ||
+                                    _markerRenderStatus ==
+                                        MarkerRenderStatus.rendering,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 11),
                       _ProfilePanel(
                         gender: _gender,
                         onGenderChanged: (gender) {
