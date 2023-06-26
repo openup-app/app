@@ -688,57 +688,127 @@ String _nightMapStyle() {
   return jsonEncode(
     [
       {
-        "featureType": "poi",
-        "elementType": "all",
+        "featureType": "landscape.man_made",
+        "elementType": "labels.text",
         "stylers": [
-          {"visibility": "off"}
+          {"lightness": "77"}
         ]
       },
       {
         "featureType": "poi.attraction",
-        "elementType": "all",
+        "elementType": "labels.icon",
         "stylers": [
           {"visibility": "off"}
         ]
       },
       {
-        "featureType": "road",
+        "featureType": "poi.business",
         "elementType": "labels",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.business",
+        "elementType": "labels.text",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.government",
+        "elementType": "labels.text",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.medical",
+        "elementType": "labels",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.medical",
+        "elementType": "labels.text",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.park",
+        "elementType": "labels",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.place_of_worship",
+        "elementType": "labels",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.school",
+        "elementType": "labels.icon",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.sports_complex",
+        "elementType": "all",
+        "stylers": [
+          {"visibility": "on"}
+        ]
+      },
+      {
+        "featureType": "poi.sports_complex",
+        "elementType": "labels.text",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.sports_complex",
+        "elementType": "labels.icon",
         "stylers": [
           {"visibility": "off"}
         ]
       },
       {
         "featureType": "road.highway",
-        "elementType": "labels",
+        "elementType": "labels.text",
+        "stylers": [
+          {"lightness": "54"}
+        ]
+      },
+      {
+        "featureType": "road.highway",
+        "elementType": "labels.icon",
         "stylers": [
           {"visibility": "off"}
         ]
       },
       {
         "featureType": "road.highway.controlled_access",
+        "elementType": "labels.icon",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "road.arterial",
         "elementType": "labels.text",
         "stylers": [
-          {"visibility": "off"}
+          {"lightness": "62"}
         ]
       },
       {
         "featureType": "road.arterial",
-        "elementType": "geometry.stroke",
-        "stylers": [
-          {"visibility": "off"}
-        ]
-      },
-      {
-        "featureType": "road.arterial",
-        "elementType": "labels",
-        "stylers": [
-          {"visibility": "off"}
-        ]
-      },
-      {
-        "featureType": "road.local",
-        "elementType": "geometry.stroke",
+        "elementType": "labels.icon",
         "stylers": [
           {"visibility": "off"}
         ]
@@ -746,20 +816,35 @@ String _nightMapStyle() {
       {
         "featureType": "road.local",
         "elementType": "labels.text",
+        "stylers": [
+          {"visibility": "on"},
+          {"lightness": "57"}
+        ]
+      },
+      {
+        "featureType": "road.local",
+        "elementType": "labels.icon",
         "stylers": [
           {"visibility": "off"}
         ]
       },
       {
         "featureType": "transit",
-        "elementType": "labels.text",
+        "elementType": "labels.icon",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "transit.line",
+        "elementType": "labels.icon",
         "stylers": [
           {"visibility": "off"}
         ]
       },
       {
         "featureType": "water",
-        "elementType": "labels",
+        "elementType": "labels.text",
         "stylers": [
           {"visibility": "off"}
         ]
