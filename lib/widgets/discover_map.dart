@@ -219,7 +219,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
                   widget.initialLocation.latLong.latitude,
                   widget.initialLocation.latLong.longitude,
                 ),
-                zoom: 14.4746,
+                zoom: 10,
               ),
               onMapCreated: _initMapController,
               myLocationEnabled: true,
