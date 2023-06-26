@@ -42,10 +42,12 @@ import 'package:openup/signup_audio.dart';
 import 'package:openup/signup_photos.dart';
 import 'package:openup/signup_friends.dart';
 import 'package:openup/signup_tutorial1.dart';
+import 'package:openup/util/key_value_store_service.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const host = String.fromEnvironment('HOST');
 const webPort = 8080;
@@ -84,6 +86,8 @@ void main() async {
     final mixpanel = await _initMixpanel();
     mixpanel.setLoggingEnabled(!kReleaseMode);
 
+    final sharedPreferences = await SharedPreferences.getInstance();
+
     runApp(
       ProviderScope(
         overrides: [
@@ -95,6 +99,7 @@ void main() async {
               port: webPort,
             );
           }),
+          keyValueStoreProvider.overrideWithValue(sharedPreferences),
           onlineUsersApiProvider.overrideWith((ref) {
             return OnlineUsersApi(
               host: host,

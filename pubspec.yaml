@@ -58,6 +58,7 @@ dependencies:
   record: ^4.4.1
   sentry_flutter: ^6.11.2
   share_plus: ^6.3.0
+  shared_preferences: ^2.1.2
   url_launcher: ^6.1.6
   mic_stream: ^0.6.2
   fftea: ^1.2.0+1

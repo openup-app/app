@@ -15,6 +15,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/discover_map_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/util/location_service.dart';
@@ -175,10 +176,20 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 
   void _showStartupModals() async {
-    await showSafetyAndPrivacyModal(context);
+    final showSafetyNotice = ref.listenManual<bool>(
+      showSafetyNoticeProvider,
+      (prev, next) => prev == null && next,
+      fireImmediately: true,
+    );
+
+    if (showSafetyNotice.read()) {
+      await showSafetyAndPrivacyModal(context);
+    }
+
     if (!mounted) {
       return;
     }
+
     final userState = ref.read(userProvider2);
     userState.map(
       guest: (_) {
