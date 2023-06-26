@@ -17,6 +17,7 @@ class DiscoverMap extends ConsumerStatefulWidget {
   final ValueChanged<DiscoverProfile?> onProfileChanged;
   final Location initialLocation;
   final ValueChanged<Location> onLocationChanged;
+  final double obscuredRatio;
   final VoidCallback showRecordPanel;
   final void Function(MarkerRenderStatus status) onMarkerRenderStatus;
 
@@ -27,6 +28,7 @@ class DiscoverMap extends ConsumerStatefulWidget {
     required this.onProfileChanged,
     required this.initialLocation,
     required this.onLocationChanged,
+    this.obscuredRatio = 0.0,
     required this.showRecordPanel,
     required this.onMarkerRenderStatus,
   });
@@ -39,6 +41,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     with TickerProviderStateMixin {
   maps.GoogleMapController? _mapController;
   double _zoomLevel = 14.4746;
+  LatLngBounds? _bounds;
 
   final _onscreenMarkers = <RenderedProfile>[];
 
@@ -302,6 +305,10 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     if (bounds == null || zoom == null || !mounted) {
       return;
     }
+    setState(() {
+      _bounds = bounds;
+      _zoomLevel = zoom;
+    });
 
     final center = LatLong(
       latitude: (bounds.northeast.latitude + bounds.southwest.latitude) / 2,
@@ -351,8 +358,16 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   }
 
   void recenterMap(LatLong latLong) {
+    double targetLatitude = latLong.latitude;
+    final bounds = _bounds;
+    if (bounds != null && widget.obscuredRatio != 0.0) {
+      final visibleLatitudeRange =
+          (bounds.southwest.latitude - bounds.northeast.latitude).abs() *
+              (1 - widget.obscuredRatio);
+      targetLatitude = latLong.latitude - visibleLatitudeRange / 2;
+    }
     final CameraPosition pos = CameraPosition(
-      target: LatLng(latLong.latitude, latLong.longitude),
+      target: LatLng(targetLatitude, latLong.longitude),
       zoom: _zoomLevel,
     );
     _mapController?.animateCamera(CameraUpdate.newCameraPosition(pos));
