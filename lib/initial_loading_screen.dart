@@ -135,15 +135,16 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Colors.black,
-      ),
-      child: Center(
-        child: Image.asset(
-          'assets/images/loading_icon.png',
-          width: 200,
-          height: 200,
+    return const Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Text(
+          'UT Meets',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 42,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );

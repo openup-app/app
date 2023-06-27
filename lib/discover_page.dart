@@ -670,7 +670,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       context: context,
       builder: (context) {
         return CupertinoActionSheet(
-          title: const Text('Sign up or log in for free to fully access bff'),
+          title:
+              const Text('Sign up or log in for free to fully access UT Meets'),
           actions: [
             CupertinoActionSheetAction(
               onPressed: () {
@@ -1153,7 +1154,7 @@ Future<void> showSafetyAndPrivacyModal(BuildContext context) {
               ),
               _DotPoint(
                 message: Text(
-                  'Bff does not share your location with others, only you can',
+                  'UT Meets does not share your location with others, only you can',
                   textAlign: TextAlign.left,
                 ),
               ),

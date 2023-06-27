@@ -89,7 +89,7 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8.0),
                   child: Text(
-                    'Here is the list of users you have blocked on bff',
+                    'Here is the list of users you have blocked on UT Meets',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,

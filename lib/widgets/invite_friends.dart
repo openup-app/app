@@ -136,7 +136,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
           child: SizedBox(height: widget.padding.top),
         ),
         const SliverToBoxAdapter(
-          child: SectionTitle(title: Text('Contacts using bff')),
+          child: SectionTitle(title: Text('Contacts using UT Meets')),
         ),
         SliverList(
           delegate: SliverChildBuilderDelegate(
@@ -158,7 +158,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                             ),
                       ),
                       subtitle: Text(
-                        '${knownProfile.profile.friendCount} friends on bff',
+                        '${knownProfile.profile.friendCount} friends on UT Meets',
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontWeight: FontWeight.w300,
                               fontSize: 12,
@@ -228,7 +228,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                         color: const Color.fromRGBO(0x34, 0x34, 0x34, 1.0)),
                   ),
                   subtitle: Text(
-                    '0 friends on bff',
+                    '0 friends on UT Meets',
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontWeight: FontWeight.w300,
                         fontSize: 12,
