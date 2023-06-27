@@ -688,10 +688,38 @@ String _nightMapStyle() {
   return jsonEncode(
     [
       {
-        "featureType": "landscape.man_made",
-        "elementType": "labels.text",
+        "featureType": "all",
+        "elementType": "geometry",
         "stylers": [
-          {"lightness": "77"}
+          {"color": "#242f3e"}
+        ]
+      },
+      {
+        "featureType": "all",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {"color": "#746855"}
+        ]
+      },
+      {
+        "featureType": "all",
+        "elementType": "labels.text.stroke",
+        "stylers": [
+          {"color": "#242f3e"}
+        ]
+      },
+      {
+        "featureType": "administrative.locality",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {"color": "#d59563"}
+        ]
+      },
+      {
+        "featureType": "poi",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {"color": "#d59563"}
         ]
       },
       {
@@ -738,9 +766,23 @@ String _nightMapStyle() {
       },
       {
         "featureType": "poi.park",
+        "elementType": "geometry",
+        "stylers": [
+          {"color": "#263c3f"}
+        ]
+      },
+      {
+        "featureType": "poi.park",
         "elementType": "labels",
         "stylers": [
           {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.park",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {"color": "#6b9a76"}
         ]
       },
       {
@@ -759,13 +801,6 @@ String _nightMapStyle() {
       },
       {
         "featureType": "poi.sports_complex",
-        "elementType": "all",
-        "stylers": [
-          {"visibility": "on"}
-        ]
-      },
-      {
-        "featureType": "poi.sports_complex",
         "elementType": "labels.text",
         "stylers": [
           {"visibility": "off"}
@@ -779,17 +814,45 @@ String _nightMapStyle() {
         ]
       },
       {
-        "featureType": "road.highway",
-        "elementType": "labels.text",
+        "featureType": "road",
+        "elementType": "geometry",
         "stylers": [
-          {"lightness": "54"}
+          {"color": "#38414e"}
+        ]
+      },
+      {
+        "featureType": "road",
+        "elementType": "geometry.stroke",
+        "stylers": [
+          {"color": "#212a37"}
+        ]
+      },
+      {
+        "featureType": "road",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {"hue": "#0064ff"}
         ]
       },
       {
         "featureType": "road.highway",
-        "elementType": "labels.icon",
+        "elementType": "geometry",
         "stylers": [
-          {"visibility": "off"}
+          {"color": "#746855"}
+        ]
+      },
+      {
+        "featureType": "road.highway",
+        "elementType": "geometry.stroke",
+        "stylers": [
+          {"color": "#1f2835"}
+        ]
+      },
+      {
+        "featureType": "road.highway",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {"color": "#f3d19c"}
         ]
       },
       {
@@ -801,13 +864,6 @@ String _nightMapStyle() {
       },
       {
         "featureType": "road.arterial",
-        "elementType": "labels.text",
-        "stylers": [
-          {"lightness": "62"}
-        ]
-      },
-      {
-        "featureType": "road.arterial",
         "elementType": "labels.icon",
         "stylers": [
           {"visibility": "off"}
@@ -815,10 +871,10 @@ String _nightMapStyle() {
       },
       {
         "featureType": "road.local",
-        "elementType": "labels.text",
+        "elementType": "labels",
         "stylers": [
-          {"visibility": "on"},
-          {"lightness": "57"}
+          {"lightness": "-4"},
+          {"visibility": "simplified"}
         ]
       },
       {
@@ -826,6 +882,13 @@ String _nightMapStyle() {
         "elementType": "labels.icon",
         "stylers": [
           {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "transit",
+        "elementType": "geometry",
+        "stylers": [
+          {"color": "#2f3948"}
         ]
       },
       {
@@ -843,10 +906,38 @@ String _nightMapStyle() {
         ]
       },
       {
+        "featureType": "transit.station",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {"color": "#d59563"}
+        ]
+      },
+      {
+        "featureType": "water",
+        "elementType": "geometry",
+        "stylers": [
+          {"color": "#17263c"}
+        ]
+      },
+      {
         "featureType": "water",
         "elementType": "labels.text",
         "stylers": [
           {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "water",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {"color": "#515c6d"}
+        ]
+      },
+      {
+        "featureType": "water",
+        "elementType": "labels.text.stroke",
+        "stylers": [
+          {"color": "#17263c"}
         ]
       }
     ],
