@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:async/async.dart';
 import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -360,7 +360,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                     );
                   },
                 ),
-                if (_queryLocation != null)
+                if (_queryLocation != null && !kReleaseMode)
                   Positioned(
                     left: 16,
                     top: MediaQuery.of(context).padding.top + 16,
