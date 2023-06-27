@@ -27,8 +27,9 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final routeActive = ModalRoute.of(context)?.isActive == true;
     return AppLifecycle(
-      onResumed: _checkPermissions,
+      onResumed: routeActive ? _checkPermissions : null,
       child: Scaffold(
         backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
         resizeToAvoidBottomInset: true,
