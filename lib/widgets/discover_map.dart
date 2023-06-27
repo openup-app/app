@@ -130,6 +130,18 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
         selectedProfile?.profile.uid == oldSelectedProfile?.profile.uid &&
             selectedProfile?.favorite != oldSelectedProfile?.favorite;
 
+    // Remove markers of profiles which are no longer given
+    final widgetProfileUids = widget.profiles.map((e) => e.profile.uid);
+    final removeFromOnscreen = <String>{};
+    for (final onscreenUid
+        in _onscreenMarkers.map((e) => e.profile.profile.uid)) {
+      if (!widgetProfileUids.contains(onscreenUid)) {
+        removeFromOnscreen.add(onscreenUid);
+      }
+    }
+    _onscreenMarkers
+        .removeWhere((p) => removeFromOnscreen.contains(p.profile.profile.uid));
+
     if (selectedProfile != null && selectedUserChanged) {
       recenterMap(selectedProfile.location.latLong);
       setState(() {
