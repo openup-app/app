@@ -345,8 +345,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       onProfileChanged: _onProfileChanged,
                       initialLocation: initialLocation,
                       onLocationChanged: _maybeRefetchProfiles,
-                      obscuredRatio:
-                          _selectedProfile == null ? 0.0 : 326 / height,
+                      obscuredRatio: 326 / height,
                       showRecordPanel: () {
                         final selectedProfile = _selectedProfile;
                         if (selectedProfile != null) {

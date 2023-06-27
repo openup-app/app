@@ -61,9 +61,9 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   );
 
   final _markersReadyToAnimate = <DiscoverProfile>{};
-  final _markersAnimating = <DiscoverProfile>[];
+  final _markersStaggering = <DiscoverProfile>[];
 
-  bool _locationOverridden = false;
+  bool _recenterAnimationComplete = false;
 
   late final MarkerRenderingStateMachine _markerRenderStateMachine;
 
@@ -72,7 +72,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     super.initState();
     _staggeredAnimationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        setState(() => _markersAnimating.clear());
+        setState(() => _markersStaggering.clear());
         _maybeStartNextStagger();
       }
     });
@@ -110,7 +110,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   void _maybeStartNextStagger() {
     if (_markersReadyToAnimate.isNotEmpty) {
       setState(() {
-        _markersAnimating.addAll(_markersReadyToAnimate.toList());
+        _markersStaggering.addAll(_markersReadyToAnimate.toList());
         _markersReadyToAnimate.clear();
       });
       _staggeredAnimationController.forward(from: 0);
@@ -124,69 +124,56 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     // Animate selected profile
     final selectedProfile = widget.selectedProfile;
     final oldSelectedProfile = oldWidget.selectedProfile;
-    if (selectedProfile != null) {
-      if (selectedProfile.profile.uid != oldSelectedProfile?.profile.uid) {
-        setState(() {
-          _locationOverridden = false;
-          _selectedMapMarkerAnimation.clear();
-        });
+    final selectedUserChanged =
+        selectedProfile?.profile.uid != oldSelectedProfile?.profile.uid;
+    final selectedUserFavoriteChanged =
+        selectedProfile?.profile.uid == oldSelectedProfile?.profile.uid &&
+            selectedProfile?.favorite != oldSelectedProfile?.favorite;
 
-        // Re-render selected
-        _renderMapMarker(profile: selectedProfile, selected: true)
-            .then((frames) {
-          if (mounted) {
-            setState(() {
-              _selectedMapMarkerAnimation
-                ..clear()
-                ..addAll(frames);
-            });
-            _selectedAnimationController.forward(from: 0);
-            if (!_locationOverridden) {
-              recenterMap(selectedProfile.location.latLong);
-            }
-          }
-        });
-      } else if (selectedProfile.profile.uid ==
-              oldSelectedProfile?.profile.uid &&
-          selectedProfile.favorite != oldSelectedProfile?.favorite) {
-        // Re-render selected
-        // Update the favorite icon
-        final unselectedFramesFuture =
-            _renderMapMarker(profile: selectedProfile, selected: false);
-        final selectedFramesFuture =
-            _renderMapMarker(profile: selectedProfile, selected: true);
-        Future.wait([unselectedFramesFuture, selectedFramesFuture])
-            .then((results) {
-          if (mounted) {
-            final index = _onscreenMarkers.indexWhere(
-                (r) => r.profile.profile.uid == selectedProfile.profile.uid);
-            if (index != -1) {
-              final r = _onscreenMarkers[index];
-              setState(() {
-                _onscreenMarkers[index] = RenderedProfile(
-                  profile: r.profile,
-                  frames: results[0],
-                );
-              });
-            }
-            setState(() {
-              _selectedMapMarkerAnimation
-                ..clear()
-                ..addAll(results[1]);
-            });
-          }
-        });
-      }
-    }
+    if (selectedProfile != null && selectedUserChanged) {
+      recenterMap(selectedProfile.location.latLong);
+      setState(() {
+        _recenterAnimationComplete = false;
+        _selectedMapMarkerAnimation.clear();
+      });
 
-    // Deselect if selected profile was removed
-    if (selectedProfile != null &&
-        !widget.profiles
-            .map((e) => e.profile.uid)
-            .contains(selectedProfile.profile.uid)) {
-      WidgetsBinding.instance.endOfFrame.then((_) {
+      // Re-render selected
+      _renderMapMarker(profile: selectedProfile, selected: true).then((frames) {
         if (mounted) {
-          widget.onProfileChanged(null);
+          setState(() {
+            _selectedMapMarkerAnimation
+              ..clear()
+              ..addAll(frames);
+          });
+          _selectedAnimationController.forward(from: 0);
+        }
+      });
+    } else if (selectedProfile != null && selectedUserFavoriteChanged) {
+      // Re-render selected
+      // Update the favorite icon
+      final unselectedFramesFuture =
+          _renderMapMarker(profile: selectedProfile, selected: false);
+      final selectedFramesFuture =
+          _renderMapMarker(profile: selectedProfile, selected: true);
+      Future.wait([unselectedFramesFuture, selectedFramesFuture])
+          .then((results) {
+        if (mounted) {
+          final index = _onscreenMarkers.indexWhere(
+              (r) => r.profile.profile.uid == selectedProfile.profile.uid);
+          if (index != -1) {
+            final r = _onscreenMarkers[index];
+            setState(() {
+              _onscreenMarkers[index] = RenderedProfile(
+                profile: r.profile,
+                frames: results[0],
+              );
+            });
+          }
+          setState(() {
+            _selectedMapMarkerAnimation
+              ..clear()
+              ..addAll(results[1]);
+          });
         }
       });
     }
@@ -221,15 +208,24 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
                 ),
                 zoom: 10,
               ),
+              tiltGesturesEnabled: false,
+              rotateGesturesEnabled: false,
+              minMaxZoomPreference: const MinMaxZoomPreference(4, null),
               onMapCreated: _initMapController,
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
               onCameraMoveStarted: () {
-                if (_locationOverridden == false) {
-                  setState(() => _locationOverridden = true);
+                if (_recenterAnimationComplete &&
+                    widget.selectedProfile != null) {
+                  widget.onProfileChanged(null);
                 }
               },
-              onCameraIdle: _onCameraMoved,
+              onCameraIdle: () {
+                if (!_recenterAnimationComplete) {
+                  setState(() => _recenterAnimationComplete = true);
+                }
+                _onCameraMoved();
+              },
               onTap: (_) => widget.onProfileChanged(null),
               markers: _buildMapMarkers(selectedProfile),
             );
@@ -244,18 +240,19 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   }
 
   Set<Marker> _buildMapMarkers(DiscoverProfile? selectedProfile) {
-    final set = <Marker>{};
+    final markers = <Marker>{};
 
-    final animationQueue = _markersAnimating.map((e) => e.profile.uid).toList();
+    final staggerUidsQueue =
+        _markersStaggering.map((e) => e.profile.uid).toList();
     for (final rendered in _onscreenMarkers) {
       final profile = rendered.profile;
       int frameIndex = _frameCount - 1;
 
       // Some profiles may be animating in
-      final staggerIndex = animationQueue.indexOf(profile.profile.uid);
+      final staggerIndex = staggerUidsQueue.indexOf(profile.profile.uid);
       if (staggerIndex != -1) {
         final ratio =
-            (staggerIndex / (animationQueue.length - 1)).clamp(0.0, 1.0);
+            (staggerIndex / (staggerUidsQueue.length - 1)).clamp(0.0, 1.0);
         final durationNormalized = _frameCount / 60;
         final staggeredAnimation = CurvedAnimation(
           parent: _staggeredAnimationController,
@@ -282,6 +279,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
         markerId: MarkerId(profile.profile.uid),
         anchor: const Offset(0.5, 0.5),
         zIndex: selected ? 10 : (favorite ? 5 : 0),
+        consumeTapEvents: true,
         position: LatLng(
           profile.location.latLong.latitude,
           profile.location.latLong.longitude,
@@ -289,9 +287,9 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
         onTap: () => widget.onProfileChanged(profile),
         icon: BitmapDescriptor.fromBytes(frame),
       );
-      set.add(marker);
+      markers.add(marker);
     }
-    return set;
+    return markers;
   }
 
   void _initMapController(GoogleMapController controller) async {
@@ -360,7 +358,9 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   void recenterMap(LatLong latLong) {
     double targetLatitude = latLong.latitude;
     final bounds = _bounds;
-    if (bounds != null && widget.obscuredRatio != 0.0) {
+    if (bounds != null &&
+        widget.obscuredRatio != 0.0 &&
+        widget.selectedProfile != null) {
       final visibleLatitudeRange =
           (bounds.southwest.latitude - bounds.northeast.latitude).abs() *
               (1 - widget.obscuredRatio);
