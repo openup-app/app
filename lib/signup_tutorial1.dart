@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -43,10 +42,12 @@ class _SignupTutorial1 extends ConsumerState<SignupTutorial1> {
                   ),
                 ),
                 Text(
-                  'A Good Photo Example',
+                  'A Good Photo to help\nmake great connections',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w500,
+                    height: 1.4,
                   ),
                 ),
               ],
@@ -56,50 +57,92 @@ class _SignupTutorial1 extends ConsumerState<SignupTutorial1> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(32.0),
+                Container(
+                  clipBehavior: Clip.hardEdge,
+                  margin: const EdgeInsets.all(24),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(32),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
+                        offset: Offset(0, 11),
+                        blurRadius: 26,
+                      ),
+                    ],
+                  ),
+                  child: Image.asset(
+                    'assets/images/tutorial_photo_good.jpg',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
                   child: Container(
+                    width: 210,
                     clipBehavior: Clip.hardEdge,
+                    margin: const EdgeInsets.only(bottom: 48),
                     decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(32)),
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
                       boxShadow: [
                         BoxShadow(
+                          offset: Offset(0, 3),
+                          blurRadius: 11,
                           color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
-                          offset: Offset(0, 11),
-                          blurRadius: 26,
-                        ),
+                        )
                       ],
                     ),
-                    child: Image.asset(
-                      'assets/images/tutorial_photo_good.jpg',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                const Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 8, top: 48),
-                    child: TutorialBubble.tick(
-                      text: Text('Photos are well lit,\n sharp and in color'),
-                    ),
-                  ),
-                ),
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: TutorialBubble.tick(
-                      text: Text('You are centered\n and happy'),
-                    ),
-                  ),
-                ),
-                const Align(
-                  alignment: Alignment.bottomRight,
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 8, bottom: 48),
-                    child: TutorialBubble.tick(
-                      text: Text('Alone in portrait and\nfocused in depth'),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 27),
+                        child: DefaultTextStyle(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            height: 1.5,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Row(
+                                children: const [
+                                  IconCircle(tick: true),
+                                  SizedBox(width: 16),
+                                  Text(
+                                    'You are center\nframed and smiling',
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: const [
+                                  IconCircle(tick: true),
+                                  SizedBox(width: 16),
+                                  Text(
+                                    'Alone in portrait and\nfocused in depth',
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: const [
+                                  IconCircle(tick: true),
+                                  SizedBox(width: 16),
+                                  Text(
+                                    'Photos are well lit,\nsharp and in color',
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -140,129 +183,43 @@ class _SignupTutorial1 extends ConsumerState<SignupTutorial1> {
   }
 }
 
-class TutorialBubble extends StatefulWidget {
-  final Text text;
+class IconCircle extends StatelessWidget {
   final bool tick;
 
-  const TutorialBubble.tick({
+  const IconCircle({
     super.key,
-    required this.text,
-  }) : tick = true;
-
-  const TutorialBubble.cross({
-    super.key,
-    required this.text,
-  }) : tick = false;
-
-  @override
-  State<TutorialBubble> createState() => _TutorialBubbleState();
-}
-
-class _TutorialBubbleState extends State<TutorialBubble>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration:
-          Duration(milliseconds: (Random().nextDouble() * 3000 + 8000).toInt()),
-    );
-    _controller.forward(from: Random().nextDouble());
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _controller.forward(from: 0);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+    required this.tick,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 176,
-      height: 96,
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                final t = _controller.value;
-                const intensity = 2;
-                final x = cos(t * 6 * pi) * intensity;
-                final y = sin(t * 2 * pi) * intensity;
-                return Transform.translate(
-                  offset: Offset(x, y),
-                  child: child,
-                );
-              },
-              child: Container(
-                clipBehavior: Clip.hardEdge,
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.95),
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                ),
-                alignment: Alignment.center,
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-                  child: Center(
-                    child: DefaultTextStyle(
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        height: 1.3,
-                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.6),
-                      ),
-                      child: widget.text,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.topRight,
-            child: Container(
-              width: 24,
-              height: 24,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                border: Border.all(width: 2, color: Colors.white),
-                shape: BoxShape.circle,
-                color: widget.tick
-                    ? const Color.fromRGBO(0x2D, 0xDA, 0x01, 1.0)
-                    : const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                boxShadow: const [
-                  BoxShadow(
-                    offset: Offset(0, 2),
-                    blurRadius: 4,
-                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.15),
-                  ),
-                ],
-              ),
-              child: widget.tick
-                  ? const Icon(
-                      Icons.done,
-                      size: 20,
-                    )
-                  : const Icon(
-                      Icons.close,
-                      size: 18,
-                    ),
-            ),
+    return Container(
+      width: 24,
+      height: 24,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        border: Border.all(width: 2, color: Colors.white),
+        shape: BoxShape.circle,
+        color: tick
+            ? const Color.fromRGBO(0x2D, 0xDA, 0x01, 1.0)
+            : const Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+        boxShadow: const [
+          BoxShadow(
+            offset: Offset(0, 2),
+            blurRadius: 4,
+            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.15),
           ),
         ],
       ),
+      child: tick
+          ? const Icon(
+              Icons.done,
+              size: 20,
+            )
+          : const Icon(
+              Icons.close,
+              size: 18,
+            ),
     );
   }
 }

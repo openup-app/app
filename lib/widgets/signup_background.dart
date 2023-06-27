@@ -64,35 +64,6 @@ class _SignupBackgroundState extends State<SignupBackground> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            for (final bokeh in _bokeh)
-              Positioned(
-                left: bokeh.offset.dx,
-                top: bokeh.offset.dy,
-                width: bokeh.size.width,
-                height: bokeh.size.height,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(1),
-                    color: bokeh.color,
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black54,
-                          blurRadius: bokeh.blurRadius,
-                          spreadRadius: bokeh.spreadRadius)
-                    ],
-                  ),
-                  child: ImageFiltered(
-                    imageFilter: ColorFilter.mode(
-                      Colors.white.withOpacity(bokeh.opacity),
-                      BlendMode.modulate,
-                    ),
-                    child: const RotationTransition(
-                      turns: AlwaysStoppedAnimation(1),
-                      child: SizedBox.expand(),
-                    ),
-                  ),
-                ),
-              ),
             widget.child,
           ],
         ),

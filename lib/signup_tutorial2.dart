@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -54,12 +56,15 @@ class _SignupTutorial2 extends ConsumerState<SignupTutorial2> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(32.0),
+                AspectRatio(
+                  aspectRatio: 9 / 16,
                   child: Container(
                     clipBehavior: Clip.hardEdge,
+                    margin: const EdgeInsets.all(24),
                     decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(32)),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(32),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
@@ -74,30 +79,72 @@ class _SignupTutorial2 extends ConsumerState<SignupTutorial2> {
                     ),
                   ),
                 ),
-                const Align(
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 8, top: 48),
-                    child: TutorialBubble.cross(
-                      text: Text('Photos are poorly\nlit and blurry'),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    width: 210,
+                    clipBehavior: Clip.hardEdge,
+                    margin: const EdgeInsets.only(bottom: 48),
+                    decoration: const BoxDecoration(
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                      boxShadow: [
+                        BoxShadow(
+                          offset: Offset(0, 3),
+                          blurRadius: 11,
+                          color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
+                        )
+                      ],
                     ),
-                  ),
-                ),
-                const Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 8),
-                    child: TutorialBubble.cross(
-                      text: Text('Off center\n with no depth'),
-                    ),
-                  ),
-                ),
-                const Align(
-                  alignment: Alignment.bottomLeft,
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 8, bottom: 48),
-                    child: TutorialBubble.cross(
-                      text: Text('Unable to tell who\nyou are'),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 27),
+                        child: DefaultTextStyle(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            height: 1.5,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Row(
+                                children: const [
+                                  IconCircle(tick: false),
+                                  SizedBox(width: 16),
+                                  Text(
+                                    'Off centered with no\ndepth',
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: const [
+                                  IconCircle(tick: false),
+                                  SizedBox(width: 16),
+                                  Text(
+                                    'Can\'t tell who you\nare, too many people',
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: const [
+                                  IconCircle(tick: false),
+                                  SizedBox(width: 16),
+                                  Text(
+                                    'Photo is poorly lit\nand blurry',
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),

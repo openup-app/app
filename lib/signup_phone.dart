@@ -182,7 +182,10 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
                 height: 42,
                 child: Center(
                   child: _submitting
-                      ? const LoadingIndicator(size: 27)
+                      ? const LoadingIndicator(
+                          size: 27,
+                          color: Colors.black,
+                        )
                       : Text(
                           'Send code',
                           textAlign: TextAlign.center,
