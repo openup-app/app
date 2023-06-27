@@ -115,7 +115,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
   @override
   Widget build(BuildContext context) {
-    const innerItemSize = 300.0;
+    const innerItemSize = 250.0;
     const itemHeight = innerItemSize + 16;
     final messagesMap = _messages;
     final messages = messagesMap?.values.toList();
@@ -311,8 +311,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                             vertical: 8.0),
                                         child: Padding(
                                           padding: EdgeInsets.only(
-                                            left: fromMe ? 64.0 : 0.0,
-                                            right: fromMe ? 0.0 : 64.0,
+                                            left: fromMe ? 100.0 : 0.0,
+                                            right: fromMe ? 0.0 : 100.0,
                                           ),
                                           child: StreamBuilder<PlaybackInfo>(
                                             initialData: const PlaybackInfo(),
@@ -626,7 +626,8 @@ Matrix4 _createTransform({
 }) {
   final scrollBottom = scrollTop + listHeight;
   final runwayLength = listHeight + itemHeight;
-  final runwayRatio = 1.0 - (scrollBottom - itemTopInList) / runwayLength;
+  final runwayRatio =
+      (1.0 - (scrollBottom - itemTopInList) / runwayLength) * 0.95;
   final invRatio = 1.0 - runwayRatio;
   return Matrix4.identity()
     // Shift scaling origin down as it scrolls up, so items don't fly upwards
@@ -636,7 +637,7 @@ Matrix4 _createTransform({
     // Center all items in the list
     ..translate(0.0, runwayLength * (0.5 - runwayRatio))
     // Shift the whole thing down
-    ..translate(0.0, -runwayLength * 0.2);
+    ..translate(0.0, -runwayLength * 0.1);
 }
 
 class _PerspectiveBubble extends ConsumerWidget {
@@ -680,17 +681,17 @@ class _PerspectiveBubble extends ConsumerWidget {
         );
 
         final x = runwayRatio;
-        const top = 0.6;
+        const top = 0.8;
         var y = 1.0;
         y = x < top ? cos(1.5 * (pi / 2) * (1 - x / top)) : y;
         y = y.clamp(0, 1);
-        final blur = 100.0 * (1 - y.clamp(0.0, 1.0));
+        final blur = 50.0 * (1 - y.clamp(0.0, 1.0));
         return Transform(
           transform: t,
           alignment: Alignment.center,
           origin: Offset(0.0, scrollBottom - itemTopInList - runwayLength),
           child: Opacity(
-            opacity: y.clamp(0.0, 1.0),
+            opacity: (y * 2).clamp(0.0, 1.0),
             // Overflow to contain blur
             child: OverflowBox(
               alignment: Alignment.center,
