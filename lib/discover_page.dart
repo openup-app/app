@@ -14,6 +14,7 @@ import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
+import 'package:openup/api/chat_state.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover_map_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
@@ -525,10 +526,29 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                   const SizedBox(height: 15),
                                   _MapButton(
                                     onPressed: widget.onShowConversations,
-                                    child: const Icon(
-                                      Icons.email,
-                                      color:
-                                          Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.email,
+                                          color: Color.fromRGBO(
+                                              0x0A, 0x7B, 0xFF, 1.0),
+                                        ),
+                                        Builder(
+                                          builder: (context) {
+                                            final count =
+                                                ref.watch(unreadCountProvider);
+                                            if (count == 0) {
+                                              return const SizedBox.shrink();
+                                            }
+                                            return Align(
+                                              alignment: Alignment.topRight,
+                                              child:
+                                                  UnreadIndicator(count: count),
+                                            );
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   const SizedBox(height: 18),

@@ -201,6 +201,26 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     );
   }
 
+  void openChatroom(String uid) {
+    state.map(
+      guest: (_) {},
+      signedIn: (signedIn) async {
+        final index =
+            signedIn.chatrooms?.indexWhere((c) => c.profile.uid == uid);
+        if (index != null && index != -1) {
+          final chatrooms = signedIn.chatrooms!;
+          final newChatrooms = List.of(chatrooms)
+            ..replaceRange(
+              index,
+              index + 1,
+              [chatrooms[index].copyWith(unreadCount: 0)],
+            );
+          state = signedIn.copyWith(chatrooms: newChatrooms);
+        }
+      },
+    );
+  }
+
   void acceptChatroom(String uid) {
     state.map(
       guest: (_) {},

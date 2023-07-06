@@ -14,6 +14,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/chat_state.dart';
 import 'package:openup/api/in_app_notifications.dart';
 import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/online_users_api_util.dart';
@@ -211,33 +212,35 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
         if (loggedIn) {
           _inAppNotificationsApi = InAppNotificationsApi(
-            host: host,
-            port: socketPort,
-            uid: user.uid,
-            onCollectionReady: (collectionId) async {
-              ref
-                  .read(collectionReadyProvider.notifier)
-                  .collectionId(collectionId);
-              final api = ref.read(apiProvider);
-              final result = await api.getCollection(collectionId);
-              result.fold(
-                (l) => null,
-                (r) {
-                  final userState = ref.read(userProvider2);
-                  final collections = userState.map(
-                    guest: (_) => <Collection>[],
-                    signedIn: (signedIn) => signedIn.collections ?? [],
-                  );
-                  final index = collections
-                      .indexWhere((c) => c.collectionId == collectionId);
-                  if (index != -1) {
-                    collections[index] = r.collection;
-                  }
-                  ref.read(userProvider.notifier).collections(collections);
-                },
-              );
-            },
-          );
+              host: host,
+              port: socketPort,
+              uid: user.uid,
+              onCollectionReady: (collectionId) async {
+                ref
+                    .read(collectionReadyProvider.notifier)
+                    .collectionId(collectionId);
+                final api = ref.read(apiProvider);
+                final result = await api.getCollection(collectionId);
+                result.fold(
+                  (l) => null,
+                  (r) {
+                    final userState = ref.read(userProvider2);
+                    final collections = userState.map(
+                      guest: (_) => <Collection>[],
+                      signedIn: (signedIn) => signedIn.collections ?? [],
+                    );
+                    final index = collections
+                        .indexWhere((c) => c.collectionId == collectionId);
+                    if (index != -1) {
+                      collections[index] = r.collection;
+                    }
+                    ref.read(userProvider.notifier).collections(collections);
+                  },
+                );
+              },
+              onUnreadCountUpdated: (count) {
+                ref.read(unreadCountProvider.notifier).updateUnreadCount(count);
+              });
         } else {
           _inAppNotificationsApi?.dispose();
         }

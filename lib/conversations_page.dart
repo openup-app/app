@@ -29,7 +29,6 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
   String _filterString = '';
 
   final _collections = <Collection>[];
-  List<Chatroom>? _chatrooms;
 
   @override
   void initState() {
@@ -259,10 +258,7 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
       params: {'uid': chatroom.profile.uid},
       extra: ChatPageArguments(chatroom: chatroom),
     );
-    final index = _chatrooms?.indexOf(chatroom);
-    if (index != null && index != -1) {
-      setState(() => _chatrooms?[index] = chatroom.copyWith(unreadCount: 0));
-    }
+    ref.read(userProvider2.notifier).openChatroom(chatroom.profile.uid);
   }
 
   void _deleteChatroom(Profile profile) async {

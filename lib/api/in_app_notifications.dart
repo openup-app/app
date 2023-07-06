@@ -12,6 +12,7 @@ class InAppNotificationsApi {
     required int port,
     required String uid,
     required void Function(String collectionId) onCollectionReady,
+    required void Function(int count) onUnreadCountUpdated,
   }) {
     _socket = io(
       'http://$host:$port/notifications',
@@ -29,6 +30,9 @@ class InAppNotificationsApi {
       if (type == 'collection_ready') {
         final collectionId = json['collectionId'] as String;
         onCollectionReady(collectionId);
+      } else if (type == 'unread_chats_count') {
+        final unreadCount = json['count'] as int;
+        onUnreadCountUpdated(unreadCount);
       }
     });
   }
