@@ -116,6 +116,8 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     );
   }
 
+  Future<void> cacheChatrooms() => _cacheChatrooms();
+
   Future<Either<ApiError, Profile>> updateName(String name) async {
     return state.map(
       guest: (_) =>
