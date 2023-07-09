@@ -58,6 +58,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   String? _playbackMessageId;
 
   bool _showUnreadMessageButton = false;
+  bool _fetchingMore = false;
+
+  static const _itemExtent = 62.0;
 
   @override
   void initState() {
@@ -71,9 +74,13 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       onMessage: (message) {
         if (mounted) {
           if (_messages != null) {
+            // Add new message and fix the visual list offset
+            final atBottom = _scrollController.position.pixels <=
+                _scrollController.position.minScrollExtent;
             setState(() => _messages![message.messageId!] = message);
-            if (_scrollController.position.pixels >=
-                _scrollController.position.maxScrollExtent) {
+            _scrollController
+                .jumpTo(_scrollController.position.pixels + _itemExtent);
+            if (atBottom) {
               _animateToBottom();
             } else {
               setState(() => _showUnreadMessageButton = true);
@@ -89,16 +96,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     final profile = ref.read(userProvider).profile!;
     setState(() => _myPhoto = profile.collection.photos.first.url);
 
-    _fetchHistory().then((value) {
-      if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-          if (mounted && _scrollController.hasClients) {
-            _scrollController
-                .jumpTo(_scrollController.position.maxScrollExtent);
-          }
-        });
-      }
-    });
+    _fetchHistory();
 
     _chatroom = widget.chatroom;
     final chatroom = widget.chatroom;
@@ -121,10 +119,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
   @override
   Widget build(BuildContext context) {
-    const innerItemSize = 250.0;
-    const itemHeight = innerItemSize + 16;
     final messagesMap = _messages;
-    final messages = messagesMap?.values.toList();
+    final messages = messagesMap?.values.toList()
+      ?..sort((a, b) => b.date.compareTo(a.date));
     final chatroom = _chatroom;
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -133,9 +130,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         const bottomButtonHeight = 51.0 + 16 * 2;
         final listBoxHeight = constraints.maxHeight -
             (MediaQuery.of(context).padding.top + dragHandleGap + appBarHeight);
-        const onScreenItemCount = 4;
-        const listContentsHeight = itemHeight * onScreenItemCount;
-        const fakeIndexCount = onScreenItemCount - 1;
         return Column(
           children: [
             SizedBox(
@@ -267,6 +261,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                         child: ListView.builder(
                           controller: _scrollController,
                           padding: const EdgeInsets.only(bottom: 100),
+                          reverse: true,
+                          itemExtent: _itemExtent,
                           itemCount: messages.length,
                           itemBuilder: (context, index) {
                             final message = messages[index];
@@ -453,9 +449,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+          _scrollController.position.minScrollExtent,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOutQuart,
         );
       }
     });
@@ -470,16 +466,21 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       return;
     }
 
-    final startDate = messages.values.first.date;
     if (_scrollController.position.userScrollDirection ==
-            ScrollDirection.forward &&
-        _scrollController.position.extentBefore < 400 &&
+            ScrollDirection.reverse &&
+        _scrollController.position.extentAfter < 350 &&
         messages.isNotEmpty) {
-      _fetchHistory(startDate: startDate);
+      var oldest = messages.values.first.date;
+      for (final m in messages.values) {
+        if (m.date.isBefore(oldest)) {
+          oldest = m.date;
+        }
+      }
+      _fetchHistory(startDate: oldest);
     }
 
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent &&
+    if (_scrollController.position.pixels <=
+            _scrollController.position.minScrollExtent &&
         _showUnreadMessageButton) {
       setState(() => _showUnreadMessageButton = false);
     }
@@ -502,6 +503,11 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   }
 
   Future<void> _fetchHistory({DateTime? startDate}) async {
+    if (_fetchingMore) {
+      return;
+    }
+
+    setState(() => _fetchingMore = true);
     final api = ref.read(apiProvider);
     final result = await api.getMessages(
       widget.otherUid,
@@ -510,6 +516,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     if (!mounted) {
       return;
     }
+
+    setState(() => _fetchingMore = false);
 
     result.fold(
       (l) => displayError(context, l),
