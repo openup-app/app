@@ -103,7 +103,7 @@ class AudioChatMessage extends StatelessWidget {
                                         formatDuration(
                                           isLoadingOrPlaying
                                               ? playbackInfo.position
-                                              : playbackInfo.duration,
+                                              : message.content.duration,
                                           canBeZero: true,
                                         ),
                                         textAlign: TextAlign.right,

@@ -68,8 +68,12 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       otherUid: widget.otherUid,
       onMessage: (message) {
         if (mounted) {
-          if (_messages == null) {
+          if (_messages != null) {
             setState(() => _messages![message.messageId!] = message);
+            if (_scrollController.position.pixels >=
+                _scrollController.position.maxScrollExtent) {
+              _animateToBottom();
+            }
           }
         }
       },
@@ -389,9 +393,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
           type: ChatType.audio,
           url: file.path,
           duration: duration,
-          waveform: const AudioMessageWaveform(
-            values: [],
-          ),
         ),
       );
     });
@@ -416,6 +417,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     result.fold(
       (l) => displayError(context, l),
       (r) {
+        setState(() => _messages![pendingId] = r);
         final chatroom = _chatroom;
         if (chatroom != null && chatroom.inviteState == ChatroomState.invited) {
           setState(() {
@@ -424,18 +426,21 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                 .read(userProvider2.notifier)
                 .acceptChatroom(chatroom.profile.uid);
           });
-          _messages![pendingId] = r;
         }
       },
     );
   }
 
   void _animateToBottom() {
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   void _scrollListener() {
