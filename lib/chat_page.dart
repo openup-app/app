@@ -57,6 +57,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   final _audio = JustAudioAudioPlayer();
   String? _playbackMessageId;
 
+  bool _showUnreadMessageButton = false;
+
   @override
   void initState() {
     super.initState();
@@ -73,6 +75,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
             if (_scrollController.position.pixels >=
                 _scrollController.position.maxScrollExtent) {
               _animateToBottom();
+            } else {
+              setState(() => _showUnreadMessageButton = true);
             }
           }
         }
@@ -322,6 +326,20 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IgnorePointer(
+                            ignoring: !_showUnreadMessageButton,
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOutQuart,
+                              opacity: _showUnreadMessageButton ? 1.0 : 0.0,
+                              child: _UnreadMessagesButton(
+                                onPressed: _animateToBottom,
+                              ),
+                            ),
+                          ),
+                        ),
                         SizedBox(
                           height: bottomButtonHeight,
                           child: Center(
@@ -459,6 +477,12 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         messages.isNotEmpty) {
       _fetchHistory(startDate: startDate);
     }
+
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent &&
+        _showUnreadMessageButton) {
+      setState(() => _showUnreadMessageButton = false);
+    }
   }
 
   Future<void> _fetchChatroom(String otherUid) async {
@@ -498,6 +522,49 @@ class _ChatScreenState extends ConsumerState<ChatPage>
           _messages = (_messages ?? {})..addEntries(entries);
         });
       },
+    );
+  }
+}
+
+class _UnreadMessagesButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _UnreadMessagesButton({
+    super.key,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 16),
+      child: Button(
+        onPressed: onPressed,
+        child: Container(
+          width: 32,
+          height: 32,
+          margin: const EdgeInsets.all(8.0),
+          decoration: const BoxDecoration(
+            color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                offset: Offset(0, 2),
+                blurRadius: 6,
+                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: const RotatedBox(
+            quarterTurns: 1,
+            child: Icon(
+              Icons.chevron_right,
+              size: 20,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
