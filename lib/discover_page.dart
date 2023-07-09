@@ -642,11 +642,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
 
   void _showRecordInvitePanel(BuildContext context, String uid) async {
     final audio = await showModalBottomSheet<Uint8List>(
-      backgroundColor: Colors.transparent,
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
-        return Surface(
+        return RecordPanelSurface(
           child: RecordPanel(
+            onCancel: Navigator.of(context).pop,
             onSubmit: (audio, duration) {
               Navigator.of(context).pop(audio);
               return Future.value(true);
@@ -761,11 +763,15 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     }
 
     return showModalBottomSheet(
-      backgroundColor: Colors.transparent,
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
-        return Surface(
+        return RecordPanelSurface(
           child: RecordPanel(
+            title: const Text('Update Audio Bio'),
+            submitLabel: const Text('Update'),
+            onCancel: Navigator.of(context).pop,
             onSubmit: (audio, _) async {
               final userStateNotifier = ref.read(userProvider2.notifier);
               final success = await userStateNotifier.updateAudioBio(audio);

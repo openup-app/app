@@ -935,10 +935,16 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
 }
 
 class RecordPanel extends ConsumerStatefulWidget {
+  final Widget? title;
+  final Widget? submitLabel;
+  final VoidCallback onCancel;
   final Future<bool> Function(Uint8List audio, Duration duration) onSubmit;
 
   const RecordPanel({
     super.key,
+    this.title,
+    this.submitLabel,
+    required this.onCancel,
     required this.onSubmit,
   });
 
@@ -947,116 +953,21 @@ class RecordPanel extends ConsumerStatefulWidget {
 }
 
 class _RecordPanelState extends ConsumerState<RecordPanel> {
+  static const _maxDuration = Duration(seconds: 30);
+
+  final _controller = PlaybackRecorderController();
+  final _recordingDurationNotifier = RecordingDurationNotifier(Duration.zero);
+  Ticker? _recordingDurationTicker;
+
   RecordPanelState _audioBioState = RecordPanelState.creating;
   Uint8List? _audio;
   Duration? _duration;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 234,
-      child: Builder(
-        builder: (context) {
-          switch (_audioBioState) {
-            case RecordPanelState.creating:
-              return RecordPanelRecorder(
-                onRecorded: (audio, duration) {
-                  setState(() {
-                    _audio = audio;
-                    _duration = duration;
-                    _audioBioState = RecordPanelState.deciding;
-                  });
-                },
-              );
-            case RecordPanelState.deciding:
-              return RecordPanelDeciding(
-                audio: _audio!,
-                submitIcon: const Icon(Icons.send),
-                submitLabel: const Text('submit'),
-                onRestart: () {
-                  setState(() {
-                    _audio = null;
-                    _duration = null;
-                    _audioBioState = RecordPanelState.creating;
-                  });
-                },
-                onSubmit: () async {
-                  setState(() => _audioBioState = RecordPanelState.uploading);
-                  final success = await widget.onSubmit(_audio!, _duration!);
-                  if (!mounted) {
-                    return;
-                  }
-
-                  if (success) {
-                    setState(() => _audioBioState = RecordPanelState.uploaded);
-                  } else {
-                    setState(() => _audioBioState = RecordPanelState.deciding);
-                  }
-                },
-              );
-            case RecordPanelState.uploading:
-              return const Center(
-                child: LoadingIndicator(color: Colors.white),
-              );
-            case RecordPanelState.uploaded:
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: const [
-                  Icon(
-                    Icons.done,
-                    size: 64,
-                    color: Colors.green,
-                  ),
-                  Text(
-                    'updated',
-                    style: TextStyle(
-                      color: Colors.green,
-                    ),
-                  )
-                ],
-              );
-          }
-        },
-      ),
-    );
-  }
-}
-
-enum RecordPanelState { creating, deciding, uploading, uploaded }
-
-class RecordPanelRecorder extends StatefulWidget {
-  final Duration? maxDuration;
-  final void Function(Uint8List? audio, Duration? duration) onRecorded;
-
-  const RecordPanelRecorder({
-    super.key,
-    this.maxDuration,
-    required this.onRecorded,
-  });
-
-  @override
-  State<RecordPanelRecorder> createState() => _RecordPanelRecorderState();
-}
-
-class _RecordPanelRecorderState extends State<RecordPanelRecorder> {
-  final _controller = PlaybackRecorderController();
-
-  final _recordingDurationNotifier = RecordingDurationNotifier(Duration.zero);
-  Ticker? _recordingDurationTicker;
+  bool _shouldSubmitWhenBytesReceived = false;
 
   @override
   void initState() {
     super.initState();
     _startRecording();
-  }
-
-  @override
-  void dispose() {
-    _recordingDurationNotifier.dispose();
-    _recordingDurationTicker?.dispose();
-    _controller.dispose();
-    super.dispose();
   }
 
   void _startRecording() {
@@ -1067,100 +978,334 @@ class _RecordPanelRecorderState extends State<RecordPanelRecorder> {
     _recordingDurationTicker?.start();
 
     _controller.startRecording(
-      maxDuration: widget.maxDuration,
-      onComplete: (recordingBytes) {
-        _recordingDurationTicker?.dispose();
-        _recordingDurationTicker = null;
-        widget.onRecorded(recordingBytes, _recordingDurationNotifier.value);
-      },
+      maxDuration: _maxDuration,
+      onComplete: _onRecordingEnded,
     );
+  }
+
+  void _onRecordingEnded(Uint8List recordingBytes) {
+    _recordingDurationTicker?.dispose();
+    setState(() {
+      _recordingDurationTicker = null;
+      _audio = recordingBytes;
+      _duration = _recordingDurationNotifier.value;
+      _audioBioState = RecordPanelState.deciding;
+    });
+
+    if (_shouldSubmitWhenBytesReceived) {
+      setState(() => _shouldSubmitWhenBytesReceived = false);
+      _onSubmit();
+    }
+  }
+
+  @override
+  void dispose() {
+    _recordingDurationNotifier.dispose();
+    _recordingDurationTicker?.dispose();
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<RecordingInfo>(
-      stream: _controller.combinedStream.map((event) => event.item1),
-      initialData: RecordingInfo.none(),
-      builder: (context, snapshot) {
-        final recordingInfo = snapshot.requireData;
-        return Button(
-          onPressed: () {
-            _recordingDurationTicker?.stop();
-            _controller.stopRecording();
-          },
-          child: SizedBox(
-            height: 234,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 22),
-                Text(
-                  'Recording message',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white),
-                ),
-                const SizedBox(height: 16),
-                ValueListenableBuilder<Duration>(
+    return Column(
+      children: [
+        const SizedBox(height: 44),
+        DefaultTextStyle(
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.black,
+          ),
+          child: widget.title ?? const Text('Recording message'),
+        ),
+        const SizedBox(height: 40),
+        Builder(
+          builder: (context) {
+            switch (_audioBioState) {
+              case RecordPanelState.creating:
+                return ValueListenableBuilder<Duration>(
                   valueListenable: _recordingDurationNotifier,
-                  builder: (context, duration, _) {
-                    return Text(
-                      formatDurationWithMillis(
-                        duration,
-                        canBeZero: true,
-                      ),
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white),
+                  builder: (context, duration, child) {
+                    return RecordPanelRecorder(
+                      duration: duration,
+                      maxDuration: _maxDuration,
+                      onStopPressed: _controller.stopRecording,
                     );
                   },
-                ),
-                Expanded(
-                  child: Center(
-                    child: Builder(
-                      builder: (context) {
-                        if (!recordingInfo.recording) {
-                          return const SizedBox.shrink();
-                        } else {
-                          return Center(
-                            child: SizedBox(
-                              width: 345,
-                              height: 80,
-                              child: CustomPaint(
-                                painter: FrequenciesPainter(
-                                  frequencies:
-                                      recordingInfo.frequencies.map((e) => e.y),
-                                  barCount: 30,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
+                );
+              case RecordPanelState.deciding:
+                return RecordPanelDeciding(
+                  audio: _audio!,
+                  onRestart: () {
+                    setState(() {
+                      _audio = null;
+                      _duration = null;
+                      _audioBioState = RecordPanelState.creating;
+                      _recordingDurationNotifier.value = Duration.zero;
+                      _recordingDurationTicker?.dispose();
+                    });
+                    _startRecording();
+                  },
+                );
+              case RecordPanelState.uploading:
+              case RecordPanelState.uploaded:
+                return const Center(
+                  child: LoadingIndicator(
+                    color: Colors.black,
                   ),
+                );
+            }
+          },
+        ),
+        const Spacer(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Button(
+              onPressed: widget.onCancel,
+              child: Container(
+                width: 163,
+                height: 56,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(28),
+                  ),
+                  color: Colors.white,
                 ),
-                Text(
-                  'tap to stop',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w300,
-                      color: Colors.white),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.only(right: 16),
+                      child: Icon(
+                        Icons.delete,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Text(
+                      'Cancel',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(width: 32),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  height: MediaQuery.of(context).padding.bottom,
-                ),
-              ],
+              ),
             ),
-          ),
-        );
-      },
+            Button(
+              onPressed: _onMaybeStopAndSubmit,
+              child: Container(
+                width: 163,
+                height: 56,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(28),
+                  ),
+                  color: Colors.white,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(width: 32),
+                    DefaultTextStyle(
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                      ),
+                      child: widget.submitLabel ?? const Text('Send'),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 16),
+                      child: Icon(
+                        Icons.send,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: MediaQuery.of(context).padding.bottom,
+        ),
+      ],
     );
   }
+
+  void _onMaybeStopAndSubmit() {
+    if (_audio == null) {
+      setState(() => _shouldSubmitWhenBytesReceived = true);
+      _controller.stopRecording();
+    } else {
+      _onSubmit();
+    }
+  }
+
+  void _onSubmit() async {
+    setState(() => _audioBioState = RecordPanelState.uploading);
+    final success = await widget.onSubmit(_audio!, _duration!);
+    if (!mounted) {
+      return;
+    }
+
+    if (success) {
+      setState(() => _audioBioState = RecordPanelState.uploaded);
+    } else {
+      setState(() => _audioBioState = RecordPanelState.deciding);
+    }
+  }
+}
+
+class RecordPanelSurface extends StatelessWidget {
+  final Widget child;
+
+  const RecordPanelSurface({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 460,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: const BoxDecoration(
+              color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(44),
+                topRight: Radius.circular(44),
+              ),
+            ),
+            child: child,
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Container(
+                width: 37,
+                height: 5,
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(0xE0, 0xE0, 0xE0, 1.0),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(3),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum RecordPanelState { creating, deciding, uploading, uploaded }
+
+class RecordPanelRecorder extends StatelessWidget {
+  final Duration duration;
+  final Duration maxDuration;
+  final VoidCallback onStopPressed;
+
+  const RecordPanelRecorder({
+    super.key,
+    required this.duration,
+    required this.maxDuration,
+    required this.onStopPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onStopPressed,
+      child: Container(
+        width: 212,
+        height: 212,
+        decoration: const BoxDecoration(
+          color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+          shape: BoxShape.circle,
+        ),
+        child: Container(
+          margin: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: const Color.fromRGBO(0x00, 0x7A, 0xEB, 1.0),
+              width: 16,
+            ),
+            shape: BoxShape.circle,
+          ),
+          child: Builder(
+            builder: (context) {
+              const max = Duration(seconds: 30);
+              final secondsRemaining =
+                  ((max - duration).inMilliseconds / 1000).ceil();
+              final ratioRemaining =
+                  (1 - duration.inMilliseconds / max.inMilliseconds)
+                      .clamp(0.0, 1.0);
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  CustomPaint(
+                    painter: _RecordingDurationArcPainter(
+                      ratio: ratioRemaining,
+                    ),
+                  ),
+                  Center(
+                    child: Text(
+                      secondsRemaining.toString(),
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RecordingDurationArcPainter extends CustomPainter {
+  final double ratio;
+
+  _RecordingDurationArcPainter({
+    required this.ratio,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawArc(
+      (Offset.zero & size).inflate(7),
+      -pi / 2,
+      ratio * 2 * pi,
+      false,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 16
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _RecordingDurationArcPainter oldDelegate) =>
+      oldDelegate.ratio != ratio;
 }
 
 class RecordingDurationNotifier extends ValueNotifier<Duration> {
@@ -1171,91 +1316,48 @@ class RecordingDurationNotifier extends ValueNotifier<Duration> {
 
 class RecordPanelDeciding extends StatelessWidget {
   final Uint8List audio;
-  final Widget submitIcon;
-  final Widget submitLabel;
   final VoidCallback onRestart;
-  final VoidCallback onSubmit;
 
   const RecordPanelDeciding({
     super.key,
     required this.audio,
-    required this.submitIcon,
-    required this.submitLabel,
     required this.onRestart,
-    required this.onSubmit,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Button(
-            onPressed: Navigator.of(context).pop,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.delete,
-                    color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'delete',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w300,
-                        color: Colors.white),
-                  ),
-                ],
+    return Button(
+      onPressed: onRestart,
+      child: Container(
+        width: 212,
+        height: 212,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+          color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+          shape: BoxShape.circle,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(
+                Icons.loop,
+                color: Colors.white,
               ),
-            ),
-          ),
-          Button(
-            onPressed: onRestart,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.loop),
-                  const SizedBox(height: 12),
-                  Text(
-                    'retry',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w300,
-                        color: Colors.white),
-                  ),
-                ],
+              SizedBox(height: 12),
+              Text(
+                'retry',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.white,
+                ),
               ),
-            ),
+            ],
           ),
-          Button(
-            onPressed: onSubmit,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  submitIcon,
-                  const SizedBox(height: 12),
-                  DefaultTextStyle(
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w300,
-                      color: Colors.white,
-                    ),
-                    child: submitLabel,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1333,22 +1435,26 @@ class PlaybackRecorderController extends ChangeNotifier {
     required void Function(Uint8List bytes) onComplete,
   }) {
     maxDuration ??= const Duration(seconds: 30);
-    _recorder.startRecording(onFrequencies: (frequencies) {
-      final value = _combinedController.value;
-      final recordingInfo = value.item1.copyWith(frequencies: frequencies);
-      _combinedController.add(Tuple2(recordingInfo, value.item2));
-    }, onComplete: (bytes) {
-      onComplete(bytes);
-    }).then((value) {
+    _recorder.startRecording(
+      onFrequencies: (frequencies) {
+        final value = _combinedController.value;
+        final recordingInfo = value.item1.copyWith(frequencies: frequencies);
+        _combinedController.add(Tuple2(recordingInfo, value.item2));
+      },
+      onComplete: (bytes) {
+        onComplete(bytes);
+      },
+    ).then((value) {
       final value = _combinedController.value;
       final recordingInfo = value.item1.copyWith(
         recording: true,
         start: DateTime.now(),
       );
       _combinedController.add(Tuple2(recordingInfo, value.item2));
-      _recordingLimitTimer = Timer(maxDuration!, () {
-        _recorder.stopRecording();
-      });
+      _recordingLimitTimer = Timer(
+        maxDuration!,
+        () => _recorder.stopRecording(),
+      );
     });
   }
 

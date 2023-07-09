@@ -162,11 +162,13 @@ class _ViewCollectionPageState extends ConsumerState<ViewProfilePage> {
 
   void _showRecordPanel(BuildContext context, String uid) async {
     final audio = await showModalBottomSheet<Uint8List>(
-      backgroundColor: Colors.transparent,
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
-        return Surface(
+        return RecordPanelSurface(
           child: RecordPanel(
+            onCancel: Navigator.of(context).pop,
             onSubmit: (audio, duration) {
               Navigator.of(context).pop(audio);
               return Future.value(true);

@@ -124,11 +124,15 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
 
   Future<File?> _showRecordPanel() async {
     final audio = await showModalBottomSheet<Uint8List>(
-      backgroundColor: Colors.transparent,
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
-        return Surface(
+        return RecordPanelSurface(
           child: RecordPanel(
+            title: const Text('Record Audio Bio'),
+            submitLabel: const Text('Submit'),
+            onCancel: Navigator.of(context).pop,
             onSubmit: (audio, duration) {
               Navigator.of(context).pop(audio);
               return Future.value(true);

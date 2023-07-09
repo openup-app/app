@@ -349,11 +349,13 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
   Future<RecordingResult?> _showRecordPanel(BuildContext context) async {
     return showModalBottomSheet<RecordingResult>(
-      backgroundColor: Colors.transparent,
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
-        return Surface(
+        return RecordPanelSurface(
           child: RecordPanel(
+            onCancel: Navigator.of(context).pop,
             onSubmit: (audio, duration) {
               Navigator.of(context).pop(RecordingResult(audio, duration));
               return Future.value(true);

@@ -353,11 +353,15 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
 
   Future<void> _showRecordPanel(BuildContext context) {
     return showModalBottomSheet<Uint8List>(
-      backgroundColor: Colors.transparent,
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
-        return Surface(
+        return RecordPanelSurface(
           child: RecordPanel(
+            title: const Text('Updating Audio Bio'),
+            submitLabel: const Text('Update'),
+            onCancel: Navigator.of(context).pop,
             onSubmit: (audio, _) async {
               final userStateNotifier = ref.read(userProvider2.notifier);
               final success = await userStateNotifier.updateAudioBio(audio);
