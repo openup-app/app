@@ -136,8 +136,11 @@ class AudioChatMessage extends StatelessWidget {
                                   clipBehavior: Clip.hardEdge,
                                   height: isLoadingOrPlaying ? 16 : 8,
                                   decoration: BoxDecoration(
-                                    color: const Color.fromRGBO(
-                                        0xC4, 0xC4, 0xC4, 1.0),
+                                    color: fromMe
+                                        ? const Color.fromRGBO(
+                                            0xE1, 0xE1, 0xE1, 1.0)
+                                        : const Color.fromRGBO(
+                                            0xC4, 0xC4, 0xC4, 1.0),
                                     borderRadius: const BorderRadius.all(
                                         Radius.circular(12)),
                                     boxShadow: isLoadingOrPlaying
