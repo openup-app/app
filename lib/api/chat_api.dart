@@ -83,7 +83,7 @@ class MessageContent with _$MessageContent {
     @JsonKey(name: "durationMicros")
     @DurationConverter()
         required Duration duration,
-    required AudioMessageWaveform waveform,
+    @Default(null) AudioMessageWaveform? waveform,
   }) = _AudioMessageContent;
 
   factory MessageContent.fromJson(Map<String, dynamic> json) =>
