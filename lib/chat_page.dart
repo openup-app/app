@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -15,8 +13,8 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/chat_message.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/waveforms.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
@@ -256,151 +254,63 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                       left: 0,
                       right: 0,
                       height: listBoxHeight,
-                      child: OverflowBox(
-                        alignment: Alignment.topCenter,
-                        minHeight: listContentsHeight,
-                        maxHeight: listContentsHeight,
-                        child: _AcceptRejectBanner(
-                          chatroom: _chatroom!,
-                          child: ListView.builder(
-                            clipBehavior: Clip.none,
-                            controller: _scrollController,
-                            padding: EdgeInsets.zero,
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            itemExtent: itemHeight,
-                            itemCount: messages.length + fakeIndexCount,
-                            itemBuilder: (context, fakeIndex) {
-                              // Invisible item to shift the first bubble closer
-                              if (fakeIndex < fakeIndexCount) {
-                                return const IgnorePointer(
-                                  child: _PerspectiveBubble(
-                                    scrollTop: 0,
-                                    listHeight: listContentsHeight,
-                                    itemHeight: itemHeight,
-                                    itemTopInList: 0,
-                                    child: SizedBox.shrink(),
-                                  ),
-                                );
-                              }
-                              final index = fakeIndex - fakeIndexCount;
-                              final message = messages[index];
-                              final myUid = ref.read(userProvider).uid;
-                              final fromMe = message.uid == myUid;
-                              final isCurrent =
-                                  _playbackMessageId == message.messageId;
-                              final playbackStream =
-                                  isCurrent ? _audio.playbackInfoStream : null;
-                              return IgnorePointer(
-                                key: ValueKey(message.messageId ?? ''),
-                                child: StreamBuilder<PlaybackInfo>(
-                                  initialData: const PlaybackInfo(),
-                                  stream: playbackStream,
-                                  builder: (context, snapshot) {
-                                    final playbackInfo = snapshot.requireData;
-                                    final isPlaying = playbackInfo.state ==
-                                        PlaybackState.playing;
-                                    final isLoading = playbackInfo.state ==
-                                        PlaybackState.loading;
-                                    return _PerspectiveBubble(
-                                      scrollTop: ref.watch(_scrollProvider),
-                                      listHeight: listContentsHeight,
-                                      itemHeight: itemHeight,
-                                      itemTopInList: fakeIndex * itemHeight,
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 8.0),
-                                        child: Padding(
-                                          padding: EdgeInsets.only(
-                                            left: fromMe ? 100.0 : 0.0,
-                                            right: fromMe ? 0.0 : 100.0,
-                                          ),
-                                          child: StreamBuilder<PlaybackInfo>(
-                                            initialData: const PlaybackInfo(),
-                                            stream: playbackStream ??
-                                                Stream.fromIterable(
-                                                    [const PlaybackInfo()]),
-                                            builder: (context, snapshot) {
-                                              final playbackInfo =
-                                                  snapshot.requireData;
-                                              // Center in large parent to contain blur
-                                              return ColoredBox(
-                                                color: Colors.transparent,
-                                                child: Center(
-                                                  child: _ChatMessage(
-                                                    photo: fromMe
-                                                        ? _myPhoto
-                                                        : _otherProfile?.photo,
-                                                    fromMe: fromMe,
-                                                    message: message,
-                                                    height: itemHeight,
-                                                    isLoading: isLoading,
-                                                    frequenciesColor: isPlaying
-                                                        ? const Color.fromRGBO(
-                                                            0x00,
-                                                            0xff,
-                                                            0xef,
-                                                            1.0)
-                                                        : const Color.fromRGBO(
-                                                            0xAF,
-                                                            0xAF,
-                                                            0xAF,
-                                                            1.0),
-                                                    frequencies: isPlaying
-                                                        ? playbackInfo
-                                                            .frequencies
-                                                        : message.content
-                                                            .waveform.values,
-                                                    onPressed: () async {
-                                                      if (isPlaying) {
-                                                        _audio.stop();
-                                                        setState(() =>
-                                                            _playbackMessageId =
-                                                                null);
-                                                      } else {
-                                                        setState(() =>
-                                                            _playbackMessageId =
-                                                                message
-                                                                    .messageId);
-                                                        await _audio.setUrl(
-                                                            message
-                                                                .content.url);
-                                                        if (mounted) {
-                                                          _audio.play();
-                                                        }
-                                                      }
-                                                    },
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ),
-                                    );
+                      child: _AcceptRejectBanner(
+                        chatroom: _chatroom!,
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.only(bottom: 100),
+                          itemCount: messages.length,
+                          itemBuilder: (context, index) {
+                            final message = messages[index];
+                            final myUid = ref.read(userProvider).uid;
+                            final fromMe = message.uid == myUid;
+                            final isCurrent =
+                                _playbackMessageId == message.messageId;
+                            final playbackStream = isCurrent
+                                ? _audio.playbackInfoStream
+                                : Stream.fromIterable([
+                                    PlaybackInfo(
+                                      position: Duration.zero,
+                                      duration: message.content.duration,
+                                      state: PlaybackState.idle,
+                                      frequencies: [],
+                                    )
+                                  ]);
+                            return StreamBuilder<PlaybackInfo>(
+                              key: ValueKey(message.messageId ?? ''),
+                              initialData: const PlaybackInfo(),
+                              stream: playbackStream,
+                              builder: (context, snapshot) {
+                                final playbackInfo = snapshot.requireData;
+                                final isPlaying =
+                                    playbackInfo.state == PlaybackState.playing;
+                                return AudioChatMessage(
+                                  message: message,
+                                  fromMe: fromMe,
+                                  photo: (fromMe
+                                          ? _myPhoto
+                                          : _otherProfile?.photo) ??
+                                      '',
+                                  playbackInfo: playbackInfo,
+                                  onPressed: () async {
+                                    if (isPlaying) {
+                                      _audio.stop();
+                                      setState(() => _playbackMessageId = null);
+                                    } else {
+                                      setState(() => _playbackMessageId =
+                                          message.messageId);
+                                      await _audio.setUrl(message.content.url);
+                                      if (mounted) {
+                                        _audio.play();
+                                      }
+                                    }
                                   },
-                                ),
-                              );
-                            },
-                          ),
+                                );
+                              },
+                            );
+                          },
                         ),
                       ),
-                    ),
-                    _TouchRegion(
-                      scrollTop: ref.watch(_scrollProvider),
-                      listHeight: listContentsHeight,
-                      itemHeight: itemHeight,
-                      itemCount: messages.length + fakeIndexCount,
-                      debugShowBounds: false,
-                      onPressed: (fakeIndex) {
-                        final index = fakeIndex - fakeIndexCount;
-                        if (index > 0 && index < messages.length) {
-                          final message = messages[index];
-                          setState(
-                              () => _playbackMessageId = message.messageId);
-                          _audio.setUrl(message.content.url);
-                          _audio.play();
-                        }
-                      },
                     ),
                   ],
                   Align(
@@ -585,461 +495,10 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   }
 }
 
-// ignore: unused_element
-class _TestChild extends StatelessWidget {
-  const _TestChild({
-    super.key,
-    required this.innerItemSize,
-    required this.fromMe,
-    required this.index,
-  });
-
-  final double innerItemSize;
-  final bool fromMe;
-  final int index;
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Colors.transparent,
-      child: Center(
-        child: Container(
-          width: innerItemSize,
-          height: innerItemSize,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: (fromMe
-                ? Colors.pink
-                : (index == 4 ? Colors.orange : Colors.blue)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-Matrix4 _createTransform({
-  required double scrollTop,
-  required double listHeight,
-  required double itemHeight,
-  required double itemTopInList,
-}) {
-  final scrollBottom = scrollTop + listHeight;
-  final runwayLength = listHeight + itemHeight;
-  final runwayRatio =
-      (1.0 - (scrollBottom - itemTopInList) / runwayLength) * 0.95;
-  final invRatio = 1.0 - runwayRatio;
-  return Matrix4.identity()
-    // Shift scaling origin down as it scrolls up, so items don't fly upwards
-    ..translate(0.0, invRatio * 0.6 * itemHeight * invRatio)
-    // Scale based on distance on the runway
-    ..scale(runwayRatio.clamp(0.0, double.infinity))
-    // Center all items in the list
-    ..translate(0.0, runwayLength * (0.5 - runwayRatio))
-    // Shift the whole thing down
-    ..translate(0.0, -runwayLength * 0.1);
-}
-
-class _PerspectiveBubble extends ConsumerWidget {
-  final double scrollTop;
-  final double listHeight;
-  final double itemHeight;
-  final double itemTopInList;
-  final Widget child;
-
-  const _PerspectiveBubble({
-    super.key,
-    required this.scrollTop,
-    required this.listHeight,
-    required this.itemHeight,
-    required this.itemTopInList,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Consumer(
-      builder: (context, ref, child) {
-        final scrollTop = ref.watch(_scrollProvider);
-        final scrollBottom = scrollTop + listHeight;
-        final runwayLength = listHeight + itemHeight;
-        final runwayRatio = 1.0 - (scrollBottom - itemTopInList) / runwayLength;
-        // final t = Matrix4.identity()
-        //   // Shift scaling origin down as it scrolls up, so items don't fly upwards
-        //   ..translate(0.0, invRatio * 0.6 * itemHeight * invRatio)
-        //   // Scale based on distance on the runway
-        //   ..scale(runwayRatio.clamp(0.0, double.infinity))
-        //   // Center all items in the list
-        //   ..translate(0.0, runwayLength * (0.5 - runwayRatio))
-        //   // Shift the whole thing down
-        //   ..translate(0.0, runwayLength * 0.1);
-        final t = _createTransform(
-          scrollTop: ref.watch(_scrollProvider),
-          listHeight: listHeight,
-          itemHeight: itemHeight,
-          itemTopInList: itemTopInList,
-        );
-
-        final x = runwayRatio;
-        const top = 0.8;
-        var y = 1.0;
-        y = x < top ? cos(1.5 * (pi / 2) * (1 - x / top)) : y;
-        y = y.clamp(0, 1);
-        final blur = 50.0 * (1 - y.clamp(0.0, 1.0));
-        return Transform(
-          transform: t,
-          alignment: Alignment.center,
-          origin: Offset(0.0, scrollBottom - itemTopInList - runwayLength),
-          child: Opacity(
-            opacity: (y * 2).clamp(0.0, 1.0),
-            // Overflow to contain blur
-            child: OverflowBox(
-              alignment: Alignment.center,
-              minWidth: 600,
-              minHeight: 600,
-              maxWidth: 600,
-              maxHeight: 600,
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(
-                  sigmaX: blur,
-                  sigmaY: blur,
-                ),
-                child: child,
-              ),
-            ),
-          ),
-        );
-      },
-      child: child,
-    );
-  }
-}
-
 class RecordingResult {
   final Uint8List audio;
   final Duration duration;
   RecordingResult(this.audio, this.duration);
-}
-
-class _ChatMessage extends StatelessWidget {
-  final String? photo;
-  final bool fromMe;
-  final ChatMessage message;
-  final double height;
-  final Color frequenciesColor;
-  final bool isLoading;
-  final List<double>? frequencies;
-  final VoidCallback onPressed;
-
-  const _ChatMessage({
-    super.key,
-    required this.fromMe,
-    required this.photo,
-    required this.message,
-    required this.height,
-    this.isLoading = false,
-    required this.frequenciesColor,
-    required this.frequencies,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: SizedBox(
-        width: height,
-        height: height,
-        child: Button(
-          onPressed: message.messageId == null ? null : onPressed,
-          useFadeWheNoPressedCallback: false,
-          child: _BubbleContainer(
-            fromMe: fromMe,
-            childBottomLeft:
-                fromMe ? _buildSentIndicator(context) : _buildPhoto(),
-            childBottomRight: fromMe ? _buildPhoto() : null,
-            child: Stack(
-              children: [
-                if (isLoading)
-                  Positioned(
-                    top: 16,
-                    left: 0,
-                    right: 4,
-                    child: LoadingIndicator(
-                      size: 24,
-                      color: frequenciesColor,
-                    ),
-                  ),
-                Center(
-                  child: SizedBox(
-                    width: 200,
-                    child: CustomPaint(
-                      size: const Size.fromHeight(140),
-                      painter: FrequenciesPainter(
-                        frequencies: frequencies ??
-                            message.content.waveform.values
-                                .map((e) => e.toDouble())
-                                .toList(),
-                        barCount: 30,
-                        color: frequenciesColor,
-                      ),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 20.0),
-                    child: Text(
-                      formatDuration(message.content.duration),
-                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          fontSize: 13,
-                          color: const Color.fromRGBO(0xFF, 0xF3, 0xF3, 0.8)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget? _buildSentIndicator(BuildContext context) {
-    final hasSent = message.messageId != null;
-    if (!hasSent) {
-      return null;
-    }
-    return Row(
-      children: [
-        if (hasSent)
-          Text(
-            'sent',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                color: const Color.fromRGBO(0x9D, 0x9D, 0x9D, 1.0),
-                fontSize: 16,
-                fontWeight: FontWeight.w300),
-          ),
-        const SizedBox(width: 2),
-        const Icon(
-          Icons.done,
-          size: 16,
-          color: Color.fromRGBO(0x9D, 0x9D, 0x9D, 1.0),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPhoto() {
-    return Container(
-      width: 33,
-      height: 33,
-      clipBehavior: Clip.hardEdge,
-      decoration: const BoxDecoration(
-        color: Colors.grey,
-        shape: BoxShape.circle,
-      ),
-      child: photo == null
-          ? null
-          : Image.network(
-              photo!,
-              fit: BoxFit.cover,
-            ),
-    );
-  }
-}
-
-class _BlurListItem extends StatefulWidget {
-  final ScrollController controller;
-  final Widget child;
-
-  const _BlurListItem({
-    super.key,
-    required this.controller,
-    required this.child,
-  });
-
-  @override
-  State<_BlurListItem> createState() => _BlurListItemState();
-}
-
-class _BlurListItemState extends State<_BlurListItem> {
-  double _scrollFraction = 1.0;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.addListener(_listener);
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_listener);
-    super.dispose();
-  }
-
-  void _listener() {
-    setState(() {
-      _scrollFraction = widget.controller.position.pixels /
-          widget.controller.position.viewportDimension;
-    });
-
-    // final scrollableBox = scrollable.context.findRenderObject() as RenderBox;
-    // final listItemBox = listItemContext.findRenderObject() as RenderBox;
-    // final listItemOffset = listItemBox.localToGlobal(
-    //   listItemBox.size.centerLeft(Offset.zero),
-    //   ancestor: scrollableBox,
-    // );
-
-    // final viewportDimension = scrollable.position.viewportDimension;
-    // _scrollFraction = scrollable.position.pixels / viewportDimension;
-    // (listItemOffset.dy / viewportDimension); //.clamp(0.0, 1.0);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final sigma = _scrollFraction * _scrollFraction * 10.0;
-    return ImageFiltered(
-      enabled: false,
-      imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-      child: widget.child,
-    );
-  }
-}
-
-class _BubbleContainer extends StatelessWidget {
-  final bool fromMe;
-  final Widget? childBottomLeft;
-  final Widget? childBottomRight;
-  final Widget child;
-
-  const _BubbleContainer({
-    super.key,
-    required this.fromMe,
-    this.childBottomLeft,
-    this.childBottomRight,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              colors: fromMe
-                  ? const [
-                      Color.fromRGBO(0x6B, 0x00, 0x00, 0.42),
-                      Color.fromRGBO(0xF3, 0x0B, 0x0B, 0.8),
-                      Color.fromRGBO(0xF3, 0x0B, 0x0B, 0.8),
-                    ]
-                  : const [
-                      Color.fromRGBO(0x00, 0x72, 0x64, 0.53),
-                      Color.fromRGBO(0x00, 0x60, 0x6D, 1.0),
-                      Color.fromRGBO(0x00, 0x8B, 0x9E, 1.0),
-                    ],
-              stops: const [0.0, 0.7, 1.0],
-            ),
-            shape: BoxShape.circle,
-          ),
-          child: child,
-        ),
-        if (childBottomLeft != null)
-          Align(
-            alignment: Alignment.bottomLeft,
-            child: childBottomLeft,
-          ),
-        if (childBottomRight != null)
-          Align(
-            alignment: Alignment.bottomRight,
-            child: childBottomRight,
-          ),
-      ],
-    );
-  }
-}
-
-class _TouchRegion extends ConsumerWidget {
-  final double scrollTop;
-  final double listHeight;
-  final double itemHeight;
-  final int itemCount;
-  final bool debugShowBounds;
-  final void Function(int index) onPressed;
-
-  const _TouchRegion({
-    super.key,
-    required this.scrollTop,
-    required this.listHeight,
-    required this.itemHeight,
-    required this.itemCount,
-    this.debugShowBounds = false,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return SizedBox(
-      height: listHeight,
-      child: Consumer(
-        builder: (context, ref, child) {
-          final maxOnScreenItemCount = (listHeight / itemHeight).ceil() + 1;
-          final topItemIndex = (scrollTop ~/ itemHeight).clamp(0, itemCount);
-          final bottomItemIndex =
-              (topItemIndex + maxOnScreenItemCount).clamp(0, itemCount);
-          final topItemStart =
-              (scrollTop ~/ itemHeight) * itemHeight - scrollTop;
-          final scrollBottom = scrollTop + listHeight;
-          final runwayLength = listHeight + itemHeight;
-          return Stack(
-            children: [
-              for (var i = 0; topItemIndex + i < bottomItemIndex; i++)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: topItemStart + i * itemHeight,
-                  height: itemHeight,
-                  child: Builder(
-                    builder: (context) {
-                      final index = topItemIndex + i;
-                      final itemTopInList = index * itemHeight;
-                      return Transform(
-                        transform: _createTransform(
-                          scrollTop: scrollTop,
-                          listHeight: listHeight,
-                          itemHeight: itemHeight,
-                          itemTopInList: itemTopInList,
-                        ),
-                        alignment: Alignment.center,
-                        origin: Offset(
-                          0.0,
-                          scrollBottom - itemTopInList - runwayLength,
-                        ),
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onTap: () => onPressed(index),
-                          child: IgnorePointer(
-                            child: Container(
-                              height: itemHeight,
-                              decoration: BoxDecoration(
-                                color: debugShowBounds
-                                    ? Colors.blue.withOpacity(0.6)
-                                    : Colors.transparent,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-            ],
-          );
-        },
-      ),
-    );
-  }
 }
 
 class _AcceptRejectBanner extends StatelessWidget {

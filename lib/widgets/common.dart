@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -2160,6 +2161,29 @@ String formatCountdown(Duration d) {
     return '${d.inHours} hour';
   } else {
     return '${d.inMinutes.toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+  }
+}
+
+String formatDate(DateTime d) {
+  final now = DateTime.now();
+  final timeFormat = DateFormat.jm();
+  final time = timeFormat.format(d);
+  if (now.year == d.year && now.month == d.month && now.day == d.day) {
+    // Time today, ex. 5:06 PM
+    final format = DateFormat.jm();
+    return format.format(d);
+  } else if (now.difference(d).inDays < 7) {
+    // Date this week, ex. Tues at 10:00 AM
+    final format = DateFormat.E();
+    return '${format.format(d)} at $time'.toUpperCase();
+  } else if (now.year == d.year) {
+    // Date this year, ex. Jul 9 at 5:06 PM
+    final format = DateFormat.MMMd();
+    return '${format.format(d)} at $time'.toUpperCase();
+  } else {
+    // Some date, ex: Mar 21, 2023 AT 12:00 PM
+    final format = DateFormat.yMMMMd();
+    return '${format.format(d)} at $time}'.toUpperCase();
   }
 }
 
