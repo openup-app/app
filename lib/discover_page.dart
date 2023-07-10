@@ -605,7 +605,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         },
                         onToggleFavorite: () {
                           if (selectedProfile != null) {
-                            _toggleFavorite(selectedProfile);
+                            _toggleFavoriteOrShowSignIn(
+                                context, selectedProfile);
                           }
                         },
                         onBlockUser: (profile) {
@@ -706,6 +707,17 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
           ),
         );
       },
+    );
+  }
+
+  void _toggleFavoriteOrShowSignIn(
+    BuildContext context,
+    DiscoverProfile profile,
+  ) async {
+    final userState = ref.read(userProvider2);
+    userState.map(
+      guest: (_) => _showSignInDialog(),
+      signedIn: (_) => _toggleFavorite(profile),
     );
   }
 
