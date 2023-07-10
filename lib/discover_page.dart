@@ -1035,7 +1035,7 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                 const SizedBox(height: 24),
                 Center(
                   child: Text(
-                    'I\'m interested in seeing...',
+                    'Who are you searching for?',
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.w400,
