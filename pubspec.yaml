@@ -71,7 +71,6 @@ dependencies:
   package_info_plus: ^3.1.2
   flutter_slidable: ^3.0.0
   google_maps_flutter: ^2.2.6
-  modal_bottom_sheet: ^3.0.0-pre
 
 dev_dependencies:
   flutter_test:

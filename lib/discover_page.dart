@@ -9,7 +9,6 @@ import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -309,319 +308,315 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoScaffold(
-      body: ActivePage(
-        onActivate: () {
-          setState(() => _pageActive = true);
-          final queryLocation = _queryLocation;
-          if (queryLocation != null) {
-            _queryProfilesAt(queryLocation);
+    return ActivePage(
+      onActivate: () {
+        setState(() => _pageActive = true);
+        final queryLocation = _queryLocation;
+        if (queryLocation != null) {
+          _queryProfilesAt(queryLocation);
+        }
+      },
+      onDeactivate: () {
+        _profileBuilderKey.currentState?.pause();
+        setState(() => _pageActive = false);
+      },
+      child: Builder(
+        builder: (context) {
+          final initialLocation = _initialLocation;
+          if (initialLocation == null) {
+            return const Center(
+              child: LoadingIndicator(),
+            );
           }
-        },
-        onDeactivate: () {
-          _profileBuilderKey.currentState?.pause();
-          setState(() => _pageActive = false);
-        },
-        child: Builder(
-          builder: (context) {
-            final initialLocation = _initialLocation;
-            if (initialLocation == null) {
-              return const Center(
-                child: LoadingIndicator(),
-              );
-            }
 
-            final profiles = List.of(_profiles);
-            final selectedProfile = _selectedProfile;
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final height = constraints.biggest.height;
-                    return DiscoverMap(
-                      key: _mapKey,
-                      profiles: _profiles,
-                      selectedProfile: _selectedProfile,
-                      onProfileChanged: _onProfileChanged,
-                      initialLocation: initialLocation,
-                      onLocationChanged: _maybeRefetchProfiles,
-                      obscuredRatio: 326 / height,
-                      showRecordPanel: () {
-                        final selectedProfile = _selectedProfile;
-                        if (selectedProfile != null) {
-                          _showRecordInvitePanelOrSignIn(
-                              context, selectedProfile.profile.uid);
-                        }
-                      },
-                      onMarkerRenderStatus: (status) {
-                        setState(() => _markerRenderStatus = status);
-                      },
+          final profiles = List.of(_profiles);
+          final selectedProfile = _selectedProfile;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final height = constraints.biggest.height;
+                  return DiscoverMap(
+                    key: _mapKey,
+                    profiles: _profiles,
+                    selectedProfile: _selectedProfile,
+                    onProfileChanged: _onProfileChanged,
+                    initialLocation: initialLocation,
+                    onLocationChanged: _maybeRefetchProfiles,
+                    obscuredRatio: 326 / height,
+                    showRecordPanel: () {
+                      final selectedProfile = _selectedProfile;
+                      if (selectedProfile != null) {
+                        _showRecordInvitePanelOrSignIn(
+                            context, selectedProfile.profile.uid);
+                      }
+                    },
+                    onMarkerRenderStatus: (status) {
+                      setState(() => _markerRenderStatus = status);
+                    },
+                  );
+                },
+              ),
+              if (_queryLocation != null && !kReleaseMode)
+                Positioned(
+                  left: 16,
+                  top: MediaQuery.of(context).padding.top + 16,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Opacity(
+                        opacity: 0.8,
+                        child: Button(
+                          onPressed: () {
+                            setState(() => _showDebugUsers = !_showDebugUsers);
+                            _queryProfilesAt(_queryLocation!);
+                          },
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(24),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Switch(
+                                  value: _showDebugUsers,
+                                  onChanged: (show) {
+                                    setState(() => _showDebugUsers = show);
+                                    _queryProfilesAt(_queryLocation!);
+                                  },
+                                ),
+                                const Text(
+                                  'Fake users',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                const SizedBox(width: 12),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 16,
+                right: 16,
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final myAccount = ref.watch(userProvider2.select(
+                      (p) => p.map(
+                          guest: (_) => null,
+                          signedIn: (signedIn) => signedIn.account),
+                    ));
+                    final myProfile = myAccount?.profile;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (myProfile != null) ...[
+                          Button(
+                            onPressed: widget.onShowSettings,
+                            child: Container(
+                              width: 45,
+                              height: 45,
+                              clipBehavior: Clip.hardEdge,
+                              foregroundDecoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border:
+                                    Border.all(width: 2, color: Colors.white),
+                              ),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    offset: Offset(0, 4),
+                                    blurRadius: 8,
+                                    color:
+                                        Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                                  ),
+                                ],
+                              ),
+                              child: Image.network(
+                                myProfile.photo,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 19),
+                          _MapButton(
+                            onPressed: () {
+                              final newVisibility =
+                                  myAccount!.location.visibility ==
+                                          LocationVisibility.public
+                                      ? LocationVisibility.private
+                                      : LocationVisibility.public;
+                              ref
+                                  .read(userProvider2.notifier)
+                                  .updateLocationVisibility(newVisibility);
+                            },
+                            child: myAccount!.location.visibility ==
+                                    LocationVisibility.public
+                                ? const Icon(
+                                    Icons.location_on,
+                                    color:
+                                        Color.fromRGBO(0x25, 0xB7, 0x00, 1.0),
+                                  )
+                                : const Icon(
+                                    Icons.location_off,
+                                    color:
+                                        Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                  ),
+                          ),
+                          const SizedBox(height: 11),
+                        ],
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final latLong =
+                                ref.watch(locationProvider)?.latLong;
+                            return _MapButton(
+                              onPressed: latLong == null
+                                  ? null
+                                  : () => _mapKey.currentState
+                                      ?.recenterMap(latLong),
+                              child: const Icon(
+                                CupertinoIcons.location_fill,
+                                size: 20,
+                                color: Color.fromRGBO(0x1A, 0x71, 0xFF, 1.0),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     );
                   },
                 ),
-                if (_queryLocation != null && !kReleaseMode)
-                  Positioned(
-                    left: 16,
-                    top: MediaQuery.of(context).padding.top + 16,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Stack(
+                      alignment: Alignment.bottomCenter,
                       children: [
-                        Opacity(
-                          opacity: 0.8,
-                          child: Button(
-                            onPressed: () {
-                              setState(
-                                  () => _showDebugUsers = !_showDebugUsers);
-                              _queryProfilesAt(_queryLocation!);
-                            },
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(24),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 16),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                _MapButton(
+                                  onPressed: () =>
+                                      _showRecordAudioBioPanel(context),
+                                  child: const Icon(
+                                    Icons.circle,
+                                    size: 16,
+                                    color:
+                                        Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                  ),
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Switch(
-                                    value: _showDebugUsers,
-                                    onChanged: (show) {
-                                      setState(() => _showDebugUsers = show);
-                                      _queryProfilesAt(_queryLocation!);
-                                    },
+                                const SizedBox(height: 15),
+                                _MapButton(
+                                  onPressed: widget.onShowConversations,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.email,
+                                        color: Color.fromRGBO(
+                                            0x0A, 0x7B, 0xFF, 1.0),
+                                      ),
+                                      Builder(
+                                        builder: (context) {
+                                          final count =
+                                              ref.watch(unreadCountProvider);
+                                          if (count == 0) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          return Align(
+                                            alignment: Alignment.topRight,
+                                            child:
+                                                UnreadIndicator(count: count),
+                                          );
+                                        },
+                                      ),
+                                    ],
                                   ),
-                                  const Text(
-                                    'Fake users',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  const SizedBox(width: 12),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(height: 18),
+                              ],
+                            ),
+                          ),
+                        ),
+                        IgnorePointer(
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutQuart,
+                            opacity: (_fetchingProfiles ||
+                                    _markerRenderStatus ==
+                                        MarkerRenderStatus.rendering)
+                                ? 1
+                                : 0,
+                            child: Lottie.asset(
+                              'assets/images/map_searching.json',
+                              width: 100,
+                              height: 48,
+                              animate: _fetchingProfiles ||
+                                  _markerRenderStatus ==
+                                      MarkerRenderStatus.rendering,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 16,
-                  right: 16,
-                  child: Consumer(
-                    builder: (context, ref, child) {
-                      final myAccount = ref.watch(userProvider2.select(
-                        (p) => p.map(
-                            guest: (_) => null,
-                            signedIn: (signedIn) => signedIn.account),
-                      ));
-                      final myProfile = myAccount?.profile;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          if (myProfile != null) ...[
-                            Button(
-                              onPressed: widget.onShowSettings,
-                              child: Container(
-                                width: 45,
-                                height: 45,
-                                clipBehavior: Clip.hardEdge,
-                                foregroundDecoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border:
-                                      Border.all(width: 2, color: Colors.white),
-                                ),
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      offset: Offset(0, 4),
-                                      blurRadius: 8,
-                                      color: Color.fromRGBO(
-                                          0x00, 0x00, 0x00, 0.25),
-                                    ),
-                                  ],
-                                ),
-                                child: Image.network(
-                                  myProfile.photo,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 19),
-                            _MapButton(
-                              onPressed: () {
-                                final newVisibility =
-                                    myAccount!.location.visibility ==
-                                            LocationVisibility.public
-                                        ? LocationVisibility.private
-                                        : LocationVisibility.public;
-                                ref
-                                    .read(userProvider2.notifier)
-                                    .updateLocationVisibility(newVisibility);
-                              },
-                              child: myAccount!.location.visibility ==
-                                      LocationVisibility.public
-                                  ? const Icon(
-                                      Icons.location_on,
-                                      color:
-                                          Color.fromRGBO(0x25, 0xB7, 0x00, 1.0),
-                                    )
-                                  : const Icon(
-                                      Icons.location_off,
-                                      color:
-                                          Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                                    ),
-                            ),
-                            const SizedBox(height: 11),
-                          ],
-                          Consumer(
-                            builder: (context, ref, child) {
-                              final latLong =
-                                  ref.watch(locationProvider)?.latLong;
-                              return _MapButton(
-                                onPressed: latLong == null
-                                    ? null
-                                    : () => _mapKey.currentState
-                                        ?.recenterMap(latLong),
-                                child: const Icon(
-                                  CupertinoIcons.location_fill,
-                                  size: 20,
-                                  color: Color.fromRGBO(0x1A, 0x71, 0xFF, 1.0),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                    _ProfilePanel(
+                      gender: _gender,
+                      onGenderChanged: (gender) {
+                        setState(() {
+                          _gender = gender;
+                          _selectedProfile = null;
+                          _profiles.clear();
+                        });
+                        _mapKey.currentState?.resetMarkers();
+                        final queryLocation = _queryLocation;
+                        if (queryLocation != null) {
+                          _queryProfilesAt(queryLocation);
+                        }
+                      },
+                      profiles: profiles,
+                      selectedProfile: selectedProfile,
+                      onProfileChanged: (profile) {
+                        setState(() {
+                          _ignoreNextLocationChange = true;
+                          _selectedProfile = profile;
+                        });
+                      },
+                      profileBuilderKey: _profileBuilderKey,
+                      onRecordInvite: (profile) {
+                        _showRecordInvitePanelOrSignIn(context, profile.uid);
+                      },
+                      onToggleFavorite: () {
+                        if (selectedProfile != null) {
+                          _toggleFavoriteOrShowSignIn(context, selectedProfile);
+                        }
+                      },
+                      onBlockUser: (profile) {
+                        setState(() => _profiles.removeWhere(
+                            ((p) => p.profile.uid == profile.uid)));
+                      },
+                      pageActive: _pageActive,
+                    ),
+                  ],
                 ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Stack(
-                        alignment: Alignment.bottomCenter,
-                        children: [
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 16),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  _MapButton(
-                                    onPressed: () =>
-                                        _showRecordAudioBioPanel(context),
-                                    child: const Icon(
-                                      Icons.circle,
-                                      size: 16,
-                                      color:
-                                          Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 15),
-                                  _MapButton(
-                                    onPressed: widget.onShowConversations,
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.email,
-                                          color: Color.fromRGBO(
-                                              0x0A, 0x7B, 0xFF, 1.0),
-                                        ),
-                                        Builder(
-                                          builder: (context) {
-                                            final count =
-                                                ref.watch(unreadCountProvider);
-                                            if (count == 0) {
-                                              return const SizedBox.shrink();
-                                            }
-                                            return Align(
-                                              alignment: Alignment.topRight,
-                                              child:
-                                                  UnreadIndicator(count: count),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 18),
-                                ],
-                              ),
-                            ),
-                          ),
-                          IgnorePointer(
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOutQuart,
-                              opacity: (_fetchingProfiles ||
-                                      _markerRenderStatus ==
-                                          MarkerRenderStatus.rendering)
-                                  ? 1
-                                  : 0,
-                              child: Lottie.asset(
-                                'assets/images/map_searching.json',
-                                width: 100,
-                                height: 48,
-                                animate: _fetchingProfiles ||
-                                    _markerRenderStatus ==
-                                        MarkerRenderStatus.rendering,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      _ProfilePanel(
-                        gender: _gender,
-                        onGenderChanged: (gender) {
-                          setState(() {
-                            _gender = gender;
-                            _selectedProfile = null;
-                            _profiles.clear();
-                          });
-                          _mapKey.currentState?.resetMarkers();
-                          final queryLocation = _queryLocation;
-                          if (queryLocation != null) {
-                            _queryProfilesAt(queryLocation);
-                          }
-                        },
-                        profiles: profiles,
-                        selectedProfile: selectedProfile,
-                        onProfileChanged: (profile) {
-                          setState(() {
-                            _ignoreNextLocationChange = true;
-                            _selectedProfile = profile;
-                          });
-                        },
-                        profileBuilderKey: _profileBuilderKey,
-                        onRecordInvite: (profile) {
-                          _showRecordInvitePanelOrSignIn(context, profile.uid);
-                        },
-                        onToggleFavorite: () {
-                          if (selectedProfile != null) {
-                            _toggleFavoriteOrShowSignIn(
-                                context, selectedProfile);
-                          }
-                        },
-                        onBlockUser: (profile) {
-                          setState(() => _profiles.removeWhere(
-                              ((p) => p.profile.uid == profile.uid)));
-                        },
-                        pageActive: _pageActive,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -686,7 +681,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 
   void _showSignInDialog() {
-    showCupertinoModalBottomSheet(
+    showCupertinoModalPopup(
       context: context,
       builder: (context) {
         return CupertinoActionSheet(
@@ -937,12 +932,15 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                     onRecord: () =>
                         widget.onRecordInvite(selectedProfile.profile),
                     onProfilePressed: () {
-                      CupertinoScaffold.showCupertinoModalBottomSheet(
+                      final topPadding = MediaQuery.of(context).padding.top;
+                      showModalBottomSheet(
                         context: context,
                         backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
                         builder: (context) {
                           return Container(
                             clipBehavior: Clip.hardEdge,
+                            margin: EdgeInsets.only(top: topPadding + 16),
                             decoration: const BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.only(
@@ -1274,7 +1272,7 @@ Future<void> showSignupGuestModal(
 }
 
 Future<bool?> _showReplaceBioPopup(BuildContext context) {
-  return showCupertinoModalBottomSheet<bool>(
+  return showCupertinoModalPopup<bool>(
     context: context,
     builder: (context) {
       return CupertinoActionSheet(
