@@ -10,6 +10,7 @@ class AudioChatMessage extends StatelessWidget {
   final bool fromMe;
   final String photo;
   final PlaybackInfo playbackInfo;
+  final double height;
   final VoidCallback onPressed;
 
   const AudioChatMessage({
@@ -18,6 +19,7 @@ class AudioChatMessage extends StatelessWidget {
     required this.fromMe,
     required this.photo,
     required this.playbackInfo,
+    required this.height,
     required this.onPressed,
   });
 
@@ -26,11 +28,12 @@ class AudioChatMessage extends StatelessWidget {
     final isPlaying = playbackInfo.state == PlaybackState.playing;
     final isLoading = playbackInfo.state == PlaybackState.loading;
     final isLoadingOrPlaying = isLoading || isPlaying;
+    const verticalMargin = 4.0;
     return Button(
       onPressed: onPressed,
       child: Container(
-        height: 54,
-        margin: const EdgeInsets.symmetric(vertical: 4),
+        height: height - verticalMargin * 2,
+        margin: const EdgeInsets.symmetric(vertical: verticalMargin),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -38,7 +41,7 @@ class AudioChatMessage extends StatelessWidget {
               Container(
                 width: 54,
                 height: 54,
-                margin: const EdgeInsets.only(left: 36, right: 10),
+                margin: const EdgeInsets.only(left: 16, right: 14),
                 alignment: Alignment.center,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
@@ -63,8 +66,8 @@ class AudioChatMessage extends StatelessWidget {
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOutQuart,
-                    width: isLoadingOrPlaying ? 234 : 182,
-                    height: 54,
+                    width: isLoadingOrPlaying ? 264 : 210,
+                    height: 60,
                     left: fromMe ? null : 0,
                     right: fromMe ? 0 : null,
                     child: Row(
@@ -136,11 +139,13 @@ class AudioChatMessage extends StatelessWidget {
                                   clipBehavior: Clip.hardEdge,
                                   height: isLoadingOrPlaying ? 16 : 8,
                                   decoration: BoxDecoration(
-                                    color: fromMe
-                                        ? const Color.fromRGBO(
-                                            0xE1, 0xE1, 0xE1, 1.0)
-                                        : const Color.fromRGBO(
-                                            0xC4, 0xC4, 0xC4, 1.0),
+                                    color: isLoadingOrPlaying
+                                        ? Colors.white
+                                        : (fromMe
+                                            ? const Color.fromRGBO(
+                                                0xE1, 0xE1, 0xE1, 1.0)
+                                            : const Color.fromRGBO(
+                                                0xC4, 0xC4, 0xC4, 1.0)),
                                     borderRadius: const BorderRadius.all(
                                         Radius.circular(12)),
                                     boxShadow: isLoadingOrPlaying
@@ -193,7 +198,7 @@ class AudioChatMessage extends StatelessWidget {
               Container(
                 width: 53,
                 height: 53,
-                margin: const EdgeInsets.only(left: 10, right: 36),
+                margin: const EdgeInsets.only(left: 14, right: 16),
                 alignment: Alignment.center,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
@@ -254,7 +259,7 @@ class _AudioPlayingSymbolState extends State<_AudioPlayingSymbol>
   Widget build(BuildContext context) {
     const scale = 1.15;
     return const Padding(
-      padding: EdgeInsets.all(8.0),
+      padding: EdgeInsets.symmetric(horizontal: 12.0),
       child: Icon(
         Icons.volume_up,
         color: Color.fromRGBO(0x1E, 0x77, 0xF8, 1.0),

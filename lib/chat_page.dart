@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,7 +61,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   bool _showUnreadMessageButton = false;
   bool _fetchingMore = false;
 
-  static const _itemExtent = 62.0;
+  static const _itemExtent = 66.0;
 
   @override
   void initState() {
@@ -125,34 +126,23 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     final chatroom = _chatroom;
     return LayoutBuilder(
       builder: (context, constraints) {
-        const dragHandleGap = 24.0;
-        const appBarHeight = 67.0;
-        const bottomButtonHeight = 51.0 + 16 * 2;
-        final listBoxHeight = constraints.maxHeight -
-            (MediaQuery.of(context).padding.top + dragHandleGap + appBarHeight);
+        const appBarHeight = 84.0;
+        const bottomButtonHeight = 46.0 + 16 * 2;
+        final listBoxHeight = constraints.maxHeight - appBarHeight;
         return Column(
           children: [
-            SizedBox(
-              height: dragHandleGap + MediaQuery.of(context).padding.top,
-              child: const Align(
-                alignment: Alignment.bottomLeft,
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: 20,
-                    bottom: 4.0,
-                  ),
-                ),
-              ),
-            ),
             SizedBox(
               height: appBarHeight,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const BackIconButton(),
+                  const SizedBox(width: 12),
+                  const BackIconButton(
+                    color: Color.fromRGBO(0xD8, 0xD8, 0xD8, 1.0),
+                  ),
                   const Spacer(),
                   if (_otherProfile != null) ...[
-                    Column(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Stack(
@@ -160,8 +150,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                           clipBehavior: Clip.none,
                           children: [
                             Container(
-                              width: 51,
-                              height: 51,
+                              width: 36,
+                              height: 36,
                               clipBehavior: Clip.hardEdge,
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
@@ -190,13 +180,15 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                           ],
                         ),
                         const SizedBox(width: 12),
-                        Text(
+                        AutoSizeText(
                           _otherProfile?.name ?? '',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(
-                                  fontSize: 16, fontWeight: FontWeight.w400),
+                          minFontSize: 16,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
@@ -210,17 +202,19 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                           padding: EdgeInsets.all(10.0),
                           child: Icon(
                             Icons.more_horiz,
-                            color: Color.fromRGBO(0x7D, 0x7D, 0x7D, 1.0),
+                            color: Color.fromRGBO(0xD8, 0xD8, 0xD8, 1.0),
                           ),
                         );
                       },
                     ),
+                    const SizedBox(width: 12),
                   ],
                 ],
               ),
             ),
-            SizedBox(
+            Container(
               height: listBoxHeight,
+              color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -296,6 +290,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                           : _otherProfile?.photo) ??
                                       '',
                                   playbackInfo: playbackInfo,
+                                  height: _itemExtent,
                                   onPressed: () async {
                                     if (isPlaying) {
                                       _audio.stop();
@@ -645,31 +640,20 @@ class _RecordButton extends StatelessWidget {
     return Button(
       onPressed: onPressed,
       child: Container(
-        width: 146,
-        height: 51,
+        width: 123,
+        height: 46,
         alignment: Alignment.center,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromRGBO(0xF3, 0x49, 0x50, 1.0),
-              Color.fromRGBO(0xDF, 0x39, 0x3F, 1.0),
-            ],
-          ),
+          color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
           borderRadius: BorderRadius.all(Radius.circular(25)),
-          boxShadow: [
-            BoxShadow(
-              offset: Offset(0, 4),
-              blurRadius: 12,
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-            ),
-          ],
         ),
         child: Text(
           label,
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: Colors.white,
+          ),
         ),
       ),
     );

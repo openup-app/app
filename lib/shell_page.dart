@@ -73,9 +73,12 @@ class ShellPageState extends State<ShellPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final maxHeight = constraints.maxHeight;
-          final maxContentHeight =
-              constraints.maxHeight - MediaQuery.of(context).padding.top - 16;
-          final maxContentRatio = maxContentHeight / maxHeight;
+          const topGap = 24.0;
+          final maxContentHeight = constraints.maxHeight -
+              (MediaQuery.of(context).padding.top + topGap);
+          final maxPanelHeight =
+              constraints.maxHeight - MediaQuery.of(context).padding.top;
+          final maxPanelRatio = maxPanelHeight / maxHeight;
           return Stack(
             children: [
               WillPopScope(
@@ -110,82 +113,72 @@ class ShellPageState extends State<ShellPage> {
                 child: DraggableScrollableSheet(
                   controller: _draggableScrollableController,
                   minChildSize: 0.0,
-                  maxChildSize: maxContentRatio,
+                  maxChildSize: maxPanelRatio,
                   initialChildSize: 0,
                   snap: true,
                   builder: (context, controller) {
-                    return ValueListenableBuilder<bool>(
-                      valueListenable: _sheetOpenNotifier,
-                      builder: (context, open, child) {
-                        return AnimatedContainer(
-                          curve: Curves.easeOut,
-                          duration: const Duration(milliseconds: 200),
-                          height: maxContentHeight,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: open
-                                ? BorderRadius.zero
-                                : const BorderRadius.only(
-                                    topLeft: Radius.circular(48),
-                                    topRight: Radius.circular(48),
-                                  ),
-                          ),
-                          child: child,
-                        );
-                      },
-                      child: Stack(
-                        children: [
-                          Align(
-                            alignment: Alignment.topCenter,
-                            child: OverflowBox(
-                              minHeight: maxContentHeight,
-                              maxHeight: maxContentHeight,
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _sheetOpenNotifier,
+                          builder: (context, open, child) {
+                            return AnimatedContainer(
+                              curve: Curves.easeOut,
+                              duration: const Duration(milliseconds: 200),
+                              height: constraints.maxHeight,
+                              clipBehavior: Clip.antiAlias,
+                              margin: const EdgeInsets.only(top: topGap),
                               alignment: Alignment.topCenter,
-                              child: IndexedStack(
-                                index: widget.currentIndex,
-                                children: [
-                                  for (var i = 0; i < _keys.length; i++)
-                                    KeyedSubtree(
-                                      key: _keys[i],
-                                      child: _BranchIndex(
-                                        index: i,
-                                        child: widget.children[i],
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: open
+                                    ? BorderRadius.zero
+                                    : const BorderRadius.only(
+                                        topLeft: Radius.circular(48),
+                                        topRight: Radius.circular(48),
                                       ),
-                                    ),
-                                ],
                               ),
-                            ),
-                          ),
-                          Align(
+                              child: child,
+                            );
+                          },
+                          child: OverflowBox(
+                            minHeight: maxContentHeight,
+                            maxHeight: maxContentHeight,
                             alignment: Alignment.topCenter,
-                            child: Stack(
+                            child: IndexedStack(
+                              index: widget.currentIndex,
                               children: [
-                                Positioned(
-                                  left: 0,
-                                  right: 0,
-                                  top: 0,
-                                  child: SingleChildScrollView(
-                                    controller: controller,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    child: const SizedBox(
-                                      height: 48,
-                                      child: Align(
-                                        alignment: Alignment.topCenter,
-                                        child: Padding(
-                                          padding: EdgeInsets.only(top: 9.0),
-                                          child: _DragHandle(),
-                                        ),
-                                      ),
+                                for (var i = 0; i < _keys.length; i++)
+                                  KeyedSubtree(
+                                    key: _keys[i],
+                                    child: _BranchIndex(
+                                      index: i,
+                                      child: widget.children[i],
                                     ),
                                   ),
-                                ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        Align(
+                          alignment: Alignment.topCenter,
+                          child: SingleChildScrollView(
+                            controller: controller,
+                            physics: const ClampingScrollPhysics(),
+                            child: const SizedBox(
+                              height: 48,
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: Padding(
+                                  padding: EdgeInsets.only(top: 9.0 + topGap),
+                                  child: _DragHandle(),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -235,14 +228,7 @@ class _DragHandle extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(2.5)),
-          color: Color.fromRGBO(0x71, 0x71, 0x71, 1.0),
-          boxShadow: [
-            BoxShadow(
-              offset: Offset(0, 1),
-              blurRadius: 4,
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-            ),
-          ],
+          color: Color.fromRGBO(0xE0, 0xE0, 0xE0, 1.0),
         ),
       ),
     );
