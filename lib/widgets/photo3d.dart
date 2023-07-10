@@ -40,6 +40,8 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
 
   late final Ticker _ticker;
 
+  Duration _ellapsed = Duration.zero;
+
   @override
   void initState() {
     super.initState();
@@ -79,9 +81,10 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
 
   void _initAnimation() {
     const intensity = 20.0;
-    final angle = Random().nextDouble() * 2 * pi;
-    _xIntensity = cos(angle) * intensity;
-    _yIntensity = sin(angle) * intensity;
+    final r = Random();
+    final startX = (r.nextBool() ? -1 : 1) * (r.nextDouble() * 0.7 + 0.3);
+    _xIntensity = startX * intensity;
+    _yIntensity = 0;
     if (!_ticker.isActive) {
       _ticker.start();
     }
@@ -91,12 +94,14 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
     final ratio = (ellapsed.inMilliseconds / widget.duration.inMilliseconds)
         .clamp(0.0, 1.0);
     final t = CurvedAnimation(
-            parent: AlwaysStoppedAnimation(ratio), curve: Curves.easeInOut)
-        .value;
+      parent: AlwaysStoppedAnimation(ratio),
+      curve: Curves.linear,
+    ).value;
     setState(() {
+      _ellapsed = ellapsed;
       _displacementX = -_xIntensity / 2 + t * _xIntensity;
-      _displacementY = -_yIntensity / 2 + t * _yIntensity;
-      _displacementZ = 0.0;
+      _displacementY = 0.0;
+      _displacementZ = t * 0.04;
     });
   }
 
@@ -141,8 +146,14 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
         fit: BoxFit.cover,
       );
     } else if (_image != null && _depth != null && _fragmentProgram != null) {
+      final ratio = (_ellapsed.inMilliseconds / widget.duration.inMilliseconds)
+          .clamp(0.0, 1.0);
+      final t = CurvedAnimation(
+        parent: AlwaysStoppedAnimation(ratio),
+        curve: Curves.linear,
+      ).value;
       return Transform.scale(
-        scale: 1.1,
+        scale: 1.0 + t * 0.1,
         child: _DisplacedImage(
           image: _image!,
           depth: _depth!,
