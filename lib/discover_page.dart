@@ -614,9 +614,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         },
                         pageActive: _pageActive,
                       ),
-                      SizedBox(
-                        height: MediaQuery.of(context).padding.bottom,
-                      ),
                     ],
                   ),
                 ),
