@@ -174,8 +174,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                     ),
                             ),
                             Positioned(
-                              left: 8,
-                              top: -30,
+                              left: -6,
+                              top: -34,
                               width: 78,
                               height: 78,
                               child: OnlineIndicatorBuilder(
