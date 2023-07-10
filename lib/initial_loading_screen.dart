@@ -137,16 +137,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
   Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: Colors.black,
-      body: Center(
-        child: Text(
-          'UT Meets',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 42,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
     );
   }
 }
