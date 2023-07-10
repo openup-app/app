@@ -324,8 +324,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         builder: (context) {
           final initialLocation = _initialLocation;
           if (initialLocation == null) {
-            return const Center(
-              child: LoadingIndicator(),
+            return const ColoredBox(
+              color: Colors.black,
+              child: SizedBox.expand(),
             );
           }
 
