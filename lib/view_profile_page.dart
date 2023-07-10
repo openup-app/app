@@ -121,7 +121,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewProfilePage> {
                   margin: EdgeInsets.only(
                     left: 16,
                     right: 16,
-                    top: 24 + MediaQuery.of(context).padding.top,
+                    top: 24,
                     bottom: 16 + MediaQuery.of(context).padding.bottom,
                   ),
                   clipBehavior: Clip.hardEdge,
@@ -141,7 +141,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewProfilePage> {
           ),
           Positioned(
             left: 16 + 20,
-            top: MediaQuery.of(context).padding.top + 24 + 20,
+            top: 24 + 20,
             child: Row(
               children: [
                 ProfileButton(

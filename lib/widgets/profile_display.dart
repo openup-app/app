@@ -141,7 +141,7 @@ class ProfileDisplay extends ConsumerWidget {
             ),
           Positioned(
             right: 22,
-            top: 28,
+            top: 20,
             child: ReportBlockPopupMenu2(
               uid: profile.uid,
               name: profile.name,
