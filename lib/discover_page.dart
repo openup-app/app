@@ -338,24 +338,27 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
               LayoutBuilder(
                 builder: (context, constraints) {
                   final height = constraints.biggest.height;
-                  return DiscoverMap(
-                    key: _mapKey,
-                    profiles: _profiles,
-                    selectedProfile: _selectedProfile,
-                    onProfileChanged: _onProfileChanged,
-                    initialLocation: initialLocation,
-                    onLocationChanged: _maybeRefetchProfiles,
-                    obscuredRatio: 326 / height,
-                    showRecordPanel: () {
-                      final selectedProfile = _selectedProfile;
-                      if (selectedProfile != null) {
-                        _showRecordInvitePanelOrSignIn(
-                            context, selectedProfile.profile.uid);
-                      }
-                    },
-                    onMarkerRenderStatus: (status) {
-                      setState(() => _markerRenderStatus = status);
-                    },
+                  return ColoredBox(
+                    color: Colors.black,
+                    child: DiscoverMap(
+                      key: _mapKey,
+                      profiles: _profiles,
+                      selectedProfile: _selectedProfile,
+                      onProfileChanged: _onProfileChanged,
+                      initialLocation: initialLocation,
+                      onLocationChanged: _maybeRefetchProfiles,
+                      obscuredRatio: 326 / height,
+                      showRecordPanel: () {
+                        final selectedProfile = _selectedProfile;
+                        if (selectedProfile != null) {
+                          _showRecordInvitePanelOrSignIn(
+                              context, selectedProfile.profile.uid);
+                        }
+                      },
+                      onMarkerRenderStatus: (status) {
+                        setState(() => _markerRenderStatus = status);
+                      },
+                    ),
                   );
                 },
               ),
