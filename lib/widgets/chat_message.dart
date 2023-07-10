@@ -87,7 +87,7 @@ class AudioChatMessage extends StatelessWidget {
                               Align(
                                 alignment: Alignment.bottomLeft,
                                 child: Text(
-                                  formatDate(message.date.toLocal()),
+                                  formatTime(message.date.toLocal()),
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w400,

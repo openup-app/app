@@ -2270,27 +2270,18 @@ String formatCountdown(Duration d) {
   }
 }
 
-String formatDate(DateTime d) {
-  final now = DateTime.now();
+// Just the date ex. 5:06 PM, regardless of the day
+String formatTime(DateTime d) {
+  final format = DateFormat.jm();
+  return format.format(d);
+}
+
+// A long date and timestamp Mar 21, 2023 at 12:00 PM
+String formatLongDateAndTime(DateTime d) {
+  final dayOfWeekFormat = DateFormat.E();
+  final dateFormat = DateFormat.MMMd();
   final timeFormat = DateFormat.jm();
-  final time = timeFormat.format(d);
-  if (now.year == d.year && now.month == d.month && now.day == d.day) {
-    // Time today, ex. 5:06 PM
-    final format = DateFormat.jm();
-    return format.format(d);
-  } else if (now.difference(d).inDays < 7) {
-    // Date this week, ex. Tues at 10:00 AM
-    final format = DateFormat.E();
-    return '${format.format(d)} at $time'.toUpperCase();
-  } else if (now.year == d.year) {
-    // Date this year, ex. Jul 9 at 5:06 PM
-    final format = DateFormat.MMMd();
-    return '${format.format(d)} at $time'.toUpperCase();
-  } else {
-    // Some date, ex: Mar 21, 2023 AT 12:00 PM
-    final format = DateFormat.yMMMMd();
-    return '${format.format(d)} at $time}'.toUpperCase();
-  }
+  return '${dayOfWeekFormat.format(d)}, ${dateFormat.format(d)} at ${timeFormat.format(d)}';
 }
 
 enum _BlockResult { block, noBlock }

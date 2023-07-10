@@ -6,6 +6,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -19,6 +20,8 @@ import 'package:openup/widgets/common.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
+
+part 'chat_page.freezed.dart';
 
 final _scrollProvider =
     StateNotifierProvider<_ScrollNotifier, double>((ref) => _ScrollNotifier());
@@ -76,11 +79,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         if (mounted) {
           if (_messages != null) {
             // Add new message and fix the visual list offset
-            final atBottom = _scrollController.position.pixels <=
-                _scrollController.position.minScrollExtent;
+            final atBottom = _scrollController.position.pixels >=
+                _scrollController.position.maxScrollExtent;
             setState(() => _messages![message.messageId!] = message);
-            _scrollController
-                .jumpTo(_scrollController.position.pixels + _itemExtent);
             if (atBottom) {
               _animateToBottom();
             } else {
@@ -97,7 +98,16 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     final profile = ref.read(userProvider).profile!;
     setState(() => _myPhoto = profile.collection.photos.first.url);
 
-    _fetchHistory();
+    _fetchHistory().then((value) {
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+          if (mounted && _scrollController.hasClients) {
+            _scrollController
+                .jumpTo(_scrollController.position.maxScrollExtent);
+          }
+        });
+      }
+    });
 
     _chatroom = widget.chatroom;
     final chatroom = widget.chatroom;
@@ -120,9 +130,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
 
   @override
   Widget build(BuildContext context) {
-    final messagesMap = _messages;
-    final messages = messagesMap?.values.toList()
-      ?..sort((a, b) => b.date.compareTo(a.date));
+    final messages = _messages?.values.toList()
+      ?..sort(_dateAscendingMessageSorter);
+    final items = _messagesToItems(messages ?? []);
     final chatroom = _chatroom;
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -244,7 +254,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                         ),
                       ),
                     )
-                  else if (messages != null && chatroom != null) ...[
+                  else if (items.isNotEmpty && chatroom != null) ...[
                     Positioned(
                       top: 0,
                       left: 0,
@@ -255,54 +265,77 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                         child: ListView.builder(
                           controller: _scrollController,
                           padding: const EdgeInsets.only(bottom: 100),
-                          reverse: true,
                           itemExtent: _itemExtent,
-                          itemCount: messages.length,
+                          itemCount: items.length,
                           itemBuilder: (context, index) {
-                            final message = messages[index];
-                            final myUid = ref.read(userProvider).uid;
-                            final fromMe = message.uid == myUid;
-                            final isCurrent =
-                                _playbackMessageId == message.messageId;
-                            final playbackStream = isCurrent
-                                ? _audio.playbackInfoStream
-                                : Stream.fromIterable([
-                                    PlaybackInfo(
-                                      position: Duration.zero,
-                                      duration: message.content.duration,
-                                      state: PlaybackState.idle,
-                                      frequencies: [],
-                                    )
-                                  ]);
-                            return StreamBuilder<PlaybackInfo>(
-                              key: ValueKey(message.messageId ?? ''),
-                              initialData: const PlaybackInfo(),
-                              stream: playbackStream,
-                              builder: (context, snapshot) {
-                                final playbackInfo = snapshot.requireData;
-                                final isPlaying =
-                                    playbackInfo.state == PlaybackState.playing;
-                                return AudioChatMessage(
-                                  message: message,
-                                  fromMe: fromMe,
-                                  photo: (fromMe
-                                          ? _myPhoto
-                                          : _otherProfile?.photo) ??
-                                      '',
-                                  playbackInfo: playbackInfo,
+                            final item = items[index];
+                            return item.when(
+                              info: (info) {
+                                return SizedBox(
                                   height: _itemExtent,
-                                  onPressed: () async {
-                                    if (isPlaying) {
-                                      _audio.stop();
-                                      setState(() => _playbackMessageId = null);
-                                    } else {
-                                      setState(() => _playbackMessageId =
-                                          message.messageId);
-                                      await _audio.setUrl(message.content.url);
-                                      if (mounted) {
-                                        _audio.play();
-                                      }
-                                    }
+                                  child: Center(
+                                    child: Text(
+                                      'Voice Message\n${formatLongDateAndTime(info.date.toLocal())}',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400,
+                                        height: 1.5,
+                                        color: Color.fromRGBO(
+                                            0x8C, 0x8C, 0x8C, 1.0),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              message: (message) {
+                                final myUid = ref.read(userProvider).uid;
+                                final fromMe = message.uid == myUid;
+                                final isCurrent =
+                                    _playbackMessageId == message.messageId;
+                                final playbackStream = isCurrent
+                                    ? _audio.playbackInfoStream
+                                    : Stream.fromIterable([
+                                        PlaybackInfo(
+                                          position: Duration.zero,
+                                          duration: message.content.duration,
+                                          state: PlaybackState.idle,
+                                          frequencies: [],
+                                        )
+                                      ]);
+                                return StreamBuilder<PlaybackInfo>(
+                                  key: ValueKey(message.messageId ?? ''),
+                                  initialData: const PlaybackInfo(),
+                                  stream: playbackStream,
+                                  builder: (context, snapshot) {
+                                    final playbackInfo = snapshot.requireData;
+                                    final isPlaying = playbackInfo.state ==
+                                        PlaybackState.playing;
+                                    return AudioChatMessage(
+                                      message: message,
+                                      fromMe: fromMe,
+                                      photo: (fromMe
+                                              ? _myPhoto
+                                              : _otherProfile?.photo) ??
+                                          '',
+                                      playbackInfo: playbackInfo,
+                                      height: _itemExtent,
+                                      onPressed: () async {
+                                        if (isPlaying) {
+                                          _audio.stop();
+                                          setState(
+                                              () => _playbackMessageId = null);
+                                        } else {
+                                          setState(() => _playbackMessageId =
+                                              message.messageId);
+                                          await _audio
+                                              .setUrl(message.content.url);
+                                          if (mounted) {
+                                            _audio.play();
+                                          }
+                                        }
+                                      },
+                                    );
                                   },
                                 );
                               },
@@ -444,7 +477,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _scrollController.animateTo(
-          _scrollController.position.minScrollExtent,
+          _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 600),
           curve: Curves.easeOutQuart,
         );
@@ -462,8 +495,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     }
 
     if (_scrollController.position.userScrollDirection ==
-            ScrollDirection.reverse &&
-        _scrollController.position.extentAfter < 350 &&
+            ScrollDirection.forward &&
+        _scrollController.position.extentBefore < 350 &&
         messages.isNotEmpty) {
       var oldest = messages.values.first.date;
       for (final m in messages.values) {
@@ -474,8 +507,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       _fetchHistory(startDate: oldest);
     }
 
-    if (_scrollController.position.pixels <=
-            _scrollController.position.minScrollExtent &&
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent &&
         _showUnreadMessageButton) {
       setState(() => _showUnreadMessageButton = false);
     }
@@ -518,14 +551,52 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       (l) => displayError(context, l),
       (messages) {
         final entries = _messages?.entries.toList() ?? [];
+        entries.addAll(messages.map((e) => MapEntry(e.messageId!, e)).toList());
+        if (entries.isEmpty) {
+          return;
+        }
+
+        if (_scrollController.hasClients) {
+          final tempMessages = Map<String, ChatMessage>.of(_messages ?? {});
+          final itemCountBefore =
+              _messagesToItems(tempMessages.values.toList()).length;
+          final itemCountAfter = _messagesToItems(
+                  (tempMessages..addEntries(entries)).values.toList())
+              .length;
+          final newItemCount = itemCountAfter - itemCountBefore;
+          _scrollController.jumpTo(
+              _scrollController.position.pixels + newItemCount * _itemExtent);
+        }
+
         setState(() {
-          entries
-              .addAll(messages.map((e) => MapEntry(e.messageId!, e)).toList());
           _messages?.clear();
           _messages = (_messages ?? {})..addEntries(entries);
         });
       },
     );
+  }
+
+  List<ChatItem> _messagesToItems(List<ChatMessage> messages) {
+    if (messages.isEmpty) {
+      return [];
+    }
+
+    final sortedMessages = List.of(messages)..sort(_dateAscendingMessageSorter);
+    var date = sortedMessages.last.date;
+    final items = sortedMessages.map((e) => ChatItem.message(e)).toList();
+
+    for (var i = items.length - 1; i >= 0; i--) {
+      final itemDate = (items[i] as _Message).message.date;
+      if (itemDate.year != date.year ||
+          itemDate.month != date.month ||
+          itemDate.day != date.day) {
+        items.insert(i + 1, ChatItem.info(ChatInfo.date(date)));
+      }
+      date = itemDate;
+    }
+    items.insert(0, ChatItem.info(ChatInfo.date(date)));
+
+    return items;
   }
 }
 
@@ -658,6 +729,20 @@ class _RecordButton extends StatelessWidget {
       ),
     );
   }
+}
+
+int _dateAscendingMessageSorter(ChatMessage a, ChatMessage b) =>
+    a.date.compareTo(b.date);
+
+@freezed
+class ChatItem with _$ChatItem {
+  const factory ChatItem.message(ChatMessage message) = _Message;
+  const factory ChatItem.info(ChatInfo info) = _Info;
+}
+
+@freezed
+class ChatInfo with _$ChatInfo {
+  const factory ChatInfo.date(DateTime date) = _Date;
 }
 
 class _ScrollNotifier extends StateNotifier<double> {
