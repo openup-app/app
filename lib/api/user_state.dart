@@ -258,9 +258,9 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
           (l) => Left(l),
           (r) {
             final collections = signedIn.collections == null
-                ? null
+                ? <Collection>[]
                 : List.of(signedIn.collections!);
-            collections?.insert(0, r);
+            collections.insert(0, r);
             state = signedIn.copyWith(collections: collections);
             return Right(r);
           },
@@ -274,18 +274,12 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
       guest: (_) =>
           Future.value(const Left(ApiError.client(ClientErrorUnauthorized()))),
       signedIn: (signedIn) async {
-        final result = await _api.deleteCollection(id);
-        return result.fold<Either<ApiError, void>>(
-          (l) => Left(l),
-          (r) {
-            final collections = signedIn.collections == null
-                ? null
-                : List.of(signedIn.collections!);
-            collections?.removeWhere((c) => c.collectionId == id);
-            state = signedIn.copyWith(collections: collections);
-            return const Right(null);
-          },
-        );
+        final collections = signedIn.collections == null
+            ? <Collection>[]
+            : List.of(signedIn.collections!);
+        collections.removeWhere((c) => c.collectionId == id);
+        state = signedIn.copyWith(collections: collections);
+        return _api.deleteCollection(id);
       },
     );
   }

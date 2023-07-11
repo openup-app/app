@@ -172,14 +172,15 @@ class _CollectionPreviewState extends State<_CollectionPreview> {
       child: Stack(
         children: [
           if (!isReady)
-            Center(
+            const Center(
               child: Text(
                 'Processing...',
                 textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(fontSize: 15, fontWeight: FontWeight.w300),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.white,
+                ),
               ),
             )
           else

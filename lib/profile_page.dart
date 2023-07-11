@@ -1187,14 +1187,17 @@ class __CollectionCreationState extends ConsumerState<_CollectionCreation> {
     if (photos.length < 3) {
       return;
     }
+
+    final notifier = ref.read(userProvider2.notifier);
+    final createCollectionFuture = notifier.createCollection(
+      photos: photos,
+      audio: _audio,
+    );
+
     final result = await withBlockingModal(
       context: context,
       label: 'Uploading',
-      future: uploadCollection(
-        api: ref.read(apiProvider),
-        photos: photos,
-        audio: _audio,
-      ),
+      future: createCollectionFuture,
     );
     if (!mounted) {
       return;
@@ -1202,8 +1205,8 @@ class __CollectionCreationState extends ConsumerState<_CollectionCreation> {
 
     result.fold(
       (l) => displayError(context, l),
-      (r) {
-        showCupertinoDialog(
+      (r) async {
+        await showCupertinoDialog(
           context: context,
           builder: (context) {
             return CupertinoAlertDialog(
@@ -1219,6 +1222,7 @@ class __CollectionCreationState extends ConsumerState<_CollectionCreation> {
             );
           },
         );
+        widget.onDone();
       },
     );
   }
