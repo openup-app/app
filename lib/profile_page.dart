@@ -216,7 +216,9 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                                       context.pushNamed(
                                         'view_profile',
                                         extra: ViewProfilePageArguments.profile(
-                                          profile: profile,
+                                          profile: profile.copyWith(
+                                            collection: collections[index],
+                                          ),
                                         ),
                                       );
                                     },

@@ -112,6 +112,10 @@ class ProfileDisplay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final myUid = ref.read(userProvider2).map(
+          guest: (_) => null,
+          signedIn: (signedIn) => signedIn.account.profile.uid,
+        );
     return Container(
       clipBehavior: Clip.hardEdge,
       decoration: const BoxDecoration(
@@ -236,39 +240,40 @@ class ProfileDisplay extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    width: 146,
-                    child: _RecordButton(
-                      onPressed: () {
-                        ref.read(userProvider2).map(
-                          guest: (_) {
-                            showCupertinoDialog(
-                              context: context,
-                              builder: (context) {
-                                return CupertinoAlertDialog(
-                                  title: const Text('Log in to send invites'),
-                                  actions: [
-                                    CupertinoDialogAction(
-                                      onPressed: Navigator.of(context).pop,
-                                      child: const Text('Cancel'),
-                                    ),
-                                    CupertinoDialogAction(
-                                      onPressed: () =>
-                                          context.pushNamed('signup'),
-                                      child: const Text('Log in'),
-                                    )
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                          signedIn: (_) {
-                            onRecord();
-                          },
-                        );
-                      },
+                  if (profile.uid != myUid)
+                    SizedBox(
+                      width: 146,
+                      child: _RecordButton(
+                        onPressed: () {
+                          ref.read(userProvider2).map(
+                                guest: (_) {
+                                  showCupertinoDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return CupertinoAlertDialog(
+                                        title: const Text(
+                                            'Log in to send invites'),
+                                        actions: [
+                                          CupertinoDialogAction(
+                                            onPressed:
+                                                Navigator.of(context).pop,
+                                            child: const Text('Cancel'),
+                                          ),
+                                          CupertinoDialogAction(
+                                            onPressed: () =>
+                                                context.pushNamed('signup'),
+                                            child: const Text('Log in'),
+                                          )
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                                signedIn: (_) => onRecord(),
+                              );
+                        },
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
