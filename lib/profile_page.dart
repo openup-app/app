@@ -1039,7 +1039,7 @@ class _CollectionCreation extends ConsumerStatefulWidget {
 }
 
 class __CollectionCreationState extends ConsumerState<_CollectionCreation> {
-  final _photos = <File>[];
+  final _photos = <File?>[null, null, null];
   File? _audio;
   _CreationStep _step = _CreationStep.photos;
 
@@ -1112,7 +1112,7 @@ class __CollectionCreationState extends ConsumerState<_CollectionCreation> {
                     child: Visibility(
                       visible: _step != _CreationStep.upload,
                       child: Button(
-                        onPressed: _photos.isEmpty
+                        onPressed: _photos.whereType<File>().length < 3
                             ? null
                             : () {
                                 switch (_step) {
@@ -1169,7 +1169,7 @@ class __CollectionCreationState extends ConsumerState<_CollectionCreation> {
                     );
                   case _CreationStep.upload:
                     return _UploadStep(
-                      photos: _photos,
+                      photos: _photos.whereType<File>().toList(),
                       onUpload: _uploadCollection,
                       onDelete: widget.onDone,
                     );
@@ -1183,12 +1183,16 @@ class __CollectionCreationState extends ConsumerState<_CollectionCreation> {
   }
 
   void _uploadCollection() async {
+    final photos = _photos.whereType<File>().toList();
+    if (photos.length < 3) {
+      return;
+    }
     final result = await withBlockingModal(
       context: context,
       label: 'Uploading',
       future: uploadCollection(
         api: ref.read(apiProvider),
-        photos: _photos,
+        photos: photos,
         audio: _audio,
       ),
     );
@@ -1221,8 +1225,8 @@ class __CollectionCreationState extends ConsumerState<_CollectionCreation> {
 }
 
 class _SimpleCollectionPhotoPicker extends StatefulWidget {
-  final List<File> photos;
-  final ValueChanged<List<File>> onPhotosUpdated;
+  final List<File?> photos;
+  final ValueChanged<List<File?>> onPhotosUpdated;
   const _SimpleCollectionPhotoPicker({
     super.key,
     required this.photos,
