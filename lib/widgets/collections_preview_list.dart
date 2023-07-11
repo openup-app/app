@@ -81,19 +81,14 @@ class _CollectionsPreviewList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
+    return ListView.separated(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 7),
       itemCount: leadingChildren.length + collections.length,
+      separatorBuilder: (context, index) => const SizedBox(width: 16),
       itemBuilder: (context, index) {
-        final isProfileIndex = index == profileCollectionIndex;
         return Container(
           width: 106,
           height: 189,
-          margin: const EdgeInsets.all(7) +
-              (isProfileIndex
-                  ? const EdgeInsets.symmetric(horizontal: 32)
-                  : EdgeInsets.zero),
           foregroundDecoration: BoxDecoration(
             borderRadius: const BorderRadius.all(Radius.circular(15)),
             border: this.index == index
@@ -114,7 +109,7 @@ class _CollectionsPreviewList extends StatelessWidget {
                     collection: collection,
                     play: play,
                     onView: () => onView(realIndex),
-                    onLongPress: (onLongPress == null || isProfileIndex)
+                    onLongPress: onLongPress == null
                         ? null
                         : () => onLongPress!(realIndex),
                   );

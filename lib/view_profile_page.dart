@@ -121,7 +121,7 @@ class _ViewCollectionPageState extends ConsumerState<ViewProfilePage> {
                   margin: EdgeInsets.only(
                     left: 16,
                     right: 16,
-                    top: 24,
+                    top: 20,
                     bottom: 16 + MediaQuery.of(context).padding.bottom,
                   ),
                   clipBehavior: Clip.hardEdge,

@@ -44,307 +44,316 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
   Widget build(BuildContext context) {
     return ref.watch(userProvider2).map(
       guest: (_) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('Log in to create a profile'),
-              ElevatedButton(
-                onPressed: () => context.pushNamed('signup'),
-                child: const Text('Log in'),
-              ),
-            ],
+        return Container(
+          color: const Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Log in to create a profile'),
+                ElevatedButton(
+                  onPressed: () => context.pushNamed('signup'),
+                  child: const Text('Log in'),
+                ),
+              ],
+            ),
           ),
         );
       },
       signedIn: (signedIn) {
         final profile = signedIn.account.profile;
-        return Container(
-          margin: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 8 + MediaQuery.of(context).padding.top,
-            bottom: 16 + MediaQuery.of(context).padding.bottom,
-          ),
-          clipBehavior: Clip.hardEdge,
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(48)),
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                controller: _scrollController,
-                child: Builder(
-                  builder: (context) {
-                    if (!_showCollectionCreation) {
-                      return Column(
-                        children: [
-                          Container(
-                            height: constraints.maxHeight,
-                            clipBehavior: Clip.hardEdge,
-                            decoration: const BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(48)),
-                            ),
-                            child: Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: CinematicGallery(
-                                    slideshow: true,
-                                    gallery: profile.collection.photos,
+        return ColoredBox(
+          color: const Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
+          child: Container(
+            margin: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 20,
+              bottom: 16 + MediaQuery.of(context).padding.bottom,
+            ),
+            clipBehavior: Clip.hardEdge,
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(48)),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Builder(
+                    builder: (context) {
+                      if (!_showCollectionCreation) {
+                        return Column(
+                          children: [
+                            Container(
+                              height: constraints.maxHeight,
+                              clipBehavior: Clip.hardEdge,
+                              decoration: const BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(48)),
+                              ),
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: CinematicGallery(
+                                      slideshow: true,
+                                      gallery: profile.collection.photos,
+                                    ),
                                   ),
-                                ),
-                                Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(bottom: 30),
-                                    child: Button(
-                                      onPressed: () =>
-                                          _showRecordPanel(context),
-                                      child: Container(
-                                        width: 146,
-                                        height: 51,
-                                        alignment: Alignment.center,
-                                        decoration: const BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topCenter,
-                                            end: Alignment.bottomCenter,
-                                            colors: [
-                                              Color.fromRGBO(
-                                                  0xF3, 0x49, 0x50, 1.0),
-                                              Color.fromRGBO(
-                                                  0xDF, 0x39, 0x3F, 1.0),
+                                  Align(
+                                    alignment: Alignment.bottomCenter,
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 30),
+                                      child: Button(
+                                        onPressed: () =>
+                                            _showRecordPanel(context),
+                                        child: Container(
+                                          width: 146,
+                                          height: 51,
+                                          alignment: Alignment.center,
+                                          decoration: const BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Color.fromRGBO(
+                                                    0xF3, 0x49, 0x50, 1.0),
+                                                Color.fromRGBO(
+                                                    0xDF, 0x39, 0x3F, 1.0),
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(25)),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                offset: Offset(0, 4),
+                                                blurRadius: 4,
+                                                color: Color.fromRGBO(
+                                                    0x00, 0x00, 0x00, 0.25),
+                                              ),
                                             ],
                                           ),
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(25)),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              offset: Offset(0, 4),
-                                              blurRadius: 4,
-                                              color: Color.fromRGBO(
-                                                  0x00, 0x00, 0x00, 0.25),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Text(
-                                          'update bio',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium!
-                                              .copyWith(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w400,
-                                                  color: Colors.white),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  right: 14,
-                                  bottom: 30,
-                                  width: 48,
-                                  height: 48,
-                                  child: Button(
-                                    onPressed: () {
-                                      _scrollController.animateTo(
-                                        _scrollController
-                                            .position.maxScrollExtent,
-                                        duration:
-                                            const Duration(milliseconds: 200),
-                                        curve: Curves.easeOut,
-                                      );
-                                    },
-                                    child: Center(
-                                      child: Container(
-                                        width: 29,
-                                        height: 29,
-                                        alignment: Alignment.center,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              offset: Offset(0, 2),
-                                              blurRadius: 4,
-                                              color: Color.fromRGBO(
-                                                  0x00, 0x00, 0x00, 0.25),
-                                            ),
-                                          ],
-                                        ),
-                                        child: const RotatedBox(
-                                          quarterTurns: 1,
-                                          child: Icon(
-                                            Icons.chevron_right,
-                                            color: Color.fromRGBO(
-                                                0x71, 0x71, 0x71, 1.0),
+                                          child: Text(
+                                            'update bio',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium!
+                                                .copyWith(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: Colors.white),
                                           ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            height: 189,
-                            child: Builder(
-                              builder: (context) {
-                                final collections = signedIn.collections ?? [];
-                                return CollectionsPreviewList(
-                                  collections: collections,
-                                  play: _showCollectionCreation == false,
-                                  leadingChildren: [
-                                    _BottomButton(
-                                      label: 'Create Collection',
-                                      icon: const Icon(Icons.collections),
-                                      onPressed: () => setState(
-                                          () => _showCollectionCreation = true),
-                                    ),
-                                  ],
-                                  onView: (index) {
-                                    context.pushNamed(
-                                      'view_profile',
-                                      extra: ViewProfilePageArguments.profile(
-                                        profile: profile,
-                                      ),
-                                    );
-                                  },
-                                  onLongPress: (index) => _showDeleteDialog(
-                                      collections[index].collectionId),
-                                );
-                              },
-                            ),
-                          ),
-                          DefaultTextStyle(
-                            style: const TextStyle(color: Colors.white),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const _SectionTitle(label: 'Name'),
-                                const _CupertinoRow(
-                                  leading: _NameField(),
-                                ),
-                                const SizedBox(height: 12),
-                                const _SectionTitle(
-                                  label: 'Phone Number',
-                                ),
-                                const SizedBox(height: 8),
-                                const _PhoneNumberField(),
-                                const SizedBox(height: 16),
-                                Button(
-                                  onPressed: () =>
-                                      context.pushNamed('contacts'),
-                                  child: _CupertinoRow(
-                                    leading: Row(
-                                      children: const [
-                                        Icon(
-                                          CupertinoIcons.book,
-                                          color: Color.fromRGBO(
-                                              0xBA, 0xBA, 0xBA, 1.0),
+                                  Positioned(
+                                    right: 14,
+                                    bottom: 30,
+                                    width: 48,
+                                    height: 48,
+                                    child: Button(
+                                      onPressed: () {
+                                        _scrollController.animateTo(
+                                          _scrollController
+                                              .position.maxScrollExtent,
+                                          duration:
+                                              const Duration(milliseconds: 200),
+                                          curve: Curves.easeOut,
+                                        );
+                                      },
+                                      child: Center(
+                                        child: Container(
+                                          width: 29,
+                                          height: 29,
+                                          alignment: Alignment.center,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                offset: Offset(0, 2),
+                                                blurRadius: 4,
+                                                color: Color.fromRGBO(
+                                                    0x00, 0x00, 0x00, 0.25),
+                                              ),
+                                            ],
+                                          ),
+                                          child: const RotatedBox(
+                                            quarterTurns: 1,
+                                            child: Icon(
+                                              Icons.chevron_right,
+                                              color: Color.fromRGBO(
+                                                  0x71, 0x71, 0x71, 1.0),
+                                            ),
+                                          ),
                                         ),
-                                        SizedBox(width: 12),
-                                        Expanded(child: Text(' My Contacts')),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Button(
-                                  onPressed: () => context.pushNamed('blocked'),
-                                  child: const _CupertinoRow(
-                                    leading: Text('Blocked users'),
-                                    trailing: Icon(
-                                      Icons.chevron_right,
-                                      color:
-                                          Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Button(
-                                  onPressed: () =>
-                                      context.pushNamed('contact_us'),
-                                  child: const _CupertinoRow(
-                                    leading: Text('Contact us'),
-                                    trailing: Icon(
-                                      Icons.chevron_right,
-                                      color:
-                                          Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Button(
-                                  onPressed: _showSignOutConfirmationModal,
-                                  child: const _CupertinoRow(
-                                    center: Text(
-                                      'Sign out',
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Button(
-                                  onPressed:
-                                      _showDeleteAccountConfirmationModal,
-                                  child: const _CupertinoRow(
-                                    center: Text(
-                                      'Delete Account',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w400,
-                                        color: Color.fromRGBO(
-                                            0xFF, 0x00, 0x00, 1.0),
                                       ),
-                                    ),
-                                  ),
-                                ),
-                                if (kDebugMode) ...[
-                                  const SizedBox(height: 16),
-                                  Center(
-                                    child: Text(
-                                      '${FirebaseAuth.instance.currentUser?.uid}',
-                                      textAlign: TextAlign.center,
-                                      style:
-                                          const TextStyle(color: Colors.black),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Center(
-                                    child: Text(
-                                      '${FirebaseAuth.instance.currentUser?.phoneNumber}',
-                                      textAlign: TextAlign.center,
-                                      style:
-                                          const TextStyle(color: Colors.black),
                                     ),
                                   ),
                                 ],
-                                const SizedBox(height: 32),
-                                SizedBox(
-                                  height:
-                                      MediaQuery.of(context).viewInsets.bottom,
-                                ),
-                              ],
+                              ),
                             ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              height: 189,
+                              child: Builder(
+                                builder: (context) {
+                                  final collections =
+                                      signedIn.collections ?? [];
+                                  return CollectionsPreviewList(
+                                    collections: collections,
+                                    play: _showCollectionCreation == false,
+                                    leadingChildren: [
+                                      _BottomButton(
+                                        label: 'Create Collection',
+                                        icon: const Icon(Icons.collections),
+                                        onPressed: () => setState(() =>
+                                            _showCollectionCreation = true),
+                                      ),
+                                    ],
+                                    onView: (index) {
+                                      context.pushNamed(
+                                        'view_profile',
+                                        extra: ViewProfilePageArguments.profile(
+                                          profile: profile,
+                                        ),
+                                      );
+                                    },
+                                    onLongPress: (index) => _showDeleteDialog(
+                                        collections[index].collectionId),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            DefaultTextStyle(
+                              style: const TextStyle(color: Colors.white),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const _SectionTitle(label: 'Name'),
+                                  const _CupertinoRow(
+                                    leading: _NameField(),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const _SectionTitle(
+                                    label: 'Phone Number',
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const _PhoneNumberField(),
+                                  const SizedBox(height: 16),
+                                  Button(
+                                    onPressed: () =>
+                                        context.pushNamed('contacts'),
+                                    child: const _CupertinoRow(
+                                      leading: Row(
+                                        children: [
+                                          Icon(
+                                            CupertinoIcons.book,
+                                            color: Color.fromRGBO(
+                                                0xBA, 0xBA, 0xBA, 1.0),
+                                          ),
+                                          SizedBox(width: 12),
+                                          Expanded(child: Text(' My Contacts')),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Button(
+                                    onPressed: () =>
+                                        context.pushNamed('blocked'),
+                                    child: const _CupertinoRow(
+                                      leading: Text('Blocked users'),
+                                      trailing: Icon(
+                                        Icons.chevron_right,
+                                        color: Color.fromRGBO(
+                                            0xBA, 0xBA, 0xBA, 1.0),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Button(
+                                    onPressed: () =>
+                                        context.pushNamed('contact_us'),
+                                    child: const _CupertinoRow(
+                                      leading: Text('Contact us'),
+                                      trailing: Icon(
+                                        Icons.chevron_right,
+                                        color: Color.fromRGBO(
+                                            0xBA, 0xBA, 0xBA, 1.0),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Button(
+                                    onPressed: _showSignOutConfirmationModal,
+                                    child: const _CupertinoRow(
+                                      center: Text(
+                                        'Sign out',
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Button(
+                                    onPressed:
+                                        _showDeleteAccountConfirmationModal,
+                                    child: const _CupertinoRow(
+                                      center: Text(
+                                        'Delete Account',
+                                        style: TextStyle(
+                                          color: Color.fromRGBO(
+                                              0xFF, 0x00, 0x00, 1.0),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (kDebugMode) ...[
+                                    const SizedBox(height: 16),
+                                    Center(
+                                      child: Text(
+                                        '${FirebaseAuth.instance.currentUser?.uid}',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                            color: Colors.black),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Center(
+                                      child: Text(
+                                        '${FirebaseAuth.instance.currentUser?.phoneNumber}',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                            color: Colors.black),
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 16),
+                                  SizedBox(
+                                    height: MediaQuery.of(context)
+                                        .viewInsets
+                                        .bottom,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      } else {
+                        return SizedBox(
+                          height: constraints.maxHeight,
+                          child: _CollectionCreation(
+                            onDone: () =>
+                                setState(() => _showCollectionCreation = false),
                           ),
-                        ],
-                      );
-                    } else {
-                      return SizedBox(
-                        height: constraints.maxHeight,
-                        child: _CollectionCreation(
-                          onDone: () =>
-                              setState(() => _showCollectionCreation = false),
-                        ),
-                      );
-                    }
-                  },
-                ),
-              );
-            },
+                        );
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         );
       },
@@ -775,14 +784,14 @@ class _CupertinoRow extends StatelessWidget {
       clipBehavior: Clip.hardEdge,
       decoration: decoration ??
           const BoxDecoration(
-            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+            color: Colors.white,
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
       child: DefaultTextStyle(
-        style: TextStyle(
-          fontSize: 15,
+        style: const TextStyle(
+          fontSize: 16,
           fontWeight: FontWeight.w400,
-          color: DefaultTextStyle.of(context).style.color,
+          color: Colors.black,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -876,7 +885,7 @@ class _SectionTitle extends StatelessWidget {
           style: Theme.of(context)
               .textTheme
               .bodyMedium!
-              .copyWith(fontSize: 12, fontWeight: FontWeight.w400),
+              .copyWith(fontSize: 13, fontWeight: FontWeight.w400),
         ),
       ),
     );
