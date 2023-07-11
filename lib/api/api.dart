@@ -839,7 +839,7 @@ class Profile with _$Profile {
     required String photo,
     String? audio,
     required Collection collection,
-    @Default([]) List<String> mutualFriends,
+    @Default([]) List<MutualContact> mutualContacts,
     @Default(0) int friendCount,
   }) = _Profile;
 
@@ -856,6 +856,18 @@ class Profile with _$Profile {
 
   factory Profile.fromJson(Map<String, dynamic> json) =>
       _$ProfileFromJson(json);
+}
+
+@freezed
+class MutualContact with _$MutualContact {
+  const factory MutualContact({
+    required String uid,
+    required String name,
+    required String photo,
+  }) = _MutualContact;
+
+  factory MutualContact.fromJson(Map<String, dynamic> json) =>
+      _$MutualContactFromJson(json);
 }
 
 @freezed

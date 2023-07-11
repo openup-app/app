@@ -116,6 +116,7 @@ class ProfileDisplay extends ConsumerWidget {
           guest: (_) => null,
           signedIn: (signedIn) => signedIn.account.profile.uid,
         );
+    final mutualContactCount = profile.mutualContacts.length;
     return Container(
       clipBehavior: Clip.hardEdge,
       decoration: const BoxDecoration(
@@ -224,7 +225,8 @@ class ProfileDisplay extends ConsumerWidget {
                               const InfoIcon(),
                               const SizedBox(width: 4),
                               Expanded(
-                                child: Text('1 mutual friends',
+                                child: Text(
+                                    '$mutualContactCount mutual friend${mutualContactCount == 1 ? '' : 's'}',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium!

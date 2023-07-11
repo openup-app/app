@@ -267,6 +267,7 @@ class _MiniProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mutualContactCount = profile.profile.mutualContacts.length;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -429,17 +430,19 @@ class _MiniProfile extends StatelessWidget {
                           const SizedBox(height: 4),
                           RichText(
                             textAlign: TextAlign.center,
-                            text: const TextSpan(
-                              style: TextStyle(
+                            text: TextSpan(
+                              style: const TextStyle(
                                 color: Color.fromRGBO(0x45, 0x45, 0x45, 1.0),
                               ),
                               children: [
                                 TextSpan(
-                                  text: '2 Shared ',
-                                  style: TextStyle(fontWeight: FontWeight.w700),
+                                  text: '$mutualContactCount Shared ',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w700),
                                 ),
                                 TextSpan(
-                                  text: 'Connections',
+                                  text:
+                                      'Connection${mutualContactCount == 1 ? '' : 's'}',
                                 ),
                               ],
                             ),
