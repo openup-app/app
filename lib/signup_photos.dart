@@ -11,6 +11,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class SignupPhotos extends ConsumerStatefulWidget {
   const SignupPhotos({super.key});
@@ -175,6 +176,7 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
       return null;
     }
 
+    await Permission.camera.request();
     final picker = ImagePicker();
     XFile? result;
     try {

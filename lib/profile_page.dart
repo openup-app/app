@@ -20,6 +20,7 @@ import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/phone_number_input.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -248,7 +249,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                                   Button(
                                     onPressed: () =>
                                         context.pushNamed('contacts'),
-                                    child: const _CupertinoRow(
+                                    child: _CupertinoRow(
                                       leading: Row(
                                         children: [
                                           Icon(
@@ -1348,6 +1349,7 @@ class _SimpleCollectionPhotoPickerState
       return null;
     }
 
+    await Permission.camera.request();
     final picker = ImagePicker();
     XFile? result;
     try {
