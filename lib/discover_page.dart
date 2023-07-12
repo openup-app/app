@@ -522,15 +522,25 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                _MapButton(
-                                  onPressed: () =>
-                                      _showRecordAudioBioPanel(context),
-                                  child: const Icon(
-                                    Icons.circle,
-                                    size: 16,
-                                    color:
-                                        Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                                  ),
+                                Builder(
+                                  builder: (context) {
+                                    final userState = ref.watch(userProvider2);
+                                    return userState.map(
+                                      guest: (_) => const SizedBox.shrink(),
+                                      signedIn: (_) {
+                                        return _MapButton(
+                                          onPressed: () =>
+                                              _showRecordAudioBioPanel(context),
+                                          child: const Icon(
+                                            Icons.circle,
+                                            size: 16,
+                                            color: Color.fromRGBO(
+                                                0xFF, 0x00, 0x00, 1.0),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
                                 ),
                                 const SizedBox(height: 15),
                                 _MapButton(
