@@ -854,7 +854,9 @@ class _ProfilePanelState extends State<_ProfilePanel> {
             child: Container(
               height: 70,
               alignment: Alignment.center,
-              margin: margin,
+              margin: margin +
+                  EdgeInsets.only(
+                      bottom: MediaQuery.of(context).padding.bottom),
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
                 borderRadius: BorderRadius.all(

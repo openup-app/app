@@ -304,7 +304,6 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
                 markerId: MarkerId('${profile.profile.uid}_selected'),
                 anchor: const Offset(0.5, 0.5),
                 zIndex: 10,
-                consumeTapEvents: false,
                 position: LatLng(
                   profile.location.latLong.latitude,
                   profile.location.latLong.longitude,
