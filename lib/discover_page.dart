@@ -54,11 +54,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       _discoverOperation;
   final _profiles = <DiscoverProfile>[];
   Location? _initialLocation;
-  Location? _queryLocation;
+  Location? _mapLocation;
+  Location? _prevQueryLocation;
   static const _kMinRadius = 4000.0;
-
-  bool _ignoreNextLocationChange = false;
-
   DiscoverProfile? _selectedProfile;
   final _invitedUsers = <String>{};
 
@@ -79,10 +77,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         if (mounted && latLong != null) {
           final location = Location(latLong: latLong, radius: _kMinRadius);
           setState(() {
-            _queryLocation = location;
+            _mapLocation = location;
             _initialLocation = location;
           });
-          _queryProfilesAt(location).then((_) {
+          _performQuery().then((_) {
             _maybeRequestNotification();
           });
         }
@@ -226,6 +224,18 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     return latLong;
   }
 
+  Future<void> _performQuery() {
+    final location = _mapLocation;
+    if (location != null) {
+      setState(() {
+        _prevQueryLocation = location;
+        _selectedProfile = null;
+      });
+      return _queryProfilesAt(location.copyWith(radius: location.radius * 0.5));
+    }
+    return Future.value();
+  }
+
   Future<void> _queryProfilesAt(Location location) async {
     setState(() => _fetchingProfiles = true);
     final api = ref.read(apiProvider);
@@ -273,33 +283,21 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     );
   }
 
-  void _maybeRefetchProfiles(Location location) {
-    if (_ignoreNextLocationChange) {
-      setState(() => _ignoreNextLocationChange = false);
-      return;
-    }
-
+  bool _areLocationsDistant(Location a, Location b) {
     // Reduced radius for improved experience when searching
-    final targetLocation = location.copyWith(radius: location.radius * 0.5);
-    final prevLocation = _queryLocation;
-    if (prevLocation != null) {
-      final panRatio =
-          greatCircleDistance(prevLocation.latLong, targetLocation.latLong) /
-              prevLocation.radius;
-      final zoomRatio = targetLocation.radius / prevLocation.radius;
-      final panned = panRatio > 1 / 3;
-      final zoomed = zoomRatio > 5 / 3 || zoomRatio < 2 / 3;
-      if (panned || zoomed) {
-        setState(() => _queryLocation = targetLocation);
-        _queryProfilesAt(targetLocation);
-      }
+    final panRatio = greatCircleDistance(a.latLong, b.latLong) / a.radius;
+    final zoomRatio = b.radius / a.radius;
+    final panned = panRatio > 0.4;
+    final zoomed = zoomRatio > 1.8 || zoomRatio < 0.5;
+    if (panned || zoomed) {
+      return true;
     }
+    return false;
   }
 
   void _onProfileChanged(DiscoverProfile? selectedProfile) {
     setState(() {
       _selectedProfile = selectedProfile;
-      _ignoreNextLocationChange = true;
       _discoverOperation?.cancel();
       _fetchingProfiles = false;
     });
@@ -311,10 +309,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     return ActivePage(
       onActivate: () {
         setState(() => _pageActive = true);
-        final queryLocation = _queryLocation;
-        if (queryLocation != null) {
-          _queryProfilesAt(queryLocation);
-        }
+        _performQuery();
       },
       onDeactivate: () {
         _profileBuilderKey.currentState?.pause();
@@ -346,7 +341,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       selectedProfile: _selectedProfile,
                       onProfileChanged: _onProfileChanged,
                       initialLocation: initialLocation,
-                      onLocationChanged: _maybeRefetchProfiles,
+                      onLocationChanged: (location) {
+                        setState(() => _mapLocation =
+                            location.copyWith(radius: location.radius));
+                      },
                       obscuredRatio: 326 / height,
                       showRecordPanel: () {
                         final selectedProfile = _selectedProfile;
@@ -362,7 +360,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                   );
                 },
               ),
-              if (_queryLocation != null && !kReleaseMode)
+              if (_mapLocation != null && !kReleaseMode)
                 Positioned(
                   left: 16,
                   top: MediaQuery.of(context).padding.top + 16,
@@ -375,7 +373,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         child: Button(
                           onPressed: () {
                             setState(() => _showDebugUsers = !_showDebugUsers);
-                            _queryProfilesAt(_queryLocation!);
+                            _performQuery();
                           },
                           child: Container(
                             decoration: const BoxDecoration(
@@ -391,7 +389,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                   value: _showDebugUsers,
                                   onChanged: (show) {
                                     setState(() => _showDebugUsers = show);
-                                    _queryProfilesAt(_queryLocation!);
+                                    _performQuery();
                                   },
                                 ),
                                 const Text(
@@ -557,23 +555,67 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                             ),
                           ),
                         ),
-                        IgnorePointer(
-                          child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeOutQuart,
-                            opacity: (_fetchingProfiles ||
+                        AnimatedCrossFade(
+                          duration: const Duration(microseconds: 200),
+                          alignment: Alignment.topCenter,
+                          crossFadeState: _fetchingProfiles
+                              ? CrossFadeState.showFirst
+                              : CrossFadeState.showSecond,
+                          firstChild: IgnorePointer(
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutQuart,
+                              opacity: (_fetchingProfiles ||
+                                      _markerRenderStatus ==
+                                          MarkerRenderStatus.rendering)
+                                  ? 1
+                                  : 0,
+                              child: Lottie.asset(
+                                'assets/images/map_searching.json',
+                                width: 100,
+                                height: 48,
+                                animate: _fetchingProfiles ||
                                     _markerRenderStatus ==
-                                        MarkerRenderStatus.rendering)
-                                ? 1
-                                : 0,
-                            child: Lottie.asset(
-                              'assets/images/map_searching.json',
-                              width: 100,
-                              height: 48,
-                              animate: _fetchingProfiles ||
-                                  _markerRenderStatus ==
-                                      MarkerRenderStatus.rendering,
+                                        MarkerRenderStatus.rendering,
+                              ),
                             ),
+                          ),
+                          secondChild: Builder(
+                            builder: (context) {
+                              final prev = _prevQueryLocation;
+                              final location = _mapLocation;
+                              final show = prev != null &&
+                                  location != null &&
+                                  _areLocationsDistant(prev, location);
+                              return AnimatedOpacity(
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeOutQuart,
+                                opacity: show ? 1.0 : 0,
+                                child: Button(
+                                  onPressed: show ? _performQuery : null,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12, horizontal: 16),
+                                    margin: const EdgeInsets.all(8),
+                                    decoration: const BoxDecoration(
+                                      color:
+                                          Color.fromRGBO(0x37, 0x87, 0xFF, 1.0),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(24),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Search this area',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w400,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -587,19 +629,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                           _profiles.clear();
                         });
                         _mapKey.currentState?.resetMarkers();
-                        final queryLocation = _queryLocation;
-                        if (queryLocation != null) {
-                          _queryProfilesAt(queryLocation);
-                        }
+                        _performQuery();
                       },
                       profiles: profiles,
                       selectedProfile: selectedProfile,
-                      onProfileChanged: (profile) {
-                        setState(() {
-                          _ignoreNextLocationChange = true;
-                          _selectedProfile = profile;
-                        });
-                      },
+                      onProfileChanged: (profile) =>
+                          setState(() => _selectedProfile = profile),
                       profileBuilderKey: _profileBuilderKey,
                       onRecordInvite: (profile) {
                         _showRecordInvitePanelOrSignIn(context, profile.uid);

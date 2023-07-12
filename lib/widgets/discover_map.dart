@@ -238,12 +238,6 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
               onMapCreated: _initMapController,
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
-              onCameraMoveStarted: () {
-                if (_recenterAnimationComplete &&
-                    widget.selectedProfile != null) {
-                  widget.onProfileChanged(null);
-                }
-              },
               onCameraIdle: () {
                 if (!_recenterAnimationComplete) {
                   setState(() => _recenterAnimationComplete = true);
@@ -304,6 +298,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
                 markerId: MarkerId('${profile.profile.uid}_selected'),
                 anchor: const Offset(0.5, 0.5),
                 zIndex: 10,
+                consumeTapEvents: true,
                 position: LatLng(
                   profile.location.latLong.latitude,
                   profile.location.latLong.longitude,
