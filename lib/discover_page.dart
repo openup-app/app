@@ -346,13 +346,15 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                             location.copyWith(radius: location.radius));
                       },
                       obscuredRatio: 326 / height,
-                      showRecordPanel: () {
+                      onShowRecordPanel: () {
                         final selectedProfile = _selectedProfile;
                         if (selectedProfile != null) {
                           _showRecordInvitePanelOrSignIn(
                               context, selectedProfile.profile.uid);
                         }
                       },
+                      onLocationSafetyTapped: () =>
+                          showSafetyAndPrivacyModal(context),
                       onMarkerRenderStatus: (status) {
                         setState(() => _markerRenderStatus = status);
                       },

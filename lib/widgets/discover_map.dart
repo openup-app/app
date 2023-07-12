@@ -18,7 +18,8 @@ class DiscoverMap extends ConsumerStatefulWidget {
   final Location initialLocation;
   final ValueChanged<Location> onLocationChanged;
   final double obscuredRatio;
-  final VoidCallback showRecordPanel;
+  final VoidCallback onShowRecordPanel;
+  final VoidCallback onLocationSafetyTapped;
   final void Function(MarkerRenderStatus status) onMarkerRenderStatus;
 
   const DiscoverMap({
@@ -29,7 +30,8 @@ class DiscoverMap extends ConsumerStatefulWidget {
     required this.initialLocation,
     required this.onLocationChanged,
     this.obscuredRatio = 0.0,
-    required this.showRecordPanel,
+    required this.onShowRecordPanel,
+    required this.onLocationSafetyTapped,
     required this.onMarkerRenderStatus,
   });
 
@@ -296,13 +298,14 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
             markers.add(
               Marker(
                 markerId: MarkerId('${profile.profile.uid}_selected'),
-                anchor: const Offset(0.5, 0.5),
-                zIndex: 10,
+                anchor: const Offset(0.5, 0),
+                zIndex: 9,
                 consumeTapEvents: true,
                 position: LatLng(
                   profile.location.latLong.latitude,
                   profile.location.latLong.longitude,
                 ),
+                onTap: widget.onLocationSafetyTapped,
                 icon: BitmapDescriptor.fromBytes(
                     exactLocationNotShownPill[selectedFrameIndex]),
               ),
@@ -740,7 +743,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     canvas.scale(pixelRatio);
     canvas.transform(scaleAnimation.storage);
 
-    const topPadding = 74.0;
+    const topPadding = 28.0;
 
     final rrect = RRect.fromRectAndRadius(
       Rect.fromCenter(
