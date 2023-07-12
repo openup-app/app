@@ -703,7 +703,7 @@ String _nightMapStyle() {
         "featureType": "all",
         "elementType": "geometry",
         "stylers": [
-          {"color": "#242f3e"}
+          {"color": "#1a2a40"}
         ]
       },
       {
