@@ -7,12 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
+import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_message.dart';
@@ -152,55 +154,68 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                   ),
                   const Spacer(),
                   if (_otherProfile != null) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Stack(
-                          alignment: Alignment.center,
-                          clipBehavior: Clip.none,
+                    Button(
+                      onPressed: () {
+                        context.pushNamed(
+                          'view_profile',
+                          extra: ViewProfilePageArguments.profile(
+                            profile: _otherProfile!,
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              clipBehavior: Clip.hardEdge,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                              ),
-                              child: _otherProfile?.photo == null
-                                  ? const SizedBox.shrink()
-                                  : Image.network(
-                                      _otherProfile!.photo,
-                                      fit: BoxFit.cover,
-                                    ),
+                            Stack(
+                              alignment: Alignment.center,
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  clipBehavior: Clip.hardEdge,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: _otherProfile?.photo == null
+                                      ? const SizedBox.shrink()
+                                      : Image.network(
+                                          _otherProfile!.photo,
+                                          fit: BoxFit.cover,
+                                        ),
+                                ),
+                                Positioned(
+                                  left: -6,
+                                  top: -34,
+                                  width: 78,
+                                  height: 78,
+                                  child: OnlineIndicatorBuilder(
+                                    uid: _otherProfile!.uid,
+                                    builder: (context, online) {
+                                      return online
+                                          ? const OnlineIndicator()
+                                          : const SizedBox.shrink();
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
-                            Positioned(
-                              left: -6,
-                              top: -34,
-                              width: 78,
-                              height: 78,
-                              child: OnlineIndicatorBuilder(
-                                uid: _otherProfile!.uid,
-                                builder: (context, online) {
-                                  return online
-                                      ? const OnlineIndicator()
-                                      : const SizedBox.shrink();
-                                },
+                            const SizedBox(width: 12),
+                            AutoSizeText(
+                              _otherProfile?.name ?? '',
+                              minFontSize: 16,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(width: 12),
-                        AutoSizeText(
-                          _otherProfile?.name ?? '',
-                          minFontSize: 16,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                     const Spacer(),
                     ReportBlockPopupMenu2(
