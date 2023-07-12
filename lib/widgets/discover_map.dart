@@ -60,6 +60,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     duration: const Duration(milliseconds: 2000),
   );
 
+  List<Uint8List>? _exactLocationNotShownPill;
+
   final _markersReadyToAnimate = <DiscoverProfile>{};
   final _markersStaggering = <DiscoverProfile>[];
 
@@ -87,6 +89,16 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       },
       onRenderEnd: _onRenderEnd,
     );
+
+    Future.delayed(Duration.zero).then((_) async {
+      if (!mounted) {
+        return;
+      }
+      final pill = await _renderExactLocationNotShownMapMarker();
+      if (mounted) {
+        setState(() => _exactLocationNotShownPill = pill);
+      }
+    });
   }
 
   void _onRenderEnd(List<RenderedProfile> renders) {
@@ -284,6 +296,24 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
             (_selectedAnimationController.value * (_frameCount - 1)).toInt();
         if (selectedFrameIndex < _selectedMapMarkerAnimation.length) {
           frame = _selectedMapMarkerAnimation[selectedFrameIndex];
+
+          final exactLocationNotShownPill = _exactLocationNotShownPill;
+          if (exactLocationNotShownPill != null) {
+            markers.add(
+              Marker(
+                markerId: MarkerId('${profile.profile.uid}_selected'),
+                anchor: const Offset(0.5, 0.5),
+                zIndex: 10,
+                consumeTapEvents: false,
+                position: LatLng(
+                  profile.location.latLong.latitude,
+                  profile.location.latLong.longitude,
+                ),
+                icon: BitmapDescriptor.fromBytes(
+                    exactLocationNotShownPill[selectedFrameIndex]),
+              ),
+            );
+          }
         }
       }
 
@@ -412,6 +442,22 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       final image = selected
           ? await _renderSelectedMapMarkerFrame(profile, pixelRatio, animation)
           : await _renderMapMarkerFrame(profile, pixelRatio, animation);
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      image.dispose();
+      frames.add(bytes!.buffer.asUint8List());
+    }
+    return frames;
+  }
+
+  Future<List<Uint8List>> _renderExactLocationNotShownMapMarker() async {
+    final pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final frames = <Uint8List>[];
+    for (var i = 0; i < _frameCount; i++) {
+      final t = i / (_frameCount - 1);
+      final animation = CurveTween(curve: Curves.easeOutQuart)
+          .animate(AlwaysStoppedAnimation(t));
+      final image = await _renderExactLocationNotShownPill(
+          pixelRatio: pixelRatio, animation: animation);
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
       image.dispose();
       frames.add(bytes!.buffer.asUint8List());
@@ -664,6 +710,88 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     );
     textPainter.layout(maxWidth: maxWidth);
     return textPainter;
+  }
+
+  Future<ui.Image> _renderExactLocationNotShownPill({
+    required double pixelRatio,
+    required Animation<double> animation,
+  }) async {
+    final textPainter = _createTextPainter(
+      text: 'Exact location not shown',
+      style: const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w400,
+        color: Colors.white,
+      ),
+    );
+    textPainter.computeLineMetrics()[0];
+
+    final pictureRecorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(pictureRecorder);
+
+    const width = 145.0;
+    const height = 22.0;
+
+    final scale = 1.0 + 0.33 * animation.value;
+
+    canvas.saveLayer(
+      null,
+      Paint()..color = Color.fromRGBO(0x00, 0x00, 0x00, animation.value),
+    );
+
+    final scaleAnimation = Matrix4.identity()
+      ..translate(width * scale / 2, height * scale / 2)
+      ..scale(scale)
+      ..translate(-width / 2, -height / 2);
+    canvas.scale(pixelRatio);
+    canvas.transform(scaleAnimation.storage);
+
+    const topPadding = 74.0;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: const Offset(width / 2, height / 2 + topPadding),
+        width: width,
+        height: height,
+      ),
+      const Radius.circular(height / 2),
+    );
+    canvas.drawShadow(
+      Path()..addRRect(rrect),
+      const Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+      6,
+      false,
+    );
+    canvas.drawRRect(
+      rrect,
+      Paint()..color = const Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
+    );
+    const textLeftPadding = 22.0;
+    const textTopPadding = 4 + topPadding;
+    textPainter.paint(
+      canvas,
+      const Offset(textLeftPadding, textTopPadding),
+    );
+
+    const icon = Icons.info;
+    final infoIconPainter = _createTextPainter(
+      text: String.fromCharCode(icon.codePoint),
+      style: TextStyle(
+        fontSize: 18,
+        color: Colors.white,
+        fontFamily: icon.fontFamily,
+      ),
+    );
+    infoIconPainter.paint(
+      canvas,
+      const Offset(2, 2 + topPadding),
+    );
+
+    final picture = pictureRecorder.endRecording();
+    return picture.toImage(
+      (pixelRatio * width * scale).toInt(),
+      (pixelRatio * (height + topPadding + 4) * scale).toInt(),
+    );
   }
 }
 
