@@ -452,9 +452,17 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                           ),
                           const SizedBox(height: 19),
                           _MapButton(
-                            onPressed: () {
+                            onPressed: () async {
+                              final visibility = myAccount!.location.visibility;
+                              if (visibility == LocationVisibility.private) {
+                                final result =
+                                    await _showLiveLocationSafetyModal(context);
+                                if (!mounted || !result) {
+                                  return;
+                                }
+                              }
                               final newVisibility =
-                                  myAccount!.location.visibility ==
+                                  myAccount.location.visibility ==
                                           LocationVisibility.public
                                       ? LocationVisibility.private
                                       : LocationVisibility.public;
@@ -1213,7 +1221,7 @@ Future<void> showSafetyAndPrivacyModal(BuildContext context) {
               SizedBox(height: 16),
               _DotPoint(
                 message: Text(
-                  'The exact location of other people is not shown',
+                  'Your exact location will not be shown',
                   textAlign: TextAlign.left,
                 ),
               ),
@@ -1225,7 +1233,7 @@ Future<void> showSafetyAndPrivacyModal(BuildContext context) {
               ),
               _DotPoint(
                 message: Text(
-                  'UT Meets does not share your location with others, only you can',
+                  'We do not share your exact location with others, only you can',
                   textAlign: TextAlign.left,
                 ),
               ),
@@ -1241,6 +1249,68 @@ Future<void> showSafetyAndPrivacyModal(BuildContext context) {
       );
     },
   );
+}
+
+Future<bool> _showLiveLocationSafetyModal(BuildContext context) async {
+  final result = await showCupertinoModalPopup<bool>(
+    context: context,
+    builder: (context) {
+      return CupertinoAlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(
+              Icons.location_on,
+              size: 16,
+            ),
+            SizedBox(width: 8),
+            Text('Live Location'),
+          ],
+        ),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Column(
+            children: const [
+              Text(
+                'Your safety is our top priority:',
+                textAlign: TextAlign.left,
+              ),
+              SizedBox(height: 16),
+              _DotPoint(
+                message: Text(
+                  'Your exact location will not be shown',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              _DotPoint(
+                message: Text(
+                  'Locations are approximate and within a half-mile radius',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              _DotPoint(
+                message: Text(
+                  'We do not share your location with others, only you can',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: Navigator.of(context).pop,
+            child: const Text('Cancel'),
+          ),
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Turn on'),
+          ),
+        ],
+      );
+    },
+  );
+  return result == true;
 }
 
 Future<void> showSignupGuestModal(
