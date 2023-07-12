@@ -194,8 +194,8 @@ class ShellPageState extends State<ShellPage> {
     if (_draggableScrollableController.isAttached) {
       _draggableScrollableController.animateTo(
         1.0,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutQuart,
       );
     } else {
       print('DraggableScrollableSheetController is not attached');
