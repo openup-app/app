@@ -177,7 +177,7 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
         ),
       );
       context.goNamed(
-        'signup_phone',
+        'signup',
         queryParams: {
           'verifiedUid': user.uid,
         },

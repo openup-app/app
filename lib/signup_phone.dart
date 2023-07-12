@@ -237,7 +237,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
           if (verifiedUid != null) {
             if (mounted) {
               context.goNamed(
-                'signup_phone',
+                'signup',
                 queryParams: {
                   'verifiedUid': verifiedUid,
                 },

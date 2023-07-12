@@ -33,7 +33,6 @@ import 'package:openup/report_screen.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/signup_age.dart';
 import 'package:openup/signup_tutorial2.dart';
-import 'package:openup/signup_welcome.dart';
 import 'package:openup/signup_gender.dart';
 import 'package:openup/signup_name.dart';
 import 'package:openup/signup_permissions.dart';
@@ -380,84 +379,71 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           name: 'signup',
           parentNavigatorKey: rootNavigatorKey,
           builder: (context, state) {
-            return const CurrentRouteSystemUiStyling.light(
-              child: SignupWelcome(),
+            final verifiedUid = state.queryParams['verifiedUid'];
+            return SignupPhone(
+              verifiedUid: verifiedUid,
             );
           },
           routes: [
             GoRoute(
-              path: 'phone',
-              name: 'signup_phone',
+              path: 'verify',
+              name: 'signup_verify',
               parentNavigatorKey: rootNavigatorKey,
               builder: (context, state) {
-                final verifiedUid = state.queryParams['verifiedUid'];
-                return SignupPhone(
-                  verifiedUid: verifiedUid,
+                final verificationId = state.queryParams['verificationId'];
+                if (verificationId == null) {
+                  throw 'Missing verification ID';
+                }
+                return SignupVerify(
+                  verificationId: verificationId,
                 );
               },
+            ),
+            GoRoute(
+              path: 'age',
+              name: 'signup_age',
+              parentNavigatorKey: rootNavigatorKey,
+              builder: (context, state) => const SignupAge(),
               routes: [
                 GoRoute(
-                  path: 'verify',
-                  name: 'signup_verify',
+                  path: 'permissions',
+                  name: 'signup_permissions',
                   parentNavigatorKey: rootNavigatorKey,
-                  builder: (context, state) {
-                    final verificationId = state.queryParams['verificationId'];
-                    if (verificationId == null) {
-                      throw 'Missing verification ID';
-                    }
-                    return SignupVerify(
-                      verificationId: verificationId,
-                    );
-                  },
-                ),
-                GoRoute(
-                  path: 'age',
-                  name: 'signup_age',
-                  parentNavigatorKey: rootNavigatorKey,
-                  builder: (context, state) => const SignupAge(),
+                  builder: (context, state) => const SignupPermissionsScreen(),
                   routes: [
                     GoRoute(
-                      path: 'permissions',
-                      name: 'signup_permissions',
-                      parentNavigatorKey: rootNavigatorKey,
-                      builder: (context, state) =>
-                          const SignupPermissionsScreen(),
+                      path: 'name',
+                      name: 'signup_name',
+                      builder: (context, state) => const SignupName(),
                       routes: [
                         GoRoute(
-                          path: 'name',
-                          name: 'signup_name',
-                          builder: (context, state) => const SignupName(),
+                          path: 'gender',
+                          name: 'signup_gender',
+                          builder: (context, state) => const SignupGender(),
                           routes: [
                             GoRoute(
-                              path: 'gender',
-                              name: 'signup_gender',
-                              builder: (context, state) => const SignupGender(),
+                              path: 'tutorial1',
+                              name: 'signup_tutorial1',
+                              builder: (context, state) =>
+                                  const SignupTutorial1(),
                               routes: [
                                 GoRoute(
-                                  path: 'tutorial1',
-                                  name: 'signup_tutorial1',
+                                  path: 'tutorial2',
+                                  name: 'signup_tutorial2',
                                   builder: (context, state) =>
-                                      const SignupTutorial1(),
+                                      const SignupTutorial2(),
                                   routes: [
                                     GoRoute(
-                                      path: 'tutorial2',
-                                      name: 'signup_tutorial2',
+                                      path: 'photos',
+                                      name: 'signup_photos',
                                       builder: (context, state) =>
-                                          const SignupTutorial2(),
+                                          const SignupPhotos(),
                                       routes: [
                                         GoRoute(
-                                          path: 'photos',
-                                          name: 'signup_photos',
+                                          path: 'audio',
+                                          name: 'signup_audio',
                                           builder: (context, state) =>
-                                              const SignupPhotos(),
-                                          routes: [
-                                            GoRoute(
-                                              path: 'audio',
-                                              name: 'signup_audio',
-                                              builder: (context, state) =>
-                                                  const SignupAudio(),
-                                            ),
-                                          ],
+                                              const SignupAudio(),
                                         ),
                                       ],
                                     ),
@@ -469,16 +455,16 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         ),
                       ],
                     ),
-                    GoRoute(
-                      path: 'friends',
-                      name: 'signup_friends',
-                      builder: (context, state) {
-                        return const CurrentRouteSystemUiStyling.light(
-                          child: SignUpFriends(),
-                        );
-                      },
-                    ),
                   ],
+                ),
+                GoRoute(
+                  path: 'friends',
+                  name: 'signup_friends',
+                  builder: (context, state) {
+                    return const CurrentRouteSystemUiStyling.light(
+                      child: SignUpFriends(),
+                    );
+                  },
                 ),
               ],
             ),
