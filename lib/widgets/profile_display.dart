@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
@@ -94,7 +95,7 @@ class ProfileBuilderState extends State<ProfileBuilder> {
   }
 }
 
-class ProfileDisplay extends ConsumerWidget {
+class ProfileDisplay extends ConsumerStatefulWidget {
   final Profile profile;
   final bool play;
   final VoidCallback onPlayPause;
@@ -111,12 +112,17 @@ class ProfileDisplay extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileDisplay> createState() => _ProfileDisplayState();
+}
+
+class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
+  @override
+  Widget build(BuildContext context) {
     final myUid = ref.read(userProvider2).map(
           guest: (_) => null,
           signedIn: (signedIn) => signedIn.account.profile.uid,
         );
-    final mutualContactCount = profile.mutualContacts.length;
+    final mutualContactCount = widget.profile.mutualContacts.length;
     return Container(
       clipBehavior: Clip.hardEdge,
       decoration: const BoxDecoration(
@@ -126,16 +132,16 @@ class ProfileDisplay extends ConsumerWidget {
         fit: StackFit.expand,
         children: [
           Button(
-            onPressed: onPlayPause,
+            onPressed: widget.onPlayPause,
             child: KeyedSubtree(
-              key: ValueKey(profile.uid),
+              key: ValueKey(widget.profile.uid),
               child: CinematicGallery(
-                slideshow: play,
-                gallery: profile.collection.photos,
+                slideshow: widget.play,
+                gallery: widget.profile.collection.photos,
               ),
             ),
           ),
-          if (!play)
+          if (!widget.play)
             const Center(
               child: IgnorePointer(
                 child: IconWithShadow(
@@ -147,12 +153,9 @@ class ProfileDisplay extends ConsumerWidget {
           Positioned(
             right: 22,
             top: 20,
-            child: ReportBlockPopupMenu2(
-              uid: profile.uid,
-              name: profile.name,
-              onBlock: onBlock,
+            child: Builder(
               builder: (context) {
-                return const _ProfileButtonContents(
+                const button = _ProfileButtonContents(
                   icon: Icon(
                     CupertinoIcons.ellipsis,
                     color: Colors.black,
@@ -160,6 +163,51 @@ class ProfileDisplay extends ConsumerWidget {
                   ),
                   size: 29,
                 );
+                if (widget.profile.uid == myUid) {
+                  return Button(
+                    onPressed: () {
+                      showCupertinoModalPopup(
+                        context: context,
+                        barrierColor:
+                            const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+                        builder: (context) {
+                          return CupertinoActionSheet(
+                            cancelButton: CupertinoActionSheetAction(
+                              onPressed: Navigator.of(context).pop,
+                              child: const Text('Cancel'),
+                            ),
+                            actions: [
+                              CupertinoActionSheetAction(
+                                onPressed: () async {
+                                  await withBlockingModal(
+                                    context: context,
+                                    label: 'Updating profile',
+                                    future: ref
+                                        .read(userProvider2.notifier)
+                                        .updateCollection(widget
+                                            .profile.collection.collectionId),
+                                  );
+                                  if (mounted) {
+                                    Navigator.of(context).pop();
+                                  }
+                                },
+                                child: const Text('Set as profile'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: button,
+                  );
+                } else {
+                  return ReportBlockPopupMenu2(
+                    uid: widget.profile.uid,
+                    name: widget.profile.name,
+                    onBlock: widget.onBlock,
+                    builder: (context) => button,
+                  );
+                }
               },
             ),
           ),
@@ -198,7 +246,7 @@ class ProfileDisplay extends ConsumerWidget {
                           context: context,
                           builder: (context) {
                             return _MutualFriendsModal(
-                              uids: [profile.uid],
+                              uids: [widget.profile.uid],
                             );
                           },
                         );
@@ -208,7 +256,7 @@ class ProfileDisplay extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           AutoSizeText(
-                            profile.name,
+                            widget.profile.name,
                             minFontSize: 15,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -242,7 +290,7 @@ class ProfileDisplay extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (profile.uid != myUid)
+                  if (widget.profile.uid != myUid)
                     SizedBox(
                       width: 146,
                       child: _RecordButton(
@@ -271,7 +319,7 @@ class ProfileDisplay extends ConsumerWidget {
                                     },
                                   );
                                 },
-                                signedIn: (_) => onRecord(),
+                                signedIn: (_) => widget.onRecord(),
                               );
                         },
                       ),

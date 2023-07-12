@@ -28,10 +28,10 @@ class ViewProfilePage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ViewProfilePage> createState() => _ViewCollectionPageState();
+  ConsumerState<ViewProfilePage> createState() => _ViewProfilePageState();
 }
 
-class _ViewCollectionPageState extends ConsumerState<ViewProfilePage> {
+class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
   Profile? _profile;
 
   final _player = JustAudioAudioPlayer();

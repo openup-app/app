@@ -141,6 +141,26 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     );
   }
 
+  Future<void> updateCollection(String collectionId) async {
+    await state.map(
+      guest: (_) async {
+        _messageNotifier.emitMessage(
+            errorToMessage(const ApiError.client(ClientError.unauthorized())));
+        return false;
+      },
+      signedIn: (signedIn) async {
+        final result = await _api.updateProfileCollection(
+          uid: signedIn.account.profile.uid,
+          collectionId: collectionId,
+        );
+        return result.fold(
+          (l) => _messageNotifier.emitMessage(errorToMessage(l)),
+          (r) => state = signedIn.copyWith.account(profile: r),
+        );
+      },
+    );
+  }
+
   Future<bool> updateAudioBio(Uint8List bytes) async {
     return state.map(
       guest: (_) {
