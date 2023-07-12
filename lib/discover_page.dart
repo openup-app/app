@@ -764,12 +764,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     );
   }
 
-  Future<void> _showRecordAudioBioPanel(BuildContext context) async {
-    final record = await _showReplaceBioPopup(context);
-    if (!mounted || record != true) {
-      return Future.value();
-    }
-
+  Future<void> _showRecordAudioBioPanel(BuildContext context) {
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1268,27 +1263,6 @@ Future<void> showSignupGuestModal(
           CupertinoDialogAction(
             onPressed: Navigator.of(context).pop,
             child: const Text('Continue as guest'),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-Future<bool?> _showReplaceBioPopup(BuildContext context) {
-  return showCupertinoModalPopup<bool>(
-    context: context,
-    builder: (context) {
-      return CupertinoActionSheet(
-        title: const Text('Replace Audio Bio'),
-        cancelButton: CupertinoDialogAction(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Record'),
           ),
         ],
       );
