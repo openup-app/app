@@ -1250,15 +1250,15 @@ class RecordPanelRecorder extends StatelessWidget {
               const max = Duration(seconds: 30);
               final secondsRemaining =
                   ((max - duration).inMilliseconds / 1000).ceil();
-              final ratioRemaining =
-                  (1 - duration.inMilliseconds / max.inMilliseconds)
+              final ratioRecorded =
+                  (duration.inMilliseconds / max.inMilliseconds)
                       .clamp(0.0, 1.0);
               return Stack(
                 fit: StackFit.expand,
                 children: [
                   CustomPaint(
                     painter: _RecordingDurationArcPainter(
-                      ratio: ratioRemaining,
+                      ratio: ratioRecorded,
                     ),
                   ),
                   Center(
