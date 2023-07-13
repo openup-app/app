@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -277,7 +278,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                       height: listBoxHeight,
                       child: ListView.builder(
                         controller: _scrollController,
-                        padding: const EdgeInsets.only(bottom: 100),
+                        padding: EdgeInsets.only(
+                            bottom: 90 + MediaQuery.of(context).padding.bottom),
                         itemExtent: _itemExtent,
                         itemCount: items.length,
                         itemBuilder: (context, index) {
@@ -357,6 +359,18 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                       ),
                     ),
                   ],
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 82 + MediaQuery.of(context).padding.bottom,
+                    child: ClipRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(),
+                      ),
+                    ),
+                  ),
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Column(
