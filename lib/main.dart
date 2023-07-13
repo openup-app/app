@@ -32,7 +32,6 @@ import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/signup_age.dart';
-import 'package:openup/signup_tutorial2.dart';
 import 'package:openup/signup_gender.dart';
 import 'package:openup/signup_name.dart';
 import 'package:openup/signup_permissions.dart';
@@ -41,7 +40,6 @@ import 'package:openup/signup_verify.dart';
 import 'package:openup/signup_audio.dart';
 import 'package:openup/signup_photos.dart';
 import 'package:openup/signup_friends.dart';
-import 'package:openup/signup_tutorial1.dart';
 import 'package:openup/util/key_value_store_service.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/view_profile_page.dart';
@@ -422,32 +420,15 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                           builder: (context, state) => const SignupGender(),
                           routes: [
                             GoRoute(
-                              path: 'tutorial1',
-                              name: 'signup_tutorial1',
-                              builder: (context, state) =>
-                                  const SignupTutorial1(),
+                              path: 'photos',
+                              name: 'signup_photos',
+                              builder: (context, state) => const SignupPhotos(),
                               routes: [
                                 GoRoute(
-                                  path: 'tutorial2',
-                                  name: 'signup_tutorial2',
+                                  path: 'audio',
+                                  name: 'signup_audio',
                                   builder: (context, state) =>
-                                      const SignupTutorial2(),
-                                  routes: [
-                                    GoRoute(
-                                      path: 'photos',
-                                      name: 'signup_photos',
-                                      builder: (context, state) =>
-                                          const SignupPhotos(),
-                                      routes: [
-                                        GoRoute(
-                                          path: 'audio',
-                                          name: 'signup_audio',
-                                          builder: (context, state) =>
-                                              const SignupAudio(),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                      const SignupAudio(),
                                 ),
                               ],
                             ),

@@ -166,19 +166,10 @@ class _SignupGenderState extends ConsumerState<SignupGender> {
       return;
     }
 
-    precacheImage(
-      const AssetImage('assets/images/tutorial_photo_good.jpg'),
-      context,
-    );
-    precacheImage(
-      const AssetImage('assets/images/tutorial_photo_bad.jpg'),
-      context,
-    );
-
     ref.read(mixpanelProvider)
       ..track("signup_submit_gender")
       ..getPeople().set('gender', gender.name);
     ref.read(accountCreationParamsProvider.notifier).gender(gender);
-    context.pushNamed('signup_tutorial1');
+    context.pushNamed('signup_photos');
   }
 }
