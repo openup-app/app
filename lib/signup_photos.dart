@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -57,11 +58,12 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
           ),
           const Spacer(),
           const Text(
-            'To join you must add at least 3 images',
+            'To join, you must add at least 1 image of yourself\n( Maximum 3 photos in a collection )',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w400,
+              height: 2.0,
               color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
             ),
           ),
@@ -80,9 +82,10 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
                       children: [
                         Button(
                           onPressed: () async {
-                            final photo = await _selectPhoto();
-                            if (mounted && photo != null) {
-                              setState(() => _photos[i] = photo);
+                            final photos = await _selectPhotos();
+                            if (mounted && photos != null) {
+                              setState(() => _photos.replaceRange(
+                                  i, i + min(3, photos.length), photos));
                             }
                           },
                           child: RoundedRectangleContainer(
@@ -126,7 +129,7 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
           ),
           const Spacer(),
           Button(
-            onPressed: _photos.contains(null) ? null : _submit,
+            onPressed: _photos.whereType<File>().isEmpty ? null : _submit,
             child: RoundedRectangleContainer(
               child: SizedBox(
                 width: 171,
@@ -153,7 +156,7 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
     );
   }
 
-  Future<File?> _selectPhoto() async {
+  Future<List<File>?> _selectPhotos() async {
     final source = await showCupertinoDialog<ImageSource>(
       context: context,
       builder: (context) {
@@ -178,9 +181,16 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
 
     await Permission.camera.request();
     final picker = ImagePicker();
-    XFile? result;
+    List<XFile>? result;
     try {
-      result = await picker.pickImage(source: source);
+      if (source == ImageSource.camera) {
+        final image = await picker.pickImage(source: source);
+        if (image != null) {
+          result = [image];
+        }
+      } else {
+        result = await picker.pickMultiImage();
+      }
     } on PlatformException catch (e) {
       if (e.code == 'camera_access_denied') {
         result = null;
@@ -192,7 +202,7 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
       return null;
     }
 
-    return File(result.path);
+    return result.map((e) => File(e.path)).toList();
   }
 
   void _submit() {
