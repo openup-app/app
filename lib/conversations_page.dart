@@ -10,7 +10,6 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/shell_page.dart';
-import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
@@ -383,119 +382,122 @@ class _ConversationList extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Stack(
-                    children: [
-                      SizedBox(
-                        height: 140,
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 29,
-                              child: Center(
-                                child: Builder(
-                                  builder: (context) {
-                                    if (chatroom.unreadCount != 0) {
-                                      return Container(
-                                        width: 10,
-                                        height: 10,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Color.fromRGBO(
-                                                  0xF6, 0x28, 0x28, 1.0),
-                                              Color.fromRGBO(
-                                                  0xFF, 0x5F, 0x5F, 1.0),
-                                            ],
+                  child: Button(
+                    onPressed: () => onOpen(chatroom),
+                    child: Stack(
+                      children: [
+                        SizedBox(
+                          height: 140,
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 29,
+                                child: Center(
+                                  child: Builder(
+                                    builder: (context) {
+                                      if (chatroom.unreadCount != 0) {
+                                        return Container(
+                                          width: 10,
+                                          height: 10,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Color.fromRGBO(
+                                                    0xF6, 0x28, 0x28, 1.0),
+                                                Color.fromRGBO(
+                                                    0xFF, 0x5F, 0x5F, 1.0),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    }
-                                    return const SizedBox.shrink();
-                                  },
+                                        );
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  ),
                                 ),
                               ),
-                            ),
-                            Container(
-                              width: 63,
-                              height: 63,
-                              clipBehavior: Clip.hardEdge,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
+                              Container(
+                                width: 63,
+                                height: 63,
+                                clipBehavior: Clip.hardEdge,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Image.network(
+                                  chatroom.profile.photo,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
-                              child: Image.network(
-                                chatroom.profile.photo,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(chatroom.profile.name,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium!
-                                          .copyWith(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w400)),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    _formatRelativeDate(chatroom.lastUpdated),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 14,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  if (chatroom.inviteState !=
-                                      ChatroomState.accepted)
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(chatroom.profile.name,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium!
+                                            .copyWith(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w400)),
+                                    const SizedBox(height: 2),
                                     Text(
-                                      'New chat invitation',
+                                      _formatRelativeDate(chatroom.lastUpdated),
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium!
                                           .copyWith(
-                                              fontWeight: FontWeight.w400,
-                                              fontSize: 12,
-                                              color: const Color.fromRGBO(
-                                                  0xFF, 0x00, 0x00, 1.0)),
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 14,
+                                          ),
                                     ),
-                                ],
+                                    const SizedBox(height: 2),
+                                    if (chatroom.inviteState !=
+                                        ChatroomState.accepted)
+                                      Text(
+                                        'New chat invitation',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium!
+                                            .copyWith(
+                                                fontWeight: FontWeight.w400,
+                                                fontSize: 12,
+                                                color: const Color.fromRGBO(
+                                                    0xFF, 0x00, 0x00, 1.0)),
+                                      ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            UnreadIndicator(
-                              count: chatroom.unreadCount,
-                            ),
-                            const Icon(
-                              Icons.chevron_right,
-                              color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                              size: 26,
-                            ),
-                            const SizedBox(width: 12),
-                          ],
+                              UnreadIndicator(
+                                count: chatroom.unreadCount,
+                              ),
+                              const Icon(
+                                Icons.chevron_right,
+                                color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                                size: 26,
+                              ),
+                              const SizedBox(width: 12),
+                            ],
+                          ),
                         ),
-                      ),
-                      Positioned(
-                        left: 44,
-                        top: -18,
-                        width: 78,
-                        height: 78,
-                        child: OnlineIndicatorBuilder(
-                          uid: chatroom.profile.uid,
-                          builder: (context, online) {
-                            return online
-                                ? const OnlineIndicator()
-                                : const SizedBox.shrink();
-                          },
+                        Positioned(
+                          left: 44,
+                          top: -18,
+                          width: 78,
+                          height: 78,
+                          child: OnlineIndicatorBuilder(
+                            uid: chatroom.profile.uid,
+                            builder: (context, online) {
+                              return online
+                                  ? const OnlineIndicator()
+                                  : const SizedBox.shrink();
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
