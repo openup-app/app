@@ -943,14 +943,7 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                 borderRadius: BorderRadius.all(
                   Radius.circular(35),
                 ),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color.fromRGBO(0x37, 0x87, 0xFF, 1.0),
-                    Color.fromRGBO(0x1F, 0x78, 0xFF, 1.0),
-                  ],
-                ),
+                color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
                 boxShadow: [
                   BoxShadow(
                     offset: Offset(0, 0),
