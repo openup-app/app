@@ -70,16 +70,6 @@ class _InitialLoadingScreenState extends ConsumerState<InitialLoadingScreen> {
       return;
     }
 
-    final navigate = getAccountResult.map(
-      logIn: (_) => false,
-      signUp: (_) => true,
-      retry: (_) => false,
-    );
-    if (navigate) {
-      context.goNamed('signup');
-      return;
-    }
-
     getAccountResult.when(
       logIn: (account) {
         ref.read(userProvider.notifier).uid(account.profile.uid);
