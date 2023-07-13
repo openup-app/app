@@ -716,7 +716,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     final textPainter = _createTextPainter(
       text: 'Exact location not shown',
       style: const TextStyle(
-        fontSize: 10,
+        fontSize: 8,
         fontWeight: FontWeight.w400,
         color: Colors.white,
       ),
@@ -726,8 +726,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     final pictureRecorder = ui.PictureRecorder();
     final canvas = ui.Canvas(pictureRecorder);
 
-    const width = 145.0;
-    const height = 22.0;
+    const width = 116.0;
+    const height = 16.0;
 
     final scale = 1.0 + 0.33 * animation.value;
 
@@ -763,8 +763,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       rrect,
       Paint()..color = const Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
     );
-    const textLeftPadding = 22.0;
-    const textTopPadding = 4 + topPadding;
+    const textLeftPadding = 16.0;
+    const textTopPadding = 3 + topPadding;
     textPainter.paint(
       canvas,
       const Offset(textLeftPadding, textTopPadding),
@@ -774,7 +774,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     final infoIconPainter = _createTextPainter(
       text: String.fromCharCode(icon.codePoint),
       style: TextStyle(
-        fontSize: 18,
+        fontSize: 12,
         color: Colors.white,
         fontFamily: icon.fontFamily,
       ),
