@@ -2,6 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/widgets/audio_playback_symbol.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/profile_display.dart';
@@ -449,38 +450,56 @@ class _MiniProfile extends StatelessWidget {
                           ),
                           const Spacer(),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 26),
-                            child: StreamBuilder<double>(
-                              stream: playbackInfoStream.map((e) {
-                                return e.duration.inMilliseconds == 0
-                                    ? 0
-                                    : e.position.inMilliseconds /
-                                        e.duration.inMilliseconds;
-                              }),
-                              initialData: 0.0,
-                              builder: (context, snapshot) {
-                                return DecoratedBox(
-                                  decoration: const BoxDecoration(
-                                    color:
-                                        Color.fromRGBO(0xE1, 0xE1, 0xE1, 1.0),
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(2)),
+                            padding: const EdgeInsets.only(left: 16, right: 26),
+                            child: Row(
+                              children: [
+                                StreamBuilder<bool>(
+                                  stream: playbackInfoStream.map(
+                                      (e) => e.state == PlaybackState.playing),
+                                  initialData: false,
+                                  builder: (context, snapshot) {
+                                    final playing = snapshot.requireData;
+                                    return AudioPlaybackSymbol(
+                                      play: playing,
+                                    );
+                                  },
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: StreamBuilder<double>(
+                                    stream: playbackInfoStream.map((e) {
+                                      return e.duration.inMilliseconds == 0
+                                          ? 0
+                                          : e.position.inMilliseconds /
+                                              e.duration.inMilliseconds;
+                                    }),
+                                    initialData: 0.0,
+                                    builder: (context, snapshot) {
+                                      return DecoratedBox(
+                                        decoration: const BoxDecoration(
+                                          color: Color.fromRGBO(
+                                              0xE1, 0xE1, 0xE1, 1.0),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(2)),
+                                        ),
+                                        child: FractionallySizedBox(
+                                          widthFactor: snapshot.requireData,
+                                          alignment: Alignment.centerLeft,
+                                          child: Container(
+                                            height: 4,
+                                            decoration: const BoxDecoration(
+                                              color: Color.fromRGBO(
+                                                  0x3E, 0x97, 0xFF, 1.0),
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(2)),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
-                                  child: FractionallySizedBox(
-                                    widthFactor: snapshot.requireData,
-                                    alignment: Alignment.centerLeft,
-                                    child: Container(
-                                      height: 4,
-                                      decoration: const BoxDecoration(
-                                        color: Color.fromRGBO(
-                                            0x3E, 0x97, 0xFF, 1.0),
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(2)),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
+                                ),
+                              ],
                             ),
                           ),
                           const Spacer(),
