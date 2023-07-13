@@ -421,70 +421,63 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        if (myProfile != null) ...[
-                          Button(
-                            onPressed: widget.onShowSettings,
-                            child: Container(
-                              width: 45,
-                              height: 45,
-                              clipBehavior: Clip.hardEdge,
-                              foregroundDecoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border:
-                                    Border.all(width: 2, color: Colors.white),
-                              ),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    offset: Offset(0, 4),
-                                    blurRadius: 8,
-                                    color:
-                                        Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                                  ),
-                                ],
-                              ),
-                              child: Image.network(
-                                myProfile.photo,
-                                fit: BoxFit.cover,
-                              ),
+                        Button(
+                          onPressed: _showSettingsOrSignIn,
+                          child: Container(
+                            width: 45,
+                            height: 45,
+                            clipBehavior: Clip.hardEdge,
+                            foregroundDecoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(width: 2, color: Colors.white),
                             ),
-                          ),
-                          const SizedBox(height: 19),
-                          _MapButton(
-                            onPressed: () async {
-                              final visibility = myAccount!.location.visibility;
-                              if (visibility == LocationVisibility.private) {
-                                final result =
-                                    await _showLiveLocationSafetyModal(context);
-                                if (!mounted || !result) {
-                                  return;
-                                }
-                              }
-                              final newVisibility =
-                                  myAccount.location.visibility ==
-                                          LocationVisibility.public
-                                      ? LocationVisibility.private
-                                      : LocationVisibility.public;
-                              ref
-                                  .read(userProvider2.notifier)
-                                  .updateLocationVisibility(newVisibility);
-                            },
-                            child: myAccount!.location.visibility ==
-                                    LocationVisibility.public
-                                ? const Icon(
-                                    Icons.location_on,
-                                    color:
-                                        Color.fromRGBO(0x25, 0xB7, 0x00, 1.0),
+                            decoration: BoxDecoration(
+                              color: myAccount != null ? Colors.white : null,
+                              shape: BoxShape.circle,
+                              boxShadow: const [
+                                BoxShadow(
+                                  offset: Offset(0, 4),
+                                  blurRadius: 8,
+                                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                                ),
+                              ],
+                            ),
+                            child: myProfile != null
+                                ? Image.network(
+                                    myProfile.photo,
+                                    fit: BoxFit.cover,
                                   )
                                 : const Icon(
-                                    Icons.location_off,
+                                    Icons.person,
+                                    size: 30,
                                     color:
-                                        Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                        Color.fromRGBO(0x84, 0x84, 0x84, 1.0),
                                   ),
                           ),
-                          const SizedBox(height: 11),
-                        ],
+                        ),
+                        const SizedBox(height: 19),
+                        _MapButton(
+                          onPressed: () async {
+                            final visibility = myAccount!.location.visibility;
+                            _showLiveLocationModalOrSignIn(
+                              targetVisibility:
+                                  visibility == LocationVisibility.private
+                                      ? LocationVisibility.public
+                                      : LocationVisibility.private,
+                            );
+                          },
+                          child: myAccount!.location.visibility ==
+                                  LocationVisibility.public
+                              ? const Icon(
+                                  Icons.location_on,
+                                  color: Color.fromRGBO(0x25, 0xB7, 0x00, 1.0),
+                                )
+                              : const Icon(
+                                  Icons.location_off,
+                                  color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                ),
+                        ),
+                        const SizedBox(height: 11),
                         Consumer(
                           builder: (context, ref, child) {
                             final latLong =
@@ -522,25 +515,15 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                Builder(
-                                  builder: (context) {
-                                    final userState = ref.watch(userProvider2);
-                                    return userState.map(
-                                      guest: (_) => const SizedBox.shrink(),
-                                      signedIn: (_) {
-                                        return _MapButton(
-                                          onPressed: () =>
-                                              _showRecordAudioBioPanel(context),
-                                          child: const Icon(
-                                            Icons.circle,
-                                            size: 16,
-                                            color: Color.fromRGBO(
-                                                0xFF, 0x00, 0x00, 1.0),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
+                                _MapButton(
+                                  onPressed: () =>
+                                      _showUpdateAudioBioOrSignIn(context),
+                                  child: const Icon(
+                                    Icons.circle,
+                                    size: 16,
+                                    color:
+                                        Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                  ),
                                 ),
                                 const SizedBox(height: 15),
                                 _MapButton(
@@ -819,7 +802,42 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     );
   }
 
-  Future<void> _showRecordAudioBioPanel(BuildContext context) {
+  void _showSettingsOrSignIn() {
+    final userState = ref.read(userProvider2);
+    userState.map(
+      guest: (_) => _showSignInDialog(),
+      signedIn: (_) => widget.onShowSettings(),
+    );
+  }
+
+  void _showLiveLocationModalOrSignIn({
+    required LocationVisibility targetVisibility,
+  }) {
+    final userState = ref.read(userProvider2);
+    userState.map(
+      guest: (_) => _showSignInDialog(),
+      signedIn: (_) async {
+        final confirm = await (targetVisibility == LocationVisibility.public
+            ? _showTurnOnLiveLocationModal(context)
+            : _showTurnOffLiveLocationModal(context));
+        if (mounted && confirm) {
+          ref
+              .read(userProvider2.notifier)
+              .updateLocationVisibility(targetVisibility);
+        }
+      },
+    );
+  }
+
+  void _showUpdateAudioBioOrSignIn(BuildContext context) {
+    final userState = ref.read(userProvider2);
+    userState.map(
+      guest: (_) => _showSignInDialog(),
+      signedIn: (_) => _showUpdateAudioBioPanel(context),
+    );
+  }
+
+  Future<void> _showUpdateAudioBioPanel(BuildContext context) {
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1261,7 +1279,80 @@ Future<void> showSafetyAndPrivacyModal(BuildContext context) {
   );
 }
 
-Future<bool> _showLiveLocationSafetyModal(BuildContext context) async {
+Future<bool> _showTurnOffLiveLocationModal(BuildContext context) async {
+  final result = await showCupertinoDialog<bool>(
+    context: context,
+    builder: (context) {
+      return CupertinoAlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(
+              Icons.location_on,
+              size: 16,
+            ),
+            SizedBox(width: 8),
+            Text('Live Location'),
+          ],
+        ),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Column(
+            children: const [
+              Text(
+                'Turning off location will prevent the following:',
+                textAlign: TextAlign.left,
+              ),
+              SizedBox(height: 16),
+              _DotPoint(
+                message: Text(
+                  'You will not be visible on the map',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              _DotPoint(
+                message: Text(
+                  'You will not receive messages from new people',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              _DotPoint(
+                message: Text(
+                  'You and your friends can still message each other',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              _DotPoint(
+                message: Text(
+                  'You will not be able to message anyone on the map',
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: Navigator.of(context).pop,
+            child: const Text('Cancel'),
+          ),
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Turn off',
+              style: TextStyle(
+                color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+  return result == true;
+}
+
+Future<bool> _showTurnOnLiveLocationModal(BuildContext context) async {
   final result = await showCupertinoDialog<bool>(
     context: context,
     builder: (context) {
