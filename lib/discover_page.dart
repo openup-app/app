@@ -80,9 +80,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
             _mapLocation = location;
             _initialLocation = location;
           });
-          _performQuery().then((_) {
-            _maybeRequestNotification();
-          });
+          _maybeRequestNotification();
         }
       });
     });
@@ -344,6 +342,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       onLocationChanged: (location) {
                         setState(() => _mapLocation =
                             location.copyWith(radius: location.radius));
+                        if (_prevQueryLocation == null) {
+                          _performQuery();
+                        }
                       },
                       obscuredRatio: 326 / height,
                       onShowRecordPanel: () {
@@ -619,7 +620,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                     margin: const EdgeInsets.all(8),
                                     decoration: const BoxDecoration(
                                       color:
-                                          Color.fromRGBO(0x37, 0x87, 0xFF, 1.0),
+                                          Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
                                       borderRadius: BorderRadius.all(
                                         Radius.circular(24),
                                       ),
