@@ -527,7 +527,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                 ),
                                 const SizedBox(height: 12),
                                 _MapButton(
-                                  onPressed: widget.onShowConversations,
+                                  onPressed: _showConversationsOrSignIn,
                                   child: Stack(
                                     alignment: Alignment.center,
                                     children: [
@@ -865,6 +865,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
           ),
         );
       },
+    );
+  }
+
+  void _showConversationsOrSignIn() {
+    final userState = ref.read(userProvider2);
+    userState.map(
+      guest: (_) => _showSignInDialog(),
+      signedIn: (_) => widget.onShowConversations,
     );
   }
 }
