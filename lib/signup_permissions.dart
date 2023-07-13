@@ -22,14 +22,14 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
   @override
   void initState() {
     super.initState();
-    _checkPermissions();
+    _checkPermissionsAndMaybeNavigate();
   }
 
   @override
   Widget build(BuildContext context) {
-    final routeActive = ModalRoute.of(context)?.isActive == true;
+    final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
     return AppLifecycle(
-      onResumed: routeActive ? _checkPermissions : null,
+      onResumed: routeCurrent ? _checkPermissionsAndMaybeNavigate : null,
       child: Scaffold(
         backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
         resizeToAvoidBottomInset: true,
@@ -78,7 +78,10 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
               label: const Text('Enable Location'),
               granted: _hasLocationPermission,
               onPressed: () {
-                Permission.location.request().then(_updateLocationStatus);
+                Permission.location
+                    .request()
+                    .then(_updateLocationStatus)
+                    .whenComplete(_checkPermissionsAndMaybeNavigate);
               },
             ),
             const SizedBox(height: 27),
@@ -87,7 +90,10 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
               label: const Text('Enable Contacts'),
               granted: _hasContactsPermission,
               onPressed: () {
-                Permission.contacts.request().then(_updateContactsStatus);
+                Permission.contacts
+                    .request()
+                    .then(_updateContactsStatus)
+                    .whenComplete(_checkPermissionsAndMaybeNavigate);
               },
             ),
             const Spacer(),
@@ -111,15 +117,25 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
     );
   }
 
-  void _checkPermissions() {
-    Permission.location.status.then((status) {
-      _updateLocationStatus(status);
-      _maybeNavigate();
-    });
-    Permission.contacts.status.then((status) {
-      _updateContactsStatus(status);
-      _maybeNavigate();
-    });
+  void _checkPermissionsAndMaybeNavigate() async {
+    final statuses = await Future.wait([
+      Permission.location.status,
+      Permission.contacts.status,
+    ]);
+    if (!mounted) {
+      return;
+    }
+
+    final locationStatus = statuses[0];
+    final contactsStatus = statuses[1];
+    _updateLocationStatus(locationStatus);
+    _updateContactsStatus(contactsStatus);
+
+    final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
+    if (_hasLocationPermission && _hasContactsPermission && routeCurrent) {
+      ref.read(mixpanelProvider).track("signup_grant_permissions");
+      context.pushNamed('signup_name');
+    }
   }
 
   void _updateLocationStatus(PermissionStatus status) {
@@ -129,7 +145,6 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
 
     if (status.isGranted || status.isLimited) {
       setState(() => _hasLocationPermission = true);
-      _maybeNavigate();
     } else if (status.isPermanentlyDenied) {
       openAppSettings();
     }
@@ -142,21 +157,8 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
 
     if (status.isGranted || status.isLimited) {
       setState(() => _hasContactsPermission = true);
-      _maybeNavigate();
     } else if (status.isPermanentlyDenied) {
       openAppSettings();
-    }
-  }
-
-  void _maybeNavigate() {
-    if (!mounted) {
-      return;
-    }
-
-    final routeActive = ModalRoute.of(context)?.isActive == true;
-    if (_hasLocationPermission && _hasContactsPermission && routeActive) {
-      ref.read(mixpanelProvider).track("signup_grant_permissions");
-      context.pushNamed('signup_name');
     }
   }
 }
