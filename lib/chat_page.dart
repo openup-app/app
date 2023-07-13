@@ -275,88 +275,85 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                       left: 0,
                       right: 0,
                       height: listBoxHeight,
-                      child: _AcceptRejectBanner(
-                        chatroom: _chatroom!,
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.only(bottom: 100),
-                          itemExtent: _itemExtent,
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final item = items[index];
-                            return item.when(
-                              info: (info) {
-                                return SizedBox(
-                                  height: _itemExtent,
-                                  child: Center(
-                                    child: Text(
-                                      'Voice Message\n${formatLongDateAndTime(info.date.toLocal())}',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                        height: 1.5,
-                                        color: Color.fromRGBO(
-                                            0x8C, 0x8C, 0x8C, 1.0),
-                                      ),
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.only(bottom: 100),
+                        itemExtent: _itemExtent,
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          return item.when(
+                            info: (info) {
+                              return SizedBox(
+                                height: _itemExtent,
+                                child: Center(
+                                  child: Text(
+                                    'Voice Message\n${formatLongDateAndTime(info.date.toLocal())}',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.5,
+                                      color:
+                                          Color.fromRGBO(0x8C, 0x8C, 0x8C, 1.0),
                                     ),
                                   ),
-                                );
-                              },
-                              message: (message) {
-                                final myUid = ref.read(userProvider).uid;
-                                final fromMe = message.uid == myUid;
-                                final isCurrent =
-                                    _playbackMessageId == message.messageId;
-                                final playbackStream = isCurrent
-                                    ? _audio.playbackInfoStream
-                                    : Stream.fromIterable([
-                                        PlaybackInfo(
-                                          position: Duration.zero,
-                                          duration: message.content.duration,
-                                          state: PlaybackState.idle,
-                                          frequencies: [],
-                                        )
-                                      ]);
-                                return StreamBuilder<PlaybackInfo>(
-                                  key: ValueKey(message.messageId ?? ''),
-                                  initialData: const PlaybackInfo(),
-                                  stream: playbackStream,
-                                  builder: (context, snapshot) {
-                                    final playbackInfo = snapshot.requireData;
-                                    final isPlaying = playbackInfo.state ==
-                                        PlaybackState.playing;
-                                    return AudioChatMessage(
-                                      message: message,
-                                      fromMe: fromMe,
-                                      photo: (fromMe
-                                              ? _myPhoto
-                                              : _otherProfile?.photo) ??
-                                          '',
-                                      playbackInfo: playbackInfo,
-                                      height: _itemExtent,
-                                      onPressed: () async {
-                                        if (isPlaying) {
-                                          _audio.stop();
-                                          setState(
-                                              () => _playbackMessageId = null);
-                                        } else {
-                                          setState(() => _playbackMessageId =
-                                              message.messageId);
-                                          await _audio
-                                              .setUrl(message.content.url);
-                                          if (mounted) {
-                                            _audio.play();
-                                          }
+                                ),
+                              );
+                            },
+                            message: (message) {
+                              final myUid = ref.read(userProvider).uid;
+                              final fromMe = message.uid == myUid;
+                              final isCurrent =
+                                  _playbackMessageId == message.messageId;
+                              final playbackStream = isCurrent
+                                  ? _audio.playbackInfoStream
+                                  : Stream.fromIterable([
+                                      PlaybackInfo(
+                                        position: Duration.zero,
+                                        duration: message.content.duration,
+                                        state: PlaybackState.idle,
+                                        frequencies: [],
+                                      )
+                                    ]);
+                              return StreamBuilder<PlaybackInfo>(
+                                key: ValueKey(message.messageId ?? ''),
+                                initialData: const PlaybackInfo(),
+                                stream: playbackStream,
+                                builder: (context, snapshot) {
+                                  final playbackInfo = snapshot.requireData;
+                                  final isPlaying = playbackInfo.state ==
+                                      PlaybackState.playing;
+                                  return AudioChatMessage(
+                                    message: message,
+                                    fromMe: fromMe,
+                                    photo: (fromMe
+                                            ? _myPhoto
+                                            : _otherProfile?.photo) ??
+                                        '',
+                                    playbackInfo: playbackInfo,
+                                    height: _itemExtent,
+                                    onPressed: () async {
+                                      if (isPlaying) {
+                                        _audio.stop();
+                                        setState(
+                                            () => _playbackMessageId = null);
+                                      } else {
+                                        setState(() => _playbackMessageId =
+                                            message.messageId);
+                                        await _audio
+                                            .setUrl(message.content.url);
+                                        if (mounted) {
+                                          _audio.play();
                                         }
-                                      },
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          },
-                        ),
+                                      }
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -662,53 +659,6 @@ class RecordingResult {
   final Uint8List audio;
   final Duration duration;
   RecordingResult(this.audio, this.duration);
-}
-
-class _AcceptRejectBanner extends StatelessWidget {
-  final Chatroom chatroom;
-  final Widget child;
-
-  const _AcceptRejectBanner({
-    super.key,
-    required this.chatroom,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: child,
-        ),
-        if (chatroom.inviteState == ChatroomState.invited)
-          Positioned(
-            left: 16,
-            top: 16,
-            right: 16,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(12),
-                ),
-                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-              ),
-              child: Text(
-                'If you send a message to ${chatroom.profile.name}, it will begin your conversation and they will be at the top of your inbox.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.white,
-                  height: 1.3,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
 }
 
 class _RecordButton extends StatelessWidget {
