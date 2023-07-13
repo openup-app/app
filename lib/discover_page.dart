@@ -545,8 +545,25 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                           }
                                           return Align(
                                             alignment: Alignment.topRight,
-                                            child:
-                                                UnreadIndicator(count: count),
+                                            child: Container(
+                                              width: 14,
+                                              height: 14,
+                                              margin: const EdgeInsets.only(
+                                                  top: 5, right: 5),
+                                              decoration: const BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Color.fromRGBO(
+                                                    0xFF, 0x00, 0x00, 1.0),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    offset: Offset(0, 1),
+                                                    blurRadius: 1.8,
+                                                    color: Color.fromRGBO(
+                                                        0x00, 0x00, 0x00, 0.25),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                           );
                                         },
                                       ),
@@ -872,7 +889,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     final userState = ref.read(userProvider2);
     userState.map(
       guest: (_) => _showSignInDialog(),
-      signedIn: (_) => widget.onShowConversations,
+      signedIn: (_) => widget.onShowConversations(),
     );
   }
 }

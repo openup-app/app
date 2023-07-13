@@ -1,3 +1,4 @@
+import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -335,8 +336,15 @@ class _ConversationList extends StatelessWidget {
       );
     }
 
-    return RefreshIndicator(
+    return CustomRefreshIndicator(
       onRefresh: onRefresh,
+      builder: MaterialIndicatorDelegate(
+        builder: (context, controller) {
+          return const LoadingIndicator(
+            color: Colors.black,
+          );
+        },
+      ),
       child: ListView.separated(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -415,63 +423,50 @@ class _ConversationList extends StatelessWidget {
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
                               ),
-                              child: Button(
-                                onPressed: () {
-                                  context.pushNamed(
-                                    'view_profile',
-                                    extra: ViewProfilePageArguments.profile(
-                                      profile: chatroom.profile,
-                                    ),
-                                  );
-                                },
-                                child: Image.network(
-                                  chatroom.profile.photo,
-                                  fit: BoxFit.cover,
-                                ),
+                              child: Image.network(
+                                chatroom.profile.photo,
+                                fit: BoxFit.cover,
                               ),
                             ),
                             const SizedBox(width: 14),
                             Expanded(
-                              child: Button(
-                                onPressed: () => onOpen(chatroom),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(chatroom.profile.name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium!
-                                            .copyWith(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w400)),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      _formatRelativeDate(chatroom.lastUpdated),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(chatroom.profile.name,
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium!
                                           .copyWith(
-                                            fontWeight: FontWeight.w400,
-                                            fontSize: 14,
-                                          ),
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w400)),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _formatRelativeDate(chatroom.lastUpdated),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 14,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  if (chatroom.inviteState !=
+                                      ChatroomState.accepted)
+                                    Text(
+                                      'New chat invitation',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium!
+                                          .copyWith(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 12,
+                                              color: const Color.fromRGBO(
+                                                  0xFF, 0x00, 0x00, 1.0)),
                                     ),
-                                    const SizedBox(height: 2),
-                                    if (chatroom.inviteState !=
-                                        ChatroomState.accepted)
-                                      Text(
-                                        'New chat invitation',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium!
-                                            .copyWith(
-                                                fontWeight: FontWeight.w400,
-                                                fontSize: 12,
-                                                color: const Color.fromRGBO(
-                                                    0xFF, 0x00, 0x00, 1.0)),
-                                      ),
-                                  ],
-                                ),
+                                ],
                               ),
                             ),
                             UnreadIndicator(

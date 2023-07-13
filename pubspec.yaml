@@ -26,6 +26,7 @@ dependencies:
 
   auto_size_text: ^3.0.0
   cupertino_icons: ^1.0.2
+  custom_refresh_indicator: ^2.2.1
   decorated_icon: ^1.2.1
   device_info_plus: ^8.0.0
   firebase_auth: ^4.2.4
