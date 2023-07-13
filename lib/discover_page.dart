@@ -1262,7 +1262,7 @@ Future<void> showSafetyAndPrivacyModal(BuildContext context) {
 }
 
 Future<bool> _showLiveLocationSafetyModal(BuildContext context) async {
-  final result = await showCupertinoModalPopup<bool>(
+  final result = await showCupertinoDialog<bool>(
     context: context,
     builder: (context) {
       return CupertinoAlertDialog(
