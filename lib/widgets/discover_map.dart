@@ -647,6 +647,14 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     );
 
     canvas.drawRRect(rrect, Paint()..color = backgroundColor);
+    if (profileOutlineColor != null) {
+      canvas.drawRRect(
+          rrect,
+          Paint()
+            ..color = profileOutlineColor
+            ..strokeWidth = 1.5
+            ..style = PaintingStyle.stroke);
+    }
     final textLeftPadding = photoCenter.dx + photoSize / 2 + 4;
     final textTopPadding = (height - metrics.height) / 2;
     textPainter.paint(
@@ -762,6 +770,13 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     canvas.drawRRect(
       rrect,
       Paint()..color = const Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
+    );
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..color = Colors.white
+        ..strokeWidth = 1
+        ..style = PaintingStyle.stroke,
     );
     const textLeftPadding = 16.0;
     const textTopPadding = 3 + topPadding;
