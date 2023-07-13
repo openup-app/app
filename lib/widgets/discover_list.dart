@@ -104,7 +104,7 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 310 + widget.itemPadding.vertical,
+      height: 291 + widget.itemPadding.vertical,
       child: PageView.builder(
         controller: _pageController,
         clipBehavior: Clip.none,
