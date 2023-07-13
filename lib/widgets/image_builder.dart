@@ -27,19 +27,13 @@ Widget loadingBuilder(
   ImageChunkEvent? progress,
 ) {
   return Stack(
+    fit: StackFit.expand,
     alignment: Alignment.center,
-    fit: StackFit.passthrough,
     children: [
       child,
-      if (progress != null)
-        Container(
-          color: Colors.transparent,
-          child: const Center(
-            child: LoadingIndicator(
-              size: 24,
-            ),
-          ),
-        ),
+      const LoadingIndicator(
+        color: Colors.black,
+      ),
     ],
   );
 }

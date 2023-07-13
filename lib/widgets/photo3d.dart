@@ -5,6 +5,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/image_builder.dart';
 
 FragmentProgram? _tempFragmentProgram;
 
@@ -144,6 +146,7 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
       return Image(
         image: widget.image,
         fit: BoxFit.cover,
+        loadingBuilder: loadingBuilder,
       );
     } else if (_image != null && _depth != null && _fragmentProgram != null) {
       final ratio = (_ellapsed.inMilliseconds / widget.duration.inMilliseconds)
@@ -164,7 +167,11 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
         ),
       );
     } else {
-      return const SizedBox.shrink();
+      return const Center(
+        child: LoadingIndicator(
+          color: Colors.black,
+        ),
+      );
     }
   }
 }
