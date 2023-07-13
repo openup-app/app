@@ -432,7 +432,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                               border: Border.all(width: 2, color: Colors.white),
                             ),
                             decoration: BoxDecoration(
-                              color: myAccount != null ? Colors.white : null,
+                              color: myAccount == null ? Colors.white : null,
                               shape: BoxShape.circle,
                               boxShadow: const [
                                 BoxShadow(
@@ -455,10 +455,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 19),
+                        const SizedBox(height: 12),
                         _MapButton(
                           onPressed: () async {
-                            final visibility = myAccount!.location.visibility;
+                            final visibility = myAccount?.location.visibility;
                             _showLiveLocationModalOrSignIn(
                               targetVisibility:
                                   visibility == LocationVisibility.private
@@ -466,7 +466,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                       : LocationVisibility.private,
                             );
                           },
-                          child: myAccount!.location.visibility ==
+                          child: myAccount?.location.visibility ==
                                   LocationVisibility.public
                               ? const Icon(
                                   Icons.location_on,
@@ -477,7 +477,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                   color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
                                 ),
                         ),
-                        const SizedBox(height: 11),
+                        const SizedBox(height: 12),
                         Consumer(
                           builder: (context, ref, child) {
                             final latLong =
@@ -525,7 +525,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                         Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
                                   ),
                                 ),
-                                const SizedBox(height: 15),
+                                const SizedBox(height: 12),
                                 _MapButton(
                                   onPressed: widget.onShowConversations,
                                   child: Stack(
