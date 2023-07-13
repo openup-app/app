@@ -954,7 +954,7 @@ class RecordPanel extends ConsumerStatefulWidget {
 class _RecordPanelState extends ConsumerState<RecordPanel> {
   static const _maxDuration = Duration(seconds: 30);
 
-  final _controller = PlaybackRecorderController();
+  PlaybackRecorderController? _controller;
   final _recordingDurationNotifier = RecordingDurationNotifier(Duration.zero);
   Ticker? _recordingDurationTicker;
 
@@ -966,20 +966,39 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
   @override
   void initState() {
     super.initState();
-    _startRecording();
+    // Avoid jank by starting to record after panel animation
+    Future.delayed(const Duration(milliseconds: 200)).then((_) {
+      if (mounted) {
+        _startRecording();
+      }
+    });
   }
 
-  void _startRecording() {
-    _recordingDurationTicker = Ticker((d) {
-      final start = (_controller._combinedController.value).item1.start;
-      _recordingDurationNotifier.value = DateTime.now().difference(start);
-    });
-    _recordingDurationTicker?.start();
+  @override
+  void dispose() {
+    _recordingDurationNotifier.dispose();
+    _recordingDurationTicker?.dispose();
+    _controller?.dispose();
+    super.dispose();
+  }
 
-    _controller.startRecording(
+  void _startRecording() async {
+    _controller?.dispose();
+    final controller = PlaybackRecorderController();
+    setState(() => _controller = controller);
+    await controller.startRecording(
       maxDuration: _maxDuration,
       onComplete: _onRecordingEnded,
     );
+    if (mounted) {
+      setState(() {
+        _recordingDurationTicker = Ticker((d) {
+          final start = (controller._combinedController.value).item1.start;
+          _recordingDurationNotifier.value = DateTime.now().difference(start);
+        });
+      });
+      _recordingDurationTicker?.start();
+    }
   }
 
   void _onRecordingEnded(Uint8List recordingBytes) {
@@ -995,14 +1014,6 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
       setState(() => _shouldSubmitWhenBytesReceived = false);
       _onSubmit();
     }
-  }
-
-  @override
-  void dispose() {
-    _recordingDurationNotifier.dispose();
-    _recordingDurationTicker?.dispose();
-    _controller.dispose();
-    super.dispose();
   }
 
   @override
@@ -1029,7 +1040,7 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
                     return RecordPanelRecorder(
                       duration: duration,
                       maxDuration: _maxDuration,
-                      onStopPressed: _controller.stopRecording,
+                      onStopPressed: () => _controller?.stopRecording(),
                     );
                   },
                 );
@@ -1141,7 +1152,7 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
   void _onMaybeStopAndSubmit() {
     if (_audio == null) {
       setState(() => _shouldSubmitWhenBytesReceived = true);
-      _controller.stopRecording();
+      _controller?.stopRecording();
     } else {
       _onSubmit();
     }
@@ -1292,7 +1303,8 @@ class _RecordingDurationArcPainter extends CustomPainter {
     canvas.drawArc(
       (Offset.zero & size).inflate(7),
       -pi / 2,
-      ratio * 2 * pi,
+      // At least draw a dot, even on a ratio of 0
+      max(ratio, 0.001) * 2 * pi,
       false,
       Paint()
         ..color = Colors.white
@@ -1400,7 +1412,7 @@ class _PlaybackRecorderState extends State<PlaybackRecorder> {
 
 class PlaybackRecorderController extends ChangeNotifier {
   late final AudioBioController _playbackController;
-  final _recorder = RecorderWithWaveforms();
+  final _recorder = RecorderWithoutWaveforms();
 
   Timer? _recordingLimitTimer;
 
@@ -1429,12 +1441,12 @@ class PlaybackRecorderController extends ChangeNotifier {
     _recorder.dispose();
   }
 
-  void startRecording({
+  Future<void> startRecording({
     Duration? maxDuration,
     required void Function(Uint8List bytes) onComplete,
-  }) {
+  }) async {
     maxDuration ??= const Duration(seconds: 30);
-    _recorder.startRecording(
+    await _recorder.startRecording(
       onFrequencies: (frequencies) {
         final value = _combinedController.value;
         final recordingInfo = value.item1.copyWith(frequencies: frequencies);
@@ -1443,18 +1455,17 @@ class PlaybackRecorderController extends ChangeNotifier {
       onComplete: (bytes) {
         onComplete(bytes);
       },
-    ).then((value) {
-      final value = _combinedController.value;
-      final recordingInfo = value.item1.copyWith(
-        recording: true,
-        start: DateTime.now(),
-      );
-      _combinedController.add(Tuple2(recordingInfo, value.item2));
-      _recordingLimitTimer = Timer(
-        maxDuration!,
-        () => _recorder.stopRecording(),
-      );
-    });
+    );
+    final value = _combinedController.value;
+    final recordingInfo = value.item1.copyWith(
+      recording: true,
+      start: DateTime.now(),
+    );
+    _combinedController.add(Tuple2(recordingInfo, value.item2));
+    _recordingLimitTimer = Timer(
+      maxDuration,
+      () => _recorder.stopRecording(),
+    );
   }
 
   void stopRecording() async {

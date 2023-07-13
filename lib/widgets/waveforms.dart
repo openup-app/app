@@ -129,6 +129,74 @@ class RecorderWithWaveforms {
   }
 }
 
+class RecorderWithoutWaveforms {
+  bool _recording = false;
+  StreamSubscription? _micStreamSubscription;
+
+  void Function(Uint8List audioBytes)? _onComplete;
+  final _totalSamples = <int>[];
+
+  int _bitDepth = 0;
+  int _sampleRate = 0;
+  int _channels = 0;
+
+  void dispose() {
+    _micStreamSubscription?.cancel();
+  }
+
+  Future<void> stopRecording() async {
+    if (!_recording) {
+      // throw 'Not recording';
+      return;
+    }
+
+    _recording = false;
+    _micStreamSubscription?.cancel();
+
+    final encoder = _AacEncoder(
+      Uint8List.fromList(_totalSamples),
+      _bitDepth,
+      _sampleRate,
+      _channels,
+    );
+    final aacFile = await encoder.result;
+    final bytes = await aacFile.readAsBytes();
+    _onComplete?.call(Uint8List.fromList(bytes));
+    _totalSamples.clear();
+
+    _onComplete = null;
+  }
+
+  Future<void> startRecording({
+    required void Function(Float64x2List frequencies) onFrequencies,
+    required void Function(Uint8List) onComplete,
+  }) async {
+    if (_recording) {
+      throw 'Already recording';
+    }
+
+    _recording = true;
+    _onComplete = onComplete;
+
+    final micStream = await MicStream.microphone();
+    final bitDepth = await MicStream.bitDepth;
+    final micBufferSize = await MicStream.bufferSize;
+    final sampleRate = await MicStream.sampleRate;
+
+    if (micStream == null ||
+        bitDepth == null ||
+        micBufferSize == null ||
+        sampleRate == null) {
+      return;
+    }
+
+    _bitDepth = bitDepth.toInt();
+    _sampleRate = sampleRate.toInt();
+    _channels = 1;
+    _micStreamSubscription = micStream.listen(_totalSamples.addAll);
+  }
+}
+
 class FrequenciesPainter extends CustomPainter {
   final Iterable<num> frequencies;
   final int barCount;
