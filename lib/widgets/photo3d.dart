@@ -80,7 +80,7 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
   }
 
   void _initAnimation() {
-    const intensity = 20.0;
+    const intensity = 5.0;
     final r = Random();
     final startX = (r.nextBool() ? -1 : 1) * (r.nextDouble() * 0.7 + 0.3);
     _xIntensity = startX * intensity;

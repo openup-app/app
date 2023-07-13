@@ -175,18 +175,15 @@ class _CinematicGalleryState extends State<CinematicGallery> {
           final i = _index % widget.gallery.length;
           final photo3d = widget.gallery[i];
 
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 800),
-            child: CinematicPhoto(
-              key: ValueKey('${_index}_${photo3d.url}'),
-              photo3d: photo3d,
-              animate: _slideshowTimer?.isActive == true,
-              onLoaded: () {
-                setState(() => _ready = true);
-                _maybeStartSlideshowTimer();
-              },
-              duration: _duration,
-            ),
+          return CinematicPhoto(
+            key: ValueKey('${_index}_${photo3d.url}'),
+            photo3d: photo3d,
+            animate: _slideshowTimer?.isActive == true,
+            onLoaded: () {
+              setState(() => _ready = true);
+              _maybeStartSlideshowTimer();
+            },
+            duration: _duration,
           );
         },
       ),
