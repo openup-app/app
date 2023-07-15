@@ -51,6 +51,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
 
   bool _showDebugUsers = false;
 
+  bool _enable3d = true;
+
   CancelableOperation<Either<ApiError, DiscoverResultsPage>>?
       _discoverOperation;
   final _profiles = <DiscoverProfile>[];
@@ -282,6 +284,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         }
                       },
                       obscuredRatio: 326 / height,
+                      enable3d: _enable3d,
                       onShowRecordPanel: () {
                         final selectedProfile = _selectedProfile;
                         if (selectedProfile != null) {
@@ -430,6 +433,29 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                               ),
                             );
                           },
+                        ),
+                        const SizedBox(height: 12),
+                        _MapButton(
+                          onPressed: () =>
+                              setState(() => _enable3d = !_enable3d),
+                          child: Center(
+                            child: Text(
+                              '3D',
+                              textAlign: TextAlign.center,
+                              style: _enable3d
+                                  ? const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color.fromRGBO(1, 184, 50, 1),
+                                    )
+                                  : const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w400,
+                                      color:
+                                          Color.fromRGBO(0x48, 0x48, 0x48, 1.0),
+                                    ),
+                            ),
+                          ),
                         ),
                       ],
                     );

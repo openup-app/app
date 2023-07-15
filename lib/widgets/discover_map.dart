@@ -11,6 +11,8 @@ import 'package:openup/api/api.dart';
 import 'package:openup/location/location_service.dart';
 import 'package:openup/widgets/map_marker_rendering.dart';
 
+final _cameraPositionProvider = StateProvider<CameraPosition?>((ref) => null);
+
 class DiscoverMap extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
   final DiscoverProfile? selectedProfile;
@@ -18,6 +20,7 @@ class DiscoverMap extends ConsumerStatefulWidget {
   final Location initialLocation;
   final ValueChanged<Location> onLocationChanged;
   final double obscuredRatio;
+  final bool enable3d;
   final VoidCallback onShowRecordPanel;
   final VoidCallback onLocationSafetyTapped;
   final void Function(MarkerRenderStatus status) onMarkerRenderStatus;
@@ -30,6 +33,7 @@ class DiscoverMap extends ConsumerStatefulWidget {
     required this.initialLocation,
     required this.onLocationChanged,
     this.obscuredRatio = 0.0,
+    required this.enable3d,
     required this.onShowRecordPanel,
     required this.onLocationSafetyTapped,
     required this.onMarkerRenderStatus,
@@ -204,6 +208,25 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       });
     }
 
+    final enable3dChanged = oldWidget.enable3d != widget.enable3d;
+    if (enable3dChanged) {
+      final tilt = widget.enable3d ? 40.0 : 0.0;
+      final position = ref.read(_cameraPositionProvider);
+      final mapController = _mapController;
+      if (mapController != null && position != null) {
+        _mapController?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: position.target,
+              bearing: position.bearing,
+              zoom: position.zoom,
+              tilt: tilt,
+            ),
+          ),
+        );
+      }
+    }
+
     _markerRenderStateMachine.profilesUpdated(profiles: widget.profiles);
   }
 
@@ -241,11 +264,29 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
               onCameraIdle: () {
+                final position = ref.read(_cameraPositionProvider);
+                final mapController = _mapController;
+                if (mapController != null &&
+                    position != null &&
+                    widget.enable3d) {
+                  _mapController?.animateCamera(
+                    CameraUpdate.newCameraPosition(
+                      CameraPosition(
+                        target: position.target,
+                        bearing: position.bearing,
+                        zoom: position.zoom,
+                        tilt: 40,
+                      ),
+                    ),
+                  );
+                }
                 if (!_recenterAnimationComplete) {
                   setState(() => _recenterAnimationComplete = true);
                 }
                 _onCameraMoved();
               },
+              onCameraMove: (p) =>
+                  ref.read(_cameraPositionProvider.notifier).state = p,
               onTap: (_) => widget.onProfileChanged(null),
               markers: _buildMapMarkers(selectedProfile),
             );
