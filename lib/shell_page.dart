@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 
-final _sheetOpenNotifier = ValueNotifier<bool>(false);
-final _sheetNotifier = ValueNotifier<double>(0.0);
+final _sheetSize = StateProvider<double>((ref) => 0.0);
+final _sheetOpenProvider = StateProvider<bool>((ref) => false);
 
-class ShellPage extends StatefulWidget {
+class ShellPage extends ConsumerStatefulWidget {
   final int? currentIndex;
   final WidgetBuilder shellBuilder;
   final VoidCallback onClosePage;
@@ -21,10 +22,10 @@ class ShellPage extends StatefulWidget {
   });
 
   @override
-  State<ShellPage> createState() => ShellPageState();
+  ConsumerState<ShellPage> createState() => ShellPageState();
 }
 
-class ShellPageState extends State<ShellPage> {
+class ShellPageState extends ConsumerState<ShellPage> {
   final _keys = <GlobalKey>[];
   final _draggableScrollableController = DraggableScrollableController();
 
@@ -32,9 +33,9 @@ class ShellPageState extends State<ShellPage> {
   void initState() {
     super.initState();
     _draggableScrollableController.addListener(() {
-      _sheetNotifier.value = _draggableScrollableController.size;
+      ref.read(_sheetSize.notifier).state = _draggableScrollableController.size;
       final fullyOpen = _draggableScrollableController.size >= 1.0;
-      _sheetOpenNotifier.value = fullyOpen;
+      ref.read(_sheetOpenProvider.notifier).state = fullyOpen;
       if (fullyOpen) {
         FocusScope.of(context).unfocus();
       }
@@ -48,7 +49,7 @@ class ShellPageState extends State<ShellPage> {
     });
 
     _keys.addAll(List.generate(widget.children.length, (_) => GlobalKey()));
-    _sheetOpenNotifier.value = false;
+    ref.read(_sheetOpenProvider.notifier).state = false;
   }
 
   @override
@@ -72,13 +73,8 @@ class ShellPageState extends State<ShellPage> {
       resizeToAvoidBottomInset: false,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final maxHeight = constraints.maxHeight;
-          const topGap = 24.0;
-          final maxContentHeight = constraints.maxHeight -
-              (MediaQuery.of(context).padding.top + topGap);
-          final maxPanelHeight =
-              constraints.maxHeight - MediaQuery.of(context).padding.top;
-          final maxPanelRatio = maxPanelHeight / maxHeight;
+          final panelTopMargin = MediaQuery.of(context).padding.top + 24.0;
+          final maxContentHeight = constraints.maxHeight - panelTopMargin;
           return Stack(
             children: [
               WillPopScope(
@@ -97,12 +93,11 @@ class ShellPageState extends State<ShellPage> {
               ),
               Positioned.fill(
                 child: IgnorePointer(
-                  child: AnimatedBuilder(
-                    animation: _sheetNotifier,
-                    builder: (context, child) {
+                  child: Builder(
+                    builder: (context) {
+                      final opacity = ref.watch(_sheetSize) * 0.35;
                       return ColoredBox(
-                        color: Color.fromRGBO(
-                            0x00, 0x00, 0x00, _sheetNotifier.value * 0.35),
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, opacity),
                       );
                     },
                   ),
@@ -113,35 +108,27 @@ class ShellPageState extends State<ShellPage> {
                 child: DraggableScrollableSheet(
                   controller: _draggableScrollableController,
                   minChildSize: 0.0,
-                  maxChildSize: maxPanelRatio,
+                  maxChildSize: 1.0,
                   initialChildSize: 0,
                   snap: true,
                   builder: (context, controller) {
                     return Stack(
                       fit: StackFit.expand,
                       children: [
-                        ValueListenableBuilder<bool>(
-                          valueListenable: _sheetOpenNotifier,
-                          builder: (context, open, child) {
-                            return AnimatedContainer(
-                              curve: Curves.easeOut,
-                              duration: const Duration(milliseconds: 200),
-                              height: constraints.maxHeight,
-                              clipBehavior: Clip.antiAlias,
-                              margin: const EdgeInsets.only(top: topGap),
-                              alignment: Alignment.topCenter,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: open
-                                    ? BorderRadius.zero
-                                    : const BorderRadius.only(
-                                        topLeft: Radius.circular(48),
-                                        topRight: Radius.circular(48),
-                                      ),
-                              ),
-                              child: child,
-                            );
-                          },
+                        AnimatedContainer(
+                          curve: Curves.easeOut,
+                          duration: const Duration(milliseconds: 200),
+                          height: constraints.maxHeight,
+                          clipBehavior: Clip.antiAlias,
+                          margin: EdgeInsets.only(top: panelTopMargin),
+                          alignment: Alignment.topCenter,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(48),
+                              topRight: Radius.circular(48),
+                            ),
+                          ),
                           child: OverflowBox(
                             minHeight: maxContentHeight,
                             maxHeight: maxContentHeight,
@@ -166,12 +153,13 @@ class ShellPageState extends State<ShellPage> {
                           child: SingleChildScrollView(
                             controller: controller,
                             physics: const ClampingScrollPhysics(),
-                            child: const SizedBox(
+                            child: Container(
                               height: 48,
-                              child: Align(
+                              margin: EdgeInsets.only(top: panelTopMargin - 28),
+                              child: const Align(
                                 alignment: Alignment.topCenter,
                                 child: Padding(
-                                  padding: EdgeInsets.only(top: 9.0 + topGap),
+                                  padding: EdgeInsets.only(top: 35),
                                   child: _DragHandle(),
                                 ),
                               ),
@@ -254,7 +242,7 @@ class _BranchIndex extends InheritedWidget {
   }
 }
 
-class ActivePage extends StatefulWidget {
+class ActivePage extends ConsumerStatefulWidget {
   final VoidCallback onActivate;
   final VoidCallback onDeactivate;
   final Widget child;
@@ -266,10 +254,10 @@ class ActivePage extends StatefulWidget {
   });
 
   @override
-  State<ActivePage> createState() => _ActivePageState();
+  ConsumerState<ActivePage> createState() => _ActivePageState();
 }
 
-class _ActivePageState extends State<ActivePage> {
+class _ActivePageState extends ConsumerState<ActivePage> {
   int? _myBranchIndex;
   int? _currentIndex;
   late bool _pageOpen;
@@ -279,8 +267,10 @@ class _ActivePageState extends State<ActivePage> {
   @override
   void initState() {
     super.initState();
-    _sheetOpenNotifier.addListener(_onPageOpen);
-    _pageOpen = _sheetOpenNotifier.value;
+    ref.listenManual<bool>(
+      _sheetOpenProvider,
+      (previous, next) => _onPageOpenChanged(next),
+    );
   }
 
   @override
@@ -298,14 +288,8 @@ class _ActivePageState extends State<ActivePage> {
     }
   }
 
-  @override
-  void dispose() {
-    _sheetOpenNotifier.removeListener(_onPageOpen);
-    super.dispose();
-  }
-
-  void _onPageOpen() {
-    _pageOpen = _sheetOpenNotifier.value;
+  void _onPageOpenChanged(bool open) {
+    _pageOpen = open;
     _updateActivation();
   }
 
