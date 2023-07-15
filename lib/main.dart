@@ -171,6 +171,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   void initState() {
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
 
     _initNotifications();
     _initInAppNotifications();
@@ -298,11 +299,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       redirect: (context, state) {
         return null;
       },
-      errorBuilder: (context, state) {
-        return const CurrentRouteSystemUiStyling.dark(
-          child: ErrorScreen(),
-        );
-      },
+      errorBuilder: (context, state) => const ErrorScreen(),
       routes: [
         GoRoute(
           path: '/signup',
@@ -373,11 +370,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 GoRoute(
                   path: 'friends',
                   name: 'signup_friends',
-                  builder: (context, state) {
-                    return const CurrentRouteSystemUiStyling.light(
-                      child: SignUpFriends(),
-                    );
-                  },
+                  builder: (context, state) => const SignUpFriends(),
                 ),
               ],
             ),
@@ -505,10 +498,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           parentNavigatorKey: rootNavigatorKey,
           builder: (context, state) {
             final args = state.extra as ReportScreenArguments;
-            return CurrentRouteSystemUiStyling.light(
-              child: ReportScreen(
-                uid: args.uid,
-              ),
+            return ReportScreen(
+              uid: args.uid,
             );
           },
         ),
