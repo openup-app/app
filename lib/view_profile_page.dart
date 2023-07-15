@@ -117,23 +117,26 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
                 ),
-                child: Container(
-                  margin: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 20,
-                    bottom: 16 + MediaQuery.of(context).padding.bottom,
-                  ),
-                  clipBehavior: Clip.hardEdge,
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(48)),
-                  ),
-                  child: ProfileDisplay(
-                    profile: profile,
-                    play: _play,
-                    onPlayPause: () => setState(() => _play = !_play),
-                    onRecord: () => _showRecordPanel(context, profile.uid),
-                    onBlock: () {},
+                child: ColoredBox(
+                  color: Colors.white,
+                  child: Container(
+                    margin: EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 20,
+                      bottom: 16 + MediaQuery.of(context).padding.bottom,
+                    ),
+                    clipBehavior: Clip.hardEdge,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(48)),
+                    ),
+                    child: ProfileDisplay(
+                      profile: profile,
+                      play: _play,
+                      onPlayPause: () => setState(() => _play = !_play),
+                      onRecord: () => _showRecordPanel(context, profile.uid),
+                      onBlock: () {},
+                    ),
                   ),
                 ),
               );

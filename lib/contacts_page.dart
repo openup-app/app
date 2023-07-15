@@ -32,30 +32,29 @@ class _ContactsPageState extends State<ContactsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Column(
-          children: [
-            SizedBox(height: MediaQuery.of(context).padding.top),
-            Padding(
-              padding: const EdgeInsets.only(top: 32, bottom: 16),
-              child: FriendsSearchField(
-                controller: _searchController,
-                focusNode: _searchFocusNode,
-              ),
+    return ColoredBox(
+      color: Colors.white,
+      child: Column(
+        children: [
+          SizedBox(height: MediaQuery.of(context).padding.top),
+          Padding(
+            padding: const EdgeInsets.only(top: 32, bottom: 16),
+            child: FriendsSearchField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
             ),
-            Expanded(
-              child: InviteFriends(
-                padding: EdgeInsets.only(
-                  top: 0,
-                  bottom: MediaQuery.of(context).padding.bottom + 16,
-                ),
-                filter: _filterString,
+          ),
+          Expanded(
+            child: InviteFriends(
+              padding: EdgeInsets.only(
+                top: 0,
+                bottom: MediaQuery.of(context).padding.bottom + 16,
               ),
+              filter: _filterString,
             ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
