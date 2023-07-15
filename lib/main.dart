@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -19,14 +18,14 @@ import 'package:openup/api/in_app_notifications.dart';
 import 'package:openup/api/online_users_api.dart';
 import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/blocked_users_page.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/contact_us_screen.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/error_screen.dart';
-import 'package:openup/initial_loading_screen.dart';
-import 'package:openup/notifications/notifications.dart';
 import 'package:openup/contacts_page.dart';
+import 'package:openup/notifications/notifications.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
@@ -41,11 +40,12 @@ import 'package:openup/signup_audio.dart';
 import 'package:openup/signup_photos.dart';
 import 'package:openup/signup_friends.dart';
 import 'package:openup/util/key_value_store_service.dart';
-import 'package:openup/util/page_transition.dart';
 import 'package:openup/view_profile_page.dart';
+import 'package:openup/widgets/restart_app.dart';
 import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stack_trace/stack_trace.dart' as stack_trace;
 
 const host = String.fromEnvironment('HOST');
 const webPort = 8080;
@@ -87,33 +87,42 @@ void main() async {
     final sharedPreferences = await SharedPreferences.getInstance();
 
     runApp(
-      ProviderScope(
-        overrides: [
-          mixpanelProvider.overrideWithValue(mixpanel),
-          apiProvider.overrideWith((ref) {
-            Random().nextInt(1 << 32).toString();
-            return Api(
-              host: host,
-              port: webPort,
-            );
-          }),
-          keyValueStoreProvider.overrideWithValue(sharedPreferences),
-          onlineUsersApiProvider.overrideWith((ref) {
-            return OnlineUsersApi(
-              host: host,
-              port: socketPort,
-              onConnectionError: () {},
-              onOnlineStatusChanged: (uid, online) {
-                ref
-                    .read(onlineUsersProvider.notifier)
-                    .onlineChanged(uid, online);
-              },
-            );
-          })
-        ],
-        child: const OpenupApp(),
+      RestartApp(
+        child: ProviderScope(
+          overrides: [
+            mixpanelProvider.overrideWithValue(mixpanel),
+            apiProvider.overrideWith((ref) {
+              Random().nextInt(1 << 32).toString();
+              return Api(
+                host: host,
+                port: webPort,
+              );
+            }),
+            keyValueStoreProvider.overrideWithValue(sharedPreferences),
+            onlineUsersApiProvider.overrideWith((ref) {
+              return OnlineUsersApi(
+                host: host,
+                port: socketPort,
+                onConnectionError: () {},
+                onOnlineStatusChanged: (uid, online) {
+                  ref
+                      .read(onlineUsersProvider.notifier)
+                      .onlineChanged(uid, online);
+                },
+              );
+            })
+          ],
+          child: const OpenupApp(),
+        ),
       ),
     );
+
+    // Riverpod uses mangled stack trace
+    FlutterError.demangleStackTrace = (StackTrace stack) {
+      if (stack is stack_trace.Trace) return stack.vmTrace;
+      if (stack is stack_trace.Chain) return stack.toTrace().vmTrace;
+      return stack;
+    };
   }
 
   if (!kReleaseMode) {
@@ -146,10 +155,6 @@ class OpenupApp extends ConsumerStatefulWidget {
 }
 
 class _OpenupAppState extends ConsumerState<OpenupApp> {
-  bool _loggedIn = false;
-  StreamSubscription? _idTokenChangesSubscription;
-  StreamSubscription? _notificationTokenSubscription;
-
   late final GoRouter _goRouter;
   final _routeObserver = RouteObserver<PageRoute>();
 
@@ -157,146 +162,89 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   final _conversationsKey = GlobalKey<NavigatorState>();
   final _settingsKey = GlobalKey<NavigatorState>();
 
-  InAppNotificationsApi? _inAppNotificationsApi;
-
   final rootNavigatorKey = GlobalKey<NavigatorState>();
 
-  PageRoute _buildPageRoute<T>({
-    required RouteSettings settings,
-    PageTransitionBuilder? transitionsBuilder,
-    required WidgetBuilder builder,
-  }) {
-    return PageRouteBuilder<T>(
-      settings: settings,
-      transitionsBuilder: transitionsBuilder ?? slideRightToLeftPageTransition,
-      transitionDuration: const Duration(milliseconds: 300),
-      reverseTransitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (_, animation, secondaryAnimation) {
-        return InheritedRouteObserver(
-          routeObserver: _routeObserver,
-          child: Builder(builder: builder),
-        );
-      },
-    );
-  }
+  NotificationManager? _notificationManager;
+  InAppNotificationsApi? _inAppNotificationsApi;
 
   @override
   void initState() {
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
+    _initNotifications();
+    _initInAppNotifications();
+
     _goRouter = _initGoRouter(
       observers: [_routeObserver],
     );
+  }
 
-    // Logging in/out triggers
-    _idTokenChangesSubscription =
-        FirebaseAuth.instance.idTokenChanges().listen((user) async {
-      final loggedIn = user != null;
-      if (_loggedIn != loggedIn) {
-        setState(() => _loggedIn = loggedIn);
+  void _initNotifications() {
+    ref.listenManual<bool>(authProvider.select((p) {
+      return p.map(
+        guest: (_) => false,
+        signedIn: (signedIn) => true,
+      );
+    }), (previous, next) {
+      _notificationManager?.dispose();
+      _notificationManager = NotificationManager(
+        api: next ? ref.read(apiProvider) : null,
+      );
+    });
+  }
 
-        // Mixpanel
-        final mixpanel = ref.read(mixpanelProvider);
-        if (user != null) {
-          mixpanel.identify(user.uid);
-          Sentry.configureScope(
-              (scope) => scope.setUser(SentryUser(id: user.uid)));
-        } else {
-          mixpanel.reset();
-          Sentry.configureScope((scope) => scope.setUser(null));
-        }
+  void _initInAppNotifications() {
+    final uidProvider = authProvider.select((p) {
+      return p.map(
+        guest: (_) => null,
+        signedIn: (signedIn) => signedIn.uid,
+      );
+    });
 
-        if (loggedIn) {
-          _inAppNotificationsApi = InAppNotificationsApi(
-            host: host,
-            port: socketPort,
-            uid: user.uid,
-            onCollectionReady: (collectionId) async {
-              ref
-                  .read(collectionReadyProvider.notifier)
-                  .collectionId(collectionId);
-              final api = ref.read(apiProvider);
-              final result = await api.getCollection(collectionId);
-              result.fold(
-                (l) => null,
-                (r) {
-                  final userState = ref.read(userProvider2);
-                  final collections = userState.map(
-                    guest: (_) => <Collection>[],
-                    signedIn: (signedIn) => signedIn.collections ?? [],
-                  );
-                  final index = collections
-                      .indexWhere((c) => c.collectionId == collectionId);
-                  if (index != -1) {
-                    collections[index] = r.collection;
-                  }
-                  ref.read(userProvider.notifier).collections(collections);
-                },
+    ref.listenManual<String?>(uidProvider, (previous, next) {
+      _inAppNotificationsApi?.dispose();
+
+      final uid = next;
+      if (uid == null) {
+        return;
+      }
+      _inAppNotificationsApi = InAppNotificationsApi(
+        host: host,
+        port: socketPort,
+        uid: uid,
+        onCollectionReady: (collectionId) async {
+          ref.read(collectionReadyProvider.notifier).collectionId(collectionId);
+          final api = ref.read(apiProvider);
+          final result = await api.getCollection(collectionId);
+          result.fold(
+            (l) => null,
+            (r) {
+              final userState = ref.read(userProvider2);
+              final collections = userState.map(
+                guest: (_) => <Collection>[],
+                signedIn: (signedIn) => signedIn.collections ?? [],
               );
-            },
-            onUnreadCountUpdated: (count) {
-              ref.read(unreadCountProvider.notifier).updateUnreadCount(count);
-              ref.read(userProvider2.notifier).cacheChatrooms();
+              final index =
+                  collections.indexWhere((c) => c.collectionId == collectionId);
+              if (index != -1) {
+                collections[index] = r.collection;
+              }
+              ref.read(userProvider.notifier).collections(collections);
             },
           );
-        } else {
-          _inAppNotificationsApi?.dispose();
-        }
-      }
-
-      // Firebase ID token refresh
-      if (user != null) {
-        try {
-          final token = await user.getIdToken();
-          if (mounted) {
-            ref.read(apiProvider).authToken = token;
-          }
-        } on FirebaseAuthException catch (e) {
-          if (e.code == 'user-not-found') {
-            // Is handled during initial loading
-          } else {
-            rethrow;
-          }
-        }
-      }
-
-      // Online indicator
-      final onlineUsersApi = ref.read(onlineUsersApiProvider);
-      if (_loggedIn) {
-        onlineUsersApi.setOnline(ref.read(userProvider).uid, true);
-      } else {
-        onlineUsersApi.setOnline(ref.read(userProvider).uid, false);
-      }
-
-      // Notifications (subsequent messaging tokens)
-      if (_loggedIn) {
-        final isIOS = Platform.isIOS;
-        await initializeNotifications();
-        _notificationTokenSubscription?.cancel();
-        _notificationTokenSubscription =
-            onNotificationMessagingToken.listen((token) async {
-          debugPrint('On notification token: $token');
-          if (token != null) {
-            ref.read(apiProvider).addNotificationTokens(
-                  fcmMessagingAndVoipToken: isIOS ? null : token,
-                  apnMessagingToken: isIOS ? token : null,
-                );
-          }
-        });
-      } else {
-        _notificationTokenSubscription?.cancel();
-        disposeNotifications();
-      }
+        },
+        onUnreadCountUpdated: (count) {
+          ref.read(unreadCountProvider.notifier).updateUnreadCount(count);
+          ref.read(userProvider2.notifier).cacheChatrooms();
+        },
+      );
     });
   }
 
   @override
   void dispose() {
-    _idTokenChangesSubscription?.cancel();
-    _notificationTokenSubscription?.cancel();
-    disposeNotifications();
-
+    _notificationManager?.dispose();
     _inAppNotificationsApi?.dispose();
     super.dispose();
   }
@@ -346,32 +294,16 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       observers: observers,
       debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
-      initialLocation: '/',
+      initialLocation: '/discover',
       redirect: (context, state) {
         return null;
       },
       errorBuilder: (context, state) {
-        final args = state.extra as InitialLoadingScreenArguments?;
-        return CurrentRouteSystemUiStyling.dark(
-          child: ErrorScreen(
-            needsOnboarding: args?.needsOnboarding ?? false,
-          ),
+        return const CurrentRouteSystemUiStyling.dark(
+          child: ErrorScreen(),
         );
       },
       routes: [
-        GoRoute(
-          path: '/',
-          name: 'initialLoading',
-          builder: (context, state) {
-            final args = state.extra as InitialLoadingScreenArguments?;
-            return CurrentRouteSystemUiStyling.light(
-              child: InitialLoadingScreen(
-                navigatorKey: rootNavigatorKey,
-                needsOnboarding: args?.needsOnboarding ?? false,
-              ),
-            );
-          },
-        ),
         GoRoute(
           path: '/signup',
           name: 'signup',

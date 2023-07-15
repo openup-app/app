@@ -2,15 +2,47 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_apns/flutter_apns.dart';
+import 'package:openup/api/api.dart';
 
 typedef DeepLinkCallback = void Function(String path);
 ApnsPushConnector? _apnsPushConnector;
 StreamController<String?>? _iosNotificationTokenController;
 StreamSubscription? _iosEventChannelTokenSubscription;
 
-Future<void> initializeNotifications() async {
+class NotificationManager {
+  final Api? api;
+  StreamSubscription? _tokenSubscription;
+
+  NotificationManager({
+    required this.api,
+  }) {
+    _initializeNotifications().then((_) {
+      _tokenSubscription =
+          onNotificationMessagingToken.listen(_onNotificationToken);
+    });
+  }
+
+  void _onNotificationToken(String? token) {
+    debugPrint('On notification token: $token');
+    if (token != null) {
+      final isIOS = Platform.isIOS;
+      api?.addNotificationTokens(
+        fcmMessagingAndVoipToken: isIOS ? null : token,
+        apnMessagingToken: isIOS ? token : null,
+      );
+    }
+  }
+
+  void dispose() {
+    _tokenSubscription?.cancel();
+    disposeNotifications();
+  }
+}
+
+Future<void> _initializeNotifications() async {
   _iosNotificationTokenController = StreamController<String?>.broadcast();
   if (Platform.isIOS) {
     _apnsPushConnector = ApnsPushConnector();

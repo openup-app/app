@@ -16,9 +16,10 @@ import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/chat_state.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover_map_provider.dart';
+import 'package:openup/location/location_provider.dart';
+import 'package:openup/location/location_service.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/shell_page.dart';
-import 'package:openup/util/location_service.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/discover_list.dart';
@@ -53,7 +54,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   CancelableOperation<Either<ApiError, DiscoverResultsPage>>?
       _discoverOperation;
   final _profiles = <DiscoverProfile>[];
-  Location? _initialLocation;
   Location? _mapLocation;
   Location? _prevQueryLocation;
   static const _kMinRadius = 4000.0;
@@ -72,17 +72,17 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   @override
   void initState() {
     super.initState();
-    _maybeRequestLocationPermission().then((_) {
-      _updateLocation().then((latLong) {
-        if (mounted && latLong != null) {
-          final location = Location(latLong: latLong, radius: _kMinRadius);
-          setState(() {
-            _mapLocation = location;
-            _initialLocation = location;
-          });
-          _maybeRequestNotification();
-        }
-      });
+    _maybeRequestNotification();
+    ref.listenManual<LocationMessage?>(locationMessageProvider,
+        (previous, next) {
+      if (next == null) {
+        return;
+      }
+      switch (next) {
+        case LocationMessage.permissionRationale:
+          _showLocationPermissionRationale();
+          break;
+      }
     });
   }
 
@@ -128,49 +128,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     }
   }
 
-  Future<bool> _maybeRequestLocationPermission() async {
-    final status = await Permission.location.status;
-    if (status.isGranted || status.isLimited) {
-      return Future.value(true);
-    }
-
-    final result = await Permission.location.request();
-    if ((result.isGranted || status.isLimited)) {
-      return Future.value(true);
-    } else {
-      if (!mounted) {
-        return false;
-      }
-      showCupertinoDialog(
-        context: context,
-        builder: (context) {
-          return CupertinoAlertDialog(
-            title: const Text(
-              'Location Services',
-              textAlign: TextAlign.center,
-            ),
-            content: const Text(
-                'Location needs to be on in order to discover people near you.'),
-            actions: [
-              CupertinoDialogAction(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-              CupertinoDialogAction(
-                onPressed: () {
-                  openAppSettings();
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Enable in Settings'),
-              ),
-            ],
-          );
-        },
-      );
-      return Future.value(false);
-    }
-  }
-
   void _showStartupModals() async {
     final showSafetyNotice = ref.listenManual<bool>(
       showSafetyNoticeProvider,
@@ -186,40 +143,23 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       return;
     }
 
-    final userState = ref.read(userProvider2);
-    userState.map(
-      guest: (_) {
-        showSignupGuestModal(
-          context,
-          onShowSignup: () => context.pushNamed('signup'),
-        );
-      },
-      signedIn: (_) {},
-    );
-  }
-
-  Future<LatLong?> _getLocation() async {
-    final locationService = LocationService();
-    final location = await locationService.getLatLong();
-    return location.map(
-      value: (value) {
-        return Future.value(value.latLong);
-      },
-      denied: (_) => Future.value(),
-      failure: (_) => Future.value(),
-    );
-  }
-
-  Future<LatLong?> _updateLocation() async {
-    final latLong = await _getLocation();
-    if (latLong != null && mounted) {
-      ref.read(locationProvider.notifier).update(LocationValue(latLong));
-      await updateLocation(
-        ref: ref,
-        latLong: latLong,
+    final isSignedOutProvider = userProvider2.select((p) {
+      return p.map(
+        guest: (guest) => !guest.byDefault,
+        signedIn: (_) => false,
       );
-    }
-    return latLong;
+    });
+    ref.listenManual<bool>(
+      isSignedOutProvider,
+      (previous, next) {
+        if (next) {
+          showSignupGuestModal(
+            context,
+            onShowSignup: () => context.pushNamed('signup'),
+          );
+        }
+      },
+    );
   }
 
   Future<void> _performQuery() {
@@ -315,14 +255,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       },
       child: Builder(
         builder: (context) {
-          final initialLocation = _initialLocation;
-          if (initialLocation == null) {
-            return const ColoredBox(
-              color: Colors.black,
-              child: SizedBox.expand(),
-            );
-          }
-
           final profiles = List.of(_profiles);
           final selectedProfile = _selectedProfile;
           return Stack(
@@ -338,7 +270,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       profiles: _profiles,
                       selectedProfile: _selectedProfile,
                       onProfileChanged: _onProfileChanged,
-                      initialLocation: initialLocation,
+                      initialLocation: Location(
+                        latLong: ref.read(locationProvider).initialLatLong,
+                        radius: 8000,
+                      ),
                       onLocationChanged: (location) {
                         setState(() => _mapLocation =
                             location.copyWith(radius: location.radius));
@@ -411,12 +346,15 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
               Positioned(
                 top: MediaQuery.of(context).padding.top + 16,
                 right: 16,
-                child: Consumer(
-                  builder: (context, ref, child) {
+                child: Builder(
+                  builder: (context) {
                     final myAccount = ref.watch(userProvider2.select(
-                      (p) => p.map(
+                      (p) {
+                        return p.map(
                           guest: (_) => null,
-                          signedIn: (signedIn) => signedIn.account),
+                          signedIn: (signedIn) => signedIn.account,
+                        );
+                      },
                     ));
                     final myProfile = myAccount?.profile;
                     return Column(
@@ -481,13 +419,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         const SizedBox(height: 12),
                         Consumer(
                           builder: (context, ref, child) {
-                            final latLong =
-                                ref.watch(locationProvider)?.latLong;
+                            final latLong = ref.watch(locationProvider).current;
                             return _MapButton(
-                              onPressed: latLong == null
-                                  ? null
-                                  : () => _mapKey.currentState
-                                      ?.recenterMap(latLong),
+                              onPressed: () =>
+                                  _mapKey.currentState?.recenterMap(latLong),
                               child: const Icon(
                                 CupertinoIcons.location_fill,
                                 size: 20,
@@ -891,6 +826,39 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     userState.map(
       guest: (_) => _showSignInDialog(),
       signedIn: (_) => widget.onShowConversations(),
+    );
+  }
+
+  void _showLocationPermissionRationale() {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: const Text(
+            'Location Services',
+            textAlign: TextAlign.center,
+          ),
+          content: const Text(
+              'Location needs to be on in order to discover people near you.'),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            CupertinoDialogAction(
+              onPressed: () async {
+                if (await openAppSettings() && mounted) {
+                  ref.read(locationProvider.notifier).retryInitLocation();
+                }
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Enable in Settings'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

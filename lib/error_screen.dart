@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:openup/initial_loading_screen.dart';
+import 'package:openup/widgets/restart_app.dart';
 
 class ErrorScreen extends StatelessWidget {
-  final bool needsOnboarding;
   const ErrorScreen({
     Key? key,
-    this.needsOnboarding = false,
   }) : super(key: key);
 
   @override
@@ -22,7 +19,7 @@ class ErrorScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Could not connect to server',
+              'Page not found',
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: Colors.black,
                     fontSize: 22,
@@ -30,14 +27,7 @@ class ErrorScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {
-                context.goNamed(
-                  'initialLoading',
-                  extra: InitialLoadingScreenArguments(
-                    needsOnboarding: needsOnboarding,
-                  ),
-                );
-              },
+              onPressed: () => RestartApp.restartApp(context),
               child: const Text('Retry'),
             ),
           ],

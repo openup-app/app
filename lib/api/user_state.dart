@@ -6,20 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/util/location_service.dart';
+import 'package:openup/auth/auth_provider.dart';
 
 part 'user_state.freezed.dart';
-
-final locationProvider =
-    StateNotifierProvider<LocationNotifier, LocationValue?>((ref) {
-  return LocationNotifier();
-});
-
-class LocationNotifier extends StateNotifier<LocationValue?> {
-  LocationNotifier() : super(null);
-
-  void update(LocationValue? value) => state = value;
-}
 
 final apiProvider = Provider<Api>((ref) => throw 'Api is uninitialized');
 
@@ -62,11 +51,58 @@ class UserState with _$UserState {
 
 final userProvider2 =
     StateNotifierProvider<UserStateNotifier2, UserState2>((ref) {
-  return UserStateNotifier2(
+  final userStateNotifier = UserStateNotifier2(
     api: ref.watch(apiProvider),
     messageNotifier: ref.read(messageProvider.notifier),
   );
+
+  _initUserState(
+    api: ref.read(apiProvider),
+    authState: ref.read(authProvider),
+    onSignedIn: (account) {
+      ref.read(userProvider.notifier).uid(account.profile.uid);
+      ref.read(userProvider.notifier).profile(account.profile);
+      userStateNotifier.signedIn(account);
+    },
+    onSignedOut: () => userStateNotifier.guest(),
+    onAuthorizedButNoAccount: () {
+      final authState = ref.read(authProvider);
+      authState.map(
+        guest: (_) => userStateNotifier.guest(),
+        signedIn: (_) =>
+            ref.read(authProvider.notifier).deleteHangingAuthAccount(),
+      );
+    },
+  );
+
+  return userStateNotifier;
 });
+
+void _initUserState({
+  required Api api,
+  required AuthState authState,
+  required void Function(Account account) onSignedIn,
+  required void Function() onSignedOut,
+  required void Function() onAuthorizedButNoAccount,
+}) async {
+  // Get user profile
+  final loggedIn = authState.map(
+    guest: (_) => false,
+    signedIn: (_) => true,
+  );
+  if (!loggedIn) {
+    onAuthorizedButNoAccount();
+    return;
+  }
+  final getAccountResult = await getAccount(api);
+  getAccountResult.map(
+    logIn: (logIn) => onSignedIn(logIn.account),
+    signUp: (_) => onAuthorizedButNoAccount(),
+    retry: (_) {
+      // TODO: Handle error
+    },
+  );
+}
 
 class UserStateNotifier2 extends StateNotifier<UserState2> {
   final Api _api;
@@ -81,7 +117,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
 
   UserState2 get userState => state;
 
-  void guest() => state = const _Guest();
+  void guest() => state = const _Guest(byDefault: false);
 
   void signedIn(Account account) async {
     state = _SignedIn(account: account);
@@ -92,6 +128,9 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
 
   Future<void> _cacheChatrooms() async {
     final result = await _api.getChatrooms();
+    if (!mounted) {
+      return;
+    }
     result.fold(
       (l) {},
       (r) {
@@ -105,6 +144,9 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
 
   Future<void> _cacheCollections(String uid) async {
     final result = await _api.getCollections(uid);
+    if (!mounted) {
+      return;
+    }
     result.fold(
       (l) {},
       (r) {
@@ -133,7 +175,9 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
         return result.fold(
           (l) => Left(l),
           (r) {
-            state = signedIn.copyWith.account(profile: r);
+            if (mounted) {
+              state = signedIn.copyWith.account(profile: r);
+            }
             return Right(r);
           },
         );
@@ -153,6 +197,9 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
           uid: signedIn.account.profile.uid,
           collectionId: collectionId,
         );
+        if (!mounted) {
+          return;
+        }
         return result.fold(
           (l) => _messageNotifier.emitMessage(errorToMessage(l)),
           (r) => state = signedIn.copyWith.account(profile: r),
@@ -177,7 +224,9 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
             return false;
           },
           (r) {
-            state = signedIn.copyWith.account(profile: r);
+            if (mounted) {
+              state = signedIn.copyWith.account(profile: r);
+            }
             return true;
           },
         );
@@ -215,7 +264,9 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
         return result.fold<Either<ApiError, void>>(
           (l) => Left(l),
           (r) {
-            state = signedIn.copyWith(chatrooms: r);
+            if (mounted) {
+              state = signedIn.copyWith(chatrooms: r);
+            }
             return const Right(null);
           },
         );
@@ -226,7 +277,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
   void openChatroom(String uid) {
     state.map(
       guest: (_) {},
-      signedIn: (signedIn) async {
+      signedIn: (signedIn) {
         final index =
             signedIn.chatrooms?.indexWhere((c) => c.profile.uid == uid);
         if (index != null && index != -1) {
@@ -281,7 +332,9 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
                 ? <Collection>[]
                 : List.of(signedIn.collections!);
             collections.insert(0, r);
-            state = signedIn.copyWith(collections: collections);
+            if (mounted) {
+              state = signedIn.copyWith(collections: collections);
+            }
             return Right(r);
           },
         );
@@ -293,7 +346,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     return state.map(
       guest: (_) =>
           Future.value(const Left(ApiError.client(ClientErrorUnauthorized()))),
-      signedIn: (signedIn) async {
+      signedIn: (signedIn) {
         final collections = signedIn.collections == null
             ? <Collection>[]
             : List.of(signedIn.collections!);
@@ -330,7 +383,9 @@ class AccountCreationParamsNotifier
 class UserState2 with _$UserState2 {
   const UserState2._();
 
-  const factory UserState2.guest() = _Guest;
+  const factory UserState2.guest({
+    @Default(true) bool byDefault,
+  }) = _Guest;
 
   const factory UserState2.signedIn({
     required Account account,

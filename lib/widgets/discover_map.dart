@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/util/location_service.dart';
+import 'package:openup/location/location_service.dart';
 import 'package:openup/widgets/map_marker_rendering.dart';
 
 class DiscoverMap extends ConsumerStatefulWidget {

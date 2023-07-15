@@ -20,6 +20,7 @@ import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/phone_number_input.dart';
+import 'package:openup/widgets/restart_app.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
@@ -454,7 +455,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
       );
 
       if (mounted) {
-        context.goNamed('initialLoading');
+        RestartApp.restartApp(context);
       }
     }
   }
@@ -501,7 +502,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
         future: _deleteAccount(),
       );
       if (mounted) {
-        context.goNamed('initialLoading');
+        RestartApp.restartApp(context);
       }
     }
   }

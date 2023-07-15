@@ -5,13 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
-import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/location/location_provider.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/phone_number_input.dart';
+import 'package:openup/widgets/restart_app.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SignupPhone extends ConsumerStatefulWidget {
@@ -70,18 +71,14 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
           notifier.profile(account.profile);
           ref.read(userProvider2.notifier).signedIn(account);
           ref.read(mixpanelProvider).track("login");
-          context.goNamed('initialLoading');
+          RestartApp.restartApp(context);
         },
         signUp: () {
           final notifier = ref.read(userProvider.notifier);
           notifier.uid(verifiedUid);
           // TODO: Hook up location more robustly
           final locationValue = ref.read(locationProvider);
-          const tempAustinLocation = LatLong(
-            latitude: 30.3119,
-            longitude: -97.732,
-          );
-          final latLong = locationValue?.latLong ?? tempAustinLocation;
+          final latLong = locationValue.current;
           ref.read(accountCreationParamsProvider.notifier).latLong(latLong);
           ref.read(mixpanelProvider).track("signup_verified");
           context.pushReplacementNamed('signup_age');
