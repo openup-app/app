@@ -481,9 +481,9 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     final canvas = ui.Canvas(pictureRecorder);
 
     final textWidth = metrics.width;
-    const horizontalPadding = 8.0;
-    const verticalPadding = 20.0;
-    const photoSize = 24.0;
+    const horizontalPadding = 16.0;
+    const verticalPadding = 32.0;
+    const photoSize = 30.0;
     final width = photoSize + 4 + textWidth + horizontalPadding + 8;
     const height = photoSize + 4 + verticalPadding;
 
@@ -519,6 +519,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       photo: photo,
       favoriteIconPainter: favoriteIconPainter,
       backgroundColor: Colors.white,
+      elevation: 10,
+      shadowColor: const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
       horizontalPadding: horizontalPadding,
       verticalPadding: verticalPadding,
       width: width,
@@ -552,8 +554,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     final canvas = ui.Canvas(pictureRecorder);
 
     final textWidth = metrics.width;
-    const horizontalPadding = 8.0;
-    const verticalPadding = 20.0;
+    const horizontalPadding = 16.0;
+    const verticalPadding = 28.0;
     const photoSize = 36.0;
     final width = photoSize + textWidth + horizontalPadding + 8;
     const height = photoSize + verticalPadding;
@@ -598,6 +600,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
         begin: null,
         end: Colors.white,
       ).evaluate(animation),
+      elevation: 8,
+      shadowColor: Colors.black,
       horizontalPadding: horizontalPadding,
       verticalPadding: verticalPadding,
       width: width,
@@ -619,6 +623,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     required TextPainter? favoriteIconPainter,
     required Color backgroundColor,
     Color? profileOutlineColor,
+    required double elevation,
+    required Color shadowColor,
     required double horizontalPadding,
     required double verticalPadding,
     required double width,
@@ -634,8 +640,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     );
     canvas.drawShadow(
       Path()..addRRect(rrect),
-      const Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-      6,
+      shadowColor,
+      elevation,
       false,
     );
 
@@ -647,14 +653,6 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     );
 
     canvas.drawRRect(rrect, Paint()..color = backgroundColor);
-    if (profileOutlineColor != null) {
-      canvas.drawRRect(
-          rrect,
-          Paint()
-            ..color = profileOutlineColor
-            ..strokeWidth = 1.5
-            ..style = PaintingStyle.stroke);
-    }
     final textLeftPadding = photoCenter.dx + photoSize / 2 + 4;
     final textTopPadding = (height - metrics.height) / 2;
     textPainter.paint(
@@ -722,7 +720,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     required Animation<double> animation,
   }) async {
     final textPainter = _createTextPainter(
-      text: 'Exact location not shown',
+      text: 'Exact user location not shown',
       style: const TextStyle(
         fontSize: 8,
         fontWeight: FontWeight.w400,
@@ -734,8 +732,11 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     final pictureRecorder = ui.PictureRecorder();
     final canvas = ui.Canvas(pictureRecorder);
 
-    const width = 116.0;
-    const height = 16.0;
+    const topPadding = 20.0;
+    const bottomPadding = 12.0;
+    const horizontalPadding = 8.0;
+    const width = 136.0 + horizontalPadding;
+    const height = 16.0 + topPadding + bottomPadding;
 
     final scale = 1.0 + 0.33 * animation.value;
 
@@ -751,35 +752,26 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     canvas.scale(pixelRatio);
     canvas.transform(scaleAnimation.storage);
 
-    const topPadding = 28.0;
-
     final rrect = RRect.fromRectAndRadius(
       Rect.fromCenter(
-        center: const Offset(width / 2, height / 2 + topPadding),
-        width: width,
-        height: height,
+        center: const Offset(width / 2, height / 2 + topPadding / 2),
+        width: width - horizontalPadding,
+        height: height - (topPadding + bottomPadding),
       ),
       const Radius.circular(height / 2),
     );
     canvas.drawShadow(
       Path()..addRRect(rrect),
-      const Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-      6,
+      const Color.fromRGBO(0x00, 0x00, 0x00, 1.0),
+      4,
       false,
     );
     canvas.drawRRect(
       rrect,
       Paint()..color = const Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
     );
-    canvas.drawRRect(
-      rrect,
-      Paint()
-        ..color = Colors.white
-        ..strokeWidth = 1
-        ..style = PaintingStyle.stroke,
-    );
-    const textLeftPadding = 16.0;
-    const textTopPadding = 3 + topPadding;
+    const textLeftPadding = horizontalPadding / 2 + 17.0;
+    const textTopPadding = topPadding + 8.5;
     textPainter.paint(
       canvas,
       const Offset(textLeftPadding, textTopPadding),
@@ -796,13 +788,13 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     );
     infoIconPainter.paint(
       canvas,
-      const Offset(2, 2 + topPadding),
+      const Offset(6, 8 + topPadding),
     );
 
     final picture = pictureRecorder.endRecording();
     return picture.toImage(
       (pixelRatio * width * scale).toInt(),
-      (pixelRatio * (height + topPadding + 4) * scale).toInt(),
+      (pixelRatio * height * scale).toInt(),
     );
   }
 }
