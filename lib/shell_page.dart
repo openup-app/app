@@ -270,6 +270,7 @@ class _ActivePageState extends ConsumerState<ActivePage> {
     ref.listenManual<bool>(
       _sheetOpenProvider,
       (previous, next) => _onPageOpenChanged(next),
+      fireImmediately: true,
     );
   }
 
