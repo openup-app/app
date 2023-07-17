@@ -161,7 +161,6 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
         .removeWhere((p) => removeFromOnscreen.contains(p.profile.profile.uid));
 
     if (selectedProfile != null && selectedUserChanged) {
-      recenterMap(selectedProfile.location.latLong);
       setState(() {
         _recenterAnimationComplete = false;
         _selectedMapMarkerAnimation.clear();

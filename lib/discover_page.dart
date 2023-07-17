@@ -227,8 +227,8 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     // Reduced radius for improved experience when searching
     final panRatio = greatCircleDistance(a.latLong, b.latLong) / a.radius;
     final zoomRatio = b.radius / a.radius;
-    final panned = panRatio > 0.4;
-    final zoomed = zoomRatio > 1.8 || zoomRatio < 0.5;
+    final panned = panRatio > 0.5;
+    final zoomed = zoomRatio > 2.0 || zoomRatio < 0.5;
     if (panned || zoomed) {
       return true;
     }
@@ -279,7 +279,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       onLocationChanged: (location) {
                         setState(() => _mapLocation =
                             location.copyWith(radius: location.radius));
-                        if (_prevQueryLocation == null) {
+                        final prevQueryLocation = _prevQueryLocation;
+                        if (prevQueryLocation == null ||
+                            _areLocationsDistant(location, prevQueryLocation)) {
                           _performQuery();
                         }
                       },
@@ -537,67 +539,23 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                             ),
                           ),
                         ),
-                        AnimatedCrossFade(
-                          duration: const Duration(microseconds: 200),
-                          alignment: Alignment.topCenter,
-                          crossFadeState: _fetchingProfiles
-                              ? CrossFadeState.showFirst
-                              : CrossFadeState.showSecond,
-                          firstChild: IgnorePointer(
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOutQuart,
-                              opacity: (_fetchingProfiles ||
-                                      _markerRenderStatus ==
-                                          MarkerRenderStatus.rendering)
-                                  ? 1
-                                  : 0,
-                              child: Lottie.asset(
-                                'assets/images/map_searching.json',
-                                width: 100,
-                                height: 48,
-                                animate: _fetchingProfiles ||
+                        IgnorePointer(
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutQuart,
+                            opacity: (_fetchingProfiles ||
                                     _markerRenderStatus ==
-                                        MarkerRenderStatus.rendering,
-                              ),
+                                        MarkerRenderStatus.rendering)
+                                ? 1
+                                : 0,
+                            child: Lottie.asset(
+                              'assets/images/map_searching.json',
+                              width: 100,
+                              height: 48,
+                              animate: _fetchingProfiles ||
+                                  _markerRenderStatus ==
+                                      MarkerRenderStatus.rendering,
                             ),
-                          ),
-                          secondChild: Builder(
-                            builder: (context) {
-                              final prev = _prevQueryLocation;
-                              final location = _mapLocation;
-                              final show = prev != null &&
-                                  location != null &&
-                                  _areLocationsDistant(prev, location);
-                              return AnimatedOpacity(
-                                duration: const Duration(milliseconds: 200),
-                                curve: Curves.easeOutQuart,
-                                opacity: show ? 1.0 : 0,
-                                child: Button(
-                                  onPressed: show ? _performQuery : null,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12, horizontal: 16),
-                                    margin: const EdgeInsets.all(8),
-                                    decoration: const BoxDecoration(
-                                      color:
-                                          Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(24),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'Search this area',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
                           ),
                         ),
                       ],
