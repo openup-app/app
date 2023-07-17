@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/invite_friends.dart';
 
@@ -49,12 +48,6 @@ class _SignUpFriendsState extends State<SignUpFriends> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: BackIconButton(
-                    color: Colors.black,
-                  ),
-                ),
                 const Text(
                   'Add your contacts',
                   style: TextStyle(

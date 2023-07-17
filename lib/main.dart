@@ -367,14 +367,14 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     ),
                   ],
                 ),
-                GoRoute(
-                  path: 'friends',
-                  name: 'signup_friends',
-                  builder: (context, state) => const SignUpFriends(),
-                ),
               ],
             ),
           ],
+        ),
+        GoRoute(
+          path: '/signup_friends',
+          name: 'signup_friends',
+          builder: (context, state) => const SignUpFriends(),
         ),
         StatefulShellRoute(
           builder: (builder) {
