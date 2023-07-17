@@ -366,9 +366,9 @@ class AccountCreationParamsNotifier
     extends StateNotifier<AccountCreationParams> {
   AccountCreationParamsNotifier() : super(const AccountCreationParams());
 
-  void photos(List<String> photos) => state = state.copyWith(photos: photos);
+  void photos(List<File> photos) => state = state.copyWith(photos: photos);
 
-  void audio(String audio) => state = state.copyWith(audio: audio);
+  void audio(File audio) => state = state.copyWith(audio: audio);
 
   void name(String name) => state = state.copyWith(name: name);
 

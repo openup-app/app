@@ -22,7 +22,17 @@ class SignupPhotos extends ConsumerStatefulWidget {
 }
 
 class _SignupPhotosState extends ConsumerState<SignupPhotos> {
-  final _photos = List<File?>.generate(3, (_) => null);
+  final _photos = <File?>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _photos.addAll(ref.read(
+        accountCreationParamsProvider.select((p) => p.photos ?? <File?>[])));
+    if (_photos.length != 3) {
+      _photos.addAll(List<File?>.generate(3 - _photos.length, (_) => null));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +96,9 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
                             if (mounted && photos != null) {
                               setState(() => _photos.replaceRange(
                                   i, i + min(3, photos.length), photos));
+                              ref
+                                  .read(accountCreationParamsProvider.notifier)
+                                  .photos(_photos.whereType<File>().toList());
                             }
                           },
                           child: RoundedRectangleContainer(
@@ -129,7 +142,9 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
           ),
           const Spacer(),
           Button(
-            onPressed: _photos.whereType<File>().isEmpty ? null : _submit,
+            onPressed: _photos.whereType<File>().isEmpty
+                ? null
+                : () => _submit(_photos.whereType<File>().toList()),
             child: RoundedRectangleContainer(
               child: SizedBox(
                 width: 171,
@@ -205,15 +220,8 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
     return result.map((e) => File(e.path)).toList();
   }
 
-  void _submit() {
-    final photos = _photos;
-    if (photos.contains(null)) {
-      return;
-    }
-
-    ref
-        .read(accountCreationParamsProvider.notifier)
-        .photos(_photos.map((e) => e!.path).toList());
+  void _submit(List<File> photos) {
+    ref.read(accountCreationParamsProvider.notifier).photos(photos);
     ref.read(mixpanelProvider).track("signup_submit_photos");
     context.pushNamed('signup_audio');
   }

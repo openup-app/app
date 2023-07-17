@@ -41,7 +41,7 @@ Future<Either<ApiError, Account>> createAccount({
   required WidgetRef ref,
   required AccountCreationParams params,
 }) async {
-  final photos = params.photos?.map((e) => File(e)).toList();
+  final photos = params.photos;
   if (photos == null) {
     debugPrint('Photos were null when creating account');
     return Future.value(const Left(ApiClientError(ClientErrorBadRequest())));
@@ -54,11 +54,7 @@ Future<Either<ApiError, Account>> createAccount({
   }
 
   final api = ref.read(apiProvider);
-  return api.createAccount(
-    params.copyWith(
-      photos: downscaled.map((e) => e.path).toList(),
-    ),
-  );
+  return api.createAccount(params.copyWith(photos: downscaled));
 }
 
 Future<Either<ApiError, Profile>> updateGender({

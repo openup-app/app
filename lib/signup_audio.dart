@@ -58,38 +58,6 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
             ),
           ),
           const Text(
-            'Here is an example of a voice bio',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Container(
-                clipBehavior: Clip.hardEdge,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(32)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
-                      offset: Offset(0, 11),
-                      blurRadius: 26,
-                    ),
-                  ],
-                ),
-                child: Image.asset(
-                  'assets/images/tutorial_photo_good.jpg',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
             'To join you must add a voice bio',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -98,20 +66,33 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
               color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
             ),
           ),
-          const SizedBox(height: 24),
-          _RecordButton(
-            onPressed: () async {
-              final audio = await _showRecordPanel();
-              if (!mounted || audio == null) {
-                return;
-              }
-
-              ref
-                  .read(accountCreationParamsProvider.notifier)
-                  .audio(audio.path);
-              final params = ref.read(accountCreationParamsProvider);
-              _signup(params: params);
-            },
+          Expanded(
+            child: SignUpRecorder(
+              onAudioRecorded: _onAudioRecorded,
+            ),
+          ),
+          Button(
+            onPressed: ref.watch(accountCreationParamsProvider
+                    .select((p) => p.audio == null))
+                ? null
+                : () =>
+                    _signup(params: ref.read(accountCreationParamsProvider)),
+            child: RoundedRectangleContainer(
+              child: SizedBox(
+                width: 171,
+                height: 42,
+                child: Center(
+                  child: Text(
+                    'Next',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(fontSize: 20, fontWeight: FontWeight.w400),
+                  ),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 36),
           SizedBox(
@@ -122,34 +103,11 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
     );
   }
 
-  Future<File?> _showRecordPanel() async {
-    final audio = await showModalBottomSheet<Uint8List>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return RecordPanelSurface(
-          child: RecordPanel(
-            title: const Text('Record Audio Bio'),
-            submitLabel: const Text('Submit'),
-            onCancel: Navigator.of(context).pop,
-            onSubmit: (audio, duration) {
-              Navigator.of(context).pop(audio);
-              return Future.value(true);
-            },
-          ),
-        );
-      },
-    );
-
-    if (audio == null || !mounted) {
-      return null;
-    }
-
+  void _onAudioRecorded(Uint8List audio, Duration duration) async {
     final tempDir = await getTemporaryDirectory();
     final file = File(path.join(tempDir.path, 'collection_audio.m4a'));
     await file.writeAsBytes(audio);
-    return file;
+    ref.read(accountCreationParamsProvider.notifier).audio(file);
   }
 
   void _signup({
@@ -177,52 +135,6 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
         ref.read(userProvider2.notifier).signedIn(r);
         context.goNamed('signup_friends');
       },
-    );
-  }
-}
-
-class _RecordButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
-
-  const _RecordButton({
-    super.key,
-    this.label = 'record bio',
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      child: Container(
-        width: 146,
-        height: 51,
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromRGBO(0xF3, 0x49, 0x50, 1.0),
-              Color.fromRGBO(0xDF, 0x39, 0x3F, 1.0),
-            ],
-          ),
-          borderRadius: BorderRadius.all(Radius.circular(25)),
-          boxShadow: [
-            BoxShadow(
-              offset: Offset(0, 4),
-              blurRadius: 4,
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-            ),
-          ],
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
-        ),
-      ),
     );
   }
 }

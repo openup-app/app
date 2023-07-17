@@ -62,8 +62,8 @@ class Api {
         request.headers.addAll(_headers);
         request.files.addAll([
           for (final photo in photos)
-            await http.MultipartFile.fromPath('photos', photo),
-          await http.MultipartFile.fromPath('audio', audio),
+            await http.MultipartFile.fromPath('photos', photo.path),
+          await http.MultipartFile.fromPath('audio', audio.path),
         ]);
         request.fields.addAll({
           'account': jsonEncode({
@@ -802,8 +802,8 @@ class AccountCreationParams with _$AccountCreationParams {
     @Default(null) String? name,
     @Default(null) int? age,
     @Default(null) Gender? gender,
-    @Default(null) List<String>? photos,
-    @Default(null) String? audio,
+    @Default(null) List<File>? photos,
+    @Default(null) File? audio,
     @Default(null) LatLong? latLong,
   }) = _AccountCreationParams;
 }

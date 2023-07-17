@@ -933,6 +933,148 @@ class RecordButtonSignUpState extends State<RecordButtonSignUp> {
   }
 }
 
+class SignUpRecorder extends ConsumerStatefulWidget {
+  final void Function(Uint8List audio, Duration duration) onAudioRecorded;
+
+  const SignUpRecorder({
+    super.key,
+    required this.onAudioRecorded,
+  });
+
+  @override
+  ConsumerState<SignUpRecorder> createState() => _SignUpRecorderState();
+}
+
+class _SignUpRecorderState extends ConsumerState<SignUpRecorder> {
+  static const _maxDuration = Duration(seconds: 30);
+
+  PlaybackRecorderController? _controller;
+  final _recordingDurationNotifier = RecordingDurationNotifier(Duration.zero);
+  Ticker? _recordingDurationTicker;
+
+  RecordPanelState _audioBioState = RecordPanelState.deciding;
+  Uint8List? _audio;
+  Duration? _duration;
+
+  @override
+  void dispose() {
+    _recordingDurationNotifier.dispose();
+    _recordingDurationTicker?.dispose();
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  void _startRecording() async {
+    _controller?.dispose();
+    final controller = PlaybackRecorderController();
+    setState(() => _controller = controller);
+    await controller.startRecording(
+      maxDuration: _maxDuration,
+      onComplete: _onRecordingEnded,
+    );
+    if (mounted) {
+      setState(() {
+        _audioBioState = RecordPanelState.creating;
+        _recordingDurationTicker = Ticker((d) {
+          final start = (controller._combinedController.value).item1.start;
+          _recordingDurationNotifier.value = DateTime.now().difference(start);
+        });
+      });
+      _recordingDurationTicker?.start();
+    }
+  }
+
+  void _stopRecording() => _controller?.stopRecording();
+
+  void _onRecordingEnded(Uint8List recordingBytes) {
+    _recordingDurationTicker?.dispose();
+    setState(() {
+      _recordingDurationTicker = null;
+      _audio = recordingBytes;
+      _duration = _recordingDurationNotifier.value;
+      _audioBioState = RecordPanelState.deciding;
+    });
+
+    widget.onAudioRecorded(recordingBytes, _recordingDurationNotifier.value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const Spacer(),
+        Builder(
+          builder: (context) {
+            switch (_audioBioState) {
+              case RecordPanelState.creating:
+                return ValueListenableBuilder<Duration>(
+                  valueListenable: _recordingDurationNotifier,
+                  builder: (context, duration, child) {
+                    return RecordPanelRecorder(
+                      duration: duration,
+                      maxDuration: _maxDuration,
+                      onPressed: _stopRecording,
+                    );
+                  },
+                );
+              default:
+                return RecordPanelRecorder(
+                  duration: _duration ?? Duration.zero,
+                  maxDuration: _maxDuration,
+                  onPressed: _startRecording,
+                );
+            }
+          },
+        ),
+        const SizedBox(height: 59),
+        ValueListenableBuilder<Duration>(
+          valueListenable: _recordingDurationNotifier,
+          builder: (context, recordingDuration, child) {
+            return Button(
+              onPressed: (_audioBioState == RecordPanelState.creating &&
+                      recordingDuration < const Duration(seconds: 2))
+                  ? null
+                  : (_audioBioState == RecordPanelState.creating
+                      ? _stopRecording
+                      : _startRecording),
+              child: Container(
+                width: 163,
+                height: 56,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(28),
+                  ),
+                  color: Colors.white,
+                ),
+                child: Center(
+                  child: DefaultTextStyle(
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                    ),
+                    child: Builder(
+                      builder: (context) {
+                        switch (_audioBioState) {
+                          case RecordPanelState.creating:
+                            return const Text('Stop');
+                          default:
+                            return const Text('Record');
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        const Spacer(),
+      ],
+    );
+  }
+}
+
 class RecordPanel extends ConsumerStatefulWidget {
   final Widget? title;
   final Widget? submitLabel;
@@ -992,6 +1134,7 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
     );
     if (mounted) {
       setState(() {
+        _audioBioState = RecordPanelState.creating;
         _recordingDurationTicker = Ticker((d) {
           final start = (controller._combinedController.value).item1.start;
           _recordingDurationNotifier.value = DateTime.now().difference(start);
@@ -1040,7 +1183,7 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
                     return RecordPanelRecorder(
                       duration: duration,
                       maxDuration: _maxDuration,
-                      onStopPressed: () => _controller?.stopRecording(),
+                      onPressed: () => _controller?.stopRecording(),
                     );
                   },
                 );
@@ -1226,19 +1369,19 @@ enum RecordPanelState { creating, deciding, uploading, uploaded }
 class RecordPanelRecorder extends StatelessWidget {
   final Duration duration;
   final Duration maxDuration;
-  final VoidCallback onStopPressed;
+  final VoidCallback onPressed;
 
   const RecordPanelRecorder({
     super.key,
     required this.duration,
     required this.maxDuration,
-    required this.onStopPressed,
+    required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
     return Button(
-      onPressed: onStopPressed,
+      onPressed: onPressed,
       child: Container(
         width: 212,
         height: 212,
