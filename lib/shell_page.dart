@@ -260,7 +260,7 @@ class ActivePage extends ConsumerStatefulWidget {
 class _ActivePageState extends ConsumerState<ActivePage> {
   int? _myBranchIndex;
   int? _currentIndex;
-  late bool _pageOpen;
+  bool _pageOpen = false;
   bool _active = false;
   bool _appResumed = true;
 
@@ -270,7 +270,6 @@ class _ActivePageState extends ConsumerState<ActivePage> {
     ref.listenManual<bool>(
       _sheetOpenProvider,
       (previous, next) => _onPageOpenChanged(next),
-      fireImmediately: true,
     );
   }
 
