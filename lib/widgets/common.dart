@@ -336,6 +336,75 @@ class _CinematicPhotoState extends State<CinematicPhoto> {
   }
 }
 
+class NonCinematicPhoto extends StatefulWidget {
+  final String url;
+  final BoxFit fit;
+  final bool animate;
+  final VoidCallback? onLoaded;
+  final Duration duration;
+
+  const NonCinematicPhoto({
+    super.key,
+    required this.url,
+    this.fit = BoxFit.cover,
+    this.animate = true,
+    this.onLoaded,
+    required this.duration,
+  });
+
+  @override
+  State<NonCinematicPhoto> createState() => _NonCinematicPhotoState();
+}
+
+class _NonCinematicPhotoState extends State<NonCinematicPhoto> {
+  late final _photoImageProvider = NetworkImage(widget.url);
+
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final futures = Future.wait([
+      _decodeImage(_photoImageProvider),
+    ]);
+    futures.then((values) {
+      values[0].dispose();
+      if (mounted) {
+        setState(() => _loading = false);
+        widget.onLoaded?.call();
+      }
+    });
+  }
+
+  Future<ui.Image> _decodeImage(ImageProvider provider) {
+    final completer = Completer<ui.Image>();
+    final listener = ImageStreamListener((imageInfo, _) {
+      completer.complete(imageInfo.image);
+    }, onError: (error, stackTrace) {
+      completer.completeError(error, stackTrace);
+    });
+    provider.resolve(ImageConfiguration.empty).addListener(listener);
+    return completer.future;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image(
+          image: _photoImageProvider,
+          fit: BoxFit.cover,
+        ),
+        if (_loading)
+          const Center(
+            child: LoadingIndicator(),
+          ),
+      ],
+    );
+  }
+}
+
 class RecordButton extends StatefulWidget {
   final String label;
   final Duration minimumRecordTime;

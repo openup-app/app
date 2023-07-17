@@ -135,7 +135,7 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
             onPressed: widget.onPlayPause,
             child: KeyedSubtree(
               key: ValueKey(widget.profile.uid),
-              child: CinematicGallery(
+              child: NonCinematicGallery(
                 slideshow: widget.play,
                 gallery: widget.profile.collection.photos,
               ),
