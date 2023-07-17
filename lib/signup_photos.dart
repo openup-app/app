@@ -95,7 +95,7 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
                             final photos = await _selectPhotos();
                             if (mounted && photos != null) {
                               setState(() => _photos.replaceRange(
-                                  i, i + min(3, photos.length), photos));
+                                  i, i + min(3 - i, photos.length), photos));
                               ref
                                   .read(accountCreationParamsProvider.notifier)
                                   .photos(_photos.whereType<File>().toList());
