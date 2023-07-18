@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
+import 'package:openup/widgets/drag_handle.dart';
 
 final _sheetSize = StateProvider<double>((ref) => 0.0);
 final _sheetOpenProvider = StateProvider<bool>((ref) => false);
@@ -160,7 +161,7 @@ class ShellPageState extends ConsumerState<ShellPage> {
                                 alignment: Alignment.topCenter,
                                 child: Padding(
                                   padding: EdgeInsets.only(top: 35),
-                                  child: _DragHandle(),
+                                  child: DragHandle(),
                                 ),
                               ),
                             ),
@@ -200,26 +201,6 @@ class ShellPageState extends ConsumerState<ShellPage> {
     } else {
       print('DraggableScrollableSheetController is not attached');
     }
-  }
-}
-
-class _DragHandle extends StatelessWidget {
-  const _DragHandle({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 37,
-      height: 6,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(2.5)),
-          color: Color.fromRGBO(0xE0, 0xE0, 0xE0, 1.0),
-        ),
-      ),
-    );
   }
 }
 

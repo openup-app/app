@@ -24,6 +24,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/discover_list.dart';
 import 'package:openup/widgets/discover_map.dart';
+import 'package:openup/widgets/drag_handle.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -350,117 +351,30 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
               Positioned(
                 top: MediaQuery.of(context).padding.top + 16,
                 right: 16,
-                child: Builder(
-                  builder: (context) {
-                    final myAccount = ref.watch(userProvider2.select(
-                      (p) {
-                        return p.map(
-                          guest: (_) => null,
-                          signedIn: (signedIn) => signedIn.account,
-                        );
-                      },
-                    ));
-                    final myProfile = myAccount?.profile;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Button(
-                          onPressed: _showSettingsOrSignIn,
-                          child: Container(
-                            width: 45,
-                            height: 45,
-                            clipBehavior: Clip.hardEdge,
-                            foregroundDecoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(width: 2, color: Colors.white),
-                            ),
-                            decoration: BoxDecoration(
-                              color: myAccount == null ? Colors.white : null,
-                              shape: BoxShape.circle,
-                              boxShadow: const [
-                                BoxShadow(
-                                  offset: Offset(0, 4),
-                                  blurRadius: 8,
-                                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                                ),
-                              ],
-                            ),
-                            child: myProfile != null
-                                ? Image.network(
-                                    myProfile.photo,
-                                    fit: BoxFit.cover,
-                                  )
-                                : const Icon(
-                                    Icons.person,
-                                    size: 30,
-                                    color:
-                                        Color.fromRGBO(0x84, 0x84, 0x84, 1.0),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _MapButton(
-                          onPressed: () async {
-                            final visibility = myAccount?.location.visibility;
-                            _showLiveLocationModalOrSignIn(
-                              targetVisibility:
-                                  visibility == LocationVisibility.private
-                                      ? LocationVisibility.public
-                                      : LocationVisibility.private,
-                            );
-                          },
-                          child: myAccount?.location.visibility ==
-                                  LocationVisibility.public
-                              ? const Icon(
-                                  Icons.location_on,
-                                  color: Color.fromRGBO(0x25, 0xB7, 0x00, 1.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _MapButton(
+                      onPressed: () => setState(() => _enable3d = !_enable3d),
+                      child: Center(
+                        child: Text(
+                          '3D',
+                          textAlign: TextAlign.center,
+                          style: _enable3d
+                              ? const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color.fromRGBO(1, 184, 50, 1),
                                 )
-                              : const Icon(
-                                  Icons.location_off,
-                                  color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                              : const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color.fromRGBO(0x48, 0x48, 0x48, 1.0),
                                 ),
                         ),
-                        const SizedBox(height: 12),
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final latLong = ref.watch(locationProvider).current;
-                            return _MapButton(
-                              onPressed: () =>
-                                  _mapKey.currentState?.recenterMap(latLong),
-                              child: const Icon(
-                                CupertinoIcons.location_fill,
-                                size: 20,
-                                color: Color.fromRGBO(0x1A, 0x71, 0xFF, 1.0),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        _MapButton(
-                          onPressed: () =>
-                              setState(() => _enable3d = !_enable3d),
-                          child: Center(
-                            child: Text(
-                              '3D',
-                              textAlign: TextAlign.center,
-                              style: _enable3d
-                                  ? const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color.fromRGBO(1, 184, 50, 1),
-                                    )
-                                  : const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w400,
-                                      color:
-                                          Color.fromRGBO(0x48, 0x48, 0x48, 1.0),
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Align(
@@ -478,17 +392,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                _MapButton(
-                                  onPressed: () =>
-                                      _showUpdateAudioBioOrSignIn(context),
-                                  child: const Icon(
-                                    Icons.circle,
-                                    size: 16,
-                                    color:
-                                        Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
                                 _MapButton(
                                   onPressed: _showConversationsOrSignIn,
                                   child: Stack(
@@ -509,10 +412,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                           return Align(
                                             alignment: Alignment.topRight,
                                             child: Container(
-                                              width: 14,
-                                              height: 14,
+                                              width: 14.5,
+                                              height: 14.5,
                                               margin: const EdgeInsets.only(
-                                                  top: 5, right: 5),
+                                                  top: 1, right: 1),
                                               decoration: const BoxDecoration(
                                                 shape: BoxShape.circle,
                                                 color: Color.fromRGBO(
@@ -532,6 +435,62 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                       ),
                                     ],
                                   ),
+                                ),
+                                const SizedBox(height: 18),
+                                Builder(
+                                  builder: (context) {
+                                    final myAccount =
+                                        ref.watch(userProvider2.select(
+                                      (p) {
+                                        return p.map(
+                                          guest: (_) => null,
+                                          signedIn: (signedIn) =>
+                                              signedIn.account,
+                                        );
+                                      },
+                                    ));
+                                    return _MapButton(
+                                      onPressed: () async {
+                                        final visibility =
+                                            myAccount?.location.visibility;
+                                        _showLiveLocationModalOrSignIn(
+                                          targetVisibility: visibility ==
+                                                  LocationVisibility.private
+                                              ? LocationVisibility.public
+                                              : LocationVisibility.private,
+                                        );
+                                      },
+                                      child: myAccount?.location.visibility ==
+                                              LocationVisibility.public
+                                          ? const Icon(
+                                              Icons.location_on,
+                                              color: Color.fromRGBO(
+                                                  0x25, 0xB7, 0x00, 1.0),
+                                            )
+                                          : const Icon(
+                                              Icons.location_off,
+                                              color: Color.fromRGBO(
+                                                  0xFF, 0x00, 0x00, 1.0),
+                                            ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 18),
+                                Consumer(
+                                  builder: (context, ref, child) {
+                                    final latLong =
+                                        ref.watch(locationProvider).current;
+                                    return _MapButton(
+                                      onPressed: () => _mapKey.currentState
+                                          ?.recenterMap(latLong),
+                                      child: const Icon(
+                                        CupertinoIcons.location_fill,
+                                        size: 20,
+                                        color: Color.fromRGBO(
+                                            0x8D, 0x8D, 0x8D, 1.0),
+                                      ),
+                                    );
+                                  },
                                 ),
                                 const SizedBox(height: 18),
                               ],
@@ -575,6 +534,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       onProfileChanged: (profile) =>
                           setState(() => _selectedProfile = profile),
                       profileBuilderKey: _profileBuilderKey,
+                      onShowSettings: _showSettingsOrSignIn,
                       onRecordInvite: (profile) {
                         _showRecordInvitePanelOrSignIn(context, profile.uid);
                       },
@@ -853,6 +813,7 @@ class _ProfilePanel extends StatefulWidget {
   final DiscoverProfile? selectedProfile;
   final ValueChanged<DiscoverProfile?> onProfileChanged;
   final GlobalKey<ProfileBuilderState> profileBuilderKey;
+  final VoidCallback onShowSettings;
   final void Function(Profile profile) onRecordInvite;
   final VoidCallback onToggleFavorite;
   final void Function(Profile profile) onBlockUser;
@@ -866,6 +827,7 @@ class _ProfilePanel extends StatefulWidget {
     required this.selectedProfile,
     required this.onProfileChanged,
     required this.profileBuilderKey,
+    required this.onShowSettings,
     required this.onRecordInvite,
     required this.onToggleFavorite,
     required this.onBlockUser,
@@ -893,26 +855,22 @@ class _ProfilePanelState extends State<_ProfilePanel> {
           crossFadeState: widget.selectedProfile == null
               ? CrossFadeState.showFirst
               : CrossFadeState.showSecond,
-          firstChild: Button(
-            onPressed: () async {
-              final prevGender = widget.gender;
-              final gender = await _showPreferencesSheet();
-              if (mounted && gender != prevGender) {
-                widget.onGenderChanged(gender);
+          firstChild: GestureDetector(
+            onVerticalDragUpdate: (details) {
+              if (details.delta.dy < 0) {
+                widget.onShowSettings();
               }
             },
             child: Container(
-              height: 70,
+              height: 72 + MediaQuery.of(context).padding.bottom,
               alignment: Alignment.center,
-              margin: margin +
-                  EdgeInsets.only(
-                      bottom: MediaQuery.of(context).padding.bottom),
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(35),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
-                color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+                color: Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
                 boxShadow: [
                   BoxShadow(
                     offset: Offset(0, 0),
@@ -921,25 +879,99 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                   ),
                 ],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(
-                    Icons.search,
-                    size: 24,
-                    color: Color.fromRGBO(0xF4, 0xF4, 0xF4, 1.0),
+              child: Container(
+                clipBehavior: Clip.hardEdge,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(24),
                   ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Who are you searching for?',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: Color.fromRGBO(0xF4, 0xF4, 0xF4, 1.0),
+                  color: Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
+                  boxShadow: [
+                    BoxShadow(
+                      offset: Offset(0, 0),
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                      blurRadius: 13,
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 7),
+                    const Center(
+                      child: DragHandle(),
+                    ),
+                    Row(
+                      children: [
+                        const SizedBox(width: 8),
+                        Button(
+                          onPressed: widget.onShowSettings,
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            clipBehavior: Clip.hardEdge,
+                            alignment: Alignment.center,
+                            margin: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.person,
+                              size: 22,
+                              color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Button(
+                            onPressed: () async {
+                              final prevGender = widget.gender;
+                              final gender = await _showPreferencesSheet();
+                              if (mounted && gender != prevGender) {
+                                widget.onGenderChanged(gender);
+                              }
+                            },
+                            child: Container(
+                              height: 32,
+                              clipBehavior: Clip.hardEdge,
+                              margin: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(11),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  SizedBox(width: 18),
+                                  Icon(
+                                    Icons.search,
+                                    size: 18,
+                                    color:
+                                        Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Who are you searching for?',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                      color:
+                                          Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1162,30 +1194,25 @@ class _MapButton extends StatelessWidget {
       width: 45,
       height: 45,
       decoration: const BoxDecoration(
-        shape: BoxShape.circle,
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(10)),
         boxShadow: [
           BoxShadow(
             offset: Offset(0, 4),
-            blurRadius: 8,
-            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+            blurRadius: 14,
+            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.15),
           )
         ],
       ),
       child: Button(
         onPressed: onPressed,
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-          ),
-          child: OverflowBox(
-            minWidth: 56,
-            minHeight: 56,
-            maxWidth: 56,
-            maxHeight: 56,
-            alignment: Alignment.center,
-            child: child,
-          ),
+        child: OverflowBox(
+          minWidth: 56,
+          minHeight: 56,
+          maxWidth: 56,
+          maxHeight: 56,
+          alignment: Alignment.center,
+          child: child,
         ),
       ),
     );
