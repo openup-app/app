@@ -536,6 +536,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       profileBuilderKey: _profileBuilderKey,
                       onShowSettings: _showSettingsOrSignIn,
                       onRecordInvite: (profile) {
+                        _profileBuilderKey.currentState?.pause();
                         _showRecordInvitePanelOrSignIn(context, profile.uid);
                       },
                       onToggleFavorite: () {
