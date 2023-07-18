@@ -73,6 +73,9 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
 
   bool _recenterAnimationComplete = false;
 
+  final _preferredTilt = 40.0;
+  final _initialZoom = 11.0;
+
   late final MarkerRenderingStateMachine _markerRenderStateMachine;
 
   @override
@@ -209,7 +212,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
 
     final enable3dChanged = oldWidget.enable3d != widget.enable3d;
     if (enable3dChanged) {
-      final tilt = widget.enable3d ? 40.0 : 0.0;
+      final tilt = widget.enable3d ? _preferredTilt : 0.0;
       final position = ref.read(_cameraPositionProvider);
       final mapController = _mapController;
       if (mapController != null && position != null) {
@@ -254,7 +257,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
                   widget.initialLocation.latLong.latitude,
                   widget.initialLocation.latLong.longitude,
                 ),
-                zoom: 10,
+                zoom: _initialZoom,
               ),
               tiltGesturesEnabled: false,
               rotateGesturesEnabled: false,
@@ -274,7 +277,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
                         target: position.target,
                         bearing: position.bearing,
                         zoom: position.zoom,
-                        tilt: 40,
+                        tilt: _preferredTilt,
                       ),
                     ),
                   );
@@ -447,7 +450,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     }
     final CameraPosition pos = CameraPosition(
       target: LatLng(targetLatitude, latLong.longitude),
-      zoom: _zoomLevel,
+      zoom: _initialZoom,
+      tilt: _preferredTilt,
     );
     _mapController?.animateCamera(CameraUpdate.newCameraPosition(pos));
   }
