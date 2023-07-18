@@ -731,15 +731,15 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
           height: photoSize,
         )),
     );
-    canvas.drawImageRect(
-      photo,
-      Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble()),
-      Rect.fromCenter(
+    paintImage(
+      canvas: canvas,
+      rect: Rect.fromCenter(
         center: photoCenter,
         width: photoSize,
         height: photoSize,
       ),
-      Paint()..color = Colors.white,
+      fit: BoxFit.cover,
+      image: photo,
     );
   }
 
