@@ -208,6 +208,70 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     );
   }
 
+  Future<bool> updateGalleryPhoto({
+    required int index,
+    required Uint8List photo,
+  }) async {
+    return state.map(
+      guest: (_) {
+        _messageNotifier.emitMessage(
+            errorToMessage(const ApiError.client(ClientError.unauthorized())));
+        return false;
+      },
+      signedIn: (signedIn) async {
+        final result = await _api.updateGalleryPhoto(
+          signedIn.account.profile.uid,
+          index,
+          photo,
+        );
+        return result.fold(
+          (l) {
+            _messageNotifier.emitMessage(errorToMessage(l));
+            return false;
+          },
+          (r) {
+            if (mounted) {
+              state = signedIn.copyWith.account(profile: r);
+            }
+            return true;
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool> deleteGalleryPhoto(int index) async {
+    return state.map(
+      guest: (_) {
+        _messageNotifier.emitMessage(
+            errorToMessage(const ApiError.client(ClientError.unauthorized())));
+        return false;
+      },
+      signedIn: (signedIn) async {
+        final gallery = signedIn.account.profile.gallery;
+        if (gallery.length <= 1) {
+          return false;
+        }
+        state = signedIn.copyWith.account
+            .profile(gallery: List.of(gallery)..removeAt(index));
+        final result =
+            await _api.deleteGalleryPhoto(signedIn.account.profile.uid, index);
+        return result.fold(
+          (l) {
+            _messageNotifier.emitMessage(errorToMessage(l));
+            return false;
+          },
+          (r) {
+            if (mounted) {
+              state = signedIn.copyWith.account(profile: r);
+            }
+            return true;
+          },
+        );
+      },
+    );
+  }
+
   Future<bool> updateAudioBio(Uint8List bytes) async {
     return state.map(
       guest: (_) {

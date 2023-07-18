@@ -125,8 +125,8 @@ class ShellPageState extends ConsumerState<ShellPage> {
                           decoration: const BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(48),
-                              topRight: Radius.circular(48),
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
                             ),
                           ),
                           child: OverflowBox(

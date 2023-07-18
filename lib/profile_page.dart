@@ -11,13 +11,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:openup/analytics/analytics.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/platform/just_audio_audio_player.dart';
+import 'package:openup/widgets/audio_playback_symbol.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/collection_photo_stack.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
+import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/phone_number_input.dart';
+import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/restart_app.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -29,14 +34,11 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePage2State extends ConsumerState<ProfilePage> {
-  bool _showCollectionCreation = false;
   final _scrollController = ScrollController();
-  Timer? _animationTimer;
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _animationTimer?.cancel();
     super.dispose();
   }
 
@@ -62,332 +64,163 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
       },
       signedIn: (signedIn) {
         final profile = signedIn.account.profile;
-        return ColoredBox(
+        return Container(
+          padding: const EdgeInsets.only(top: 20),
           color: const Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
-          child: Container(
-            margin: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 20,
-              bottom: 16 + MediaQuery.of(context).padding.bottom,
-            ),
-            clipBehavior: Clip.hardEdge,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(48)),
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  controller: _scrollController,
-                  child: Builder(
-                    builder: (context) {
-                      if (!_showCollectionCreation) {
-                        return Column(
-                          children: [
-                            Container(
-                              height: constraints.maxHeight,
-                              clipBehavior: Clip.hardEdge,
-                              decoration: const BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(48)),
-                              ),
-                              child: Stack(
-                                children: [
-                                  Positioned.fill(
-                                    child: NonCinematicGallery(
-                                      slideshow: true,
-                                      gallery: profile.gallery,
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment.bottomCenter,
-                                    child: Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 30),
-                                      child: Button(
-                                        onPressed: () =>
-                                            _showRecordPanel(context),
-                                        child: Container(
-                                          width: 146,
-                                          height: 51,
-                                          alignment: Alignment.center,
-                                          decoration: const BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [
-                                                Color.fromRGBO(
-                                                    0xF3, 0x49, 0x50, 1.0),
-                                                Color.fromRGBO(
-                                                    0xDF, 0x39, 0x3F, 1.0),
-                                              ],
-                                            ),
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(25)),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                offset: Offset(0, 4),
-                                                blurRadius: 4,
-                                                color: Color.fromRGBO(
-                                                    0x00, 0x00, 0x00, 0.25),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Text(
-                                            'update bio',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium!
-                                                .copyWith(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w400,
-                                                    color: Colors.white),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: 14,
-                                    bottom: 30,
-                                    width: 48,
-                                    height: 48,
-                                    child: Button(
-                                      onPressed: () {
-                                        _scrollController.animateTo(
-                                          _scrollController
-                                              .position.maxScrollExtent,
-                                          duration:
-                                              const Duration(milliseconds: 200),
-                                          curve: Curves.easeOut,
-                                        );
-                                      },
-                                      child: Center(
-                                        child: Container(
-                                          width: 29,
-                                          height: 29,
-                                          alignment: Alignment.center,
-                                          decoration: const BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                offset: Offset(0, 2),
-                                                blurRadius: 4,
-                                                color: Color.fromRGBO(
-                                                    0x00, 0x00, 0x00, 0.25),
-                                              ),
-                                            ],
-                                          ),
-                                          child: const RotatedBox(
-                                            quarterTurns: 1,
-                                            child: Icon(
-                                              Icons.chevron_right,
-                                              color: Color.fromRGBO(
-                                                  0x71, 0x71, 0x71, 1.0),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                controller: _scrollController,
+                child: Builder(
+                  builder: (context) {
+                    return Column(
+                      children: [
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            child: Text(
+                              'Profile & Settings',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Color.fromRGBO(0x79, 0x79, 0x79, 1.0),
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            DefaultTextStyle(
-                              style: const TextStyle(color: Colors.white),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const _SectionTitle(label: 'Name'),
-                                  const _CupertinoRow(
-                                    leading: _NameField(),
+                          ),
+                        ),
+                        SizedBox(
+                          height: constraints.maxHeight -
+                              (MediaQuery.of(context).padding.bottom + 150),
+                          child: _ProfilePanel(
+                            profile: profile,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        DefaultTextStyle(
+                          style: const TextStyle(color: Colors.white),
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const _SectionTitle(label: 'Name'),
+                                const _CupertinoRow(
+                                  leading: _NameField(),
+                                ),
+                                const SizedBox(height: 12),
+                                const _SectionTitle(
+                                  label: 'Phone Number',
+                                ),
+                                const SizedBox(height: 8),
+                                const _PhoneNumberField(),
+                                const SizedBox(height: 16),
+                                Button(
+                                  onPressed: () =>
+                                      context.pushNamed('contacts'),
+                                  child: _CupertinoRow(
+                                    leading: Row(
+                                      children: [
+                                        Icon(
+                                          CupertinoIcons.book,
+                                          color: Color.fromRGBO(
+                                              0xBA, 0xBA, 0xBA, 1.0),
+                                        ),
+                                        SizedBox(width: 12),
+                                        Expanded(child: Text(' My Contacts')),
+                                      ],
+                                    ),
                                   ),
-                                  const SizedBox(height: 12),
-                                  const _SectionTitle(
-                                    label: 'Phone Number',
+                                ),
+                                const SizedBox(height: 16),
+                                Button(
+                                  onPressed: () => context.pushNamed('blocked'),
+                                  child: const _CupertinoRow(
+                                    leading: Text('Blocked users'),
+                                    trailing: Icon(
+                                      Icons.chevron_right,
+                                      color:
+                                          Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Button(
+                                  onPressed: () =>
+                                      context.pushNamed('contact_us'),
+                                  child: const _CupertinoRow(
+                                    leading: Text('Contact us'),
+                                    trailing: Icon(
+                                      Icons.chevron_right,
+                                      color:
+                                          Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Button(
+                                  onPressed: _showSignOutConfirmationModal,
+                                  child: const _CupertinoRow(
+                                    center: Text(
+                                      'Sign out',
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Button(
+                                  onPressed:
+                                      _showDeleteAccountConfirmationModal,
+                                  child: const _CupertinoRow(
+                                    center: Text(
+                                      'Delete Account',
+                                      style: TextStyle(
+                                        color: Color.fromRGBO(
+                                            0xFF, 0x00, 0x00, 1.0),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (kDebugMode) ...[
+                                  const SizedBox(height: 16),
+                                  Center(
+                                    child: Text(
+                                      '${FirebaseAuth.instance.currentUser?.uid}',
+                                      textAlign: TextAlign.center,
+                                      style:
+                                          const TextStyle(color: Colors.black),
+                                    ),
                                   ),
                                   const SizedBox(height: 8),
-                                  const _PhoneNumberField(),
-                                  const SizedBox(height: 16),
-                                  Button(
-                                    onPressed: () =>
-                                        context.pushNamed('contacts'),
-                                    child: _CupertinoRow(
-                                      leading: Row(
-                                        children: [
-                                          Icon(
-                                            CupertinoIcons.book,
-                                            color: Color.fromRGBO(
-                                                0xBA, 0xBA, 0xBA, 1.0),
-                                          ),
-                                          SizedBox(width: 12),
-                                          Expanded(child: Text(' My Contacts')),
-                                        ],
-                                      ),
+                                  Center(
+                                    child: Text(
+                                      '${FirebaseAuth.instance.currentUser?.phoneNumber}',
+                                      textAlign: TextAlign.center,
+                                      style:
+                                          const TextStyle(color: Colors.black),
                                     ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Button(
-                                    onPressed: () =>
-                                        context.pushNamed('blocked'),
-                                    child: const _CupertinoRow(
-                                      leading: Text('Blocked users'),
-                                      trailing: Icon(
-                                        Icons.chevron_right,
-                                        color: Color.fromRGBO(
-                                            0xBA, 0xBA, 0xBA, 1.0),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Button(
-                                    onPressed: () =>
-                                        context.pushNamed('contact_us'),
-                                    child: const _CupertinoRow(
-                                      leading: Text('Contact us'),
-                                      trailing: Icon(
-                                        Icons.chevron_right,
-                                        color: Color.fromRGBO(
-                                            0xBA, 0xBA, 0xBA, 1.0),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Button(
-                                    onPressed: _showSignOutConfirmationModal,
-                                    child: const _CupertinoRow(
-                                      center: Text(
-                                        'Sign out',
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Button(
-                                    onPressed:
-                                        _showDeleteAccountConfirmationModal,
-                                    child: const _CupertinoRow(
-                                      center: Text(
-                                        'Delete Account',
-                                        style: TextStyle(
-                                          color: Color.fromRGBO(
-                                              0xFF, 0x00, 0x00, 1.0),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (kDebugMode) ...[
-                                    const SizedBox(height: 16),
-                                    Center(
-                                      child: Text(
-                                        '${FirebaseAuth.instance.currentUser?.uid}',
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                            color: Colors.black),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Center(
-                                      child: Text(
-                                        '${FirebaseAuth.instance.currentUser?.phoneNumber}',
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                            color: Colors.black),
-                                      ),
-                                    ),
-                                  ],
-                                  const SizedBox(height: 16),
-                                  SizedBox(
-                                    height: MediaQuery.of(context)
-                                        .viewInsets
-                                        .bottom,
                                   ),
                                 ],
-                              ),
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  height:
+                                      MediaQuery.of(context).viewInsets.bottom,
+                                ),
+                              ],
                             ),
-                          ],
-                        );
-                      } else {
-                        return SizedBox(
-                          height: constraints.maxHeight,
-                          child: _CollectionCreation(
-                            onDone: () =>
-                                setState(() => _showCollectionCreation = false),
                           ),
-                        );
-                      }
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _showRecordPanel(BuildContext context) {
-    return showModalBottomSheet<Uint8List>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return RecordPanelSurface(
-          child: RecordPanel(
-            title: const Text('Updating Audio Bio'),
-            submitLabel: const Text('Update'),
-            onCancel: Navigator.of(context).pop,
-            onSubmit: (audio, _) async {
-              final userStateNotifier = ref.read(userProvider2.notifier);
-              final success = await userStateNotifier.updateAudioBio(audio);
-              if (success) {
-                _animationTimer?.cancel();
-                _animationTimer = Timer(const Duration(milliseconds: 1500), () {
-                  if (mounted) {
-                    Navigator.of(context).pop();
-                  }
-                });
-              }
-              return success;
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              );
             },
           ),
         );
       },
     );
-  }
-
-  void _showDeleteDialog(String collectionId) async {
-    final result = await showCupertinoDialog<bool>(
-      context: context,
-      builder: (context) {
-        return CupertinoAlertDialog(
-          title: const Text('Delete collection?'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.of(context).pop(true),
-              isDestructiveAction: true,
-              child: const Text('Delete'),
-            ),
-            CupertinoDialogAction(
-              onPressed: Navigator.of(context).pop,
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-    if (result == true && mounted) {
-      final deleteResult =
-          await ref.read(userProvider2.notifier).deleteCollection(collectionId);
-      if (mounted) {
-        deleteResult.fold(
-          (l) => displayError(context, l),
-          (r) {},
-        );
-      }
-    }
   }
 
   void _showSignOutConfirmationModal() async {
@@ -480,6 +313,389 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
     ref.read(userProvider2.notifier).guest();
     ref.read(apiProvider).deleteAccount();
     await FirebaseAuth.instance.signOut();
+  }
+}
+
+class _ProfilePanel extends ConsumerStatefulWidget {
+  final Profile profile;
+
+  const _ProfilePanel({
+    super.key,
+    required this.profile,
+  });
+
+  @override
+  ConsumerState<_ProfilePanel> createState() => _ProfilePanelState();
+}
+
+class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
+  final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
+  Timer? _animationTimer;
+
+  @override
+  void dispose() {
+    _animationTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+        color: Colors.white,
+      ),
+      child: Column(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  flex: 6,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 8,
+                    ),
+                    child: ProfileBuilder(
+                      key: _profileBuilderKey,
+                      profile: widget.profile,
+                      play: false,
+                      builder: (context, playbackState, playbackInfoStream) {
+                        return Column(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                clipBehavior: Clip.hardEdge,
+                                decoration: const BoxDecoration(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(22),
+                                  ),
+                                ),
+                                child: NonCinematicGallery(
+                                  slideshow: true,
+                                  gallery: widget.profile.gallery,
+                                ),
+                              ),
+                            ),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16.0),
+                                      child: AudioPlaybackSymbol(
+                                        play: playbackState ==
+                                            PlaybackState.playing,
+                                        size: 16,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: StreamBuilder<double>(
+                                        stream: playbackInfoStream.map((e) {
+                                          return e.duration.inMilliseconds == 0
+                                              ? 0
+                                              : e.position.inMilliseconds /
+                                                  e.duration.inMilliseconds;
+                                        }),
+                                        initialData: 0.0,
+                                        builder: (context, snapshot) {
+                                          return DecoratedBox(
+                                            decoration: const BoxDecoration(
+                                              color: Color.fromRGBO(
+                                                  0xE1, 0xE1, 0xE1, 1.0),
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(2)),
+                                            ),
+                                            child: FractionallySizedBox(
+                                              widthFactor: snapshot.requireData,
+                                              alignment: Alignment.centerLeft,
+                                              child: Container(
+                                                height: 4,
+                                                decoration: const BoxDecoration(
+                                                  color: Color.fromRGBO(
+                                                      0x3E, 0x97, 0xFF, 1.0),
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(2)),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Button(
+                                        onPressed: () =>
+                                            _showRecordPanel(context),
+                                        child: Container(
+                                          width: 146,
+                                          height: 51,
+                                          alignment: Alignment.center,
+                                          decoration: const BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Color.fromRGBO(
+                                                    0x28, 0x98, 0xFF, 1.0),
+                                                Color.fromRGBO(
+                                                    0x02, 0x7D, 0xED, 1.0),
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(25)),
+                                          ),
+                                          child: Text(
+                                            'Update Voice Bio',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium!
+                                                .copyWith(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Button(
+                                      onPressed: () =>
+                                          _onPlayPause(playbackState),
+                                      child: Container(
+                                        width: 46,
+                                        height: 46,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color.fromRGBO(
+                                              0x05, 0x7F, 0xEF, 1.0),
+                                        ),
+                                        child: Builder(
+                                          builder: (context) {
+                                            switch (playbackState) {
+                                              case PlaybackState.playing:
+                                                return const Icon(
+                                                  Icons.pause_rounded,
+                                                  size: 34,
+                                                  color: Colors.white,
+                                                );
+                                              case PlaybackState.loading:
+                                                return const LoadingIndicator(
+                                                  size: 24,
+                                                  color: Colors.white,
+                                                );
+                                              default:
+                                                return const Icon(
+                                                  Icons.play_arrow_rounded,
+                                                  size: 34,
+                                                  color: Colors.white,
+                                                );
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Flexible(
+                  flex: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 7.0),
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < 3; i++)
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 7,
+                                horizontal: 8,
+                              ),
+                              child: Button(
+                                onPressed: () => _updatePhoto(i),
+                                onLongPressStart:
+                                    (widget.profile.gallery.length <= 1 ||
+                                            i >= widget.profile.gallery.length)
+                                        ? null
+                                        : () => _showDeletePhotoDialog(i),
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Container(
+                                      clipBehavior: Clip.hardEdge,
+                                      decoration: const BoxDecoration(
+                                        color: Color.fromRGBO(
+                                            0xE7, 0xE7, 0xE7, 1.0),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(16),
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            offset: Offset(0, 2),
+                                            blurRadius: 4,
+                                            color: Color.fromRGBO(
+                                                0x00, 0x00, 0x00, 0.25),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Builder(
+                                        builder: (context) {
+                                          if (i >=
+                                              widget.profile.gallery.length) {
+                                            return const Center(
+                                              child: Icon(
+                                                Icons.add_a_photo,
+                                                size: 28,
+                                                color: Color.fromRGBO(
+                                                    0x28, 0x98, 0xFF, 1.0),
+                                              ),
+                                            );
+                                          } else {
+                                            return Image.network(
+                                              widget.profile.gallery[i],
+                                              fit: BoxFit.cover,
+                                              loadingBuilder: loadingBuilder,
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                    Positioned(
+                                      right: 8,
+                                      bottom: 8,
+                                      child: Container(
+                                        width: 23,
+                                        height: 23,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          '${i + 1}',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onPlayPause(PlaybackState playbackState) {
+    switch (playbackState) {
+      case PlaybackState.idle:
+      case PlaybackState.paused:
+        _profileBuilderKey.currentState?.play();
+        break;
+      default:
+        _profileBuilderKey.currentState?.pause();
+    }
+  }
+
+  void _updatePhoto(int index) async {
+    final photo = await _selectPhoto(context);
+    final photoBytes = await photo?.readAsBytes();
+    if (photoBytes != null && mounted) {
+      final notifier = ref.read(userProvider2.notifier);
+      final uploadFuture = notifier.updateGalleryPhoto(
+        index: index,
+        photo: photoBytes,
+      );
+      await withBlockingModal(
+        context: context,
+        label: 'Updating photo',
+        future: uploadFuture,
+      );
+    }
+  }
+
+  void _showDeletePhotoDialog(int index) async {
+    final result = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: const Text('Delete photo?'),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(context).pop(true),
+              isDestructiveAction: true,
+              child: const Text('Delete'),
+            ),
+            CupertinoDialogAction(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+    if (result == true && mounted) {
+      await ref.read(userProvider2.notifier).deleteGalleryPhoto(index);
+    }
+  }
+
+  Future<void> _showRecordPanel(BuildContext context) {
+    _profileBuilderKey.currentState?.pause();
+    return showModalBottomSheet<Uint8List>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return RecordPanelSurface(
+          child: RecordPanel(
+            title: const Text('Updating Audio Bio'),
+            submitLabel: const Text('Update'),
+            onCancel: Navigator.of(context).pop,
+            onSubmit: (audio, _) async {
+              final userStateNotifier = ref.read(userProvider2.notifier);
+              final success = await userStateNotifier.updateAudioBio(audio);
+              if (success) {
+                _animationTimer?.cancel();
+                _animationTimer = Timer(const Duration(milliseconds: 1500), () {
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                  }
+                });
+              }
+              return success;
+            },
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -1242,7 +1458,7 @@ class _SimpleCollectionPhotoPickerState
                     children: [
                       Button(
                         onPressed: () async {
-                          final photo = await _selectPhoto();
+                          final photo = await _selectPhoto(context);
                           if (mounted && photo != null) {
                             widget.onPhotosUpdated(List.of(widget.photos)
                               ..replaceRange(i, i + 1, [photo]));
@@ -1289,48 +1505,6 @@ class _SimpleCollectionPhotoPickerState
         ),
       ],
     );
-  }
-
-  Future<File?> _selectPhoto() async {
-    final source = await showCupertinoDialog<ImageSource>(
-      context: context,
-      builder: (context) {
-        return CupertinoAlertDialog(
-          title: const Text('Pick a photo'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.of(context).pop(ImageSource.camera),
-              child: const Text('Take photo'),
-            ),
-            CupertinoDialogAction(
-              onPressed: () => Navigator.of(context).pop(ImageSource.gallery),
-              child: const Text('Gallery'),
-            ),
-          ],
-        );
-      },
-    );
-    if (!mounted || source == null) {
-      return null;
-    }
-
-    await Permission.camera.request();
-    final picker = ImagePicker();
-    XFile? result;
-    try {
-      result = await picker.pickImage(source: source);
-    } on PlatformException catch (e) {
-      if (e.code == 'camera_access_denied') {
-        result = null;
-      } else {
-        rethrow;
-      }
-    }
-    if (!mounted || result == null) {
-      return null;
-    }
-
-    return File(result.path);
   }
 }
 
@@ -1431,3 +1605,45 @@ class _UploadStep extends StatelessWidget {
 }
 
 enum _CreationStep { photos, upload }
+
+Future<File?> _selectPhoto(BuildContext context) async {
+  final source = await showCupertinoDialog<ImageSource>(
+    context: context,
+    builder: (context) {
+      return CupertinoAlertDialog(
+        title: const Text('Pick a photo'),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(context).pop(ImageSource.camera),
+            child: const Text('Take photo'),
+          ),
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(context).pop(ImageSource.gallery),
+            child: const Text('Gallery'),
+          ),
+        ],
+      );
+    },
+  );
+  if (source == null) {
+    return null;
+  }
+
+  await Permission.camera.request();
+  final picker = ImagePicker();
+  XFile? result;
+  try {
+    result = await picker.pickImage(source: source);
+  } on PlatformException catch (e) {
+    if (e.code == 'camera_access_denied') {
+      result = null;
+    } else {
+      rethrow;
+    }
+  }
+  if (result == null) {
+    return null;
+  }
+
+  return File(result.path);
+}

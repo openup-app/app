@@ -30,10 +30,11 @@ Widget loadingBuilder(
     fit: StackFit.expand,
     alignment: Alignment.center,
     children: [
+      if (progress != null)
+        const LoadingIndicator(
+          color: Colors.black,
+        ),
       child,
-      const LoadingIndicator(
-        color: Colors.black,
-      ),
     ],
   );
 }

@@ -398,7 +398,9 @@ class _NonCinematicPhotoState extends State<NonCinematicPhoto> {
         ),
         if (_loading)
           const Center(
-            child: LoadingIndicator(),
+            child: LoadingIndicator(
+              color: Colors.black,
+            ),
           ),
       ],
     );
