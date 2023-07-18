@@ -144,14 +144,15 @@ class _ChatScreenState extends ConsumerState<ChatPage>
         final listBoxHeight = constraints.maxHeight - appBarHeight;
         return Column(
           children: [
-            SizedBox(
+            Container(
               height: appBarHeight,
+              color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(width: 12),
                   const BackIconButton(
-                    color: Color.fromRGBO(0xD8, 0xD8, 0xD8, 1.0),
+                    color: Color.fromRGBO(0xBD, 0xBD, 0xBD, 1.0),
                   ),
                   const Spacer(),
                   if (_otherProfile != null) ...[
@@ -228,7 +229,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                           padding: EdgeInsets.all(10.0),
                           child: Icon(
                             Icons.more_horiz,
-                            color: Color.fromRGBO(0xD8, 0xD8, 0xD8, 1.0),
+                            color: Color.fromRGBO(0xBD, 0xBD, 0xBD, 1.0),
                           ),
                         );
                       },
@@ -238,9 +239,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                 ],
               ),
             ),
-            Container(
+            SizedBox(
               height: listBoxHeight,
-              color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -364,11 +364,8 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                     right: 0,
                     bottom: 0,
                     height: 82 + MediaQuery.of(context).padding.bottom,
-                    child: ClipRect(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(),
-                      ),
+                    child: const ColoredBox(
+                      color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
                     ),
                   ),
                   Align(

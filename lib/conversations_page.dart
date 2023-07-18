@@ -390,36 +390,30 @@ class _ConversationList extends StatelessWidget {
                           height: 140,
                           child: Row(
                             children: [
-                              SizedBox(
-                                width: 29,
-                                child: Center(
-                                  child: Builder(
-                                    builder: (context) {
-                                      if (chatroom.unreadCount != 0) {
-                                        return Container(
-                                          width: 10,
-                                          height: 10,
-                                          decoration: const BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Color.fromRGBO(
-                                                    0xF6, 0x28, 0x28, 1.0),
-                                                Color.fromRGBO(
-                                                    0xFF, 0x5F, 0x5F, 1.0),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      return const SizedBox.shrink();
-                                    },
+                              const SizedBox(width: 11),
+                              Visibility(
+                                visible: chatroom.unreadCount == 0,
+                                maintainSize: true,
+                                maintainState: true,
+                                maintainAnimation: true,
+                                child: Container(
+                                  width: 13,
+                                  height: 13,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color.fromRGBO(0xF6, 0x28, 0x28, 1.0),
+                                        Color.fromRGBO(0xFF, 0x5F, 0x5F, 1.0),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               Container(
-                                width: 63,
-                                height: 63,
+                                width: 43,
+                                height: 43,
                                 clipBehavior: Clip.hardEdge,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
@@ -431,48 +425,52 @@ class _ConversationList extends StatelessWidget {
                               ),
                               const SizedBox(width: 14),
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                child: Stack(
                                   children: [
-                                    Text(chatroom.profile.name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium!
-                                            .copyWith(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w400)),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      _formatRelativeDate(chatroom.lastUpdated),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium!
-                                          .copyWith(
-                                            fontWeight: FontWeight.w400,
-                                            fontSize: 14,
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          chatroom.profile.name,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
                                           ),
+                                        ),
+                                        if (chatroom.inviteState !=
+                                            ChatroomState.accepted) ...[
+                                          const SizedBox(height: 4),
+                                          const Text(
+                                            'New chat invitation',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 12,
+                                              color: Color.fromRGBO(
+                                                  0xFF, 0x00, 0x00, 1.0),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
-                                    const SizedBox(height: 2),
-                                    if (chatroom.inviteState !=
-                                        ChatroomState.accepted)
-                                      Text(
-                                        'New chat invitation',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium!
-                                            .copyWith(
-                                                fontWeight: FontWeight.w400,
-                                                fontSize: 12,
-                                                color: const Color.fromRGBO(
-                                                    0xFF, 0x00, 0x00, 1.0)),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        _formatRelativeDate(
+                                            chatroom.lastUpdated),
+                                        textAlign: TextAlign.right,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w300,
+                                          fontSize: 14,
+                                        ),
                                       ),
+                                    ),
                                   ],
                                 ),
                               ),
-                              UnreadIndicator(
-                                count: chatroom.unreadCount,
-                              ),
+                              const SizedBox(width: 8),
                               const Icon(
                                 Icons.chevron_right,
                                 color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
