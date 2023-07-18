@@ -99,7 +99,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     );
 
     final profile = ref.read(userProvider).profile!;
-    setState(() => _myPhoto = profile.collection.photos.first.url);
+    setState(() => _myPhoto = profile.photo);
 
     _fetchHistory().then((value) {
       if (mounted) {

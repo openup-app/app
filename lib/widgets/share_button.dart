@@ -125,9 +125,9 @@ class _SharePageState extends ConsumerState<_SharePage>
                 borderRadius: const BorderRadius.all(
                   Radius.circular(24),
                 ),
-                child: CinematicGallery(
+                child: NonCinematicGallery(
                   slideshow: true,
-                  gallery: widget.profile.collection.photos,
+                  gallery: widget.profile.gallery,
                 ),
               ),
             ),

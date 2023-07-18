@@ -13,10 +13,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/collection_photo_stack.dart';
-import 'package:openup/widgets/collections_preview_list.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/phone_number_input.dart';
@@ -96,9 +94,9 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                               child: Stack(
                                 children: [
                                   Positioned.fill(
-                                    child: CinematicGallery(
+                                    child: NonCinematicGallery(
                                       slideshow: true,
-                                      gallery: profile.collection.photos,
+                                      gallery: profile.gallery,
                                     ),
                                   ),
                                   Align(
@@ -194,40 +192,6 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                                     ),
                                   ),
                                 ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            SizedBox(
-                              height: 189,
-                              child: Builder(
-                                builder: (context) {
-                                  final collections =
-                                      signedIn.collections ?? [];
-                                  return CollectionsPreviewList(
-                                    collections: collections,
-                                    play: _showCollectionCreation == false,
-                                    leadingChildren: [
-                                      _BottomButton(
-                                        label: 'Create Collection',
-                                        icon: const Icon(Icons.collections),
-                                        onPressed: () => setState(() =>
-                                            _showCollectionCreation = true),
-                                      ),
-                                    ],
-                                    onView: (index) {
-                                      context.pushNamed(
-                                        'view_profile',
-                                        extra: ViewProfilePageArguments.profile(
-                                          profile: profile.copyWith(
-                                            collection: collections[index],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    onLongPress: (index) => _showDeleteDialog(
-                                        collections[index].collectionId),
-                                  );
-                                },
                               ),
                             ),
                             const SizedBox(height: 16),

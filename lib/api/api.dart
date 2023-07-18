@@ -190,6 +190,47 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, Profile>> updateGalleryPhoto(
+    String uid,
+    int index,
+    Uint8List photo,
+  ) {
+    return _request(
+      makeRequest: () {
+        return http.put(
+          Uri.parse('$_urlBase/profiles/$uid/gallery/$index'),
+          headers: {
+            ..._headers,
+            'Content-Type': 'application/octet-stream',
+          },
+          body: photo,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(Profile.fromJson(json['profile']));
+      },
+    );
+  }
+
+  Future<Either<ApiError, Profile>> deleteGalleryPhoto(
+    String uid,
+    int index,
+  ) {
+    return _request(
+      makeRequest: () {
+        return http.delete(
+          Uri.parse('$_urlBase/profiles/$uid/gallery/$index'),
+          headers: {..._headers},
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(Profile.fromJson(json['profile']));
+      },
+    );
+  }
+
   Future<Either<ApiError, Profile>> updateProfileCollection({
     required String collectionId,
     required String uid,
@@ -838,7 +879,7 @@ class Profile with _$Profile {
     required Gender gender,
     required String photo,
     String? audio,
-    required Collection collection,
+    required List<String> gallery,
     @Default([]) List<MutualContact> mutualContacts,
     @Default(0) int friendCount,
   }) = _Profile;

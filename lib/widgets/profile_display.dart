@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
@@ -137,7 +136,7 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
               key: ValueKey(widget.profile.uid),
               child: NonCinematicGallery(
                 slideshow: widget.play,
-                gallery: widget.profile.collection.photos,
+                gallery: widget.profile.gallery,
               ),
             ),
           ),
@@ -155,57 +154,23 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
             top: 20,
             child: Builder(
               builder: (context) {
-                const button = _ProfileButtonContents(
-                  icon: Icon(
-                    CupertinoIcons.ellipsis,
-                    color: Colors.black,
-                    size: 20,
-                  ),
-                  size: 29,
-                );
                 if (widget.profile.uid == myUid) {
-                  return Button(
-                    onPressed: () {
-                      showCupertinoModalPopup(
-                        context: context,
-                        barrierColor:
-                            const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-                        builder: (context) {
-                          return CupertinoActionSheet(
-                            cancelButton: CupertinoActionSheetAction(
-                              onPressed: Navigator.of(context).pop,
-                              child: const Text('Cancel'),
-                            ),
-                            actions: [
-                              CupertinoActionSheetAction(
-                                onPressed: () async {
-                                  await withBlockingModal(
-                                    context: context,
-                                    label: 'Updating profile',
-                                    future: ref
-                                        .read(userProvider2.notifier)
-                                        .updateCollection(widget
-                                            .profile.collection.collectionId),
-                                  );
-                                  if (mounted) {
-                                    Navigator.of(context).pop();
-                                  }
-                                },
-                                child: const Text('Set as profile'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    child: button,
-                  );
+                  return const SizedBox.shrink();
                 } else {
                   return ReportBlockPopupMenu2(
                     uid: widget.profile.uid,
                     name: widget.profile.name,
                     onBlock: widget.onBlock,
-                    builder: (context) => button,
+                    builder: (context) {
+                      return const _ProfileButtonContents(
+                        icon: Icon(
+                          CupertinoIcons.ellipsis,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                        size: 29,
+                      );
+                    },
                   );
                 }
               },
@@ -570,7 +535,7 @@ class _MutualFriendsModalState extends ConsumerState<_MutualFriendsModal> {
                     shape: BoxShape.circle,
                   ),
                   child: Image.network(
-                    profile.collection.photos.first.url,
+                    profile.photo,
                     fit: BoxFit.cover,
                   ),
                 ),

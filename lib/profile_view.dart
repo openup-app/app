@@ -163,8 +163,8 @@ class _ProfileViewState extends State<ProfileView> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      CinematicGallery(
-                        gallery: widget.profile.collection.photos,
+                      NonCinematicGallery(
+                        gallery: widget.profile.gallery,
                         slideshow: !_audioPaused,
                       ),
                       if (!isMe)
