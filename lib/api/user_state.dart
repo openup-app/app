@@ -123,7 +123,6 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     state = _SignedIn(account: account);
 
     _cacheChatrooms();
-    _cacheCollections(account.profile.uid);
   }
 
   Future<void> _cacheChatrooms() async {
