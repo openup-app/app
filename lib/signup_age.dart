@@ -40,14 +40,15 @@ class _SignupAgeState extends ConsumerState<SignupAge> {
             alignment: Alignment.topCenter,
             child: Stack(
               alignment: Alignment.center,
-              children: const [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: BackIconButton(
-                    color: Colors.black,
+              children: [
+                if (ModalRoute.of(context)?.canPop == true)
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: BackIconButton(
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-                Text(
+                const Text(
                   'Age',
                   style: TextStyle(
                     fontSize: 19,
