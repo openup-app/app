@@ -258,6 +258,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
                   widget.initialLocation.latLong.longitude,
                 ),
                 zoom: _initialZoom,
+                tilt: _preferredTilt,
               ),
               tiltGesturesEnabled: false,
               rotateGesturesEnabled: false,
