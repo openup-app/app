@@ -392,7 +392,7 @@ class _ConversationList extends StatelessWidget {
                             children: [
                               const SizedBox(width: 11),
                               Visibility(
-                                visible: chatroom.unreadCount == 0,
+                                visible: chatroom.unreadCount != 0,
                                 maintainSize: true,
                                 maintainState: true,
                                 maintainAnimation: true,
