@@ -18,7 +18,11 @@ class SignupAge extends ConsumerStatefulWidget {
 class _SignupAgeState extends ConsumerState<SignupAge> {
   static const _minAge = 13;
   static const _maxAge = 99;
-  int _age = _minAge;
+  static const _targetAge = 17;
+  int _age = _targetAge;
+
+  final _scrollController =
+      FixedExtentScrollController(initialItem: _targetAge - _minAge);
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +88,7 @@ class _SignupAgeState extends ConsumerState<SignupAge> {
                     ),
                   ),
                   CupertinoPicker(
+                    scrollController: _scrollController,
                     itemExtent: 40,
                     diameterRatio: 40,
                     squeeze: 1.0,
