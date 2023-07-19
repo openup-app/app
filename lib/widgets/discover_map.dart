@@ -375,7 +375,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   }
 
   void _initMapController(GoogleMapController controller) async {
-    controller.setMapStyle(_nightMapStyle());
+    controller.setMapStyle(_mapStyle());
     setState(() => _mapController = controller);
   }
 
@@ -872,7 +872,7 @@ class RenderedProfile {
 
 enum MarkerRenderStatus { ready, rendering }
 
-String _nightMapStyle() {
+String _mapStyle() {
   return jsonEncode(
     [
       {
@@ -899,8 +899,22 @@ String _nightMapStyle() {
         ]
       },
       {
+        "featureType": "poi",
+        "elementType": "geometry.fill",
+        "stylers": [
+          {"color": "#c0ed98"}
+        ]
+      },
+      {
         "featureType": "poi.attraction",
         "elementType": "labels.text",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.attraction",
+        "elementType": "labels.icon",
         "stylers": [
           {"visibility": "off"}
         ]
@@ -956,7 +970,21 @@ String _nightMapStyle() {
       },
       {
         "featureType": "poi.park",
+        "elementType": "labels.text",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.park",
         "elementType": "labels.icon",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
+        "featureType": "poi.place_of_worship",
+        "elementType": "labels.text",
         "stylers": [
           {"visibility": "off"}
         ]
@@ -969,6 +997,20 @@ String _nightMapStyle() {
         ]
       },
       {
+        "featureType": "poi.school",
+        "elementType": "labels.text",
+        "stylers": [
+          {"visibility": "on"}
+        ]
+      },
+      {
+        "featureType": "poi.school",
+        "elementType": "labels.icon",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
         "featureType": "poi.sports_complex",
         "elementType": "geometry.fill",
         "stylers": [
@@ -983,19 +1025,19 @@ String _nightMapStyle() {
         ]
       },
       {
+        "featureType": "poi.sports_complex",
+        "elementType": "labels.icon",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
         "featureType": "road",
         "elementType": "all",
         "stylers": [
           {"weight": "1.00"},
           {"gamma": "1.8"},
           {"saturation": "0"}
-        ]
-      },
-      {
-        "featureType": "road",
-        "elementType": "geometry.fill",
-        "stylers": [
-          {"hue": "#ffb200"}
         ]
       },
       {
@@ -1083,6 +1125,13 @@ String _nightMapStyle() {
         ]
       },
       {
+        "featureType": "road.arterial",
+        "elementType": "labels.icon",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
         "featureType": "road.local",
         "elementType": "geometry",
         "stylers": [
@@ -1114,6 +1163,13 @@ String _nightMapStyle() {
         ]
       },
       {
+        "featureType": "road.local",
+        "elementType": "labels.icon",
+        "stylers": [
+          {"visibility": "off"}
+        ]
+      },
+      {
         "featureType": "transit",
         "elementType": "labels.icon",
         "stylers": [
@@ -1127,6 +1183,14 @@ String _nightMapStyle() {
           {"saturation": "23"},
           {"lightness": "33"},
           {"gamma": "0.80"}
+        ]
+      },
+      {
+        "featureType": "transit.station.airport",
+        "elementType": "geometry.fill",
+        "stylers": [
+          {"visibility": "on"},
+          {"color": "#faf5ed"}
         ]
       },
       {
