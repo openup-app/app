@@ -856,124 +856,135 @@ class _ProfilePanelState extends State<_ProfilePanel> {
           crossFadeState: widget.selectedProfile == null
               ? CrossFadeState.showFirst
               : CrossFadeState.showSecond,
-          firstChild: GestureDetector(
-            onVerticalDragUpdate: (details) {
-              if (details.delta.dy < 0) {
-                widget.onShowSettings();
-              }
-            },
-            child: Container(
-              height: 72 + MediaQuery.of(context).padding.bottom,
-              alignment: Alignment.center,
-              clipBehavior: Clip.hardEdge,
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-                color: Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
-                boxShadow: [
-                  BoxShadow(
-                    offset: Offset(0, 0),
-                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                    blurRadius: 13,
-                  ),
-                ],
+          firstChild: Container(
+            height: 72 + MediaQuery.of(context).padding.bottom,
+            alignment: Alignment.center,
+            clipBehavior: Clip.hardEdge,
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
               ),
-              child: Container(
-                clipBehavior: Clip.hardEdge,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(24),
-                  ),
-                  color: Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
-                  boxShadow: [
-                    BoxShadow(
-                      offset: Offset(0, 0),
-                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                      blurRadius: 13,
-                    ),
-                  ],
+              color: Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
+              boxShadow: [
+                BoxShadow(
+                  offset: Offset(0, 0),
+                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                  blurRadius: 13,
                 ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 7),
-                    const Center(
-                      child: DragHandle(),
+              ],
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  clipBehavior: Clip.hardEdge,
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(24),
                     ),
-                    Row(
-                      children: [
-                        const SizedBox(width: 8),
-                        Button(
-                          onPressed: widget.onShowSettings,
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            clipBehavior: Clip.hardEdge,
-                            alignment: Alignment.center,
-                            margin: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.person,
-                              size: 22,
-                              color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Button(
-                            onPressed: () async {
-                              final prevGender = widget.gender;
-                              final gender = await _showPreferencesSheet();
-                              if (mounted && gender != prevGender) {
-                                widget.onGenderChanged(gender);
-                              }
-                            },
+                    color: Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
+                    boxShadow: [
+                      BoxShadow(
+                        offset: Offset(0, 0),
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                        blurRadius: 13,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 7),
+                      const Center(
+                        child: DragHandle(),
+                      ),
+                      Row(
+                        children: [
+                          const SizedBox(width: 8),
+                          Button(
+                            onPressed: widget.onShowSettings,
                             child: Container(
+                              width: 32,
                               height: 32,
                               clipBehavior: Clip.hardEdge,
+                              alignment: Alignment.center,
                               margin: const EdgeInsets.all(8),
                               decoration: const BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(11),
-                                ),
+                                shape: BoxShape.circle,
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  SizedBox(width: 18),
-                                  Icon(
-                                    Icons.search,
-                                    size: 18,
-                                    color:
-                                        Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-                                  ),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'Who are you searching for?',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400,
-                                      color:
-                                          Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-                                    ),
-                                  ),
-                                ],
+                              child: const Icon(
+                                Icons.person,
+                                size: 22,
+                                color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                    ),
-                  ],
+                          Expanded(
+                            child: Button(
+                              onPressed: () async {
+                                final prevGender = widget.gender;
+                                final gender = await _showPreferencesSheet();
+                                if (mounted && gender != prevGender) {
+                                  widget.onGenderChanged(gender);
+                                }
+                              },
+                              child: Container(
+                                height: 32,
+                                clipBehavior: Clip.hardEdge,
+                                margin: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(11),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    SizedBox(width: 18),
+                                    Icon(
+                                      Icons.search,
+                                      size: 18,
+                                      color:
+                                          Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Who are you searching for?',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
+                                        color: Color.fromRGBO(
+                                            0x8D, 0x8D, 0x8D, 1.0),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  right: 0,
+                  bottom: MediaQuery.of(context).padding.bottom,
+                  child: GestureDetector(
+                    onVerticalDragUpdate: (details) {
+                      if (details.delta.dy < 0) {
+                        widget.onShowSettings();
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
           secondChild: // Must live above PageView.builder (otherwise duplicate global key)
