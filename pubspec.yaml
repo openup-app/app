@@ -1,7 +1,7 @@
 name: openup
 description: Video and voice calling app with strangers
 publish_to: "none"
-version: 1.4.25+68
+version: 1.4.26+69
 
 environment:
   sdk: ">=2.17.0 <3.0.0"
