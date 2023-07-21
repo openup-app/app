@@ -907,16 +907,35 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                               width: 32,
                               height: 32,
                               clipBehavior: Clip.hardEdge,
-                              alignment: Alignment.center,
                               margin: const EdgeInsets.all(8),
                               decoration: const BoxDecoration(
                                 color: Colors.white,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(
-                                Icons.person,
-                                size: 22,
-                                color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                              child: Consumer(
+                                builder: (context, ref, child) {
+                                  final myProfile =
+                                      ref.watch(userProvider2.select((p) {
+                                    return p.map(
+                                      guest: (_) => null,
+                                      signedIn: (signedIn) =>
+                                          signedIn.account.profile,
+                                    );
+                                  }));
+                                  if (myProfile != null) {
+                                    return Image.network(
+                                      myProfile.photo,
+                                      fit: BoxFit.cover,
+                                    );
+                                  } else {
+                                    return const Icon(
+                                      Icons.person,
+                                      size: 22,
+                                      color:
+                                          Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                                    );
+                                  }
+                                },
                               ),
                             ),
                           ),
