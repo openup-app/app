@@ -204,6 +204,16 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
           );
         }
         return false;
+      } else if (e.code == 'quota-exceeded') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'We are experiencing high demand, please try again later'),
+            ),
+          );
+        }
+        return false;
       }
 
       if (mounted) {
