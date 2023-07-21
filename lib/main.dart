@@ -182,17 +182,21 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   }
 
   void _initNotifications() {
-    ref.listenManual<bool>(authProvider.select((p) {
-      return p.map(
-        guest: (_) => false,
-        signedIn: (signedIn) => true,
-      );
-    }), (previous, next) {
-      _notificationManager?.dispose();
-      _notificationManager = NotificationManager(
-        api: next ? ref.read(apiProvider) : null,
-      );
-    });
+    ref.listenManual<bool>(
+      authProvider.select((p) {
+        return p.map(
+          guest: (_) => false,
+          signedIn: (signedIn) => true,
+        );
+      }),
+      (previous, next) {
+        _notificationManager?.dispose();
+        _notificationManager = NotificationManager(
+          api: next ? ref.read(apiProvider) : null,
+        );
+      },
+      fireImmediately: true,
+    );
   }
 
   void _initInAppNotifications() {

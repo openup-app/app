@@ -46,6 +46,7 @@ Future<void> _initializeNotifications() async {
   _iosNotificationTokenController = StreamController<String?>.broadcast();
   if (Platform.isIOS) {
     _apnsPushConnector = ApnsPushConnector();
+    _apnsPushConnector?.configureApns();
   }
 }
 
@@ -79,10 +80,9 @@ Stream<String?> get onNotificationMessagingToken async* {
         _iosNotificationTokenController?.add(token);
       });
       yield _apnsPushConnector?.token.value;
-      // _apnsPushConnector?.token.addListener(() {
-      //   // Seems to always be a null token
-      //   _iosNotificationTokenController?.add(_apnsPushConnector?.token.value);
-      // });
+      _apnsPushConnector?.token.addListener(() {
+        _iosNotificationTokenController?.add(_apnsPushConnector?.token.value);
+      });
     }
     if (_iosNotificationTokenController != null) {
       yield* _iosNotificationTokenController!.stream;

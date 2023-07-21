@@ -7,6 +7,7 @@ import GoogleMaps
 @objc class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
   var eventChannel: FlutterEventChannel?;
   var notificationTokenEventSink: FlutterEventSink?;
+  var deviceToken: Data?;
 
   override func application(
     _ application: UIApplication,
@@ -15,6 +16,9 @@ import GoogleMaps
     GMSServices.provideAPIKey("AIzaSyBgwJH4Tz0zMjPJLU5F9n4k2iuneDN1OmM");
     GeneratedPluginRegistrant.register(with: self)
 
+    if #available(iOS 10.0, *) {
+      UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
+    }
 
     guard let controller = window?.rootViewController as? FlutterViewController else {
       fatalError("rootViewController is not type FlutterViewController")
@@ -26,6 +30,7 @@ import GoogleMaps
   }
 
   override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    self.deviceToken = deviceToken;
     // Token for Firebase Auth, see: https://github.com/firebase/flutterfire/issues/4970#issuecomment-894834223
     Auth.auth().setAPNSToken(deviceToken, type: AuthAPNSTokenType.unknown)
     
@@ -45,6 +50,9 @@ import GoogleMaps
   // Handle EventChannel
   func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
     self.notificationTokenEventSink = events;
+    if let deviceToken = self.deviceToken {
+      events(deviceToken.hexString);
+    }
     return nil
   }
 
