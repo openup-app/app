@@ -9,20 +9,22 @@ import 'package:openup/api/api.dart';
 
 typedef DeepLinkCallback = void Function(String path);
 ApnsPushConnector? _apnsPushConnector;
-StreamController<String?>? _iosNotificationTokenController;
+late final StreamController<String?> _iosNotificationTokenController;
 StreamSubscription? _iosEventChannelTokenSubscription;
 
 class NotificationManager {
   final Api? api;
-  StreamSubscription? _tokenSubscription;
 
   NotificationManager({
     required this.api,
   }) {
-    _initializeNotifications().then((_) {
-      _tokenSubscription =
-          onNotificationMessagingToken.listen(_onNotificationToken);
-    });
+    if (Platform.isIOS) {
+      _apnsPushConnector = ApnsPushConnector();
+      _apnsPushConnector?.shouldPresent = (_) => Future.value(true);
+      _apnsPushConnector?.configureApns();
+    }
+    _iosNotificationTokenController = StreamController<String?>.broadcast();
+    _tokenStream.listen(_onNotificationToken);
   }
 
   void _onNotificationToken(String? token) {
@@ -36,56 +38,41 @@ class NotificationManager {
     }
   }
 
-  void dispose() {
-    _tokenSubscription?.cancel();
-    disposeNotifications();
-  }
-}
+  void dispose() => _disposeNotifications();
 
-Future<void> _initializeNotifications() async {
-  _iosNotificationTokenController = StreamController<String?>.broadcast();
-  if (Platform.isIOS) {
-    _apnsPushConnector = ApnsPushConnector();
-    _apnsPushConnector?.configureApns();
-  }
-}
-
-void disposeNotifications() {
-  _iosNotificationTokenController?.close();
-  _iosNotificationTokenController = null;
-  _iosEventChannelTokenSubscription?.cancel();
-  _iosEventChannelTokenSubscription = null;
-  if (Platform.isIOS) {
-    _apnsPushConnector = null;
-  }
-}
-
-Stream<String?> get onNotificationMessagingToken async* {
-  if (Platform.isAndroid) {
-    yield await FirebaseMessaging.instance.getToken();
-    yield* FirebaseMessaging.instance.onTokenRefresh;
-  } else if (Platform.isIOS) {
-    final status = await _apnsPushConnector?.getAuthorizationStatus();
-    if (status != ApnsAuthorizationStatus.authorized) {
-      await _apnsPushConnector
-          ?.requestNotificationPermissions(const IosNotificationSettings());
+  void _disposeNotifications() {
+    _iosEventChannelTokenSubscription?.cancel();
+    _iosNotificationTokenController.close();
+    if (Platform.isIOS) {
+      _apnsPushConnector = null;
     }
+  }
 
-    if (await _apnsPushConnector?.getAuthorizationStatus() ==
-        ApnsAuthorizationStatus.authorized) {
-      // APNSPushConnector is receving a null token, so manually get it ourselves
-      const eventChannel = EventChannel('com.openupdating/notification_tokens');
-      _iosEventChannelTokenSubscription =
-          eventChannel.receiveBroadcastStream().listen((token) {
-        _iosNotificationTokenController?.add(token);
-      });
-      yield _apnsPushConnector?.token.value;
-      _apnsPushConnector?.token.addListener(() {
-        _iosNotificationTokenController?.add(_apnsPushConnector?.token.value);
-      });
-    }
-    if (_iosNotificationTokenController != null) {
-      yield* _iosNotificationTokenController!.stream;
+  Stream<String?> get _tokenStream async* {
+    if (Platform.isAndroid) {
+      yield await FirebaseMessaging.instance.getToken();
+      yield* FirebaseMessaging.instance.onTokenRefresh;
+    } else if (Platform.isIOS) {
+      var status = await _apnsPushConnector?.getAuthorizationStatus();
+      if (status != ApnsAuthorizationStatus.authorized) {
+        await _apnsPushConnector
+            ?.requestNotificationPermissions(const IosNotificationSettings());
+      }
+
+      status = await _apnsPushConnector?.getAuthorizationStatus();
+      if (status == ApnsAuthorizationStatus.authorized) {
+        // APNSPushConnector is receving a null token, so manually get it ourselves
+        const eventChannel =
+            EventChannel('com.openupdating/notification_tokens');
+        _iosEventChannelTokenSubscription =
+            eventChannel.receiveBroadcastStream().listen((token) {
+          _iosNotificationTokenController.add(token);
+        });
+        _apnsPushConnector?.token.addListener(() {
+          _iosNotificationTokenController.add(_apnsPushConnector?.token.value);
+        });
+      }
+      yield* _iosNotificationTokenController.stream;
     }
   }
 }

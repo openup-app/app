@@ -4,16 +4,13 @@ import Flutter
 import GoogleMaps
 
 @UIApplicationMain
-@objc class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
-  var eventChannel: FlutterEventChannel?;
-  var notificationTokenEventSink: FlutterEventSink?;
-  var deviceToken: Data?;
+@objc class AppDelegate : FlutterAppDelegate {
+  var notificationTokenStreamHandler: NotificationTokenStreamHandler?;
 
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GMSServices.provideAPIKey("AIzaSyBgwJH4Tz0zMjPJLU5F9n4k2iuneDN1OmM");
     GeneratedPluginRegistrant.register(with: self)
 
     if #available(iOS 10.0, *) {
@@ -23,19 +20,21 @@ import GoogleMaps
     guard let controller = window?.rootViewController as? FlutterViewController else {
       fatalError("rootViewController is not type FlutterViewController")
     }
-    self.eventChannel = FlutterEventChannel(name: "com.openupdating/notification_tokens", binaryMessenger: controller.binaryMessenger);
-    self.eventChannel?.setStreamHandler(self);
+
+    self.notificationTokenStreamHandler = NotificationTokenStreamHandler(controller);
+
+    // Google Mobile Services for using Google Maps
+    GMSServices.provideAPIKey("AIzaSyBgwJH4Tz0zMjPJLU5F9n4k2iuneDN1OmM");
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-    self.deviceToken = deviceToken;
     // Token for Firebase Auth, see: https://github.com/firebase/flutterfire/issues/4970#issuecomment-894834223
     Auth.auth().setAPNSToken(deviceToken, type: AuthAPNSTokenType.unknown)
-    
-    // Token to handle ourselves in Dart
-    self.notificationTokenEventSink?(deviceToken.hexString);
+
+    // Further use of push notification token in Flutter app
+    self.notificationTokenStreamHandler?.onToken(deviceToken);
   }
 
   override func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
@@ -46,22 +45,38 @@ import GoogleMaps
     }
     // Other plugins to handle push notifications
   }
+}
+
+/// Notifies the Flutter app about APNs tokens via an EventChannel.
+class NotificationTokenStreamHandler : NSObject, FlutterStreamHandler {
+  var eventChannel: FlutterEventChannel?;
+  var eventSink: FlutterEventSink?;
+  var deviceToken: Data?;
+
+  init(_ controller: FlutterViewController) {
+    super.init();
+    self.eventChannel = FlutterEventChannel(name: "com.openupdating/notification_tokens", binaryMessenger: controller.binaryMessenger);
+    self.eventChannel?.setStreamHandler(self);
+  }
+
+  public func onToken(_ deviceToken: Data) {
+    self.deviceToken = deviceToken;
+    self.eventSink?(deviceToken.hexString);
+  }
 
   // Handle EventChannel
-  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-    self.notificationTokenEventSink = events;
+  public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    self.eventSink = events;
     if let deviceToken = self.deviceToken {
-      events(deviceToken.hexString);
+      onToken(deviceToken);
     }
     return nil
   }
 
   // Handler for EventChannel
-  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+  public func onCancel(withArguments arguments: Any?) -> FlutterError? {
     return nil;  
   }
-
-
 }
 
 extension Data {
