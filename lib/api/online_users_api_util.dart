@@ -29,6 +29,7 @@ final onlineUsersProvider =
         }
       }
     },
+    fireImmediately: true,
   );
 
   ref.onDispose(onlineUsersApi.dispose);

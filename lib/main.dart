@@ -41,8 +41,8 @@ import 'package:openup/signup_photos.dart';
 import 'package:openup/signup_friends.dart';
 import 'package:openup/util/key_value_store_service.dart';
 import 'package:openup/view_profile_page.dart';
+import 'package:openup/widgets/online_users.dart';
 import 'package:openup/widgets/restart_app.dart';
-import 'package:openup/widgets/system_ui_styling.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stack_trace/stack_trace.dart' as stack_trace;
@@ -112,7 +112,9 @@ void main() async {
               );
             })
           ],
-          child: const OpenupApp(),
+          child: const OnlineUsersWatcher(
+            child: OpenupApp(),
+          ),
         ),
       ),
     );
