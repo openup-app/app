@@ -78,7 +78,7 @@ class _PhoneInputState extends State<PhoneInput> {
               ),
               onSelected: (country) {
                 setState(() => _country = country);
-                _validatePhoneNoPrefix(_phoneController.text);
+                _validatePhoneWithPrefix(_phoneController.text);
               },
               itemBuilder: (context) {
                 return [
@@ -151,12 +151,16 @@ class _PhoneInputState extends State<PhoneInput> {
               FilteringTextInputFormatter.deny(RegExp(r'\s')),
             ],
             onChanged: (_) {
-              final error = _validatePhoneNoPrefix(_phoneController.text);
+              final value = _phoneController.text;
+              final String phoneWithPrefix;
+              if (!value.startsWith('+')) {
+                phoneWithPrefix = '+${_country.callingCode}$value';
+              } else {
+                phoneWithPrefix = value;
+              }
+              final error = _validatePhoneWithPrefix(phoneWithPrefix);
               widget.onValidationError(error);
-              widget.onChanged(
-                '+${_country.callingCode}${_phoneController.text}',
-                error == null,
-              );
+              widget.onChanged(phoneWithPrefix, error == null);
             },
             onEditingComplete: () {
               FocusScope.of(context).unfocus();
@@ -177,14 +181,13 @@ class _PhoneInputState extends State<PhoneInput> {
     );
   }
 
-  String? _validatePhoneNoPrefix(String? value) {
+  String? _validatePhoneWithPrefix(String? value) {
+    print('vaule is $value');
     if (value == null) {
       return 'Enter a phone number';
     }
 
-    final phoneNumberWithPrefix = '+${_country.callingCode}$value';
-    if (_phoneRegex.stringMatch(phoneNumberWithPrefix) ==
-        phoneNumberWithPrefix) {
+    if (_phoneRegex.stringMatch(value) == value) {
       return null;
     } else {
       return 'Invalid phone number';
