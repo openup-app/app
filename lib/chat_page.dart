@@ -137,282 +137,278 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       ?..sort(_dateAscendingMessageSorter);
     final items = _messagesToItems(messages ?? []);
     final chatroom = _chatroom;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const appBarHeight = 84.0;
-        const bottomButtonHeight = 46.0 + 16 * 2;
-        final listBoxHeight = constraints.maxHeight - appBarHeight;
-        return Column(
-          children: [
-            Container(
-              height: appBarHeight,
-              color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(width: 12),
-                  const BackIconButton(
-                    color: Color.fromRGBO(0xBD, 0xBD, 0xBD, 1.0),
-                  ),
-                  const Spacer(),
-                  if (_otherProfile != null) ...[
-                    Button(
-                      onPressed: () {
-                        context.pushNamed(
-                          'view_profile',
-                          extra: ViewProfilePageArguments.profile(
-                            profile: _otherProfile!,
-                          ),
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Stack(
-                              alignment: Alignment.center,
-                              clipBehavior: Clip.none,
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  clipBehavior: Clip.hardEdge,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: _otherProfile?.photo == null
-                                      ? const SizedBox.shrink()
-                                      : Image.network(
-                                          _otherProfile!.photo,
-                                          fit: BoxFit.cover,
-                                        ),
-                                ),
-                                Positioned(
-                                  left: -6,
-                                  top: -34,
-                                  width: 78,
-                                  height: 78,
-                                  child: OnlineIndicatorBuilder(
-                                    uid: _otherProfile!.uid,
-                                    builder: (context, online) {
-                                      return online
-                                          ? const OnlineIndicator()
-                                          : const SizedBox.shrink();
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 12),
-                            AutoSizeText(
-                              _otherProfile?.name ?? '',
-                              minFontSize: 16,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+    return ColoredBox(
+      // Background for iOS back gesture
+      color: Colors.white,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const appBarHeight = 84.0;
+          final listBoxHeight = constraints.maxHeight - appBarHeight;
+          return Column(
+            children: [
+              Container(
+                height: appBarHeight,
+                color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(width: 12),
+                    const BackIconButton(
+                      color: Color.fromRGBO(0xBD, 0xBD, 0xBD, 1.0),
                     ),
                     const Spacer(),
-                    ReportBlockPopupMenu2(
-                      uid: _otherProfile!.uid,
-                      name: _otherProfile!.name,
-                      onBlock: Navigator.of(context).pop,
-                      builder: (context) {
-                        return const Padding(
-                          padding: EdgeInsets.all(10.0),
-                          child: Icon(
-                            Icons.more_horiz,
-                            color: Color.fromRGBO(0xBD, 0xBD, 0xBD, 1.0),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                ],
-              ),
-            ),
-            SizedBox(
-              height: listBoxHeight,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  if (messages != null &&
-                      messages.isEmpty &&
-                      _otherProfile != null)
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: listBoxHeight,
-                      child: Center(
+                    if (_otherProfile != null) ...[
+                      Button(
+                        onPressed: () {
+                          context.pushNamed(
+                            'view_profile',
+                            extra: ViewProfilePageArguments.profile(
+                              profile: _otherProfile!,
+                            ),
+                          );
+                        },
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Text(
-                            'Send your first message to ${_otherProfile!.name}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                    color: const Color.fromRGBO(
-                                        0x70, 0x70, 0x70, 1.0)),
-                            textAlign: TextAlign.center,
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Stack(
+                                alignment: Alignment.center,
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    clipBehavior: Clip.hardEdge,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: _otherProfile?.photo == null
+                                        ? const SizedBox.shrink()
+                                        : Image.network(
+                                            _otherProfile!.photo,
+                                            fit: BoxFit.cover,
+                                          ),
+                                  ),
+                                  Positioned(
+                                    left: -6,
+                                    top: -34,
+                                    width: 78,
+                                    height: 78,
+                                    child: OnlineIndicatorBuilder(
+                                      uid: _otherProfile!.uid,
+                                      builder: (context, online) {
+                                        return online
+                                            ? const OnlineIndicator()
+                                            : const SizedBox.shrink();
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 12),
+                              AutoSizeText(
+                                _otherProfile?.name ?? '',
+                                minFontSize: 16,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    )
-                  else if (items.isNotEmpty && chatroom != null) ...[
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: listBoxHeight,
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        padding: EdgeInsets.only(
-                            bottom: 90 + MediaQuery.of(context).padding.bottom),
-                        itemExtent: _itemExtent,
-                        itemCount: items.length,
-                        itemBuilder: (context, index) {
-                          final item = items[index];
-                          return item.when(
-                            info: (info) {
-                              return SizedBox(
-                                height: _itemExtent,
-                                child: Center(
-                                  child: Text(
-                                    'Voice Message\n${formatLongDateAndTime(info.date.toLocal())}',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.5,
-                                      color:
-                                          Color.fromRGBO(0x8C, 0x8C, 0x8C, 1.0),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                            message: (message) {
-                              final myUid = ref.read(userProvider).uid;
-                              final fromMe = message.uid == myUid;
-                              final isCurrent =
-                                  _playbackMessageId == message.messageId;
-                              final playbackStream = isCurrent
-                                  ? _audio.playbackInfoStream
-                                  : Stream.fromIterable([
-                                      PlaybackInfo(
-                                        position: Duration.zero,
-                                        duration: message.content.duration,
-                                        state: PlaybackState.idle,
-                                        frequencies: [],
-                                      )
-                                    ]);
-                              return StreamBuilder<PlaybackInfo>(
-                                key: ValueKey(message.messageId ?? ''),
-                                initialData: const PlaybackInfo(),
-                                stream: playbackStream,
-                                builder: (context, snapshot) {
-                                  final playbackInfo = snapshot.requireData;
-                                  final isPlaying = playbackInfo.state ==
-                                      PlaybackState.playing;
-                                  return AudioChatMessage(
-                                    message: message,
-                                    fromMe: fromMe,
-                                    photo: (fromMe
-                                            ? _myPhoto
-                                            : _otherProfile?.photo) ??
-                                        '',
-                                    playbackInfo: playbackInfo,
-                                    height: _itemExtent,
-                                    onPressed: () async {
-                                      if (isPlaying) {
-                                        _audio.stop();
-                                        setState(
-                                            () => _playbackMessageId = null);
-                                      } else {
-                                        setState(() => _playbackMessageId =
-                                            message.messageId);
-                                        await _audio
-                                            .setUrl(message.content.url);
-                                        if (mounted) {
-                                          _audio.play();
-                                        }
-                                      }
-                                    },
-                                  );
-                                },
-                              );
-                            },
+                      const Spacer(),
+                      ReportBlockPopupMenu2(
+                        uid: _otherProfile!.uid,
+                        name: _otherProfile!.name,
+                        onBlock: Navigator.of(context).pop,
+                        builder: (context) {
+                          return const Padding(
+                            padding: EdgeInsets.all(10.0),
+                            child: Icon(
+                              Icons.more_horiz,
+                              color: Color.fromRGBO(0xBD, 0xBD, 0xBD, 1.0),
+                            ),
                           );
                         },
                       ),
+                      const SizedBox(width: 12),
+                    ],
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: listBoxHeight,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    if (messages != null &&
+                        messages.isEmpty &&
+                        _otherProfile != null)
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: listBoxHeight,
+                        child: Center(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Text(
+                              'Send your first message to ${_otherProfile!.name}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w400,
+                                      color: const Color.fromRGBO(
+                                          0x70, 0x70, 0x70, 1.0)),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      )
+                    else if (items.isNotEmpty && chatroom != null) ...[
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: listBoxHeight,
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          padding: EdgeInsets.only(
+                              bottom:
+                                  90 + MediaQuery.of(context).padding.bottom),
+                          itemExtent: _itemExtent,
+                          itemCount: items.length,
+                          itemBuilder: (context, index) {
+                            final item = items[index];
+                            return item.when(
+                              info: (info) {
+                                return SizedBox(
+                                  height: _itemExtent,
+                                  child: Center(
+                                    child: Text(
+                                      'Voice Message\n${formatLongDateAndTime(info.date.toLocal())}',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w400,
+                                        height: 1.5,
+                                        color: Color.fromRGBO(
+                                            0x8C, 0x8C, 0x8C, 1.0),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              message: (message) {
+                                final myUid = ref.read(userProvider).uid;
+                                final fromMe = message.uid == myUid;
+                                final isCurrent =
+                                    _playbackMessageId == message.messageId;
+                                final playbackStream = isCurrent
+                                    ? _audio.playbackInfoStream
+                                    : Stream.fromIterable([
+                                        PlaybackInfo(
+                                          position: Duration.zero,
+                                          duration: message.content.duration,
+                                          state: PlaybackState.idle,
+                                          frequencies: [],
+                                        )
+                                      ]);
+                                return StreamBuilder<PlaybackInfo>(
+                                  key: ValueKey(message.messageId ?? ''),
+                                  initialData: const PlaybackInfo(),
+                                  stream: playbackStream,
+                                  builder: (context, snapshot) {
+                                    final playbackInfo = snapshot.requireData;
+                                    final isPlaying = playbackInfo.state ==
+                                        PlaybackState.playing;
+                                    return AudioChatMessage(
+                                      message: message,
+                                      fromMe: fromMe,
+                                      photo: (fromMe
+                                              ? _myPhoto
+                                              : _otherProfile?.photo) ??
+                                          '',
+                                      playbackInfo: playbackInfo,
+                                      height: _itemExtent,
+                                      onPressed: () async {
+                                        if (isPlaying) {
+                                          _audio.stop();
+                                          setState(
+                                              () => _playbackMessageId = null);
+                                        } else {
+                                          setState(() => _playbackMessageId =
+                                              message.messageId);
+                                          await _audio
+                                              .setUrl(message.content.url);
+                                          if (mounted) {
+                                            _audio.play();
+                                          }
+                                        }
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: 80 + MediaQuery.of(context).padding.bottom,
+                      child: const ColoredBox(
+                        color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).padding.bottom + 16),
+                        child: _RecordButton(
+                          onPressed: () async {
+                            _audio.stop();
+                            final result = await _showRecordPanel(context);
+                            if (result != null && mounted) {
+                              _submit(result.audio, result.duration);
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IgnorePointer(
+                        ignoring: !_showUnreadMessageButton,
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutQuart,
+                          opacity: _showUnreadMessageButton ? 1.0 : 0.0,
+                          child: _UnreadMessagesButton(
+                            onPressed: _animateToBottom,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    height: 82 + MediaQuery.of(context).padding.bottom,
-                    child: const ColoredBox(
-                      color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: IgnorePointer(
-                            ignoring: !_showUnreadMessageButton,
-                            child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 200),
-                              curve: Curves.easeOutQuart,
-                              opacity: _showUnreadMessageButton ? 1.0 : 0.0,
-                              child: _UnreadMessagesButton(
-                                onPressed: _animateToBottom,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: bottomButtonHeight,
-                          child: Center(
-                            child: _RecordButton(
-                              onPressed: () async {
-                                _audio.stop();
-                                final result = await _showRecordPanel(context);
-                                if (result != null && mounted) {
-                                  _submit(result.audio, result.duration);
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: MediaQuery.of(context).padding.bottom,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 

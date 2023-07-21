@@ -274,18 +274,6 @@ class _MiniProfile extends StatelessWidget {
       children: [
         // White background so the card doesn't become see through when tapped
         ...[
-          const Positioned(
-            top: 20,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(34)),
-              ),
-            ),
-          ),
           const Align(
             alignment: Alignment.topCenter,
             child: SizedBox(
@@ -313,11 +301,14 @@ class _MiniProfile extends StatelessWidget {
                   clipBehavior: Clip.hardEdge,
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(34)),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(34),
+                      topRight: Radius.circular(34),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        offset: Offset(0, 4),
-                        blurRadius: 8,
+                        offset: Offset(0, -1),
+                        blurRadius: 24,
                         color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
                       ),
                     ],
