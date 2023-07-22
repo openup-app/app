@@ -7,6 +7,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/auth/auth_provider.dart';
+import 'package:openup/util/image_manip.dart';
 
 part 'user_state.freezed.dart';
 
@@ -209,7 +210,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
 
   Future<bool> updateGalleryPhoto({
     required int index,
-    required Uint8List photo,
+    required File photo,
   }) async {
     return state.map(
       guest: (_) {
@@ -218,10 +219,14 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
         return false;
       },
       signedIn: (signedIn) async {
+        final downscaled = await downscaleImage(photo);
+        if (downscaled == null) {
+          return false;
+        }
         final result = await _api.updateGalleryPhoto(
           signedIn.account.profile.uid,
           index,
-          photo,
+          downscaled,
         );
         return result.fold(
           (l) {

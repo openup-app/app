@@ -627,12 +627,11 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
 
   void _updatePhoto(int index) async {
     final photo = await _selectPhoto(context);
-    final photoBytes = await photo?.readAsBytes();
-    if (photoBytes != null && mounted) {
+    if (photo != null && mounted) {
       final notifier = ref.read(userProvider2.notifier);
       final uploadFuture = notifier.updateGalleryPhoto(
         index: index,
-        photo: photoBytes,
+        photo: photo,
       );
       await withBlockingModal(
         context: context,

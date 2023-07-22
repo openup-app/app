@@ -193,17 +193,17 @@ class Api {
   Future<Either<ApiError, Profile>> updateGalleryPhoto(
     String uid,
     int index,
-    Uint8List photo,
+    File photo,
   ) {
     return _request(
-      makeRequest: () {
+      makeRequest: () async {
         return http.put(
           Uri.parse('$_urlBase/profiles/$uid/gallery/$index'),
           headers: {
             ..._headers,
             'Content-Type': 'application/octet-stream',
           },
-          body: photo,
+          body: await photo.readAsBytes(),
         );
       },
       handleSuccess: (response) {
