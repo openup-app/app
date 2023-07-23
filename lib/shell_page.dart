@@ -27,6 +27,7 @@ class ShellPage extends ConsumerStatefulWidget {
 }
 
 class ShellPageState extends ConsumerState<ShellPage> {
+  final _shellBuilderKey = GlobalKey();
   final _keys = <GlobalKey>[];
   final _draggableScrollableController = DraggableScrollableController();
 
@@ -90,7 +91,13 @@ class ShellPageState extends ConsumerState<ShellPage> {
                   );
                   return Future.value(false);
                 },
-                child: widget.shellBuilder(context),
+                child: KeyedSubtree(
+                  key: _shellBuilderKey,
+                  child: _BranchIndex(
+                    index: 0,
+                    child: widget.shellBuilder(context),
+                  ),
+                ),
               ),
               Positioned.fill(
                 child: IgnorePointer(
@@ -141,7 +148,7 @@ class ShellPageState extends ConsumerState<ShellPage> {
                                   KeyedSubtree(
                                     key: _keys[i],
                                     child: _BranchIndex(
-                                      index: i,
+                                      index: i + 1,
                                       child: widget.children[i],
                                     ),
                                   ),
@@ -224,11 +231,13 @@ class _BranchIndex extends InheritedWidget {
 }
 
 class ActivePage extends ConsumerStatefulWidget {
+  final bool activeOnSheetOpen;
   final VoidCallback onActivate;
   final VoidCallback onDeactivate;
   final Widget child;
   const ActivePage({
     super.key,
+    this.activeOnSheetOpen = true,
     required this.onActivate,
     required this.onDeactivate,
     required this.child,
@@ -277,9 +286,13 @@ class _ActivePageState extends ConsumerState<ActivePage> {
   void _updateActivation() {
     final isBranchRoute = _myBranchIndex != null;
     final onCurrentBranch = _currentIndex == _myBranchIndex;
-    final routeActive = ModalRoute.of(context)?.isActive == true;
-    final visible = isBranchRoute ? onCurrentBranch : routeActive;
-    final shouldBeActive = visible && _pageOpen && _appResumed;
+    final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
+    final visible = isBranchRoute ? onCurrentBranch : routeCurrent;
+    final shouldBeActive = visible &&
+        (widget.activeOnSheetOpen && _pageOpen ||
+            !widget.activeOnSheetOpen && !_pageOpen) &&
+        _appResumed;
+
     if (!_active && shouldBeActive) {
       SchedulerBinding.instance.addPostFrameCallback((_) {
         if (mounted) {

@@ -180,7 +180,6 @@ class _PhoneInputState extends State<PhoneInput> {
   }
 
   String? _validatePhoneWithPrefix(String? value) {
-    print('vaule is $value');
     if (value == null) {
       return 'Enter a phone number';
     }
