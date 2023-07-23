@@ -261,7 +261,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
                 tilt: _preferredTilt,
               ),
               tiltGesturesEnabled: false,
-              rotateGesturesEnabled: false,
+              rotateGesturesEnabled: true,
               minMaxZoomPreference: const MinMaxZoomPreference(4, null),
               onMapCreated: _initMapController,
               myLocationEnabled: true,
