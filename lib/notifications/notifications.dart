@@ -8,12 +8,12 @@ import 'package:flutter_apns/flutter_apns.dart';
 import 'package:openup/api/api.dart';
 
 typedef DeepLinkCallback = void Function(String path);
-ApnsPushConnector? _apnsPushConnector;
-late final StreamController<String?> _iosNotificationTokenController;
-StreamSubscription? _iosEventChannelTokenSubscription;
 
 class NotificationManager {
   final Api? api;
+  ApnsPushConnector? _apnsPushConnector;
+  StreamController<String?>? _iosNotificationTokenController;
+  StreamSubscription? _iosEventChannelTokenSubscription;
 
   NotificationManager({
     required this.api,
@@ -22,8 +22,8 @@ class NotificationManager {
       _apnsPushConnector = ApnsPushConnector();
       _apnsPushConnector?.shouldPresent = (_) => Future.value(true);
       _apnsPushConnector?.configureApns();
+      _iosNotificationTokenController = StreamController<String?>.broadcast();
     }
-    _iosNotificationTokenController = StreamController<String?>.broadcast();
     _tokenStream.listen(_onNotificationToken);
   }
 
@@ -42,7 +42,7 @@ class NotificationManager {
 
   void _disposeNotifications() {
     _iosEventChannelTokenSubscription?.cancel();
-    _iosNotificationTokenController.close();
+    _iosNotificationTokenController?.close();
     if (Platform.isIOS) {
       _apnsPushConnector = null;
     }
@@ -66,13 +66,16 @@ class NotificationManager {
             EventChannel('com.openupdating/notification_tokens');
         _iosEventChannelTokenSubscription =
             eventChannel.receiveBroadcastStream().listen((token) {
-          _iosNotificationTokenController.add(token);
+          _iosNotificationTokenController?.add(token);
         });
         _apnsPushConnector?.token.addListener(() {
-          _iosNotificationTokenController.add(_apnsPushConnector?.token.value);
+          _iosNotificationTokenController?.add(_apnsPushConnector?.token.value);
         });
       }
-      yield* _iosNotificationTokenController.stream;
+      final stream = _iosNotificationTokenController?.stream;
+      if (stream != null) {
+        yield* stream;
+      }
     }
   }
 }
