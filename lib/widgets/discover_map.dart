@@ -452,7 +452,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     final CameraPosition pos = CameraPosition(
       target: LatLng(targetLatitude, latLong.longitude),
       zoom: _initialZoom,
-      tilt: _preferredTilt,
+      tilt: widget.enable3d ? _preferredTilt : 0,
     );
     _mapController?.animateCamera(CameraUpdate.newCameraPosition(pos));
   }
