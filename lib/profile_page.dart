@@ -1167,12 +1167,8 @@ class _NameFieldState extends ConsumerState<_NameField> {
               if (_submittingName) {
                 return const Padding(
                   padding: EdgeInsets.only(right: 12.0),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
+                  child: LoadingIndicator(
+                    color: Colors.black,
                   ),
                 );
               }
