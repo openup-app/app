@@ -66,10 +66,15 @@ class NotificationManager {
             EventChannel('com.openupdating/notification_tokens');
         _iosEventChannelTokenSubscription =
             eventChannel.receiveBroadcastStream().listen((token) {
-          _iosNotificationTokenController?.add(token);
+          if (_iosNotificationTokenController?.isClosed != true) {
+            _iosNotificationTokenController?.add(token);
+          }
         });
         _apnsPushConnector?.token.addListener(() {
-          _iosNotificationTokenController?.add(_apnsPushConnector?.token.value);
+          if (_iosNotificationTokenController?.isClosed != true) {
+            _iosNotificationTokenController
+                ?.add(_apnsPushConnector?.token.value);
+          }
         });
       }
       final stream = _iosNotificationTokenController?.stream;
