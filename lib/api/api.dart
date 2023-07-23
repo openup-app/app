@@ -285,7 +285,7 @@ class Api {
                   'token': apnMessagingToken,
                   'messaging': true,
                   'voip': false,
-                  'service': 'apn',
+                  'service': 'apns',
                 },
             ]
           }),
