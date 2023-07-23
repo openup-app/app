@@ -150,7 +150,10 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
           completer.complete(const _Error(SendCodeError.invalidPhoneNumber));
         } else if (e.code == 'network-request-failed') {
           completer.complete(const _Error(SendCodeError.networkError));
+        } else if (e.code == 'too-many-requests') {
+          completer.complete(const _Error(SendCodeError.tooManyRequests));
         } else {
+          debugPrint(e.code);
           Sentry.captureException(e);
           completer.complete(const _Error(SendCodeError.failure));
         }
@@ -194,6 +197,8 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
           completer.complete(const _Error(SendCodeError.invalidPhoneNumber));
         } else if (e.code == 'network-request-failed') {
           completer.complete(const _Error(SendCodeError.networkError));
+        } else if (e.code == 'too-many-requests') {
+          completer.complete(const _Error(SendCodeError.tooManyRequests));
         } else {
           Sentry.captureException(e);
           completer.complete(const _Error(SendCodeError.failure));
@@ -290,6 +295,7 @@ enum SendCodeError {
   credentialFailure,
   invalidPhoneNumber,
   networkError,
+  tooManyRequests,
   failure,
 }
 

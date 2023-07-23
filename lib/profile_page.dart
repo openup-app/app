@@ -980,6 +980,9 @@ class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
           case SendCodeError.networkError:
             message = 'Network error';
             break;
+          case SendCodeError.tooManyRequests:
+            message = 'Too many attempts, please try again later';
+            break;
           case SendCodeError.failure:
             message = 'Something went wrong';
             break;
