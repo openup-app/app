@@ -41,11 +41,11 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
             height: MediaQuery.of(context).padding.top,
           ),
           const SizedBox(height: 16),
-          const Align(
+          Align(
             alignment: Alignment.topCenter,
             child: Stack(
               alignment: Alignment.center,
-              children: [
+              children: const [
                 Align(
                   alignment: Alignment.centerLeft,
                   child: BackIconButton(
@@ -178,6 +178,9 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
         return;
       case AuthResult.invalidCode:
         message = 'Invalid code';
+        break;
+      case AuthResult.invalidId:
+        message = 'Unable to attempt verification, please try again';
         break;
       case AuthResult.quotaExceeded:
         message = 'We are experiencing high demand, please try again later';

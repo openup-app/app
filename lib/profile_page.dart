@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -14,6 +13,7 @@ import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/audio_playback_symbol.dart';
 import 'package:openup/widgets/button.dart';
@@ -71,6 +71,8 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
             builder: (context, constraints) {
               return SingleChildScrollView(
                 controller: _scrollController,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 child: Builder(
                   builder: (context) {
                     return Column(
@@ -182,26 +184,44 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                                     ),
                                   ),
                                 ),
-                                if (kDebugMode) ...[
-                                  const SizedBox(height: 16),
-                                  Center(
-                                    child: Text(
-                                      '${FirebaseAuth.instance.currentUser?.uid}',
-                                      textAlign: TextAlign.center,
-                                      style:
-                                          const TextStyle(color: Colors.black),
-                                    ),
+                                if (kDebugMode)
+                                  Builder(
+                                    builder: (context) {
+                                      final authState = ref.watch(authProvider);
+                                      final signedIn = authState.map(
+                                        guest: (_) => null,
+                                        signedIn: (signedIn) => signedIn,
+                                      );
+                                      if (signedIn == null) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      return Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const SizedBox(height: 16),
+                                          Center(
+                                            child: Text(
+                                              signedIn.uid,
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Center(
+                                            child: Text(
+                                              signedIn.phoneNumber ?? '',
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   ),
-                                  const SizedBox(height: 8),
-                                  Center(
-                                    child: Text(
-                                      '${FirebaseAuth.instance.currentUser?.phoneNumber}',
-                                      textAlign: TextAlign.center,
-                                      style:
-                                          const TextStyle(color: Colors.black),
-                                    ),
-                                  ),
-                                ],
                                 const SizedBox(height: 16),
                                 SizedBox(
                                   height:
@@ -268,7 +288,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
     if (Platform.isAndroid) {
       await FirebaseMessaging.instance.deleteToken();
     }
-    await FirebaseAuth.instance.signOut();
+    await ref.read(authProvider.notifier).signOut();
   }
 
   void _showDeleteAccountConfirmationModal() async {
@@ -312,7 +332,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
       ..collections([]);
     ref.read(userProvider2.notifier).guest();
     ref.read(apiProvider).deleteAccount();
-    await FirebaseAuth.instance.signOut();
+    await ref.read(authProvider.notifier).signOut();
   }
 }
 
@@ -706,32 +726,71 @@ class _PhoneNumberField extends ConsumerStatefulWidget {
 }
 
 class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
-  bool _editing = false;
+  String? _validationError;
   String? _newPhoneNumber;
   bool _newPhoneNumberValid = false;
-  bool _submitting = false;
-  int? _forceResendingToken;
+
+  final _phoneController = TextEditingController();
+  final _phoneFocusNode = FocusNode();
   final _verificationCodeController = TextEditingController();
+
+  _ChangePhoneState _state = _ChangePhoneState.closed;
+  String? _verificationId;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.listenManual<AuthSignedIn?>(
+      authProvider.select((p) {
+        return p.map(
+          guest: (_) => null,
+          signedIn: (signedIn) => signedIn,
+        );
+      }),
+      (previous, next) {
+        if (previous == null && next != null) {
+          _phoneController.text = next.phoneNumber ?? '';
+        }
+      },
+      fireImmediately: true,
+    );
+  }
 
   @override
   void dispose() {
+    _phoneController.dispose();
+    _phoneFocusNode.dispose();
     _verificationCodeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final signedIn = ref.watch(authProvider.select((p) {
+      return p.map(
+        guest: (_) => null,
+        signedIn: (signedIn) => signedIn,
+      );
+    }));
+
+    final phoneNumber = signedIn?.phoneNumber;
+    if (phoneNumber == null) {
+      return _CupertinoRow();
+    }
+
     return AnimatedSize(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
       alignment: Alignment.topCenter,
-      child: !_editing
-          ? _CupertinoRow(
-              leading:
-                  Text(FirebaseAuth.instance.currentUser?.phoneNumber ?? ''),
+      child: Builder(
+        builder: (context) {
+          if (_state == _ChangePhoneState.closed) {
+            return _CupertinoRow(
+              leading: Text(phoneNumber),
               trailing: Button(
                 onPressed: () {
-                  setState(() => _editing = !_editing);
+                  setState(() => _state = _ChangePhoneState.enteringPhone);
+                  _phoneFocusNode.requestFocus();
                 },
                 child: const Padding(
                   padding: EdgeInsets.all(8.0),
@@ -743,203 +802,252 @@ class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
                   ),
                 ),
               ),
-            )
-          : DecoratedBox(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(8)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _CupertinoRow(
-                    leading: PhoneInput(
-                      onChanged: (value, valid) {
-                        setState(() {
-                          _newPhoneNumber = value;
-                          _newPhoneNumberValid = valid;
-                        });
-                      },
-                      onValidationError: (_) {},
+            );
+          }
+          return DecoratedBox(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _CupertinoRow(
+                  leading: PhoneInput(
+                    textController: _phoneController,
+                    focusNode: _phoneFocusNode,
+                    textAlign: TextAlign.start,
+                    onChanged: (value, valid) {
+                      setState(() {
+                        _newPhoneNumber = value;
+                        _newPhoneNumberValid = valid;
+                      });
+                    },
+                    onValidationError: (validationError) {
+                      setState(() => _validationError = validationError);
+                    },
+                  ),
+                  trailing: Button(
+                    onPressed: (!_newPhoneNumberValid ||
+                            _state == _ChangePhoneState.awaitingCode ||
+                            _state == _ChangePhoneState.submitting)
+                        ? null
+                        : () {
+                            final newPhoneNumber = _newPhoneNumber;
+                            if (newPhoneNumber != null &&
+                                newPhoneNumber.isNotEmpty) {
+                              _submitNewPhoneNumber(newPhoneNumber);
+                            }
+                          },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: _state != _ChangePhoneState.awaitingCode
+                          ? const Text(
+                              'Send code',
+                              style: TextStyle(
+                                color: Color.fromRGBO(0x51, 0xA1, 0xFF, 1.0),
+                              ),
+                            )
+                          : const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: LoadingIndicator(
+                                color: Colors.black,
+                              ),
+                            ),
                     ),
-                    trailing: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Text(
-                        'Send code',
-                        style: TextStyle(
-                          color: Color.fromRGBO(0x51, 0xA1, 0xFF, 1.0),
-                        ),
-                      ),
-                    ),
-                    decoration: const BoxDecoration(),
                   ),
-                  const Divider(
-                    height: 1,
-                    indent: 20,
-                  ),
-                  _CupertinoRow(
-                    leading: TextFormField(
-                      controller: _verificationCodeController,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'Verification code',
-                        hintStyle: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color: Color.fromRGBO(0x9B, 0x9B, 0x9B, 1.0),
-                        ),
-                      ),
-                    ),
-                    decoration: const BoxDecoration(),
-                  ),
-                  const Divider(
-                    height: 1,
-                    indent: 20,
-                  ),
-                  ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _verificationCodeController,
-                    builder: (context, value, __) {
-                      return Button(
-                        onPressed: value.text.isEmpty
-                            ? null
-                            : () async {
-                                setState(() => _submitting = true);
-                                await Future.delayed(
-                                    const Duration(seconds: 1));
-                                if (mounted) {
-                                  setState(() {
-                                    _submitting = false;
-                                    _editing = false;
-                                  });
-                                }
-                              },
-                        child: _CupertinoRow(
-                          center: !_submitting
-                              ? const Text(
-                                  'Done',
-                                  style: TextStyle(
-                                    color:
-                                        Color.fromRGBO(0x34, 0x78, 0xF6, 1.0),
-                                  ),
-                                )
-                              : const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                  decoration: const BoxDecoration(),
+                ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutQuart,
+                  alignment: Alignment.topCenter,
+                  child: Builder(
+                    builder: (context) {
+                      if (_state == _ChangePhoneState.closed) {
+                        return const SizedBox.shrink();
+                      }
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Divider(
+                            height: 1,
+                            indent: 20,
+                          ),
+                          _CupertinoRow(
+                            leading: TextFormField(
+                              controller: _verificationCodeController,
+                              keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.done,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Verification code',
+                                hintStyle: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400,
+                                  color: Color.fromRGBO(0x9B, 0x9B, 0x9B, 1.0),
                                 ),
-                          decoration: const BoxDecoration(),
-                        ),
+                              ),
+                            ),
+                            decoration: const BoxDecoration(),
+                          ),
+                          const Divider(
+                            height: 1,
+                            indent: 20,
+                          ),
+                          ValueListenableBuilder<TextEditingValue>(
+                            valueListenable: _verificationCodeController,
+                            builder: (context, value, __) {
+                              return Button(
+                                onPressed: value.text.isEmpty
+                                    ? null
+                                    : () => _verifyCode(value.text),
+                                child: _CupertinoRow(
+                                  center: _state != _ChangePhoneState.submitting
+                                      ? const Text(
+                                          'Done',
+                                          style: TextStyle(
+                                            color: Color.fromRGBO(
+                                                0x34, 0x78, 0xF6, 1.0),
+                                          ),
+                                        )
+                                      : const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: LoadingIndicator(
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                  decoration: const BoxDecoration(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       );
                     },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          );
+        },
+      ),
     );
-    // const SizedBox(height: 16),
-    // SizedBox(
-    //   width: 237,
-    //   child: Button(
-    //     onPressed: (_submitting | !_newPhoneNumberValid ||
-    //             _newPhoneNumber?.isEmpty == true)
-    //         ? null
-    //         : _updateInformation,
-    //     child: _InputArea(
-    //       childNeedsOpacity: false,
-    //       gradientColors: const [
-    //         Color.fromRGBO(0xFF, 0x3B, 0x3B, 0.65),
-    //         Color.fromRGBO(0xFF, 0x33, 0x33, 0.54),
-    //       ],
-    //       child: Center(
-    //         child: _submitting
-    //             ? const LoadingIndicator()
-    //             : Text(
-    //                 'Update Information',
-    //                 style: Theme.of(context)
-    //                     .textTheme
-    //                     .bodyMedium!
-    //                     .copyWith(
-    //                       fontSize: 24,
-    //                       fontWeight: FontWeight.w500,
-    //                     ),
-    //               ),
-    //       ),
-    //     ),
-    //   ),
-    // ),
   }
 
-  void _updateInformation() async {
-    ref.read(mixpanelProvider).track("change_phone_number");
-    FocusScope.of(context).unfocus();
-    setState(() => _submitting = true);
-    final newPhoneNumber = _newPhoneNumber;
-    if (newPhoneNumber == null || !_newPhoneNumberValid) {
+  void _submitNewPhoneNumber(String newPhoneNumber) async {
+    setState(() => _state = _ChangePhoneState.awaitingCode);
+    final result =
+        await ref.read(authProvider.notifier).updatePhoneNumber(newPhoneNumber);
+    if (!mounted) {
+      return;
+    }
+    result.map(
+      codeSent: (codeSent) {
+        FocusScope.of(context).nextFocus();
+        setState(() {
+          _state = _ChangePhoneState.codeSent;
+          _verificationId = codeSent.verificationId;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Code has been sent'),
+          ),
+        );
+      },
+      verified: (_) {
+        setState(() => _state = _ChangePhoneState.closed);
+        FocusScope.of(context).unfocus();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Phone number updated'),
+          ),
+        );
+      },
+      error: (error) {
+        setState(() => _state = _ChangePhoneState.enteringPhone);
+        final e = error.error;
+        final String message;
+        switch (e) {
+          case SendCodeError.credentialFailure:
+            message = 'Failed to validate';
+            break;
+          case SendCodeError.invalidPhoneNumber:
+            message = 'Unsupported phone number';
+            break;
+          case SendCodeError.networkError:
+            message = 'Network error';
+            break;
+          case SendCodeError.failure:
+            message = 'Something went wrong';
+            break;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+          ),
+        );
+      },
+    );
+  }
+
+  void _verifyCode(String code) async {
+    final verificationId = _verificationId;
+    if (verificationId == null) {
       return;
     }
 
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw 'No user is logged in';
+    setState(() => _state = _ChangePhoneState.submitting);
+    final notifier = ref.read(authProvider.notifier);
+    final result = await notifier.authenticatePhoneChange(
+      verificationId: verificationId,
+      smsCode: code,
+    );
+    if (!mounted) {
+      return;
     }
 
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: newPhoneNumber,
-      verificationCompleted: (credential) async {
-        try {
-          await user.updatePhoneNumber(credential);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Successfully updated phone number'),
-              ),
-            );
-          }
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Something went wrong'),
-              ),
-            );
-          }
-        }
+    if (result == AuthResult.success) {
+      setState(() => _state = _ChangePhoneState.closed);
+      _verificationCodeController.clear();
+    } else {
+      setState(() => _state = _ChangePhoneState.codeSent);
+    }
 
-        setState(() => _submitting = false);
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        debugPrint(e.toString());
-        String message;
-        if (e.code == 'network-request-failed') {
-          message = 'Network error';
-        } else {
-          message = 'Failed to send verification code';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-        setState(() => _submitting = false);
-      },
-      codeSent: (verificationId, forceResendingToken) async {
-        setState(() => _forceResendingToken = forceResendingToken);
-        await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) {
-              // Removed settings phone verification screen
-              return const SizedBox.shrink();
-            },
-          ),
-        );
-        setState(() => _submitting = false);
-      },
-      forceResendingToken: _forceResendingToken,
-      codeAutoRetrievalTimeout: (verificationId) {
-        // Android SMS auto-fill failed, nothing to do
-      },
+    final String message;
+    switch (result) {
+      case AuthResult.success:
+        message = 'Sucessfully verified code';
+        return;
+      case AuthResult.invalidCode:
+        message = 'Invalid code';
+        break;
+      case AuthResult.invalidId:
+        message = 'Unable to attempt verification, please try again';
+        break;
+      case AuthResult.quotaExceeded:
+        message = 'We are experiencing high demand, please try again later';
+        break;
+      case AuthResult.failure:
+        message = 'Something went wrong';
+        break;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
     );
   }
+}
+
+enum _ChangePhoneState {
+  closed,
+  enteringPhone,
+  awaitingCode,
+  codeSent,
+  submitting
 }
 
 class _CupertinoRow extends StatelessWidget {
@@ -1125,7 +1233,6 @@ class _NameFieldState extends ConsumerState<_NameField> {
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _nameController,
-              autofocus: true,
               focusNode: _nameFocusNode,
               enabled: _editingName,
               textCapitalization: TextCapitalization.sentences,
@@ -1144,7 +1251,11 @@ class _NameFieldState extends ConsumerState<_NameField> {
           onPressed: () async {
             if (!_editingName) {
               setState(() => _editingName = true);
-              FocusScope.of(context).requestFocus(_nameFocusNode);
+              _nameController.selection = TextSelection(
+                baseOffset: 0,
+                extentOffset: _nameController.text.length,
+              );
+              _nameFocusNode.requestFocus();
             } else {
               setState(() => _submittingName = true);
               final result = await ref
@@ -1582,7 +1693,7 @@ class _UploadStep extends StatelessWidget {
             left: 8,
             right: 8,
             top: 8,
-            bottom: 8 + MediaQuery.of(context).padding.bottom,
+            bottom: 8 + MediaQuery.of(context).viewPadding.bottom,
           ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 346),

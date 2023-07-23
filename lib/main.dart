@@ -312,9 +312,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           name: 'signup',
           parentNavigatorKey: rootNavigatorKey,
           builder: (context, state) {
-            final verifiedUid = state.queryParams['verifiedUid'];
+            final verified = state.queryParams['verified'] == 'true';
             return SignupPhone(
-              verifiedUid: verifiedUid,
+              verified: verified,
             );
           },
           routes: [

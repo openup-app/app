@@ -86,11 +86,11 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
             height: MediaQuery.of(context).padding.top,
           ),
           const SizedBox(height: 16),
-          const Align(
+          Align(
             alignment: Alignment.topCenter,
             child: Stack(
               alignment: Alignment.center,
-              children: [
+              children: const [
                 Align(
                   alignment: Alignment.centerLeft,
                   child: BackIconButton(
@@ -198,7 +198,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
 
     setState(() => _submitting = true);
     final notifier = ref.read(authProvider.notifier);
-    final result = await notifier.sendVerificationCode(phoneNumber);
+    final result = await notifier.signInWithPhoneNumber(phoneNumber);
     if (!mounted) {
       return;
     }

@@ -8,16 +8,20 @@ part 'phone_number_input.freezed.dart';
 class PhoneInput extends StatefulWidget {
   final TextStyle? style;
   final Color? hintTextColor;
-  final String? initialValue;
+  final TextEditingController? textController;
+  final FocusNode? focusNode;
   final bool showCountryCodePicker;
+  final TextAlign textAlign;
   final void Function(String value, bool valid) onChanged;
   final void Function(String? error) onValidationError;
   const PhoneInput({
     super.key,
     this.style,
     this.hintTextColor,
-    this.initialValue,
+    this.textController,
+    this.focusNode,
     this.showCountryCodePicker = false,
+    this.textAlign = TextAlign.center,
     required this.onChanged,
     required this.onValidationError,
   });
@@ -32,20 +36,14 @@ class _PhoneInputState extends State<PhoneInput> {
   late final _countries = List.of(_unsortedCountries)
     ..sort((a, b) => a.name.compareTo(b.name));
 
-  final _phoneController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    final initialValue = widget.initialValue;
-    if (initialValue != null) {
-      _phoneController.text = initialValue;
-    }
-  }
+  late final _phoneController =
+      widget.textController ?? TextEditingController();
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    if (widget.textController == null) {
+      _phoneController.dispose();
+    }
     super.dispose();
   }
 
@@ -145,8 +143,10 @@ class _PhoneInputState extends State<PhoneInput> {
         Expanded(
           child: TextFormField(
             controller: _phoneController,
+            focusNode: widget.focusNode,
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.done,
+            textAlignVertical: TextAlignVertical.center,
             inputFormatters: [
               FilteringTextInputFormatter.deny(RegExp(r'\s')),
             ],
@@ -165,9 +165,7 @@ class _PhoneInputState extends State<PhoneInput> {
             onEditingComplete: () {
               FocusScope.of(context).unfocus();
             },
-            textAlign: widget.showCountryCodePicker
-                ? TextAlign.start
-                : TextAlign.center,
+            textAlign: widget.textAlign,
             style: widget.style,
             decoration: InputDecoration.collapsed(
               hintText: 'Phone Number',
