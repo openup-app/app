@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
@@ -159,6 +159,24 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
   }
 
   Future<void> cacheChatrooms() => _cacheChatrooms();
+
+  Future<Either<ApiError, Account>> createAccount(
+    AccountCreationParams params,
+  ) async {
+    final photos = params.photos;
+    if (photos == null) {
+      debugPrint('Photos were null when creating account');
+      return Future.value(const Left(ApiClientError(ClientErrorBadRequest())));
+    }
+
+    final downscaled = await _downscalePhotos(photos);
+    if (downscaled == null) {
+      debugPrint('Failed to downscale profile images');
+      return Future.value(const Left(ApiClientError(ClientErrorBadRequest())));
+    }
+
+    return _api.createAccount(params.copyWith(photos: downscaled));
+  }
 
   Future<Either<ApiError, Profile>> updateName(String name) async {
     return state.map(
@@ -391,8 +409,16 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
       guest: (_) =>
           Future.value(const Left(ApiError.client(ClientErrorUnauthorized()))),
       signedIn: (signedIn) async {
-        final result =
-            await uploadCollection(api: _api, photos: photos, audio: audio);
+        final downscaled = await _downscalePhotos(photos);
+        if (downscaled == null) {
+          return Future.value(
+              const Left(ApiError.client(ClientError.badRequest())));
+        }
+
+        final result = await _api.createCollection(
+          downscaled.map((e) => e.path).toList(),
+          useAsProfile: useAsProfile,
+        );
         return result.fold<Either<ApiError, Collection>>(
           (l) => Left(l),
           (r) {
@@ -423,6 +449,18 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
         return _api.deleteCollection(id);
       },
     );
+  }
+
+  Future<List<File>?> _downscalePhotos(List<File> photos) async {
+    final downscaledImages = <File>[];
+    for (final photo in photos) {
+      final downscaled = await downscaleImage(photo);
+      if (downscaled == null) {
+        return null;
+      }
+      downscaledImages.add(downscaled);
+    }
+    return downscaledImages;
   }
 }
 
