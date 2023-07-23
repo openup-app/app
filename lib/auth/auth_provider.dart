@@ -24,6 +24,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   final Api api;
   final Mixpanel mixpanel;
 
+  int? _forceResendingToken;
   User? _user;
   StreamSubscription? _idTokenChangesSubscription;
 
@@ -114,7 +115,88 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       }
     }
   }
+
+  Future<SendCodeResult> sendVerificationCode(String phoneNumber) async {
+    mixpanel.track("signup_submit_phone");
+    final completer = Completer<SendCodeResult>();
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      forceResendingToken: _forceResendingToken,
+      verificationCompleted: (credential) async {
+        try {
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          completer.complete(const _Verified());
+        } catch (e) {
+          completer.complete(const _Error(SendCodeError.credentialFailure));
+        }
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        if (e.code == 'invalid-phone-number') {
+          completer.complete(const _Error(SendCodeError.invalidPhoneNumber));
+        } else if (e.code == 'network-request-failed') {
+          completer.complete(const _Error(SendCodeError.networkError));
+        } else {
+          Sentry.captureException(e);
+          completer.complete(const _Error(SendCodeError.failure));
+        }
+      },
+      codeSent: (verificationId, forceResendingToken) async {
+        mixpanel.track("signup_code_sent");
+        _forceResendingToken = forceResendingToken;
+        completer.complete(_CodeSent(verificationId));
+      },
+      codeAutoRetrievalTimeout: (verificationId) {
+        // Android SMS auto-fill failed, nothing to do
+        debugPrint('Code auto retrieval timeout');
+      },
+    );
+    return completer.future;
+  }
+
+  Future<AuthResult> authenticate({
+    required String verificationId,
+    required String smsCode,
+  }) async {
+    mixpanel.track("sign_up_submit_phone_verification");
+
+    final credential = PhoneAuthProvider.credential(
+      verificationId: verificationId,
+      smsCode: smsCode,
+    );
+
+    try {
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      return AuthResult.success;
+    } on FirebaseAuthException catch (e, s) {
+      if (e.code == 'invalid-verification-code') {
+        return AuthResult.invalidCode;
+      } else if (e.code == 'quota-exceeded') {
+        return AuthResult.quotaExceeded;
+      }
+      Sentry.captureException(e, stackTrace: s);
+      return AuthResult.failure;
+    } catch (e, s) {
+      Sentry.captureException(e, stackTrace: s);
+      return AuthResult.failure;
+    }
+  }
 }
+
+@freezed
+class SendCodeResult with _$SendCodeResult {
+  const factory SendCodeResult.codeSent(String verificationId) = _CodeSent;
+  const factory SendCodeResult.verified() = _Verified;
+  const factory SendCodeResult.error(SendCodeError error) = _Error;
+}
+
+enum SendCodeError {
+  credentialFailure,
+  invalidPhoneNumber,
+  networkError,
+  failure,
+}
+
+enum AuthResult { success, invalidCode, quotaExceeded, failure }
 
 @freezed
 class AuthState with _$AuthState {

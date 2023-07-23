@@ -1,11 +1,9 @@
-import 'dart:async';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
@@ -13,13 +11,12 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/phone_number_input.dart';
 import 'package:openup/widgets/restart_app.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SignupPhone extends ConsumerStatefulWidget {
-  final String? verifiedUid;
+  final bool verified;
   const SignupPhone({
     Key? key,
-    this.verifiedUid,
+    required this.verified,
   }) : super(key: key);
 
   @override
@@ -32,7 +29,6 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
   bool _valid = false;
 
   bool _submitting = false;
-  int? _forceResendingToken;
 
   @override
   void initState() {
@@ -47,18 +43,9 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
   }
 
   void _handleVerification() async {
-    final verifiedUid = widget.verifiedUid;
-    if (verifiedUid != null && !_submitting) {
+    if (widget.verified && !_submitting) {
       setState(() => _submitting = true);
-      final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-      if (token == null) {
-        // TODO: Retry getting id token
-        return null;
-      }
-      final api = ref.read(apiProvider);
-      api.authToken = token;
-
-      final result = await getAccount(api);
+      final result = await getAccount(ref.read(apiProvider));
       if (!mounted) {
         return;
       }
@@ -67,16 +54,13 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
       result.when(
         logIn: (account) {
           final notifier = ref.read(userProvider.notifier);
-          notifier.uid(verifiedUid);
+          notifier.uid(account.profile.uid);
           notifier.profile(account.profile);
           ref.read(userProvider2.notifier).signedIn(account);
           ref.read(mixpanelProvider).track("login");
           RestartApp.restartApp(context);
         },
         signUp: () {
-          final notifier = ref.read(userProvider.notifier);
-          notifier.uid(verifiedUid);
-          // TODO: Hook up location more robustly
           final locationValue = ref.read(locationProvider);
           final latLong = locationValue.current;
           ref.read(accountCreationParamsProvider.notifier).latLong(latLong);
@@ -102,11 +86,11 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
             height: MediaQuery.of(context).padding.top,
           ),
           const SizedBox(height: 16),
-          Align(
+          const Align(
             alignment: Alignment.topCenter,
             child: Stack(
               alignment: Alignment.center,
-              children: const [
+              children: [
                 Align(
                   alignment: Alignment.centerLeft,
                   child: BackIconButton(
@@ -207,89 +191,59 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
 
   void _submit() async {
     FocusScope.of(context).unfocus();
-
     final phoneNumber = _phoneNumber;
-    if (_valid && phoneNumber != null) {
-      ref.read(mixpanelProvider).track("sign_up_submit_phone");
-      setState(() => _submitting = true);
-      await _sendVerificationCode(phoneNumber);
-      if (mounted) {
-        setState(() => _submitting = false);
-      }
+    if (!_valid || phoneNumber == null) {
+      return;
     }
-  }
 
-  Future<bool> _sendVerificationCode(String phoneNumber) async {
-    final completer = Completer<bool>();
-    FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: (credential) async {
-        try {
-          final userCredential =
-              await FirebaseAuth.instance.signInWithCredential(credential);
-          completer.complete(true);
+    setState(() => _submitting = true);
+    final notifier = ref.read(authProvider.notifier);
+    final result = await notifier.sendVerificationCode(phoneNumber);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _submitting = false);
 
-          final verifiedUid = userCredential.user?.uid ??
-              FirebaseAuth.instance.currentUser?.uid;
-          if (verifiedUid != null) {
-            if (mounted) {
-              context.goNamed(
-                'signup',
-                queryParams: {
-                  'verifiedUid': verifiedUid,
-                },
-              );
-            }
-          } else {
-            throw 'User credential is null';
-          }
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Something went wrong'),
-              ),
-            );
-          }
-        }
+    result.map(
+      codeSent: (codeSent) {
+        context.pushNamed(
+          'signup_verify',
+          queryParams: {
+            'verificationId': codeSent.verificationId,
+          },
+        );
       },
-      verificationFailed: (FirebaseAuthException e) {
-        Sentry.captureException(e);
-
+      verified: (_) {
+        context.goNamed(
+          'signup',
+          queryParams: {
+            'verified': true,
+          },
+        );
+      },
+      error: (error) {
+        final e = error.error;
         final String message;
-        if (e.code == 'invalid-phone-number') {
-          message = 'Unsupported phone number';
-        } else if (e.code == 'network-request-failed') {
-          message = 'Network error';
-        } else {
-          debugPrint(e.code);
-          message = 'Failed to send verification code';
+        switch (e) {
+          case SendCodeError.credentialFailure:
+            message = 'Failed to validate';
+            break;
+          case SendCodeError.invalidPhoneNumber:
+            message = 'Unsupported phone number';
+            break;
+          case SendCodeError.networkError:
+            message = 'Network error';
+            break;
+          case SendCodeError.failure:
+            message = 'Something went wrong';
+            break;
         }
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
-        }
-        if (!completer.isCompleted) {
-          completer.complete(false);
-        }
-      },
-      codeSent: (verificationId, forceResendingToken) async {
-        if (!mounted) {
-          return;
-        }
-        setState(() => _forceResendingToken = forceResendingToken);
-        ref.read(mixpanelProvider).track("signup_submit_phone");
-        context.pushNamed('signup_verify', queryParams: {
-          'verificationId': verificationId,
-        });
-        completer.complete(true);
-      },
-      forceResendingToken: _forceResendingToken,
-      codeAutoRetrievalTimeout: (verificationId) {
-        // Android SMS auto-fill failed, nothing to do
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+          ),
+        );
       },
     );
-    return completer.future;
   }
 }

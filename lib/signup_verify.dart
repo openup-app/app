@@ -1,15 +1,11 @@
-import 'dart:async';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/analytics/analytics.dart';
+import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/input_area.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SignupVerify extends ConsumerStatefulWidget {
   final String verificationId;
@@ -45,11 +41,11 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
             height: MediaQuery.of(context).padding.top,
           ),
           const SizedBox(height: 16),
-          Align(
+          const Align(
             alignment: Alignment.topCenter,
             child: Stack(
               alignment: Alignment.center,
-              children: const [
+              children: [
                 Align(
                   alignment: Alignment.centerLeft,
                   child: BackIconButton(
@@ -155,86 +151,45 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
   }
 
   void _submit() async {
-    ref.read(mixpanelProvider).track("sign_up_submit_phone_verification");
-    FocusScope.of(context).unfocus();
-    setState(() => _submitting = true);
     final smsCode = _smsCodeController.text;
-    final result = await _signIn(smsCode);
+    FocusScope.of(context).unfocus();
+
+    setState(() => _submitting = true);
+    final notifier = ref.read(authProvider.notifier);
+    final result = await notifier.authenticate(
+      verificationId: widget.verificationId,
+      smsCode: smsCode,
+    );
     if (!mounted) {
       return;
     }
-
     setState(() => _submitting = false);
-    final user = FirebaseAuth.instance.currentUser;
-    if (result) {
-      if (user == null) {
-        throw 'No user is logged in';
-      }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sucessfully verified code'),
-        ),
-      );
-      context.goNamed(
-        'signup',
-        queryParams: {
-          'verifiedUid': user.uid,
-        },
-      );
-    }
-  }
-
-  Future<bool> _signIn(String smsCode) async {
-    try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: widget.verificationId,
-        smsCode: smsCode,
-      );
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      return true;
-    } on FirebaseAuthException catch (e, s) {
-      if (e.code == 'invalid-verification-code') {
-        if (mounted) {
-          setState(() => _errorText = 'Invalid code');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invalid code'),
-            ),
-          );
-        }
-        return false;
-      } else if (e.code == 'quota-exceeded') {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                  'We are experiencing high demand, please try again later'),
-            ),
-          );
-        }
-        return false;
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Something went wrong'),
-          ),
+    final String message;
+    switch (result) {
+      case AuthResult.success:
+        message = 'Sucessfully verified code';
+        context.goNamed(
+          'signup',
+          queryParams: {
+            'verified': 'true',
+          },
         );
-      }
-      Sentry.captureException(e, stackTrace: s);
-      return false;
-    } catch (e, s) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Something went wrong'),
-          ),
-        );
-      }
-      Sentry.captureException(e, stackTrace: s);
-      return false;
+        return;
+      case AuthResult.invalidCode:
+        message = 'Invalid code';
+        break;
+      case AuthResult.quotaExceeded:
+        message = 'We are experiencing high demand, please try again later';
+        break;
+      case AuthResult.failure:
+        message = 'Something went wrong';
+        break;
     }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
   }
 }
