@@ -9,6 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/location/location_service.dart';
+import 'package:openup/util/image_manip.dart';
 import 'package:openup/widgets/map_marker_rendering.dart';
 
 final _cameraPositionProvider = StateProvider<CameraPosition?>((ref) => null);
@@ -551,7 +552,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
             ),
           );
 
-    final photo = await _fetchImage(
+    final photo = await fetchImage(
       NetworkImage(profile.profile.photo),
       size: const Size.square(photoSize),
       pixelRatio: pixelRatio,
@@ -626,7 +627,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
             ),
           );
 
-    final photo = await _fetchImage(
+    final photo = await fetchImage(
       NetworkImage(profile.profile.photo),
       size: const Size.square(photoSize),
       pixelRatio: pixelRatio,
@@ -842,23 +843,6 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       (pixelRatio * height * scale).toInt(),
     );
   }
-}
-
-Future<ui.Image> _fetchImage(
-  ImageProvider provider, {
-  required Size size,
-  required double pixelRatio,
-}) {
-  final completer = Completer<ui.Image>();
-  final listener = ImageStreamListener((imageInfo, _) {
-    completer.complete(imageInfo.image);
-  }, onError: (error, stackTrace) {
-    completer.completeError(error, stackTrace);
-  });
-  provider
-      .resolve(ImageConfiguration(size: size, devicePixelRatio: pixelRatio))
-      .addListener(listener);
-  return completer.future;
 }
 
 class RenderedProfile {

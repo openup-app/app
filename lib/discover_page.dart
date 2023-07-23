@@ -14,6 +14,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/chat_state.dart';
+import 'package:openup/api/user_profile_cache.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover_map_provider.dart';
 import 'package:openup/location/location_provider.dart';
@@ -914,31 +915,41 @@ class _ProfilePanelState extends State<_ProfilePanel> {
                                 color: Colors.white,
                                 shape: BoxShape.circle,
                               ),
-                              child: Consumer(
-                                builder: (context, ref, child) {
-                                  final myProfile =
-                                      ref.watch(userProvider2.select((p) {
-                                    return p.map(
-                                      guest: (_) => null,
-                                      signedIn: (signedIn) =>
-                                          signedIn.account.profile,
-                                    );
-                                  }));
-                                  if (myProfile != null) {
-                                    return Image.network(
-                                      myProfile.photo,
-                                      fit: BoxFit.cover,
-                                    );
-                                  } else {
-                                    return const Icon(
-                                      Icons.person,
-                                      size: 22,
-                                      color:
-                                          Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-                                    );
-                                  }
-                                },
-                              ),
+                              child: UserProfileCache(
+                                  builder: (context, cachedPhoto) {
+                                return Consumer(
+                                  builder: (context, ref, child) {
+                                    final myProfile =
+                                        ref.watch(userProvider2.select((p) {
+                                      return p.map(
+                                        guest: (_) => null,
+                                        signedIn: (signedIn) =>
+                                            signedIn.account.profile,
+                                      );
+                                    }));
+                                    if (myProfile != null) {
+                                      return Image(
+                                        image: NetworkImage(myProfile.photo),
+                                        fit: BoxFit.cover,
+                                        gaplessPlayback: true,
+                                      );
+                                    } else if (cachedPhoto != null) {
+                                      return Image.file(
+                                        cachedPhoto,
+                                        fit: BoxFit.cover,
+                                        gaplessPlayback: true,
+                                      );
+                                    } else {
+                                      return const Icon(
+                                        Icons.person,
+                                        size: 22,
+                                        color: Color.fromRGBO(
+                                            0x8D, 0x8D, 0x8D, 1.0),
+                                      );
+                                    }
+                                  },
+                                );
+                              }),
                             ),
                           ),
                           Expanded(

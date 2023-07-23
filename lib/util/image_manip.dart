@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -68,4 +69,21 @@ Future<Uint8List?> _encodeJpg(ui.Image image, {int quality = 80}) async {
     quality: quality,
   );
   return Uint8List.fromList(jpg);
+}
+
+Future<ui.Image> fetchImage(
+  ImageProvider provider, {
+  required Size size,
+  required double pixelRatio,
+}) {
+  final completer = Completer<ui.Image>();
+  final listener = ImageStreamListener((imageInfo, _) {
+    completer.complete(imageInfo.image);
+  }, onError: (error, stackTrace) {
+    completer.completeError(error, stackTrace);
+  });
+  provider
+      .resolve(ImageConfiguration(size: size, devicePixelRatio: pixelRatio))
+      .addListener(listener);
+  return completer.future;
 }
