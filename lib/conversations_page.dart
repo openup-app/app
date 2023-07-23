@@ -1,5 +1,4 @@
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
@@ -48,229 +48,226 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
 
   @override
   Widget build(BuildContext context) {
-    return Builder(
-      builder: (context) {
-        final loggedIn = FirebaseAuth.instance.currentUser != null;
-        if (!loggedIn) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('Log in start conversations'),
-              ElevatedButton(
-                onPressed: () => context.pushNamed('signup'),
-                child: const Text('Log in'),
-              ),
-            ],
-          );
-        }
-
-        return ActivePage(
-          onActivate: () {
-            /// Notifications don't update chats, so refreshe on page activation
-            ref.read(userProvider2.notifier).refreshChatrooms();
-          },
-          onDeactivate: () {},
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 18),
-              const Padding(
-                padding: EdgeInsets.only(left: 32),
-                child: Text(
-                  'Conversations',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Color.fromRGBO(0xFF, 0x71, 0x71, 1.0),
-                  ),
-                ),
-              ),
-              Container(
-                height: 31,
-                margin: const EdgeInsets.only(
-                  left: 16,
-                  top: 8,
-                  right: 16,
-                  bottom: 16,
-                ),
-                clipBehavior: Clip.hardEdge,
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-                  borderRadius: BorderRadius.all(Radius.circular(11)),
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: 26,
-                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 11, right: 6),
-                        child: TextFormField(
-                          controller: _searchController,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            icon: const Icon(
-                              Icons.search,
-                              size: 16,
-                            ),
-                            hintText: 'Search',
-                            hintStyle: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color.fromRGBO(
-                                      0x8D, 0x8D, 0x8D, 1.0),
-                                ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (_filterString.isNotEmpty)
-                      Button(
-                        onPressed: () {
-                          setState(() => _searchController.text = "");
-                          FocusScope.of(context).unfocus();
-                        },
-                        child: const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Icon(
-                            Icons.close,
-                            color: Colors.black,
-                            size: 16,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ColoredBox(
-                  color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-                  child: Column(
-                    children: [
-                      if (_filterString.isEmpty)
-                        Visibility(
-                          visible: false,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: SizedBox(
-                              height: 150,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                keyboardDismissBehavior:
-                                    ScrollViewKeyboardDismissBehavior.onDrag,
-                                itemCount: _collections.length,
-                                itemBuilder: (context, index) {
-                                  final collection = _collections[index];
-                                  return Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 82,
-                                        height: 110,
-                                        clipBehavior: Clip.hardEdge,
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: const Color.fromRGBO(
-                                                0xFF, 0x5F, 0x5F, 1.0),
-                                            width: 2,
-                                          ),
-                                          borderRadius: const BorderRadius.all(
-                                              Radius.circular(11)),
-                                        ),
-                                        margin: const EdgeInsets.all(9),
-                                        child: Image.network(
-                                          collection.photos.first.url,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      SizedBox(
-                                        width: 82,
-                                        child: Text(
-                                          'Name',
-                                          overflow: TextOverflow.ellipsis,
-                                          textAlign: TextAlign.center,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium!
-                                              .copyWith(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w200,
-                                                color: Colors.white,
-                                              ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      Expanded(
-                        child: Consumer(
-                          builder: (context, ref, child) {
-                            final filteredChatrooms =
-                                ref.watch(userProvider2.select((p) {
-                              return p.map(
-                                guest: (_) => null,
-                                signedIn: (signedIn) =>
-                                    signedIn.chatrooms?.where((c) {
-                                  return c.profile.name
-                                      .toLowerCase()
-                                      .contains(_filterString.toLowerCase());
-                                }),
-                              );
-                            }));
-
-                            final nonPendingChatrooms = filteredChatrooms
-                                ?.where((chatroom) =>
-                                    chatroom.inviteState !=
-                                    ChatroomState.pending)
-                                .toList();
-                            return _ConversationList(
-                              chatrooms: nonPendingChatrooms,
-                              emptyLabel:
-                                  'Invite someone to chat,\nthen continue the conversation here',
-                              filtered: _filterString.isNotEmpty,
-                              onRefresh: ref
-                                  .read(userProvider2.notifier)
-                                  .refreshChatrooms,
-                              onOpen: _openChat,
-                              onDelete: (index) => _deleteChatroom(
-                                  nonPendingChatrooms![index].profile),
-                            );
-                          },
-                        ),
-                      ),
-                      SizedBox(
-                        height: MediaQuery.of(context).viewInsets.bottom,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+    final loggedIn = ref.watch(authProvider.select((p) {
+      return p.map(
+        guest: (_) => false,
+        signedIn: (_) => true,
+      );
+    }));
+    if (!loggedIn) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('Log in start conversations'),
+          ElevatedButton(
+            onPressed: () => context.pushNamed('signup'),
+            child: const Text('Log in'),
           ),
-        );
+        ],
+      );
+    }
+
+    return ActivePage(
+      onActivate: () {
+        /// Notifications don't update chats, so refreshe on page activation
+        ref.read(userProvider2.notifier).refreshChatrooms();
       },
+      onDeactivate: () {},
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 18),
+          const Padding(
+            padding: EdgeInsets.only(left: 32),
+            child: Text(
+              'Conversations',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Color.fromRGBO(0xFF, 0x71, 0x71, 1.0),
+              ),
+            ),
+          ),
+          Container(
+            height: 31,
+            margin: const EdgeInsets.only(
+              left: 16,
+              top: 8,
+              right: 16,
+              bottom: 16,
+            ),
+            clipBehavior: Clip.hardEdge,
+            decoration: const BoxDecoration(
+              color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+              borderRadius: BorderRadius.all(Radius.circular(11)),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 26,
+                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
+                ),
+              ],
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 11, right: 6),
+                    child: TextFormField(
+                      controller: _searchController,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w300,
+                          ),
+                      textAlignVertical: TextAlignVertical.center,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        icon: const Icon(
+                          Icons.search,
+                          size: 16,
+                        ),
+                        hintText: 'Search',
+                        hintStyle: Theme.of(context)
+                            .textTheme
+                            .bodyMedium!
+                            .copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color:
+                                  const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                            ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (_filterString.isNotEmpty)
+                  Button(
+                    onPressed: () {
+                      setState(() => _searchController.text = "");
+                      FocusScope.of(context).unfocus();
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.close,
+                        color: Colors.black,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ColoredBox(
+              color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+              child: Column(
+                children: [
+                  if (_filterString.isEmpty)
+                    Visibility(
+                      visible: false,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: SizedBox(
+                          height: 150,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            itemCount: _collections.length,
+                            itemBuilder: (context, index) {
+                              final collection = _collections[index];
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 82,
+                                    height: 110,
+                                    clipBehavior: Clip.hardEdge,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: const Color.fromRGBO(
+                                            0xFF, 0x5F, 0x5F, 1.0),
+                                        width: 2,
+                                      ),
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(11)),
+                                    ),
+                                    margin: const EdgeInsets.all(9),
+                                    child: Image.network(
+                                      collection.photos.first.url,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  SizedBox(
+                                    width: 82,
+                                    child: Text(
+                                      'Name',
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium!
+                                          .copyWith(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w200,
+                                            color: Colors.white,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        final filteredChatrooms =
+                            ref.watch(userProvider2.select((p) {
+                          return p.map(
+                            guest: (_) => null,
+                            signedIn: (signedIn) =>
+                                signedIn.chatrooms?.where((c) {
+                              return c.profile.name
+                                  .toLowerCase()
+                                  .contains(_filterString.toLowerCase());
+                            }),
+                          );
+                        }));
+
+                        final nonPendingChatrooms = filteredChatrooms
+                            ?.where((chatroom) =>
+                                chatroom.inviteState != ChatroomState.pending)
+                            .toList();
+                        return _ConversationList(
+                          chatrooms: nonPendingChatrooms,
+                          emptyLabel:
+                              'Invite someone to chat,\nthen continue the conversation here',
+                          filtered: _filterString.isNotEmpty,
+                          onRefresh:
+                              ref.read(userProvider2.notifier).refreshChatrooms,
+                          onOpen: _openChat,
+                          onDelete: (index) => _deleteChatroom(
+                              nonPendingChatrooms![index].profile),
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    height: MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
