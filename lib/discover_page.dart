@@ -155,6 +155,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       isSignedOutProvider,
       (previous, next) {
         if (next) {
+          _tempPauseAudio();
           showSignupGuestModal(
             context,
             onShowSignup: () => context.pushNamed('signup'),
@@ -221,6 +222,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         });
       },
     );
+  }
+
+  void _tempPauseAudio() {
+    _profileBuilderKey.currentState?.pause();
   }
 
   bool _areLocationsDistant(Location a, Location b) {
@@ -630,6 +635,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
           actions: [
             CupertinoActionSheetAction(
               onPressed: () {
+                _tempPauseAudio();
                 Navigator.of(context).pop();
                 context.pushNamed('signup');
               },
