@@ -14,8 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/online_users_api.dart';
-import 'package:openup/api/online_users_api_util.dart';
+import 'package:openup/api/online_users_provider.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/audio_bio.dart';
@@ -1913,12 +1912,12 @@ class OnlineIndicatorBuilder extends ConsumerStatefulWidget {
 
 class OnlineIndicatorBuilderState
     extends ConsumerState<OnlineIndicatorBuilder> {
-  late final OnlineUsersApi _onlineUsersApi;
+  // Cached to use during dispose()
+  late final _cachedNotifier = ref.read(onlineUsersProvider.notifier);
 
   @override
   void initState() {
     super.initState();
-    _onlineUsersApi = ref.read(onlineUsersApiProvider);
     _subscribe(widget.uid);
   }
 
@@ -1937,10 +1936,9 @@ class OnlineIndicatorBuilderState
     super.dispose();
   }
 
-  void _subscribe(String uid) => _onlineUsersApi.subscribeToOnlineStatus(uid);
+  void _subscribe(String uid) => _cachedNotifier.subscribe(uid);
 
-  void _unsubscribe(String uid) =>
-      _onlineUsersApi.unsubscribeToOnlineStatus(uid);
+  void _unsubscribe(String uid) => _cachedNotifier.unsubscribe(uid);
 
   @override
   Widget build(BuildContext context) {

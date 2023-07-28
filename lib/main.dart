@@ -15,8 +15,6 @@ import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/chat_state.dart';
 import 'package:openup/api/in_app_notifications.dart';
-import 'package:openup/api/online_users_api.dart';
-import 'package:openup/api/online_users_api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/blocked_users_page.dart';
@@ -99,18 +97,6 @@ void main() async {
               );
             }),
             keyValueStoreProvider.overrideWithValue(sharedPreferences),
-            onlineUsersApiProvider.overrideWith((ref) {
-              return OnlineUsersApi(
-                host: host,
-                port: socketPort,
-                onConnectionError: () {},
-                onOnlineStatusChanged: (uid, online) {
-                  ref
-                      .read(onlineUsersProvider.notifier)
-                      .onlineChanged(uid, online);
-                },
-              );
-            })
           ],
           child: const OnlineUsersWatcher(
             child: OpenupApp(),

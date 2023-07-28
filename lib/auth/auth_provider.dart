@@ -42,13 +42,20 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     required this.api,
     required this.mixpanel,
   }) : super(_initialState()) {
+    _init();
+  }
+
+  void _init() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      _refreshAuthToken(user).then((token) {
-        if (token != null) {
-          api.authToken = token;
-        }
-      });
+      final token = await _refreshAuthToken(user);
+      if (!mounted) {
+        return;
+      }
+
+      if (token != null) {
+        api.authToken = token;
+      }
     }
 
     // Logging in/out triggers
@@ -96,7 +103,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     return null;
   }
 
-  void _onIdTokenChange(User? user) {
+  void _onIdTokenChange(User? user) async {
     final oldUser = _user;
     _user = user;
     final wasLoggedIn = oldUser != null;
@@ -111,11 +118,17 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
           uid: user.uid,
           phoneNumber: user.phoneNumber,
         );
-        _refreshAuthToken(user).then((token) {
-          if (token != null) {
-            api.authToken = token;
-          }
-        });
+        final token = await _refreshAuthToken(user);
+        if (!mounted) {
+          return;
+        }
+        state = state.map(
+          guest: (guest) => guest,
+          signedIn: (signedIn) => signedIn.copyWith(token: token),
+        );
+        if (token != null) {
+          api.authToken = token;
+        }
       } else {
         mixpanel.reset();
         Sentry.configureScope((scope) => scope.setUser(null));
@@ -307,5 +320,6 @@ class AuthState with _$AuthState {
   const factory AuthState.signedIn({
     required String uid,
     required String? phoneNumber,
+    @Default(null) String? token,
   }) = AuthSignedIn;
 }
