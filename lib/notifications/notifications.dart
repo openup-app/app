@@ -5,18 +5,21 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_apns/flutter_apns.dart';
-import 'package:openup/api/api.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'notifications.freezed.dart';
 
 typedef DeepLinkCallback = void Function(String path);
 
 class NotificationManager {
-  final Api? api;
+  final void Function(NotificationToken token) onToken;
   ApnsPushConnector? _apnsPushConnector;
   StreamController<String?>? _iosNotificationTokenController;
   StreamSubscription? _iosEventChannelTokenSubscription;
+  bool _disposed = false;
 
   NotificationManager({
-    required this.api,
+    required this.onToken,
   }) {
     if (Platform.isIOS) {
       _apnsPushConnector = ApnsPushConnector();
@@ -24,23 +27,26 @@ class NotificationManager {
       _apnsPushConnector?.configureApns();
       _iosNotificationTokenController = StreamController<String?>.broadcast();
     }
+  }
+
+  void requestNotificationPermission() {
+    print('######## Requesting notification permission');
     _tokenStream.listen(_onNotificationToken);
   }
 
   void _onNotificationToken(String? token) {
     debugPrint('On notification token: $token');
-    if (token != null) {
-      final isIOS = Platform.isIOS;
-      api?.addNotificationTokens(
-        fcmMessagingAndVoipToken: isIOS ? null : token,
-        apnMessagingToken: isIOS ? token : null,
-      );
+    if (token != null && !_disposed) {
+      final notificationToken =
+          Platform.isIOS ? _ApnsMessaging(token) : _FcmMessagingAndVoip(token);
+      onToken(notificationToken);
     }
   }
 
   void dispose() => _disposeNotifications();
 
   void _disposeNotifications() {
+    _disposed = true;
     _iosEventChannelTokenSubscription?.cancel();
     _iosNotificationTokenController?.close();
     if (Platform.isIOS) {
@@ -49,6 +55,11 @@ class NotificationManager {
   }
 
   Stream<String?> get _tokenStream async* {
+    if (_disposed) {
+      yield* const Stream.empty();
+      return;
+    }
+
     if (Platform.isAndroid) {
       yield await FirebaseMessaging.instance.getToken();
       yield* FirebaseMessaging.instance.onTokenRefresh;
@@ -83,4 +94,11 @@ class NotificationManager {
       }
     }
   }
+}
+
+@freezed
+class NotificationToken with _$NotificationToken {
+  const factory NotificationToken.fcmMessagingAndVoip(String token) =
+      _FcmMessagingAndVoip;
+  const factory NotificationToken.apnsMessaging(String token) = _ApnsMessaging;
 }

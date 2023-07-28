@@ -171,7 +171,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   void _initNotifications() {
     ref.listenManual<bool>(
-      authProvider.select((p) {
+      userProvider2.select((p) {
         return p.map(
           guest: (_) => false,
           signedIn: (signedIn) => true,
@@ -179,9 +179,13 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       }),
       (previous, next) {
         _notificationManager?.dispose();
-        _notificationManager = NotificationManager(
-          api: next ? ref.read(apiProvider) : null,
-        );
+        if (next) {
+          _notificationManager = NotificationManager(
+            onToken: (token) =>
+                ref.read(apiProvider).addNotificationToken(token),
+          );
+          _notificationManager?.requestNotificationPermission();
+        }
       },
       fireImmediately: true,
     );

@@ -10,6 +10,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/main.dart';
+import 'package:openup/notifications/notifications.dart';
 
 part 'api.freezed.dart';
 part 'api.g.dart';
@@ -262,10 +263,25 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> addNotificationTokens({
-    String? fcmMessagingAndVoipToken,
-    String? apnMessagingToken,
-  }) {
+  Future<Either<ApiError, void>> addNotificationToken(
+    NotificationToken notificationToken,
+  ) {
+    late final String token;
+    late final bool voip;
+    late final String service;
+    notificationToken.map(
+      fcmMessagingAndVoip: (fcmMessagingAndVoip) {
+        token = fcmMessagingAndVoip.token;
+        voip = true;
+        service = 'fcm';
+      },
+      apnsMessaging: (apnsMessaging) {
+        token = apnsMessaging.token;
+        voip = false;
+        service = 'apns';
+      },
+    );
+
     return _request(
       makeRequest: () {
         return http.post(
@@ -273,20 +289,12 @@ class Api {
           headers: _headers,
           body: jsonEncode({
             'tokens': [
-              if (fcmMessagingAndVoipToken != null)
-                {
-                  'token': fcmMessagingAndVoipToken,
-                  'messaging': true,
-                  'voip': true,
-                  'service': 'fcm',
-                },
-              if (apnMessagingToken != null)
-                {
-                  'token': apnMessagingToken,
-                  'messaging': true,
-                  'voip': false,
-                  'service': 'apns',
-                },
+              {
+                'token': token,
+                'messaging': true,
+                'voip': voip,
+                'service': service,
+              },
             ]
           }),
         );

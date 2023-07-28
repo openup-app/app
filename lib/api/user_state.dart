@@ -326,6 +326,9 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
       signedIn: (signedIn) async {
         state = signedIn.copyWith.account.location(visibility: visibility);
         final result = await _api.updateLocationVisibility(visibility);
+        if (!mounted) {
+          return;
+        }
         result.fold(
           (l) => _messageNotifier.emitMessage(errorToMessage(l)),
           (r) {},
