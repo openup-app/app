@@ -937,7 +937,6 @@ class DiscoverProfile with _$DiscoverProfile {
     required Profile profile,
     required Location location,
     required bool favorite,
-    required bool online,
   }) = _DiscoverProfile;
 
   factory DiscoverProfile.fromJson(Map<String, dynamic> json) =>
@@ -1043,7 +1042,7 @@ enum RelatedCollectionsType { user }
 @freezed
 class Chatroom with _$Chatroom {
   const factory Chatroom({
-    required Profile profile,
+    required DiscoverProfile profile,
     @_DateTimeConverter() required DateTime lastUpdated,
     required ChatroomState inviteState,
     required int unreadCount,

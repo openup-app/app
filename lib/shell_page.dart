@@ -73,117 +73,125 @@ class ShellPageState extends ConsumerState<ShellPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final panelTopMargin = MediaQuery.of(context).padding.top + 24.0;
-          final maxContentHeight = constraints.maxHeight - panelTopMargin;
-          return Stack(
-            children: [
-              WillPopScope(
-                onWillPop: () {
-                  if (_draggableScrollableController.size == 0) {
-                    return Future.value(true);
-                  }
-                  _draggableScrollableController.animateTo(
-                    0,
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOut,
-                  );
-                  return Future.value(false);
-                },
-                child: KeyedSubtree(
-                  key: _shellBuilderKey,
-                  child: _BranchIndex(
-                    index: 0,
-                    child: widget.shellBuilder(context),
+      body: SheetControl(
+        onAction: _onSheetAction,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final panelTopMargin = MediaQuery.of(context).padding.top + 24.0;
+            final maxContentHeight = constraints.maxHeight - panelTopMargin;
+            return Stack(
+              children: [
+                WillPopScope(
+                  onWillPop: () {
+                    if (_draggableScrollableController.size == 0) {
+                      return Future.value(true);
+                    }
+                    hideSheet();
+                    return Future.value(false);
+                  },
+                  child: KeyedSubtree(
+                    key: _shellBuilderKey,
+                    child: _BranchIndex(
+                      index: 0,
+                      child: widget.shellBuilder(context),
+                    ),
                   ),
                 ),
-              ),
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Builder(
-                    builder: (context) {
-                      final opacity = ref.watch(_sheetSize) * 0.35;
-                      return ColoredBox(
-                        color: Color.fromRGBO(0x00, 0x00, 0x00, opacity),
-                      );
-                    },
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Builder(
+                      builder: (context) {
+                        final opacity = ref.watch(_sheetSize) * 0.35;
+                        return ColoredBox(
+                          color: Color.fromRGBO(0x00, 0x00, 0x00, opacity),
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: DraggableScrollableSheet(
-                  controller: _draggableScrollableController,
-                  minChildSize: 0.0,
-                  maxChildSize: 1.0,
-                  initialChildSize: 0,
-                  snap: true,
-                  builder: (context, controller) {
-                    return Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        AnimatedContainer(
-                          curve: Curves.easeOut,
-                          duration: const Duration(milliseconds: 200),
-                          height: constraints.maxHeight,
-                          clipBehavior: Clip.antiAlias,
-                          margin: EdgeInsets.only(top: panelTopMargin),
-                          alignment: Alignment.topCenter,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(20),
-                              topRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: OverflowBox(
-                            minHeight: maxContentHeight,
-                            maxHeight: maxContentHeight,
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: DraggableScrollableSheet(
+                    controller: _draggableScrollableController,
+                    minChildSize: 0.0,
+                    maxChildSize: 1.0,
+                    initialChildSize: 0,
+                    snap: true,
+                    builder: (context, controller) {
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          AnimatedContainer(
+                            curve: Curves.easeOut,
+                            duration: const Duration(milliseconds: 200),
+                            height: constraints.maxHeight,
+                            clipBehavior: Clip.antiAlias,
+                            margin: EdgeInsets.only(top: panelTopMargin),
                             alignment: Alignment.topCenter,
-                            child: IndexedStack(
-                              index: widget.currentIndex,
-                              children: [
-                                for (var i = 0; i < _keys.length; i++)
-                                  KeyedSubtree(
-                                    key: _keys[i],
-                                    child: _BranchIndex(
-                                      index: i + 1,
-                                      child: widget.children[i],
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(20),
+                                topRight: Radius.circular(20),
+                              ),
+                            ),
+                            child: OverflowBox(
+                              minHeight: maxContentHeight,
+                              maxHeight: maxContentHeight,
+                              alignment: Alignment.topCenter,
+                              child: IndexedStack(
+                                index: widget.currentIndex,
+                                children: [
+                                  for (var i = 0; i < _keys.length; i++)
+                                    KeyedSubtree(
+                                      key: _keys[i],
+                                      child: _BranchIndex(
+                                        index: i + 1,
+                                        child: widget.children[i],
+                                      ),
                                     ),
-                                  ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: SingleChildScrollView(
-                            controller: controller,
-                            physics: const ClampingScrollPhysics(),
-                            child: Container(
-                              height: 48,
-                              margin: EdgeInsets.only(top: panelTopMargin - 28),
-                              child: const Align(
-                                alignment: Alignment.topCenter,
-                                child: Padding(
-                                  padding: EdgeInsets.only(top: 35),
-                                  child: DragHandle(),
+                          Align(
+                            alignment: Alignment.topCenter,
+                            child: SingleChildScrollView(
+                              controller: controller,
+                              physics: const ClampingScrollPhysics(),
+                              child: Container(
+                                height: 48,
+                                margin:
+                                    EdgeInsets.only(top: panelTopMargin - 28),
+                                child: const Align(
+                                  alignment: Alignment.topCenter,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(top: 35),
+                                    child: DragHandle(),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    );
-                  },
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
+  }
+
+  void _onSheetAction(_SheetAction action) {
+    switch (action) {
+      case _SheetAction.close:
+        hideSheet();
+        break;
+    }
   }
 
   void showSheet() {
@@ -202,7 +210,7 @@ class ShellPageState extends ConsumerState<ShellPage> {
     if (_draggableScrollableController.isAttached) {
       _draggableScrollableController.animateTo(
         0,
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
       );
     } else {
@@ -324,4 +332,27 @@ class _ActivePageState extends ConsumerState<ActivePage> {
       child: widget.child,
     );
   }
+}
+
+class SheetControl extends InheritedWidget {
+  final void Function(_SheetAction action) _onAction;
+
+  const SheetControl({
+    required super.child,
+    required void Function(_SheetAction action) onAction,
+  }) : _onAction = onAction;
+
+  @override
+  bool updateShouldNotify(covariant SheetControl oldWidget) {
+    return oldWidget._onAction != _onAction;
+  }
+
+  static SheetControl of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<SheetControl>()!;
+
+  void close() => _onAction(_SheetAction.close);
+}
+
+enum _SheetAction {
+  close;
 }

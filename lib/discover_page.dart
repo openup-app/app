@@ -16,6 +16,7 @@ import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/chat_state.dart';
 import 'package:openup/api/user_profile_cache.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/discover_map_provider.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/location/location_service.dart';
@@ -88,6 +89,22 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
           break;
       }
     });
+
+    ref.listenManual<DiscoverAction?>(
+      discoverProvider,
+      (previous, next) {
+        if (next == null) {
+          return;
+        }
+
+        next.map(
+          viewProfile: (viewProfile) {
+            final profile = viewProfile.profile;
+            _mapKey.currentState?.recenterMap(profile.location.latLong);
+          },
+        );
+      },
+    );
   }
 
   @override

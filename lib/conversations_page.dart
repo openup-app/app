@@ -234,7 +234,7 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
                             guest: (_) => null,
                             signedIn: (signedIn) =>
                                 signedIn.chatrooms?.where((c) {
-                              return c.profile.name
+                              return c.profile.profile.name
                                   .toLowerCase()
                                   .contains(_filterString.toLowerCase());
                             }),
@@ -254,7 +254,7 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
                               ref.read(userProvider2.notifier).refreshChatrooms,
                           onOpen: _openChat,
                           onDelete: (index) => _deleteChatroom(
-                              nonPendingChatrooms![index].profile),
+                              nonPendingChatrooms![index].profile.profile),
                         );
                       },
                     ),
@@ -275,10 +275,10 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
     FocusScope.of(context).unfocus();
     context.pushNamed(
       'chat',
-      params: {'uid': chatroom.profile.uid},
+      params: {'uid': chatroom.profile.profile.uid},
       extra: ChatPageArguments(chatroom: chatroom),
     );
-    ref.read(userProvider2.notifier).openChatroom(chatroom.profile.uid);
+    ref.read(userProvider2.notifier).openChatroom(chatroom.profile.profile.uid);
   }
 
   void _deleteChatroom(Profile profile) async {
@@ -357,7 +357,7 @@ class _ConversationList extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Slidable(
-                        key: Key(chatroom.profile.uid),
+                        key: Key(chatroom.profile.profile.uid),
                         endActionPane: ActionPane(
                           motion: const ScrollMotion(),
                           extentRatio: actionPaneExtentRatio,
@@ -366,7 +366,7 @@ class _ConversationList extends StatelessWidget {
                               onPressed: (context) {
                                 _showDeleteConversationConfirmationModal(
                                   context: context,
-                                  profile: chatroom.profile,
+                                  profile: chatroom.profile.profile,
                                   index: index,
                                 );
                               },
@@ -415,7 +415,7 @@ class _ConversationList extends StatelessWidget {
                                         shape: BoxShape.circle,
                                       ),
                                       child: Image.network(
-                                        chatroom.profile.photo,
+                                        chatroom.profile.profile.photo,
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -430,7 +430,7 @@ class _ConversationList extends StatelessWidget {
                                                 MainAxisAlignment.center,
                                             children: [
                                               Text(
-                                                chatroom.profile.name,
+                                                chatroom.profile.profile.name,
                                                 style: const TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w500,
@@ -483,7 +483,7 @@ class _ConversationList extends StatelessWidget {
                                 width: 78,
                                 height: 78,
                                 child: OnlineIndicatorBuilder(
-                                  uid: chatroom.profile.uid,
+                                  uid: chatroom.profile.profile.uid,
                                   builder: (context, online) {
                                     return online
                                         ? const OnlineIndicator()

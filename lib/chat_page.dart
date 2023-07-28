@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +13,9 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
+import 'package:openup/shell_page.dart';
 import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
@@ -115,7 +116,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
     _chatroom = widget.chatroom;
     final chatroom = widget.chatroom;
     if (chatroom != null) {
-      _otherProfile = chatroom.profile;
+      _otherProfile = chatroom.profile.profile;
     } else {
       _fetchChatroom(widget.otherUid);
     }
@@ -222,16 +223,24 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                         ),
                       ),
                       const Spacer(),
-                      ReportBlockPopupMenu2(
-                        uid: _otherProfile!.uid,
-                        name: _otherProfile!.name,
-                        onBlock: Navigator.of(context).pop,
+                      Builder(
                         builder: (context) {
-                          return const Padding(
-                            padding: EdgeInsets.all(10.0),
-                            child: Icon(
-                              Icons.more_horiz,
-                              color: Color.fromRGBO(0xBD, 0xBD, 0xBD, 1.0),
+                          final profile = chatroom?.profile;
+                          return Button(
+                            onPressed: profile == null
+                                ? null
+                                : () {
+                                    SheetControl.of(context).close();
+                                    ref.read(discoverProvider.notifier).state =
+                                        DiscoverAction.viewProfile(profile);
+                                  },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Image.asset(
+                                'assets/images/location_search.png',
+                                width: 26,
+                                height: 25,
+                              ),
                             ),
                           );
                         },
@@ -485,7 +494,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
             _chatroom = chatroom.copyWith(inviteState: ChatroomState.accepted);
             ref
                 .read(userProvider2.notifier)
-                .acceptChatroom(chatroom.profile.uid);
+                .acceptChatroom(chatroom.profile.profile.uid);
           });
         }
       },
@@ -544,7 +553,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       (l) => displayError(context, l),
       (r) => setState(() {
         _chatroom = r;
-        _otherProfile = r.profile;
+        _otherProfile = r.profile.profile;
       }),
     );
   }

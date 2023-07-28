@@ -77,7 +77,12 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
   void _initLocation() async {
     final service = LocationService();
-    if (await _requestLocationPermission(service)) {
+    final hasPermission = await _requestLocationPermission(service);
+    if (!mounted) {
+      return;
+    }
+
+    if (hasPermission) {
       final location = await service.getLatLong();
       if (!mounted) {
         return;

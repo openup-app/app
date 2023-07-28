@@ -30,7 +30,6 @@ class NotificationManager {
   }
 
   void requestNotificationPermission() {
-    print('######## Requesting notification permission');
     _tokenStream.listen(_onNotificationToken);
   }
 
