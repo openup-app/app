@@ -2,7 +2,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/widgets/audio_playback_symbol.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/profile_display.dart';
@@ -12,7 +11,6 @@ import '../platform/just_audio_audio_player.dart';
 class DiscoverList extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
   final DiscoverProfile? selectedProfile;
-  final EdgeInsets itemPadding;
   final ValueChanged<DiscoverProfile?> onProfileChanged;
   final PlaybackState playbackState;
   final Stream<PlaybackInfo> playbackInfoStream;
@@ -25,7 +23,6 @@ class DiscoverList extends ConsumerStatefulWidget {
     super.key,
     required this.profiles,
     required this.selectedProfile,
-    this.itemPadding = EdgeInsets.zero,
     required this.onProfileChanged,
     required this.playbackState,
     required this.playbackInfoStream,
@@ -104,7 +101,7 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 291 + widget.itemPadding.vertical,
+      height: 80,
       child: PageView.builder(
         controller: _pageController,
         clipBehavior: Clip.none,
@@ -269,303 +266,128 @@ class _MiniProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mutualContactCount = profile.profile.mutualContacts.length;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // White background so the card doesn't become see through when tapped
-        ...[
-          const Align(
-            alignment: Alignment.topCenter,
-            child: SizedBox(
-              width: 100,
-              height: 100,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Colors.white,
+    return Button(
+      onPressed: onProfilePressed,
+      child: Row(
+        children: [
+          const SizedBox(width: 21),
+          Container(
+            width: 50,
+            height: 50,
+            clipBehavior: Clip.hardEdge,
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              boxShadow: [
+                BoxShadow(
+                  offset: Offset(0, 1),
+                  blurRadius: 9,
+                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.35),
+                ),
+              ],
+            ),
+            child: Image.network(
+              profile.profile.photo,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AutoSizeText(
+                  profile.profile.name,
+                  textAlign: TextAlign.center,
+                  minFontSize: 16,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromRGBO(0x3C, 0x3C, 0x3C, 1.0),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: Color.fromRGBO(0x45, 0x45, 0x45, 1.0),
+                    ),
+                    children: [
+                      TextSpan(
+                        text: '$mutualContactCount Shared ',
+                      ),
+                      TextSpan(
+                        text: 'Connection${mutualContactCount == 1 ? '' : 's'}',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Button(
+            onPressed: onToggleFavorite,
+            child: Container(
+              width: 48,
+              height: 48,
+              color: Colors.transparent,
+              alignment: Alignment.center,
+              child: Icon(
+                profile.favorite ? Icons.favorite : Icons.favorite_outline,
+                color: profile.favorite
+                    ? const Color.fromRGBO(0xFF, 0x4F, 0x4F, 1.0)
+                    : const Color.fromRGBO(0x3D, 0x3D, 0x3D, 1.0),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Button(
+            onPressed: onPlayPause,
+            child: Container(
+              width: 48,
+              height: 48,
+              alignment: Alignment.center,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
+                  color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+                ),
+                child: Builder(
+                  builder: (context) {
+                    switch (playbackState) {
+                      case PlaybackState.playing:
+                        return const Icon(
+                          Icons.pause_rounded,
+                          size: 18,
+                          color: Colors.white,
+                        );
+                      case PlaybackState.loading:
+                        return const LoadingIndicator(
+                          size: 12,
+                          color: Colors.white,
+                        );
+                      default:
+                        return const Icon(
+                          Icons.play_arrow_rounded,
+                          size: 18,
+                          color: Colors.white,
+                        );
+                    }
+                  },
                 ),
               ),
             ),
           ),
+          const SizedBox(width: 28),
         ],
-        Button(
-          onPressed: onProfilePressed,
-          child: Stack(
-            children: [
-              Positioned(
-                top: 20,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  clipBehavior: Clip.hardEdge,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(34),
-                      topRight: Radius.circular(34),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        offset: Offset(0, -1),
-                        blurRadius: 24,
-                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Positioned(
-                        left: 12,
-                        top: 12,
-                        child: Button(
-                          onPressed: () => onProfileChanged(null),
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            padding: const EdgeInsets.all(12),
-                            child: const DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(0x3D, 0x3D, 0x3D, 0.25),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.close,
-                                size: 16,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        right: 12,
-                        top: 12,
-                        child: Button(
-                          onPressed: onToggleFavorite,
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            color: Colors.transparent,
-                            alignment: Alignment.center,
-                            child: Icon(
-                              profile.favorite
-                                  ? Icons.favorite
-                                  : Icons.favorite_outline,
-                              color: profile.favorite
-                                  ? const Color.fromRGBO(0xFF, 0x4F, 0x4F, 1.0)
-                                  : const Color.fromRGBO(
-                                      0x3D, 0x3D, 0x3D, 0.25),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        right: 12,
-                        bottom: MediaQuery.of(context).padding.bottom + 12,
-                        child: Button(
-                          onPressed: onPlayPause,
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            alignment: Alignment.center,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
-                              ),
-                              child: Builder(
-                                builder: (context) {
-                                  switch (playbackState) {
-                                    case PlaybackState.playing:
-                                      return const Icon(
-                                        Icons.pause_rounded,
-                                        size: 18,
-                                        color: Colors.white,
-                                      );
-                                    case PlaybackState.loading:
-                                      return const LoadingIndicator(
-                                        size: 12,
-                                        color: Colors.white,
-                                      );
-                                    default:
-                                      return const Icon(
-                                        Icons.play_arrow_rounded,
-                                        size: 18,
-                                        color: Colors.white,
-                                      );
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 96),
-                          AutoSizeText(
-                            profile.profile.name,
-                            textAlign: TextAlign.center,
-                            minFontSize: 16,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          RichText(
-                            textAlign: TextAlign.center,
-                            text: TextSpan(
-                              style: const TextStyle(
-                                color: Color.fromRGBO(0x45, 0x45, 0x45, 1.0),
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: '$mutualContactCount Shared ',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w700),
-                                ),
-                                TextSpan(
-                                  text:
-                                      'Connection${mutualContactCount == 1 ? '' : 's'}',
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Spacer(),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 16, right: 26),
-                            child: Row(
-                              children: [
-                                StreamBuilder<bool>(
-                                  stream: playbackInfoStream.map(
-                                      (e) => e.state == PlaybackState.playing),
-                                  initialData: false,
-                                  builder: (context, snapshot) {
-                                    final playing = snapshot.requireData;
-                                    return AudioPlaybackSymbol(
-                                      play: playing,
-                                    );
-                                  },
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: StreamBuilder<double>(
-                                    stream: playbackInfoStream.map((e) {
-                                      return e.duration.inMilliseconds == 0
-                                          ? 0
-                                          : e.position.inMilliseconds /
-                                              e.duration.inMilliseconds;
-                                    }),
-                                    initialData: 0.0,
-                                    builder: (context, snapshot) {
-                                      return DecoratedBox(
-                                        decoration: const BoxDecoration(
-                                          color: Color.fromRGBO(
-                                              0xE1, 0xE1, 0xE1, 1.0),
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(2)),
-                                        ),
-                                        child: FractionallySizedBox(
-                                          widthFactor: snapshot.requireData,
-                                          alignment: Alignment.centerLeft,
-                                          child: Container(
-                                            height: 4,
-                                            decoration: const BoxDecoration(
-                                              color: Color.fromRGBO(
-                                                  0x3E, 0x97, 0xFF, 1.0),
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(2)),
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Spacer(),
-                          Center(
-                            child: Button(
-                              onPressed: onRecord,
-                              child: Container(
-                                width: 123,
-                                height: 46,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    width: 1.3,
-                                    color: const Color.fromRGBO(
-                                        0x00, 0x85, 0xFF, 1.0),
-                                  ),
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(25),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'send message',
-                                  style: TextStyle(
-                                    color:
-                                        Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            height: MediaQuery.of(context).padding.bottom,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.topCenter,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  clipBehavior: Clip.hardEdge,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        offset: Offset(0, 1),
-                        blurRadius: 4,
-                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                      ),
-                    ],
-                  ),
-                  child: Container(
-                    foregroundDecoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        width: 2,
-                        color: Colors.white,
-                      ),
-                    ),
-                    child: Image.network(
-                      profile.profile.photo,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

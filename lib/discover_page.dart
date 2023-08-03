@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:async/async.dart';
 import 'package:dartz/dartz.dart' show Either;
@@ -867,284 +868,289 @@ class _ProfilePanel extends StatefulWidget {
 class _ProfilePanelState extends State<_ProfilePanel> {
   @override
   Widget build(BuildContext context) {
-    const margin = EdgeInsets.symmetric(
-      horizontal: 24,
-      vertical: 16,
+    const borderSide = BorderSide(
+      color: Color.fromRGBO(0xAB, 0xAB, 0xAB, 0.33),
     );
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedCrossFade(
-          duration: const Duration(milliseconds: 300),
-          sizeCurve: Curves.easeOutQuart,
-          crossFadeState: widget.selectedProfile == null
-              ? CrossFadeState.showFirst
-              : CrossFadeState.showSecond,
-          firstChild: Container(
-            // Padding to avoid clipping panel shadow
-            padding: const EdgeInsets.only(top: 24),
-            color: Colors.transparent,
-            child: Container(
-              height: 72 + MediaQuery.of(context).padding.bottom,
-              alignment: Alignment.center,
-              clipBehavior: Clip.hardEdge,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+    return Container(
+      margin: const EdgeInsets.only(top: 24),
+      decoration: BoxDecoration(
+        boxShadow: [
+          widget.selectedProfile == null
+              ? const BoxShadow(
+                  offset: Offset(0, -1),
+                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.15),
+                  blurRadius: 5,
+                  blurStyle: BlurStyle.outer,
+                )
+              : const BoxShadow(
+                  offset: Offset(0, -1),
+                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                  blurRadius: 13,
+                  blurStyle: BlurStyle.outer,
                 ),
-                color: const Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
-                boxShadow: [
-                  widget.selectedProfile == null
-                      ? const BoxShadow(
-                          offset: Offset(0, -1),
-                          color: Color.fromRGBO(0x00, 0x00, 0x00, 0.15),
-                          blurRadius: 5,
+        ],
+      ),
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: ColoredBox(
+            color: const Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutQuart,
+                  child: widget.selectedProfile == null
+                      ? const SizedBox(
+                          width: double.infinity,
+                          height: 0,
                         )
-                      : const BoxShadow(
-                          offset: Offset(0, -1),
-                          color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                          blurRadius: 13,
-                        ),
-                ],
-              ),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Column(
+                      : _buildMiniProfile(),
+                ),
+                Container(
+                  height: 72 + MediaQuery.of(context).padding.bottom,
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.hardEdge,
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      left: borderSide,
+                      top: borderSide,
+                      right: borderSide,
+                    ),
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      const SizedBox(height: 7),
-                      const Center(
-                        child: DragHandle(),
-                      ),
-                      Row(
+                      Column(
                         children: [
-                          const SizedBox(width: 8),
-                          Button(
-                            onPressed: widget.onShowSettings,
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              clipBehavior: Clip.hardEdge,
-                              margin: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
+                          const SizedBox(height: 7),
+                          const Center(
+                            child: DragHandle(),
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(width: 8),
+                              Button(
+                                onPressed: widget.onShowSettings,
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  clipBehavior: Clip.hardEdge,
+                                  margin: const EdgeInsets.all(8),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: UserProfileCache(
+                                      builder: (context, cachedPhoto) {
+                                    return Consumer(
+                                      builder: (context, ref, child) {
+                                        final myProfile =
+                                            ref.watch(userProvider2.select((p) {
+                                          return p.map(
+                                            guest: (_) => null,
+                                            signedIn: (signedIn) =>
+                                                signedIn.account.profile,
+                                          );
+                                        }));
+                                        if (myProfile != null) {
+                                          return Image(
+                                            image:
+                                                NetworkImage(myProfile.photo),
+                                            fit: BoxFit.cover,
+                                            gaplessPlayback: true,
+                                          );
+                                        } else if (cachedPhoto != null) {
+                                          return Image.file(
+                                            cachedPhoto,
+                                            fit: BoxFit.cover,
+                                            gaplessPlayback: true,
+                                          );
+                                        } else {
+                                          return const Icon(
+                                            Icons.person,
+                                            size: 22,
+                                            color: Color.fromRGBO(
+                                                0x8D, 0x8D, 0x8D, 1.0),
+                                          );
+                                        }
+                                      },
+                                    );
+                                  }),
+                                ),
                               ),
-                              child: UserProfileCache(
-                                  builder: (context, cachedPhoto) {
-                                return Consumer(
-                                  builder: (context, ref, child) {
-                                    final myProfile =
-                                        ref.watch(userProvider2.select((p) {
-                                      return p.map(
-                                        guest: (_) => null,
-                                        signedIn: (signedIn) =>
-                                            signedIn.account.profile,
-                                      );
-                                    }));
-                                    if (myProfile != null) {
-                                      return Image(
-                                        image: NetworkImage(myProfile.photo),
-                                        fit: BoxFit.cover,
-                                        gaplessPlayback: true,
-                                      );
-                                    } else if (cachedPhoto != null) {
-                                      return Image.file(
-                                        cachedPhoto,
-                                        fit: BoxFit.cover,
-                                        gaplessPlayback: true,
-                                      );
-                                    } else {
-                                      return const Icon(
-                                        Icons.person,
-                                        size: 22,
-                                        color: Color.fromRGBO(
-                                            0x8D, 0x8D, 0x8D, 1.0),
-                                      );
+                              Expanded(
+                                child: Button(
+                                  onPressed: () async {
+                                    final prevGender = widget.gender;
+                                    final gender =
+                                        await _showPreferencesSheet();
+                                    if (mounted && gender != prevGender) {
+                                      widget.onGenderChanged(gender);
                                     }
                                   },
-                                );
-                              }),
-                            ),
-                          ),
-                          Expanded(
-                            child: Button(
-                              onPressed: () async {
-                                final prevGender = widget.gender;
-                                final gender = await _showPreferencesSheet();
-                                if (mounted && gender != prevGender) {
-                                  widget.onGenderChanged(gender);
-                                }
-                              },
-                              child: Container(
-                                height: 32,
-                                clipBehavior: Clip.hardEdge,
-                                margin: const EdgeInsets.all(8),
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(11),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    SizedBox(width: 18),
-                                    Icon(
-                                      Icons.search,
-                                      size: 18,
-                                      color:
-                                          Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Who are you searching for?',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w400,
-                                        color: Color.fromRGBO(
-                                            0x8D, 0x8D, 0x8D, 1.0),
+                                  child: Container(
+                                    height: 32,
+                                    clipBehavior: Clip.hardEdge,
+                                    margin: const EdgeInsets.all(8),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(11),
                                       ),
                                     ),
-                                  ],
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: const [
+                                        SizedBox(width: 18),
+                                        Icon(
+                                          Icons.search,
+                                          size: 18,
+                                          color: Color.fromRGBO(
+                                              0x8D, 0x8D, 0x8D, 1.0),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'Who are you searching for?',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w400,
+                                            color: Color.fromRGBO(
+                                                0x8D, 0x8D, 0x8D, 1.0),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 8),
+                            ],
                           ),
-                          const SizedBox(width: 8),
                         ],
+                      ),
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        right: 0,
+                        bottom: MediaQuery.of(context).padding.bottom,
+                        child: GestureDetector(
+                          onVerticalDragUpdate: (details) {
+                            if (details.delta.dy < 0) {
+                              widget.onShowSettings();
+                            }
+                          },
+                        ),
                       ),
                     ],
                   ),
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    right: 0,
-                    bottom: MediaQuery.of(context).padding.bottom,
-                    child: GestureDetector(
-                      onVerticalDragUpdate: (details) {
-                        if (details.delta.dy < 0) {
-                          widget.onShowSettings();
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          secondChild: // Must live above PageView.builder (otherwise duplicate global key)
-              Container(
-            // Padding to avoid clipping panel shadow
-            padding: const EdgeInsets.only(top: 12),
-            color: Colors.transparent,
-            child: ProfileBuilder(
-              key: widget.profileBuilderKey,
-              profile: widget.selectedProfile?.profile,
-              play: widget.pageActive,
-              builder: (context, playbackState, playbackInfoStream) {
-                final selectedProfile = widget.selectedProfile;
-                return Builder(
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniProfile() {
+    // Must live above PageView.builder (otherwise duplicate global key)
+    return ProfileBuilder(
+      key: widget.profileBuilderKey,
+      profile: widget.selectedProfile?.profile,
+      play: widget.pageActive,
+      builder: (context, playbackState, playbackInfoStream) {
+        final selectedProfile = widget.selectedProfile;
+        return Builder(
+          builder: (context) {
+            if (selectedProfile == null) {
+              return const SizedBox(
+                height: 0,
+                width: double.infinity,
+              );
+            }
+            return DiscoverList(
+              profiles: widget.profiles,
+              selectedProfile: selectedProfile,
+              onProfileChanged: (profile) {
+                // final scrollingForward = index > _profileIndex;
+                // if (scrollingForward) {
+                //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+                // }
+                widget.onProfileChanged(profile);
+              },
+              playbackState: playbackState,
+              playbackInfoStream: playbackInfoStream,
+              onPlayPause: () => _onPlayPause(playbackState),
+              onToggleFavorite: widget.onToggleFavorite,
+              onRecord: () => widget.onRecordInvite(selectedProfile.profile),
+              onProfilePressed: () {
+                final topPadding = MediaQuery.of(context).padding.top;
+                showModalBottomSheet(
+                  context: context,
+                  backgroundColor: Colors.transparent,
+                  isScrollControlled: true,
                   builder: (context) {
-                    if (selectedProfile == null) {
-                      return const SizedBox(
-                        height: 0,
-                        width: double.infinity,
-                      );
-                    }
-                    return DiscoverList(
-                      profiles: widget.profiles,
-                      selectedProfile: selectedProfile,
-                      itemPadding: margin,
-                      onProfileChanged: (profile) {
-                        // final scrollingForward = index > _profileIndex;
-                        // if (scrollingForward) {
-                        //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-                        // }
-                        widget.onProfileChanged(profile);
-                      },
-                      playbackState: playbackState,
-                      playbackInfoStream: playbackInfoStream,
-                      onPlayPause: () => _onPlayPause(playbackState),
-                      onToggleFavorite: widget.onToggleFavorite,
-                      onRecord: () =>
-                          widget.onRecordInvite(selectedProfile.profile),
-                      onProfilePressed: () {
-                        final topPadding = MediaQuery.of(context).padding.top;
-                        showModalBottomSheet(
-                          context: context,
-                          backgroundColor: Colors.transparent,
-                          isScrollControlled: true,
-                          builder: (context) {
-                            return Container(
-                              clipBehavior: Clip.hardEdge,
-                              margin: EdgeInsets.only(top: topPadding + 16),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(56),
-                                  topRight: Radius.circular(56),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    offset: Offset(0, 2),
-                                    blurRadius: 12,
-                                    color:
-                                        Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const SizedBox(height: 9),
-                                  Container(
-                                    width: 37,
-                                    height: 5,
-                                    decoration: const BoxDecoration(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(2.5)),
-                                      color:
-                                          Color.fromRGBO(0xE0, 0xE0, 0xE0, 1.0),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 9),
-                                  Expanded(
-                                    child: DiscoverListFull(
-                                      profiles: widget.profiles,
-                                      selectedProfile: selectedProfile,
-                                      onProfileChanged: (profile) {
-                                        widget.onProfileChanged(profile);
-                                      },
-                                      play: true,
-                                      onPlayPause: () =>
-                                          _onPlayPause(playbackState),
-                                      onRecord: () => widget.onRecordInvite(
-                                          selectedProfile.profile),
-                                      onBlock: () {
-                                        widget.onBlockUser(
-                                            selectedProfile.profile);
-                                        widget.onProfileChanged(null);
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      },
+                    return Container(
+                      clipBehavior: Clip.hardEdge,
+                      margin: EdgeInsets.only(top: topPadding + 16),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(56),
+                          topRight: Radius.circular(56),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            offset: Offset(0, 2),
+                            blurRadius: 12,
+                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 9),
+                          Container(
+                            width: 37,
+                            height: 5,
+                            decoration: const BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(2.5)),
+                              color: Color.fromRGBO(0xE0, 0xE0, 0xE0, 1.0),
+                            ),
+                          ),
+                          const SizedBox(height: 9),
+                          Expanded(
+                            child: DiscoverListFull(
+                              profiles: widget.profiles,
+                              selectedProfile: selectedProfile,
+                              onProfileChanged: (profile) {
+                                widget.onProfileChanged(profile);
+                              },
+                              play: true,
+                              onPlayPause: () => _onPlayPause(playbackState),
+                              onRecord: () => widget
+                                  .onRecordInvite(selectedProfile.profile),
+                              onBlock: () {
+                                widget.onBlockUser(selectedProfile.profile);
+                                widget.onProfileChanged(null);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 );
               },
-            ),
-          ),
-        ),
-      ],
+            );
+          },
+        );
+      },
     );
   }
 
