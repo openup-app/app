@@ -14,7 +14,8 @@ class DiscoverList extends ConsumerStatefulWidget {
   final ValueChanged<DiscoverProfile?> onProfileChanged;
   final PlaybackState playbackState;
   final Stream<PlaybackInfo> playbackInfoStream;
-  final VoidCallback onPlayPause;
+  final VoidCallback onPlay;
+  final VoidCallback onPause;
   final VoidCallback onRecord;
   final VoidCallback onToggleFavorite;
   final VoidCallback onProfilePressed;
@@ -26,7 +27,8 @@ class DiscoverList extends ConsumerStatefulWidget {
     required this.onProfileChanged,
     required this.playbackState,
     required this.playbackInfoStream,
-    required this.onPlayPause,
+    required this.onPlay,
+    required this.onPause,
     required this.onRecord,
     required this.onToggleFavorite,
     required this.onProfilePressed,
@@ -117,7 +119,8 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
             playbackInfoStream:
                 selected ? widget.playbackInfoStream : const Stream.empty(),
             onProfileChanged: widget.onProfileChanged,
-            onPlayPause: widget.onPlayPause,
+            onPlay: widget.onPlay,
+            onPause: widget.onPause,
             onRecord: widget.onRecord,
             onToggleFavorite: widget.onToggleFavorite,
             onProfilePressed: widget.onProfilePressed,
@@ -132,8 +135,9 @@ class DiscoverListFull extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
   final DiscoverProfile? selectedProfile;
   final ValueChanged<DiscoverProfile?> onProfileChanged;
-  final bool play;
-  final VoidCallback onPlayPause;
+  final Stream<PlaybackInfo> playbackInfoStream;
+  final VoidCallback onPlay;
+  final VoidCallback onPause;
   final VoidCallback onRecord;
   final VoidCallback onBlock;
 
@@ -142,8 +146,9 @@ class DiscoverListFull extends ConsumerStatefulWidget {
     required this.profiles,
     required this.selectedProfile,
     required this.onProfileChanged,
-    required this.play,
-    required this.onPlayPause,
+    required this.playbackInfoStream,
+    required this.onPlay,
+    required this.onPause,
     required this.onRecord,
     required this.onBlock,
   });
@@ -224,14 +229,13 @@ class _DisoverListFullState extends ConsumerState<DiscoverListFull> {
         final profile = widget.profiles[index];
         return Padding(
           padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            bottom: 16 + MediaQuery.of(context).padding.bottom,
+            bottom: MediaQuery.of(context).padding.bottom,
           ),
           child: ProfileDisplay(
             profile: profile.profile,
-            play: widget.play,
-            onPlayPause: widget.onPlayPause,
+            playbackInfoStream: widget.playbackInfoStream,
+            onPlay: widget.onPlay,
+            onPause: widget.onPause,
             onRecord: widget.onRecord,
             onBlock: widget.onBlock,
           ),
@@ -246,7 +250,8 @@ class _MiniProfile extends StatelessWidget {
   final PlaybackState playbackState;
   final Stream<PlaybackInfo> playbackInfoStream;
   final ValueChanged<DiscoverProfile?> onProfileChanged;
-  final VoidCallback onPlayPause;
+  final VoidCallback onPlay;
+  final VoidCallback onPause;
   final VoidCallback onRecord;
   final VoidCallback onToggleFavorite;
   final VoidCallback onProfilePressed;
@@ -257,7 +262,8 @@ class _MiniProfile extends StatelessWidget {
     required this.playbackState,
     required this.playbackInfoStream,
     required this.onProfileChanged,
-    required this.onPlayPause,
+    required this.onPlay,
+    required this.onPause,
     required this.onRecord,
     required this.onToggleFavorite,
     required this.onProfilePressed,
@@ -347,7 +353,16 @@ class _MiniProfile extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Button(
-            onPressed: onPlayPause,
+            onPressed: () {
+              switch (playbackState) {
+                case PlaybackState.idle:
+                case PlaybackState.paused:
+                  onPlay();
+                  break;
+                default:
+                  onPause();
+              }
+            },
             child: Container(
               width: 48,
               height: 48,
@@ -385,7 +400,7 @@ class _MiniProfile extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 28),
+          const SizedBox(width: 16),
         ],
       ),
     );

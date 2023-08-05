@@ -132,8 +132,9 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                     ),
                     child: ProfileDisplay(
                       profile: profile,
-                      play: _play,
-                      onPlayPause: () => setState(() => _play = !_play),
+                      playbackInfoStream: _player.playbackInfoStream,
+                      onPlay: () => _player.play(),
+                      onPause: () => _player.pause(),
                       onRecord: () => _showRecordPanel(context, profile.uid),
                       onBlock: () {},
                     ),

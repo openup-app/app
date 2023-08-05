@@ -21,7 +21,6 @@ import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/discover_map_provider.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/location/location_service.dart';
-import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -1083,65 +1082,36 @@ class _ProfilePanelState extends State<_ProfilePanel> {
               },
               playbackState: playbackState,
               playbackInfoStream: playbackInfoStream,
-              onPlayPause: () => _onPlayPause(playbackState),
+              onPlay: () => widget.profileBuilderKey.currentState?.play(),
+              onPause: () => widget.profileBuilderKey.currentState?.pause(),
               onToggleFavorite: widget.onToggleFavorite,
               onRecord: () => widget.onRecordInvite(selectedProfile.profile),
               onProfilePressed: () {
-                final topPadding = MediaQuery.of(context).padding.top;
+                final mediaQueryData = MediaQuery.of(context);
                 showModalBottomSheet(
                   context: context,
-                  backgroundColor: Colors.transparent,
+                  backgroundColor: Colors.white,
                   isScrollControlled: true,
                   builder: (context) {
-                    return Container(
-                      clipBehavior: Clip.hardEdge,
-                      margin: EdgeInsets.only(top: topPadding + 16),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(56),
-                          topRight: Radius.circular(56),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            offset: Offset(0, 2),
-                            blurRadius: 12,
-                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(height: 9),
-                          Container(
-                            width: 37,
-                            height: 5,
-                            decoration: const BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(2.5)),
-                              color: Color.fromRGBO(0xE0, 0xE0, 0xE0, 1.0),
-                            ),
-                          ),
-                          const SizedBox(height: 9),
-                          Expanded(
-                            child: DiscoverListFull(
-                              profiles: widget.profiles,
-                              selectedProfile: selectedProfile,
-                              onProfileChanged: (profile) {
-                                widget.onProfileChanged(profile);
-                              },
-                              play: true,
-                              onPlayPause: () => _onPlayPause(playbackState),
-                              onRecord: () => widget
-                                  .onRecordInvite(selectedProfile.profile),
-                              onBlock: () {
-                                widget.onBlockUser(selectedProfile.profile);
-                                widget.onProfileChanged(null);
-                              },
-                            ),
-                          ),
-                        ],
+                    return MediaQuery(
+                      data: mediaQueryData,
+                      child: DiscoverListFull(
+                        profiles: widget.profiles,
+                        selectedProfile: selectedProfile,
+                        onProfileChanged: (profile) {
+                          widget.onProfileChanged(profile);
+                        },
+                        playbackInfoStream: playbackInfoStream,
+                        onPlay: () =>
+                            widget.profileBuilderKey.currentState?.play(),
+                        onPause: () =>
+                            widget.profileBuilderKey.currentState?.pause(),
+                        onRecord: () =>
+                            widget.onRecordInvite(selectedProfile.profile),
+                        onBlock: () {
+                          widget.onBlockUser(selectedProfile.profile);
+                          widget.onProfileChanged(null);
+                        },
                       ),
                     );
                   },
@@ -1152,17 +1122,6 @@ class _ProfilePanelState extends State<_ProfilePanel> {
         );
       },
     );
-  }
-
-  void _onPlayPause(PlaybackState playbackState) {
-    switch (playbackState) {
-      case PlaybackState.idle:
-      case PlaybackState.paused:
-        widget.profileBuilderKey.currentState?.play();
-        break;
-      default:
-        widget.profileBuilderKey.currentState?.pause();
-    }
   }
 
   Future<Gender?> _showPreferencesSheet() async {

@@ -100,6 +100,28 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        Button(
+                          onPressed: () => _onDisplayProfile(profile),
+                          child: Container(
+                            height: 52,
+                            clipBehavior: Clip.hardEdge,
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: const BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(16)),
+                              color: Colors.white,
+                            ),
+                            alignment: Alignment.center,
+                            child: const Text(
+                              'Preview',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         DefaultTextStyle(
                           style: const TextStyle(color: Colors.white),
                           child: Padding(
@@ -235,6 +257,36 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                     );
                   },
                 ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  void _onDisplayProfile(Profile profile) {
+    final mediaQueryData = MediaQuery.of(context);
+    final profileBuilderKey = GlobalKey<ProfileBuilderState>();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      builder: (context) {
+        return MediaQuery(
+          data: mediaQueryData,
+          child: ProfileBuilder(
+            key: profileBuilderKey,
+            play: false,
+            profile: profile,
+            builder: (context, playbackState, playbackInfoStream) {
+              return ProfileDisplay(
+                profile: profile,
+                playbackInfoStream: playbackInfoStream,
+                onPlay: () => profileBuilderKey.currentState?.play(),
+                onPause: () => profileBuilderKey.currentState?.pause(),
+                onRecord: () {},
+                onBlock: () {},
               );
             },
           ),
@@ -1176,10 +1228,11 @@ class _SectionTitle extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 4.0),
         child: Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium!
-              .copyWith(fontSize: 13, fontWeight: FontWeight.w400),
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: Colors.black,
+          ),
         ),
       ),
     );

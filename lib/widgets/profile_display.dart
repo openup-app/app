@@ -8,6 +8,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/drag_handle.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 
@@ -80,9 +81,15 @@ class ProfileBuilderState extends State<ProfileBuilder> {
     super.dispose();
   }
 
-  void play() => _player.play(loop: true);
+  void play() {
+    print('requested to play');
+    _player.play(loop: true);
+  }
 
-  void pause() => _player.pause();
+  void pause() {
+    print('erquested to pause');
+    _player.pause();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,16 +103,18 @@ class ProfileBuilderState extends State<ProfileBuilder> {
 
 class ProfileDisplay extends ConsumerStatefulWidget {
   final Profile profile;
-  final bool play;
-  final VoidCallback onPlayPause;
+  final Stream<PlaybackInfo> playbackInfoStream;
+  final VoidCallback onPlay;
+  final VoidCallback onPause;
   final VoidCallback onRecord;
   final VoidCallback onBlock;
 
   const ProfileDisplay({
     super.key,
     required this.profile,
-    required this.play,
-    required this.onPlayPause,
+    required this.playbackInfoStream,
+    required this.onPlay,
+    required this.onPause,
     required this.onRecord,
     required this.onBlock,
   });
@@ -122,89 +131,130 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
           signedIn: (signedIn) => signedIn.account.profile.uid,
         );
     final mutualContactCount = widget.profile.mutualContacts.length;
-    return Container(
-      clipBehavior: Clip.hardEdge,
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(48)),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Button(
-            onPressed: widget.onPlayPause,
-            child: KeyedSubtree(
-              key: ValueKey(widget.profile.uid),
-              child: NonCinematicGallery(
-                slideshow: widget.play,
-                gallery: widget.profile.gallery,
-              ),
-            ),
-          ),
-          if (!widget.play)
-            const Center(
-              child: IgnorePointer(
-                child: IconWithShadow(
-                  Icons.play_arrow,
-                  size: 80,
-                ),
-              ),
-            ),
-          Positioned(
-            right: 22,
-            top: 20,
-            child: Builder(
-              builder: (context) {
-                if (widget.profile.uid == myUid) {
-                  return const SizedBox.shrink();
-                } else {
-                  return ReportBlockPopupMenu2(
-                    uid: widget.profile.uid,
-                    name: widget.profile.name,
-                    onBlock: widget.onBlock,
-                    builder: (context) {
-                      return const _ProfileButtonContents(
-                        icon: Icon(
-                          CupertinoIcons.ellipsis,
-                          color: Colors.black,
-                          size: 20,
+    final playingStream = widget.playbackInfoStream.map((info) =>
+        info.state != PlaybackState.idle && info.state != PlaybackState.paused);
+    return Column(
+      children: [
+        Expanded(
+          child: StreamBuilder<bool>(
+            stream: playingStream,
+            initialData: false,
+            builder: (context, snapshot) {
+              final playing = snapshot.requireData;
+              return Button(
+                onPressed: () {
+                  if (playing) {
+                    widget.onPause();
+                  } else {
+                    widget.onPlay();
+                  }
+                },
+                child: Stack(
+                  children: [
+                    KeyedSubtree(
+                      key: ValueKey(widget.profile.uid),
+                      child: NonCinematicGallery(
+                        slideshow: playing,
+                        gallery: widget.profile.gallery,
+                      ),
+                    ),
+                    if (!playing)
+                      const Center(
+                        child: IgnorePointer(
+                          child: IconWithShadow(
+                            Icons.play_arrow,
+                            size: 80,
+                          ),
                         ),
-                        size: 29,
-                      );
-                    },
-                  );
-                }
-              },
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 120,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.5),
+                      ),
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: IgnorePointer(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              top: MediaQuery.of(context).padding.top + 8),
+                          child: const DragHandle(
+                            width: 36,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: StreamBuilder<double>(
+                        stream: widget.playbackInfoStream.map((e) {
+                          return e.duration.inMilliseconds == 0
+                              ? 0
+                              : e.position.inMilliseconds /
+                                  e.duration.inMilliseconds;
+                        }),
+                        initialData: 0.0,
+                        builder: (context, snapshot) {
+                          return DecoratedBox(
+                            decoration: const BoxDecoration(
+                              color: Color.fromRGBO(0x6C, 0x6C, 0x6C, 0.5),
+                            ),
+                            child: FractionallySizedBox(
+                              widthFactor: snapshot.requireData,
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                height: 4,
+                                decoration: const BoxDecoration(
+                                  color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.75),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(2)),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ),
+              );
+            },
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: 51,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              margin: const EdgeInsets.only(bottom: 38),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Button(
+        ),
+        const SizedBox(height: 28),
+        Padding(
+          padding: const EdgeInsets.only(left: 26, right: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: AutoSizeText(
+                            widget.profile.name,
+                            minFontSize: 15,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (widget.profile.age != null)
+                          Text(
+                            widget.profile.age.toString(),
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w300,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Button(
                       useFadeWheNoPressedCallback: false,
                       onPressed: () {
                         showCupertinoModalPopup(
@@ -220,81 +270,118 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          AutoSizeText(
-                            widget.profile.name,
-                            minFontSize: 15,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white),
-                          ),
                           Row(
                             children: [
                               const InfoIcon(),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
-                                    '$mutualContactCount mutual friend${mutualContactCount == 1 ? '' : 's'}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w400,
-                                            color: Colors.white)),
+                                  '$mutualContactCount mutual friend${mutualContactCount == 1 ? '' : 's'}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
                               )
                             ],
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (widget.profile.uid != myUid)
-                    SizedBox(
-                      width: 146,
-                      child: _RecordButton(
-                        onPressed: () {
-                          ref.read(userProvider2).map(
-                                guest: (_) {
-                                  showCupertinoDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return CupertinoAlertDialog(
-                                        title: const Text(
-                                            'Log in to send invites'),
-                                        actions: [
-                                          CupertinoDialogAction(
-                                            onPressed:
-                                                Navigator.of(context).pop,
-                                            child: const Text('Cancel'),
-                                          ),
-                                          CupertinoDialogAction(
-                                            onPressed: () =>
-                                                context.pushNamed('signup'),
-                                            child: const Text('Log in'),
-                                          )
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                                signedIn: (_) => widget.onRecord(),
-                              );
-                        },
-                      ),
+                  ],
+                ),
+              ),
+              Builder(
+                builder: (context) {
+                  if (widget.profile.uid == myUid) {
+                    return const SizedBox.shrink();
+                  } else {
+                    return ReportBlockPopupMenu2(
+                      uid: widget.profile.uid,
+                      name: widget.profile.name,
+                      onBlock: widget.onBlock,
+                      builder: (context) {
+                        return const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Icon(
+                            CupertinoIcons.ellipsis,
+                            color: Colors.black,
+                            size: 20,
+                          ),
+                        );
+                      },
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 23),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(width: 26),
+            Button(
+              onPressed: Navigator.of(context).pop,
+              child: Container(
+                width: 51,
+                height: 51,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      offset: Offset(0, 3),
+                      blurRadius: 10,
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
                     ),
-                ],
+                  ],
+                ),
+                child: const Icon(
+                  Icons.close,
+                  color: Color.fromRGBO(0x47, 0x47, 0x47, 1.0),
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: 22),
+            if (widget.profile.uid != myUid)
+              Expanded(
+                child: _RecordButton(
+                  onPressed: () {
+                    final userState = ref.read(userProvider2);
+                    userState.map(
+                      guest: (_) {
+                        showCupertinoDialog(
+                          context: context,
+                          builder: (context) {
+                            return CupertinoAlertDialog(
+                              title: const Text('Log in to send invites'),
+                              actions: [
+                                CupertinoDialogAction(
+                                  onPressed: Navigator.of(context).pop,
+                                  child: const Text('Cancel'),
+                                ),
+                                CupertinoDialogAction(
+                                  onPressed: () => context.pushNamed('signup'),
+                                  child: const Text('Log in'),
+                                )
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      signedIn: (_) => widget.onRecord(),
+                    );
+                  },
+                ),
+              ),
+            const SizedBox(width: 18),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
     );
   }
 }
@@ -311,8 +398,8 @@ class InfoIcon extends StatelessWidget {
       alignment: Alignment.center,
       children: const [
         SizedBox(
-          width: 10,
-          height: 10,
+          width: 14,
+          height: 14,
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -322,7 +409,7 @@ class InfoIcon extends StatelessWidget {
         ),
         Icon(
           Icons.info,
-          color: Color.fromRGBO(0xFF, 0x38, 0x38, 1.0),
+          color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
           size: 16,
         ),
       ],
@@ -418,7 +505,7 @@ class _RecordButton extends StatelessWidget {
 
   const _RecordButton({
     super.key,
-    this.label = 'send message',
+    this.label = 'Send Message',
     required this.onPressed,
   });
 
@@ -427,31 +514,27 @@ class _RecordButton extends StatelessWidget {
     return Button(
       onPressed: onPressed,
       child: Container(
-        width: 146,
         height: 51,
         alignment: Alignment.center,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromRGBO(0xF3, 0x49, 0x50, 1.0),
-              Color.fromRGBO(0xDF, 0x39, 0x3F, 1.0),
-            ],
-          ),
-          borderRadius: BorderRadius.all(Radius.circular(25)),
+          color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+          borderRadius: BorderRadius.all(Radius.circular(11)),
           boxShadow: [
             BoxShadow(
-              offset: Offset(0, 4),
-              blurRadius: 4,
+              offset: Offset(0, 2),
+              blurRadius: 17,
               color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
             ),
           ],
         ),
         child: Text(
           label,
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: Colors.white,
+          ),
         ),
       ),
     );
