@@ -77,7 +77,7 @@ class ShellPageState extends ConsumerState<ShellPage> {
         onAction: _onSheetAction,
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final panelTopMargin = MediaQuery.of(context).padding.top + 24.0;
+            const panelTopMargin = 0.0;
             final maxContentHeight = constraints.maxHeight - panelTopMargin;
             return Stack(
               children: [
@@ -126,14 +126,16 @@ class ShellPageState extends ConsumerState<ShellPage> {
                             duration: const Duration(milliseconds: 200),
                             height: constraints.maxHeight,
                             clipBehavior: Clip.antiAlias,
-                            margin: EdgeInsets.only(top: panelTopMargin),
+                            margin: const EdgeInsets.only(top: panelTopMargin),
                             alignment: Alignment.topCenter,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(20),
-                                topRight: Radius.circular(20),
-                              ),
+                              borderRadius: ref.watch(_sheetOpenProvider)
+                                  ? BorderRadius.zero
+                                  : const BorderRadius.only(
+                                      topLeft: Radius.circular(20),
+                                      topRight: Radius.circular(20),
+                                    ),
                             ),
                             child: OverflowBox(
                               minHeight: maxContentHeight,
@@ -159,10 +161,8 @@ class ShellPageState extends ConsumerState<ShellPage> {
                             child: SingleChildScrollView(
                               controller: controller,
                               physics: const ClampingScrollPhysics(),
-                              child: Container(
-                                height: 48,
-                                margin:
-                                    EdgeInsets.only(top: panelTopMargin - 28),
+                              child: SizedBox(
+                                height: 44 + MediaQuery.of(context).padding.top,
                                 child: const Align(
                                   alignment: Alignment.topCenter,
                                   child: Padding(

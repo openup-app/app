@@ -65,7 +65,8 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
       signedIn: (signedIn) {
         final profile = signedIn.account.profile;
         return Container(
-          padding: const EdgeInsets.only(top: 20),
+          padding:
+              EdgeInsets.only(top: MediaQuery.of(context).padding.top + 32),
           color: const Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -77,6 +78,7 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                   builder: (context) {
                     return Column(
                       children: [
+                        SizedBox(height: MediaQuery.of(context).padding.top),
                         const Align(
                           alignment: Alignment.centerLeft,
                           child: Padding(

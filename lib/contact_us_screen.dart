@@ -41,7 +41,7 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 32),
+              SizedBox(height: MediaQuery.of(context).padding.top + 40),
               SizedBox(
                 height: 44,
                 child: Stack(

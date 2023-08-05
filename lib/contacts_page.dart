@@ -36,9 +36,12 @@ class _ContactsPageState extends State<ContactsPage> {
       color: Colors.white,
       child: Column(
         children: [
-          SizedBox(height: MediaQuery.of(context).padding.top),
+          SizedBox(height: MediaQuery.of(context).padding.top + 44),
           Padding(
-            padding: const EdgeInsets.only(top: 32, bottom: 16),
+            padding: const EdgeInsets.only(
+              top: 4,
+              bottom: 16,
+            ),
             child: FriendsSearchField(
               controller: _searchController,
               focusNode: _searchFocusNode,

@@ -143,10 +143,16 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       color: Colors.white,
       child: LayoutBuilder(
         builder: (context, constraints) {
+          final topPadding = MediaQuery.of(context).padding.top + 16;
           const appBarHeight = 84.0;
-          final listBoxHeight = constraints.maxHeight - appBarHeight;
+          final listBoxHeight =
+              constraints.maxHeight - (topPadding + appBarHeight);
           return Column(
             children: [
+              Container(
+                height: topPadding,
+                color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+              ),
               Container(
                 height: appBarHeight,
                 color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),

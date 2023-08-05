@@ -51,7 +51,7 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
             height: constraints.maxHeight,
             child: Column(
               children: [
-                const SizedBox(height: 32),
+                SizedBox(height: MediaQuery.of(context).padding.top + 44),
                 SizedBox(
                   height: 44,
                   child: Stack(
