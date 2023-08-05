@@ -15,6 +15,7 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
+import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/audio_playback_symbol.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/collection_photo_stack.dart';
@@ -35,6 +36,7 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePage2State extends ConsumerState<ProfilePage> {
   final _scrollController = ScrollController();
+  final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
 
   @override
   void dispose() {
@@ -65,8 +67,6 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
       signedIn: (signedIn) {
         final profile = signedIn.account.profile;
         return Container(
-          padding:
-              EdgeInsets.only(top: MediaQuery.of(context).padding.top + 32),
           color: const Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -99,11 +99,18 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
                               (MediaQuery.of(context).padding.bottom + 150),
                           child: _ProfilePanel(
                             profile: profile,
+                            profileBuilderKey: _profileBuilderKey,
                           ),
                         ),
                         const SizedBox(height: 16),
                         Button(
-                          onPressed: () => _onDisplayProfile(profile),
+                          onPressed: () {
+                            _profileBuilderKey.currentState?.pause();
+                            displayProfileBottomSheet(
+                              context: context,
+                              profile: profile,
+                            );
+                          },
                           child: Container(
                             height: 52,
                             clipBehavior: Clip.hardEdge,
@@ -267,36 +274,6 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
     );
   }
 
-  void _onDisplayProfile(Profile profile) {
-    final mediaQueryData = MediaQuery.of(context);
-    final profileBuilderKey = GlobalKey<ProfileBuilderState>();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      builder: (context) {
-        return MediaQuery(
-          data: mediaQueryData,
-          child: ProfileBuilder(
-            key: profileBuilderKey,
-            play: false,
-            profile: profile,
-            builder: (context, playbackState, playbackInfoStream) {
-              return ProfileDisplay(
-                profile: profile,
-                playbackInfoStream: playbackInfoStream,
-                onPlay: () => profileBuilderKey.currentState?.play(),
-                onPause: () => profileBuilderKey.currentState?.pause(),
-                onRecord: () {},
-                onBlock: () {},
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
   void _showSignOutConfirmationModal() async {
     final result = await showCupertinoModalPopup<bool>(
       context: context,
@@ -392,10 +369,12 @@ class _ProfilePage2State extends ConsumerState<ProfilePage> {
 
 class _ProfilePanel extends ConsumerStatefulWidget {
   final Profile profile;
+  final GlobalKey<ProfileBuilderState> profileBuilderKey;
 
   const _ProfilePanel({
     super.key,
     required this.profile,
+    required this.profileBuilderKey,
   });
 
   @override
@@ -403,7 +382,6 @@ class _ProfilePanel extends ConsumerStatefulWidget {
 }
 
 class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
-  final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
   Timer? _animationTimer;
 
   @override
@@ -434,7 +412,7 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
                       horizontal: 8,
                     ),
                     child: ProfileBuilder(
-                      key: _profileBuilderKey,
+                      key: widget.profileBuilderKey,
                       profile: widget.profile,
                       play: false,
                       builder: (context, playbackState, playbackInfoStream) {
@@ -692,10 +670,10 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
     switch (playbackState) {
       case PlaybackState.idle:
       case PlaybackState.paused:
-        _profileBuilderKey.currentState?.play();
+        widget.profileBuilderKey.currentState?.play();
         break;
       default:
-        _profileBuilderKey.currentState?.pause();
+        widget.profileBuilderKey.currentState?.pause();
     }
   }
 
@@ -741,7 +719,7 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
   }
 
   Future<void> _showRecordPanel(BuildContext context) {
-    _profileBuilderKey.currentState?.pause();
+    widget.profileBuilderKey.currentState?.pause();
     return showModalBottomSheet<Uint8List>(
       context: context,
       backgroundColor: Colors.transparent,

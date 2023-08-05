@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -167,11 +166,10 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                     if (_otherProfile != null) ...[
                       Button(
                         onPressed: () {
-                          context.pushNamed(
-                            'view_profile',
-                            extra: ViewProfilePageArguments.profile(
-                              profile: _otherProfile!,
-                            ),
+                          _audio.pause();
+                          displayProfileBottomSheet(
+                            context: context,
+                            profile: _otherProfile!,
                           );
                         },
                         child: Padding(

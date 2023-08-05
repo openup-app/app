@@ -8,7 +8,6 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/drag_handle.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 
@@ -81,15 +80,9 @@ class ProfileBuilderState extends State<ProfileBuilder> {
     super.dispose();
   }
 
-  void play() {
-    print('requested to play');
-    _player.play(loop: true);
-  }
+  void play() => _player.play(loop: true);
 
-  void pause() {
-    print('erquested to pause');
-    _player.pause();
-  }
+  void pause() => _player.pause();
 
   @override
   Widget build(BuildContext context) {
@@ -167,19 +160,6 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
                           ),
                         ),
                       ),
-                    Align(
-                      alignment: Alignment.topCenter,
-                      child: IgnorePointer(
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                              top: MediaQuery.of(context).padding.top + 8),
-                          child: const DragHandle(
-                            width: 36,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
                     Positioned(
                       left: 0,
                       right: 0,
@@ -380,7 +360,7 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
             const SizedBox(width: 18),
           ],
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
       ],
     );
   }

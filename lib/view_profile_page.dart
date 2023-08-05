@@ -13,6 +13,7 @@ import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/drag_handle.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -111,34 +112,15 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
               if (profile == null) {
                 return const SizedBox.shrink();
               }
-              return ClipRRect(
-                clipBehavior: Clip.hardEdge,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                child: ColoredBox(
-                  color: Colors.white,
-                  child: Container(
-                    margin: EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      top: 20,
-                      bottom: 16 + MediaQuery.of(context).padding.bottom,
-                    ),
-                    clipBehavior: Clip.hardEdge,
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(48)),
-                    ),
-                    child: ProfileDisplay(
-                      profile: profile,
-                      playbackInfoStream: _player.playbackInfoStream,
-                      onPlay: () => _player.play(),
-                      onPause: () => _player.pause(),
-                      onRecord: () => _showRecordPanel(context, profile.uid),
-                      onBlock: () {},
-                    ),
-                  ),
+              return ColoredBox(
+                color: Colors.white,
+                child: ProfileDisplay(
+                  profile: profile,
+                  playbackInfoStream: _player.playbackInfoStream,
+                  onPlay: () => _player.play(),
+                  onPause: () => _player.pause(),
+                  onRecord: () => _showRecordPanel(context, profile.uid),
+                  onBlock: () {},
                 ),
               );
             },
@@ -217,4 +199,106 @@ class ViewProfilePageArguments with _$ViewProfilePageArguments {
   const factory ViewProfilePageArguments.uid({
     required String uid,
   }) = _Uid;
+}
+
+void displayProfileBottomSheet({
+  required BuildContext context,
+  required Profile profile,
+}) {
+  final mediaQueryData = MediaQuery.of(context);
+  final profileBuilderKey = GlobalKey<ProfileBuilderState>();
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.white,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    builder: (context) {
+      return MediaQuery(
+        data: mediaQueryData,
+        child: Stack(
+          children: [
+            ProfileBuilder(
+              key: profileBuilderKey,
+              play: true,
+              profile: profile,
+              builder: (context, playbackState, playbackInfoStream) {
+                return ProfileDisplay(
+                  profile: profile,
+                  playbackInfoStream: playbackInfoStream,
+                  onPlay: () => profileBuilderKey.currentState?.play(),
+                  onPause: () => profileBuilderKey.currentState?.pause(),
+                  onRecord: () {},
+                  onBlock: () {},
+                );
+              },
+            ),
+            // Builder to access media query via context
+            Builder(
+              builder: (context) {
+                return Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + 8),
+                    child: const DragHandle(
+                      width: 36,
+                      color: Colors.white,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+void displayProfileBottomSheetExistingPlayer({
+  required BuildContext context,
+  required Profile profile,
+  required Stream<PlaybackInfo> playbackInfoStream,
+  required GlobalKey<ProfileBuilderState> profileBuilderKey,
+}) {
+  final mediaQueryData = MediaQuery.of(context);
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.white,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    builder: (context) {
+      return MediaQuery(
+        data: mediaQueryData,
+        child: Stack(
+          children: [
+            ProfileDisplay(
+              profile: profile,
+              playbackInfoStream: playbackInfoStream,
+              onPlay: () => profileBuilderKey.currentState?.play(),
+              onPause: () => profileBuilderKey.currentState?.pause(),
+              onRecord: () {},
+              onBlock: () {},
+            ),
+            // Builder to access media query via context
+            Builder(
+              builder: (context) {
+                return Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + 8),
+                    child: const DragHandle(
+                      width: 36,
+                      color: Colors.white,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }

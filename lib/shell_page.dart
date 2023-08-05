@@ -163,11 +163,15 @@ class ShellPageState extends ConsumerState<ShellPage> {
                               physics: const ClampingScrollPhysics(),
                               child: SizedBox(
                                 height: 44 + MediaQuery.of(context).padding.top,
-                                child: const Align(
-                                  alignment: Alignment.topCenter,
-                                  child: Padding(
-                                    padding: EdgeInsets.only(top: 35),
-                                    child: DragHandle(),
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                      top: MediaQuery.of(context).padding.top),
+                                  child: const Align(
+                                    alignment: Alignment.topCenter,
+                                    child: Padding(
+                                      padding: EdgeInsets.only(top: 8),
+                                      child: DragHandle(),
+                                    ),
                                   ),
                                 ),
                               ),
