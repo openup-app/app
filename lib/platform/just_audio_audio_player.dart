@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:math';
 
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
@@ -26,7 +24,6 @@ class JustAudioAudioPlayer {
   late final StreamSubscription _stateSubscription;
   late final StreamSubscription _positionSubscription;
   late final StreamSubscription _durationSubscription;
-  StreamSubscription? _visualizerSubscription;
 
   PlaybackInfo _playbackInfo = const PlaybackInfo();
 
@@ -43,7 +40,6 @@ class JustAudioAudioPlayer {
           break;
         case ProcessingState.ready:
         case ProcessingState.completed:
-          _visualizerSubscription?.cancel();
           _playbackInfo = _playbackInfo.copyWith(
               state: state.playing &&
                       state.processingState == ProcessingState.ready
@@ -54,38 +50,6 @@ class JustAudioAudioPlayer {
             _player.seek(Duration.zero);
           }
           break;
-      }
-
-      if (state.playing &&
-          state.processingState != ProcessingState.idle &&
-          state.processingState != ProcessingState.completed) {
-        _visualizerSubscription?.cancel();
-
-        await _player.startVisualizer(
-            enableFft: false, enableWaveform: true, captureRate: 25000);
-
-        _visualizerSubscription =
-            _player.visualizerWaveformStream.listen((capture) {
-          final average = (capture.data.fold<int>(0, (p, e) => p + e - 128) /
-                  capture.data.length)
-              .abs();
-          const count = 128;
-          final magnitudes = List.generate(count, (i) {
-            final x = (i / count - 0.5) * 5;
-            if (Platform.isAndroid) {
-              return (average / 64 * exp((-x * x))).clamp(0.0, 1.0);
-            } else {
-              return (average / 8 * exp((-x * x))).clamp(0.0, 1.0);
-            }
-          });
-          _playbackInfo = _playbackInfo.copyWith(frequencies: magnitudes);
-          if (!_playbackInfoController.isClosed) {
-            _playbackInfoController.add(_playbackInfo);
-          }
-        });
-      } else {
-        _visualizerSubscription?.cancel();
-        _player.stopVisualizer();
       }
 
       if (!_playbackInfoController.isClosed) {
@@ -144,8 +108,6 @@ class JustAudioAudioPlayer {
 
   Future<void> stop() async {
     // Calling justAudio.AudioPlayer.stop() seems to unload the audio sometimes
-    _visualizerSubscription?.cancel();
-    _player.stopVisualizer();
     await pause();
     return seek(Duration.zero);
   }
