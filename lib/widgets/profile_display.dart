@@ -214,6 +214,7 @@ class ProfileDisplay extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 36,
                               fontWeight: FontWeight.w500,
+                              color: Color.fromRGBO(0x38, 0x37, 0x37, 1.0),
                             ),
                           ),
                         ),
@@ -224,6 +225,7 @@ class ProfileDisplay extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.w300,
+                              color: Color.fromRGBO(0x38, 0x37, 0x37, 1.0),
                             ),
                           ),
                       ],
@@ -615,13 +617,13 @@ class ProfileDisplayBehavior extends ConsumerWidget {
           onPlay: () => profileBuilderKey.currentState?.play(),
           onPause: () => profileBuilderKey.currentState?.pause(),
           recordLabel: isMe
-              ? const Text('Update Audio Bio')
+              ? const Text('Update Voice Bio')
               : const Text('Send Message'),
           onRecord: () async {
             final result = await showRecordPanel(
               context: context,
               title: isMe
-                  ? const Text('Recording Audio Bio')
+                  ? const Text('Recording Voice Bio')
                   : const Text('Recording Message'),
               submitLabel: isMe
                   ? const Text('Finish & Update')
@@ -638,7 +640,7 @@ class ProfileDisplayBehavior extends ConsumerWidget {
                   : notifier.sendMessage(uid: profile.uid, audio: result.audio);
               return withBlockingModal(
                 context: context,
-                label: isMe ? 'Updating audio bio...' : 'Sending message...',
+                label: isMe ? 'Updating voice bio...' : 'Sending message...',
                 future: future,
               );
             }

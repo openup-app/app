@@ -733,7 +733,7 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
     widget.profileBuilderKey.currentState?.pause();
     final result = await showRecordPanel(
       context: context,
-      title: const Text('Recording Audio Bio'),
+      title: const Text('Recording Voice Bio'),
       submitLabel: const Text('Finish & Update'),
     );
     if (!mounted || result == null) {
@@ -743,7 +743,7 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
     final notifier = ref.read(userProvider2.notifier);
     return withBlockingModal(
       context: context,
-      label: 'Updating audio bio...',
+      label: 'Updating voice bio...',
       future: notifier.updateAudioBio(result.audio),
     );
   }
