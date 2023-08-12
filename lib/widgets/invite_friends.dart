@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/contacts/contacts_provider.dart';
+import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/section.dart';
@@ -29,11 +30,6 @@ class InviteFriends extends ConsumerStatefulWidget {
 }
 
 class _InviteFriendsState extends ConsumerState<InviteFriends> {
-  bool _hasContactsPermission = false;
-  bool _error = false;
-
-  List<KnownContactProfile>? _knownProfiles;
-
   @override
   void initState() {
     super.initState();
@@ -42,7 +38,9 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_hasContactsPermission) {
+    final hasPermission =
+        ref.watch(contactsProvider.select((p) => p.hasPermission));
+    if (!hasPermission) {
       return LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -56,11 +54,11 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                     color: Colors.black,
                   ),
                   label: const Text('Enable Contacts'),
-                  granted: _hasContactsPermission,
+                  granted: hasPermission,
                   onPressed: () async {
                     final status = await Permission.contacts.request();
                     if (mounted && status == PermissionStatus.granted) {
-                      _fetchContacts();
+                      ref.read(contactsProvider.notifier).refreshContacts();
                     }
                   },
                 ),
@@ -71,58 +69,10 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
       );
     }
 
-    if (_error) {
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            controller: widget.controller,
-            child: SizedBox(
-              height: constraints.maxHeight,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Failed to get contacts',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontWeight: FontWeight.w300,
-                          fontSize: 12,
-                          color: Colors.white),
-                    ),
-                    ElevatedButton(
-                      child: const Text('Retry'),
-                      onPressed: () => _fetchContacts(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    }
-
-    final knownProfiles = _knownProfiles
-        ?.where((c) =>
-            c.profile.name.toLowerCase().contains(widget.filter.toLowerCase()))
-        .toList();
-    final contacts =
+    final filteredState =
         ref.watch(contactsProvider.select((p) => p.filter(widget.filter)));
-    if (knownProfiles == null) {
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            controller: widget.controller,
-            child: SizedBox(
-              height: constraints.maxHeight,
-              child: const Center(
-                child: LoadingIndicator(),
-              ),
-            ),
-          );
-        },
-      );
-    }
+
+    final contacts = filteredState.contacts;
     return CustomScrollView(
       controller: widget.controller,
       slivers: [
@@ -132,41 +82,88 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
         const SliverToBoxAdapter(
           child: SectionTitle(title: Text('Contacts using UT Meets')),
         ),
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            childCount: knownProfiles.length,
-            (context, index) {
-              final knownProfile = knownProfiles[index];
-              return DecoratedBox(
-                decoration: const BoxDecoration(color: Colors.white),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ListTile(
-                      title: Text(
-                        knownProfile.profile.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+        Builder(
+          builder: (context) {
+            return filteredState.knownContactsState.map(
+              error: (_) {
+                return const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text('Failed to load contacts'),
+                  ),
+                );
+              },
+              loading: (_) {
+                return const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: LoadingIndicator(
+                      color: Colors.black,
+                    ),
+                  ),
+                );
+              },
+              contacts: (contacts) {
+                final knownProfiles = contacts.contacts;
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    childCount: knownProfiles.length,
+                    (context, index) {
+                      final contact = knownProfiles[index];
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: const BoxDecoration(color: Colors.white),
+                        child: ListTile(
+                          leading: Container(
+                            width: 40,
+                            height: 40,
+                            clipBehavior: Clip.hardEdge,
+                            margin: const EdgeInsets.symmetric(horizontal: 6),
+                            alignment: Alignment.center,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                            ),
+                            child: contact.photo.isNotEmpty
+                                ? Image.network(
+                                    contact.photo,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Text(
+                                    contact.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                          ),
+                          title: Text(
+                            contact.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
                               fontWeight: FontWeight.w400,
                               fontSize: 16,
+                              color: Color.fromRGBO(0x34, 0x34, 0x34, 1.0),
                             ),
-                      ),
-                      subtitle: Text(
-                        '${knownProfile.profile.friendCount} friends on UT Meets',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontWeight: FontWeight.w300,
-                              fontSize: 12,
-                            ),
-                      ),
-                      trailing: _InviteButton(
-                        phoneNumber: knownProfile.phoneNumber,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                          ),
+                          trailing: _InviteButton(
+                            onPressed: () {
+                              context.goNamed(
+                                'view_profile',
+                                extra: ViewProfilePageArguments.uid(
+                                  uid: contact.uid,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            );
+          },
         ),
         const SliverToBoxAdapter(
           child: SectionTitle(title: Text('Invite contacts')),
@@ -203,33 +200,37 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                       color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
                     ),
                     child: contact.photo != null
-                        ? Image.memory(contact.photo!)
+                        ? Image.memory(
+                            contact.photo!,
+                            fit: BoxFit.cover,
+                          )
                         : Text(
-                            contact.name,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium!
-                                .copyWith(
-                                    fontWeight: FontWeight.w400, fontSize: 16),
+                            contact.name.substring(0, 1),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 16,
+                            ),
                           ),
                   ),
                   title: Text(
                     contact.name,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 16,
-                        color: const Color.fromRGBO(0x34, 0x34, 0x34, 1.0)),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                      color: Color.fromRGBO(0x34, 0x34, 0x34, 1.0),
+                    ),
                   ),
-                  subtitle: Text(
+                  subtitle: const Text(
                     '0 friends on UT Meets',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontWeight: FontWeight.w300,
-                        fontSize: 12,
-                        color: const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0)),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w300,
+                      fontSize: 12,
+                      color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                    ),
                   ),
                   trailing: _InviteButton(
-                    phoneNumber: contact.phoneNumber,
+                    onPressed: () => _launchMessagingApp(contact.phoneNumber),
                   ),
                 ),
               );
@@ -244,63 +245,20 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
       ],
     );
   }
-
-  Future<void> _fetchContacts() async {
-    setState(() => _error = false);
-
-    final status = await Permission.contacts.status;
-    if (status != PermissionStatus.granted) {
-      return;
-    }
-    if (mounted) {
-      setState(() => _hasContactsPermission = true);
-    }
-    final allContacts = ref.read(contactsProvider).contacts;
-
-    if (!mounted) {
-      return;
-    }
-
-    final contacts =
-        allContacts.where((c) => c.phoneNumber.isNotEmpty).toList();
-    final api = ref.read(apiProvider);
-    final result = await api
-        .getKnownContactProfiles(contacts.map((e) => e.phoneNumber).toList());
-    if (!mounted) {
-      return;
-    }
-
-    result.fold(
-      (l) {
-        displayError(context, l);
-        setState(() => _error = true);
-      },
-      (r) {
-        final knownProfiles = r;
-        for (final knownProfile in knownProfiles) {
-          contacts
-              .removeWhere((c) => c.phoneNumber == knownProfile.phoneNumber);
-        }
-
-        setState(() {
-          _knownProfiles = knownProfiles;
-        });
-      },
-    );
-  }
 }
 
 class _InviteButton extends StatelessWidget {
-  final String phoneNumber;
+  final VoidCallback onPressed;
+
   const _InviteButton({
     super.key,
-    required this.phoneNumber,
+    required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
     return Button(
-      onPressed: () => _launchMessagingApp(phoneNumber),
+      onPressed: onPressed,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: DecoratedBox(
@@ -325,14 +283,14 @@ class _InviteButton extends StatelessWidget {
       ),
     );
   }
+}
 
-  void _launchMessagingApp(String phoneNumber) {
-    final querySymbol = Platform.isAndroid ? '?' : '&';
-    final body = Uri.encodeComponent(
-        'I\'m on UT Meets, a new way to meet online. \nhttps://utmeets.com');
-    final url = Uri.parse('sms://$phoneNumber/${querySymbol}body=$body');
-    launchUrl(url);
-  }
+void _launchMessagingApp(String phoneNumber) {
+  final querySymbol = Platform.isAndroid ? '?' : '&';
+  final body = Uri.encodeComponent(
+      'I\'m on UT Meets, a new way to meet online. \nhttps://utmeets.com');
+  final url = Uri.parse('sms://$phoneNumber/${querySymbol}body=$body');
+  launchUrl(url);
 }
 
 class _Heading extends StatelessWidget {

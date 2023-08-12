@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:openup/contacts/contacts_provider.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/invite_friends.dart';
 
-class SignUpFriends extends StatefulWidget {
+class SignUpFriends extends ConsumerStatefulWidget {
   const SignUpFriends({super.key});
 
   @override
-  State<SignUpFriends> createState() => _SignUpFriendsState();
+  ConsumerState<SignUpFriends> createState() => _SignUpFriendsState();
 }
 
-class _SignUpFriendsState extends State<SignUpFriends> {
+class _SignUpFriendsState extends ConsumerState<SignUpFriends> {
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
   String _filterString = '';
 
   @override
   void initState() {
+    ref.read(contactsProvider.notifier).uploadContacts();
     _searchController.addListener(() {
       if (_filterString != _searchController.text) {
         setState(() => _filterString = _searchController.text);

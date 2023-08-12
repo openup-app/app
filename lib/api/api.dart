@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
 import 'package:openup/api/chat_api.dart';
+import 'package:openup/contacts/contacts_provider.dart';
 import 'package:openup/main.dart';
 import 'package:openup/notifications/notifications.dart';
 
@@ -608,22 +609,46 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, List<KnownContactProfile>>> getKnownContactProfiles(
-    List<String> phoneNumbers,
-  ) {
+  Future<Either<ApiError, List<KnownContact>>> addContacts(
+      List<Contact> contacts) {
     return _request(
       makeRequest: () {
         return http.post(
           Uri.parse('$_urlBase/account/contacts'),
           headers: _headers,
-          body: jsonEncode({'phoneNumbers': phoneNumbers}),
+          body: jsonEncode({
+            'contacts': [
+              for (final contact in contacts)
+                {
+                  'name': contact.name,
+                  'phoneNumber': contact.phoneNumber,
+                },
+            ]
+          }),
         );
       },
       handleSuccess: (response) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        final contacts = json['contacts'] as List<dynamic>;
+        final json = jsonDecode(response.body);
+        final knownContacts = json['knownContacts'] as List<dynamic>;
         return Right(
-            List.from(contacts.map((e) => KnownContactProfile.fromJson(e))));
+            List.from(knownContacts.map((e) => KnownContact.fromJson(e))));
+      },
+    );
+  }
+
+  Future<Either<ApiError, List<KnownContact>>> getKnownContacts() {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/account/contacts'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        final knownContacts = json['knownContacts'] as List<dynamic>;
+        return Right(
+            List.from(knownContacts.map((e) => KnownContact.fromJson(e))));
       },
     );
   }
@@ -979,14 +1004,15 @@ class ProfileWithCollections with _$ProfileWithCollections {
 enum Gender { male, female, nonBinary }
 
 @freezed
-class KnownContactProfile with _$KnownContactProfile {
-  const factory KnownContactProfile({
-    required Profile profile,
-    required String phoneNumber,
-  }) = _KnownContactProfile;
+class KnownContact with _$KnownContact {
+  const factory KnownContact({
+    required String uid,
+    required String name,
+    required String photo,
+  }) = _KnownContact;
 
-  factory KnownContactProfile.fromJson(Map<String, dynamic> json) =>
-      _$KnownContactProfileFromJson(json);
+  factory KnownContact.fromJson(Map<String, dynamic> json) =>
+      _$KnownContactFromJson(json);
 }
 
 @freezed
