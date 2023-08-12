@@ -398,6 +398,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                             final result = await showRecordPanel(
                               context: context,
                               title: const Text('Recording Message'),
+                              submitLabel: const Text('Finish & Send'),
                             );
                             if (result != null && mounted) {
                               _submit(result.audio, result.duration);

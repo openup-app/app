@@ -1024,7 +1024,6 @@ class _SignUpRecorderState extends ConsumerState<SignUpRecorder> {
   Ticker? _recordingDurationTicker;
 
   RecordPanelState _audioBioState = RecordPanelState.deciding;
-  Uint8List? _audio;
   Duration? _duration;
 
   @override
@@ -1061,7 +1060,6 @@ class _SignUpRecorderState extends ConsumerState<SignUpRecorder> {
     _recordingDurationTicker?.dispose();
     setState(() {
       _recordingDurationTicker = null;
-      _audio = recordingBytes;
       _duration = _recordingDurationNotifier.value;
       _audioBioState = RecordPanelState.deciding;
     });
@@ -1147,15 +1145,15 @@ class _SignUpRecorderState extends ConsumerState<SignUpRecorder> {
 }
 
 class RecordPanel extends ConsumerStatefulWidget {
-  final Widget? title;
-  final Widget? submitLabel;
+  final Widget title;
+  final Widget submitLabel;
   final VoidCallback onCancel;
   final Future<bool> Function(Uint8List audio, Duration duration) onSubmit;
 
   const RecordPanel({
     super.key,
-    this.title,
-    this.submitLabel,
+    required this.title,
+    required this.submitLabel,
     required this.onCancel,
     required this.onSubmit,
   });
@@ -1174,7 +1172,6 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
   RecordPanelState _audioBioState = RecordPanelState.creating;
   Uint8List? _audio;
   Duration? _duration;
-  bool _shouldSubmitWhenBytesReceived = false;
 
   @override
   void initState() {
@@ -1224,140 +1221,120 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
       _audioBioState = RecordPanelState.deciding;
     });
 
-    if (_shouldSubmitWhenBytesReceived) {
-      setState(() => _shouldSubmitWhenBytesReceived = false);
-      _onSubmit();
-    }
+    _onSubmit();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        const SizedBox(height: 44),
-        DefaultTextStyle(
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
-          ),
-          child: widget.title ?? const Text('Recording message'),
-        ),
-        const SizedBox(height: 40),
-        Builder(
-          builder: (context) {
-            switch (_audioBioState) {
-              case RecordPanelState.creating:
-                return ValueListenableBuilder<Duration>(
-                  valueListenable: _recordingDurationNotifier,
-                  builder: (context, duration, child) {
-                    return RecordPanelRecorder(
-                      duration: duration,
-                      maxDuration: _maxDuration,
-                      onPressed: () => _controller?.stopRecording(),
-                    );
-                  },
-                );
-              case RecordPanelState.deciding:
-                return RecordPanelDeciding(
-                  audio: _audio!,
-                  onRestart: () {
-                    setState(() {
-                      _audio = null;
-                      _duration = null;
-                      _audioBioState = RecordPanelState.creating;
-                      _recordingDurationNotifier.value = Duration.zero;
-                      _recordingDurationTicker?.dispose();
-                    });
-                    _startRecording();
-                  },
-                );
-              case RecordPanelState.uploading:
-              case RecordPanelState.uploaded:
-                return const Center(
-                  child: LoadingIndicator(
-                    color: Colors.black,
-                  ),
-                );
-            }
-          },
-        ),
-        const Spacer(),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Button(
-              onPressed: widget.onCancel,
-              child: Container(
-                width: 163,
-                height: 56,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(28),
-                  ),
-                  color: Colors.white,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.only(right: 16),
-                      child: Icon(
-                        Icons.delete,
-                        color: Colors.black,
-                      ),
-                    ),
-                    Text(
-                      'Cancel',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(width: 32),
-                  ],
-                ),
+        Positioned(
+          right: 16,
+          top: 16,
+          width: 48,
+          height: 48,
+          child: Button(
+            onPressed: Navigator.of(context).pop,
+            child: Container(
+              margin: const EdgeInsets.all(10),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+              ),
+              child: const Icon(
+                Icons.close,
+                color: Color.fromRGBO(0x44, 0x44, 0x44, 1.0),
+                size: 20,
               ),
             ),
+          ),
+        ),
+        Column(
+          children: [
+            const SizedBox(height: 44),
+            DefaultTextStyle(
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+              ),
+              child: widget.title,
+            ),
+            const SizedBox(height: 40),
+            Builder(
+              builder: (context) {
+                switch (_audioBioState) {
+                  case RecordPanelState.creating:
+                    return ValueListenableBuilder<Duration>(
+                      valueListenable: _recordingDurationNotifier,
+                      builder: (context, duration, child) {
+                        return RecordPanelRecorder(
+                          duration: duration,
+                          maxDuration: _maxDuration,
+                          onPressed: () => _controller?.stopRecording(),
+                        );
+                      },
+                    );
+                  case RecordPanelState.deciding:
+                    return RecordPanelDeciding(
+                      audio: _audio!,
+                      onRestart: () {
+                        setState(() {
+                          _audio = null;
+                          _duration = null;
+                          _audioBioState = RecordPanelState.creating;
+                          _recordingDurationNotifier.value = Duration.zero;
+                          _recordingDurationTicker?.dispose();
+                        });
+                        _startRecording();
+                      },
+                    );
+                  case RecordPanelState.uploading:
+                  case RecordPanelState.uploaded:
+                    return const Center(
+                      child: LoadingIndicator(
+                        color: Colors.black,
+                      ),
+                    );
+                }
+              },
+            ),
+            const Spacer(),
             Button(
               onPressed: _onMaybeStopAndSubmit,
               child: Container(
-                width: 163,
                 height: 56,
+                margin: const EdgeInsets.symmetric(horizontal: 57),
                 decoration: const BoxDecoration(
                   borderRadius: BorderRadius.all(
-                    Radius.circular(28),
+                    Radius.circular(11),
                   ),
                   color: Colors.white,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(width: 32),
-                    DefaultTextStyle(
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black,
-                      ),
-                      child: widget.submitLabel ?? const Text('Send'),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.only(left: 16),
-                      child: Icon(
-                        Icons.send,
-                        color: Colors.black,
-                      ),
-                    ),
+                  boxShadow: [
+                    BoxShadow(
+                      offset: Offset(0, 2),
+                      blurRadius: 17,
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.0625),
+                    )
                   ],
+                ),
+                child: Center(
+                  child: DefaultTextStyle(
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
+                    ),
+                    child: widget.submitLabel,
+                  ),
                 ),
               ),
             ),
+            const SizedBox(height: 32),
+            SizedBox(
+              height: MediaQuery.of(context).padding.bottom,
+            ),
           ],
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: MediaQuery.of(context).padding.bottom,
         ),
       ],
     );
@@ -1365,7 +1342,6 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
 
   void _onMaybeStopAndSubmit() {
     if (_audio == null) {
-      setState(() => _shouldSubmitWhenBytesReceived = true);
       _controller?.stopRecording();
     } else {
       _onSubmit();
@@ -1399,37 +1375,18 @@ class RecordPanelSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 460,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Container(
-            clipBehavior: Clip.hardEdge,
-            decoration: const BoxDecoration(
-              color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(44),
-                topRight: Radius.circular(44),
-              ),
-            ),
-            child: child,
+      child: Container(
+        clipBehavior: Clip.hardEdge,
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(44),
+            topRight: Radius.circular(44),
           ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Container(
-                width: 37,
-                height: 5,
-                decoration: const BoxDecoration(
-                  color: Color.fromRGBO(0xE0, 0xE0, 0xE0, 1.0),
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(3),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 48, sigmaY: 48),
+          child: child,
+        ),
       ),
     );
   }
@@ -1457,23 +1414,22 @@ class RecordPanelRecorder extends StatelessWidget {
         width: 212,
         height: 212,
         decoration: const BoxDecoration(
-          color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+          color: Color.fromRGBO(0x00, 0x85, 0xFF, 0.25),
           shape: BoxShape.circle,
-        ),
-        child: Container(
-          margin: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: const Color.fromRGBO(0x00, 0x7A, 0xEB, 1.0),
-              width: 16,
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 26,
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.0225),
             ),
-            shape: BoxShape.circle,
-          ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(22),
           child: Builder(
             builder: (context) {
               const max = Duration(seconds: 30);
               final secondsRemaining =
-                  ((max - duration).inMilliseconds / 1000).ceil();
+                  ((max - duration).inMilliseconds / 1000).ceil().clamp(0, 30);
               final ratioRecorded =
                   (duration.inMilliseconds / max.inMilliseconds)
                       .clamp(0.0, 1.0);
@@ -1490,7 +1446,7 @@ class RecordPanelRecorder extends StatelessWidget {
                       secondsRemaining.toString(),
                       style: const TextStyle(
                         fontSize: 32,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w400,
                         color: Colors.white,
                       ),
                     ),
@@ -1514,17 +1470,25 @@ class _RecordingDurationArcPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final rect = (Offset.zero & size).inflate(7);
     canvas.drawArc(
-      (Offset.zero & size).inflate(7),
+      rect,
       -pi / 2,
       // At least draw a dot, even on a ratio of 0
       max(ratio, 0.001) * 2 * pi,
       false,
       Paint()
-        ..color = Colors.white
         ..style = PaintingStyle.stroke
         ..strokeWidth = 16
-        ..strokeCap = StrokeCap.round,
+        ..strokeCap = StrokeCap.round
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.fromRGBO(0x68, 0xB7, 0xFF, 1.0),
+            Color.fromRGBO(0x16, 0x8F, 0xFF, 1.0),
+          ],
+        ).createShader(rect),
     );
   }
 
@@ -1558,15 +1522,21 @@ class RecordPanelDeciding extends StatelessWidget {
         height: 212,
         alignment: Alignment.center,
         decoration: const BoxDecoration(
-          color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+          color: Color.fromRGBO(0x00, 0x85, 0xFF, 0.25),
           shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 26,
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.0225),
+            ),
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
+        child: const Padding(
+          padding: EdgeInsets.all(8.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Icon(
                 Icons.loop,
                 color: Colors.white,
@@ -1576,7 +1546,7 @@ class RecordPanelDeciding extends StatelessWidget {
                 'retry',
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w300,
+                  fontWeight: FontWeight.w400,
                   color: Colors.white,
                 ),
               ),

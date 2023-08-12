@@ -6,6 +6,7 @@ import 'package:openup/widgets/common.dart';
 Future<RecordResult?> showRecordPanel({
   required BuildContext context,
   required Widget title,
+  required Widget submitLabel,
 }) async {
   return showModalBottomSheet<RecordResult>(
     context: context,
@@ -15,6 +16,7 @@ Future<RecordResult?> showRecordPanel({
       return RecordPanelSurface(
         child: RecordPanel(
           title: title,
+          submitLabel: submitLabel,
           onCancel: Navigator.of(context).pop,
           onSubmit: (audio, duration) {
             Navigator.of(context).pop(RecordResult(audio, duration));

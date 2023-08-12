@@ -623,6 +623,9 @@ class ProfileDisplayBehavior extends ConsumerWidget {
               title: isMe
                   ? const Text('Recording Audio Bio')
                   : const Text('Recording Message'),
+              submitLabel: isMe
+                  ? const Text('Finish & Update')
+                  : const Text('Finish & Send'),
             );
             if (context.mounted) {
               if (result == null) {

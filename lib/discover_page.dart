@@ -25,6 +25,7 @@ import 'package:openup/widgets/discover_list.dart';
 import 'package:openup/widgets/discover_map.dart';
 import 'package:openup/widgets/drag_handle.dart';
 import 'package:openup/widgets/profile_display.dart';
+import 'package:openup/widgets/record.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
@@ -580,44 +581,29 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     final userState = ref.read(userProvider2);
     userState.map(
       guest: (_) => showSignInModal(context),
-      signedIn: (_) {
-        _showRecordInvitePanel(context, uid);
-      },
-    );
-  }
-
-  void _showRecordInvitePanel(BuildContext context, String uid) async {
-    final audio = await showModalBottomSheet<Uint8List>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return RecordPanelSurface(
-          child: RecordPanel(
-            onCancel: Navigator.of(context).pop,
-            onSubmit: (audio, duration) {
-              Navigator.of(context).pop(audio);
-              return Future.value(true);
-            },
-          ),
+      signedIn: (_) async {
+        final result = await showRecordPanel(
+          context: context,
+          title: const Text('Recording Message'),
+          submitLabel: const Text('Finish & Send'),
         );
+
+        if (result == null || !mounted) {
+          return;
+        }
+
+        final notifier = ref.read(userProvider2.notifier);
+        await withBlockingModal(
+          context: context,
+          label: 'Sending invite...',
+          future: notifier.sendMessage(uid: uid, audio: result.audio),
+        );
+
+        if (mounted) {
+          setState(() => _invitedUsers.add(uid));
+        }
       },
     );
-
-    if (audio == null || !mounted) {
-      return;
-    }
-
-    final notifier = ref.read(userProvider2.notifier);
-    await withBlockingModal(
-      context: context,
-      label: 'Sending invite...',
-      future: notifier.sendMessage(uid: uid, audio: audio),
-    );
-
-    if (mounted) {
-      setState(() => _invitedUsers.add(uid));
-    }
   }
 
   void _toggleFavoriteOrShowSignIn(
