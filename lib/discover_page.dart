@@ -776,13 +776,12 @@ class _PanelState extends ConsumerState<_Panel> {
         boxShadow: [
           widget.selectedProfile == null
               ? const BoxShadow(
-                  offset: Offset(0, -1),
+                  offset: Offset(0, 1),
                   color: Color.fromRGBO(0x00, 0x00, 0x00, 0.15),
                   blurRadius: 5,
                   blurStyle: BlurStyle.outer,
                 )
               : const BoxShadow(
-                  offset: Offset(0, -1),
                   color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
                   blurRadius: 13,
                   blurStyle: BlurStyle.outer,
@@ -899,9 +898,9 @@ class _PanelState extends ConsumerState<_Panel> {
                                         Radius.circular(11),
                                       ),
                                     ),
-                                    child: Row(
+                                    child: const Row(
                                       mainAxisSize: MainAxisSize.min,
-                                      children: const [
+                                      children: [
                                         SizedBox(width: 18),
                                         Icon(
                                           Icons.search,
