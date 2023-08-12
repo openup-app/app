@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/contacts/contacts_provider.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/section.dart';
@@ -33,18 +33,11 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
   bool _error = false;
 
   List<KnownContactProfile>? _knownProfiles;
-  List<Contact>? _contacts;
 
   @override
   void initState() {
     super.initState();
-    Permission.contacts.status.then((status) {
-      if (mounted) {
-        setState(
-            () => _hasContactsPermission = status == PermissionStatus.granted);
-        _fetchContacts();
-      }
-    });
+    ref.read(contactsProvider.notifier).refreshContacts();
   }
 
   @override
@@ -58,7 +51,10 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
               height: constraints.maxHeight,
               child: Center(
                 child: PermissionButton(
-                  icon: const Icon(Icons.import_contacts),
+                  icon: const Icon(
+                    Icons.import_contacts,
+                    color: Colors.black,
+                  ),
                   label: const Text('Enable Contacts'),
                   granted: _hasContactsPermission,
                   onPressed: () async {
@@ -110,11 +106,9 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
         ?.where((c) =>
             c.profile.name.toLowerCase().contains(widget.filter.toLowerCase()))
         .toList();
-    final contacts = _contacts
-        ?.where((c) =>
-            c.displayName.toLowerCase().contains(widget.filter.toLowerCase()))
-        .toList();
-    if (knownProfiles == null || contacts == null) {
+    final contacts =
+        ref.watch(contactsProvider.select((p) => p.filter(widget.filter)));
+    if (knownProfiles == null) {
       return LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -208,10 +202,10 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                       shape: BoxShape.circle,
                       color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
                     ),
-                    child: contact.photoOrThumbnail != null
-                        ? Image.memory(contact.photoOrThumbnail!)
+                    child: contact.photo != null
+                        ? Image.memory(contact.photo!)
                         : Text(
-                            contact.displayName.substring(0, 1).toUpperCase(),
+                            contact.name,
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
@@ -220,7 +214,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                           ),
                   ),
                   title: Text(
-                    contact.displayName,
+                    contact.name,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontWeight: FontWeight.w400,
@@ -235,9 +229,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                         color: const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0)),
                   ),
                   trailing: _InviteButton(
-                    phoneNumber: contact.phones.isEmpty
-                        ? ''
-                        : contact.phones.first.number,
+                    phoneNumber: contact.phoneNumber,
                   ),
                 ),
               );
@@ -263,19 +255,17 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
     if (mounted) {
       setState(() => _hasContactsPermission = true);
     }
-    final allContacts = await FlutterContacts.getContacts(
-      withThumbnail: true,
-      withProperties: true,
-    );
+    final allContacts = ref.read(contactsProvider).contacts;
 
     if (!mounted) {
       return;
     }
 
-    final contacts = allContacts.where((c) => c.phones.isNotEmpty).toList();
+    final contacts =
+        allContacts.where((c) => c.phoneNumber.isNotEmpty).toList();
     final api = ref.read(apiProvider);
-    final result = await api.getKnownContactProfiles(
-        contacts.map((e) => e.phones.first.number).toList());
+    final result = await api
+        .getKnownContactProfiles(contacts.map((e) => e.phoneNumber).toList());
     if (!mounted) {
       return;
     }
@@ -288,13 +278,12 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
       (r) {
         final knownProfiles = r;
         for (final knownProfile in knownProfiles) {
-          contacts.removeWhere(
-              (c) => c.phones.first.number == knownProfile.phoneNumber);
+          contacts
+              .removeWhere((c) => c.phoneNumber == knownProfile.phoneNumber);
         }
 
         setState(() {
           _knownProfiles = knownProfiles;
-          _contacts = contacts;
         });
       },
     );
@@ -340,7 +329,7 @@ class _InviteButton extends StatelessWidget {
   void _launchMessagingApp(String phoneNumber) {
     final querySymbol = Platform.isAndroid ? '?' : '&';
     final body = Uri.encodeComponent(
-        'I\'m on Openup, a new way to meet online. \nhttps://openupfriends.com');
+        'I\'m on UT Meets, a new way to meet online. \nhttps://utmeets.com');
     final url = Uri.parse('sms://$phoneNumber/${querySymbol}body=$body');
     launchUrl(url);
   }
