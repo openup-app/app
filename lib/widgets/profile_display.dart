@@ -2,14 +2,16 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/drag_handle.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
+import 'package:openup/widgets/record.dart';
 
 class ProfileBuilder extends StatefulWidget {
   final Profile? profile;
@@ -94,13 +96,14 @@ class ProfileBuilderState extends State<ProfileBuilder> {
   }
 }
 
-class ProfileDisplay extends ConsumerStatefulWidget {
+class ProfileDisplay extends StatelessWidget {
   final Profile profile;
   final Stream<PlaybackInfo> playbackInfoStream;
   final VoidCallback onPlay;
   final VoidCallback onPause;
+  final Widget recordLabel;
   final VoidCallback onRecord;
-  final VoidCallback onBlock;
+  final VoidCallback? onBlock;
 
   const ProfileDisplay({
     super.key,
@@ -108,23 +111,15 @@ class ProfileDisplay extends ConsumerStatefulWidget {
     required this.playbackInfoStream,
     required this.onPlay,
     required this.onPause,
+    required this.recordLabel,
     required this.onRecord,
-    required this.onBlock,
+    this.onBlock,
   });
 
   @override
-  ConsumerState<ProfileDisplay> createState() => _ProfileDisplayState();
-}
-
-class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
-  @override
   Widget build(BuildContext context) {
-    final myUid = ref.read(userProvider2).map(
-          guest: (_) => null,
-          signedIn: (signedIn) => signedIn.account.profile.uid,
-        );
-    final mutualContactCount = widget.profile.mutualContacts.length;
-    final playingStream = widget.playbackInfoStream.map((info) =>
+    final mutualContactCount = profile.mutualContacts.length;
+    final playingStream = playbackInfoStream.map((info) =>
         info.state != PlaybackState.idle && info.state != PlaybackState.paused);
     return Column(
       children: [
@@ -137,18 +132,18 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
               return Button(
                 onPressed: () {
                   if (playing) {
-                    widget.onPause();
+                    onPause();
                   } else {
-                    widget.onPlay();
+                    onPlay();
                   }
                 },
                 child: Stack(
                   children: [
                     KeyedSubtree(
-                      key: ValueKey(widget.profile.uid),
+                      key: ValueKey(profile.uid),
                       child: NonCinematicGallery(
                         slideshow: playing,
-                        gallery: widget.profile.gallery,
+                        gallery: profile.gallery,
                       ),
                     ),
                     if (!playing)
@@ -165,7 +160,7 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
                       right: 0,
                       bottom: 0,
                       child: StreamBuilder<double>(
-                        stream: widget.playbackInfoStream.map((e) {
+                        stream: playbackInfoStream.map((e) {
                           return e.duration.inMilliseconds == 0
                               ? 0
                               : e.position.inMilliseconds /
@@ -212,7 +207,7 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
                       children: [
                         Flexible(
                           child: AutoSizeText(
-                            widget.profile.name,
+                            profile.name,
                             minFontSize: 15,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -223,9 +218,9 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        if (widget.profile.age != null)
+                        if (profile.age != null)
                           Text(
-                            widget.profile.age.toString(),
+                            profile.age.toString(),
                             style: const TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.w300,
@@ -241,7 +236,7 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
                           context: context,
                           builder: (context) {
                             return _MutualFriendsModal(
-                              uids: [widget.profile.uid],
+                              uids: [profile.uid],
                             );
                           },
                         );
@@ -271,29 +266,22 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
                   ],
                 ),
               ),
-              Builder(
-                builder: (context) {
-                  if (widget.profile.uid == myUid) {
-                    return const SizedBox.shrink();
-                  } else {
-                    return ReportBlockPopupMenu2(
-                      uid: widget.profile.uid,
-                      name: widget.profile.name,
-                      onBlock: widget.onBlock,
-                      builder: (context) {
-                        return const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Icon(
-                            CupertinoIcons.ellipsis,
-                            color: Colors.black,
-                            size: 20,
-                          ),
-                        );
-                      },
+              if (onBlock != null)
+                ReportBlockPopupMenu2(
+                  uid: profile.uid,
+                  name: profile.name,
+                  onBlock: onBlock!,
+                  builder: (context) {
+                    return const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(
+                        CupertinoIcons.ellipsis,
+                        color: Colors.black,
+                        size: 20,
+                      ),
                     );
-                  }
-                },
-              ),
+                  },
+                ),
             ],
           ),
         ),
@@ -326,37 +314,12 @@ class _ProfileDisplayState extends ConsumerState<ProfileDisplay> {
               ),
             ),
             const SizedBox(width: 22),
-            if (widget.profile.uid != myUid)
-              Expanded(
-                child: _RecordButton(
-                  onPressed: () {
-                    final userState = ref.read(userProvider2);
-                    userState.map(
-                      guest: (_) {
-                        showCupertinoDialog(
-                          context: context,
-                          builder: (context) {
-                            return CupertinoAlertDialog(
-                              title: const Text('Log in to send invites'),
-                              actions: [
-                                CupertinoDialogAction(
-                                  onPressed: Navigator.of(context).pop,
-                                  child: const Text('Cancel'),
-                                ),
-                                CupertinoDialogAction(
-                                  onPressed: () => context.pushNamed('signup'),
-                                  child: const Text('Log in'),
-                                )
-                              ],
-                            );
-                          },
-                        );
-                      },
-                      signedIn: (_) => widget.onRecord(),
-                    );
-                  },
-                ),
+            Expanded(
+              child: _RecordButton(
+                label: recordLabel,
+                onPressed: onRecord,
               ),
+            ),
             const SizedBox(width: 18),
           ],
         ),
@@ -480,12 +443,12 @@ class _ProfileButtonContents extends StatelessWidget {
 }
 
 class _RecordButton extends StatelessWidget {
-  final String label;
+  final Widget label;
   final VoidCallback? onPressed;
 
   const _RecordButton({
     super.key,
-    this.label = 'Send Message',
+    required this.label,
     required this.onPressed,
   });
 
@@ -507,14 +470,14 @@ class _RecordButton extends StatelessWidget {
             ),
           ],
         ),
-        child: Text(
-          label,
+        child: DefaultTextStyle(
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w400,
             color: Colors.white,
           ),
+          child: label,
         ),
       ),
     );
@@ -617,4 +580,158 @@ class _MutualFriendsModalState extends ConsumerState<_MutualFriendsModal> {
       ],
     );
   }
+}
+
+/// Implements the actions that [ProfileDisplay] can perform.
+class ProfileDisplayBehavior extends ConsumerWidget {
+  final Profile profile;
+  final GlobalKey<ProfileBuilderState> profileBuilderKey;
+  final PlaybackState playbackState;
+  final Stream<PlaybackInfo> playbackInfoStream;
+  final VoidCallback onReportedOrBlocked;
+
+  const ProfileDisplayBehavior({
+    super.key,
+    required this.profile,
+    required this.profileBuilderKey,
+    required this.playbackState,
+    required this.playbackInfoStream,
+    required this.onReportedOrBlocked,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final userState = ref.read(userProvider2);
+        final myUid = userState.map(
+          guest: (_) => null,
+          signedIn: (signedIn) => signedIn.account.profile.uid,
+        );
+        final isMe = profile.uid == myUid;
+        return ProfileDisplay(
+          profile: profile,
+          playbackInfoStream: playbackInfoStream,
+          onPlay: () => profileBuilderKey.currentState?.play(),
+          onPause: () => profileBuilderKey.currentState?.pause(),
+          recordLabel: isMe
+              ? const Text('Update Audio Bio')
+              : const Text('Send Message'),
+          onRecord: () async {
+            final result = await showRecordPanel(
+              context: context,
+              title: isMe
+                  ? const Text('Recording Audio Bio')
+                  : const Text('Recording Message'),
+            );
+            if (context.mounted) {
+              if (result == null) {
+                return;
+              }
+
+              final notifier = ref.read(userProvider2.notifier);
+              final future = isMe
+                  ? notifier.updateAudioBio(result.audio)
+                  : notifier.sendMessage(uid: profile.uid, audio: result.audio);
+              return withBlockingModal(
+                context: context,
+                label: isMe ? 'Updating audio bio...' : 'Sending message...',
+                future: future,
+              );
+            }
+          },
+          onBlock: isMe
+              ? null
+              : () {
+                  // TODO
+                },
+        );
+      },
+    );
+  }
+}
+
+void showProfileBottomSheet({
+  required BuildContext context,
+  required Profile profile,
+  GlobalKey<ProfileBuilderState>? existingProfileBuilderKey,
+  Stream<PlaybackInfo>? existingPlaybackInfoStream,
+}) {
+  final mediaQueryData = MediaQuery.of(context);
+  final profileBuilderKey =
+      existingProfileBuilderKey ?? GlobalKey<ProfileBuilderState>();
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.white,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    builder: (context) {
+      return MediaQuery(
+        data: mediaQueryData,
+        child: Stack(
+          children: [
+            _buildProfileBuilderIfNull(
+              context: context,
+              profile: profile,
+              profileBuilderKey: profileBuilderKey,
+              playbackInfoStream: existingPlaybackInfoStream,
+              builder: (context, playbackState, playbackInfoStream) {
+                return ProfileDisplayBehavior(
+                  profile: profile,
+                  profileBuilderKey: profileBuilderKey,
+                  playbackState: playbackState,
+                  playbackInfoStream: playbackInfoStream,
+                  onReportedOrBlocked: Navigator.of(context).pop,
+                );
+              },
+            ),
+            // Builder to access media query via context
+            Builder(
+              builder: (context) {
+                return Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + 8),
+                    child: const DragHandle(
+                      width: 36,
+                      color: Colors.white,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildProfileBuilderIfNull({
+  required BuildContext context,
+  required Profile profile,
+  required GlobalKey<ProfileBuilderState> profileBuilderKey,
+  required Stream<PlaybackInfo>? playbackInfoStream,
+  required Widget Function(BuildContext context, PlaybackState playbackState,
+          Stream<PlaybackInfo> playbackInfoStream)
+      builder,
+}) {
+  if (playbackInfoStream == null) {
+    return ProfileBuilder(
+      key: profileBuilderKey,
+      play: true,
+      profile: profile,
+      builder: (context, playbackState, playbackInfoStream) {
+        return builder(context, playbackState, playbackInfoStream);
+      },
+    );
+  }
+  return StreamBuilder<PlaybackState>(
+    initialData: PlaybackState.idle,
+    builder: (context, snapshot) {
+      final playbackState = snapshot.requireData;
+      return builder(context, playbackState, playbackInfoStream);
+    },
+  );
 }

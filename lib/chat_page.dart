@@ -15,11 +15,12 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/shell_page.dart';
-import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_message.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/profile_display.dart';
+import 'package:openup/widgets/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
@@ -59,8 +60,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
   final _scrollController = ScrollController();
 
   Profile? _otherProfile;
-  String? _myPhoto;
-
   final _audio = JustAudioAudioPlayer();
   String? _playbackMessageId;
 
@@ -98,9 +97,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       },
     );
 
-    final profile = ref.read(userProvider).profile!;
-    setState(() => _myPhoto = profile.photo);
-
     _fetchHistory().then((value) {
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
@@ -137,6 +133,12 @@ class _ChatScreenState extends ConsumerState<ChatPage>
       ?..sort(_dateAscendingMessageSorter);
     final items = _messagesToItems(messages ?? []);
     final chatroom = _chatroom;
+
+    final myProfile = ref.read(userProvider2).map(
+          guest: (_) => null,
+          signedIn: (signedIn) => signedIn.account.profile,
+        );
+
     return ColoredBox(
       // Background for iOS back gesture
       color: Colors.white,
@@ -167,7 +169,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                       Button(
                         onPressed: () {
                           _audio.pause();
-                          displayProfileBottomSheet(
+                          showProfileBottomSheet(
                             context: context,
                             profile: _otherProfile!,
                           );
@@ -347,7 +349,7 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                       message: message,
                                       fromMe: fromMe,
                                       photo: (fromMe
-                                              ? _myPhoto
+                                              ? myProfile?.photo
                                               : _otherProfile?.photo) ??
                                           '',
                                       playbackInfo: playbackInfo,
@@ -393,7 +395,10 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                         child: _RecordButton(
                           onPressed: () async {
                             _audio.stop();
-                            final result = await _showRecordPanel(context);
+                            final result = await showRecordPanel(
+                              context: context,
+                              title: const Text('Recording Message'),
+                            );
                             if (result != null && mounted) {
                               _submit(result.audio, result.duration);
                             }
@@ -422,25 +427,6 @@ class _ChatScreenState extends ConsumerState<ChatPage>
           );
         },
       ),
-    );
-  }
-
-  Future<RecordingResult?> _showRecordPanel(BuildContext context) async {
-    return showModalBottomSheet<RecordingResult>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return RecordPanelSurface(
-          child: RecordPanel(
-            onCancel: Navigator.of(context).pop,
-            onSubmit: (audio, duration) {
-              Navigator.of(context).pop(RecordingResult(audio, duration));
-              return Future.value(true);
-            },
-          ),
-        );
-      },
     );
   }
 

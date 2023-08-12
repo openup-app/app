@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/profile_display.dart';
 
 import '../platform/just_audio_audio_player.dart';
 
@@ -16,7 +15,6 @@ class DiscoverList extends ConsumerStatefulWidget {
   final Stream<PlaybackInfo> playbackInfoStream;
   final VoidCallback onPlay;
   final VoidCallback onPause;
-  final VoidCallback onRecord;
   final VoidCallback onToggleFavorite;
   final VoidCallback onProfilePressed;
 
@@ -29,7 +27,6 @@ class DiscoverList extends ConsumerStatefulWidget {
     required this.playbackInfoStream,
     required this.onPlay,
     required this.onPause,
-    required this.onRecord,
     required this.onToggleFavorite,
     required this.onProfilePressed,
   });
@@ -115,13 +112,11 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
               profile.profile.uid == widget.selectedProfile?.profile.uid;
           return _MiniProfile(
             profile: profile,
-            playbackState: widget.playbackState,
             playbackInfoStream:
                 selected ? widget.playbackInfoStream : const Stream.empty(),
             onProfileChanged: widget.onProfileChanged,
             onPlay: widget.onPlay,
             onPause: widget.onPause,
-            onRecord: widget.onRecord,
             onToggleFavorite: widget.onToggleFavorite,
             onProfilePressed: widget.onProfilePressed,
           );
@@ -133,24 +128,20 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
 
 class _MiniProfile extends StatelessWidget {
   final DiscoverProfile profile;
-  final PlaybackState playbackState;
   final Stream<PlaybackInfo> playbackInfoStream;
   final ValueChanged<DiscoverProfile?> onProfileChanged;
   final VoidCallback onPlay;
   final VoidCallback onPause;
-  final VoidCallback onRecord;
   final VoidCallback onToggleFavorite;
   final VoidCallback onProfilePressed;
 
   const _MiniProfile({
     super.key,
     required this.profile,
-    required this.playbackState,
     required this.playbackInfoStream,
     required this.onProfileChanged,
     required this.onPlay,
     required this.onPause,
-    required this.onRecord,
     required this.onToggleFavorite,
     required this.onProfilePressed,
   });
@@ -238,53 +229,60 @@ class _MiniProfile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Button(
-            onPressed: () {
-              switch (playbackState) {
-                case PlaybackState.idle:
-                case PlaybackState.paused:
-                  onPlay();
-                  break;
-                default:
-                  onPause();
-              }
+          StreamBuilder<PlaybackState>(
+            initialData: PlaybackState.idle,
+            stream: playbackInfoStream.map((e) => e.state),
+            builder: (context, snapshot) {
+              final playbackState = snapshot.requireData;
+              return Button(
+                onPressed: () {
+                  switch (playbackState) {
+                    case PlaybackState.idle:
+                    case PlaybackState.paused:
+                      onPlay();
+                      break;
+                    default:
+                      onPause();
+                  }
+                },
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+                    ),
+                    child: Builder(
+                      builder: (conext) {
+                        switch (playbackState) {
+                          case PlaybackState.playing:
+                            return const Icon(
+                              Icons.pause_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            );
+                          case PlaybackState.loading:
+                            return const LoadingIndicator(
+                              size: 12,
+                              color: Colors.white,
+                            );
+                          default:
+                            return const Icon(
+                              Icons.play_arrow_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            );
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              );
             },
-            child: Container(
-              width: 48,
-              height: 48,
-              alignment: Alignment.center,
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
-                ),
-                child: Builder(
-                  builder: (context) {
-                    switch (playbackState) {
-                      case PlaybackState.playing:
-                        return const Icon(
-                          Icons.pause_rounded,
-                          size: 18,
-                          color: Colors.white,
-                        );
-                      case PlaybackState.loading:
-                        return const LoadingIndicator(
-                          size: 12,
-                          color: Colors.white,
-                        );
-                      default:
-                        return const Icon(
-                          Icons.play_arrow_rounded,
-                          size: 18,
-                          color: Colors.white,
-                        );
-                    }
-                  },
-                ),
-              ),
-            ),
           ),
           const SizedBox(width: 16),
         ],

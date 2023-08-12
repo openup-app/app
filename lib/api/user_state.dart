@@ -6,8 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
+import 'package:openup/api/chat_api.dart';
 import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/util/image_manip.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 part 'user_state.freezed.dart';
 
@@ -399,6 +402,22 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
           newChatrooms.replaceRange(index, index + 1, [accepted]);
           state = signedIn.copyWith(chatrooms: newChatrooms);
         }
+      },
+    );
+  }
+
+  Future<void> sendMessage({
+    required String uid,
+    required Uint8List audio,
+  }) {
+    return state.map(
+      guest: (_) => Future.value(),
+      signedIn: (signedIn) async {
+        final tempDir = await getTemporaryDirectory();
+        final timestamp = DateTime.now().toIso8601String();
+        final file = File(path.join(tempDir.path, 'message_$timestamp.m4a'));
+        await file.writeAsBytes(audio);
+        await _api.sendMessage(uid, ChatType.audio, file.path);
       },
     );
   }

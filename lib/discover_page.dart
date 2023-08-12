@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:async/async.dart';
@@ -10,10 +9,8 @@ import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
-import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/chat_state.dart';
 import 'package:openup/api/user_profile_cache.dart';
 import 'package:openup/api/user_state.dart';
@@ -22,15 +19,12 @@ import 'package:openup/discover_map_provider.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/location/location_service.dart';
 import 'package:openup/shell_page.dart';
-import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/discover_list.dart';
 import 'package:openup/widgets/discover_map.dart';
 import 'package:openup/widgets/drag_handle.dart';
 import 'package:openup/widgets/profile_display.dart';
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
@@ -545,7 +539,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                     ),
                   ],
                 ),
-                _ProfilePanel(
+                _Panel(
                   gender: _gender,
                   onGenderChanged: (gender) {
                     setState(() {
@@ -562,10 +556,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       setState(() => _selectedProfile = profile),
                   profileBuilderKey: _profileBuilderKey,
                   onShowSettings: _showSettingsOrSignIn,
-                  onRecordInvite: (profile) {
-                    _profileBuilderKey.currentState?.pause();
-                    _showRecordInvitePanelOrSignIn(context, profile.uid);
-                  },
                   onToggleFavorite: () {
                     if (selectedProfile != null) {
                       _toggleFavoriteOrShowSignIn(context, selectedProfile);
@@ -586,11 +576,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 
   void _showRecordInvitePanelOrSignIn(BuildContext context, String uid) {
+    _tempPauseAudio();
     final userState = ref.read(userProvider2);
     userState.map(
-      guest: (_) {
-        _showSignInDialog();
-      },
+      guest: (_) => showSignInModal(context),
       signedIn: (_) {
         _showRecordInvitePanel(context, uid);
       },
@@ -619,24 +608,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       return;
     }
 
-    ref.read(mixpanelProvider).track(
-      "send_invite",
-      properties: {"type": "discover"},
-    );
-
-    final tempDir = await getTemporaryDirectory();
-    final file = File(path.join(tempDir.path, 'invite.m4a'));
-    await file.writeAsBytes(audio);
-    if (!mounted) {
-      return;
-    }
-
-    final future =
-        ref.read(apiProvider).sendMessage(uid, ChatType.audio, file.path);
+    final notifier = ref.read(userProvider2.notifier);
     await withBlockingModal(
       context: context,
       label: 'Sending invite...',
-      future: future,
+      future: notifier.sendMessage(uid: uid, audio: audio),
     );
 
     if (mounted) {
@@ -644,39 +620,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     }
   }
 
-  void _showSignInDialog() {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) {
-        return CupertinoActionSheet(
-          title:
-              const Text('Sign up or log in for free to fully access UT Meets'),
-          actions: [
-            CupertinoActionSheetAction(
-              onPressed: () {
-                _tempPauseAudio();
-                Navigator.of(context).pop();
-                context.pushNamed('signup');
-              },
-              child: const Text('Sign up or log in'),
-            ),
-          ],
-          cancelButton: CupertinoActionSheetAction(
-            onPressed: Navigator.of(context).pop,
-            child: const Text('Cancel'),
-          ),
-        );
-      },
-    );
-  }
-
   void _toggleFavoriteOrShowSignIn(
     BuildContext context,
     DiscoverProfile profile,
   ) async {
+    _tempPauseAudio();
     final userState = ref.read(userProvider2);
     userState.map(
-      guest: (_) => _showSignInDialog(),
+      guest: (_) => showSignInModal(context),
       signedIn: (_) => _toggleFavorite(profile),
     );
   }
@@ -726,9 +677,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 
   void _showSettingsOrSignIn() {
+    _tempPauseAudio();
     final userState = ref.read(userProvider2);
     userState.map(
-      guest: (_) => _showSignInDialog(),
+      guest: (_) => showSignInModal(context),
       signedIn: (_) => widget.onShowSettings(),
     );
   }
@@ -736,9 +688,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   void _showLiveLocationModalOrSignIn({
     required LocationVisibility targetVisibility,
   }) {
+    _tempPauseAudio();
     final userState = ref.read(userProvider2);
     userState.map(
-      guest: (_) => _showSignInDialog(),
+      guest: (_) => showSignInModal(context),
       signedIn: (_) async {
         final confirm = await (targetVisibility == LocationVisibility.public
             ? _showTurnOnLiveLocationModal(context)
@@ -752,49 +705,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     );
   }
 
-  void _showUpdateAudioBioOrSignIn(BuildContext context) {
-    final userState = ref.read(userProvider2);
-    userState.map(
-      guest: (_) => _showSignInDialog(),
-      signedIn: (_) => _showUpdateAudioBioPanel(context),
-    );
-  }
-
-  Future<void> _showUpdateAudioBioPanel(BuildContext context) {
-    return showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return RecordPanelSurface(
-          child: RecordPanel(
-            title: const Text('Update Audio Bio'),
-            submitLabel: const Text('Update'),
-            onCancel: Navigator.of(context).pop,
-            onSubmit: (audio, _) async {
-              final userStateNotifier = ref.read(userProvider2.notifier);
-              final success = await userStateNotifier.updateAudioBio(audio);
-              if (success) {
-                _audioBioUpdatedAnimationTimer?.cancel();
-                _audioBioUpdatedAnimationTimer =
-                    Timer(const Duration(milliseconds: 1500), () {
-                  if (mounted) {
-                    Navigator.of(context).pop();
-                  }
-                });
-              }
-              return success;
-            },
-          ),
-        );
-      },
-    );
-  }
-
   void _showConversationsOrSignIn() {
+    _tempPauseAudio();
     final userState = ref.read(userProvider2);
     userState.map(
-      guest: (_) => _showSignInDialog(),
+      guest: (_) => showSignInModal(context),
       signedIn: (_) => widget.onShowConversations(),
     );
   }
@@ -833,7 +748,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 }
 
-class _ProfilePanel extends StatefulWidget {
+class _Panel extends ConsumerStatefulWidget {
   final Gender? gender;
   final ValueChanged<Gender?> onGenderChanged;
   final List<DiscoverProfile> profiles;
@@ -841,12 +756,11 @@ class _ProfilePanel extends StatefulWidget {
   final ValueChanged<DiscoverProfile?> onProfileChanged;
   final GlobalKey<ProfileBuilderState> profileBuilderKey;
   final VoidCallback onShowSettings;
-  final void Function(Profile profile) onRecordInvite;
   final VoidCallback onToggleFavorite;
   final void Function(Profile profile) onBlockUser;
   final bool pageActive;
 
-  const _ProfilePanel({
+  const _Panel({
     super.key,
     required this.gender,
     required this.onGenderChanged,
@@ -855,17 +769,16 @@ class _ProfilePanel extends StatefulWidget {
     required this.onProfileChanged,
     required this.profileBuilderKey,
     required this.onShowSettings,
-    required this.onRecordInvite,
     required this.onToggleFavorite,
     required this.onBlockUser,
     required this.pageActive,
   });
 
   @override
-  State<_ProfilePanel> createState() => _ProfilePanelState();
+  ConsumerState<_Panel> createState() => _PanelState();
 }
 
-class _ProfilePanelState extends State<_ProfilePanel> {
+class _PanelState extends ConsumerState<_Panel> {
   @override
   Widget build(BuildContext context) {
     const borderSide = BorderSide(
@@ -1063,37 +976,33 @@ class _ProfilePanelState extends State<_ProfilePanel> {
       play: widget.pageActive,
       builder: (context, playbackState, playbackInfoStream) {
         final selectedProfile = widget.selectedProfile;
-        return Builder(
-          builder: (context) {
-            if (selectedProfile == null) {
-              return const SizedBox(
-                height: 0,
-                width: double.infinity,
-              );
-            }
-            return DiscoverList(
-              profiles: widget.profiles,
-              selectedProfile: selectedProfile,
-              onProfileChanged: (profile) {
-                // final scrollingForward = index > _profileIndex;
-                // if (scrollingForward) {
-                //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-                // }
-                widget.onProfileChanged(profile);
-              },
-              playbackState: playbackState,
-              playbackInfoStream: playbackInfoStream,
-              onPlay: () => widget.profileBuilderKey.currentState?.play(),
-              onPause: () => widget.profileBuilderKey.currentState?.pause(),
-              onToggleFavorite: widget.onToggleFavorite,
-              onRecord: () => widget.onRecordInvite(selectedProfile.profile),
-              onProfilePressed: () {
-                displayProfileBottomSheetExistingPlayer(
-                    context: context,
-                    profile: selectedProfile.profile,
-                    playbackInfoStream: playbackInfoStream,
-                    profileBuilderKey: widget.profileBuilderKey);
-              },
+        if (selectedProfile == null) {
+          return const SizedBox(
+            height: 0,
+            width: double.infinity,
+          );
+        }
+        return DiscoverList(
+          profiles: widget.profiles,
+          selectedProfile: selectedProfile,
+          onProfileChanged: (profile) {
+            // final scrollingForward = index > _profileIndex;
+            // if (scrollingForward) {
+            //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
+            // }
+            widget.onProfileChanged(profile);
+          },
+          playbackState: playbackState,
+          playbackInfoStream: playbackInfoStream,
+          onPlay: () => widget.profileBuilderKey.currentState?.play(),
+          onPause: () => widget.profileBuilderKey.currentState?.pause(),
+          onToggleFavorite: widget.onToggleFavorite,
+          onProfilePressed: () {
+            showProfileBottomSheet(
+              context: context,
+              profile: selectedProfile.profile,
+              existingProfileBuilderKey: widget.profileBuilderKey,
+              existingPlaybackInfoStream: playbackInfoStream,
             );
           },
         );

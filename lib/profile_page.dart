@@ -16,7 +16,6 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/shell_page.dart';
-import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/audio_playback_symbol.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/collection_photo_stack.dart';
@@ -25,6 +24,7 @@ import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/image_builder.dart';
 import 'package:openup/widgets/phone_number_input.dart';
 import 'package:openup/widgets/profile_display.dart';
+import 'package:openup/widgets/record.dart';
 import 'package:openup/widgets/restart_app.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -112,7 +112,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           Button(
                             onPressed: () {
                               _profileBuilderKey.currentState?.pause();
-                              displayProfileBottomSheet(
+                              showProfileBottomSheet(
                                 context: context,
                                 profile: profile,
                               );
@@ -729,34 +729,21 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
     }
   }
 
-  Future<void> _showRecordPanel(BuildContext context) {
+  Future<void> _showRecordPanel(BuildContext context) async {
     widget.profileBuilderKey.currentState?.pause();
-    return showModalBottomSheet<Uint8List>(
+    final result = await showRecordPanel(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return RecordPanelSurface(
-          child: RecordPanel(
-            title: const Text('Updating Audio Bio'),
-            submitLabel: const Text('Update'),
-            onCancel: Navigator.of(context).pop,
-            onSubmit: (audio, _) async {
-              final userStateNotifier = ref.read(userProvider2.notifier);
-              final success = await userStateNotifier.updateAudioBio(audio);
-              if (success) {
-                _animationTimer?.cancel();
-                _animationTimer = Timer(const Duration(milliseconds: 1500), () {
-                  if (mounted) {
-                    Navigator.of(context).pop();
-                  }
-                });
-              }
-              return success;
-            },
-          ),
-        );
-      },
+      title: const Text('Recording Audio Bio'),
+    );
+    if (!mounted || result == null) {
+      return;
+    }
+
+    final notifier = ref.read(userProvider2.notifier);
+    return withBlockingModal(
+      context: context,
+      label: 'Updating audio bio...',
+      future: notifier.updateAudioBio(result.audio),
     );
   }
 }

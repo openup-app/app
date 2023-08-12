@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/api.dart';
@@ -2002,92 +2003,91 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
       );
     }));
     return Button(
-      onPressed: myUid == null
-          ? null
-          : () {
-              showCupertinoModalPopup(
-                context: context,
-                barrierColor: const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-                builder: (context) {
-                  return CupertinoActionSheet(
-                    cancelButton: CupertinoActionSheetAction(
-                      onPressed: () async {
-                        final block = await _showBlockDialog(
-                          context: context,
-                          myUid: myUid,
-                        );
-
-                        if (block == _BlockResult.block && mounted) {
-                          final blockFuture =
-                              ref.read(apiProvider).blockUser(widget.uid);
-                          await withBlockingModal(
-                            context: context,
-                            label: 'Blocking...',
-                            future: blockFuture,
-                          );
-                          widget.onBlock();
-                        }
-
-                        if (mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      child: const Text('Block User'),
-                    ),
-                    actions: [
-                      CupertinoActionSheetAction(
-                        onPressed: () async {
-                          final reportReason = await _showReportReasonModal(
-                            context: context,
-                            myUid: myUid,
-                          );
-                          if (reportReason == null || !mounted) {
-                            return;
-                          }
-
-                          // Send report
-                          final api = ref.read(apiProvider);
-                          final reportFuture = api.reportUser(
-                            uid: myUid,
-                            reportedUid: widget.uid,
-                            reason: reportReason.name,
-                          );
-                          await withBlockingModal(
-                            context: context,
-                            label: 'Reporting...',
-                            future: reportFuture,
-                          );
-
-                          if (!mounted) {
-                            return;
-                          }
-
-                          final block = await _showReportSubmittedModal(
-                            context: context,
-                          );
-                          if (block == _BlockResult.block && mounted) {
-                            final api = ref.read(apiProvider);
-                            final blockFuture = api.blockUser(widget.uid);
-                            await withBlockingModal(
-                              context: context,
-                              label: 'Blocking...',
-                              future: blockFuture,
-                            );
-                            widget.onBlock();
-                          }
-
-                          if (mounted) {
-                            Navigator.of(context).pop();
-                          }
-                        },
-                        child: const Text('Report User'),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
+      onPressed: myUid == null ? null : () => _onPressed(myUid),
       child: widget.builder(context),
+    );
+  }
+
+  void _onPressed(String myUid) {
+    showCupertinoModalPopup(
+      context: context,
+      barrierColor: const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+      builder: (context) {
+        return CupertinoActionSheet(
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: () async {
+              final block = await _showBlockDialog(
+                context: context,
+                myUid: myUid,
+              );
+
+              if (block == _BlockResult.block && mounted) {
+                final blockFuture = ref.read(apiProvider).blockUser(widget.uid);
+                await withBlockingModal(
+                  context: context,
+                  label: 'Blocking...',
+                  future: blockFuture,
+                );
+                widget.onBlock();
+              }
+
+              if (mounted) {
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Block User'),
+          ),
+          actions: [
+            CupertinoActionSheetAction(
+              onPressed: () async {
+                final reportReason = await _showReportReasonModal(
+                  context: context,
+                  myUid: myUid,
+                );
+                if (reportReason == null || !mounted) {
+                  return;
+                }
+
+                // Send report
+                final api = ref.read(apiProvider);
+                final reportFuture = api.reportUser(
+                  uid: myUid,
+                  reportedUid: widget.uid,
+                  reason: reportReason.name,
+                );
+                await withBlockingModal(
+                  context: context,
+                  label: 'Reporting...',
+                  future: reportFuture,
+                );
+
+                if (!mounted) {
+                  return;
+                }
+
+                final block = await _showReportSubmittedModal(
+                  context: context,
+                );
+                if (block == _BlockResult.block && mounted) {
+                  final api = ref.read(apiProvider);
+                  final blockFuture = api.blockUser(widget.uid);
+                  await withBlockingModal(
+                    context: context,
+                    label: 'Blocking...',
+                    future: blockFuture,
+                  );
+                  widget.onBlock();
+                }
+
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Report User'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -2321,6 +2321,31 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
     }
     return _BlockResult.noBlock;
   }
+}
+
+Future<void> showSignInModal(BuildContext context) {
+  return showCupertinoModalPopup<void>(
+    context: context,
+    builder: (context) {
+      return CupertinoActionSheet(
+        title:
+            const Text('Sign up or log in for free to fully access UT Meets'),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.pushNamed('signup');
+            },
+            child: const Text('Sign up or log in'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: Navigator.of(context).pop,
+          child: const Text('Cancel'),
+        ),
+      );
+    },
+  );
 }
 
 class RadioTile extends StatelessWidget {

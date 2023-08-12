@@ -1,22 +1,13 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:openup/analytics/analytics.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/back_button.dart';
-import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/drag_handle.dart';
 import 'package:openup/widgets/profile_display.dart';
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
 
 part 'view_profile_page.freezed.dart';
 
@@ -34,20 +25,14 @@ class ViewProfilePage extends ConsumerStatefulWidget {
 
 class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
   Profile? _profile;
-
-  final _player = JustAudioAudioPlayer();
   bool _play = true;
+
+  final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
 
   @override
   void initState() {
     super.initState();
     _init();
-  }
-
-  @override
-  void dispose() {
-    _player.dispose();
-    super.dispose();
   }
 
   void _init() async {
@@ -82,15 +67,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     );
   }
 
-  void _playAudio() {
-    _player.stop();
-    final audio = _profile?.audio;
-    if (audio != null) {
-      _player
-        ..setUrl(audio)
-        ..play(loop: true);
-    }
-  }
+  void _playAudio() => _profileBuilderKey.currentState?.play();
 
   @override
   Widget build(BuildContext context) {
@@ -98,11 +75,11 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     return ActivePage(
       onActivate: () {
         setState(() => _play = true);
-        _player.play();
+        _playAudio();
       },
       onDeactivate: () {
         setState(() => _play = false);
-        _player.stop();
+        _profileBuilderKey.currentState?.pause();
       },
       child: Stack(
         fit: StackFit.expand,
@@ -114,13 +91,21 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
               }
               return ColoredBox(
                 color: Colors.white,
-                child: ProfileDisplay(
-                  profile: profile,
-                  playbackInfoStream: _player.playbackInfoStream,
-                  onPlay: () => _player.play(),
-                  onPause: () => _player.pause(),
-                  onRecord: () => _showRecordPanel(context, profile.uid),
-                  onBlock: () {},
+                child: ProfileBuilder(
+                  key: _profileBuilderKey,
+                  profile: _profile,
+                  play: _play,
+                  builder: (context, playbackState, playbackInfoStream) {
+                    return ProfileDisplayBehavior(
+                      profile: profile,
+                      profileBuilderKey: _profileBuilderKey,
+                      playbackState: playbackState,
+                      playbackInfoStream: playbackInfoStream,
+                      onReportedOrBlocked: () {
+                        context.go('/');
+                      },
+                    );
+                  },
                 ),
               );
             },
@@ -145,49 +130,6 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
       ),
     );
   }
-
-  void _showRecordPanel(BuildContext context, String uid) async {
-    final audio = await showModalBottomSheet<Uint8List>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return RecordPanelSurface(
-          child: RecordPanel(
-            onCancel: Navigator.of(context).pop,
-            onSubmit: (audio, duration) {
-              Navigator.of(context).pop(audio);
-              return Future.value(true);
-            },
-          ),
-        );
-      },
-    );
-
-    if (audio == null || !mounted) {
-      return;
-    }
-
-    ref.read(mixpanelProvider).track(
-      "send_message",
-      properties: {"type": "collection"},
-    );
-
-    final tempDir = await getTemporaryDirectory();
-    final file = File(path.join(tempDir.path, 'chat.m4a'));
-    await file.writeAsBytes(audio);
-    if (!mounted) {
-      return;
-    }
-
-    final api = ref.read(apiProvider);
-    final future = api.sendMessage(uid, ChatType.audio, file.path);
-    await withBlockingModal(
-      context: context,
-      label: 'Sending message...',
-      future: future,
-    );
-  }
 }
 
 @freezed
@@ -199,106 +141,4 @@ class ViewProfilePageArguments with _$ViewProfilePageArguments {
   const factory ViewProfilePageArguments.uid({
     required String uid,
   }) = _Uid;
-}
-
-void displayProfileBottomSheet({
-  required BuildContext context,
-  required Profile profile,
-}) {
-  final mediaQueryData = MediaQuery.of(context);
-  final profileBuilderKey = GlobalKey<ProfileBuilderState>();
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: Colors.white,
-    useRootNavigator: true,
-    isScrollControlled: true,
-    builder: (context) {
-      return MediaQuery(
-        data: mediaQueryData,
-        child: Stack(
-          children: [
-            ProfileBuilder(
-              key: profileBuilderKey,
-              play: true,
-              profile: profile,
-              builder: (context, playbackState, playbackInfoStream) {
-                return ProfileDisplay(
-                  profile: profile,
-                  playbackInfoStream: playbackInfoStream,
-                  onPlay: () => profileBuilderKey.currentState?.play(),
-                  onPause: () => profileBuilderKey.currentState?.pause(),
-                  onRecord: () {},
-                  onBlock: () {},
-                );
-              },
-            ),
-            // Builder to access media query via context
-            Builder(
-              builder: (context) {
-                return Align(
-                  alignment: Alignment.topCenter,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                        top: MediaQuery.of(context).padding.top + 8),
-                    child: const DragHandle(
-                      width: 36,
-                      color: Colors.white,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
-void displayProfileBottomSheetExistingPlayer({
-  required BuildContext context,
-  required Profile profile,
-  required Stream<PlaybackInfo> playbackInfoStream,
-  required GlobalKey<ProfileBuilderState> profileBuilderKey,
-}) {
-  final mediaQueryData = MediaQuery.of(context);
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: Colors.white,
-    useRootNavigator: true,
-    isScrollControlled: true,
-    builder: (context) {
-      return MediaQuery(
-        data: mediaQueryData,
-        child: Stack(
-          children: [
-            ProfileDisplay(
-              profile: profile,
-              playbackInfoStream: playbackInfoStream,
-              onPlay: () => profileBuilderKey.currentState?.play(),
-              onPause: () => profileBuilderKey.currentState?.pause(),
-              onRecord: () {},
-              onBlock: () {},
-            ),
-            // Builder to access media query via context
-            Builder(
-              builder: (context) {
-                return Align(
-                  alignment: Alignment.topCenter,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                        top: MediaQuery.of(context).padding.top + 8),
-                    child: const DragHandle(
-                      width: 36,
-                      color: Colors.white,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    },
-  );
 }
