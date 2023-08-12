@@ -1666,20 +1666,20 @@ class PlaybackRecorderController extends ChangeNotifier {
         final recordingInfo = value.item1.copyWith(frequencies: frequencies);
         _combinedController.add(Tuple2(recordingInfo, value.item2));
       },
-      onComplete: (bytes) {
-        onComplete(bytes);
-      },
+      onComplete: onComplete,
     );
     final value = _combinedController.value;
     final recordingInfo = value.item1.copyWith(
       recording: true,
       start: DateTime.now(),
     );
-    _combinedController.add(Tuple2(recordingInfo, value.item2));
-    _recordingLimitTimer = Timer(
-      maxDuration,
-      () => _recorder.stopRecording(),
-    );
+    if (!_combinedController.isClosed) {
+      _combinedController.add(Tuple2(recordingInfo, value.item2));
+      _recordingLimitTimer = Timer(
+        maxDuration,
+        () => _recorder.stopRecording(),
+      );
+    }
   }
 
   void stopRecording() async {
