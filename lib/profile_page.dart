@@ -160,7 +160,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                   Button(
                                     onPressed: () =>
                                         context.pushNamed('contacts'),
-                                    child: _CupertinoRow(
+                                    child: const _CupertinoRow(
                                       leading: Row(
                                         children: [
                                           Icon(
