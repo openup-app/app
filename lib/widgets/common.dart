@@ -1236,7 +1236,7 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
           child: Button(
             onPressed: Navigator.of(context).pop,
             child: Container(
-              margin: const EdgeInsets.all(10),
+              margin: const EdgeInsets.all(12),
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
@@ -1244,7 +1244,7 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
               child: const Icon(
                 Icons.close,
                 color: Color.fromRGBO(0x44, 0x44, 0x44, 1.0),
-                size: 20,
+                size: 16,
               ),
             ),
           ),
