@@ -9,6 +9,7 @@ import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
+import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_state.dart';
@@ -553,8 +554,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                   },
                   profiles: profiles,
                   selectedProfile: selectedProfile,
-                  onProfileChanged: (profile) =>
-                      setState(() => _selectedProfile = profile),
+                  onProfileChanged: (profile) {
+                    ref.read(mixpanelProvider).track('view_mini_profile');
+                    setState(() => _selectedProfile = profile);
+                  },
                   profileBuilderKey: _profileBuilderKey,
                   onShowSettings: _showSettingsOrSignIn,
                   onToggleFavorite: () {
@@ -995,6 +998,7 @@ class _PanelState extends ConsumerState<_Panel>
           onPause: () => widget.profileBuilderKey.currentState?.pause(),
           onToggleFavorite: widget.onToggleFavorite,
           onProfilePressed: () {
+            ref.read(mixpanelProvider).track('view_full_profile');
             showProfileBottomSheet(
               context: context,
               transitionAnimationController: _sheetAnimationController,

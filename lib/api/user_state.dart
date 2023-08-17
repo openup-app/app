@@ -4,6 +4,8 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
+import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
@@ -58,6 +60,7 @@ final userProvider2 =
   final userStateNotifier = UserStateNotifier2(
     api: ref.watch(apiProvider),
     messageNotifier: ref.read(messageProvider.notifier),
+    mixpanel: ref.read(mixpanelProvider),
   );
 
   _initUserState(
@@ -111,12 +114,15 @@ void _initUserState({
 class UserStateNotifier2 extends StateNotifier<UserState2> {
   final Api _api;
   final MessageStateNotifier _messageNotifier;
+  final Mixpanel _mixpanel;
 
   UserStateNotifier2({
     required Api api,
     required MessageStateNotifier messageNotifier,
+    required Mixpanel mixpanel,
   })  : _api = api,
         _messageNotifier = messageNotifier,
+        _mixpanel = mixpanel,
         super(const _Guest());
 
   UserState2 get userState => state;
@@ -189,6 +195,13 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
         if (name.isEmpty || name == signedIn.account.profile.name) {
           return Right(signedIn.account.profile);
         }
+        _mixpanel.track(
+          'update_name',
+          properties: {
+            'oldName': signedIn.account.profile.name,
+            'newName': name,
+          },
+        );
         final result = await _api.updateProfile(
           signedIn.account.profile.uid,
           signedIn.account.profile.copyWith(name: name),
@@ -233,6 +246,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     required int index,
     required File photo,
   }) async {
+    _mixpanel.track('gallery_replace_photo');
     return state.map(
       guest: (_) {
         _messageNotifier.emitMessage(
@@ -266,6 +280,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
   }
 
   Future<bool> deleteGalleryPhoto(int index) async {
+    _mixpanel.track('gallery_delete_photo');
     return state.map(
       guest: (_) {
         _messageNotifier.emitMessage(
@@ -298,6 +313,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
   }
 
   Future<bool> updateAudioBio(Uint8List bytes) async {
+    _mixpanel.track('update_audio_bio');
     return state.map(
       guest: (_) {
         _messageNotifier.emitMessage(
@@ -324,6 +340,12 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
   }
 
   void updateLocationVisibility(LocationVisibility visibility) {
+    _mixpanel.track(
+      'update_location_visibility',
+      properties: {
+        'visibility': visibility.name,
+      },
+    );
     state.map(
       guest: (_) => Future.value(),
       signedIn: (signedIn) async {
@@ -348,6 +370,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
   }
 
   Future<Either<ApiError, void>> deleteChatroom(String uid) {
+    _mixpanel.track('delete_friend');
     return state.map(
       guest: (_) =>
           Future.value(const Left(ApiError.client(ClientErrorUnauthorized()))),
