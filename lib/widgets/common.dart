@@ -394,7 +394,7 @@ class _NonCinematicPhotoState extends State<NonCinematicPhoto> {
       children: [
         Image(
           image: _photoImageProvider,
-          fit: BoxFit.contain,
+          fit: BoxFit.cover,
         ),
         if (_loading)
           const Center(
