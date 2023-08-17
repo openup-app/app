@@ -151,140 +151,173 @@ class _MiniProfile extends StatelessWidget {
     final mutualContactCount = profile.profile.mutualContacts.length;
     return Button(
       onPressed: onProfilePressed,
-      child: Row(
+      child: Stack(
         children: [
-          const SizedBox(width: 21),
-          Container(
-            width: 50,
-            height: 50,
-            clipBehavior: Clip.hardEdge,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-              boxShadow: [
-                BoxShadow(
-                  offset: Offset(0, 1),
-                  blurRadius: 9,
-                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.35),
-                ),
-              ],
-            ),
-            child: Image.network(
-              profile.profile.photo,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AutoSizeText(
-                  profile.profile.name,
-                  textAlign: TextAlign.center,
-                  minFontSize: 16,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                    color: Color.fromRGBO(0x3C, 0x3C, 0x3C, 1.0),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w400,
-                      color: Color.fromRGBO(0x45, 0x45, 0x45, 1.0),
+          Row(
+            children: [
+              const SizedBox(width: 21),
+              Container(
+                width: 50,
+                height: 50,
+                clipBehavior: Clip.hardEdge,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                  boxShadow: [
+                    BoxShadow(
+                      offset: Offset(0, 1),
+                      blurRadius: 9,
+                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.35),
                     ),
-                    children: [
-                      TextSpan(
-                        text: '$mutualContactCount Shared ',
-                      ),
-                      TextSpan(
-                        text: 'Connection${mutualContactCount == 1 ? '' : 's'}',
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          Button(
-            onPressed: onToggleFavorite,
-            child: Container(
-              width: 48,
-              height: 48,
-              color: Colors.transparent,
-              alignment: Alignment.center,
-              child: Icon(
-                profile.favorite ? Icons.favorite : Icons.favorite_outline,
-                color: profile.favorite
-                    ? const Color.fromRGBO(0xFF, 0x4F, 0x4F, 1.0)
-                    : const Color.fromRGBO(0x3D, 0x3D, 0x3D, 1.0),
+                child: Image.network(
+                  profile.profile.photo,
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          StreamBuilder<PlaybackState>(
-            initialData: PlaybackState.idle,
-            stream: playbackInfoStream.map((e) => e.state),
-            builder: (context, snapshot) {
-              final playbackState = snapshot.requireData;
-              return Button(
-                onPressed: () {
-                  switch (playbackState) {
-                    case PlaybackState.idle:
-                    case PlaybackState.paused:
-                      onPlay();
-                      break;
-                    default:
-                      onPause();
-                  }
-                },
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AutoSizeText(
+                      profile.profile.name,
+                      textAlign: TextAlign.center,
+                      minFontSize: 16,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                        color: Color.fromRGBO(0x3C, 0x3C, 0x3C, 1.0),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w400,
+                          color: Color.fromRGBO(0x45, 0x45, 0x45, 1.0),
+                        ),
+                        children: [
+                          TextSpan(
+                            text: '$mutualContactCount Shared ',
+                          ),
+                          TextSpan(
+                            text:
+                                'Connection${mutualContactCount == 1 ? '' : 's'}',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Button(
+                onPressed: onToggleFavorite,
                 child: Container(
                   width: 48,
                   height: 48,
+                  color: Colors.transparent,
                   alignment: Alignment.center,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
-                    ),
-                    child: Builder(
-                      builder: (conext) {
-                        switch (playbackState) {
-                          case PlaybackState.playing:
-                            return const Icon(
-                              Icons.pause_rounded,
-                              size: 18,
-                              color: Colors.white,
-                            );
-                          case PlaybackState.loading:
-                            return const LoadingIndicator(
-                              size: 12,
-                              color: Colors.white,
-                            );
-                          default:
-                            return const Icon(
-                              Icons.play_arrow_rounded,
-                              size: 18,
-                              color: Colors.white,
-                            );
-                        }
-                      },
-                    ),
+                  child: Icon(
+                    profile.favorite ? Icons.favorite : Icons.favorite_outline,
+                    color: profile.favorite
+                        ? const Color.fromRGBO(0xFF, 0x4F, 0x4F, 1.0)
+                        : const Color.fromRGBO(0x3D, 0x3D, 0x3D, 1.0),
                   ),
                 ),
-              );
-            },
+              ),
+              const SizedBox(width: 8),
+              StreamBuilder<PlaybackState>(
+                initialData: PlaybackState.idle,
+                stream: playbackInfoStream.map((e) => e.state),
+                builder: (context, snapshot) {
+                  final playbackState = snapshot.requireData;
+                  return Button(
+                    onPressed: () {
+                      switch (playbackState) {
+                        case PlaybackState.idle:
+                        case PlaybackState.paused:
+                          onPlay();
+                          break;
+                        default:
+                          onPause();
+                      }
+                    },
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      alignment: Alignment.center,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+                        ),
+                        child: Builder(
+                          builder: (conext) {
+                            switch (playbackState) {
+                              case PlaybackState.playing:
+                                return const Icon(
+                                  Icons.pause_rounded,
+                                  size: 18,
+                                  color: Colors.white,
+                                );
+                              case PlaybackState.loading:
+                                return const LoadingIndicator(
+                                  size: 12,
+                                  color: Colors.white,
+                                );
+                              default:
+                                return const Icon(
+                                  Icons.play_arrow_rounded,
+                                  size: 18,
+                                  color: Colors.white,
+                                );
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 16),
+            ],
           ),
-          const SizedBox(width: 16),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: 4,
+            child: StreamBuilder<double>(
+              stream: playbackInfoStream.map((e) {
+                return e.duration.inMilliseconds == 0
+                    ? 0
+                    : e.position.inMilliseconds / e.duration.inMilliseconds;
+              }),
+              initialData: 0.0,
+              builder: (context, snapshot) {
+                return DecoratedBox(
+                  decoration: const BoxDecoration(
+                    color: Color.fromRGBO(0xE3, 0xE2, 0xE2, 1.0),
+                  ),
+                  child: FractionallySizedBox(
+                    widthFactor: snapshot.requireData,
+                    alignment: Alignment.centerLeft,
+                    child: const ColoredBox(
+                      color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
