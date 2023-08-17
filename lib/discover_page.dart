@@ -764,7 +764,19 @@ class _Panel extends ConsumerStatefulWidget {
   ConsumerState<_Panel> createState() => _PanelState();
 }
 
-class _PanelState extends ConsumerState<_Panel> {
+class _PanelState extends ConsumerState<_Panel>
+    with SingleTickerProviderStateMixin {
+  late final _sheetAnimationController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 250),
+  );
+
+  @override
+  void dispose() {
+    _sheetAnimationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     const borderSide = BorderSide(
@@ -985,6 +997,7 @@ class _PanelState extends ConsumerState<_Panel> {
           onProfilePressed: () {
             showProfileBottomSheet(
               context: context,
+              transitionAnimationController: _sheetAnimationController,
               profile: selectedProfile.profile,
               existingProfileBuilderKey: widget.profileBuilderKey,
               existingPlaybackInfoStream: playbackInfoStream,

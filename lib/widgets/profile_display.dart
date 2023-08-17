@@ -658,6 +658,7 @@ class ProfileDisplayBehavior extends ConsumerWidget {
 
 void showProfileBottomSheet({
   required BuildContext context,
+  AnimationController? transitionAnimationController,
   required Profile profile,
   GlobalKey<ProfileBuilderState>? existingProfileBuilderKey,
   Stream<PlaybackInfo>? existingPlaybackInfoStream,
@@ -670,6 +671,7 @@ void showProfileBottomSheet({
     backgroundColor: Colors.white,
     useRootNavigator: true,
     isScrollControlled: true,
+    transitionAnimationController: transitionAnimationController,
     builder: (context) {
       return MediaQuery(
         data: mediaQueryData,
