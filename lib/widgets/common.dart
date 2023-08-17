@@ -1374,18 +1374,29 @@ class RecordPanelSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 460,
-      child: Container(
-        clipBehavior: Clip.hardEdge,
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(44),
-            topRight: Radius.circular(44),
+      height: 460 + 67,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 67.0),
+        child: Container(
+          clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(
+            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.3),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 50,
+                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
+                blurStyle: BlurStyle.outer,
+              ),
+            ],
           ),
-        ),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 48, sigmaY: 48),
-          child: child,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 48, sigmaY: 48),
+            child: child,
+          ),
         ),
       ),
     );
