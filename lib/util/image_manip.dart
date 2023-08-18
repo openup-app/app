@@ -65,7 +65,13 @@ Future<Uint8List?> _encodeJpg(ui.Image image, {int quality = 80}) async {
   }
 
   final jpg = img.encodeJpg(
-    img.Image.fromBytes(image.width, image.height, bytes),
+    img.Image.fromBytes(
+      width: image.width,
+      height: image.height,
+      bytes: bytes.buffer,
+      numChannels: 4,
+      order: img.ChannelOrder.rgba,
+    ),
     quality: quality,
   );
   return Uint8List.fromList(jpg);
