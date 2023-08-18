@@ -30,7 +30,7 @@ class ContactsService {
     return allContacts.map((e) {
       return Contact(
         name: e.displayName,
-        phoneNumber: e.phones.first.number,
+        phoneNumber: e.phones.isEmpty ? '' : e.phones.first.number,
         photo: e.photoOrThumbnail,
       );
     }).toList();
