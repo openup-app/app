@@ -2,13 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/contacts/contacts_provider.dart';
-import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/section.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -119,7 +118,6 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                             height: 40,
                             clipBehavior: Clip.hardEdge,
                             margin: const EdgeInsets.symmetric(horizontal: 6),
-                            alignment: Alignment.center,
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
                               color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
@@ -127,7 +125,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                             child: contact.photo.isNotEmpty
                                 ? Image.network(
                                     contact.photo,
-                                    fit: BoxFit.cover,
+                                    fit: BoxFit.fill,
                                   )
                                 : Text(
                                     contact.name,
@@ -148,11 +146,9 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                           ),
                           trailing: _InviteButton(
                             onPressed: () {
-                              context.goNamed(
-                                'view_profile',
-                                extra: ViewProfilePageArguments.uid(
-                                  uid: contact.uid,
-                                ),
+                              showProfileBottomSheetLoadProfile(
+                                context: context,
+                                uid: contact.uid,
                               );
                             },
                           ),
@@ -219,14 +215,6 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
                       color: Color.fromRGBO(0x34, 0x34, 0x34, 1.0),
-                    ),
-                  ),
-                  subtitle: const Text(
-                    '0 friends on UT Meets',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w300,
-                      fontSize: 12,
-                      color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
                     ),
                   ),
                   trailing: _InviteButton(

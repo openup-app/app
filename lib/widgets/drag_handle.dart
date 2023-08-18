@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 class DragHandle extends StatelessWidget {
   final double width;
   final Color color;
+  final BoxShadow? shadow;
   const DragHandle({
     super.key,
     this.width = 32,
     this.color = const Color.fromRGBO(0xCE, 0xCE, 0xCE, 1.0),
+    this.shadow,
   });
 
   @override
@@ -18,6 +20,7 @@ class DragHandle extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(2.5)),
           color: color,
+          boxShadow: shadow != null ? [shadow!] : null,
         ),
       ),
     );

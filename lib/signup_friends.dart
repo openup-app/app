@@ -19,7 +19,11 @@ class _SignUpFriendsState extends ConsumerState<SignUpFriends> {
 
   @override
   void initState() {
-    ref.read(contactsProvider.notifier).uploadContacts();
+    ref.read(contactsProvider.notifier).refreshContacts().then((_) {
+      if (mounted) {
+        ref.read(contactsProvider.notifier).uploadContacts();
+      }
+    });
     _searchController.addListener(() {
       if (_filterString != _searchController.text) {
         setState(() => _filterString = _searchController.text);

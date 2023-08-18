@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openup/contacts/contacts_provider.dart';
 import 'package:openup/widgets/invite_friends.dart';
 
-class ContactsPage extends StatefulWidget {
+class ContactsPage extends ConsumerStatefulWidget {
   const ContactsPage({super.key});
 
   @override
-  State<ContactsPage> createState() => _ContactsPageState();
+  ConsumerState<ContactsPage> createState() => _ContactsPageState();
 }
 
-class _ContactsPageState extends State<ContactsPage> {
+class _ContactsPageState extends ConsumerState<ContactsPage> {
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
   String _filterString = '';
@@ -16,6 +18,11 @@ class _ContactsPageState extends State<ContactsPage> {
   @override
   void initState() {
     super.initState();
+    ref.read(contactsProvider.notifier).refreshContacts().then((_) {
+      if (mounted) {
+        ref.read(contactsProvider.notifier).uploadContacts();
+      }
+    });
     _searchController.addListener(() {
       if (_filterString != _searchController.text) {
         setState(() => _filterString = _searchController.text);

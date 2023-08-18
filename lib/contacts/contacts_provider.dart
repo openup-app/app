@@ -28,7 +28,7 @@ class ContactsStateNotifier extends StateNotifier<ContactsState> {
           knownContactsState: KnownContactsState.loading(),
         ));
 
-  void refreshContacts() async {
+  Future<void> refreshContacts() async {
     var hasPermission = await contactsService.hasPermission();
     if (!mounted) {
       return;
@@ -54,7 +54,6 @@ class ContactsStateNotifier extends StateNotifier<ContactsState> {
           },
         ).toList(),
       );
-      getKnownContacts();
     }
 
     if (mounted) {
@@ -84,21 +83,6 @@ class ContactsStateNotifier extends StateNotifier<ContactsState> {
         },
       );
     }
-  }
-
-  void getKnownContacts() async {
-    final result = await api.getKnownContacts();
-    if (!mounted) {
-      return;
-    }
-    result.fold(
-      (l) => state = state.copyWith(
-        knownContactsState: const KnownContactsState.error(),
-      ),
-      (r) => state = state.copyWith(
-        knownContactsState: KnownContactsState.contacts(r),
-      ),
-    );
   }
 }
 

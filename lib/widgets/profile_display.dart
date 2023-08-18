@@ -1,4 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -200,50 +201,53 @@ class ProfileDisplay extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: AutoSizeText(
-                            profile.name,
-                            minFontSize: 15,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w500,
-                              color: Color.fromRGBO(0x38, 0x37, 0x37, 1.0),
+                child: Button(
+                  useFadeWheNoPressedCallback: false,
+                  onPressed: mutualContactCount == 0
+                      ? null
+                      : () {
+                          onPause();
+                          showCupertinoModalPopup(
+                            context: context,
+                            builder: (context) {
+                              return _MutualContactsModal(
+                                contacts: profile.mutualContacts,
+                              );
+                            },
+                          );
+                        },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: AutoSizeText(
+                              profile.name,
+                              minFontSize: 15,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w500,
+                                color: Color.fromRGBO(0x38, 0x37, 0x37, 1.0),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        if (profile.age != null)
-                          Text(
-                            profile.age.toString(),
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w300,
-                              color: Color.fromRGBO(0x38, 0x37, 0x37, 1.0),
+                          const SizedBox(width: 8),
+                          if (profile.age != null)
+                            Text(
+                              profile.age.toString(),
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w300,
+                                color: Color.fromRGBO(0x38, 0x37, 0x37, 1.0),
+                              ),
                             ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Button(
-                      useFadeWheNoPressedCallback: false,
-                      onPressed: () {
-                        showCupertinoModalPopup(
-                          context: context,
-                          builder: (context) {
-                            return _MutualFriendsModal(
-                              uids: [profile.uid],
-                            );
-                          },
-                        );
-                      },
-                      child: Column(
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Column(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -253,7 +257,7 @@ class ProfileDisplay extends StatelessWidget {
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
-                                  '$mutualContactCount mutual friend${mutualContactCount == 1 ? '' : 's'}',
+                                  '$mutualContactCount Shared Connection${mutualContactCount == 1 ? '' : 's'}',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w400,
@@ -264,8 +268,8 @@ class ProfileDisplay extends StatelessWidget {
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               if (onBlock != null)
@@ -486,47 +490,13 @@ class _RecordButton extends StatelessWidget {
   }
 }
 
-class _MutualFriendsModal extends ConsumerStatefulWidget {
-  final List<String> uids;
+class _MutualContactsModal extends StatelessWidget {
+  final List<KnownContact> contacts;
 
-  const _MutualFriendsModal({
+  const _MutualContactsModal({
     super.key,
-    required this.uids,
+    required this.contacts,
   });
-
-  @override
-  ConsumerState<_MutualFriendsModal> createState() =>
-      _MutualFriendsModalState();
-}
-
-class _MutualFriendsModalState extends ConsumerState<_MutualFriendsModal> {
-  bool _loading = true;
-
-  final _profiles = <Profile>[];
-
-  @override
-  void initState() {
-    super.initState();
-    final api = ref.read(apiProvider);
-    Future.wait(widget.uids.map(api.getProfile)).then((results) {
-      if (mounted) {
-        final profiles = results.map((result) {
-          return result.fold(
-            (l) => null,
-            (r) => r,
-          );
-        });
-
-        final nonNullProfiles =
-            List<Profile>.from(profiles.where((e) => e != null));
-
-        setState(() {
-          _loading = false;
-          _profiles.addAll(nonNullProfiles);
-        });
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -536,22 +506,23 @@ class _MutualFriendsModalState extends ConsumerState<_MutualFriendsModal> {
         isDefaultAction: true,
         child: const Text('Cancel'),
       ),
-      title: Text(
-        'Mutual friends',
-        style: Theme.of(context)
-            .textTheme
-            .bodyMedium!
-            .copyWith(fontSize: 16, fontWeight: FontWeight.w300),
+      title: const Text(
+        'Shared connections',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w300,
+          color: Colors.white,
+        ),
       ),
       actions: [
-        if (_loading)
+        for (final contact in contacts)
           CupertinoActionSheetAction(
-            onPressed: () {},
-            child: const LoadingIndicator(size: 35),
-          ),
-        for (final profile in _profiles)
-          CupertinoActionSheetAction(
-            onPressed: () {},
+            onPressed: () {
+              showProfileBottomSheetLoadProfile(
+                context: context,
+                uid: contact.uid,
+              );
+            },
             child: Row(
               children: [
                 const SizedBox(width: 21),
@@ -563,16 +534,19 @@ class _MutualFriendsModalState extends ConsumerState<_MutualFriendsModal> {
                     shape: BoxShape.circle,
                   ),
                   child: Image.network(
-                    profile.photo,
+                    contact.photo,
                     fit: BoxFit.cover,
                   ),
                 ),
                 const SizedBox(width: 20),
                 Expanded(
                   child: Text(
-                    profile.name,
+                    contact.name,
                     textAlign: TextAlign.left,
                     overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 const Icon(Icons.chevron_right),
@@ -656,6 +630,128 @@ class ProfileDisplayBehavior extends ConsumerWidget {
   }
 }
 
+class _ProfileDisplayLoadProfile extends ConsumerStatefulWidget {
+  final String uid;
+  const _ProfileDisplayLoadProfile({
+    super.key,
+    required this.uid,
+  });
+
+  @override
+  ConsumerState<_ProfileDisplayLoadProfile> createState() =>
+      __ProfileDisplayLoadProfileState();
+}
+
+class __ProfileDisplayLoadProfileState
+    extends ConsumerState<_ProfileDisplayLoadProfile> {
+  final profileBuilderKey = GlobalKey<ProfileBuilderState>();
+  Either<ApiError, Profile>? _profile;
+
+  @override
+  void initState() {
+    super.initState();
+    _init();
+  }
+
+  void _init() async {
+    final result = await ref.read(apiProvider).getProfile(widget.uid);
+    if (mounted) {
+      setState(() => _profile = result);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = _profile;
+    if (profile == null) {
+      return const Center(
+        child: LoadingIndicator(
+          color: Colors.black,
+        ),
+      );
+    }
+    return profile.fold(
+      (l) {
+        return const Center(
+          child: Text(
+            'Failed to load profile',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Colors.black,
+            ),
+          ),
+        );
+      },
+      (profile) {
+        return _buildProfileBuilderIfNull(
+          context: context,
+          profile: profile,
+          profileBuilderKey: profileBuilderKey,
+          playbackInfoStream: null,
+          builder: (context, playbackState, playbackInfoStream) {
+            return ProfileDisplayBehavior(
+              profile: profile,
+              profileBuilderKey: profileBuilderKey,
+              playbackState: playbackState,
+              playbackInfoStream: playbackInfoStream,
+              onReportedOrBlocked: Navigator.of(context).pop,
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+void showProfileBottomSheetLoadProfile({
+  required BuildContext context,
+  AnimationController? transitionAnimationController,
+  required String uid,
+}) {
+  final mediaQueryData = MediaQuery.of(context);
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.white,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    transitionAnimationController: transitionAnimationController,
+    builder: (context) {
+      return MediaQuery(
+        data: mediaQueryData,
+        child: Stack(
+          children: [
+            _ProfileDisplayLoadProfile(
+              uid: uid,
+            ),
+            // Builder to access media query via context
+            Builder(
+              builder: (context) {
+                return Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + 8),
+                    child: const DragHandle(
+                      width: 36,
+                      color: Colors.white,
+                      shadow: BoxShadow(
+                        offset: Offset(0, 1),
+                        blurRadius: 8,
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 void showProfileBottomSheet({
   required BuildContext context,
   AnimationController? transitionAnimationController,
@@ -703,6 +799,11 @@ void showProfileBottomSheet({
                     child: const DragHandle(
                       width: 36,
                       color: Colors.white,
+                      shadow: BoxShadow(
+                        offset: Offset(0, 1),
+                        blurRadius: 8,
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.4),
+                      ),
                     ),
                   ),
                 );
