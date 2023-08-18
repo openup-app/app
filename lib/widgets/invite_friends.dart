@@ -79,7 +79,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
           child: SizedBox(height: widget.padding.top),
         ),
         const SliverToBoxAdapter(
-          child: SectionTitle(title: Text('Contacts using UT Meets')),
+          child: SectionTitle(title: Text('Contacts using Bonjour')),
         ),
         Builder(
           builder: (context) {
@@ -276,7 +276,7 @@ class _InviteButton extends StatelessWidget {
 void _launchMessagingApp(String phoneNumber) {
   final querySymbol = Platform.isAndroid ? '?' : '&';
   final body = Uri.encodeComponent(
-      'I\'m on UT Meets, a new way to meet online. \nhttps://utmeets.com');
+      'I\'m on Bonjour, a new way to meet online. \nhttps://bonjourland.com');
   final url = Uri.parse('sms://$phoneNumber/${querySymbol}body=$body');
   launchUrl(url);
 }
