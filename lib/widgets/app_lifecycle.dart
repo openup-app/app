@@ -51,6 +51,8 @@ class _AppLifecycleState extends State<AppLifecycle>
       case AppLifecycleState.resumed:
         widget.onResumed?.call();
         break;
+      case AppLifecycleState.hidden:
+        break;
     }
   }
 

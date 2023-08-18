@@ -735,6 +735,7 @@ Widget _buildProfileBuilderIfNull({
     );
   }
   return StreamBuilder<PlaybackState>(
+    stream: playbackInfoStream.map((event) => event.state),
     initialData: PlaybackState.idle,
     builder: (context, snapshot) {
       final playbackState = snapshot.requireData;
