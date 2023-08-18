@@ -16,11 +16,18 @@ enum LocationMessage { permissionRationale }
 
 final locationProvider =
     StateNotifierProvider<LocationNotifier, LocationState>((ref) {
+  final latLongOverride = ref.watch(userProvider2.select<LatLong?>((p) {
+    return p.map(
+      guest: (_) => null,
+      signedIn: (signedIn) => signedIn.account.profile.latLongOverride,
+    );
+  }));
   final locationNotifier = LocationNotifier(
     keyValueStore: ref.read(keyValueStoreProvider),
     onMessage: (message) =>
         ref.read(locationMessageProvider.notifier).state = message,
     onUpdateLocation: (latLong) => _updateLocationIfSignedIn(latLong, ref),
+    latLongOverride: latLongOverride,
   );
 
   locationNotifier._initLocation();
@@ -59,11 +66,13 @@ class LocationNotifier extends StateNotifier<LocationState> {
   final SharedPreferences keyValueStore;
   final void Function(LocationMessage message) onMessage;
   final void Function(LatLong latLong) onUpdateLocation;
+  final LatLong? latLongOverride;
 
   LocationNotifier({
     required this.keyValueStore,
     required this.onMessage,
     required this.onUpdateLocation,
+    this.latLongOverride,
   }) : super(
           LocationState(
             initialLatLong: _readInitialLatLong(keyValueStore),
@@ -88,7 +97,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
         return;
       }
       location.map(
-        value: (value) => _update(value.latLong),
+        value: (value) => _update(latLongOverride ?? value.latLong),
         denied: (_) => onMessage(LocationMessage.permissionRationale),
         failure: (_) {},
       );

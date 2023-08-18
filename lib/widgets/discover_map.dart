@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/location/location_service.dart';
 import 'package:openup/util/image_manip.dart';
 import 'package:openup/widgets/map_marker_rendering.dart';
@@ -107,6 +108,17 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       final pill = await _renderExactLocationNotShownMapMarker();
       if (mounted) {
         setState(() => _exactLocationNotShownPill = pill);
+      }
+    });
+
+    ref.listenManual(userProvider2.select((p) {
+      return p.map(
+        guest: (_) => null,
+        signedIn: (signedIn) => signedIn.account.profile.latLongOverride,
+      );
+    }), (previous, next) {
+      if (previous == null && next != null) {
+        recenterMap(next);
       }
     });
   }

@@ -915,6 +915,7 @@ class Profile with _$Profile {
     required List<String> gallery,
     @Default([]) List<KnownContact> mutualContacts,
     @Default(0) int friendCount,
+    @Default(null) LatLong? latLongOverride,
   }) = _Profile;
 
   // Private constructor required for adding methods
