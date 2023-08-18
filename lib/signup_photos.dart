@@ -45,11 +45,11 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
             height: MediaQuery.of(context).padding.top,
           ),
           const SizedBox(height: 16),
-          Align(
+          const Align(
             alignment: Alignment.topCenter,
             child: Stack(
               alignment: Alignment.center,
-              children: const [
+              children: [
                 Align(
                   alignment: Alignment.centerLeft,
                   child: BackIconButton(

@@ -28,7 +28,7 @@ class UserProfileCache extends ConsumerStatefulWidget {
 }
 
 class _UserProfileCacheState extends ConsumerState<UserProfileCache> {
-  File? _photoFile = null;
+  File? _photoFile;
 
   @override
   void initState() {

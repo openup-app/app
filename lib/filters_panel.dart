@@ -43,12 +43,12 @@ class _FiltersState extends State<Filters> {
               const SizedBox(height: 20),
               const _Heading(
                   label: 'I\'m interested in seeing these ethnicities...'),
-              _SearchBox(),
+              const _SearchBox(),
               _ShowListButton(
                 onPressed: () {},
               ),
               const _Heading(label: 'I\'m interested in people who speak...'),
-              _SearchBox(),
+              const _SearchBox(),
               _ShowListButton(
                 onPressed: () {},
               ),
@@ -184,10 +184,10 @@ class _Filter extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                        color: const Color.fromRGBO(0x59, 0x59, 0x59, 1.0),
-                        fontSize: 19,
-                      ),
+                  style: const TextStyle(
+                    color: Color.fromRGBO(0x59, 0x59, 0x59, 1.0),
+                    fontSize: 19,
+                  ),
                 ),
               ),
               if (checked)

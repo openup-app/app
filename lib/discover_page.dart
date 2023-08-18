@@ -58,7 +58,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   final _profiles = <DiscoverProfile>[];
   Location? _mapLocation;
   Location? _prevQueryLocation;
-  static const _kMinRadius = 4000.0;
   DiscoverProfile? _selectedProfile;
   final _invitedUsers = <String>{};
 
@@ -1144,9 +1143,9 @@ Future<void> showSafetyAndPrivacyModal(BuildContext context) {
     context: context,
     builder: (context) {
       return CupertinoAlertDialog(
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(
               Icons.shield,
               size: 16,
@@ -1155,10 +1154,10 @@ Future<void> showSafetyAndPrivacyModal(BuildContext context) {
             Text('Safety & Privacy'),
           ],
         ),
-        content: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.0),
           child: Column(
-            children: const [
+            children: [
               Text(
                 'Safety and privacy is our top priority:',
                 textAlign: TextAlign.left,
@@ -1201,9 +1200,9 @@ Future<bool> _showTurnOffLiveLocationModal(BuildContext context) async {
     context: context,
     builder: (context) {
       return CupertinoAlertDialog(
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(
               Icons.location_on,
               size: 16,
@@ -1212,10 +1211,10 @@ Future<bool> _showTurnOffLiveLocationModal(BuildContext context) async {
             Text('Live Location'),
           ],
         ),
-        content: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.0),
           child: Column(
-            children: const [
+            children: [
               Text(
                 'Turning off location will prevent the following:',
                 textAlign: TextAlign.left,
@@ -1274,9 +1273,9 @@ Future<bool> _showTurnOnLiveLocationModal(BuildContext context) async {
     context: context,
     builder: (context) {
       return CupertinoAlertDialog(
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(
               Icons.location_on,
               size: 16,
@@ -1285,10 +1284,10 @@ Future<bool> _showTurnOnLiveLocationModal(BuildContext context) async {
             Text('Live Location'),
           ],
         ),
-        content: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.0),
           child: Column(
-            children: const [
+            children: [
               Text(
                 'Your safety is our top priority:',
                 textAlign: TextAlign.left,
@@ -1340,10 +1339,10 @@ Future<void> showSignupGuestModal(
     builder: (context) {
       return CupertinoAlertDialog(
         title: const Text('Sign up'),
-        content: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.0),
           child: Column(
-            children: const [
+            children: [
               Text(
                 'Sign up or log in for free and gain these abilities:',
                 textAlign: TextAlign.left,
