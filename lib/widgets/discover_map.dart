@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:async/async.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as maps;
@@ -57,6 +58,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   final _frameCount =
       ((_markerAppearDuration.inMilliseconds / 1000) * 60).floor();
 
+  CancelableOperation<List<Uint8List>>? _cancelableRenderOfSelected;
   final _selectedMapMarkerAnimation = <Uint8List>[];
   late final _selectedAnimationController = AnimationController(
     vsync: this,
@@ -183,8 +185,15 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       });
 
       // Re-render selected
-      _renderMapMarker(profile: selectedProfile, selected: true).then((frames) {
-        if (mounted) {
+      _cancelableRenderOfSelected?.cancel();
+      final renderFuture =
+          _renderMapMarker(profile: selectedProfile, selected: true);
+      _cancelableRenderOfSelected =
+          CancelableOperation.fromFuture(renderFuture);
+      _cancelableRenderOfSelected?.then((frames) {
+        final stillSelected =
+            widget.selectedProfile?.profile.uid == selectedProfile.profile.uid;
+        if (mounted && stillSelected) {
           setState(() {
             _selectedMapMarkerAnimation
               ..clear()
