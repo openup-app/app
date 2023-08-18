@@ -125,7 +125,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                             child: contact.photo.isNotEmpty
                                 ? Image.network(
                                     contact.photo,
-                                    fit: BoxFit.fill,
+                                    fit: BoxFit.cover,
                                   )
                                 : Text(
                                     contact.name,
