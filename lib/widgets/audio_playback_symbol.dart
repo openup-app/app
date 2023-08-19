@@ -16,9 +16,15 @@ class AudioPlaybackSymbol extends StatefulWidget {
 
 class _AudioPlaybackSymbolState extends State<AudioPlaybackSymbol>
     with SingleTickerProviderStateMixin {
-  late final _controller = AnimationController(
-    vsync: this,
-  );
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+    );
+  }
 
   @override
   void didUpdateWidget(covariant AudioPlaybackSymbol oldWidget) {

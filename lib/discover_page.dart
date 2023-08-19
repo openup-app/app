@@ -737,10 +737,16 @@ class _Panel extends ConsumerStatefulWidget {
 
 class _PanelState extends ConsumerState<_Panel>
     with SingleTickerProviderStateMixin {
-  late final _sheetAnimationController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 250),
-  );
+  late final AnimationController _sheetAnimationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _sheetAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+  }
 
   @override
   void dispose() {

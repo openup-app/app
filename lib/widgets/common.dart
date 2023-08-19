@@ -362,14 +362,16 @@ class _NonCinematicPhotoState extends State<NonCinematicPhoto>
 
   bool _loading = true;
 
-  late final _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 5),
-  );
+  late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    );
+
     final futures = Future.wait([
       _decodeImage(_photoImageProvider),
     ]);

@@ -60,15 +60,9 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
 
   CancelableOperation<List<Uint8List>>? _cancelableRenderOfSelected;
   final _selectedMapMarkerAnimation = <Uint8List>[];
-  late final _selectedAnimationController = AnimationController(
-    vsync: this,
-    duration: _markerAppearDuration,
-  );
+  late final AnimationController _selectedAnimationController;
 
-  late final _staggeredAnimationController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 2000),
-  );
+  late final AnimationController _staggeredAnimationController;
 
   List<Uint8List>? _exactLocationNotShownPill;
 
@@ -85,6 +79,14 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   @override
   void initState() {
     super.initState();
+    _selectedAnimationController = AnimationController(
+      vsync: this,
+      duration: _markerAppearDuration,
+    );
+    _staggeredAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
     _staggeredAnimationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         setState(() => _markersStaggering.clear());
