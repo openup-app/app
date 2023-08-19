@@ -594,6 +594,9 @@ class ProfileDisplayBehavior extends ConsumerWidget {
               ? const Text('Update Voice Bio')
               : const Text('Send Message'),
           onRecord: () async {
+            if (myUid == null) {
+              return showSignInModal(context);
+            }
             final result = await showRecordPanel(
               context: context,
               title: isMe
