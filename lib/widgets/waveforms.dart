@@ -59,7 +59,11 @@ class RecorderWithoutWaveforms {
     _recording = true;
     _onComplete = onComplete;
 
-    final micStream = await MicStream.microphone();
+    final micStream = await MicStream.microphone(
+      audioFormat: Platform.isIOS
+          ? AudioFormat.ENCODING_PCM_16BIT
+          : AudioFormat.ENCODING_PCM_8BIT,
+    );
     final bitDepth = await MicStream.bitDepth;
     final micBufferSize = await MicStream.bufferSize;
     final sampleRate = await MicStream.sampleRate;
