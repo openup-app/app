@@ -362,8 +362,15 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                                         } else {
                                           setState(() => _playbackMessageId =
                                               message.messageId);
-                                          await _audio
-                                              .setUrl(message.content.url);
+
+                                          // Play locally or from network
+                                          if (message.messageId == null) {
+                                            await _audio
+                                                .setPath(message.content.url);
+                                          } else {
+                                            await _audio
+                                                .setUrl(message.content.url);
+                                          }
                                           if (mounted) {
                                             _audio.play();
                                           }
