@@ -1038,10 +1038,10 @@ class SignUpRecorder extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SignUpRecorder> createState() => _SignUpRecorderState();
+  ConsumerState<SignUpRecorder> createState() => SignUpRecorderState();
 }
 
-class _SignUpRecorderState extends ConsumerState<SignUpRecorder> {
+class SignUpRecorderState extends ConsumerState<SignUpRecorder> {
   static const _maxDuration = Duration(seconds: 30);
 
   PlaybackRecorderController? _controller;
@@ -1078,6 +1078,8 @@ class _SignUpRecorderState extends ConsumerState<SignUpRecorder> {
       _recordingDurationTicker?.start();
     }
   }
+
+  void stopRecording() => _stopRecording();
 
   void _stopRecording() => _controller?.stopRecording();
 

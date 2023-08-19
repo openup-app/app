@@ -24,6 +24,8 @@ class SignupAudio extends ConsumerStatefulWidget {
 }
 
 class _SignupAudioState extends ConsumerState<SignupAudio> {
+  final _recorderKey = GlobalKey<SignUpRecorderState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,6 +70,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
           ),
           Expanded(
             child: SignUpRecorder(
+              key: _recorderKey,
               onAudioRecorded: _onAudioRecorded,
             ),
           ),
@@ -113,6 +116,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
   void _signup({
     required AccountCreationParams params,
   }) async {
+    _recorderKey.currentState?.stopRecording();
     ref.read(mixpanelProvider).track("signup_submit_audio");
 
     final result = await withBlockingModal(
