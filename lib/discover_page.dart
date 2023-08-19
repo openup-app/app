@@ -51,8 +51,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
 
   bool _showDebugUsers = false;
 
-  bool _enable3d = true;
-
   CancelableOperation<Either<ApiError, DiscoverResultsPage>>?
       _discoverOperation;
   final _profiles = <DiscoverProfile>[];
@@ -304,7 +302,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                     }
                   },
                   obscuredRatio: 326 / height,
-                  enable3d: _enable3d,
+                  enable3d: true,
                   onShowRecordPanel: () {
                     final selectedProfile = _selectedProfile;
                     if (selectedProfile != null) {
@@ -366,35 +364,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                 ],
               ),
             ),
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            right: 16,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _MapButton(
-                  onPressed: () => setState(() => _enable3d = !_enable3d),
-                  child: Center(
-                    child: Text(
-                      '3D',
-                      textAlign: TextAlign.center,
-                      style: _enable3d
-                          ? const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Color.fromRGBO(1, 184, 50, 1),
-                            )
-                          : const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Color.fromRGBO(0x48, 0x48, 0x48, 1.0),
-                            ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Column(
