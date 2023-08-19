@@ -21,6 +21,7 @@ import 'package:openup/blocked_users_page.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/contact_us_screen.dart';
 import 'package:openup/discover_page.dart';
+import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/contacts_page.dart';
 import 'package:openup/notifications/notifications.dart';
@@ -163,6 +164,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
     _initNotifications();
     _initInAppNotifications();
+    _initDynamicConfig();
 
     _goRouter = _initGoRouter(
       observers: [_routeObserver],
@@ -237,6 +239,16 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         },
       );
     });
+  }
+
+  void _initDynamicConfig() {
+    ref.listenManual(
+      dynamicConfigProvider,
+      (previous, next) {
+        // Listening just to force it to be created
+      },
+      fireImmediately: true,
+    );
   }
 
   @override

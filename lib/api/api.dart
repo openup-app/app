@@ -40,6 +40,21 @@ class Api {
     _headers['Authorization'] = 'Bearer $value';
   }
 
+  Future<Either<ApiError, DynamicConfig>> getDynamicConfiguration() {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/config'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(DynamicConfig.fromJson(json));
+      },
+    );
+  }
+
   Future<Either<ApiError, Account>> createAccount(
     AccountCreationParams params,
   ) {
@@ -868,6 +883,16 @@ class ClientError with _$ClientError {
 @freezed
 class ServerError with _$ServerError {
   const factory ServerError.serverError() = _ServerError;
+}
+
+@freezed
+class DynamicConfig with _$DynamicConfig {
+  const factory DynamicConfig({
+    @Default(null) String? contactInviteMessage,
+  }) = _DynamicConfig;
+
+  factory DynamicConfig.fromJson(Map<String, dynamic> json) =>
+      _$DynamicConfigFromJson(json);
 }
 
 @freezed

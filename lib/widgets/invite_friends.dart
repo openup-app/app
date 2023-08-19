@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/contacts/contacts_provider.dart';
+import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/profile_display.dart';
@@ -218,7 +219,13 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                     ),
                   ),
                   trailing: _InviteButton(
-                    onPressed: () => _launchMessagingApp(contact.phoneNumber),
+                    onPressed: () {
+                      final dynamicConfig = ref.read(dynamicConfigProvider);
+                      final message = dynamicConfig.contactInviteMessage ??
+                          'I\'m on Bonjour, a new way to meet online. \nhttps://bonjourland.com';
+                      final body = Uri.encodeComponent(message);
+                      _launchMessagingApp(contact.phoneNumber, body);
+                    },
                   ),
                 ),
               );
@@ -273,10 +280,8 @@ class _InviteButton extends StatelessWidget {
   }
 }
 
-void _launchMessagingApp(String phoneNumber) {
+void _launchMessagingApp(String phoneNumber, String body) {
   final querySymbol = Platform.isAndroid ? '?' : '&';
-  final body = Uri.encodeComponent(
-      'I\'m on Bonjour, a new way to meet online. \nhttps://bonjourland.com');
   final url = Uri.parse('sms://$phoneNumber/${querySymbol}body=$body');
   launchUrl(url);
 }
