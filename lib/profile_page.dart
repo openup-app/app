@@ -320,6 +320,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Future<void> _signOut() async {
+    _profileBuilderKey.currentState?.pause();
     ref.read(mixpanelProvider).track("sign_out");
     ref.read(userProvider.notifier)
       ..uid('')
@@ -367,6 +368,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Future<void> _deleteAccount() async {
+    _profileBuilderKey.currentState?.pause();
     ref.read(mixpanelProvider).track("delete_account");
     ref.read(userProvider.notifier)
       ..uid('')
