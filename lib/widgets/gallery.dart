@@ -282,8 +282,23 @@ class _NonCinematicGalleryState extends State<NonCinematicGallery> {
           final photoUrl = widget.gallery[i];
 
           return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 400),
+            switchInCurve: Curves.easeOutQuart,
+            // Don't animate in reverse
+            reverseDuration: const Duration(days: 1),
             switchOutCurve: Curves.easeOutQuart,
+            transitionBuilder: (child, animation) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.1, 0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: FadeTransition(
+                  opacity: animation,
+                  child: child,
+                ),
+              );
+            },
             child: NonCinematicPhoto(
               key: ValueKey('${_index}_$photoUrl'),
               url: photoUrl,

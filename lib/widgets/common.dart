@@ -356,10 +356,16 @@ class NonCinematicPhoto extends StatefulWidget {
   State<NonCinematicPhoto> createState() => _NonCinematicPhotoState();
 }
 
-class _NonCinematicPhotoState extends State<NonCinematicPhoto> {
+class _NonCinematicPhotoState extends State<NonCinematicPhoto>
+    with SingleTickerProviderStateMixin {
   late final _photoImageProvider = NetworkImage(widget.url);
 
   bool _loading = true;
+
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 5),
+  );
 
   @override
   void initState() {
@@ -374,6 +380,14 @@ class _NonCinematicPhotoState extends State<NonCinematicPhoto> {
         widget.onLoaded?.call();
       }
     });
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<ui.Image> _decodeImage(ImageProvider provider) {
@@ -392,9 +406,18 @@ class _NonCinematicPhotoState extends State<NonCinematicPhoto> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image(
-          image: _photoImageProvider,
-          fit: BoxFit.cover,
+        AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: 1 + _controller.value * 0.1,
+              child: child,
+            );
+          },
+          child: Image(
+            image: _photoImageProvider,
+            fit: BoxFit.cover,
+          ),
         ),
         if (_loading)
           const Center(
