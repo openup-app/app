@@ -107,9 +107,9 @@ class AudioChatMessage extends StatelessWidget {
                                   ? Colors.white
                                   : (fromMe
                                       ? const Color.fromRGBO(
-                                          0x5C, 0xA8, 0xF5, 1.0)
+                                          0x13, 0x77, 0xFF, 1.0)
                                       : const Color.fromRGBO(
-                                          0xC4, 0xC4, 0xC4, 1.0)),
+                                          0xE9, 0xE9, 0xEB, 1.0)),
                               border: isLoadingOrPlaying
                                   ? Border.all(
                                       color: const Color.fromRGBO(
@@ -127,7 +127,7 @@ class AudioChatMessage extends StatelessWidget {
                               heightFactor: 1.0,
                               alignment: Alignment.centerLeft,
                               child: const ColoredBox(
-                                color: Color.fromRGBO(0x1E, 0x77, 0xF8, 1.0),
+                                color: Color.fromRGBO(0x13, 0x77, 0xFF, 1.0),
                               ),
                             ),
                           ),

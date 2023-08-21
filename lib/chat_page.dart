@@ -150,13 +150,9 @@ class _ChatScreenState extends ConsumerState<ChatPage>
               constraints.maxHeight - (topPadding + appBarHeight);
           return Column(
             children: [
-              Container(
-                height: topPadding,
-                color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-              ),
-              Container(
+              SizedBox(height: topPadding),
+              SizedBox(
                 height: appBarHeight,
-                color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -385,13 +381,13 @@ class _ChatScreenState extends ConsumerState<ChatPage>
                         ),
                       ),
                     ],
-                    Positioned(
+                    const Positioned(
                       left: 0,
                       right: 0,
-                      bottom: 0,
-                      height: 80 + MediaQuery.of(context).padding.bottom,
-                      child: const ColoredBox(
-                        color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                      bottom: 80,
+                      height: 1,
+                      child: ColoredBox(
+                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
                       ),
                     ),
                     Align(
