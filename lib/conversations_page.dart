@@ -78,18 +78,7 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            height: MediaQuery.of(context).padding.top + 28,
-          ),
-          const Padding(
-            padding: EdgeInsets.only(left: 32),
-            child: Text(
-              'Conversations',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Color.fromRGBO(0xFF, 0x71, 0x71, 1.0),
-              ),
-            ),
+            height: MediaQuery.of(context).padding.top + 40,
           ),
           Container(
             height: 31,
@@ -162,110 +151,107 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
             ),
           ),
           Expanded(
-            child: ColoredBox(
-              color: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-              child: Column(
-                children: [
-                  if (_filterString.isEmpty)
-                    Visibility(
-                      visible: false,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: SizedBox(
-                          height: 150,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            keyboardDismissBehavior:
-                                ScrollViewKeyboardDismissBehavior.onDrag,
-                            itemCount: _collections.length,
-                            itemBuilder: (context, index) {
-                              final collection = _collections[index];
-                              return Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 82,
-                                    height: 110,
-                                    clipBehavior: Clip.hardEdge,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: const Color.fromRGBO(
-                                            0xFF, 0x5F, 0x5F, 1.0),
-                                        width: 2,
-                                      ),
-                                      borderRadius: const BorderRadius.all(
-                                          Radius.circular(11)),
+            child: Column(
+              children: [
+                if (_filterString.isEmpty)
+                  Visibility(
+                    visible: false,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: SizedBox(
+                        height: 150,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          itemCount: _collections.length,
+                          itemBuilder: (context, index) {
+                            final collection = _collections[index];
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 82,
+                                  height: 110,
+                                  clipBehavior: Clip.hardEdge,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: const Color.fromRGBO(
+                                          0xFF, 0x5F, 0x5F, 1.0),
+                                      width: 2,
                                     ),
-                                    margin: const EdgeInsets.all(9),
-                                    child: Image.network(
-                                      collection.photos.first.url,
-                                      fit: BoxFit.cover,
-                                    ),
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(11)),
                                   ),
-                                  const SizedBox(height: 4),
-                                  SizedBox(
-                                    width: 82,
-                                    child: Text(
-                                      'Name',
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.center,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium!
-                                          .copyWith(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w200,
-                                            color: Colors.white,
-                                          ),
-                                    ),
+                                  margin: const EdgeInsets.all(9),
+                                  child: Image.network(
+                                    collection.photos.first.url,
+                                    fit: BoxFit.cover,
                                   ),
-                                ],
-                              );
-                            },
-                          ),
+                                ),
+                                const SizedBox(height: 4),
+                                SizedBox(
+                                  width: 82,
+                                  child: Text(
+                                    'Name',
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w200,
+                                          color: Colors.white,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),
-                  Expanded(
-                    child: Consumer(
-                      builder: (context, ref, child) {
-                        final filteredChatrooms =
-                            ref.watch(userProvider2.select((p) {
-                          return p.map(
-                            guest: (_) => null,
-                            signedIn: (signedIn) =>
-                                signedIn.chatrooms?.where((c) {
-                              return c.profile.profile.name
-                                  .toLowerCase()
-                                  .contains(_filterString.toLowerCase());
-                            }),
-                          );
-                        }));
-
-                        final nonPendingChatrooms = filteredChatrooms
-                            ?.where((chatroom) =>
-                                chatroom.inviteState != ChatroomState.pending)
-                            .toList();
-                        return _ConversationList(
-                          chatrooms: nonPendingChatrooms,
-                          emptyLabel:
-                              'Invite someone to chat,\nthen continue the conversation here',
-                          filtered: _filterString.isNotEmpty,
-                          onRefresh:
-                              ref.read(userProvider2.notifier).refreshChatrooms,
-                          onOpen: _openChat,
-                          onDelete: (index) => _deleteChatroom(
-                              nonPendingChatrooms![index].profile.profile),
+                  ),
+                Expanded(
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final filteredChatrooms =
+                          ref.watch(userProvider2.select((p) {
+                        return p.map(
+                          guest: (_) => null,
+                          signedIn: (signedIn) =>
+                              signedIn.chatrooms?.where((c) {
+                            return c.profile.profile.name
+                                .toLowerCase()
+                                .contains(_filterString.toLowerCase());
+                          }),
                         );
-                      },
-                    ),
+                      }));
+
+                      final nonPendingChatrooms = filteredChatrooms
+                          ?.where((chatroom) =>
+                              chatroom.inviteState != ChatroomState.pending)
+                          .toList();
+                      return _ConversationList(
+                        chatrooms: nonPendingChatrooms,
+                        emptyLabel:
+                            'Invite someone to chat,\nthen continue the conversation here',
+                        filtered: _filterString.isNotEmpty,
+                        onRefresh:
+                            ref.read(userProvider2.notifier).refreshChatrooms,
+                        onOpen: _openChat,
+                        onDelete: (index) => _deleteChatroom(
+                            nonPendingChatrooms![index].profile.profile),
+                      );
+                    },
                   ),
-                  SizedBox(
-                    height: MediaQuery.of(context).viewInsets.bottom,
-                  ),
-                ],
-              ),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).viewInsets.bottom,
+                ),
+              ],
             ),
           ),
         ],
@@ -397,14 +383,8 @@ class _ConversationList extends StatelessWidget {
                                         height: 13,
                                         decoration: const BoxDecoration(
                                           shape: BoxShape.circle,
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Color.fromRGBO(
-                                                  0xF6, 0x28, 0x28, 1.0),
-                                              Color.fromRGBO(
-                                                  0xFF, 0x5F, 0x5F, 1.0),
-                                            ],
-                                          ),
+                                          color: Color.fromRGBO(
+                                              0x00, 0x85, 0xFF, 1.0),
                                         ),
                                       ),
                                     ),
@@ -431,6 +411,10 @@ class _ConversationList extends StatelessWidget {
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
                                             children: [
+                                              if (chatroom.inviteState !=
+                                                      ChatroomState.accepted ||
+                                                  chatroom.unreadCount != 0)
+                                                const SizedBox(height: 20),
                                               Text(
                                                 chatroom.profile.profile.name,
                                                 style: const TextStyle(
@@ -447,7 +431,19 @@ class _ConversationList extends StatelessWidget {
                                                     fontWeight: FontWeight.w400,
                                                     fontSize: 12,
                                                     color: Color.fromRGBO(
-                                                        0xFF, 0x00, 0x00, 1.0),
+                                                        0x00, 0x94, 0xFF, 1.0),
+                                                  ),
+                                                ),
+                                              ] else if (chatroom.unreadCount !=
+                                                  0) ...[
+                                                const SizedBox(height: 4),
+                                                const Text(
+                                                  'New message',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w400,
+                                                    fontSize: 12,
+                                                    color: Color.fromRGBO(
+                                                        0x00, 0x94, 0xFF, 1.0),
                                                   ),
                                                 ),
                                               ],
