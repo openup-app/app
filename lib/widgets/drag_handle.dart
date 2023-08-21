@@ -7,7 +7,7 @@ class DragHandle extends StatelessWidget {
   const DragHandle({
     super.key,
     this.width = 32,
-    this.color = const Color.fromRGBO(0xCE, 0xCE, 0xCE, 1.0),
+    this.color = const Color.fromRGBO(0xB4, 0xB4, 0xB4, 1.0),
     this.shadow,
   });
 

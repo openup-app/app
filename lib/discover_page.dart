@@ -851,7 +851,9 @@ class _PanelState extends ConsumerState<_Panel>
                         children: [
                           const SizedBox(height: 7),
                           const Center(
-                            child: DragHandle(),
+                            child: DragHandle(
+                              color: Color.fromRGBO(0xCE, 0xCE, 0xCE, 1.0),
+                            ),
                           ),
                           Row(
                             children: [
