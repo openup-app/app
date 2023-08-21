@@ -974,12 +974,24 @@ class SimpleProfile with _$SimpleProfile {
 class DiscoverProfile with _$DiscoverProfile {
   const factory DiscoverProfile({
     required Profile profile,
-    required Location location,
+    required UserLocation location,
     required bool favorite,
   }) = _DiscoverProfile;
 
   factory DiscoverProfile.fromJson(Map<String, dynamic> json) =>
       _$DiscoverProfileFromJson(json);
+}
+
+@freezed
+class UserLocation with _$UserLocation {
+  const factory UserLocation({
+    required LatLong latLong,
+    required double radius,
+    required LocationVisibility visibility,
+  }) = _UserLocation;
+
+  factory UserLocation.fromJson(Map<String, dynamic> json) =>
+      _$UserLocationFromJson(json);
 }
 
 @freezed
