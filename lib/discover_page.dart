@@ -488,15 +488,15 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         ),
                       ),
                     ),
-                    IgnorePointer(
-                      child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOutQuart,
-                        opacity: (_fetchingProfiles ||
-                                _markerRenderStatus ==
-                                    MarkerRenderStatus.rendering)
-                            ? 1
-                            : 0,
+                    AnimatedCrossFade(
+                      duration: const Duration(milliseconds: 300),
+                      alignment: Alignment.center,
+                      crossFadeState: (_fetchingProfiles ||
+                              _markerRenderStatus ==
+                                  MarkerRenderStatus.rendering)
+                          ? CrossFadeState.showFirst
+                          : CrossFadeState.showSecond,
+                      firstChild: IgnorePointer(
                         child: Lottie.asset(
                           'assets/images/map_searching.json',
                           width: 100,
@@ -504,6 +504,37 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                           animate: _fetchingProfiles ||
                               _markerRenderStatus ==
                                   MarkerRenderStatus.rendering,
+                        ),
+                      ),
+                      secondChild: Button(
+                        onPressed: _performQuery,
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5.0),
+                            child: Container(
+                              width: 95,
+                              height: 38,
+                              clipBehavior: Clip.hardEdge,
+                              alignment: Alignment.center,
+                              decoration: const BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(24)),
+                                color: Colors.black,
+                              ),
+                              child: BackdropFilter(
+                                filter:
+                                    ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                                child: Text(
+                                  '${_profiles.length} result${_profiles.length == 1 ? '' : 's'}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
