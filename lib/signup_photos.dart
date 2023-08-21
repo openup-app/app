@@ -177,14 +177,19 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
       builder: (context) {
         return CupertinoAlertDialog(
           title: const Text('Pick a photo'),
+          content: const Text('This photo will be used in your profile'),
           actions: [
             CupertinoDialogAction(
               onPressed: () => Navigator.of(context).pop(ImageSource.camera),
-              child: const Text('Take photo'),
+              child: const Text('Take new photo'),
             ),
             CupertinoDialogAction(
               onPressed: () => Navigator.of(context).pop(ImageSource.gallery),
-              child: const Text('Gallery'),
+              child: const Text('Pick from Gallery'),
+            ),
+            CupertinoDialogAction(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('Cancel'),
             ),
           ],
         );
