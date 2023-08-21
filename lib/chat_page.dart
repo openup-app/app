@@ -71,14 +71,25 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
 
   final _locationOverlayPortalController = OverlayPortalController();
 
+  // Saves the profile/uid here in case the user gets signed out during chat
+  late Profile myProfile;
+  late String myUid;
+
   @override
   void initState() {
     super.initState();
 
+    final userState = ref.read(userProvider2);
+    myProfile = userState.map(
+      guest: (_) => throw 'User is not signed in',
+      signedIn: (signedIn) => signedIn.account.profile,
+    );
+    myUid = myProfile.uid;
+
     _chatApi = ChatApi(
       host: widget.host,
       socketPort: widget.socketPort,
-      uid: ref.read(userProvider).uid,
+      uid: myUid,
       otherUid: widget.otherUid,
       onMessage: (message) {
         if (mounted) {
@@ -136,11 +147,6 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
       ?..sort(_dateAscendingMessageSorter);
     final items = _messagesToItems(messages ?? []);
     final chatroom = _chatroom;
-
-    final myProfile = ref.read(userProvider2).map(
-          guest: (_) => null,
-          signedIn: (signedIn) => signedIn.account.profile,
-        );
 
     return ColoredBox(
       // Background for iOS back gesture
@@ -388,7 +394,6 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
                                 );
                               },
                               message: (message) {
-                                final myUid = ref.read(userProvider).uid;
                                 final fromMe = message.uid == myUid;
                                 final isCurrent =
                                     _playbackMessageId == message.messageId;
@@ -414,7 +419,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
                                       message: message,
                                       fromMe: fromMe,
                                       photo: (fromMe
-                                              ? myProfile?.photo
+                                              ? myProfile.photo
                                               : _otherProfile?.photo) ??
                                           '',
                                       playbackInfo: playbackInfo,
@@ -516,10 +521,9 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
 
     const uuid = Uuid();
     final pendingId = uuid.v4();
-    final uid = ref.read(userProvider).uid;
     setState(() {
       _messages![pendingId] = ChatMessage(
-        uid: uid,
+        uid: myUid,
         date: DateTime.now().toUtc(),
         reactions: {},
         content: MessageContent.audio(
