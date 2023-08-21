@@ -1083,8 +1083,17 @@ class SignUpRecorderState extends ConsumerState<SignUpRecorder> {
 
   void _stopRecording() => _controller?.stopRecording();
 
-  void _onRecordingEnded(Uint8List recordingBytes) {
+  void _onRecordingEnded(Uint8List? recordingBytes) {
     _recordingDurationTicker?.dispose();
+
+    if (recordingBytes == null) {
+      setState(() {
+        _recordingDurationTicker = null;
+        _audioBioState = RecordPanelState.deciding;
+      });
+      return;
+    }
+
     setState(() {
       _recordingDurationTicker = null;
       _duration = _recordingDurationNotifier.value;
@@ -1239,8 +1248,14 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
     }
   }
 
-  void _onRecordingEnded(Uint8List recordingBytes) {
+  void _onRecordingEnded(Uint8List? recordingBytes) {
     _recordingDurationTicker?.dispose();
+
+    if (recordingBytes == null) {
+      Navigator.of(context).pop();
+      return;
+    }
+
     setState(() {
       _recordingDurationTicker = null;
       _audio = recordingBytes;
@@ -1665,7 +1680,7 @@ class PlaybackRecorderController extends ChangeNotifier {
 
   Future<void> startRecording({
     Duration? maxDuration,
-    required void Function(Uint8List bytes) onComplete,
+    required void Function(Uint8List? bytes) onComplete,
   }) async {
     maxDuration ??= const Duration(seconds: 30);
     await _recorder.startRecording(

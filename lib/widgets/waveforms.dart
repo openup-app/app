@@ -6,23 +6,38 @@ import 'dart:typed_data';
 import 'package:ffmpeg_kit_flutter_audio/ffmpeg_kit.dart' as ffmpeg;
 import 'package:ffmpeg_kit_flutter_audio/ffmpeg_session.dart' as ffmpeg_session;
 import 'package:flutter/rendering.dart';
-import 'package:mic_stream/mic_stream.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart' as rec;
 
 class RecorderWithoutWaveforms {
   bool _recording = false;
-  StreamSubscription? _micStreamSubscription;
+  final _recorder = rec.Record();
 
-  void Function(Uint8List audioBytes)? _onComplete;
-  final _totalSamples = <int>[];
-
-  int _bitDepth = 0;
-  int _sampleRate = 0;
-  int _channels = 0;
+  void Function(Uint8List? audioBytes)? _onComplete;
 
   void dispose() {
-    _micStreamSubscription?.cancel();
+    _recorder.dispose();
+  }
+
+  Future<void> startRecording({
+    required void Function(Float64x2List frequencies) onFrequencies,
+    required void Function(Uint8List?) onComplete,
+  }) async {
+    if (_recording) {
+      throw 'Already recording';
+    }
+
+    _recording = true;
+    _onComplete = onComplete;
+
+    final tempDir = await getTemporaryDirectory();
+    final filePath = path.join(
+        tempDir.path, 'recording_${DateTime.now().toIso8601String()}.m4a');
+    await _recorder.start(
+      path: filePath,
+      encoder: rec.AudioEncoder.aacLc,
+    );
   }
 
   Future<void> stopRecording() async {
@@ -32,53 +47,21 @@ class RecorderWithoutWaveforms {
     }
 
     _recording = false;
-    _micStreamSubscription?.cancel();
-
-    final encoder = _AacEncoder(
-      Uint8List.fromList(_totalSamples),
-      _bitDepth,
-      _sampleRate,
-      _channels,
-    );
-    final aacFile = await encoder.result;
-    final bytes = await aacFile.readAsBytes();
-    _onComplete?.call(Uint8List.fromList(bytes));
-    _totalSamples.clear();
-
-    _onComplete = null;
-  }
-
-  Future<void> startRecording({
-    required void Function(Float64x2List frequencies) onFrequencies,
-    required void Function(Uint8List) onComplete,
-  }) async {
-    if (_recording) {
-      throw 'Already recording';
-    }
-
-    _recording = true;
-    _onComplete = onComplete;
-
-    final micStream = await MicStream.microphone(
-      audioFormat: Platform.isIOS
-          ? AudioFormat.ENCODING_PCM_16BIT
-          : AudioFormat.ENCODING_PCM_8BIT,
-    );
-    final bitDepth = await MicStream.bitDepth;
-    final micBufferSize = await MicStream.bufferSize;
-    final sampleRate = await MicStream.sampleRate;
-
-    if (micStream == null ||
-        bitDepth == null ||
-        micBufferSize == null ||
-        sampleRate == null) {
+    final filePath = await _recorder.stop();
+    if (filePath == null) {
+      _onComplete?.call(null);
       return;
     }
 
-    _bitDepth = bitDepth.toInt();
-    _sampleRate = sampleRate.toInt();
-    _channels = 1;
-    _micStreamSubscription = micStream.listen(_totalSamples.addAll);
+    final file = File(filePath);
+    if (!await file.exists()) {
+      _onComplete?.call(null);
+      return;
+    }
+
+    final bytes = await file.readAsBytes();
+    _onComplete?.call(Uint8List.fromList(bytes));
+    _onComplete = null;
   }
 }
 
@@ -148,8 +131,9 @@ class _AacEncoder {
   void _encode(Uint8List samples, int bitDepth, int rate, int channels) async {
     final dir = await getTemporaryDirectory();
     final id = DateTime.now().toIso8601String();
-    final input = await File(join(dir.path, '$id.pcm')).create(recursive: true);
-    final output = File(join(dir.path, '$id.m4a'));
+    final input =
+        await File(path.join(dir.path, '$id.pcm')).create(recursive: true);
+    final output = File(path.join(dir.path, '$id.m4a'));
     await input.writeAsBytes(samples);
     final String format;
     if (bitDepth == 8) {
