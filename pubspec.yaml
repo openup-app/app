@@ -147,7 +147,7 @@ flutter:
         - asset: assets/fonts/NeueHaasUnica-ExtraBlack.ttf
           weight: 900
 
-flutter_icons:
+flutter_launcher_icons:
   image_path: "assets/images/app_icon.png"
   android: true
   min_sdk_android: 21
