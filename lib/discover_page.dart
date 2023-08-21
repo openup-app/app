@@ -517,9 +517,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                   MarkerRenderStatus.rendering,
                         ),
                       ),
-                      secondChild: Button(
-                        onPressed: _performQuery,
-                        child: Center(
+                      secondChild: Center(
+                        child: Button(
+                          onPressed: _performQuery,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 5.0),
                             child: Container(
@@ -532,16 +532,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                     BorderRadius.all(Radius.circular(24)),
                                 color: Colors.black,
                               ),
-                              child: BackdropFilter(
-                                filter:
-                                    ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                                child: Text(
-                                  '${_profiles.length} result${_profiles.length == 1 ? '' : 's'}',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.white,
-                                  ),
+                              child: Text(
+                                '${_profiles.length} result${_profiles.length == 1 ? '' : 's'}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
