@@ -154,7 +154,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final topPadding = MediaQuery.of(context).padding.top + 16;
-          const appBarHeight = 88.0;
+          const appBarHeight = 84.0;
           final listBoxHeight =
               constraints.maxHeight - (topPadding + appBarHeight);
           return Column(
@@ -177,152 +177,131 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
                   decoration: const BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
-                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
+                        color: Color.fromRGBO(0xE6, 0xE6, 0xE6, 1.0),
                       ),
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const SizedBox(width: 12),
-                          const BackIconButton(
-                            color: Color.fromRGBO(0xBD, 0xBD, 0xBD, 1.0),
-                          ),
-                          const Spacer(),
-                          if (_otherProfile != null) ...[
-                            Button(
-                              onPressed: () {
-                                _audio.pause();
-                                showProfileBottomSheet(
-                                  context: context,
-                                  profile: _otherProfile!,
-                                );
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Stack(
-                                      alignment: Alignment.center,
-                                      clipBehavior: Clip.none,
-                                      children: [
-                                        Container(
-                                          width: 36,
-                                          height: 36,
-                                          clipBehavior: Clip.hardEdge,
-                                          decoration: const BoxDecoration(
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: _otherProfile?.photo == null
-                                              ? const SizedBox.shrink()
-                                              : Image.network(
-                                                  _otherProfile!.photo,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                        ),
-                                        Positioned(
-                                          left: -6,
-                                          top: -34,
-                                          width: 78,
-                                          height: 78,
-                                          child: OnlineIndicatorBuilder(
-                                            uid: _otherProfile!.uid,
-                                            builder: (context, online) {
-                                              return online
-                                                  ? const OnlineIndicator()
-                                                  : const SizedBox.shrink();
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(width: 12),
-                                    AutoSizeText(
-                                      _otherProfile?.name ?? '',
-                                      minFontSize: 16,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const Spacer(),
-                            Builder(
-                              builder: (context) {
-                                final profile = chatroom?.profile;
-                                return Button(
-                                  onPressed: profile == null
-                                      ? null
-                                      : profile.location.visibility ==
-                                              LocationVisibility.public
-                                          ? () => _showLocation(profile)
-                                          : _locationOverlayPortalController
-                                              .show,
-                                  child: Builder(
-                                    builder: (context) {
-                                      switch (profile?.location.visibility) {
-                                        case null:
-                                          return const SizedBox.shrink();
-                                        case LocationVisibility.public:
-                                          return Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Image.asset(
-                                              'assets/images/location_search.png',
-                                              width: 26,
-                                              height: 25,
-                                            ),
-                                          );
-                                        case LocationVisibility.private:
-                                          return Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: SvgPicture.asset(
-                                              'assets/images/location_off.svg',
-                                              height: 29,
-                                              colorFilter:
-                                                  const ColorFilter.mode(
-                                                Color.fromRGBO(
-                                                    0xFF, 0x3F, 0x00, 1.0),
-                                                BlendMode.srcATop,
-                                              ),
-                                            ),
-                                          );
-                                      }
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 12),
-                          ],
-                        ],
+                      const SizedBox(width: 12),
+                      const BackIconButton(
+                        color: Color.fromRGBO(0xBD, 0xBD, 0xBD, 1.0),
                       ),
-                      Visibility(
-                        visible: chatroom?.profile.location.visibility ==
-                            LocationVisibility.private,
-                        maintainSize: true,
-                        maintainAnimation: true,
-                        maintainState: true,
-                        child: const Padding(
-                          padding: EdgeInsets.only(top: 4, bottom: 4),
-                          child: Text(
-                            'Location currently disabled',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Color.fromRGBO(0x95, 0x8F, 0x8F, 1.0),
+                      const Spacer(),
+                      if (_otherProfile != null) ...[
+                        Button(
+                          onPressed: () {
+                            _audio.pause();
+                            showProfileBottomSheet(
+                              context: context,
+                              profile: _otherProfile!,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  clipBehavior: Clip.hardEdge,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: _otherProfile?.photo == null
+                                      ? const SizedBox.shrink()
+                                      : Image.network(
+                                          _otherProfile!.photo,
+                                          fit: BoxFit.cover,
+                                        ),
+                                ),
+                                const SizedBox(width: 12),
+                                OnlineIndicatorBuilder(
+                                  uid: _otherProfile!.uid,
+                                  builder: (context, online) {
+                                    return Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (online) const SizedBox(height: 11),
+                                        AutoSizeText(
+                                          _otherProfile?.name ?? '',
+                                          minFontSize: 16,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        if (online)
+                                          const Text(
+                                            'online',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 12,
+                                              color: Color.fromRGBO(
+                                                  0x94, 0x94, 0x94, 1.0),
+                                            ),
+                                          ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ),
+                        const Spacer(),
+                        Builder(
+                          builder: (context) {
+                            final profile = chatroom?.profile;
+                            return Button(
+                              onPressed: profile == null
+                                  ? null
+                                  : profile.location.visibility ==
+                                          LocationVisibility.public
+                                      ? () => _showLocation(profile)
+                                      : _locationOverlayPortalController.show,
+                              child: Builder(
+                                builder: (context) {
+                                  switch (profile?.location.visibility) {
+                                    case null:
+                                      return const SizedBox.shrink();
+                                    case LocationVisibility.public:
+                                      return Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Image.asset(
+                                          'assets/images/location_search.png',
+                                          width: 26,
+                                          height: 25,
+                                        ),
+                                      );
+                                    case LocationVisibility.private:
+                                      return Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: SvgPicture.asset(
+                                          'assets/images/location_off.svg',
+                                          height: 29,
+                                          colorFilter: const ColorFilter.mode(
+                                            Color.fromRGBO(
+                                                0xFF, 0x3F, 0x00, 1.0),
+                                            BlendMode.srcATop,
+                                          ),
+                                        ),
+                                      );
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 12),
+                      ],
                     ],
                   ),
                 ),

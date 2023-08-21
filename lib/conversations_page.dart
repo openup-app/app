@@ -150,6 +150,11 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
               ],
             ),
           ),
+          const SizedBox(height: 8),
+          const Divider(
+            height: 1,
+            color: Color.fromRGBO(0xE6, 0xE6, 0xE6, 1.0),
+          ),
           Expanded(
             child: Column(
               children: [
@@ -366,55 +371,65 @@ class _ConversationList extends StatelessWidget {
                         ),
                         child: Button(
                           onPressed: () => onOpen(chatroom),
-                          child: Stack(
-                            children: [
-                              SizedBox(
-                                height: 140,
-                                child: Row(
-                                  children: [
-                                    const SizedBox(width: 11),
-                                    Visibility(
-                                      visible: chatroom.unreadCount != 0,
-                                      maintainSize: true,
-                                      maintainState: true,
-                                      maintainAnimation: true,
-                                      child: Container(
-                                        width: 13,
-                                        height: 13,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Color.fromRGBO(
-                                              0x00, 0x85, 0xFF, 1.0),
-                                        ),
+                          child: SizedBox(
+                            height: 140,
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 11),
+                                Visibility(
+                                  visible: chatroom.unreadCount == 0,
+                                  maintainSize: true,
+                                  maintainState: true,
+                                  maintainAnimation: true,
+                                  child: Container(
+                                    width: 13,
+                                    height: 13,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Color.fromRGBO(0x00, 0x94, 0xFF, 1.0),
+                                          Color.fromRGBO(0x64, 0xBC, 0xFC, 1.0),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      width: 43,
-                                      height: 43,
-                                      clipBehavior: Clip.hardEdge,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Image.network(
-                                        chatroom.profile.profile.photo,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: Stack(
-                                        children: [
-                                          Column(
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  width: 43,
+                                  height: 43,
+                                  clipBehavior: Clip.hardEdge,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Image.network(
+                                    chatroom.profile.profile.photo,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Stack(
+                                    children: [
+                                      OnlineIndicatorBuilder(
+                                        uid: chatroom.profile.profile.uid,
+                                        builder: (context, online) {
+                                          final hasSubtitle =
+                                              chatroom.inviteState !=
+                                                      ChatroomState.accepted ||
+                                                  online ||
+                                                  chatroom.unreadCount != 0;
+                                          return Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
                                             children: [
-                                              if (chatroom.inviteState !=
-                                                      ChatroomState.accepted ||
-                                                  chatroom.unreadCount != 0)
-                                                const SizedBox(height: 20),
+                                              if (hasSubtitle)
+                                                const SizedBox(height: 15),
                                               Text(
                                                 chatroom.profile.profile.name,
                                                 style: const TextStyle(
@@ -422,9 +437,10 @@ class _ConversationList extends StatelessWidget {
                                                   fontWeight: FontWeight.w500,
                                                 ),
                                               ),
-                                              if (chatroom.inviteState !=
-                                                  ChatroomState.accepted) ...[
+                                              if (hasSubtitle)
                                                 const SizedBox(height: 4),
+                                              if (chatroom.inviteState !=
+                                                  ChatroomState.accepted)
                                                 const Text(
                                                   'New chat invitation',
                                                   style: TextStyle(
@@ -433,10 +449,19 @@ class _ConversationList extends StatelessWidget {
                                                     color: Color.fromRGBO(
                                                         0x00, 0x94, 0xFF, 1.0),
                                                   ),
-                                                ),
-                                              ] else if (chatroom.unreadCount !=
-                                                  0) ...[
-                                                const SizedBox(height: 4),
+                                                )
+                                              else if (online)
+                                                const Text(
+                                                  'online',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w400,
+                                                    fontSize: 12,
+                                                    color: Color.fromRGBO(
+                                                        0x94, 0x94, 0x94, 1.0),
+                                                  ),
+                                                )
+                                              else if (chatroom.unreadCount !=
+                                                  0)
                                                 const Text(
                                                   'New message',
                                                   style: TextStyle(
@@ -446,50 +471,34 @@ class _ConversationList extends StatelessWidget {
                                                         0x00, 0x94, 0xFF, 1.0),
                                                   ),
                                                 ),
-                                              ],
                                             ],
-                                          ),
-                                          Align(
-                                            alignment: Alignment.centerRight,
-                                            child: Text(
-                                              _formatRelativeDate(
-                                                  chatroom.lastUpdated),
-                                              textAlign: TextAlign.right,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w300,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                          );
+                                        },
                                       ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    const Icon(
-                                      Icons.chevron_right,
-                                      color:
-                                          Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                                      size: 26,
-                                    ),
-                                    const SizedBox(width: 12),
-                                  ],
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Text(
+                                          _formatRelativeDate(
+                                              chatroom.lastUpdated),
+                                          textAlign: TextAlign.right,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w300,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              Positioned(
-                                left: 44,
-                                top: -18,
-                                width: 78,
-                                height: 78,
-                                child: OnlineIndicatorBuilder(
-                                  uid: chatroom.profile.profile.uid,
-                                  builder: (context, online) {
-                                    return online
-                                        ? const OnlineIndicator()
-                                        : const SizedBox.shrink();
-                                  },
+                                const SizedBox(width: 8),
+                                const Icon(
+                                  Icons.chevron_right,
+                                  color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
+                                  size: 26,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 12),
+                              ],
+                            ),
                           ),
                         ),
                       ),
