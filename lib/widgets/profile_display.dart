@@ -100,6 +100,7 @@ class ProfileBuilderState extends State<ProfileBuilder> {
 class ProfileDisplay extends StatelessWidget {
   final Profile profile;
   final Stream<PlaybackInfo> playbackInfoStream;
+  final bool useBackIconForCloseButton;
   final VoidCallback onPlay;
   final VoidCallback onPause;
   final Widget recordLabel;
@@ -110,6 +111,7 @@ class ProfileDisplay extends StatelessWidget {
     super.key,
     required this.profile,
     required this.playbackInfoStream,
+    required this.useBackIconForCloseButton,
     required this.onPlay,
     required this.onPause,
     required this.recordLabel,
@@ -313,10 +315,15 @@ class ProfileDisplay extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.close,
-                  color: Color.fromRGBO(0x47, 0x47, 0x47, 1.0),
-                ),
+                child: useBackIconForCloseButton
+                    ? const Icon(
+                        Icons.chevron_left,
+                        color: Color.fromRGBO(0x47, 0x47, 0x47, 1.0),
+                      )
+                    : const Icon(
+                        Icons.close,
+                        color: Color.fromRGBO(0x47, 0x47, 0x47, 1.0),
+                      ),
               ),
             ),
             const SizedBox(width: 22),
@@ -562,6 +569,7 @@ class _MutualContactsModal extends StatelessWidget {
 class ProfileDisplayBehavior extends ConsumerWidget {
   final Profile profile;
   final GlobalKey<ProfileBuilderState> profileBuilderKey;
+  final bool useBackIconForCloseButton;
   final PlaybackState playbackState;
   final Stream<PlaybackInfo> playbackInfoStream;
   final VoidCallback onReportedOrBlocked;
@@ -570,6 +578,7 @@ class ProfileDisplayBehavior extends ConsumerWidget {
     super.key,
     required this.profile,
     required this.profileBuilderKey,
+    required this.useBackIconForCloseButton,
     required this.playbackState,
     required this.playbackInfoStream,
     required this.onReportedOrBlocked,
@@ -588,6 +597,7 @@ class ProfileDisplayBehavior extends ConsumerWidget {
         return ProfileDisplay(
           profile: profile,
           playbackInfoStream: playbackInfoStream,
+          useBackIconForCloseButton: useBackIconForCloseButton,
           onPlay: () => profileBuilderKey.currentState?.play(),
           onPause: () => profileBuilderKey.currentState?.pause(),
           recordLabel: isMe
@@ -636,9 +646,12 @@ class ProfileDisplayBehavior extends ConsumerWidget {
 
 class _ProfileDisplayLoadProfile extends ConsumerStatefulWidget {
   final String uid;
+  final bool useBackIconForCloseButton;
+
   const _ProfileDisplayLoadProfile({
     super.key,
     required this.uid,
+    required this.useBackIconForCloseButton,
   });
 
   @override
@@ -697,6 +710,7 @@ class __ProfileDisplayLoadProfileState
             return ProfileDisplayBehavior(
               profile: profile,
               profileBuilderKey: profileBuilderKey,
+              useBackIconForCloseButton: widget.useBackIconForCloseButton,
               playbackState: playbackState,
               playbackInfoStream: playbackInfoStream,
               onReportedOrBlocked: Navigator.of(context).pop,
@@ -712,6 +726,7 @@ void showProfileBottomSheetLoadProfile({
   required BuildContext context,
   AnimationController? transitionAnimationController,
   required String uid,
+  bool useBackIconForCloseButton = false,
 }) {
   final mediaQueryData = MediaQuery.of(context);
   showModalBottomSheet(
@@ -727,6 +742,7 @@ void showProfileBottomSheetLoadProfile({
           children: [
             _ProfileDisplayLoadProfile(
               uid: uid,
+              useBackIconForCloseButton: useBackIconForCloseButton,
             ),
             // Builder to access media query via context
             Builder(
@@ -760,6 +776,7 @@ void showProfileBottomSheet({
   required BuildContext context,
   AnimationController? transitionAnimationController,
   required Profile profile,
+  bool useBackIconForCloseButton = false,
   GlobalKey<ProfileBuilderState>? existingProfileBuilderKey,
   Stream<PlaybackInfo>? existingPlaybackInfoStream,
 }) {
@@ -786,6 +803,7 @@ void showProfileBottomSheet({
                 return ProfileDisplayBehavior(
                   profile: profile,
                   profileBuilderKey: profileBuilderKey,
+                  useBackIconForCloseButton: useBackIconForCloseButton,
                   playbackState: playbackState,
                   playbackInfoStream: playbackInfoStream,
                   onReportedOrBlocked: Navigator.of(context).pop,

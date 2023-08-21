@@ -115,6 +115,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                               showProfileBottomSheet(
                                 context: context,
                                 profile: profile,
+                                useBackIconForCloseButton: true,
                               );
                             },
                             child: Container(

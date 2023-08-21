@@ -99,6 +99,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                     return ProfileDisplayBehavior(
                       profile: profile,
                       profileBuilderKey: _profileBuilderKey,
+                      useBackIconForCloseButton: false,
                       playbackState: playbackState,
                       playbackInfoStream: playbackInfoStream,
                       onReportedOrBlocked: () {
