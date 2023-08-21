@@ -499,51 +499,54 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         ),
                       ),
                     ),
-                    AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 300),
-                      alignment: Alignment.center,
-                      crossFadeState: (_fetchingProfiles ||
-                              _markerRenderStatus ==
-                                  MarkerRenderStatus.rendering)
-                          ? CrossFadeState.showFirst
-                          : CrossFadeState.showSecond,
-                      firstChild: IgnorePointer(
-                        child: Lottie.asset(
-                          'assets/images/map_searching.json',
-                          width: 100,
-                          height: 48,
-                          animate: _fetchingProfiles ||
-                              _markerRenderStatus ==
-                                  MarkerRenderStatus.rendering,
-                        ),
-                      ),
-                      secondChild: Center(
-                        child: Button(
-                          onPressed: _performQuery,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5.0),
-                            child: Container(
-                              width: 95,
-                              height: 38,
-                              clipBehavior: Clip.hardEdge,
-                              alignment: Alignment.center,
-                              decoration: const BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(24)),
-                                color: Colors.black,
-                              ),
-                              child: Text(
-                                '${_profiles.length} result${_profiles.length == 1 ? '' : 's'}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.white,
+                    Builder(
+                      builder: (context) {
+                        final searching = (_fetchingProfiles ||
+                            _markerRenderStatus ==
+                                MarkerRenderStatus.rendering);
+                        return Button(
+                          onPressed: searching ? null : _performQuery,
+                          useFadeWheNoPressedCallback: false,
+                          child: Container(
+                            width: 86,
+                            height: 26,
+                            alignment: Alignment.center,
+                            decoration: const BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(5)),
+                              color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.8),
+                              boxShadow: [
+                                BoxShadow(
+                                  blurRadius: 24,
+                                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.15),
                                 ),
-                              ),
+                              ],
+                            ),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 200),
+                              child: searching
+                                  ? const IgnorePointer(
+                                      child: Text(
+                                        'Searching...',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    )
+                                  : Text(
+                                      '${_profiles.length} result${_profiles.length == 1 ? '' : 's'}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400,
+                                        color: Colors.black,
+                                      ),
+                                    ),
                             ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ],
                 ),
