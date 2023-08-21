@@ -80,9 +80,10 @@ class MessageContent with _$MessageContent {
   const factory MessageContent.audio({
     required ChatType type,
     required String url,
+    @Default(Duration(seconds: 1))
     @JsonKey(name: "durationMicros")
     @DurationConverter()
-        required Duration duration,
+    Duration duration,
     @Default(null) AudioMessageWaveform? waveform,
   }) = _AudioMessageContent;
 
