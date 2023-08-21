@@ -444,6 +444,23 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
                         color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
                       ),
                     ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: 80 + MediaQuery.of(context).padding.bottom,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(
+                              color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                              width: 0.5,
+                            ),
+                          ),
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: Padding(
