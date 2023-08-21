@@ -12,15 +12,16 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(
-        left: 17,
+        left: 30,
         top: 17,
         bottom: 4,
       ),
       child: DefaultTextStyle(
-        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: const Color.fromRGBO(0x85, 0x85, 0x8A, 1.0)),
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: Colors.black,
+        ),
         child: title,
       ),
     );

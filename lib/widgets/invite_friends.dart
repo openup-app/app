@@ -112,7 +112,6 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                       final contact = knownProfiles[index];
                       return Container(
                         margin: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: const BoxDecoration(color: Colors.white),
                         child: ListTile(
                           leading: Container(
                             width: 40,
@@ -173,9 +172,8 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
               final isFirst = index == 0;
               final isLast = index == contacts.length - 1;
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
+                margin: const EdgeInsets.symmetric(horizontal: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white,
                   borderRadius: BorderRadius.only(
                     topLeft: isFirst ? const Radius.circular(16) : Radius.zero,
                     topRight: isFirst ? const Radius.circular(16) : Radius.zero,
@@ -190,11 +188,11 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                     width: 40,
                     height: 40,
                     clipBehavior: Clip.hardEdge,
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    margin: const EdgeInsets.only(left: 4),
                     alignment: Alignment.center,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                      color: Colors.white,
                     ),
                     child: contact.photo != null
                         ? Image.memory(
@@ -387,10 +385,10 @@ class FriendsSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 32,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 30),
       decoration: const BoxDecoration(
-        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
-        borderRadius: BorderRadius.all(Radius.circular(8)),
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
       child: Align(
         alignment: Alignment.centerLeft,
@@ -407,11 +405,17 @@ class FriendsSearchField extends StatelessWidget {
                     fontSize: 14,
                     fontWeight: FontWeight.w300,
                   ),
-                  decoration: const InputDecoration.collapsed(
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    icon: Icon(
+                      Icons.search,
+                      size: 16,
+                      color: Colors.black,
+                    ),
                     hintText: 'Search',
                     hintStyle: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w300,
+                      fontWeight: FontWeight.w400,
                       color: Colors.black,
                     ),
                   ),
