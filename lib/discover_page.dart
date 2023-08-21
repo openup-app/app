@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:async/async.dart';
+import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -57,6 +58,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   Location? _mapLocation;
   Location? _prevQueryLocation;
   DiscoverProfile? _selectedProfile;
+  String? _selectUidWhenAvailable;
   final _invitedUsers = <String>{};
 
   final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
@@ -95,6 +97,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
           viewProfile: (viewProfile) {
             final profile = viewProfile.profile;
             _mapKey.currentState?.recenterMap(profile.location.latLong);
+            setState(() => _selectUidWhenAvailable = profile.profile.uid);
           },
         );
       },
@@ -227,7 +230,15 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         );
       },
       (r) async {
+        DiscoverProfile? profileToSelect;
+        final targetUid = _selectUidWhenAvailable;
+        if (targetUid != null) {
+          profileToSelect =
+              r.profiles.firstWhereOrNull((p) => p.profile.uid == targetUid);
+        }
         setState(() {
+          _selectUidWhenAvailable = null;
+          _selectedProfile = profileToSelect;
           _profiles
             ..clear()
             ..addAll(r.profiles);
