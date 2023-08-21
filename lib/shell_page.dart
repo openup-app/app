@@ -10,6 +10,7 @@ final _sheetOpenProvider = StateProvider<bool>((ref) => false);
 
 class ShellPage extends ConsumerStatefulWidget {
   final int? currentIndex;
+  final int indexOffset;
   final WidgetBuilder shellBuilder;
   final VoidCallback onClosePage;
   final List<Widget> children;
@@ -17,6 +18,7 @@ class ShellPage extends ConsumerStatefulWidget {
   const ShellPage({
     super.key,
     required this.currentIndex,
+    this.indexOffset = 0,
     required this.shellBuilder,
     required this.onClosePage,
     required this.children,
@@ -34,22 +36,7 @@ class ShellPageState extends ConsumerState<ShellPage> {
   @override
   void initState() {
     super.initState();
-    _draggableScrollableController.addListener(() {
-      ref.read(_sheetSize.notifier).state = _draggableScrollableController.size;
-      final fullyOpen = _draggableScrollableController.size >= 1.0;
-      ref.read(_sheetOpenProvider.notifier).state = fullyOpen;
-      if (fullyOpen) {
-        FocusScope.of(context).unfocus();
-      }
-
-      const epsilon = 0.0001;
-      if (_draggableScrollableController.size <= epsilon) {
-        if (widget.currentIndex != null) {
-          widget.onClosePage();
-        }
-      }
-    });
-
+    _draggableScrollableController.addListener(_onSheetUpdate);
     _keys.addAll(List.generate(widget.children.length, (_) => GlobalKey()));
     ref.read(_sheetOpenProvider.notifier).state = false;
   }
@@ -60,6 +47,25 @@ class ShellPageState extends ConsumerState<ShellPage> {
     if (oldWidget.currentIndex != widget.currentIndex &&
         widget.currentIndex != null) {
       showSheet();
+    }
+  }
+
+  void _onSheetUpdate() {
+    const epsilon = 0.0001;
+
+    ref.read(_sheetSize.notifier).state = _draggableScrollableController.size;
+    final fullyOpen = _draggableScrollableController.size >= 1.0;
+    ref.read(_sheetOpenProvider.notifier).state = fullyOpen;
+
+    final fullyClosed = _draggableScrollableController.size <= epsilon;
+    if (fullyClosed) {
+      FocusScope.of(context).unfocus();
+      final currentIndex = widget.currentIndex;
+      if (currentIndex != null) {
+        StatefulShellRouteState.of(context)
+            .resetBranch(index: currentIndex + widget.indexOffset);
+        widget.onClosePage();
+      }
     }
   }
 
@@ -148,7 +154,7 @@ class ShellPageState extends ConsumerState<ShellPage> {
                                     KeyedSubtree(
                                       key: _keys[i],
                                       child: _BranchIndex(
-                                        index: i + 1,
+                                        index: i + widget.indexOffset,
                                         child: widget.children[i],
                                       ),
                                     ),
@@ -206,7 +212,7 @@ class ShellPageState extends ConsumerState<ShellPage> {
         curve: Curves.easeOutQuart,
       );
     } else {
-      print('DraggableScrollableSheetController is not attached');
+      debugPrint('DraggableScrollableSheetController is not attached');
     }
   }
 
@@ -218,7 +224,7 @@ class ShellPageState extends ConsumerState<ShellPage> {
         curve: Curves.easeOut,
       );
     } else {
-      print('DraggableScrollableSheetController is not attached');
+      debugPrint('DraggableScrollableSheetController is not attached');
     }
   }
 }

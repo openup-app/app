@@ -554,6 +554,7 @@ class _ShellState extends ConsumerState<_Shell> {
     return ShellPage(
       key: _shellPageKey,
       currentIndex: _index == 0 ? null : (_index - 1),
+      indexOffset: 1,
       shellBuilder: (context) => widget.children[0],
       onClosePage: () => ref.read(_pageNotifierProvider.notifier).changePage(0),
       children: widget.children.sublist(1),
