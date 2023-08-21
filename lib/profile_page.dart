@@ -643,26 +643,38 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
                                         },
                                       ),
                                     ),
-                                    Positioned(
-                                      right: 8,
-                                      bottom: 8,
-                                      child: Container(
-                                        width: 23,
-                                        height: 23,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white,
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          '${i + 1}',
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w400,
+                                    if (i < widget.profile.gallery.length)
+                                      Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: Button(
+                                          onPressed: (widget.profile.gallery
+                                                          .length <=
+                                                      1 ||
+                                                  i >=
+                                                      widget.profile.gallery
+                                                          .length)
+                                              ? null
+                                              : () => _showDeletePhotoDialog(i),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Container(
+                                              width: 23,
+                                              height: 23,
+                                              decoration: const BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Colors.white,
+                                              ),
+                                              alignment: Alignment.center,
+                                              child: const Icon(
+                                                Icons.close,
+                                                size: 16,
+                                                color: Colors.black,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),
