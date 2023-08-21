@@ -154,8 +154,10 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         try {
           await FirebaseAuth.instance.signInWithCredential(credential);
           completer.complete(const _Verified());
-        } catch (e) {
-          completer.complete(const _Error(SendCodeError.credentialFailure));
+        } catch (e, s) {
+          debugPrint(e.toString());
+          Sentry.captureException(e, stackTrace: s);
+          completer.complete(const _Error(SendCodeError.failure));
         }
       },
       verificationFailed: (FirebaseAuthException e) {
@@ -165,6 +167,9 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
           completer.complete(const _Error(SendCodeError.networkError));
         } else if (e.code == 'too-many-requests') {
           completer.complete(const _Error(SendCodeError.tooManyRequests));
+        } else if (e.code == 'quota-exceeded') {
+          Sentry.captureException(e);
+          completer.complete(const _Error(SendCodeError.quotaExceeded));
         } else {
           debugPrint(e.code);
           Sentry.captureException(e);
@@ -201,6 +206,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
             completer.complete(const SendCodeResult.verified());
           }
         } catch (e, s) {
+          debugPrint(e.toString());
           Sentry.captureException(e, stackTrace: s);
           completer.complete(const _Error(SendCodeError.failure));
         }
@@ -212,7 +218,11 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
           completer.complete(const _Error(SendCodeError.networkError));
         } else if (e.code == 'too-many-requests') {
           completer.complete(const _Error(SendCodeError.tooManyRequests));
+        } else if (e.code == 'quota-exceeded') {
+          Sentry.captureException(e);
+          completer.complete(const _Error(SendCodeError.quotaExceeded));
         } else {
+          debugPrint(e.code);
           Sentry.captureException(e);
           completer.complete(const _Error(SendCodeError.failure));
         }
@@ -309,6 +319,7 @@ enum SendCodeError {
   invalidPhoneNumber,
   networkError,
   tooManyRequests,
+  quotaExceeded,
   failure,
 }
 

@@ -237,6 +237,9 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
           case SendCodeError.tooManyRequests:
             message = 'Too many attempts, please try again later';
             break;
+          case SendCodeError.quotaExceeded:
+            message = 'Unable to send code, we are working to solve this';
+            break;
           case SendCodeError.failure:
             message = 'Something went wrong';
             break;
