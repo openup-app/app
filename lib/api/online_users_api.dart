@@ -15,16 +15,18 @@ class OnlineUsersApi {
     required VoidCallback onConnectionError,
     required void Function(String uid, bool online) onOnlineStatusChanged,
   }) {
+    final options = OptionBuilder()
+        .setTimeout(1500)
+        .setTransports(['websocket']).enableForceNew();
+    if (authToken != null) {
+      // Can't use conditional parameter due to this issue:
+      // https://github.com/rikulo/socket.io-client-dart/issues/343
+      options.setQuery({'token': authToken});
+    }
+
     _socket = io(
       'http://$host:$port/online_users',
-      OptionBuilder()
-          .setTimeout(1500)
-          .setTransports(['websocket'])
-          .setQuery({
-            if (authToken != null) 'token': authToken,
-          })
-          .enableForceNew()
-          .build(),
+      options.build(),
     );
 
     _socket.onConnectError((_) {
