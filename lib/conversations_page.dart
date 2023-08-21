@@ -555,8 +555,8 @@ String _formatRelativeDate(DateTime date) {
   final localDate = date.toLocal();
   final yesterday = DateUtils.dateOnly(now).subtract(const Duration(days: 1));
   if (DateUtils.isSameDay(localDate, now)) {
-    final twentyFourHourMinuteFormat = DateFormat.Hm();
-    return twentyFourHourMinuteFormat.format(localDate);
+    final timeFormat = DateFormat.jm();
+    return timeFormat.format(localDate);
   } else if (DateUtils.isSameDay(localDate, yesterday)) {
     return 'yesterday';
   } else if (diff.inDays < 7) {
