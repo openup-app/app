@@ -434,12 +434,13 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
                         ),
                       ),
                     ],
-                    const Positioned(
+                    Positioned(
                       left: 0,
                       right: 0,
-                      bottom: 80,
+                      bottom: 80 + MediaQuery.of(context).padding.bottom,
                       height: 1,
-                      child: ColoredBox(
+                      child: const Divider(
+                        height: 1,
                         color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
                       ),
                     ),

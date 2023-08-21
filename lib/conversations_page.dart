@@ -150,7 +150,7 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           const Divider(
             height: 1,
             color: Color.fromRGBO(0xE6, 0xE6, 0xE6, 1.0),
