@@ -132,7 +132,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                               child: const Text(
                                 'Preview',
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
@@ -458,6 +458,8 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
                                         play: playbackState ==
                                             PlaybackState.playing,
                                         size: 16,
+                                        padding: const EdgeInsets.only(
+                                            left: 4, right: 12),
                                       ),
                                     ),
                                     Expanded(
@@ -843,7 +845,7 @@ class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
                   child: Text(
                     'Edit',
                     style: TextStyle(
-                      color: Color.fromRGBO(0xFF, 0x74, 0x74, 1.0),
+                      color: Color.fromRGBO(255, 82, 82, 1),
                     ),
                   ),
                 ),
@@ -1132,7 +1134,7 @@ class _CupertinoRow extends StatelessWidget {
           ),
       child: DefaultTextStyle(
         style: const TextStyle(
-          fontSize: 16,
+          fontSize: 16.5,
           fontWeight: FontWeight.w400,
           color: Colors.black,
         ),
@@ -1226,7 +1228,7 @@ class _SectionTitle extends StatelessWidget {
         child: Text(
           label,
           style: const TextStyle(
-            fontSize: 13,
+            fontSize: 13.5,
             fontWeight: FontWeight.w400,
             color: Colors.black,
           ),
@@ -1344,7 +1346,7 @@ class _NameFieldState extends ConsumerState<_NameField> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w400,
-                      color: Color.fromRGBO(0xFF, 0x74, 0x74, 1.0),
+                      color: Color.fromRGBO(255, 82, 82, 1),
                     ),
                   ),
                 );

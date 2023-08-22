@@ -4,10 +4,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 class AudioPlaybackSymbol extends StatefulWidget {
   final bool play;
   final double size;
+  final EdgeInsets padding;
   const AudioPlaybackSymbol({
     super.key,
     required this.play,
     this.size = 20.0,
+    this.padding = const EdgeInsets.symmetric(horizontal: 12),
   });
 
   @override
@@ -46,7 +48,7 @@ class _AudioPlaybackSymbolState extends State<AudioPlaybackSymbol>
   Widget build(BuildContext context) {
     const scale = 1.15;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      padding: widget.padding,
       child: Icon(
         Icons.volume_up,
         color: const Color.fromRGBO(0x1E, 0x77, 0xF8, 1.0),

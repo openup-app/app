@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:openup/api/api.dart';
@@ -81,7 +82,7 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
             height: MediaQuery.of(context).padding.top + 40,
           ),
           Container(
-            height: 31,
+            height: 32,
             margin: const EdgeInsets.only(
               left: 16,
               top: 8,
@@ -92,12 +93,6 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
             decoration: const BoxDecoration(
               color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
               borderRadius: BorderRadius.all(Radius.circular(11)),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 26,
-                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.05),
-                ),
-              ],
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -107,27 +102,23 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
                     padding: const EdgeInsets.only(left: 11, right: 6),
                     child: TextFormField(
                       controller: _searchController,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w300,
-                          ),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
                       textAlignVertical: TextAlignVertical.center,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         border: InputBorder.none,
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.search,
-                          size: 16,
+                          size: 18,
                         ),
                         hintText: 'Search',
-                        hintStyle: Theme.of(context)
-                            .textTheme
-                            .bodyMedium!
-                            .copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color:
-                                  const Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-                            ),
+                        hintStyle: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w400,
+                          color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                        ),
                       ),
                     ),
                   ),
@@ -345,7 +336,7 @@ class _ConversationList extends StatelessWidget {
             itemBuilder: (context, index) {
               final chatroom = chatrooms[index];
               return SizedBox(
-                height: 84,
+                height: 80,
                 child: Column(
                   children: [
                     Expanded(
@@ -375,32 +366,35 @@ class _ConversationList extends StatelessWidget {
                             height: 140,
                             child: Row(
                               children: [
-                                const SizedBox(width: 11),
                                 Visibility(
                                   visible: chatroom.unreadCount != 0,
                                   maintainSize: true,
                                   maintainState: true,
                                   maintainAnimation: true,
-                                  child: Container(
-                                    width: 13,
-                                    height: 13,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Color.fromRGBO(0x00, 0x94, 0xFF, 1.0),
-                                          Color.fromRGBO(0x64, 0xBC, 0xFC, 1.0),
-                                        ],
+                                  child: SizedBox(
+                                    width: 33,
+                                    child: Container(
+                                      width: 13,
+                                      height: 13,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: [
+                                            Color.fromRGBO(
+                                                0x00, 0x94, 0xFF, 1.0),
+                                            Color.fromRGBO(
+                                                0x64, 0xBC, 0xFC, 1.0),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
                                 Container(
-                                  width: 43,
-                                  height: 43,
+                                  width: 47,
+                                  height: 47,
                                   clipBehavior: Clip.hardEdge,
                                   decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
@@ -410,7 +404,7 @@ class _ConversationList extends StatelessWidget {
                                     fit: BoxFit.cover,
                                   ),
                                 ),
-                                const SizedBox(width: 14),
+                                const SizedBox(width: 13),
                                 Expanded(
                                   child: Stack(
                                     children: [
@@ -429,11 +423,11 @@ class _ConversationList extends StatelessWidget {
                                                 MainAxisAlignment.center,
                                             children: [
                                               if (hasSubtitle)
-                                                const SizedBox(height: 15),
+                                                const SizedBox(height: 16),
                                               Text(
                                                 chatroom.profile.profile.name,
                                                 style: const TextStyle(
-                                                  fontSize: 16,
+                                                  fontSize: 17,
                                                   fontWeight: FontWeight.w500,
                                                 ),
                                               ),
@@ -477,26 +471,29 @@ class _ConversationList extends StatelessWidget {
                                       ),
                                       Align(
                                         alignment: Alignment.centerRight,
-                                        child: Text(
-                                          _formatRelativeDate(
-                                              chatroom.lastUpdated),
-                                          textAlign: TextAlign.right,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w300,
-                                            fontSize: 14,
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 3.0),
+                                          child: Text(
+                                            _formatRelativeDate(
+                                                chatroom.lastUpdated),
+                                            textAlign: TextAlign.right,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w300,
+                                              fontSize: 15,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                const Icon(
-                                  Icons.chevron_right,
-                                  color: Color.fromRGBO(0xBA, 0xBA, 0xBA, 1.0),
-                                  size: 26,
-                                ),
                                 const SizedBox(width: 12),
+                                SvgPicture.asset(
+                                  'assets/images/chevron_right.svg',
+                                  height: 12,
+                                ),
+                                const SizedBox(width: 24),
                               ],
                             ),
                           ),

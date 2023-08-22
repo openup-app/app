@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -514,7 +513,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                             decoration: const BoxDecoration(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(5)),
-                              color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.8),
+                              color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.95),
                               boxShadow: [
                                 BoxShadow(
                                   blurRadius: 24,
@@ -526,21 +525,25 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                               duration: const Duration(milliseconds: 200),
                               child: searching
                                   ? const IgnorePointer(
-                                      child: Text(
-                                        'Searching...',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w400,
-                                          color: Colors.black,
+                                      child: Center(
+                                        child: Text(
+                                          'Searching...',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w400,
+                                            color: Colors.black,
+                                          ),
                                         ),
                                       ),
                                     )
-                                  : Text(
-                                      '${_profiles.length} result${_profiles.length == 1 ? '' : 's'}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.black,
+                                  : Center(
+                                      child: Text(
+                                        '${_profiles.length} result${_profiles.length == 1 ? '' : 's'}',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.black,
+                                        ),
                                       ),
                                     ),
                             ),
@@ -932,6 +935,8 @@ class _PanelState extends ConsumerState<_Panel>
                                     ),
                                     child: const Row(
                                       mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       children: [
                                         SizedBox(width: 18),
                                         Icon(
@@ -941,14 +946,17 @@ class _PanelState extends ConsumerState<_Panel>
                                               0x8D, 0x8D, 0x8D, 1.0),
                                         ),
                                         SizedBox(width: 6),
-                                        Text(
-                                          'Who are you searching for?',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400,
-                                            color: Color.fromRGBO(
-                                                0x8D, 0x8D, 0x8D, 1.0),
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 2),
+                                          child: Text(
+                                            'Who are you searching for?',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w400,
+                                              color: Color.fromRGBO(
+                                                  0x8D, 0x8D, 0x8D, 1.0),
+                                            ),
                                           ),
                                         ),
                                       ],

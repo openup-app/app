@@ -75,7 +75,7 @@ class AudioChatMessage extends StatelessWidget {
                                   textAlign:
                                       fromMe ? TextAlign.right : TextAlign.left,
                                   style: const TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 13.5,
                                     fontWeight: FontWeight.w400,
                                     color:
                                         Color.fromRGBO(0x9D, 0x9D, 0x9D, 1.0),

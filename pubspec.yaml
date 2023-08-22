@@ -93,6 +93,7 @@ flutter:
     - assets/images/pause_icon.svg
     - assets/images/friends.json
     - assets/images/chevron_right.png
+    - assets/images/chevron_right.svg
     - assets/images/close_circle.png
     - assets/images/location_off.svg
     - assets/images/location_search.png
