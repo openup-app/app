@@ -311,6 +311,18 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
+                    if (messages == null)
+                      Padding(
+                        padding: EdgeInsets.only(
+                            bottom:
+                                (80 + MediaQuery.of(context).padding.bottom) /
+                                    2),
+                        child: const Center(
+                          child: LoadingIndicator(
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
                     if (messages != null &&
                         messages.isEmpty &&
                         _otherProfile != null)
