@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -6,13 +7,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_apns/flutter_apns.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 part 'notifications.freezed.dart';
+part 'notifications.g.dart';
 
 typedef DeepLinkCallback = void Function(String path);
 
 class NotificationManager {
   final void Function(NotificationToken token) onToken;
+  final void Function(String path) onDeepLink;
+
   ApnsPushConnector? _apnsPushConnector;
   StreamController<String?>? _iosNotificationTokenController;
   StreamSubscription? _iosEventChannelTokenSubscription;
@@ -20,11 +25,29 @@ class NotificationManager {
 
   NotificationManager({
     required this.onToken,
+    required this.onDeepLink,
   }) {
     if (Platform.isIOS) {
       _apnsPushConnector = ApnsPushConnector();
       _apnsPushConnector?.shouldPresent = (_) => Future.value(true);
-      _apnsPushConnector?.configureApns();
+      _apnsPushConnector?.configureApns(
+        onLaunch: (message) {
+          _parseNotification(message);
+          return Future.value();
+        },
+        onMessage: (message) {
+          _parseNotification(message);
+          return Future.value();
+        },
+        onBackgroundMessage: (message) {
+          _parseNotification(message);
+          return Future.value();
+        },
+        onResume: (message) {
+          _parseNotification(message);
+          return Future.value();
+        },
+      );
       _iosNotificationTokenController = StreamController<String?>.broadcast();
     }
   }
@@ -50,6 +73,20 @@ class NotificationManager {
     _iosNotificationTokenController?.close();
     if (Platform.isIOS) {
       _apnsPushConnector = null;
+    }
+  }
+
+  void _parseNotification(ApnsRemoteMessage message) {
+    final data = message.payload['data'] ?? {};
+    final body = jsonDecode(data['body'] ?? '{}');
+    switch (data['type']) {
+      case 'deep_link':
+        try {
+          final deepLink = NotificationPayload.fromJson(body);
+          onDeepLink(deepLink.path);
+        } catch (e, s) {
+          Sentry.captureException(e, stackTrace: s);
+        }
     }
   }
 
@@ -100,4 +137,12 @@ class NotificationToken with _$NotificationToken {
   const factory NotificationToken.fcmMessagingAndVoip(String token) =
       _FcmMessagingAndVoip;
   const factory NotificationToken.apnsMessaging(String token) = _ApnsMessaging;
+}
+
+@freezed
+class NotificationPayload with _$NotificationPayload {
+  const factory NotificationPayload.deepLink(String path) = _DeepLink;
+
+  factory NotificationPayload.fromJson(Map<String, dynamic> json) =>
+      _$NotificationPayloadFromJson(json);
 }

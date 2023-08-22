@@ -185,6 +185,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           _notificationManager = NotificationManager(
             onToken: (token) =>
                 ref.read(apiProvider).addNotificationToken(token),
+            onDeepLink: _goRouter.go,
           );
           _notificationManager?.requestNotificationPermission();
         }
