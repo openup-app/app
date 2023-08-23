@@ -1151,7 +1151,7 @@ String _mapStyle() {
         "featureType": "road.local",
         "elementType": "geometry.fill",
         "stylers": [
-          {"color": "#e8e8e8"}
+          {"color": "#e0e0e0"}
         ]
       },
       {
