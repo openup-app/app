@@ -72,7 +72,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   bool _recenterAnimationComplete = false;
 
   final _preferredTilt = 40.0;
-  final _initialZoom = 13.0;
+  final _initialZoom = 13.9;
 
   late final MarkerRenderingStateMachine _markerRenderStateMachine;
 
