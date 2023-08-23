@@ -804,7 +804,7 @@ class _PanelState extends ConsumerState<_Panel>
       color: Color.fromRGBO(0xAB, 0xAB, 0xAB, 0.33),
     );
     return Container(
-      margin: const EdgeInsets.only(top: 24),
+      margin: const EdgeInsets.only(top: 20),
       decoration: BoxDecoration(
         boxShadow: [
           widget.selectedProfile == null
