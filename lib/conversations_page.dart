@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -318,7 +320,7 @@ class _ConversationList extends StatelessWidget {
 
     return CustomRefreshIndicator(
       onRefresh: onRefresh,
-      builder: MaterialIndicatorDelegate(
+      builder: _SimpleIndicatorDelegate(
         builder: (context, controller) {
           return const LoadingIndicator(
             color: Colors.black,
@@ -571,4 +573,206 @@ String _formatRelativeDate(DateTime date) {
     final longDateFormat = DateFormat.yMMMMd();
     return longDateFormat.format(localDate);
   }
+}
+
+/// Modified from package:custom_refresh_indicator material_indicator_delegate.dart
+class _SimpleIndicatorDelegate extends IndicatorBuilderDelegate {
+  final Widget Function(BuildContext context, IndicatorController controller)
+      builder;
+
+  const _SimpleIndicatorDelegate({
+    required this.builder,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+    Widget child,
+    IndicatorController controller,
+  ) {
+    return Stack(
+      children: <Widget>[
+        child,
+        _PositionedIndicatorContainer(
+          edgeOffset: 0,
+          displacement: 0,
+          controller: controller,
+          child: Transform.scale(
+            scale: controller.isFinalizing
+                ? controller.value.clamp(0.0, 1.0)
+                : 1.0,
+            child: Container(
+              width: 41,
+              height: 41,
+              margin: const EdgeInsets.all(4.0),
+              child: _InfiniteRotation(
+                running: controller.isLoading,
+                child: builder(context, controller),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  bool get autoRebuild => true;
+}
+
+/// Copied from package:custom_refresh_indicator material_indicator_delegate.dart
+class _PositionedIndicatorContainer extends StatelessWidget {
+  final IndicatorController controller;
+  final double displacement;
+  final Widget child;
+  final double edgeOffset;
+
+  const _PositionedIndicatorContainer({
+    Key? key,
+    required this.child,
+    required this.controller,
+    required this.displacement,
+    required this.edgeOffset,
+  }) : super(key: key);
+
+  Alignment _getAlignement(IndicatorSide side) {
+    switch (side) {
+      case IndicatorSide.left:
+        return Alignment.centerLeft;
+      case IndicatorSide.top:
+        return Alignment.topCenter;
+      case IndicatorSide.right:
+        return Alignment.centerRight;
+      case IndicatorSide.bottom:
+        return Alignment.bottomCenter;
+      case IndicatorSide.none:
+        throw UnsupportedError('Cannot get alignement for "none" side.');
+    }
+  }
+
+  EdgeInsets _getEdgeInsets(IndicatorSide side) {
+    switch (side) {
+      case IndicatorSide.left:
+        return EdgeInsets.only(left: displacement);
+      case IndicatorSide.top:
+        return EdgeInsets.only(top: displacement);
+      case IndicatorSide.right:
+        return EdgeInsets.only(right: displacement);
+      case IndicatorSide.bottom:
+        return EdgeInsets.only(bottom: displacement);
+      case IndicatorSide.none:
+        throw UnsupportedError('Cannot get edge insets for "none" side.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (controller.side.isNone) return const SizedBox();
+
+    final isVerticalAxis = controller.side.isTop || controller.side.isBottom;
+    final isHorizontalAxis = controller.side.isLeft || controller.side.isRight;
+
+    final AlignmentDirectional alignment = isVerticalAxis
+        ? AlignmentDirectional(-1.0, controller.side.isTop ? 1.0 : -1.0)
+        : AlignmentDirectional(controller.side.isLeft ? 1.0 : -1.0, -1.0);
+
+    final double value = controller.isFinalizing ? 1.0 : controller.value;
+
+    return Positioned(
+      top: isHorizontalAxis
+          ? 0
+          : controller.side.isTop
+              ? edgeOffset
+              : null,
+      bottom: isHorizontalAxis
+          ? 0
+          : controller.side.isBottom
+              ? edgeOffset
+              : null,
+      left: isVerticalAxis
+          ? 0
+          : controller.side.isLeft
+              ? edgeOffset
+              : null,
+      right: isVerticalAxis
+          ? 0
+          : controller.side.isRight
+              ? edgeOffset
+              : null,
+      child: ClipRRect(
+        child: Align(
+          alignment: alignment,
+          heightFactor: isVerticalAxis ? max(value, 0.0) : null,
+          widthFactor: isHorizontalAxis ? max(value, 0.0) : null,
+          child: Container(
+            padding: _getEdgeInsets(controller.side),
+            alignment: _getAlignement(controller.side),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Copied from package:custom_refresh_indicator material_indicator_delegate.dart
+class _InfiniteRotation extends StatefulWidget {
+  final Widget? child;
+  final bool running;
+
+  const _InfiniteRotation({
+    required this.child,
+    required this.running,
+    Key? key,
+  }) : super(key: key);
+  @override
+  _InfiniteRotationState createState() => _InfiniteRotationState();
+}
+
+class _InfiniteRotationState extends State<_InfiniteRotation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _rotationController;
+
+  @override
+  void didUpdateWidget(_InfiniteRotation oldWidget) {
+    if (oldWidget.running != widget.running) {
+      if (widget.running) {
+        _startAnimation();
+      } else {
+        _rotationController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 50),
+        );
+      }
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void initState() {
+    _rotationController = AnimationController(
+      duration: const Duration(milliseconds: 750),
+      vsync: this,
+    );
+
+    if (widget.running) {
+      _startAnimation();
+    }
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    super.dispose();
+  }
+
+  void _startAnimation() {
+    _rotationController.repeat();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      RotationTransition(turns: _rotationController, child: widget.child);
 }
