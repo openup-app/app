@@ -95,11 +95,11 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
         if (mounted) {
           if (_messages != null) {
             // Add new message and fix the visual list offset
-            final atBottom = _scrollController.position.pixels >=
-                _scrollController.position.maxScrollExtent;
+            final atLatest = _scrollController.position.pixels >=
+                _scrollController.position.minScrollExtent;
             setState(() => _messages![message.messageId!] = message);
-            if (atBottom) {
-              _animateToBottom();
+            if (atLatest) {
+              _animateToLatest();
             } else {
               setState(() => _showUnreadMessageButton = true);
             }
@@ -111,16 +111,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
       },
     );
 
-    _fetchHistory().then((value) {
-      if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-          if (mounted && _scrollController.hasClients) {
-            _scrollController
-                .jumpTo(_scrollController.position.maxScrollExtent);
-          }
-        });
-      }
-    });
+    _fetchHistory();
 
     _chatroom = widget.chatroom;
     final chatroom = widget.chatroom;
@@ -388,6 +379,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
                           padding: EdgeInsets.only(
                               bottom:
                                   90 + MediaQuery.of(context).padding.bottom),
+                          reverse: true,
                           itemExtent: _itemExtent,
                           itemCount: items.length,
                           itemBuilder: (context, index) {
@@ -529,7 +521,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
                           curve: Curves.easeOutQuart,
                           opacity: _showUnreadMessageButton ? 1.0 : 0.0,
                           child: _UnreadMessagesButton(
-                            onPressed: _animateToBottom,
+                            onPressed: _animateToLatest,
                           ),
                         ),
                       ),
@@ -570,8 +562,8 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
       );
     });
 
-    if (mounted && _scrollController.hasClients) {
-      _animateToBottom();
+    if (mounted) {
+      _animateToLatest();
     }
 
     final api = ref.read(apiProvider);
@@ -604,16 +596,14 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
     );
   }
 
-  void _animateToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeOutQuart,
-        );
-      }
-    });
+  void _animateToLatest() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeOutQuart,
+      );
+    }
   }
 
   void _scrollListener() {
@@ -626,8 +616,8 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
     }
 
     if (_scrollController.position.userScrollDirection ==
-            ScrollDirection.forward &&
-        _scrollController.position.extentBefore < 350 &&
+            ScrollDirection.reverse &&
+        _scrollController.position.extentAfter < 350 &&
         messages.isNotEmpty) {
       var oldest = messages.values.first.date;
       for (final m in messages.values) {
@@ -687,18 +677,6 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
           return;
         }
 
-        if (_scrollController.hasClients) {
-          final tempMessages = Map<String, ChatMessage>.of(_messages ?? {});
-          final itemCountBefore =
-              _messagesToItems(tempMessages.values.toList()).length;
-          final itemCountAfter = _messagesToItems(
-                  (tempMessages..addEntries(entries)).values.toList())
-              .length;
-          final newItemCount = itemCountAfter - itemCountBefore;
-          _scrollController.jumpTo(
-              _scrollController.position.pixels + newItemCount * _itemExtent);
-        }
-
         setState(() {
           _messages?.clear();
           _messages = (_messages ?? {})..addEntries(entries);
@@ -727,7 +705,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
     }
     items.insert(0, ChatItem.info(ChatInfo.date(date)));
 
-    return items;
+    return items.reversed.toList();
   }
 
   void _showLocation(DiscoverProfile profile) {
