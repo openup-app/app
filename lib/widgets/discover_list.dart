@@ -161,6 +161,7 @@ class _MiniProfile extends StatelessWidget {
                 height: 50,
                 clipBehavior: Clip.hardEdge,
                 decoration: const BoxDecoration(
+                  color: Colors.white,
                   borderRadius: BorderRadius.all(Radius.circular(8)),
                   boxShadow: [
                     BoxShadow(
