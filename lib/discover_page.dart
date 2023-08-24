@@ -825,7 +825,7 @@ class _PanelState extends ConsumerState<_Panel>
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
           child: ColoredBox(
-            color: const Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.6),
+            color: const Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.4),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
