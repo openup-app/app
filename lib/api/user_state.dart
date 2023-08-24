@@ -202,10 +202,8 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
             'newName': name,
           },
         );
-        final result = await _api.updateProfile(
-          signedIn.account.profile.uid,
-          signedIn.account.profile.copyWith(name: name),
-        );
+        final result =
+            await _api.updateProfileName(signedIn.account.profile.uid, name);
         return result.fold(
           (l) => Left(l),
           (r) {
