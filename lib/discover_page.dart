@@ -509,6 +509,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                           child: Container(
                             width: 86,
                             height: 26,
+                            padding: const EdgeInsets.only(top: 1),
                             alignment: Alignment.center,
                             decoration: const BoxDecoration(
                               borderRadius:
@@ -526,13 +527,24 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                               child: searching
                                   ? const IgnorePointer(
                                       child: Center(
-                                        child: Text(
-                                          'Searching...',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w400,
-                                            color: Colors.black,
-                                          ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              'Loading',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w400,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            SizedBox(width: 5),
+                                            LoadingIndicator(
+                                              color: Colors.black,
+                                              size: 6.5,
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     )

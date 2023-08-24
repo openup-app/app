@@ -2496,6 +2496,7 @@ class LoadingIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoActivityIndicator(
       color: color,
+      radius: size,
     );
   }
 }
