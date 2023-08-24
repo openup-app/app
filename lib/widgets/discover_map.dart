@@ -53,7 +53,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
 
   final _onscreenMarkers = <RenderedProfile>[];
 
-  static const _markerAppearDuration = Duration(milliseconds: 250);
+  static const _markerAppearDuration = Duration(milliseconds: 200);
   final _frameCount =
       ((_markerAppearDuration.inMilliseconds / 1000) * 60).floor();
 
@@ -84,7 +84,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     );
     _staggeredAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 3200),
     );
     _staggeredAnimationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
