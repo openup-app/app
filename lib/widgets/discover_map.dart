@@ -180,6 +180,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     _onscreenMarkers
         .removeWhere((p) => removeFromOnscreen.contains(p.profile.profile.uid));
 
+    final pixelRatio = MediaQuery.of(context).devicePixelRatio;
+
     if (selectedProfile != null && selectedUserChanged) {
       setState(() {
         _recenterAnimationComplete = false;
@@ -188,8 +190,12 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
 
       // Re-render selected
       _cancelableRenderOfSelected?.cancel();
-      final renderFuture =
-          _renderMapMarker(profile: selectedProfile, selected: true);
+      final renderFuture = _renderMapMarker(
+        profile: selectedProfile,
+        photo: null,
+        pixelRatio: pixelRatio,
+        selected: true,
+      );
       _cancelableRenderOfSelected =
           CancelableOperation.fromFuture(renderFuture);
       _cancelableRenderOfSelected?.then((frames) {
@@ -207,10 +213,18 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     } else if (selectedProfile != null && selectedUserFavoriteChanged) {
       // Re-render selected
       // Update the favorite icon
-      final unselectedFramesFuture =
-          _renderMapMarker(profile: selectedProfile, selected: false);
-      final selectedFramesFuture =
-          _renderMapMarker(profile: selectedProfile, selected: true);
+      final unselectedFramesFuture = _renderMapMarker(
+        profile: selectedProfile,
+        photo: null,
+        pixelRatio: pixelRatio,
+        selected: false,
+      );
+      final selectedFramesFuture = _renderMapMarker(
+        profile: selectedProfile,
+        photo: null,
+        pixelRatio: pixelRatio,
+        selected: true,
+      );
       Future.wait([unselectedFramesFuture, selectedFramesFuture])
           .then((results) {
         if (mounted) {
@@ -484,9 +498,28 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
   Future<List<RenderedProfile>> _renderMapMarkers(
       List<DiscoverProfile> profiles) async {
     final rendered = <RenderedProfile>[];
-    for (final profile in profiles) {
+    const photoSize = 36.0;
+    final count = profiles.length;
+    final pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    final photos = await Future.wait(profiles.map((profile) {
+      return fetchImage(
+        Image.network(
+          profile.profile.photo,
+          width: photoSize,
+          height: photoSize,
+          cacheWidth: photoSize.toInt(),
+          cacheHeight: photoSize.toInt(),
+        ).image,
+        size: const Size.square(photoSize),
+        pixelRatio: pixelRatio,
+      );
+    }));
+    for (var i = 0; i < profiles.length; i++) {
+      final profile = profiles[i];
       final frames = await _renderMapMarker(
         profile: profile,
+        photo: photos[i],
+        pixelRatio: pixelRatio,
         selected: false,
       );
       rendered.add(RenderedProfile(profile: profile, frames: frames));
@@ -496,23 +529,43 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
 
   Future<List<Uint8List>> _renderMapMarker({
     required DiscoverProfile profile,
+    required ui.Image? photo,
+    required double pixelRatio,
     required bool selected,
   }) async {
-    final pixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final frames = <Uint8List>[];
-    for (var i = 0; i < _frameCount; i++) {
-      final t = i / (_frameCount - 1);
-      final animation =
-          CurveTween(curve: selected ? Curves.easeOutQuart : Curves.bounceOut)
+    const photoSize = 36.0;
+    photo ??= await fetchImage(
+      Image.network(
+        profile.profile.photo,
+        width: photoSize,
+        height: photoSize,
+        cacheWidth: photoSize.toInt(),
+        cacheHeight: photoSize.toInt(),
+      ).image,
+      size: const Size.square(photoSize),
+      pixelRatio: pixelRatio,
+    );
+
+    return Future.wait([
+      for (var i = 0; i < _frameCount; i++)
+        Future.microtask(() {
+          final t = i / (_frameCount - 1);
+          final animation = CurveTween(
+                  curve: selected ? Curves.easeOutQuart : Curves.bounceOut)
               .animate(AlwaysStoppedAnimation(t));
-      final image = selected
-          ? await _renderSelectedMapMarkerFrame(profile, pixelRatio, animation)
-          : await _renderMapMarkerFrame(profile, pixelRatio, animation);
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      image.dispose();
-      frames.add(bytes!.buffer.asUint8List());
-    }
-    return frames;
+          final imageFuture = selected
+              ? _renderSelectedMapMarkerFrame(
+                  profile, photo!, pixelRatio, animation)
+              : _renderMapMarkerFrame(profile, photo!, pixelRatio, animation);
+          return imageFuture.then((i) {
+            return i.toByteData(format: ui.ImageByteFormat.png).then((b) {
+              i.dispose();
+
+              return b!.buffer.asUint8List();
+            });
+          });
+        })
+    ]);
   }
 
   Future<List<Uint8List>> _renderExactLocationNotShownMapMarker() async {
@@ -533,6 +586,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
 
   Future<ui.Image> _renderMapMarkerFrame(
     DiscoverProfile profile,
+    ui.Image photo,
     double pixelRatio,
     Animation<double> animation,
   ) async {
@@ -550,8 +604,8 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     final canvas = ui.Canvas(pictureRecorder);
 
     final textWidth = metrics.width;
-    const horizontalPadding = 16.0;
-    const verticalPadding = 32.0;
+    const horizontalPadding = 6.0;
+    const verticalPadding = 16.0;
     const photoSize = 30.0;
     final width = photoSize + 4 + textWidth + horizontalPadding + 8;
     const height = photoSize + 4 + verticalPadding;
@@ -575,12 +629,6 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
             ),
           );
 
-    final photo = await fetchImage(
-      NetworkImage(profile.profile.photo),
-      size: const Size.square(photoSize),
-      pixelRatio: pixelRatio,
-    );
-
     _paintProfilePill(
       canvas: canvas,
       textPainter: textPainter,
@@ -588,7 +636,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       photo: photo,
       favoriteIconPainter: favoriteIconPainter,
       backgroundColor: Colors.white,
-      elevation: 10,
+      elevation: 4,
       shadowColor: const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
       horizontalPadding: horizontalPadding,
       verticalPadding: verticalPadding,
@@ -605,6 +653,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
 
   Future<ui.Image> _renderSelectedMapMarkerFrame(
     DiscoverProfile profile,
+    ui.Image photo,
     double pixelRatio,
     Animation<double> animation,
   ) async {
@@ -650,11 +699,6 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
             ),
           );
 
-    final photo = await fetchImage(
-      NetworkImage(profile.profile.photo),
-      size: const Size.square(photoSize),
-      pixelRatio: pixelRatio,
-    );
     _paintProfilePill(
       canvas: canvas,
       textPainter: textPainter,
