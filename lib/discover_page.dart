@@ -805,22 +805,6 @@ class _PanelState extends ConsumerState<_Panel>
     );
     return Container(
       margin: const EdgeInsets.only(top: 20),
-      decoration: BoxDecoration(
-        boxShadow: [
-          widget.selectedProfile == null
-              ? const BoxShadow(
-                  offset: Offset(0, 1),
-                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.15),
-                  blurRadius: 5,
-                  blurStyle: BlurStyle.outer,
-                )
-              : const BoxShadow(
-                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                  blurRadius: 13,
-                  blurStyle: BlurStyle.outer,
-                ),
-        ],
-      ),
       child: ClipRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
