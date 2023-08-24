@@ -936,6 +936,7 @@ class Profile with _$Profile {
     int? age,
     required Gender gender,
     required String photo,
+    @_Base64Converter() required Uint8List photoThumbnail,
     String? audio,
     required List<String> gallery,
     @Default([]) List<KnownContact> mutualContacts,
@@ -1112,6 +1113,16 @@ class _DateTimeConverter implements JsonConverter<DateTime, String> {
 
   @override
   String toJson(DateTime dateTime) => dateTime.toIso8601String();
+}
+
+class _Base64Converter implements JsonConverter<Uint8List, String> {
+  const _Base64Converter();
+
+  @override
+  Uint8List fromJson(String value) => base64Decode(value);
+
+  @override
+  String toJson(Uint8List data) => base64Encode(data);
 }
 
 enum ChatroomState { invited, pending, accepted }
