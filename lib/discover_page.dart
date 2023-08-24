@@ -300,7 +300,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                   onProfileChanged: _onProfileChanged,
                   initialLocation: Location(
                     latLong: ref.read(locationProvider).initialLatLong,
-                    radius: 8000,
+                    radius: 1800,
                   ),
                   onLocationChanged: (location) {
                     setState(() => _mapLocation =
