@@ -364,9 +364,7 @@ class _LoadCollectionListState extends ConsumerState<_LoadCollectionList> {
       );
     }
     return const Center(
-      child: LoadingIndicator(
-        size: 32,
-      ),
+      child: LoadingIndicator(),
     );
   }
 }

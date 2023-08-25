@@ -125,7 +125,6 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
                 child: Center(
                   child: _submitting
                       ? const LoadingIndicator(
-                          size: 27,
                           color: Colors.black,
                         )
                       : Text(

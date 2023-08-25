@@ -701,7 +701,7 @@ class RecordButtonState extends State<RecordButton> {
                               ? null
                               : () => widget.onSubmit(_audioPath!),
                           child: widget.submitting
-                              ? const LoadingIndicator(size: 32)
+                              ? const LoadingIndicator()
                               : Container(
                                   padding: const EdgeInsets.all(4.0),
                                   decoration: BoxDecoration(
@@ -2488,7 +2488,7 @@ class LoadingIndicator extends StatelessWidget {
   final Color color;
   const LoadingIndicator({
     super.key,
-    this.size = 50,
+    this.size = 10,
     this.color = Colors.white,
   });
 

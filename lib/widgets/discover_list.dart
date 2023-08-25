@@ -271,7 +271,6 @@ class _MiniProfile extends StatelessWidget {
                                 );
                               case PlaybackState.loading:
                                 return const LoadingIndicator(
-                                  size: 12,
                                   color: Colors.white,
                                 );
                               default:

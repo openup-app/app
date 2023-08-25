@@ -296,12 +296,12 @@ class _PhotoPickerGridState extends State<_PhotoPickerGrid> {
               },
               firstPageProgressIndicatorBuilder: (context) {
                 return const Center(
-                  child: LoadingIndicator(size: 35),
+                  child: LoadingIndicator(),
                 );
               },
               newPageProgressIndicatorBuilder: (context) {
                 return const Center(
-                  child: LoadingIndicator(size: 35),
+                  child: LoadingIndicator(),
                 );
               },
               noItemsFoundIndicatorBuilder: (context) {

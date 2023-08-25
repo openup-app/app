@@ -164,7 +164,6 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
                 child: Center(
                   child: _submitting
                       ? const LoadingIndicator(
-                          size: 27,
                           color: Colors.black,
                         )
                       : Text(

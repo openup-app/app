@@ -559,7 +559,6 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
                                                 );
                                               case PlaybackState.loading:
                                                 return const LoadingIndicator(
-                                                  size: 24,
                                                   color: Colors.white,
                                                 );
                                               default:
