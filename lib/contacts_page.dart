@@ -19,7 +19,10 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
   @override
   void initState() {
     super.initState();
-    ref.read(contactsProvider.notifier).refreshContacts().then((_) {
+    ref
+        .read(contactsProvider.notifier)
+        .refreshContacts(canRequestPermission: false)
+        .then((_) {
       if (mounted) {
         ref.read(contactsProvider.notifier).uploadContacts();
       }

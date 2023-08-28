@@ -19,7 +19,10 @@ class _SignUpFriendsState extends ConsumerState<SignUpFriends> {
 
   @override
   void initState() {
-    ref.read(contactsProvider.notifier).refreshContacts().then((_) {
+    ref
+        .read(contactsProvider.notifier)
+        .refreshContacts(canRequestPermission: false)
+        .then((_) {
       if (mounted) {
         ref.read(contactsProvider.notifier).uploadContacts();
       }

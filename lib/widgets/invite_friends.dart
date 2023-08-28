@@ -33,7 +33,9 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
   @override
   void initState() {
     super.initState();
-    ref.read(contactsProvider.notifier).refreshContacts();
+    ref
+        .read(contactsProvider.notifier)
+        .refreshContacts(canRequestPermission: false);
   }
 
   @override
@@ -58,7 +60,9 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                   onPressed: () async {
                     final status = await Permission.contacts.request();
                     if (mounted && status == PermissionStatus.granted) {
-                      ref.read(contactsProvider.notifier).refreshContacts();
+                      ref
+                          .read(contactsProvider.notifier)
+                          .refreshContacts(canRequestPermission: true);
                     }
                   },
                 ),

@@ -28,7 +28,7 @@ class ContactsStateNotifier extends StateNotifier<ContactsState> {
           knownContactsState: KnownContactsState.loading(),
         ));
 
-  Future<void> refreshContacts() async {
+  Future<void> refreshContacts({required bool canRequestPermission}) async {
     var hasPermission = await contactsService.hasPermission();
     if (!mounted) {
       return;
@@ -37,7 +37,8 @@ class ContactsStateNotifier extends StateNotifier<ContactsState> {
       hasPermission: hasPermission,
     );
 
-    if (hasPermission || await contactsService.requestPermission()) {
+    if (hasPermission ||
+        (canRequestPermission && await contactsService.requestPermission())) {
       hasPermission = true;
       final contacts = await contactsService.getContacts();
       if (!mounted) {
