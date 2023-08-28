@@ -161,7 +161,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       return;
     }
 
-    final canContinueAsGuest = !ref.read(dynamicConfigProvider).loginRequired;
     final isSignedOutProvider = userProvider2.select((p) {
       return p.map(
         guest: (guest) => !guest.byDefault,
@@ -176,7 +175,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
           _tempPauseAudio();
           showSignupGuestModal(
             context,
-            canContinueAsGuest: canContinueAsGuest,
             onShowSignup: () => context.pushNamed('signup'),
           );
         }
@@ -1359,64 +1357,80 @@ Future<bool> _showTurnOnLiveLocationModal(BuildContext context) async {
 
 Future<void> showSignupGuestModal(
   BuildContext context, {
-  required bool canContinueAsGuest,
   required VoidCallback onShowSignup,
 }) {
   return showCupertinoDialog(
     context: context,
     builder: (context) {
-      return CupertinoAlertDialog(
-        title: const Text('Sign up'),
-        content: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.0),
-          child: Column(
-            children: [
-              Text(
-                'Sign up or log in for free and gain these abilities:',
-                textAlign: TextAlign.left,
+      return Consumer(
+        builder: (context, ref, child) {
+          final dynamicConfigReady =
+              ref.watch(dynamicConfigStateProvider) == DynamicConfigState.ready;
+          final canContinueAsGuest =
+              ref.watch(dynamicConfigProvider.select((p) => !p.loginRequired));
+          return CupertinoAlertDialog(
+            title: const Text('Sign up'),
+            content: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Column(
+                children: [
+                  Text(
+                    'Sign up or log in for free and gain these abilities:',
+                    textAlign: TextAlign.left,
+                  ),
+                  SizedBox(height: 16),
+                  _DotPoint(
+                    message: Text(
+                      'Let people know what you\'re up to by broadcasting a voice message',
+                      textAlign: TextAlign.left,
+                    ),
+                  ),
+                  _DotPoint(
+                    message: Text(
+                      'Send messages to anyone, anytime',
+                      textAlign: TextAlign.left,
+                    ),
+                  ),
+                  _DotPoint(
+                    message: Text(
+                      'Enhance your photos into cinematic photos',
+                      textAlign: TextAlign.left,
+                    ),
+                  ),
+                  _DotPoint(
+                    message: Text(
+                      'Receive voice messages from other people',
+                      textAlign: TextAlign.left,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 16),
-              _DotPoint(
-                message: Text(
-                  'Let people know what you\'re up to by broadcasting a voice message',
-                  textAlign: TextAlign.left,
+            ),
+            actions: [
+              if (!dynamicConfigReady)
+                const CupertinoDialogAction(
+                  child: LoadingIndicator(
+                    size: 10,
+                  ),
+                )
+              else ...[
+                CupertinoDialogAction(
+                  onPressed: onShowSignup,
+                  child: const Text(
+                    'Sign up or log in',
+                    style:
+                        TextStyle(color: Color.fromRGBO(0x2C, 0x80, 0xFF, 1.0)),
+                  ),
                 ),
-              ),
-              _DotPoint(
-                message: Text(
-                  'Send messages to anyone, anytime',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              _DotPoint(
-                message: Text(
-                  'Enhance your photos into cinematic photos',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              _DotPoint(
-                message: Text(
-                  'Receive voice messages from other people',
-                  textAlign: TextAlign.left,
-                ),
-              ),
+                if (canContinueAsGuest)
+                  CupertinoDialogAction(
+                    onPressed: Navigator.of(context).pop,
+                    child: const Text('Continue as guest'),
+                  ),
+              ]
             ],
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: onShowSignup,
-            child: const Text(
-              'Sign up or log in',
-              style: TextStyle(color: Color.fromRGBO(0x2C, 0x80, 0xFF, 1.0)),
-            ),
-          ),
-          if (canContinueAsGuest)
-            CupertinoDialogAction(
-              onPressed: Navigator.of(context).pop,
-              child: const Text('Continue as guest'),
-            ),
-        ],
+          );
+        },
       );
     },
   );

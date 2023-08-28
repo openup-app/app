@@ -1,18 +1,35 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/online_users_provider.dart';
+import 'package:openup/dynamic_config/dynamic_config.dart';
 
-// Stays alive and informs the backend of online/offline/logout.
-class OnlineUsersWatcher extends ConsumerWidget {
+// Stays alive and initializes providers.
+// TODO: Find a cleaner way of initializing and keeping alive providers
+class ProviderWatcher extends ConsumerStatefulWidget {
   final Widget child;
-  const OnlineUsersWatcher({
+  const ProviderWatcher({
     super.key,
     required this.child,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(onlineUsersProvider);
-    return child;
+  ConsumerState<ProviderWatcher> createState() => _ProviderWatcherState();
+}
+
+class _ProviderWatcherState extends ConsumerState<ProviderWatcher> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize providers
+    ref.read(dynamicConfigProvider);
+    ref.read(dynamicConfigStateProvider);
+
+    // Informs the backend of online/offline/logout
+    ref.listenManual(onlineUsersProvider, (_, __) => {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }

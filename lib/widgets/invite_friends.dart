@@ -219,8 +219,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                   trailing: _InviteButton(
                     onPressed: () {
                       final dynamicConfig = ref.read(dynamicConfigProvider);
-                      final message = dynamicConfig.contactInviteMessage ??
-                          'I\'m on Bonjour, a new way to meet online. \nhttps://bonjourland.com';
+                      final message = dynamicConfig.contactInviteMessage;
                       final body = Uri.encodeComponent(message);
                       _launchMessagingApp(contact.phoneNumber, body);
                     },

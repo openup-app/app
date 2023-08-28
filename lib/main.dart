@@ -22,6 +22,7 @@ import 'package:openup/chat_page.dart';
 import 'package:openup/contact_us_screen.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/dynamic_config/dynamic_config.dart';
+import 'package:openup/dynamic_config/dynamic_config_service.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/contacts_page.dart';
 import 'package:openup/notifications/notifications.dart';
@@ -85,6 +86,15 @@ void main() async {
 
     final sharedPreferences = await SharedPreferences.getInstance();
 
+    final dynamicConfigService = DynamicConfigService(
+      defaults: const DynamicConfig(
+        contactInviteMessage:
+            'I\'m on Howdy, a new way to meet online. https://bonjourland.com',
+        loginRequired: true,
+      ),
+    );
+    dynamicConfigService.init();
+
     runApp(
       RestartApp(
         child: ProviderScope(
@@ -98,8 +108,16 @@ void main() async {
               );
             }),
             keyValueStoreProvider.overrideWithValue(sharedPreferences),
+            dynamicConfigStateProvider.overrideWith((ref) {
+              final notifier =
+                  DynamicConfigStateStateNotifier(dynamicConfigService);
+              ref.onDispose(() => notifier.onDispose());
+              return notifier;
+            }),
+            dynamicConfigProvider.overrideWith(
+                (ref) => DynamicConfigStateNotifier(dynamicConfigService)),
           ],
-          child: const OnlineUsersWatcher(
+          child: const ProviderWatcher(
             child: OpenupApp(),
           ),
         ),
