@@ -22,6 +22,7 @@ import 'package:openup/widgets/audio_bio.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/photo3d.dart';
 import 'package:openup/widgets/waveforms.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:tuple/tuple.dart';
 
@@ -1059,7 +1060,30 @@ class SignUpRecorderState extends ConsumerState<SignUpRecorder> {
     super.dispose();
   }
 
+  Future<bool> _hasMicrophonePermission() async {
+    const permission = Permission.microphone;
+    var status = await permission.status;
+    if (status == PermissionStatus.granted ||
+        status == PermissionStatus.limited) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> _requestMicrophonePermission() =>
+      Permission.microphone.request();
+
   void _startRecording() async {
+    if (!await _hasMicrophonePermission()) {
+      await _requestMicrophonePermission();
+      if (!await _hasMicrophonePermission()) {
+        return;
+      }
+    }
+    if (!mounted) {
+      return;
+    }
+
     _controller?.dispose();
     final controller = PlaybackRecorderController();
     setState(() => _controller = controller);
