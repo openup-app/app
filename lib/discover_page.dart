@@ -582,7 +582,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                   profiles: profiles,
                   selectedProfile: selectedProfile,
                   onProfileChanged: (profile) {
-                    ref.read(mixpanelProvider).track('view_mini_profile');
+                    ref.read(analyticsProvider).trackViewMiniProfile();
                     setState(() => _selectedProfile = profile);
                   },
                   profileBuilderKey: _profileBuilderKey,
@@ -1022,7 +1022,7 @@ class _PanelState extends ConsumerState<_Panel>
           onPause: () => widget.profileBuilderKey.currentState?.pause(),
           onToggleFavorite: widget.onToggleFavorite,
           onProfilePressed: () {
-            ref.read(mixpanelProvider).track('view_full_profile');
+            ref.read(analyticsProvider).trackViewFullProfile();
             showProfileBottomSheet(
               context: context,
               transitionAnimationController: _sheetAnimationController,

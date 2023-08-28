@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -84,6 +85,8 @@ void main() async {
     final mixpanel = await _initMixpanel();
     mixpanel.setLoggingEnabled(!kReleaseMode);
 
+    final firebaseAnalytics = FirebaseAnalytics.instance;
+
     final sharedPreferences = await SharedPreferences.getInstance();
 
     final dynamicConfigService = DynamicConfigService(
@@ -100,6 +103,7 @@ void main() async {
         child: ProviderScope(
           overrides: [
             mixpanelProvider.overrideWithValue(mixpanel),
+            firebaseAnalyticsProvider.overrideWithValue(firebaseAnalytics),
             apiProvider.overrideWith((ref) {
               Random().nextInt(1 << 32).toString();
               return Api(

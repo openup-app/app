@@ -166,9 +166,7 @@ class _SignupGenderState extends ConsumerState<SignupGender> {
       return;
     }
 
-    ref.read(mixpanelProvider)
-      ..track("signup_submit_gender")
-      ..getPeople().set('gender', gender.name);
+    ref.read(analyticsProvider).trackSignupSubmitGender();
     ref.read(accountCreationParamsProvider.notifier).gender(gender);
     context.pushNamed('signup_photos');
   }

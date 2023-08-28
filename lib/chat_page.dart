@@ -17,7 +17,6 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/shell_page.dart';
-import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_message.dart';
 import 'package:openup/widgets/common.dart';
@@ -573,7 +572,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
       file.path,
     );
 
-    ref.read(mixpanelProvider).track("send_message");
+    ref.read(analyticsProvider).trackSendMessage();
 
     if (!mounted) {
       return;

@@ -160,9 +160,7 @@ class _SignupNameState extends ConsumerState<SignupName> {
       return;
     }
 
-    ref.read(mixpanelProvider)
-      ..track("signup_submit_name")
-      ..getPeople().set('name', newName);
+    ref.read(analyticsProvider).trackSignupSubmitName();
     ref.read(accountCreationParamsProvider.notifier).name(newName);
     context.pushNamed('signup_gender');
   }

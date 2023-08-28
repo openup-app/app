@@ -57,14 +57,14 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
           notifier.uid(account.profile.uid);
           notifier.profile(account.profile);
           ref.read(userProvider2.notifier).signedIn(account);
-          ref.read(mixpanelProvider).track("login");
+          ref.read(analyticsProvider).trackLogin();
           RestartApp.restartApp(context);
         },
         signUp: () {
           final locationValue = ref.read(locationProvider);
           final latLong = locationValue.current;
           ref.read(accountCreationParamsProvider.notifier).latLong(latLong);
-          ref.read(mixpanelProvider).track("signup_verified");
+          ref.read(analyticsProvider).trackSignupVerified();
           context.pushReplacementNamed('signup_age');
         },
         retry: () {

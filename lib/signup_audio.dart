@@ -117,7 +117,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
     required AccountCreationParams params,
   }) async {
     _recorderKey.currentState?.stopRecording();
-    ref.read(mixpanelProvider).track("signup_submit_audio");
+    ref.read(analyticsProvider).trackSignupSubmitAudio();
 
     final result = await withBlockingModal(
       context: context,
@@ -135,6 +135,10 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
           return;
         }
 
+        final analytics = ref.read(analyticsProvider);
+        analytics.setUserProperty('name', r.profile.name);
+        analytics.setUserProperty('age', r.profile.age);
+        analytics.setUserProperty('gender', r.profile.gender.name);
         ref.read(userProvider.notifier).profile(r.profile);
         ref.read(userProvider2.notifier).signedIn(r);
         context.goNamed('signup_friends');

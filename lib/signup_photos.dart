@@ -227,7 +227,7 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
 
   void _submit(List<File> photos) {
     ref.read(accountCreationParamsProvider.notifier).photos(photos);
-    ref.read(mixpanelProvider).track("signup_submit_photos");
+    ref.read(analyticsProvider).trackSignupSubmitPhotos();
     context.pushNamed('signup_audio');
   }
 }

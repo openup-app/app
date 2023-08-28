@@ -146,9 +146,7 @@ class _SignupAgeState extends ConsumerState<SignupAge> {
   }
 
   void _submit() async {
-    ref.read(mixpanelProvider)
-      ..track("signup_submit_age")
-      ..getPeople().set('age', _age);
+    ref.read(analyticsProvider).trackSignupSubmitAge();
     ref.read(accountCreationParamsProvider.notifier).age(_age);
     context.pushNamed('signup_permissions');
   }

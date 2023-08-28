@@ -133,7 +133,7 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
 
     final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
     if (_hasLocationPermission && _hasContactsPermission && routeCurrent) {
-      ref.read(mixpanelProvider).track("signup_grant_permissions");
+      ref.read(analyticsProvider).trackSignupGrantPermissions();
       context.pushNamed('signup_name');
     }
   }

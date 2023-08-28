@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:mixpanel_flutter/mixpanel_flutter.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
@@ -16,13 +15,13 @@ final authProvider =
     StateNotifierProvider.autoDispose<AuthStateNotifier, AuthState>((ref) {
   return AuthStateNotifier(
     api: ref.read(apiProvider),
-    mixpanel: ref.read(mixpanelProvider),
+    analytics: ref.read(analyticsProvider),
   );
 });
 
 class AuthStateNotifier extends StateNotifier<AuthState> {
   final Api api;
-  final Mixpanel mixpanel;
+  final Analytics analytics;
 
   int? _forceResendingToken;
   User? _user;
@@ -40,7 +39,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
   AuthStateNotifier({
     required this.api,
-    required this.mixpanel,
+    required this.analytics,
   }) : super(_initialState()) {
     _init();
   }
@@ -111,7 +110,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     final loginChange = wasLoggedIn != loggedIn;
     if (loginChange) {
       if (user != null) {
-        mixpanel.identify(user.uid);
+        analytics.setUserId(user.uid);
         Sentry.configureScope(
             (scope) => scope.setUser(SentryUser(id: user.uid)));
         state = AuthSignedIn(
@@ -130,7 +129,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
           api.authToken = token;
         }
       } else {
-        mixpanel.reset();
+        analytics.resetUser();
         Sentry.configureScope((scope) => scope.setUser(null));
         state = const _Guest();
       }
@@ -145,7 +144,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   }
 
   Future<SendCodeResult> signInWithPhoneNumber(String phoneNumber) async {
-    mixpanel.track("signup_submit_phone");
+    analytics.trackSignupSubmitPhone();
     final completer = Completer<SendCodeResult>();
     await FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: phoneNumber,
@@ -177,7 +176,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         }
       },
       codeSent: (verificationId, forceResendingToken) async {
-        mixpanel.track("signup_code_sent");
+        analytics.trackSignupCodeSent();
         _forceResendingToken = forceResendingToken;
         completer.complete(_CodeSent(verificationId));
       },
@@ -195,7 +194,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       return Future.value(const _Error(SendCodeError.failure));
     }
 
-    mixpanel.track("change_phone_submit_phone");
+    analytics.trackChangePhoneSubmitPhone();
     final completer = Completer<SendCodeResult>();
     await FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: newPhoneNumber,
@@ -228,7 +227,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         }
       },
       codeSent: (verificationId, forceResendingToken) async {
-        mixpanel.track("change_phone_code_sent");
+        analytics.trackChangePhoneCodeSent();
         _forceResendingToken = forceResendingToken;
         completer.complete(_CodeSent(verificationId));
       },
@@ -245,7 +244,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     required String verificationId,
     required String smsCode,
   }) async {
-    mixpanel.track("signup_submit_phone_verification");
+    analytics.trackSignupSubmitPhoneVerification();
 
     final credential = PhoneAuthProvider.credential(
       verificationId: verificationId,
@@ -280,7 +279,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       return Future.value(AuthResult.failure);
     }
 
-    mixpanel.track("change_phone_verification");
+    analytics.trackChangePhoneSubmitVerification();
 
     final credential = PhoneAuthProvider.credential(
       verificationId: verificationId,
@@ -289,6 +288,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
     try {
       await user.updatePhoneNumber(credential);
+      analytics.trackChangePhoneVerified();
       return AuthResult.success;
     } on FirebaseAuthException catch (e, s) {
       if (e.code == 'invalid-verification-code') {

@@ -143,7 +143,7 @@ class _SharePageState extends ConsumerState<_SharePage>
           const SizedBox(height: 13),
           Button(
             onPressed: () {
-              ref.read(mixpanelProvider).track("share_profile");
+              ref.read(analyticsProvider).trackShareProfile();
               Share.share(
                 url,
                 subject: 'The only app dedicated to making new friends',
