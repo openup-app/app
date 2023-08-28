@@ -114,7 +114,7 @@ class Analytics {
 
   void setUserProperty(String key, dynamic value) {
     _mixpanel.getPeople().set(key, value);
-    _firebaseAnalytics.setUserProperty(name: key, value: value);
+    _firebaseAnalytics.setUserProperty(name: key, value: value.toString());
   }
 
   void resetUser() {
