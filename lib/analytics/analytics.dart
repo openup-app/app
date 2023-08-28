@@ -45,6 +45,9 @@ class Analytics {
 
   void trackSignupGrantPermissions() => _track('signup_grant_permissions');
 
+  void trackSignupGrantOnlyLocationPermission() =>
+      _track('signup_grant_only_location_permission');
+
   void trackSignupSubmitPhotos() => _track('signup_submit_photos');
 
   void trackCreateAccount() => _track(

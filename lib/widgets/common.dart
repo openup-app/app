@@ -1828,7 +1828,11 @@ class PermissionButton extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                icon,
+                IconTheme(
+                  data: IconTheme.of(context)
+                      .copyWith(color: granted ? Colors.white : Colors.black),
+                  child: icon,
+                ),
                 const SizedBox(width: 13),
                 DefaultTextStyle(
                   style: TextStyle(

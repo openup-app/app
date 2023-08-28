@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/back_button.dart';
+import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -80,7 +81,8 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
               onPressed: () {
                 Permission.location
                     .request()
-                    .then(_updateLocationStatus)
+                    .then((status) =>
+                        _updateLocationStatus(status, openSettings: true))
                     .whenComplete(_checkPermissionsAndMaybeNavigate);
               },
             ),
@@ -92,9 +94,27 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
               onPressed: () {
                 Permission.contacts
                     .request()
-                    .then(_updateContactsStatus)
+                    .then((status) =>
+                        _updateContactsStatus(status, openSettings: true))
                     .whenComplete(_checkPermissionsAndMaybeNavigate);
               },
+            ),
+            const SizedBox(height: 50),
+            Button(
+              onPressed: _hasLocationPermission
+                  ? _checkLocationPermissionOnlyAndMaybeNavigate
+                  : null,
+              child: const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'skip contacts',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: Color.fromRGBO(0x81, 0x81, 0x81, 1.0),
+                  ),
+                ),
+              ),
             ),
             const Spacer(),
             const Text(
@@ -117,7 +137,7 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
     );
   }
 
-  void _checkPermissionsAndMaybeNavigate() async {
+  void _checkPermissionsAndMaybeNavigate({bool openSettings = false}) async {
     final statuses = await Future.wait([
       Permission.location.status,
       Permission.contacts.status,
@@ -128,8 +148,8 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
 
     final locationStatus = statuses[0];
     final contactsStatus = statuses[1];
-    _updateLocationStatus(locationStatus);
-    _updateContactsStatus(contactsStatus);
+    _updateLocationStatus(locationStatus, openSettings: openSettings);
+    _updateContactsStatus(contactsStatus, openSettings: openSettings);
 
     final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
     if (_hasLocationPermission && _hasContactsPermission && routeCurrent) {
@@ -138,26 +158,49 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
     }
   }
 
-  void _updateLocationStatus(PermissionStatus status) {
+  void _checkLocationPermissionOnlyAndMaybeNavigate({
+    bool openSettings = false,
+  }) async {
+    final locationStatus = await Permission.location.status;
+    if (!mounted) {
+      return;
+    }
+
+    _updateLocationStatus(locationStatus, openSettings: openSettings);
+
+    final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
+    if (_hasLocationPermission && routeCurrent) {
+      ref.read(analyticsProvider).trackSignupGrantOnlyLocationPermission();
+      context.pushNamed('signup_name');
+    }
+  }
+
+  void _updateLocationStatus(
+    PermissionStatus status, {
+    required bool openSettings,
+  }) {
     if (!mounted) {
       return;
     }
 
     if (status.isGranted || status.isLimited) {
       setState(() => _hasLocationPermission = true);
-    } else if (status.isPermanentlyDenied) {
+    } else if (status.isPermanentlyDenied && openSettings) {
       openAppSettings();
     }
   }
 
-  void _updateContactsStatus(PermissionStatus status) {
+  void _updateContactsStatus(
+    PermissionStatus status, {
+    required bool openSettings,
+  }) {
     if (!mounted) {
       return;
     }
 
     if (status.isGranted || status.isLimited) {
       setState(() => _hasContactsPermission = true);
-    } else if (status.isPermanentlyDenied) {
+    } else if (status.isPermanentlyDenied && openSettings) {
       openAppSettings();
     }
   }
