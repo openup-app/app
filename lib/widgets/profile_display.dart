@@ -205,19 +205,20 @@ class ProfileDisplay extends StatelessWidget {
               Expanded(
                 child: Button(
                   useFadeWheNoPressedCallback: false,
-                  onPressed: mutualContactCount == 0
-                      ? null
-                      : () {
-                          onPause();
-                          showCupertinoModalPopup(
-                            context: context,
-                            builder: (context) {
-                              return _MutualContactsModal(
-                                contacts: profile.mutualContacts,
+                  onPressed:
+                      mutualContactCount == 0 || !profile.hasSyncedContacts
+                          ? null
+                          : () {
+                              onPause();
+                              showCupertinoModalPopup(
+                                context: context,
+                                builder: (context) {
+                                  return _MutualContactsModal(
+                                    contacts: profile.mutualContacts,
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -259,7 +260,10 @@ class ProfileDisplay extends StatelessWidget {
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
-                                  '$mutualContactCount Shared Connection${mutualContactCount == 1 ? '' : 's'}',
+                                  mutualContactCount == 0 &&
+                                          !profile.hasSyncedContacts
+                                      ? 'Contacts not synced'
+                                      : '$mutualContactCount Shared Connection${mutualContactCount == 1 ? '' : 's'}',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w400,

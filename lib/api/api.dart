@@ -917,6 +917,7 @@ class Profile with _$Profile {
     @Default([]) List<KnownContact> mutualContacts,
     @Default(0) int friendCount,
     @Default(null) LatLong? latLongOverride,
+    @Default(false) hasSyncedContacts,
   }) = _Profile;
 
   // Private constructor required for adding methods
