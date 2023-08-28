@@ -86,6 +86,9 @@ void main() async {
     mixpanel.setLoggingEnabled(!kReleaseMode);
 
     final firebaseAnalytics = FirebaseAnalytics.instance;
+    if (!kReleaseMode) {
+      firebaseAnalytics.setAnalyticsCollectionEnabled(false);
+    }
 
     final sharedPreferences = await SharedPreferences.getInstance();
 
