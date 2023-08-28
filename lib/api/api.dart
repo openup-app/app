@@ -889,6 +889,7 @@ class ServerError with _$ServerError {
 class DynamicConfig with _$DynamicConfig {
   const factory DynamicConfig({
     @Default(null) String? contactInviteMessage,
+    @Default(true) bool loginRequired,
   }) = _DynamicConfig;
 
   factory DynamicConfig.fromJson(Map<String, dynamic> json) =>

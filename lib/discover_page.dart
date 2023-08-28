@@ -17,6 +17,7 @@ import 'package:openup/api/user_profile_cache.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/discover_map_provider.dart';
+import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/location/location_service.dart';
 import 'package:openup/shell_page.dart';
@@ -145,13 +146,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 
   void _showStartupModals() async {
-    final showSafetyNotice = ref.listenManual<bool>(
+    final showSafetyNoticeSubscription = ref.listenManual<bool>(
       showSafetyNoticeProvider,
       (prev, next) => prev == null && next,
       fireImmediately: true,
     );
 
-    if (showSafetyNotice.read()) {
+    final shouldShowSafetyNotice = showSafetyNoticeSubscription.read();
+    if (shouldShowSafetyNotice) {
       await showSafetyAndPrivacyModal(context);
     }
 
@@ -159,6 +161,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       return;
     }
 
+    final canContinueAsGuest = !ref.read(dynamicConfigProvider).loginRequired;
     final isSignedOutProvider = userProvider2.select((p) {
       return p.map(
         guest: (guest) => !guest.byDefault,
@@ -167,11 +170,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     });
     ref.listenManual<bool>(
       isSignedOutProvider,
+      fireImmediately: true,
       (previous, next) {
         if (next) {
           _tempPauseAudio();
           showSignupGuestModal(
             context,
+            canContinueAsGuest: canContinueAsGuest,
             onShowSignup: () => context.pushNamed('signup'),
           );
         }
@@ -1354,9 +1359,10 @@ Future<bool> _showTurnOnLiveLocationModal(BuildContext context) async {
 
 Future<void> showSignupGuestModal(
   BuildContext context, {
+  required bool canContinueAsGuest,
   required VoidCallback onShowSignup,
 }) {
-  return showCupertinoModalPopup(
+  return showCupertinoDialog(
     context: context,
     builder: (context) {
       return CupertinoAlertDialog(
@@ -1399,19 +1405,17 @@ Future<void> showSignupGuestModal(
         ),
         actions: [
           CupertinoDialogAction(
-            onPressed: () {
-              Navigator.of(context).pop();
-              onShowSignup();
-            },
+            onPressed: onShowSignup,
             child: const Text(
               'Sign up or log in',
               style: TextStyle(color: Color.fromRGBO(0x2C, 0x80, 0xFF, 1.0)),
             ),
           ),
-          CupertinoDialogAction(
-            onPressed: Navigator.of(context).pop,
-            child: const Text('Continue as guest'),
-          ),
+          if (canContinueAsGuest)
+            CupertinoDialogAction(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('Continue as guest'),
+            ),
         ],
       );
     },
