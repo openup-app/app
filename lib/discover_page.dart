@@ -67,22 +67,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   MarkerRenderStatus _markerRenderStatus = MarkerRenderStatus.ready;
 
   bool _hasShownStartupModals = false;
+  bool _firstDidChangeDeps = false;
 
   Timer? _audioBioUpdatedAnimationTimer;
 
   @override
   void initState() {
     super.initState();
-    final isSignedIn = ref.read(userProvider2.select((p) {
-      return p.map(
-        guest: (_) => false,
-        signedIn: (_) => true,
-      );
-    }));
-    if (isSignedIn) {
-      _maybeRequestNotification();
-    }
-
     ref.listenManual<LocationMessage?>(locationMessageProvider,
         (previous, next) {
       if (next == null) {
@@ -122,6 +113,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_firstDidChangeDeps) {
+      _firstDidChangeDeps = false;
+      // Location permission also requested from NotificationManager
+      _maybeRequestNotification();
+    }
+
     _precacheImageAndDepth(_profiles, from: 1, count: 2);
 
     Future.delayed(Duration.zero).then((_) {
@@ -148,9 +145,22 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 
   Future<void> _maybeRequestNotification() async {
-    final status = await Permission.notification.status;
-    if (!(status.isGranted || status.isLimited)) {
-      await Permission.notification.request();
+    final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
+    if (!routeCurrent) {
+      return;
+    }
+
+    final isSignedIn = ref.read(userProvider2.select((p) {
+      return p.map(
+        guest: (_) => false,
+        signedIn: (_) => true,
+      );
+    }));
+    if (isSignedIn) {
+      final status = await Permission.notification.status;
+      if (!(status.isGranted || status.isLimited)) {
+        await Permission.notification.request();
+      }
     }
   }
 
