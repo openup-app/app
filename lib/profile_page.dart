@@ -1794,10 +1794,12 @@ Future<File?> _selectPhoto(BuildContext context) async {
     return null;
   }
 
-  await Permission.camera.request();
   final picker = ImagePicker();
   XFile? result;
   try {
+    if (source == ImageSource.camera) {
+      await Permission.camera.request();
+    }
     result = await picker.pickImage(source: source);
   } on PlatformException catch (e) {
     if (e.code == 'camera_access_denied') {

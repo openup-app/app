@@ -199,11 +199,11 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
       return null;
     }
 
-    await Permission.camera.request();
     final picker = ImagePicker();
     List<XFile>? result;
     try {
       if (source == ImageSource.camera) {
+        await Permission.camera.request();
         final image = await picker.pickImage(source: source);
         if (image != null) {
           result = [image];
