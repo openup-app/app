@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:openup/analytics/analytics.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/auth/auth_provider.dart';
+import 'package:openup/location/location_provider.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/input_area.dart';
+import 'package:openup/widgets/restart_app.dart';
 
 class SignupVerify extends ConsumerStatefulWidget {
   final String verificationId;
@@ -117,7 +121,14 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
           ),
           const Spacer(),
           Button(
-            onPressed: _submitting ? null : _submit,
+            onPressed: _submitting
+                ? null
+                : () async {
+                    final result = await _submit();
+                    if (result == AuthResult.success && mounted) {
+                      _handleVerification();
+                    }
+                  },
             child: RoundedRectangleContainer(
               child: SizedBox(
                 width: 171,
@@ -149,7 +160,7 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
     );
   }
 
-  void _submit() async {
+  Future<AuthResult?> _submit() async {
     final smsCode = _smsCodeController.text;
     FocusScope.of(context).unfocus();
 
@@ -160,7 +171,7 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
       smsCode: smsCode,
     );
     if (!mounted) {
-      return;
+      return null;
     }
     setState(() => _submitting = false);
 
@@ -168,30 +179,51 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
     switch (result) {
       case AuthResult.success:
         message = 'Sucessfully verified code';
-        context.goNamed(
-          'signup',
-          queryParams: {
-            'verified': 'true',
-          },
-        );
-        return;
       case AuthResult.invalidCode:
         message = 'Invalid code';
-        break;
       case AuthResult.invalidId:
         message = 'Unable to attempt verification, please try again';
-        break;
       case AuthResult.quotaExceeded:
         message = 'We are experiencing high demand, please try again later';
-        break;
       case AuthResult.failure:
         message = 'Something went wrong';
-        break;
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
       ),
+    );
+
+    return result;
+  }
+
+  void _handleVerification() async {
+    setState(() => _submitting = true);
+    final result = await getAccount(ref.read(apiProvider));
+    if (!mounted) {
+      return;
+    }
+    setState(() => _submitting = false);
+
+    result.when(
+      logIn: (account) {
+        final notifier = ref.read(userProvider.notifier);
+        notifier.uid(account.profile.uid);
+        notifier.profile(account.profile);
+        ref.read(userProvider2.notifier).signedIn(account);
+        ref.read(analyticsProvider).trackLogin();
+        RestartApp.restartApp(context);
+      },
+      signUp: () {
+        final locationValue = ref.read(locationProvider);
+        final latLong = locationValue.current;
+        ref.read(accountCreationParamsProvider.notifier).latLong(latLong);
+        ref.read(analyticsProvider).trackSignupVerified();
+        context.goNamed('signup_age');
+      },
+      retry: () {
+        context.goNamed('signup_phone');
+      },
     );
   }
 }

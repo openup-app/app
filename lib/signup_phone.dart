@@ -1,22 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/analytics/analytics.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/auth/auth_provider.dart';
-import 'package:openup/location/location_provider.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/phone_number_input.dart';
-import 'package:openup/widgets/restart_app.dart';
 
 class SignupPhone extends ConsumerStatefulWidget {
-  final bool verified;
   const SignupPhone({
     Key? key,
-    required this.verified,
   }) : super(key: key);
 
   @override
@@ -29,50 +23,6 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
   bool _valid = false;
 
   bool _submitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _handleVerification();
-  }
-
-  @override
-  void didUpdateWidget(covariant SignupPhone oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _handleVerification();
-  }
-
-  void _handleVerification() async {
-    if (widget.verified && !_submitting) {
-      setState(() => _submitting = true);
-      final result = await getAccount(ref.read(apiProvider));
-      if (!mounted) {
-        return;
-      }
-      setState(() => _submitting = false);
-
-      result.when(
-        logIn: (account) {
-          final notifier = ref.read(userProvider.notifier);
-          notifier.uid(account.profile.uid);
-          notifier.profile(account.profile);
-          ref.read(userProvider2.notifier).signedIn(account);
-          ref.read(analyticsProvider).trackLogin();
-          RestartApp.restartApp(context);
-        },
-        signUp: () {
-          final locationValue = ref.read(locationProvider);
-          final latLong = locationValue.current;
-          ref.read(accountCreationParamsProvider.notifier).latLong(latLong);
-          ref.read(analyticsProvider).trackSignupVerified();
-          context.pushReplacementNamed('signup_age');
-        },
-        retry: () {
-          context.pushReplacementNamed('signup_phone');
-        },
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -336,12 +336,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           path: '/signup',
           name: 'signup',
           parentNavigatorKey: rootNavigatorKey,
-          builder: (context, state) {
-            final verified = state.queryParams['verified'] == 'true';
-            return SignupPhone(
-              verified: verified,
-            );
-          },
+          builder: (context, state) => const SignupPhone(),
           routes: [
             GoRoute(
               path: 'verify',
@@ -357,40 +352,39 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 );
               },
             ),
+          ],
+        ),
+        GoRoute(
+          path: '/signup_age',
+          name: 'signup_age',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) => const SignupAge(),
+          routes: [
             GoRoute(
-              path: 'age',
-              name: 'signup_age',
+              path: 'permissions',
+              name: 'signup_permissions',
               parentNavigatorKey: rootNavigatorKey,
-              builder: (context, state) => const SignupAge(),
+              builder: (context, state) => const SignupPermissionsScreen(),
               routes: [
                 GoRoute(
-                  path: 'permissions',
-                  name: 'signup_permissions',
-                  parentNavigatorKey: rootNavigatorKey,
-                  builder: (context, state) => const SignupPermissionsScreen(),
+                  path: 'name',
+                  name: 'signup_name',
+                  builder: (context, state) => const SignupName(),
                   routes: [
                     GoRoute(
-                      path: 'name',
-                      name: 'signup_name',
-                      builder: (context, state) => const SignupName(),
+                      path: 'gender',
+                      name: 'signup_gender',
+                      builder: (context, state) => const SignupGender(),
                       routes: [
                         GoRoute(
-                          path: 'gender',
-                          name: 'signup_gender',
-                          builder: (context, state) => const SignupGender(),
+                          path: 'photos',
+                          name: 'signup_photos',
+                          builder: (context, state) => const SignupPhotos(),
                           routes: [
                             GoRoute(
-                              path: 'photos',
-                              name: 'signup_photos',
-                              builder: (context, state) => const SignupPhotos(),
-                              routes: [
-                                GoRoute(
-                                  path: 'audio',
-                                  name: 'signup_audio',
-                                  builder: (context, state) =>
-                                      const SignupAudio(),
-                                ),
-                              ],
+                              path: 'audio',
+                              name: 'signup_audio',
+                              builder: (context, state) => const SignupAudio(),
                             ),
                           ],
                         ),
