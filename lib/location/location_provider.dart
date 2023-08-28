@@ -120,11 +120,11 @@ class LocationNotifier extends StateNotifier<LocationState> {
   static LatLong _readInitialLatLong(SharedPreferences keyValueStore) {
     final initialLatLongJson = keyValueStore.getString(_initialLocationKey);
     if (initialLatLongJson == null) {
-      const fortWorth = LatLong(
-        latitude: 32.735747,
-        longitude: -97.326995,
+      const austinHighSchool = LatLong(
+        latitude: 30.273729565067256,
+        longitude: -97.76676369414457,
       );
-      return fortWorth;
+      return austinHighSchool;
     }
     return LatLong.fromJson(jsonDecode(initialLatLongJson));
   }
