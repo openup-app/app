@@ -73,7 +73,16 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   @override
   void initState() {
     super.initState();
-    _maybeRequestNotification();
+    final isSignedIn = ref.read(userProvider2.select((p) {
+      return p.map(
+        guest: (_) => false,
+        signedIn: (_) => true,
+      );
+    }));
+    if (isSignedIn) {
+      _maybeRequestNotification();
+    }
+
     ref.listenManual<LocationMessage?>(locationMessageProvider,
         (previous, next) {
       if (next == null) {
