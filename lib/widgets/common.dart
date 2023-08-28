@@ -2494,9 +2494,12 @@ class LoadingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoActivityIndicator(
-      color: color,
-      radius: size,
+    // Using Repaintboundary due to this issue and comment: https://github.com/flutter/flutter/issues/120874#issuecomment-1499302781
+    return RepaintBoundary(
+      child: CupertinoActivityIndicator(
+        color: color,
+        radius: size,
+      ),
     );
   }
 }
