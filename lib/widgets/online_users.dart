@@ -20,16 +20,15 @@ class _ProviderWatcherState extends ConsumerState<ProviderWatcher> {
   @override
   void initState() {
     super.initState();
-    // Initialize providers
-    ref.read(dynamicConfigProvider);
-    ref.read(dynamicConfigStateProvider);
-
     // Informs the backend of online/offline/logout
     ref.listenManual(onlineUsersProvider, (_, __) => {});
   }
 
   @override
   Widget build(BuildContext context) {
+    // Initialize providers
+    ref.watch(dynamicConfigProvider);
+    ref.watch(dynamicConfigStateProvider);
     return widget.child;
   }
 }
