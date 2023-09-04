@@ -2379,7 +2379,7 @@ Future<void> showSignInModal(BuildContext context) {
     context: context,
     builder: (context) {
       return CupertinoActionSheet(
-        title: const Text('Sign up or log in for free to fully access Howdy'),
+        title: const Text('Sign up or log in for free to fully access Bonjour'),
         actions: [
           CupertinoActionSheetAction(
             onPressed: () {

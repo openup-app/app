@@ -95,7 +95,7 @@ void main() async {
     final dynamicConfigService = DynamicConfigService(
       defaults: const DynamicConfig(
         contactInviteMessage:
-            'I\'m on Howdy, a new way to meet online. https://bonjourland.com',
+            'I\'m on Bonjour, a new way to meet online. https://bonjourland.com',
         loginRequired: true,
       ),
     );

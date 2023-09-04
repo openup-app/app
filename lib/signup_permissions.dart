@@ -64,7 +64,7 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
             ),
             const Spacer(),
             const Text(
-              'Howdy needs your location and contacts to help\nyou have the best experience.',
+              'Bonjour needs your location and contacts to help\nyou have the best experience.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -118,7 +118,7 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
             ),
             const Spacer(),
             const Text(
-              'Howdy cares about your privacy. We will not\ntext, call or spam anyone from your contacts.',
+              'Bonjour cares about your privacy. We will not\ntext, call or spam anyone from your contacts.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
