@@ -23,7 +23,7 @@ import 'package:openup/location/location_service.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/discover_list.dart';
+import 'package:openup/widgets/discover_map_mini_list.dart';
 import 'package:openup/widgets/discover_map.dart';
 import 'package:openup/widgets/drag_handle.dart';
 import 'package:openup/widgets/profile_display.dart';
@@ -1025,7 +1025,7 @@ class _PanelState extends ConsumerState<_Panel>
             width: double.infinity,
           );
         }
-        return DiscoverList(
+        return DiscoverMapMiniList(
           profiles: widget.profiles,
           selectedProfile: selectedProfile,
           onProfileChanged: (profile) {

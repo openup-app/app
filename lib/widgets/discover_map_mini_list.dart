@@ -7,7 +7,7 @@ import 'package:openup/widgets/common.dart';
 
 import '../platform/just_audio_audio_player.dart';
 
-class DiscoverList extends ConsumerStatefulWidget {
+class DiscoverMapMiniList extends ConsumerStatefulWidget {
   final List<DiscoverProfile> profiles;
   final DiscoverProfile? selectedProfile;
   final ValueChanged<DiscoverProfile?> onProfileChanged;
@@ -18,7 +18,7 @@ class DiscoverList extends ConsumerStatefulWidget {
   final VoidCallback onToggleFavorite;
   final VoidCallback onProfilePressed;
 
-  const DiscoverList({
+  const DiscoverMapMiniList({
     super.key,
     required this.profiles,
     required this.selectedProfile,
@@ -32,10 +32,11 @@ class DiscoverList extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<DiscoverList> createState() => _DisoverListState();
+  ConsumerState<DiscoverMapMiniList> createState() =>
+      _DisoverMapMiniListState();
 }
 
-class _DisoverListState extends ConsumerState<DiscoverList> {
+class _DisoverMapMiniListState extends ConsumerState<DiscoverMapMiniList> {
   final _pageListener = ValueNotifier<double>(0);
   late final PageController _pageController;
   bool _reportPageChange = true;
@@ -67,7 +68,7 @@ class _DisoverListState extends ConsumerState<DiscoverList> {
   }
 
   @override
-  void didUpdateWidget(covariant DiscoverList oldWidget) {
+  void didUpdateWidget(covariant DiscoverMapMiniList oldWidget) {
     super.didUpdateWidget(oldWidget);
     final selectedProfile = widget.selectedProfile;
     final selectedIndex = selectedProfile == null
