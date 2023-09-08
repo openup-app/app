@@ -36,18 +36,19 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
             height: MediaQuery.of(context).padding.top,
           ),
           const SizedBox(height: 16),
-          const Align(
+          Align(
             alignment: Alignment.topCenter,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: BackIconButton(
-                    color: Colors.black,
+                if (ModalRoute.of(context)?.canPop == true)
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: BackIconButton(
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-                Text(
+                const Text(
                   'Log in or sign up',
                   style: TextStyle(
                     fontSize: 19,
