@@ -26,6 +26,7 @@ import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/dynamic_config/dynamic_config_service.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/contacts_page.dart';
+import 'package:openup/initial_loading_page.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/conversations_page.dart';
@@ -329,12 +330,15 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       observers: observers,
       debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
-      initialLocation: '/discover',
-      redirect: (context, state) {
-        return null;
-      },
+      initialLocation: '/',
+      redirect: _redirectGuestsToSignUp,
       errorBuilder: (context, state) => const ErrorScreen(),
       routes: [
+        GoRoute(
+          path: '/',
+          name: '/initial_loading',
+          builder: (context, state) => const InitialLoadingPage(),
+        ),
         GoRoute(
           path: '/signup',
           name: 'signup',
@@ -536,6 +540,33 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           },
         ),
       ],
+    );
+  }
+
+  FutureOr<String>? _redirectGuestsToSignUp(
+    BuildContext context,
+    GoRouterState state,
+  ) {
+    // Initial loading page redirects by itself
+    if (state.location == '/') {
+      return null;
+    }
+
+    // No need to redirect away from signup
+    if (state.location.startsWith('/signup')) {
+      return null;
+    }
+
+    final userState = ref.read(userProvider2);
+    return userState.map(
+      guest: (guest) {
+        // TODO: Pass along the redirect location to initial loading page
+        if (guest.byDefault) {
+          return '/';
+        }
+        return '/signup';
+      },
+      signedIn: (_) => null,
     );
   }
 }
