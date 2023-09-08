@@ -13,7 +13,6 @@ import 'package:openup/api/chat_state.dart';
 import 'package:openup/api/user_profile_cache.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
-import 'package:openup/discover_map_provider.dart';
 import 'package:openup/discover_provider.dart';
 import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/location/location_provider.dart';

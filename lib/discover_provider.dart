@@ -7,15 +7,28 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/location/location_service.dart';
+import 'package:openup/util/key_value_store_service.dart';
 
 part 'discover_provider.freezed.dart';
 
-final alertProvider = StateProvider<String?>((ref) => null);
+final discoverAlertProvider = StateProvider<String?>((ref) => null);
+
+final showSafetyNoticeProvider = StateProvider<bool>((ref) {
+  const safetyNoticeShownKey = 'safety_notice_shown';
+  final keyValueStore = ref.read(keyValueStoreProvider);
+  final shown = keyValueStore.getBool(safetyNoticeShownKey) ?? false;
+  if (shown) {
+    return false;
+  }
+
+  keyValueStore.setBool(safetyNoticeShownKey, true);
+  return true;
+});
 
 final discoverProvider =
     StateNotifierProvider<DiscoverNotifier, DiscoverState>((ref) {
   final api = ref.read(apiProvider);
-  final alertNotifier = ref.read(alertProvider.notifier);
+  final alertNotifier = ref.read(discoverAlertProvider.notifier);
   return DiscoverNotifier(
     api: api,
     onAlert: (message) => alertNotifier.state = message,
