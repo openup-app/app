@@ -1,9 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:async/async.dart';
-import 'package:collection/collection.dart';
-import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Chip;
@@ -17,9 +14,9 @@ import 'package:openup/api/user_profile_cache.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/discover_map_provider.dart';
+import 'package:openup/discover_provider.dart';
 import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/location/location_provider.dart';
-import 'package:openup/location/location_service.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -46,19 +43,8 @@ class DiscoverPage extends ConsumerStatefulWidget {
 
 class DiscoverPageState extends ConsumerState<DiscoverPage>
     with SingleTickerProviderStateMixin {
-  bool _fetchingProfiles = false;
-  Gender? _gender;
   bool _pageActive = false;
 
-  bool _showDebugUsers = false;
-
-  CancelableOperation<Either<ApiError, DiscoverResultsPage>>?
-      _discoverOperation;
-  final _profiles = <DiscoverProfile>[];
-  Location? _mapLocation;
-  Location? _prevQueryLocation;
-  DiscoverProfile? _selectedProfile;
-  String? _selectUidWhenAvailable;
   final _invitedUsers = <String>{};
 
   final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
@@ -87,7 +73,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     });
 
     ref.listenManual<DiscoverAction?>(
-      discoverProvider,
+      discoverActionProvider,
       (previous, next) {
         if (next == null) {
           return;
@@ -97,11 +83,24 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
           viewProfile: (viewProfile) {
             final profile = viewProfile.profile;
             _mapKey.currentState?.recenterMap(profile.location.latLong);
-            setState(() => _selectUidWhenAvailable = profile.profile.uid);
+            ref
+                .read(discoverProvider.notifier)
+                .uidToSelectWhenAvailable(profile.profile.uid);
           },
         );
       },
     );
+
+    ref.listenManual<String?>(discoverAlertProvider, (previous, next) {
+      if (next == null) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(next),
+        ),
+      );
+    });
   }
 
   @override
@@ -119,7 +118,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       _maybeRequestNotification();
     }
 
-    _precacheImageAndDepth(_profiles, from: 1, count: 2);
+    final readyState = ref.read(_discoverReadyProvider);
+    if (readyState != null) {
+      _precacheImageAndDepth(readyState.profiles, from: 1, count: 2);
+    }
 
     Future.delayed(Duration.zero).then((_) {
       if (!mounted) {
@@ -129,6 +131,16 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         _hasShownStartupModals = true;
         _showStartupModals();
       }
+    });
+  }
+
+  AlwaysAliveProviderListenable<DiscoverReadyState?>
+      get _discoverReadyProvider {
+    return discoverProvider.select((s) {
+      return s.map(
+        init: (_) => null,
+        ready: (ready) => ready,
+      );
     });
   }
 
@@ -201,107 +213,25 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     );
   }
 
-  Future<void> _performQuery() {
-    final location = _mapLocation;
-    if (location != null) {
-      setState(() {
-        _prevQueryLocation = location;
-        _selectedProfile = null;
-      });
-      return _queryProfilesAt(location.copyWith(radius: location.radius * 0.5));
-    }
-    return Future.value();
-  }
-
-  Future<void> _queryProfilesAt(Location location) async {
-    setState(() => _fetchingProfiles = true);
-    final api = ref.read(apiProvider);
-    _discoverOperation?.cancel();
-    final discoverFuture = api.getDiscover(
-      location: location,
-      gender: _gender,
-      debug: _showDebugUsers,
-    );
-    _discoverOperation = CancelableOperation.fromFuture(discoverFuture);
-    final profiles = await _discoverOperation?.value;
-
-    if (!mounted || profiles == null) {
-      return;
-    }
-    setState(() => _fetchingProfiles = false);
-
-    profiles.fold(
-      (l) {
-        var message = errorToMessage(l);
-        message = l.when(
-          network: (_) => message,
-          client: (client) => client.when(
-            badRequest: () => 'Unable to request users',
-            unauthorized: () => message,
-            notFound: () => 'Unable to find users',
-            forbidden: () => message,
-            conflict: () => message,
-          ),
-          server: (_) => message,
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-          ),
-        );
-      },
-      (r) async {
-        DiscoverProfile? profileToSelect;
-        final targetUid = _selectUidWhenAvailable;
-        if (targetUid != null) {
-          profileToSelect =
-              r.profiles.firstWhereOrNull((p) => p.profile.uid == targetUid);
-        }
-        setState(() {
-          _selectUidWhenAvailable = null;
-          _selectedProfile = profileToSelect;
-          _profiles
-            ..clear()
-            ..addAll(r.profiles);
-        });
-      },
-    );
-  }
-
   void _tempPauseAudio() {
     _profileBuilderKey.currentState?.pause();
   }
 
-  bool _areLocationsDistant(Location a, Location b) {
-    // Reduced radius for improved experience when searching
-    final panRatio = greatCircleDistance(a.latLong, b.latLong) / a.radius;
-    final zoomRatio = b.radius / a.radius;
-    final panned = panRatio > 0.5;
-    final zoomed = zoomRatio > 2.0 || zoomRatio < 0.5;
-    if (panned || zoomed) {
-      return true;
-    }
-    return false;
-  }
-
   void _onProfileChanged(DiscoverProfile? selectedProfile) {
-    setState(() {
-      _selectedProfile = selectedProfile;
-      _discoverOperation?.cancel();
-      _fetchingProfiles = false;
-    });
+    ref.read(discoverProvider.notifier).selectProfile(selectedProfile);
     _profileBuilderKey.currentState?.play();
   }
 
   @override
   Widget build(BuildContext context) {
-    final profiles = List.of(_profiles);
-    final selectedProfile = _selectedProfile;
+    final readyState = ref.watch(_discoverReadyProvider);
+    final profiles = readyState?.profiles ?? [];
+    final selectedProfile = readyState?.selectedProfile;
     return ActivePage(
       activeOnSheetOpen: false,
       onActivate: () {
         setState(() => _pageActive = true);
-        _performQuery();
+        ref.read(discoverProvider.notifier).performQuery();
       },
       onDeactivate: () {
         _profileBuilderKey.currentState?.pause();
@@ -317,26 +247,18 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                 color: Colors.black,
                 child: DiscoverMap(
                   key: _mapKey,
-                  profiles: _profiles,
-                  selectedProfile: _selectedProfile,
+                  profiles: profiles,
+                  selectedProfile: selectedProfile,
                   onProfileChanged: _onProfileChanged,
                   initialLocation: Location(
                     latLong: ref.read(locationProvider).initialLatLong,
                     radius: 1800,
                   ),
-                  onLocationChanged: (location) {
-                    setState(() => _mapLocation =
-                        location.copyWith(radius: location.radius));
-                    final prevQueryLocation = _prevQueryLocation;
-                    if (prevQueryLocation == null ||
-                        _areLocationsDistant(location, prevQueryLocation)) {
-                      _performQuery();
-                    }
-                  },
+                  onLocationChanged:
+                      ref.read(discoverProvider.notifier).locationChanged,
                   obscuredRatio: 326 / height,
                   enable3d: true,
                   onShowRecordPanel: () {
-                    final selectedProfile = _selectedProfile;
                     if (selectedProfile != null) {
                       _showRecordInvitePanelOrSignIn(
                           context, selectedProfile.profile.uid);
@@ -351,7 +273,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
               );
             },
           ),
-          if (_mapLocation != null && !kReleaseMode)
+          if (!kReleaseMode)
             Positioned(
               left: 16,
               top: MediaQuery.of(context).padding.top + 16,
@@ -363,8 +285,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                     opacity: 0.8,
                     child: Button(
                       onPressed: () {
-                        setState(() => _showDebugUsers = !_showDebugUsers);
-                        _performQuery();
+                        if (readyState != null) {
+                          ref.read(discoverProvider.notifier).showDebugUsers =
+                              !readyState.showDebugUsers;
+                        }
                       },
                       child: Container(
                         decoration: const BoxDecoration(
@@ -377,10 +301,11 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Switch(
-                              value: _showDebugUsers,
+                              value: readyState?.showDebugUsers ?? false,
                               onChanged: (show) {
-                                setState(() => _showDebugUsers = show);
-                                _performQuery();
+                                ref
+                                    .read(discoverProvider.notifier)
+                                    .showDebugUsers = show;
                               },
                             ),
                             const Text(
@@ -514,7 +439,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeOutQuart,
                               width: 0,
-                              height: _selectedProfile == null ? 0 : 4,
+                              height: selectedProfile == null ? 0 : 4,
                             ),
                           ],
                         ),
@@ -522,11 +447,15 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                     ),
                     Builder(
                       builder: (context) {
-                        final searching = (_fetchingProfiles ||
+                        final searching = (readyState?.loading == true ||
                             _markerRenderStatus ==
                                 MarkerRenderStatus.rendering);
                         return Button(
-                          onPressed: searching ? null : _performQuery,
+                          onPressed: searching
+                              ? null
+                              : ref
+                                  .read(discoverProvider.notifier)
+                                  .performQuery,
                           useFadeWheNoPressedCallback: false,
                           child: Container(
                             width: 86,
@@ -572,7 +501,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                     )
                                   : Center(
                                       child: Text(
-                                        '${_profiles.length} result${_profiles.length == 1 ? '' : 's'}',
+                                        '${profiles.length} result${profiles.length == 1 ? '' : 's'}',
                                         style: const TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w400,
@@ -588,21 +517,16 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                   ],
                 ),
                 _Panel(
-                  gender: _gender,
+                  gender: readyState?.gender,
                   onGenderChanged: (gender) {
-                    setState(() {
-                      _gender = gender;
-                      _selectedProfile = null;
-                      _profiles.clear();
-                    });
+                    ref.read(discoverProvider.notifier).genderChanged(gender);
                     _mapKey.currentState?.resetMarkers();
-                    _performQuery();
                   },
                   profiles: profiles,
                   selectedProfile: selectedProfile,
                   onProfileChanged: (profile) {
                     ref.read(analyticsProvider).trackViewMiniProfile();
-                    setState(() => _selectedProfile = profile);
+                    ref.read(discoverProvider.notifier).selectProfile(profile);
                   },
                   profileBuilderKey: _profileBuilderKey,
                   onShowSettings: _showSettingsOrSignIn,
@@ -612,8 +536,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                     }
                   },
                   onBlockUser: (profile) {
-                    setState(() => _profiles
-                        .removeWhere(((p) => p.profile.uid == profile.uid)));
+                    ref
+                        .read(discoverProvider.notifier)
+                        .userBlocked(profile.uid);
                   },
                   pageActive: _pageActive,
                 ),
@@ -668,47 +593,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   }
 
   void _toggleFavorite(DiscoverProfile profile) async {
-    final api = ref.read(apiProvider);
-    Either<ApiError, DiscoverProfile> result;
-    var index =
-        _profiles.indexWhere((p) => p.profile.uid == profile.profile.uid);
-    if (index != -1) {
-      setState(() {
-        _profiles.replaceRange(
-          index,
-          index + 1,
-          [profile.copyWith(favorite: !profile.favorite)],
-        );
-      });
-    }
-    setState(() {
-      _selectedProfile =
-          _selectedProfile?.copyWith(favorite: !_selectedProfile!.favorite);
-    });
-    if (profile.favorite) {
-      result = await api.removeFavorite(profile.profile.uid);
-    } else {
-      result = await api.addFavorite(profile.profile.uid);
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    index = _profiles.indexWhere((p) => p.profile.uid == profile.profile.uid);
-    result.fold(
-      (l) {
-        if (index != -1) {
-          setState(() => _profiles.replaceRange(index, index + 1, [profile]));
-        }
-        displayError(context, l);
-      },
-      (r) {
-        if (index != -1) {
-          setState(() => _profiles.replaceRange(index, index + 1, [r]));
-        }
-      },
-    );
+    ref
+        .read(discoverProvider.notifier)
+        .setFavorite(profile.profile.uid, !profile.favorite);
   }
 
   void _showSettingsOrSignIn() {

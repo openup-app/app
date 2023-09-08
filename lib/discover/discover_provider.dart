@@ -4,7 +4,7 @@ import 'package:openup/api/api.dart';
 
 part 'discover_provider.freezed.dart';
 
-final discoverProvider = StateProvider<DiscoverAction?>((ref) => null);
+final discoverActionProvider = StateProvider<DiscoverAction?>((ref) => null);
 
 @freezed
 class DiscoverAction with _$DiscoverAction {

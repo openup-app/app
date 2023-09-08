@@ -709,7 +709,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
 
   void _showLocation(DiscoverProfile profile) {
     SheetControl.of(context).close();
-    ref.read(discoverProvider.notifier).state =
+    ref.read(discoverActionProvider.notifier).state =
         DiscoverAction.viewProfile(profile);
   }
 }
