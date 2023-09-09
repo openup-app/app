@@ -19,6 +19,7 @@ import 'package:openup/location/location_provider.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/discover_dialogs.dart';
 import 'package:openup/widgets/discover_map_mini_list.dart';
 import 'package:openup/widgets/discover_map.dart';
 import 'package:openup/widgets/drag_handle.dart';
@@ -66,7 +67,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       }
       switch (next) {
         case LocationMessage.permissionRationale:
-          _showLocationPermissionRationale();
+          showLocationPermissionRationale(context);
           break;
       }
     });
@@ -634,39 +635,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       signedIn: (_) => widget.onShowConversations(),
     );
   }
-
-  void _showLocationPermissionRationale() {
-    showCupertinoDialog(
-      context: context,
-      builder: (context) {
-        return CupertinoAlertDialog(
-          title: const Text(
-            'Location Services',
-            textAlign: TextAlign.center,
-          ),
-          content: const Text(
-              'Location needs to be on in order to discover people near you.'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            CupertinoDialogAction(
-              onPressed: () async {
-                if (await openAppSettings() && mounted) {
-                  ref.read(locationProvider.notifier).retryInitLocation();
-                }
-                if (mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Enable in Settings'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
 
 class _Panel extends ConsumerStatefulWidget {
@@ -770,51 +738,9 @@ class _PanelState extends ConsumerState<_Panel>
                               const SizedBox(width: 8),
                               Button(
                                 onPressed: widget.onShowSettings,
-                                child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  clipBehavior: Clip.hardEdge,
-                                  margin: const EdgeInsets.all(8),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: UserProfileCache(
-                                      builder: (context, cachedPhoto) {
-                                    return Consumer(
-                                      builder: (context, ref, child) {
-                                        final myProfile =
-                                            ref.watch(userProvider2.select((p) {
-                                          return p.map(
-                                            guest: (_) => null,
-                                            signedIn: (signedIn) =>
-                                                signedIn.account.profile,
-                                          );
-                                        }));
-                                        if (myProfile != null) {
-                                          return Image(
-                                            image:
-                                                NetworkImage(myProfile.photo),
-                                            fit: BoxFit.cover,
-                                            gaplessPlayback: true,
-                                          );
-                                        } else if (cachedPhoto != null) {
-                                          return Image.file(
-                                            cachedPhoto,
-                                            fit: BoxFit.cover,
-                                            gaplessPlayback: true,
-                                          );
-                                        } else {
-                                          return const Icon(
-                                            Icons.person,
-                                            size: 22,
-                                            color: Color.fromRGBO(
-                                                0x8D, 0x8D, 0x8D, 1.0),
-                                          );
-                                        }
-                                      },
-                                    );
-                                  }),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: ProfileButton(),
                                 ),
                               ),
                               Expanded(
@@ -1024,6 +950,64 @@ class _PanelState extends ConsumerState<_Panel>
       }
     }
     return gender;
+  }
+}
+
+class ProfileButton extends StatelessWidget {
+  final double _width;
+  final double _height;
+
+  const ProfileButton({
+    super.key,
+    double width = 32,
+    double height = 32,
+  })  : _width = width,
+        _height = height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: _width,
+      height: _height,
+      clipBehavior: Clip.hardEdge,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: UserProfileCache(
+        builder: (context, cachedPhoto) {
+          return Consumer(
+            builder: (context, ref, child) {
+              final myProfile = ref.watch(userProvider2.select((p) {
+                return p.map(
+                  guest: (_) => null,
+                  signedIn: (signedIn) => signedIn.account.profile,
+                );
+              }));
+              if (myProfile != null) {
+                return Image(
+                  image: NetworkImage(myProfile.photo),
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                );
+              } else if (cachedPhoto != null) {
+                return Image.file(
+                  cachedPhoto,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                );
+              } else {
+                return const Icon(
+                  Icons.person,
+                  size: 22,
+                  color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                );
+              }
+            },
+          );
+        },
+      ),
+    );
   }
 }
 

@@ -80,27 +80,28 @@ class LocationNotifier extends StateNotifier<LocationState> {
           ),
         );
 
-  void retryInitLocation() => _initLocation();
+  Future<LocationState?> retryInitLocation() => _initLocation();
 
   LatLong get _current => state.current;
 
-  void _initLocation() async {
+  Future<LocationState?> _initLocation() async {
     final service = LocationService();
     final hasPermission = await _requestLocationPermission(service);
     if (!mounted) {
-      return;
+      return null;
     }
 
     if (hasPermission) {
       final location = await service.getLatLong();
       if (!mounted) {
-        return;
+        return null;
       }
       location.map(
         value: (value) => _update(latLongOverride ?? value.latLong),
         denied: (_) => onMessage(LocationMessage.permissionRationale),
         failure: (_) {},
       );
+      return state;
     } else {
       onMessage(LocationMessage.permissionRationale);
     }

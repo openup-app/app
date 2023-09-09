@@ -6,6 +6,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/location/location_provider.dart';
 import 'package:openup/location/location_service.dart';
 import 'package:openup/util/key_value_store_service.dart';
 
@@ -28,15 +29,18 @@ final showSafetyNoticeProvider = StateProvider<bool>((ref) {
 final discoverProvider =
     StateNotifierProvider<DiscoverNotifier, DiscoverState>((ref) {
   final api = ref.read(apiProvider);
+  final locationNotifier = ref.read(locationProvider.notifier);
   final alertNotifier = ref.read(discoverAlertProvider.notifier);
   return DiscoverNotifier(
     api: api,
+    locationNotifier: locationNotifier,
     onAlert: (message) => alertNotifier.state = message,
   );
 });
 
 class DiscoverNotifier extends StateNotifier<DiscoverState> {
   final Api api;
+  final LocationNotifier locationNotifier;
   final void Function(String message) onAlert;
 
   CancelableOperation<Either<ApiError, DiscoverResultsPage>>?
@@ -47,10 +51,25 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
 
   DiscoverNotifier({
     required this.api,
+    required this.locationNotifier,
     required this.onAlert,
-  }) : super(const _Init());
+  }) : super(const _Init()) {
+    _autoInit();
+  }
 
-  Future<void> performQuery() {
+  void _autoInit() async {
+    final locationState = await locationNotifier.retryInitLocation();
+    if (mounted && locationState != null) {
+      locationChanged(
+        Location(
+          latLong: locationState.current,
+          radius: 20,
+        ),
+      );
+    }
+  }
+
+  Future<void> performQuery() async {
     final readyState = _readyState();
     if (readyState == null) {
       return Future.value();
