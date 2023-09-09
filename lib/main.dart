@@ -56,9 +56,6 @@ const socketPort = 8081;
 // TODO: Should be app constant coming from dart defines (to be used in background call handler too)
 const urlBase = 'https://$host:$webPort';
 
-final _pageNotifierProvider =
-    StateNotifierProvider<_PageNotifier, int>((ref) => _PageNotifier());
-
 void main() async {
   void appRunner() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -175,6 +172,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   final _discoverKey = GlobalKey<NavigatorState>();
   final _conversationsKey = GlobalKey<NavigatorState>();
+  final _mapKey = GlobalKey<NavigatorState>();
   final _settingsKey = GlobalKey<NavigatorState>();
 
   final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -412,7 +410,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           builder: (builder) {
             return builder.buildShell(
               (context, state, child) {
-                return _Shell(
+                return TabShell(
                   children: child.children,
                 );
               },
@@ -426,14 +424,50 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 GoRoute(
                   path: '/discover',
                   name: 'discover',
+                  builder: (context, state) =>
+                      const Center(child: FlutterLogo(size: 200)),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              navigatorKey: _conversationsKey,
+              preload: true,
+              routes: [
+                GoRoute(
+                  path: '/chats',
+                  name: 'chats',
+                  builder: (context, state) => const ConversationsPage(),
+                  routes: [
+                    GoRoute(
+                      path: ':uid',
+                      name: 'chat',
+                      builder: (context, state) {
+                        final otherUid = state.params['uid']!;
+                        final args = state.extra as ChatPageArguments?;
+                        return ChatPage(
+                          host: host,
+                          webPort: webPort,
+                          socketPort: socketPort,
+                          otherUid: otherUid,
+                          chatroom: args?.chatroom,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              navigatorKey: _mapKey,
+              preload: true,
+              routes: [
+                GoRoute(
+                  path: '/map',
+                  name: 'map',
                   builder: (context, state) {
                     return DiscoverPage(
-                      onShowConversations: () => ref
-                          .read(_pageNotifierProvider.notifier)
-                          .changePage(1),
-                      onShowSettings: () => ref
-                          .read(_pageNotifierProvider.notifier)
-                          .changePage(2),
+                      onShowConversations: () {},
+                      onShowSettings: () {},
                     );
                   },
                   routes: [
@@ -452,38 +486,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         } else {
                           throw 'Missing page arguments';
                         }
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            StatefulShellBranch(
-              navigatorKey: _conversationsKey,
-              preload: true,
-              routes: [
-                GoRoute(
-                  path: '/chats',
-                  name: 'chats',
-                  builder: (context, state) => const ConversationsPage(),
-                  routes: [
-                    GoRoute(
-                      path: ':uid',
-                      name: 'chat',
-                      redirect: (context, state) {
-                        ref.read(_pageNotifierProvider.notifier).changePage(1);
-                        return null;
-                      },
-                      builder: (context, state) {
-                        final otherUid = state.params['uid']!;
-                        final args = state.extra as ChatPageArguments?;
-                        return ChatPage(
-                          host: host,
-                          webPort: webPort,
-                          socketPort: socketPort,
-                          otherUid: otherUid,
-                          chatroom: args?.chatroom,
-                        );
                       },
                     ),
                   ],
@@ -569,56 +571,4 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       signedIn: (_) => null,
     );
   }
-}
-
-class _Shell extends ConsumerStatefulWidget {
-  final List<Widget> children;
-
-  const _Shell({
-    super.key,
-    required this.children,
-  });
-
-  @override
-  ConsumerState<_Shell> createState() => _ShellState();
-}
-
-class _ShellState extends ConsumerState<_Shell> {
-  int _index = 0;
-  final _shellPageKey = GlobalKey<ShellPageState>();
-
-  @override
-  void initState() {
-    super.initState();
-    ref.listenManual<int>(
-      _pageNotifierProvider,
-      (previous, next) {
-        if (next != _index) {
-          setState(() => _index = next);
-          StatefulShellRouteState.of(context).goBranch(index: _index);
-          if (_index != 0) {
-            _shellPageKey.currentState?.showSheet();
-          }
-        }
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ShellPage(
-      key: _shellPageKey,
-      currentIndex: _index == 0 ? null : (_index - 1),
-      indexOffset: 1,
-      shellBuilder: (context) => widget.children[0],
-      onClosePage: () => ref.read(_pageNotifierProvider.notifier).changePage(0),
-      children: widget.children.sublist(1),
-    );
-  }
-}
-
-class _PageNotifier extends StateNotifier<int> {
-  _PageNotifier() : super(0);
-
-  void changePage(int index) => state = index;
 }

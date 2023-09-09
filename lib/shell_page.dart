@@ -1,12 +1,205 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:openup/discover_page.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
+import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/drag_handle.dart';
 
 final _sheetSize = StateProvider<double>((ref) => 0.0);
 final _sheetOpenProvider = StateProvider<bool>((ref) => false);
+
+final _pageNotifierProvider =
+    StateNotifierProvider<_PageNotifier, int>((ref) => _PageNotifier());
+
+class _PageNotifier extends StateNotifier<int> {
+  _PageNotifier() : super(0);
+
+  void changePage(int index) => state = index;
+}
+
+class TabShell extends ConsumerStatefulWidget {
+  final List<Widget> children;
+
+  const TabShell({
+    super.key,
+    required this.children,
+  });
+
+  @override
+  ConsumerState<TabShell> createState() => _TabShellState();
+}
+
+class _TabShellState extends ConsumerState<TabShell> {
+  int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.listenManual<int>(
+      _pageNotifierProvider,
+      (previous, next) {
+        if (next != _index) {
+          setState(() => _index = next);
+          StatefulShellRouteState.of(context).goBranch(index: _index);
+        }
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Column(
+        children: [
+          Expanded(
+            child: IndexedStack(
+              index: _index,
+              children: [
+                for (var i = 0; i < widget.children.length; i++)
+                  ColoredBox(
+                    color: Colors.white,
+                    child: _BranchIndex(
+                      index: i,
+                      child: widget.children[i],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          ColoredBox(
+            color: const Color.fromRGBO(0xD9, 0xD9, 0xD9, 0.05),
+            child: SizedBox(
+              height: 86 + MediaQuery.of(context).padding.bottom,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _NavButton(
+                            icon: SvgPicture.asset(
+                                'assets/images/nav_icon_people.svg'),
+                            label: const Text('People'),
+                            selected: _index == 0,
+                            onPressed: () => ref
+                                .read(_pageNotifierProvider.notifier)
+                                .changePage(0),
+                          ),
+                        ),
+                        Expanded(
+                          child: _NavButton(
+                            icon: SvgPicture.asset(
+                                'assets/images/nav_icon_messages.svg'),
+                            label: const Text('Messages'),
+                            selected: _index == 1,
+                            onPressed: () => ref
+                                .read(_pageNotifierProvider.notifier)
+                                .changePage(1),
+                          ),
+                        ),
+                        Expanded(
+                          child: _NavButton(
+                            icon: const Icon(
+                              Icons.location_on_sharp,
+                              size: 28,
+                            ),
+                            label: const Text('Events'),
+                            selected: _index == 2,
+                            onPressed: () => ref
+                                .read(_pageNotifierProvider.notifier)
+                                .changePage(2),
+                          ),
+                        ),
+                        Expanded(
+                          child: _NavButton(
+                            icon: const ProfileButton(
+                              width: 28,
+                              height: 28,
+                            ),
+                            label: const Text('Profile'),
+                            selected: _index == 3,
+                            enableFilterOnIcon: false,
+                            onPressed: () => ref
+                                .read(_pageNotifierProvider.notifier)
+                                .changePage(3),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: MediaQuery.of(context).padding.bottom,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavButton extends StatelessWidget {
+  final Widget icon;
+  final Widget label;
+  final bool selected;
+  final bool enableFilterOnIcon;
+  final VoidCallback onPressed;
+  const _NavButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.selected,
+    this.enableFilterOnIcon = true,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onPressed,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            height: 28,
+            child: Center(
+              child: enableFilterOnIcon
+                  ? ColorFiltered(
+                      colorFilter: ColorFilter.mode(
+                        selected
+                            ? Colors.white
+                            : const Color.fromRGBO(0x8F, 0x8C, 0x8C, 1.0),
+                        BlendMode.srcIn,
+                      ),
+                      child: icon,
+                    )
+                  : icon,
+            ),
+          ),
+          const SizedBox(height: 8),
+          DefaultTextStyle(
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: selected
+                  ? Colors.white
+                  : const Color.fromRGBO(0x8F, 0x8C, 0x8C, 1.0),
+            ),
+            child: label,
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class ShellPage extends ConsumerStatefulWidget {
   final int? currentIndex;

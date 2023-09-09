@@ -102,6 +102,8 @@ flutter:
     - assets/images/map_searching.json
     - assets/images/menu_background.png
     - assets/images/menu_button.png
+    - assets/images/nav_icon_messages.svg
+    - assets/images/nav_icon_people.svg
     - assets/images/onboard_discover.jpg
     - assets/images/onboard_chat.jpg
     - assets/images/onboard_countdown.jpg
