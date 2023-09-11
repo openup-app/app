@@ -70,8 +70,17 @@ class _TabShellState extends ConsumerState<TabShell> {
               ],
             ),
           ),
-          ColoredBox(
-            color: const Color.fromRGBO(0xD9, 0xD9, 0xD9, 0.05),
+          DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color.fromRGBO(0xD9, 0xD9, 0xD9, 0.05),
+                  Color.fromRGBO(0x3D, 0x3D, 0x3D, 0.05),
+                ],
+              ),
+            ),
             child: SizedBox(
               height: 86 + MediaQuery.of(context).padding.bottom,
               child: Column(
