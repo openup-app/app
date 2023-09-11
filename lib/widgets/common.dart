@@ -2511,6 +2511,64 @@ class UnreadIndicator extends StatelessWidget {
   }
 }
 
+class TickerBuilder extends StatefulWidget {
+  final bool enabled;
+  final WidgetBuilder builder;
+
+  const TickerBuilder({
+    super.key,
+    this.enabled = true,
+    required this.builder,
+  });
+
+  @override
+  State<TickerBuilder> createState() => _TickerBuilderState();
+}
+
+class _TickerBuilderState extends State<TickerBuilder> {
+  Ticker? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.enabled) {
+      _startTicker();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant TickerBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.enabled != widget.enabled) {
+      if (widget.enabled) {
+        _startTicker();
+      } else {
+        _ticker?.dispose();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _ticker?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(context);
+  }
+
+  void _startTicker() {
+    final ticker = Ticker((elapsed) {
+      setState(() {});
+    });
+    _ticker?.dispose();
+    setState(() => _ticker = ticker);
+    ticker.start();
+  }
+}
+
 class LoadingIndicator extends StatelessWidget {
   final double size;
   final Color color;
