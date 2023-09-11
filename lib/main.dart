@@ -21,6 +21,7 @@ import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/blocked_users_page.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/contact_us_screen.dart';
+import 'package:openup/discover_list_page.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/dynamic_config/dynamic_config_service.dart';
@@ -424,8 +425,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 GoRoute(
                   path: '/discover',
                   name: 'discover',
-                  builder: (context, state) =>
-                      const Center(child: FlutterLogo(size: 200)),
+                  builder: (context, state) => const DiscoverListPage(),
                 ),
               ],
             ),

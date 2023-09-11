@@ -315,3 +315,141 @@ class _NonCinematicGalleryState extends State<NonCinematicGallery> {
     );
   }
 }
+
+class CameraFlashGallery extends StatefulWidget {
+  final List<String> gallery;
+  final bool slideshow;
+
+  const CameraFlashGallery({
+    Key? key,
+    this.gallery = const [],
+    required this.slideshow,
+  }) : super(key: key);
+
+  @override
+  State<CameraFlashGallery> createState() => _CameraFlashGalleryState();
+}
+
+class _CameraFlashGalleryState extends State<CameraFlashGallery> {
+  static const _duration = Duration(seconds: 5);
+  Timer? _slideshowTimer;
+  int _index = 0;
+  bool _ready = false;
+
+  bool _initialDidChangeDependencies = true;
+
+  late DateTime _start;
+  Duration _elapsedAtPause = Duration.zero;
+
+  @override
+  void initState() {
+    _start = DateTime.now();
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialDidChangeDependencies) {
+      _initialDidChangeDependencies = false;
+      _precache();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant CameraFlashGallery oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final equals = const DeepCollectionEquality().equals;
+    if (!equals(oldWidget.gallery, widget.gallery)) {
+      _precache();
+      _index = 0;
+      _maybeStartSlideshowTimer();
+    }
+    if (oldWidget.slideshow != widget.slideshow) {
+      if (widget.slideshow) {
+        _maybeStartSlideshowTimer();
+      } else {
+        _elapsedAtPause = DateTime.now().difference(_start);
+        _slideshowTimer?.cancel();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _slideshowTimer?.cancel();
+    super.dispose();
+  }
+
+  void _maybeStartSlideshowTimer() {
+    if (!widget.slideshow) {
+      return;
+    }
+    if (_ready) {
+      setState(() {
+        _start = DateTime.now().subtract(_elapsedAtPause);
+        _elapsedAtPause = Duration.zero;
+      });
+      _slideshowTimer?.cancel();
+      _slideshowTimer = Timer(_duration, () {
+        setState(() {
+          _index++;
+          _ready = false;
+        });
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: Builder(
+        builder: (context) {
+          if (widget.gallery.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          final i = _index % widget.gallery.length;
+          final photoUrl = widget.gallery[i];
+
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 166),
+            switchInCurve: Curves.easeOutQuart,
+            // Don't animate in reverse
+            reverseDuration: const Duration(days: 1),
+            switchOutCurve: Curves.easeOutQuart,
+            child: TickerBuilder(
+              enabled: widget.slideshow,
+              builder: (context) {
+                final elapsed = DateTime.now().difference(_start);
+                final ratio =
+                    (elapsed.inMilliseconds / _duration.inMilliseconds)
+                        .clamp(0, 1);
+                final scale = 1.13 + ratio * 0.07;
+                return Transform.scale(
+                  scale: scale,
+                  alignment: Alignment.centerRight,
+                  child: NonCinematicPhoto(
+                    key: ValueKey('${_index}_$photoUrl'),
+                    url: photoUrl,
+                    animate: _slideshowTimer?.isActive == true,
+                    onLoaded: () {
+                      setState(() => _ready = true);
+                      _maybeStartSlideshowTimer();
+                    },
+                    duration: _duration,
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _precache() {
+    widget.gallery.forEach((photoUrl) {
+      precacheImage(NetworkImage(photoUrl), context);
+    });
+  }
+}

@@ -151,6 +151,11 @@ flutter:
           weight: 800
         - asset: assets/fonts/NeueHaasUnica-ExtraBlack.ttf
           weight: 900
+    - family: Covered By Your Grace
+      fonts:
+        - asset: assets/fonts/CoveredByYourGrace-Regular.ttf
+          weight: 400
+
 
 flutter_launcher_icons:
   image_path: "assets/images/app_icon.png"
