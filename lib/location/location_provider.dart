@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -7,6 +8,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/location/location_service.dart';
 import 'package:openup/util/key_value_store_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 part 'location_provider.freezed.dart';
 
@@ -137,4 +139,26 @@ class LocationState with _$LocationState {
     required LatLong initialLatLong,
     required LatLong current,
   }) = _LocationState;
+}
+
+double distanceMiles(LatLong a, LatLong b) {
+  const double earthRadiusMiles = 3958.8;
+
+  double aLatAngle = radians(a.latitude);
+  double aLonAngle = radians(a.longitude);
+  double bLatAngle = radians(b.latitude);
+  double bLonAngle = radians(b.longitude);
+
+  double deltaLatAngle = bLatAngle - aLatAngle;
+  double deltaLonAngle = bLonAngle - aLonAngle;
+
+  double squared = sin(deltaLatAngle / 2) * sin(deltaLatAngle / 2) +
+      cos(aLatAngle) *
+          cos(bLatAngle) *
+          sin(deltaLonAngle / 2) *
+          sin(deltaLonAngle / 2);
+  double angularDist = 2 * atan2(sqrt(squared), sqrt(1 - squared));
+  double distanceMiles = earthRadiusMiles * angularDist;
+
+  return distanceMiles;
 }

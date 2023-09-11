@@ -167,7 +167,7 @@ class _ListViewState extends ConsumerState<_ListView> {
   }
 }
 
-class _ProfileCard extends StatelessWidget {
+class _ProfileCard extends ConsumerWidget {
   final VoidCallback onOptions;
   final VoidCallback onMessage;
 
@@ -181,7 +181,8 @@ class _ProfileCard extends StatelessWidget {
   final DiscoverProfile profile;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final myLatLong = ref.watch(locationProvider.select((s) => s.current));
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 22),
       child: AspectRatio(
@@ -234,12 +235,19 @@ class _ProfileCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const Text(
-                        '4 miles away',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w300,
-                        ),
+                      Builder(
+                        builder: (context) {
+                          final distance =
+                              distanceMiles(profile.location.latLong, myLatLong)
+                                  .round();
+                          return Text(
+                            '$distance ${distance == 1 ? 'mile' : 'miles'} away',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w300,
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 8),
                     ],
