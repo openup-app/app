@@ -1,12 +1,9 @@
 import 'dart:math';
 
 class PerlinNoise {
-  final int _seed;
+  final int _baseSeed;
 
-  PerlinNoise({
-    required int size,
-    required int seed,
-  }) : _seed = seed;
+  PerlinNoise({required int seed}) : _baseSeed = seed;
 
   double at(
     double t, {
@@ -17,8 +14,9 @@ class PerlinNoise {
     final period = 1 / frequency;
     final integral = t ~/ period;
     final local = t / period - (t / period).truncate();
-    final gradientL = _gradient(integral, seed: seed);
-    final gradientR = _gradient(integral + 1, seed: seed);
+    final currentSeed = _baseSeed + (seed ?? 0);
+    final gradientL = _gradient(integral, seed: currentSeed);
+    final gradientR = _gradient(integral + 1, seed: currentSeed);
     final lToLocal = local;
     final rToLocal = local - 1;
     final dotL = gradientL * lToLocal;
@@ -26,8 +24,8 @@ class PerlinNoise {
     return lerp(dotL, dotR, ease(local)) * amplitude;
   }
 
-  double _gradient(int t, {int? seed}) {
-    final random = Random((seed ?? _seed) + t);
+  double _gradient(int t, {required int seed}) {
+    final random = Random((seed) + t);
     final value = random.nextDouble() * 2 * pi;
     return cos(value);
   }

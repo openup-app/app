@@ -4,137 +4,78 @@ import 'package:openup/widgets/common.dart';
 
 const _seed = 585384;
 
-class WigglePosition extends StatefulWidget {
-  final double frequency;
-  final double amplitude;
-  final int? seed;
-  final Widget child;
+typedef WiggleGenerator = double Function({
+  required double frequency,
+  required double amplitude,
+  Duration? delay,
+});
 
-  const WigglePosition({
+class WiggleBuilder extends StatefulWidget {
+  final bool enabled;
+
+  final int? seed;
+  final Widget Function(
+    BuildContext context,
+    Widget? child,
+    WiggleGenerator wiggle,
+  ) builder;
+  final Widget? child;
+
+  const WiggleBuilder({
     super.key,
-    required this.frequency,
-    required this.amplitude,
+    this.enabled = true,
     this.seed,
-    required this.child,
+    required this.builder,
+    this.child,
   });
 
   @override
-  State<WigglePosition> createState() => _WigglePositionState();
+  State<WiggleBuilder> createState() => _WiggleBuilderState();
 }
 
-class _WigglePositionState extends State<WigglePosition> {
-  late final _noise = PerlinNoise(size: 2000, seed: widget.seed ?? _seed);
+class _WiggleBuilderState extends State<WiggleBuilder> {
   late DateTime _start;
+  late PerlinNoise _noise;
 
   @override
   void initState() {
     super.initState();
     _start = DateTime.now();
+    _noise = PerlinNoise(seed: widget.seed ?? _seed);
+  }
+
+  @override
+  void didUpdateWidget(covariant WiggleBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.seed != widget.seed) {
+      _noise = PerlinNoise(seed: widget.seed ?? _seed);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return TickerBuilder(
+      enabled: widget.enabled,
       builder: (context) {
         final now = DateTime.now();
         final elapsed = now.difference(_start);
         final t = elapsed.inMilliseconds / 1000;
-        final seedX = 481812 + (widget.seed ?? 0);
-        final seedY = 117856 + (widget.seed ?? 0);
-        final x = _noise.at(
-          t,
-          frequency: widget.frequency,
-          amplitude: widget.amplitude,
-          seed: seedX,
-        );
-        final y = _noise.at(
-          t,
-          frequency: widget.frequency,
-          amplitude: widget.amplitude,
-          seed: seedY,
-        );
-        return Transform.translate(
-          offset: Offset(x, y),
-          child: widget.child,
-        );
-      },
-    );
-  }
-}
-
-enum _RotationAxis { x, y, z }
-
-class WiggleRotation extends StatefulWidget {
-  final double frequency;
-  final double amplitude;
-  final _RotationAxis _axis;
-  final int? seed;
-  final Widget child;
-
-  const WiggleRotation.x({
-    super.key,
-    required this.frequency,
-    required this.amplitude,
-    this.seed,
-    required this.child,
-  }) : _axis = _RotationAxis.x;
-
-  const WiggleRotation.y({
-    super.key,
-    required this.frequency,
-    required this.amplitude,
-    this.seed,
-    required this.child,
-  }) : _axis = _RotationAxis.y;
-
-  const WiggleRotation.z({
-    super.key,
-    required this.frequency,
-    required this.amplitude,
-    required this.child,
-    this.seed,
-  }) : _axis = _RotationAxis.z;
-
-  @override
-  State<WiggleRotation> createState() => _WiggleRotationState();
-}
-
-class _WiggleRotationState extends State<WiggleRotation> {
-  late final _noise = PerlinNoise(size: 2000, seed: widget.seed ?? _seed);
-  late DateTime _start;
-
-  @override
-  void initState() {
-    super.initState();
-    _start = DateTime.now();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const perspectiveDivide = 0.002;
-    return TickerBuilder(
-      builder: (context) {
-        final now = DateTime.now();
-        final elapsed = now.difference(_start);
-        final t = elapsed.inMilliseconds / 1000;
-        final angle = _noise.at(
-          t,
-          frequency: widget.frequency,
-          amplitude: widget.amplitude,
-        );
-        final transform = Matrix4.identity()..setEntry(3, 2, perspectiveDivide);
-        switch (widget._axis) {
-          case _RotationAxis.x:
-            transform.rotateX(angle);
-          case _RotationAxis.y:
-            transform.rotateY(angle);
-          case _RotationAxis.z:
-            transform.rotateZ(angle);
-        }
-        return Transform(
-          transform: transform,
-          alignment: Alignment.center,
-          child: widget.child,
+        int seedModifier = 0;
+        return widget.builder(
+          context,
+          widget.child,
+          ({
+            required double frequency,
+            required double amplitude,
+            Duration? delay,
+          }) {
+            return _noise.at(
+              t - (delay?.inMilliseconds ?? 0) / 1000,
+              frequency: frequency,
+              amplitude: amplitude,
+              seed: seedModifier++,
+            );
+          },
         );
       },
     );
