@@ -451,13 +451,11 @@ class _BranchIndex extends InheritedWidget {
 }
 
 class ActivePage extends ConsumerStatefulWidget {
-  final bool activeOnSheetOpen;
   final VoidCallback onActivate;
   final VoidCallback onDeactivate;
   final Widget child;
   const ActivePage({
     super.key,
-    this.activeOnSheetOpen = true,
     required this.onActivate,
     required this.onDeactivate,
     required this.child,
@@ -470,18 +468,8 @@ class ActivePage extends ConsumerStatefulWidget {
 class _ActivePageState extends ConsumerState<ActivePage> {
   int? _myBranchIndex;
   int? _currentIndex;
-  bool _pageOpen = false;
   bool _active = false;
   bool _appResumed = true;
-
-  @override
-  void initState() {
-    super.initState();
-    ref.listenManual<bool>(
-      _sheetOpenProvider,
-      (previous, next) => _onPageOpenChanged(next),
-    );
-  }
 
   @override
   void didChangeDependencies() {
@@ -498,20 +486,12 @@ class _ActivePageState extends ConsumerState<ActivePage> {
     }
   }
 
-  void _onPageOpenChanged(bool open) {
-    _pageOpen = open;
-    _updateActivation();
-  }
-
   void _updateActivation() {
     final isBranchRoute = _myBranchIndex != null;
     final onCurrentBranch = _currentIndex == _myBranchIndex;
     final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
     final visible = isBranchRoute ? onCurrentBranch : routeCurrent;
-    final shouldBeActive = visible &&
-        (widget.activeOnSheetOpen && _pageOpen ||
-            !widget.activeOnSheetOpen && !_pageOpen) &&
-        _appResumed;
+    final shouldBeActive = visible && _appResumed;
 
     if (!_active && shouldBeActive) {
       SchedulerBinding.instance.addPostFrameCallback((_) {

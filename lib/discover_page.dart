@@ -228,7 +228,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     final profiles = readyState?.profiles ?? [];
     final selectedProfile = readyState?.selectedProfile;
     return ActivePage(
-      activeOnSheetOpen: false,
       onActivate: () {
         setState(() => _pageActive = true);
         ref.read(discoverProvider.notifier).performQuery();
