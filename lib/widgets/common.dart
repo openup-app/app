@@ -1429,6 +1429,86 @@ class _RecordPanelState extends ConsumerState<RecordPanel> {
   }
 }
 
+enum RecorderState { none, recording, recorded }
+
+class RecorderBuilder extends ConsumerStatefulWidget {
+  final void Function()? onRecordingStarted;
+  final void Function(Uint8List? audio, Duration duration) onRecordingEnded;
+  final Widget Function(
+      BuildContext context, RecorderState state, Duration elapsed) builder;
+
+  const RecorderBuilder({
+    super.key,
+    this.onRecordingStarted,
+    required this.onRecordingEnded,
+    required this.builder,
+  });
+
+  @override
+  ConsumerState<RecorderBuilder> createState() => RecorderBuilderState();
+}
+
+class RecorderBuilderState extends ConsumerState<RecorderBuilder> {
+  PlaybackRecorderController? _controller;
+  DateTime? _start;
+
+  RecorderState _state = RecorderState.none;
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  void startRecording({Duration? maxDuration}) async {
+    _controller?.dispose();
+    final controller = PlaybackRecorderController();
+    setState(() => _controller = controller);
+    await controller.startRecording(
+      maxDuration: maxDuration,
+      onComplete: _onRecordingEnded,
+    );
+    if (mounted) {
+      setState(() {
+        _state = RecorderState.recording;
+        _start = DateTime.now();
+      });
+      widget.onRecordingStarted?.call();
+    }
+  }
+
+  void stopRecording() => _controller?.stopRecording();
+
+  void _onRecordingEnded(Uint8List? recordingBytes) {
+    final start = _start;
+    if (start == null) {
+      return;
+    }
+
+    final end = DateTime.now();
+    final elapsed = end.difference(start);
+    setState(() {
+      _start = null;
+      _state = RecorderState.none;
+    });
+
+    widget.onRecordingEnded(recordingBytes, elapsed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final start = _start;
+    return TickerBuilder(
+      enabled: start != null,
+      builder: (context) {
+        final elapsed =
+            start == null ? Duration.zero : DateTime.now().difference(start);
+        return widget.builder(context, _state, elapsed);
+      },
+    );
+  }
+}
+
 class RecordPanelSurface extends StatelessWidget {
   final Widget child;
 
@@ -1706,7 +1786,6 @@ class PlaybackRecorderController extends ChangeNotifier {
     Duration? maxDuration,
     required void Function(Uint8List? bytes) onComplete,
   }) async {
-    maxDuration ??= const Duration(seconds: 30);
     await _recorder.startRecording(
       onFrequencies: (frequencies) {
         final value = _combinedController.value;
@@ -1722,10 +1801,12 @@ class PlaybackRecorderController extends ChangeNotifier {
     );
     if (!_combinedController.isClosed) {
       _combinedController.add(Tuple2(recordingInfo, value.item2));
-      _recordingLimitTimer = Timer(
-        maxDuration,
-        () => _recorder.stopRecording(),
-      );
+      if (maxDuration != null) {
+        _recordingLimitTimer = Timer(
+          maxDuration,
+          () => _recorder.stopRecording(),
+        );
+      }
     }
   }
 
