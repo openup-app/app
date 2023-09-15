@@ -2,11 +2,14 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover_provider.dart';
 import 'package:openup/location/location_provider.dart';
+import 'package:openup/platform/just_audio_audio_player.dart';
+import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/card_stack.dart';
 import 'package:openup/widgets/common.dart';
@@ -93,6 +96,8 @@ class _ListView extends ConsumerStatefulWidget {
 }
 
 class _ListViewState extends ConsumerState<_ListView> {
+  final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
+
   bool _play = true;
   int _profileIndex = 0;
 
@@ -104,38 +109,50 @@ class _ListViewState extends ConsumerState<_ListView> {
         child: LoadingIndicator(),
       );
     }
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Center(
-          child: ProfileBuilder(
-            profile: profiles[_profileIndex % profiles.length].profile,
-            play: false,
-            builder: (context, playbackState, playbackInfoStream) {
-              return CardStack(
-                width: constraints.maxWidth,
-                items: profiles,
-                onChanged: (index) {
-                  setState(() => _profileIndex = index);
-                },
-                itemBuilder: (context, item) {
-                  final profile = item;
-                  return _ProfileCard(
-                    profile: profile,
-                    onOptions: () {},
-                    onMessage: () =>
-                        _showRecordInvitePanel(context, profile.profile.uid),
-                  );
-                },
-              );
-            },
-          ),
-        );
-      },
+    return ActivePage(
+      onActivate: () {},
+      onDeactivate: () => setState(() => _play = false),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Center(
+            child: ProfileBuilder(
+              key: _profileBuilderKey,
+              profile: profiles[_profileIndex % profiles.length].profile,
+              play: _play,
+              builder: (context, playbackState, playbackInfoStream) {
+                final currentProfile =
+                    profiles[_profileIndex % profiles.length].profile;
+                return CardStack(
+                  width: constraints.maxWidth,
+                  items: profiles,
+                  onChanged: (index) {
+                    setState(() => _profileIndex = index);
+                  },
+                  itemBuilder: (context, item) {
+                    final isCurrent = item.profile.uid == currentProfile.uid;
+                    final profile = item;
+                    return _ProfileCard(
+                      profile: profile,
+                      playbackState: isCurrent ? playbackState : null,
+                      playbackInfoStream: isCurrent ? playbackInfoStream : null,
+                      onPlay: () => setState(() => _play = true),
+                      onPause: () => setState(() => _play = false),
+                      onOptions: () {},
+                      onMessage: () =>
+                          _showRecordInvitePanel(context, profile.profile.uid),
+                    );
+                  },
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
   void _showRecordInvitePanel(BuildContext context, String uid) async {
-    // _tempPauseAudio();
+    _pauseAudio();
     final userState = ref.read(userProvider2);
     final signedIn = userState.map(
       guest: (_) => null,
@@ -165,15 +182,25 @@ class _ListViewState extends ConsumerState<_ListView> {
       future: notifier.sendMessage(uid: uid, audio: result.audio),
     );
   }
+
+  void _pauseAudio() => setState(() => _play = false);
 }
 
 class _ProfileCard extends ConsumerWidget {
+  final PlaybackState? playbackState;
+  final Stream<PlaybackInfo>? playbackInfoStream;
+  final VoidCallback onPlay;
+  final VoidCallback onPause;
   final VoidCallback onOptions;
   final VoidCallback onMessage;
 
   const _ProfileCard({
     super.key,
     required this.profile,
+    required this.playbackState,
+    required this.playbackInfoStream,
+    required this.onPlay,
+    required this.onPause,
     required this.onOptions,
     required this.onMessage,
   });
@@ -202,9 +229,41 @@ class _ProfileCard extends ConsumerWidget {
                 padding: const EdgeInsets.all(18),
                 child: AspectRatio(
                   aspectRatio: 14 / 19,
-                  child: CameraFlashGallery(
-                    slideshow: true,
-                    gallery: profile.profile.gallery,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Button(
+                        onPressed: _togglePlayPause,
+                        child: CameraFlashGallery(
+                          slideshow: true,
+                          gallery: profile.profile.gallery,
+                        ),
+                      ),
+                      IgnorePointer(
+                        child: Center(
+                          child: Builder(
+                            builder: (context) {
+                              return switch (playbackState) {
+                                PlaybackState.idle ||
+                                PlaybackState.paused =>
+                                  const Icon(
+                                    Icons.play_arrow,
+                                    size: 64,
+                                    shadows: [
+                                      Shadow(
+                                        blurRadius: 8,
+                                        color: Color.fromRGBO(
+                                            0x00, 0x00, 0x00, 0.25),
+                                      ),
+                                    ],
+                                  ),
+                                _ => const SizedBox.shrink(),
+                              };
+                            },
+                          ),
+                        ),
+                      )
+                    ],
                   ),
                 ),
               ),
@@ -253,20 +312,36 @@ class _ProfileCard extends ConsumerWidget {
                     ],
                   ),
                   const Spacer(),
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.music_note,
-                      size: 32,
-                      color: Colors.white,
+                  Button(
+                    onPressed: _togglePlayPause,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      alignment: Alignment.center,
+                      margin: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.black,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Builder(
+                        builder: (context) {
+                          return switch (playbackState) {
+                            null => const SizedBox.shrink(),
+                            PlaybackState.idle ||
+                            PlaybackState.paused =>
+                              const Icon(Icons.play_arrow),
+                            PlaybackState.playing => SvgPicture.asset(
+                                'assets/images/audio_indicator.svg',
+                                width: 16,
+                                height: 18,
+                              ),
+                            _ => const LoadingIndicator(),
+                          };
+                        },
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
                 ],
               ),
               const SizedBox(height: 8),
@@ -322,6 +397,18 @@ class _ProfileCard extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _togglePlayPause() {
+    switch (playbackState) {
+      case PlaybackState.idle:
+      case PlaybackState.paused:
+        onPlay();
+      case null:
+        return;
+      default:
+        onPause();
+    }
   }
 }
 

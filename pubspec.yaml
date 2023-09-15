@@ -88,6 +88,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/app_logo.png
+    - assets/images/audio_indicator.svg
     - assets/images/call.json
     - assets/images/call.svg
     - assets/images/video_call.json
