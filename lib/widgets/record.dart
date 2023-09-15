@@ -72,7 +72,7 @@ class _WobblyRingsRecorderState extends State<WobblyRingsRecorder> {
     return RecorderBuilder(
       key: _key,
       onRecordingEnded: _onRecordingEnded,
-      builder: (context, state, duration) {
+      builder: (context, state, duration, amplitude, maxAmplitude) {
         final short = duration < widget.minDuration;
         return Stack(
           alignment: Alignment.center,
@@ -80,7 +80,9 @@ class _WobblyRingsRecorderState extends State<WobblyRingsRecorder> {
             Button(
               onPressed: short ? null : _stopRecording,
               useFadeWheNoPressedCallback: false,
-              child: const WobblyRings(),
+              child: WobblyRings(
+                scale: 1.00 + (amplitude / maxAmplitude).clamp(0, 1),
+              ),
             ),
             switch (state) {
               RecorderState.none => const SizedBox.shrink(),

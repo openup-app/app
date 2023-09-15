@@ -13,20 +13,32 @@ import 'package:record/record.dart' as rec;
 class RecorderWithoutWaveforms {
   bool _recording = false;
   final _recorder = rec.Record();
+  StreamSubscription? _amplitudeSubscription;
 
   void Function(Uint8List? audioBytes)? _onComplete;
 
   void dispose() {
     _recorder.dispose();
+    _amplitudeSubscription?.cancel();
   }
 
   Future<void> startRecording({
-    required void Function(Float64x2List frequencies) onFrequencies,
+    required void Function(double current, double max) onAmplitude,
     required void Function(Uint8List?) onComplete,
   }) async {
     if (_recording) {
       throw 'Already recording';
     }
+
+    final amplitudeStream =
+        _recorder.onAmplitudeChanged(const Duration(milliseconds: 16));
+    _amplitudeSubscription?.cancel();
+    _amplitudeSubscription = amplitudeStream.listen((value) {
+      // See dBFS calculation section: https://audiointerfacing.com/dbfs-in-audio/
+      final current = pow(10, value.current / 20) * value.max;
+      final max = value.max;
+      onAmplitude(current, max);
+    });
 
     _recording = true;
     _onComplete = onComplete;
@@ -46,6 +58,7 @@ class RecorderWithoutWaveforms {
       return;
     }
 
+    _amplitudeSubscription?.cancel();
     _recording = false;
     final filePath = await _recorder.stop();
     if (filePath == null) {

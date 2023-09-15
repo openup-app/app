@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui';
 import 'dart:ui' as ui;
 
@@ -23,8 +22,6 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/photo3d.dart';
 import 'package:openup/widgets/waveforms.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:rxdart/subjects.dart';
-import 'package:tuple/tuple.dart';
 
 class CountdownTimer extends StatefulWidget {
   final String Function(Duration remaining)? formatter;
@@ -1089,14 +1086,15 @@ class SignUpRecorderState extends ConsumerState<SignUpRecorder> {
     setState(() => _controller = controller);
     await controller.startRecording(
       maxDuration: _maxDuration,
+      onAmplitude: (amplitude, maxAmplitude) {},
       onComplete: _onRecordingEnded,
     );
     if (mounted) {
       setState(() {
         _audioBioState = RecordPanelState.creating;
         _recordingDurationTicker = Ticker((d) {
-          final start = (controller._combinedController.value).item1.start;
-          _recordingDurationNotifier.value = DateTime.now().difference(start);
+          _recordingDurationNotifier.value =
+              DateTime.now().difference(DateTime.now());
         });
       });
       _recordingDurationTicker?.start();
@@ -1204,238 +1202,18 @@ class SignUpRecorderState extends ConsumerState<SignUpRecorder> {
   }
 }
 
-class RecordPanel extends ConsumerStatefulWidget {
-  final Widget title;
-  final Widget submitLabel;
-  final VoidCallback onCancel;
-  final Future<bool> Function(Uint8List audio, Duration duration) onSubmit;
-
-  const RecordPanel({
-    super.key,
-    required this.title,
-    required this.submitLabel,
-    required this.onCancel,
-    required this.onSubmit,
-  });
-
-  @override
-  ConsumerState<RecordPanel> createState() => _RecordPanelState();
-}
-
-class _RecordPanelState extends ConsumerState<RecordPanel> {
-  static const _maxDuration = Duration(seconds: 30);
-
-  PlaybackRecorderController? _controller;
-  final _recordingDurationNotifier = RecordingDurationNotifier(Duration.zero);
-  Ticker? _recordingDurationTicker;
-
-  RecordPanelState _audioBioState = RecordPanelState.creating;
-  Uint8List? _audio;
-  Duration? _duration;
-
-  @override
-  void initState() {
-    super.initState();
-    // Avoid jank by starting to record after panel animation
-    Future.delayed(const Duration(milliseconds: 200)).then((_) {
-      if (mounted) {
-        _startRecording();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _recordingDurationNotifier.dispose();
-    _recordingDurationTicker?.dispose();
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  void _startRecording() async {
-    _controller?.dispose();
-    final controller = PlaybackRecorderController();
-    setState(() => _controller = controller);
-    await controller.startRecording(
-      maxDuration: _maxDuration,
-      onComplete: _onRecordingEnded,
-    );
-    if (mounted) {
-      setState(() {
-        _audioBioState = RecordPanelState.creating;
-        _recordingDurationTicker = Ticker((d) {
-          final start = (controller._combinedController.value).item1.start;
-          _recordingDurationNotifier.value = DateTime.now().difference(start);
-        });
-      });
-      _recordingDurationTicker?.start();
-    }
-  }
-
-  void _onRecordingEnded(Uint8List? recordingBytes) {
-    _recordingDurationTicker?.dispose();
-
-    if (recordingBytes == null) {
-      Navigator.of(context).pop();
-      return;
-    }
-
-    setState(() {
-      _recordingDurationTicker = null;
-      _audio = recordingBytes;
-      _duration = _recordingDurationNotifier.value;
-      _audioBioState = RecordPanelState.deciding;
-    });
-
-    _onSubmit();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          right: 16,
-          top: 16,
-          width: 48,
-          height: 48,
-          child: Button(
-            onPressed: Navigator.of(context).pop,
-            child: Container(
-              margin: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-              ),
-              child: const Icon(
-                Icons.close,
-                color: Color.fromRGBO(0x44, 0x44, 0x44, 1.0),
-                size: 16,
-              ),
-            ),
-          ),
-        ),
-        Column(
-          children: [
-            const SizedBox(height: 44),
-            DefaultTextStyle(
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: Colors.white,
-              ),
-              child: widget.title,
-            ),
-            const SizedBox(height: 40),
-            Builder(
-              builder: (context) {
-                switch (_audioBioState) {
-                  case RecordPanelState.creating:
-                    return ValueListenableBuilder<Duration>(
-                      valueListenable: _recordingDurationNotifier,
-                      builder: (context, duration, child) {
-                        return RecordPanelRecorder(
-                          duration: duration,
-                          maxDuration: _maxDuration,
-                          onPressed: () => _controller?.stopRecording(),
-                        );
-                      },
-                    );
-                  case RecordPanelState.deciding:
-                    return RecordPanelDeciding(
-                      audio: _audio!,
-                      onRestart: () {
-                        setState(() {
-                          _audio = null;
-                          _duration = null;
-                          _audioBioState = RecordPanelState.creating;
-                          _recordingDurationNotifier.value = Duration.zero;
-                          _recordingDurationTicker?.dispose();
-                        });
-                        _startRecording();
-                      },
-                    );
-                  case RecordPanelState.uploading:
-                  case RecordPanelState.uploaded:
-                    return const Center(
-                      child: LoadingIndicator(
-                        color: Colors.black,
-                      ),
-                    );
-                }
-              },
-            ),
-            const Spacer(),
-            Button(
-              onPressed: _onMaybeStopAndSubmit,
-              child: Container(
-                height: 56,
-                margin: const EdgeInsets.symmetric(horizontal: 57),
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(11),
-                  ),
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      offset: Offset(0, 2),
-                      blurRadius: 17,
-                      color: Color.fromRGBO(0x00, 0x00, 0x00, 0.0625),
-                    )
-                  ],
-                ),
-                child: Center(
-                  child: DefaultTextStyle(
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black,
-                    ),
-                    child: widget.submitLabel,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              height: MediaQuery.of(context).padding.bottom,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  void _onMaybeStopAndSubmit() {
-    if (_audio == null) {
-      _controller?.stopRecording();
-    } else {
-      _onSubmit();
-    }
-  }
-
-  void _onSubmit() async {
-    setState(() => _audioBioState = RecordPanelState.uploading);
-    final success = await widget.onSubmit(_audio!, _duration!);
-    if (!mounted) {
-      return;
-    }
-
-    if (success) {
-      setState(() => _audioBioState = RecordPanelState.uploaded);
-    } else {
-      setState(() => _audioBioState = RecordPanelState.deciding);
-    }
-  }
-}
-
 enum RecorderState { none, recording, recorded }
 
 class RecorderBuilder extends ConsumerStatefulWidget {
   final void Function()? onRecordingStarted;
   final void Function(Uint8List? audio, Duration duration) onRecordingEnded;
   final Widget Function(
-      BuildContext context, RecorderState state, Duration elapsed) builder;
+    BuildContext context,
+    RecorderState state,
+    Duration elapsed,
+    double amplitude,
+    double maxAmplitude,
+  ) builder;
 
   const RecorderBuilder({
     super.key,
@@ -1454,6 +1232,9 @@ class RecorderBuilderState extends ConsumerState<RecorderBuilder> {
 
   RecorderState _state = RecorderState.none;
 
+  double _amplitude = 0;
+  double _maxAmplitude = 1;
+
   @override
   void dispose() {
     _controller?.dispose();
@@ -1466,6 +1247,12 @@ class RecorderBuilderState extends ConsumerState<RecorderBuilder> {
     setState(() => _controller = controller);
     await controller.startRecording(
       maxDuration: maxDuration,
+      onAmplitude: (amplitude, maxAmplitude) {
+        setState(() {
+          _amplitude = amplitude;
+          _maxAmplitude = maxAmplitude;
+        });
+      },
       onComplete: _onRecordingEnded,
     );
     if (mounted) {
@@ -1503,7 +1290,13 @@ class RecorderBuilderState extends ConsumerState<RecorderBuilder> {
       builder: (context) {
         final elapsed =
             start == null ? Duration.zero : DateTime.now().difference(start);
-        return widget.builder(context, _state, elapsed);
+        return widget.builder(
+          context,
+          _state,
+          elapsed,
+          _amplitude,
+          _maxAmplitude,
+        );
       },
     );
   }
@@ -1715,108 +1508,47 @@ class RecordPanelDeciding extends StatelessWidget {
   }
 }
 
-class PlaybackRecorder extends StatefulWidget {
-  final PlaybackRecorderController controller;
-  final Widget Function(
-    BuildContext context,
-    RecordingInfo recordingInfo,
-    PlaybackInfo playbackInfo,
-  ) builder;
-
-  const PlaybackRecorder({
-    super.key,
-    required this.controller,
-    required this.builder,
-  });
-
-  @override
-  State<PlaybackRecorder> createState() => _PlaybackRecorderState();
-}
-
-class _PlaybackRecorderState extends State<PlaybackRecorder> {
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<Tuple2<RecordingInfo, PlaybackInfo>>(
-      stream: widget.controller.combinedStream,
-      initialData: Tuple2(RecordingInfo.none(), const PlaybackInfo()),
-      builder: (context, snapshot) {
-        final value = snapshot.requireData;
-        return widget.builder(
-          context,
-          value.item1,
-          value.item2,
-        );
-      },
-    );
-  }
-}
-
 class PlaybackRecorderController extends ChangeNotifier {
   late final AudioBioController _playbackController;
   final _recorder = RecorderWithoutWaveforms();
 
   Timer? _recordingLimitTimer;
 
-  final _combinedController =
-      BehaviorSubject<Tuple2<RecordingInfo, PlaybackInfo>>.seeded(
-          Tuple2(RecordingInfo.none(), const PlaybackInfo()));
-
   PlaybackRecorderController() : super() {
     _playbackController = AudioBioController(onRecordingComplete: (_) {});
-
-    _playbackController.playbackInfoStream.listen((playbackInfo) {
-      final value = _combinedController.value;
-      _combinedController.add(Tuple2(value.item1, playbackInfo));
-    });
   }
 
-  Stream<Tuple2<RecordingInfo, PlaybackInfo>> get combinedStream =>
-      _combinedController.stream;
+  Stream<PlaybackInfo> get playbackInfoStream =>
+      _playbackController.playbackInfoStream;
 
   @override
   void dispose() {
     super.dispose();
     _recordingLimitTimer?.cancel();
-    _combinedController.close();
     _playbackController.dispose();
     _recorder.dispose();
   }
 
   Future<void> startRecording({
     Duration? maxDuration,
+    required void Function(double amplitude, double maxAmplitude) onAmplitude,
     required void Function(Uint8List? bytes) onComplete,
   }) async {
     await _recorder.startRecording(
-      onFrequencies: (frequencies) {
-        final value = _combinedController.value;
-        final recordingInfo = value.item1.copyWith(frequencies: frequencies);
-        _combinedController.add(Tuple2(recordingInfo, value.item2));
-      },
+      onAmplitude: onAmplitude,
       onComplete: onComplete,
     );
-    final value = _combinedController.value;
-    final recordingInfo = value.item1.copyWith(
-      recording: true,
-      start: DateTime.now(),
-    );
-    if (!_combinedController.isClosed) {
-      _combinedController.add(Tuple2(recordingInfo, value.item2));
-      if (maxDuration != null) {
-        _recordingLimitTimer = Timer(
-          maxDuration,
-          () => _recorder.stopRecording(),
-        );
-      }
+    if (maxDuration != null) {
+      _recordingLimitTimer = Timer(
+        maxDuration,
+        () => _recorder.stopRecording(),
+      );
     }
   }
 
   void stopRecording() async {
     _recordingLimitTimer?.cancel();
     await _recorder.stopRecording();
-
-    final value = _combinedController.value;
-    final recordingInfo = RecordingInfo.none();
-    _combinedController.add(Tuple2(recordingInfo, value.item2));
   }
 
   void startPlayback() => _playbackController.play();
@@ -1829,28 +1561,33 @@ class PlaybackRecorderController extends ChangeNotifier {
 class RecordingInfo {
   final bool recording;
   final DateTime start;
-  final Float64x2List frequencies;
+  final double amplitude;
+  final double maxAmplitude;
 
   const RecordingInfo(
     this.recording,
     this.start,
-    this.frequencies,
+    this.amplitude,
+    this.maxAmplitude,
   );
 
   RecordingInfo.none()
       : recording = false,
         start = DateTime.now(),
-        frequencies = Float64x2List(0);
+        amplitude = 0,
+        maxAmplitude = 1;
 
   RecordingInfo copyWith({
     bool? recording,
     DateTime? start,
-    Float64x2List? frequencies,
+    double? amplitude,
+    double? maxAmplitude,
   }) {
     return RecordingInfo(
       recording ?? this.recording,
       start ?? this.start,
-      frequencies ?? this.frequencies,
+      amplitude ?? this.amplitude,
+      maxAmplitude ?? this.maxAmplitude,
     );
   }
 }
