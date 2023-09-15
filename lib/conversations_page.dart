@@ -4,8 +4,6 @@ import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:openup/api/api.dart';
@@ -13,9 +11,11 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/shell_page.dart';
+import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 class ConversationsPage extends ConsumerStatefulWidget {
   const ConversationsPage({
@@ -77,182 +77,185 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
         ref.read(userProvider2.notifier).refreshChatrooms();
       },
       onDeactivate: () {},
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).padding.top + 40,
-          ),
-          Container(
-            height: 32,
-            margin: const EdgeInsets.only(
-              left: 16,
-              top: 8,
-              right: 16,
-              bottom: 16,
-            ),
-            clipBehavior: Clip.hardEdge,
-            decoration: const BoxDecoration(
-              color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-              borderRadius: BorderRadius.all(Radius.circular(11)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 11, right: 6),
-                    child: TextFormField(
-                      controller: _searchController,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      textAlignVertical: TextAlignVertical.center,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        icon: Icon(
-                          Icons.search,
-                          size: 18,
-                        ),
-                        hintText: 'Search',
-                        hintStyle: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w400,
-                          color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-                        ),
-                      ),
-                    ),
-                  ),
+      child: ColoredBox(
+        color: Colors.black,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: MediaQuery.of(context).padding.top),
+            const Center(
+              child: Text(
+                'Messages',
+                style: TextStyle(
+                  fontFamily: 'Covered By Your Grace',
+                  fontWeight: FontWeight.w400,
+                  fontSize: 20,
+                  color: Colors.white,
                 ),
-                if (_filterString.isNotEmpty)
-                  Button(
-                    onPressed: () {
-                      setState(() => _searchController.text = "");
-                      FocusScope.of(context).unfocus();
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Icon(
-                        Icons.close,
-                        color: Colors.black,
-                        size: 16,
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          const Divider(
-            height: 1,
-            color: Color.fromRGBO(0xE6, 0xE6, 0xE6, 1.0),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                if (_filterString.isEmpty)
-                  Visibility(
-                    visible: false,
+            const SizedBox(height: 11),
+            Container(
+              height: 32,
+              margin: const EdgeInsets.symmetric(horizontal: 11),
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(
+                color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+                borderRadius: BorderRadius.all(Radius.circular(6)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: SizedBox(
-                        height: 150,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          keyboardDismissBehavior:
-                              ScrollViewKeyboardDismissBehavior.onDrag,
-                          itemCount: _collections.length,
-                          itemBuilder: (context, index) {
-                            final collection = _collections[index];
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 82,
-                                  height: 110,
-                                  clipBehavior: Clip.hardEdge,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: const Color.fromRGBO(
-                                          0xFF, 0x5F, 0x5F, 1.0),
-                                      width: 2,
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                        Radius.circular(11)),
-                                  ),
-                                  margin: const EdgeInsets.all(9),
-                                  child: Image.network(
-                                    collection.photos.first.url,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                SizedBox(
-                                  width: 82,
-                                  child: Text(
-                                    'Name',
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w200,
-                                          color: Colors.white,
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                      padding: const EdgeInsets.only(left: 11, right: 6),
+                      child: TextFormField(
+                        controller: _searchController,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        textAlignVertical: TextAlignVertical.center,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          icon: Icon(
+                            Icons.search,
+                            size: 18,
+                          ),
+                          hintText: 'Search',
+                          hintStyle: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w400,
+                            color: Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                Expanded(
-                  child: Consumer(
-                    builder: (context, ref, child) {
-                      final filteredChatrooms =
-                          ref.watch(userProvider2.select((p) {
-                        return p.map(
-                          guest: (_) => null,
-                          signedIn: (signedIn) =>
-                              signedIn.chatrooms?.where((c) {
-                            return c.profile.profile.name
-                                .toLowerCase()
-                                .contains(_filterString.toLowerCase());
-                          }),
-                        );
-                      }));
-
-                      final nonPendingChatrooms = filteredChatrooms
-                          ?.where((chatroom) =>
-                              chatroom.inviteState != ChatroomState.pending)
-                          .toList();
-                      return _ConversationList(
-                        chatrooms: nonPendingChatrooms,
-                        emptyLabel:
-                            'Invite someone to chat,\nthen continue the conversation here',
-                        filtered: _filterString.isNotEmpty,
-                        onRefresh:
-                            ref.read(userProvider2.notifier).refreshChatrooms,
-                        onOpen: _openChat,
-                        onDelete: (index) => _deleteChatroom(
-                            nonPendingChatrooms![index].profile.profile),
-                      );
-                    },
-                  ),
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).viewInsets.bottom,
-                ),
-              ],
+                  if (_filterString.isNotEmpty)
+                    Button(
+                      onPressed: () {
+                        setState(() => _searchController.text = "");
+                        FocusScope.of(context).unfocus();
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Icon(
+                          Icons.close,
+                          color: Colors.black,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: Column(
+                children: [
+                  if (_filterString.isEmpty)
+                    Visibility(
+                      visible: false,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: SizedBox(
+                          height: 150,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            itemCount: _collections.length,
+                            itemBuilder: (context, index) {
+                              final collection = _collections[index];
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 82,
+                                    height: 110,
+                                    clipBehavior: Clip.hardEdge,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: const Color.fromRGBO(
+                                            0xFF, 0x5F, 0x5F, 1.0),
+                                        width: 2,
+                                      ),
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(11)),
+                                    ),
+                                    margin: const EdgeInsets.all(9),
+                                    child: Image.network(
+                                      collection.photos.first.url,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  SizedBox(
+                                    width: 82,
+                                    child: Text(
+                                      'Name',
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium!
+                                          .copyWith(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w200,
+                                            color: Colors.white,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  Expanded(
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        final filteredChatrooms =
+                            ref.watch(userProvider2.select((p) {
+                          return p.map(
+                            guest: (_) => null,
+                            signedIn: (signedIn) =>
+                                signedIn.chatrooms?.where((c) {
+                              return c.profile.profile.name
+                                  .toLowerCase()
+                                  .contains(_filterString.toLowerCase());
+                            }),
+                          );
+                        }));
+
+                        final nonPendingChatrooms = filteredChatrooms
+                            ?.where((chatroom) =>
+                                chatroom.inviteState != ChatroomState.pending)
+                            .toList();
+                        return _ConversationList(
+                          chatrooms: nonPendingChatrooms,
+                          emptyLabel:
+                              'Invite someone to chat,\nthen continue the conversation here',
+                          filtered: _filterString.isNotEmpty,
+                          onRefresh:
+                              ref.read(userProvider2.notifier).refreshChatrooms,
+                          onOpen: _openChat,
+                          onDelete: (index) => _deleteChatroom(
+                              nonPendingChatrooms![index].profile.profile),
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    height: MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -323,194 +326,121 @@ class _ConversationList extends StatelessWidget {
       builder: _SimpleIndicatorDelegate(
         builder: (context, controller) {
           return const LoadingIndicator(
-            color: Colors.black,
+            color: Colors.white,
           );
         },
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final actionPaneExtentRatio = 80 / constraints.maxWidth;
-          return ListView.builder(
-            padding:
-                EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            itemCount: chatrooms.length,
-            itemBuilder: (context, index) {
-              final chatroom = chatrooms[index];
-              return SizedBox(
-                height: 80,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Slidable(
-                        key: Key(chatroom.profile.profile.uid),
-                        endActionPane: ActionPane(
-                          motion: const ScrollMotion(),
-                          extentRatio: actionPaneExtentRatio,
-                          children: [
-                            SlidableAction(
-                              onPressed: (context) {
-                                _showDeleteConversationConfirmationModal(
-                                  context: context,
-                                  profile: chatroom.profile.profile,
-                                  index: index,
-                                );
-                              },
-                              backgroundColor:
-                                  const Color.fromRGBO(0xFF, 0x07, 0x07, 1.0),
-                              icon: Icons.delete,
-                            ),
-                          ],
-                        ),
-                        child: Button(
-                          onPressed: () => onOpen(chatroom),
-                          child: SizedBox(
-                            height: 140,
-                            child: Row(
-                              children: [
-                                Visibility(
-                                  visible: chatroom.unreadCount != 0,
-                                  maintainSize: true,
-                                  maintainState: true,
-                                  maintainAnimation: true,
-                                  child: SizedBox(
-                                    width: 33,
-                                    child: Container(
-                                      width: 13,
-                                      height: 13,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            Color.fromRGBO(
-                                                0x00, 0x94, 0xFF, 1.0),
-                                            Color.fromRGBO(
-                                                0x64, 0xBC, 0xFC, 1.0),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  width: 47,
-                                  height: 47,
-                                  clipBehavior: Clip.hardEdge,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Image.network(
-                                    chatroom.profile.profile.photo,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                const SizedBox(width: 13),
-                                Expanded(
-                                  child: Stack(
-                                    children: [
-                                      OnlineIndicatorBuilder(
-                                        uid: chatroom.profile.profile.uid,
-                                        builder: (context, online) {
-                                          final hasSubtitle =
-                                              chatroom.inviteState !=
-                                                      ChatroomState.accepted ||
-                                                  online ||
-                                                  chatroom.unreadCount != 0;
-                                          return Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              if (hasSubtitle)
-                                                const SizedBox(height: 16),
-                                              Text(
-                                                chatroom.profile.profile.name,
-                                                style: const TextStyle(
-                                                  fontSize: 17,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                              if (hasSubtitle)
-                                                const SizedBox(height: 4),
-                                              if (chatroom.inviteState !=
-                                                  ChatroomState.accepted)
-                                                const Text(
-                                                  'New chat invitation',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w400,
-                                                    fontSize: 12,
-                                                    color: Color.fromRGBO(
-                                                        0x00, 0x94, 0xFF, 1.0),
-                                                  ),
-                                                )
-                                              else if (online)
-                                                const Text(
-                                                  'online',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w400,
-                                                    fontSize: 12,
-                                                    color: Color.fromRGBO(
-                                                        0x94, 0x94, 0x94, 1.0),
-                                                  ),
-                                                )
-                                              else if (chatroom.unreadCount !=
-                                                  0)
-                                                const Text(
-                                                  'New message',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w400,
-                                                    fontSize: 12,
-                                                    color: Color.fromRGBO(
-                                                        0x00, 0x94, 0xFF, 1.0),
-                                                  ),
-                                                ),
-                                            ],
-                                          );
-                                        },
-                                      ),
-                                      Align(
-                                        alignment: Alignment.centerRight,
-                                        child: Padding(
-                                          padding:
-                                              const EdgeInsets.only(top: 3.0),
-                                          child: Text(
-                                            _formatRelativeDate(
-                                                chatroom.lastUpdated),
-                                            textAlign: TextAlign.right,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w300,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                SvgPicture.asset(
-                                  'assets/images/chevron_right.svg',
-                                  height: 12,
-                                ),
-                                const SizedBox(width: 24),
-                              ],
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.85 / 1,
+        ),
+        padding: const EdgeInsets.all(5),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        itemCount: chatrooms.length,
+        itemBuilder: (context, index) {
+          final chatroom = chatrooms[index];
+          return Stack(
+            key: Key(chatroom.profile.profile.uid),
+            children: [
+              WiggleBuilder(
+                seed: chatroom.profile.profile.uid.hashCode,
+                builder: (context, child, wiggle) {
+                  final offset = Offset(
+                    wiggle(frequency: 0.3, amplitude: 20),
+                    wiggle(frequency: 0.3, amplitude: 20),
+                  );
+
+                  final rotationZ =
+                      wiggle(frequency: 0.5, amplitude: radians(4));
+                  final rotationY =
+                      wiggle(frequency: 0.5, amplitude: radians(10));
+                  const perspectiveDivide = 0.002;
+                  final transform = Matrix4.identity()
+                    ..setEntry(3, 2, perspectiveDivide)
+                    ..rotateY(rotationY)
+                    ..rotateZ(rotationZ);
+                  return Transform.translate(
+                    offset: offset,
+                    child: Transform(
+                      transform: transform,
+                      alignment: Alignment.center,
+                      child: child,
+                    ),
+                  );
+                },
+                child: Button(
+                  onPressed: () => onOpen(chatroom),
+                  child: Container(
+                    height: 200,
+                    margin: EdgeInsets.only(
+                      left: index.isEven ? 6 : 10,
+                      top: 8,
+                      right: index.isEven ? 10 : 6,
+                      bottom: 8,
+                    ),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(5)),
+                      color: Colors.white,
+                    ),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: AspectRatio(
+                            aspectRatio: 1 / 1,
+                            child: Image.network(
+                              chatroom.profile.profile.photo,
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
+                        Text(
+                          chatroom.profile.profile.name.toUpperCase(),
+                          style: const TextStyle(
+                            fontFamily: 'Covered By Your Grace',
+                            fontWeight: FontWeight.w400,
+                            fontSize: 22,
+                            color: Color.fromRGBO(0x29, 0x29, 0x29, 1.0),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (chatroom.unreadCount != 0)
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Container(
+                    width: 27,
+                    height: 27,
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color.fromRGBO(0xFF, 0x16, 0x16, 1.0),
+                        boxShadow: [
+                          BoxShadow(
+                            offset: Offset(0, 4),
+                            blurRadius: 4,
+                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                          )
+                        ]),
+                    child: Center(
+                      child: Text(
+                        chatroom.unreadCount > 9
+                            ? '9+'
+                            : chatroom.unreadCount.toString(),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    const Divider(
-                      color: Color.fromRGBO(0xDA, 0xDA, 0xDA, 1.0),
-                      height: 1,
-                      indent: 29,
-                    ),
-                  ],
+                  ),
                 ),
-              );
-            },
+            ],
           );
         },
       ),

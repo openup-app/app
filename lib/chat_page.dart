@@ -17,14 +17,15 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/shell_page.dart';
+import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_message.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/profile_display.dart';
-import 'package:openup/widgets/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 part 'chat_page.freezed.dart';
 
@@ -57,7 +58,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
   late final ChatApi _chatApi;
   Chatroom? _chatroom;
   Map<String, ChatMessage>? _messages;
-  final _scrollController = ScrollController();
+  late final PageController _pageController;
 
   Profile? _otherProfile;
   final _audio = JustAudioAudioPlayer();
@@ -66,9 +67,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
   bool _showUnreadMessageButton = false;
   bool _fetchingMore = false;
 
-  static const _itemExtent = 66.0;
-
-  final _locationOverlayPortalController = OverlayPortalController();
+  double _pageScroll = 0;
 
   // Saves the profile/uid here in case the user gets signed out during chat
   late Profile myProfile;
@@ -77,6 +76,11 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
   @override
   void initState() {
     super.initState();
+
+    _pageController = PageController(viewportFraction: 0.7);
+    _pageController.addListener(() {
+      setState(() => _pageScroll = _pageController.page ?? 0);
+    });
 
     final userState = ref.read(userProvider2);
     myProfile = userState.map(
@@ -94,8 +98,8 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
         if (mounted) {
           if (_messages != null) {
             // Add new message and fix the visual list offset
-            final atLatest = _scrollController.position.pixels >=
-                _scrollController.position.minScrollExtent;
+            final atLatest = _pageController.position.pixels >=
+                _pageController.position.minScrollExtent;
             setState(() => _messages![message.messageId!] = message);
             if (atLatest) {
               _animateToLatest();
@@ -120,14 +124,14 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
       _fetchChatroom(widget.otherUid);
     }
 
-    _scrollController.addListener(_scrollListener);
+    _pageController.addListener(_scrollListener);
   }
 
   @override
   void dispose() {
     _chatApi.dispose();
     _audio.dispose();
-    _scrollController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -135,404 +139,388 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
   Widget build(BuildContext context) {
     final messages = _messages?.values.toList()
       ?..sort(_dateAscendingMessageSorter);
-    final items = _messagesToItems(messages ?? []);
+    final items = _messagesToItems(messages ?? [])
+      ..removeWhere((i) => i is _Info);
     final chatroom = _chatroom;
 
     return ColoredBox(
-      // Background for iOS back gesture
-      color: Colors.white,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final topPadding = MediaQuery.of(context).padding.top + 16;
-          const appBarHeight = 84.0;
-          final listBoxHeight =
-              constraints.maxHeight - (topPadding + appBarHeight);
-          return Column(
-            children: [
-              SizedBox(height: topPadding),
-              OverlayPortal(
-                controller: _locationOverlayPortalController,
-                overlayChildBuilder: (context) {
-                  return IgnorePointer(
-                    child: Center(
-                      child: _LocationOverlay(
-                        onComplete: () =>
-                            _locationOverlayPortalController.hide(),
+      color: Colors.black,
+      child: Column(
+        children: [
+          SizedBox(height: MediaQuery.of(context).padding.top),
+          SizedBox(
+            height: 84.0,
+            child: Stack(
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 10.0),
+                    child: Button(
+                      onPressed: Navigator.of(context).pop,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: RotatedBox(
+                          quarterTurns: 2,
+                          child: SvgPicture.asset(
+                            'assets/images/chevron_right.svg',
+                            colorFilter: const ColorFilter.mode(
+                              Color.fromRGBO(0x00, 0x7C, 0xEE, 1.0),
+                              BlendMode.srcIn,
+                            ),
+                            height: 28,
+                          ),
+                        ),
                       ),
                     ),
-                  );
-                },
-                child: Container(
-                  height: appBarHeight,
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Color.fromRGBO(0xE6, 0xE6, 0xE6, 1.0),
-                      ),
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 10.0),
-                          child: Button(
-                            onPressed: Navigator.of(context).pop,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: RotatedBox(
-                                quarterTurns: 2,
-                                child: SvgPicture.asset(
-                                  'assets/images/chevron_right.svg',
-                                  colorFilter: const ColorFilter.mode(
-                                    Color.fromRGBO(0xBD, 0xBD, 0xBD, 1.0),
-                                    BlendMode.srcIn,
-                                  ),
-                                  height: 19,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_otherProfile != null) ...[
-                        Center(
-                          child: Button(
-                            onPressed: () {
-                              _audio.pause();
-                              showProfileBottomSheet(
-                                context: context,
-                                profile: _otherProfile!,
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: 41,
-                                    height: 41,
-                                    clipBehavior: Clip.hardEdge,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: _otherProfile?.photo == null
-                                        ? const SizedBox.shrink()
-                                        : Image.network(
-                                            _otherProfile!.photo,
-                                            fit: BoxFit.cover,
-                                          ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  OnlineIndicatorBuilder(
-                                    uid: _otherProfile!.uid,
-                                    builder: (context, online) {
-                                      return Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          if (online)
-                                            const SizedBox(height: 12),
-                                          AutoSizeText(
-                                            _otherProfile?.name ?? '',
-                                            minFontSize: 16,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          if (online)
-                                            const Text(
-                                              'online',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w400,
-                                                fontSize: 12,
-                                                color: Color.fromRGBO(
-                                                    0x94, 0x94, 0x94, 1.0),
-                                              ),
-                                            ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 12.0),
-                            child: Builder(
-                              builder: (context) {
-                                final profile = chatroom?.profile;
-                                return Button(
-                                  onPressed: profile == null
-                                      ? null
-                                      : profile.location.visibility ==
-                                              LocationVisibility.public
-                                          ? () => _showLocation(profile)
-                                          : _locationOverlayPortalController
-                                              .show,
-                                  child: Builder(
-                                    builder: (context) {
-                                      switch (profile?.location.visibility) {
-                                        case null:
-                                          return const SizedBox.shrink();
-                                        case LocationVisibility.public:
-                                          return Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Image.asset(
-                                              'assets/images/location_search.png',
-                                              width: 26,
-                                              height: 25,
-                                            ),
-                                          );
-                                        case LocationVisibility.private:
-                                          return Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: SvgPicture.asset(
-                                              'assets/images/location_off.svg',
-                                              height: 30,
-                                              colorFilter:
-                                                  const ColorFilter.mode(
-                                                Color.fromRGBO(
-                                                    0xFF, 0x3F, 0x00, 1.0),
-                                                BlendMode.srcATop,
-                                              ),
-                                            ),
-                                          );
-                                      }
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
                   ),
                 ),
-              ),
-              SizedBox(
-                height: listBoxHeight,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    if (messages == null)
-                      Padding(
-                        padding: EdgeInsets.only(
-                            bottom:
-                                (80 + MediaQuery.of(context).padding.bottom) /
-                                    2),
-                        child: const Center(
-                          child: LoadingIndicator(
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    if (messages != null &&
-                        messages.isEmpty &&
-                        _otherProfile != null)
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: listBoxHeight,
-                        child: Center(
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Text(
-                              'Send your first message to ${_otherProfile!.name}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400,
-                                      color: const Color.fromRGBO(
-                                          0x70, 0x70, 0x70, 1.0)),
-                              textAlign: TextAlign.center,
+                if (_otherProfile != null) ...[
+                  Center(
+                    child: Button(
+                      onPressed: () {
+                        _audio.pause();
+                        showProfileBottomSheet(
+                          context: context,
+                          profile: _otherProfile!,
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              clipBehavior: Clip.hardEdge,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                              ),
+                              child: _otherProfile?.photo == null
+                                  ? const SizedBox.shrink()
+                                  : Image.network(
+                                      _otherProfile!.photo,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
-                          ),
-                        ),
-                      )
-                    else if (items.isNotEmpty && chatroom != null) ...[
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: listBoxHeight,
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          padding: EdgeInsets.only(
-                              bottom:
-                                  90 + MediaQuery.of(context).padding.bottom),
-                          reverse: true,
-                          itemExtent: _itemExtent,
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final item = items[index];
-                            return item.when(
-                              info: (info) {
-                                return SizedBox(
-                                  height: _itemExtent,
-                                  child: Center(
-                                    child: Text(
-                                      'Voice Message\n${formatLongDateAndTime(info.date.toLocal())}',
-                                      textAlign: TextAlign.center,
+                            const SizedBox(width: 8),
+                            OnlineIndicatorBuilder(
+                              uid: _otherProfile!.uid,
+                              builder: (context, online) {
+                                return Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (online) const SizedBox(height: 12),
+                                    AutoSizeText(
+                                      _otherProfile?.name ?? '',
+                                      minFontSize: 16,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
-                                        fontSize: 13,
+                                        fontFamily: 'Covered By Your Grace',
+                                        fontSize: 24,
                                         fontWeight: FontWeight.w400,
-                                        height: 1.5,
-                                        color: Color.fromRGBO(
-                                            0x8C, 0x8C, 0x8C, 1.0),
+                                        color: Colors.white,
                                       ),
                                     ),
-                                  ),
+                                    if (online)
+                                      const Text(
+                                        'online',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 12,
+                                          color: Color.fromRGBO(
+                                              0x94, 0x94, 0x94, 1.0),
+                                        ),
+                                      ),
+                                  ],
                                 );
                               },
-                              message: (message) {
-                                final fromMe = message.uid == myUid;
-                                final isCurrent =
-                                    _playbackMessageId == message.messageId;
-                                final playbackStream = isCurrent
-                                    ? _audio.playbackInfoStream
-                                    : Stream.fromIterable([
-                                        PlaybackInfo(
-                                          position: Duration.zero,
-                                          duration: message.content.duration,
-                                          state: PlaybackState.idle,
-                                          frequencies: [],
-                                        )
-                                      ]);
-                                return StreamBuilder<PlaybackInfo>(
-                                  key: ValueKey(message.messageId ?? ''),
-                                  initialData: const PlaybackInfo(),
-                                  stream: playbackStream,
-                                  builder: (context, snapshot) {
-                                    final playbackInfo = snapshot.requireData;
-                                    final isPlaying = playbackInfo.state ==
-                                        PlaybackState.playing;
-                                    return AudioChatMessage(
-                                      message: message,
-                                      fromMe: fromMe,
-                                      photo: (fromMe
-                                              ? myProfile.photo
-                                              : _otherProfile?.photo) ??
-                                          '',
-                                      playbackInfo: playbackInfo,
-                                      height: _itemExtent,
-                                      onPressed: () async {
-                                        if (isPlaying) {
-                                          _audio.stop();
-                                          setState(
-                                              () => _playbackMessageId = null);
-                                        } else {
-                                          setState(() => _playbackMessageId =
-                                              message.messageId);
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                if (messages == null)
+                  Padding(
+                    padding: EdgeInsets.only(
+                        bottom:
+                            (80 + MediaQuery.of(context).padding.bottom) / 2),
+                    child: const Center(
+                      child: LoadingIndicator(),
+                    ),
+                  ),
+                if (messages != null &&
+                    messages.isEmpty &&
+                    _otherProfile != null)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        'Send your first message to ${_otherProfile!.name}',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: const Color.fromRGBO(0x70, 0x70, 0x70, 1.0)),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  )
+                else if (items.isNotEmpty && chatroom != null) ...[
+                  Center(
+                    child: SizedBox(
+                      height: 354,
+                      child: PageView.builder(
+                        controller: _pageController,
+                        reverse: true,
+                        itemCount: items.length,
+                        clipBehavior: Clip.none,
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          final scrollOffset =
+                              (index - _pageScroll).abs().clamp(0, 1);
+                          return item.when(
+                            info: (info) => const SizedBox.shrink(),
+                            message: (message) {
+                              final fromMe = message.uid == myUid;
+                              final isCurrent =
+                                  _playbackMessageId == message.messageId;
+                              final playbackStream = isCurrent
+                                  ? _audio.playbackInfoStream
+                                  : Stream.fromIterable([
+                                      PlaybackInfo(
+                                        position: Duration.zero,
+                                        duration: message.content.duration,
+                                        state: PlaybackState.idle,
+                                        frequencies: [],
+                                      )
+                                    ]);
+                              return Transform.scale(
+                                alignment: Alignment.center,
+                                scale: 1 - scrollOffset * 0.1,
+                                child: WiggleBuilder(
+                                  enabled: scrollOffset < 1,
+                                  seed: message.messageId.hashCode,
+                                  builder: (context, child, wiggle) {
+                                    final attenuation = 1.0 - scrollOffset;
+                                    final offset = Offset(
+                                          wiggle(frequency: 0.3, amplitude: 20),
+                                          wiggle(frequency: 0.3, amplitude: 20),
+                                        ) *
+                                        attenuation;
 
-                                          // Play locally or from network
-                                          if (message.messageId == null) {
-                                            await _audio
-                                                .setPath(message.content.url);
-                                          } else {
-                                            await _audio
-                                                .setUrl(message.content.url);
-                                          }
-                                          if (mounted) {
-                                            _audio.play();
-                                          }
-                                        }
-                                      },
+                                    final rotationZ = wiggle(
+                                        frequency: 0.5,
+                                        amplitude: radians(4) * attenuation);
+                                    final rotationY = wiggle(
+                                        frequency: 0.5,
+                                        amplitude: radians(10) * attenuation);
+                                    const perspectiveDivide = 0.002;
+                                    final transform = Matrix4.identity()
+                                      ..setEntry(3, 2, perspectiveDivide)
+                                      ..rotateY(rotationY)
+                                      ..rotateZ(rotationZ);
+                                    return Transform.translate(
+                                      offset: offset,
+                                      child: Transform(
+                                        transform: transform,
+                                        alignment: Alignment.center,
+                                        child: child,
+                                      ),
                                     );
                                   },
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 76 + MediaQuery.of(context).padding.bottom,
-                      height: 1,
-                      child: const Divider(
-                        height: 1,
-                        color: Color.fromRGBO(0x00, 0x00, 0x00, 0.1),
+                                  child: ColorFiltered(
+                                    colorFilter: ColorFilter.mode(
+                                      Color.fromRGBO(
+                                          0x00,
+                                          0x00,
+                                          0x00,
+                                          (index - _pageScroll)
+                                                  .abs()
+                                                  .clamp(0, 1) *
+                                              0.6),
+                                      BlendMode.srcOver,
+                                    ),
+                                    child: StreamBuilder<bool>(
+                                      stream: playbackStream.map((event) =>
+                                          event.state == PlaybackState.playing),
+                                      initialData: false,
+                                      builder: (context, snapshot) {
+                                        final isPlaying = snapshot.requireData;
+                                        return Button(
+                                          onPressed: () =>
+                                              _playPause(message, isPlaying),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(5)),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                AspectRatio(
+                                                  aspectRatio: 1 / 1,
+                                                  child: Stack(
+                                                    fit: StackFit.expand,
+                                                    alignment: Alignment.center,
+                                                    children: [
+                                                      Image.network(
+                                                        fromMe
+                                                            ? myProfile.photo
+                                                            : chatroom.profile
+                                                                .profile.photo,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                      if (!isPlaying)
+                                                        const Icon(
+                                                          Icons.play_arrow,
+                                                          size: 64,
+                                                          shadows: [
+                                                            Shadow(
+                                                              blurRadius: 8,
+                                                              color: Color
+                                                                  .fromRGBO(
+                                                                      0x00,
+                                                                      0x00,
+                                                                      0x00,
+                                                                      0.25),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        formatDate(message.date
+                                                            .toLocal()),
+                                                        style: const TextStyle(
+                                                          fontFamily:
+                                                              'Covered By Your Grace',
+                                                          fontSize: 22,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                          color: Color.fromRGBO(
+                                                              0x29,
+                                                              0x29,
+                                                              0x29,
+                                                              1.0),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      formatTime(message.date
+                                                          .toLocal()),
+                                                      textAlign:
+                                                          TextAlign.right,
+                                                      style: const TextStyle(
+                                                        fontFamily:
+                                                            'Covered By Your Grace',
+                                                        fontSize: 22,
+                                                        fontWeight:
+                                                            FontWeight.w400,
+                                                        color: Color.fromRGBO(
+                                                            0x29,
+                                                            0x29,
+                                                            0x29,
+                                                            1.0),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 14),
+                                                StreamBuilder<PlaybackInfo>(
+                                                  key: ValueKey(
+                                                      message.messageId ?? ''),
+                                                  initialData:
+                                                      const PlaybackInfo(),
+                                                  stream: playbackStream,
+                                                  builder: (context, snapshot) {
+                                                    final playbackInfo =
+                                                        snapshot.requireData;
+                                                    return AudioMessagePlaybackBar(
+                                                      message: message,
+                                                      playbackInfo:
+                                                          playbackInfo,
+                                                    );
+                                                  },
+                                                ),
+                                                const SizedBox(height: 12),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
                       ),
                     ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: 76 + MediaQuery.of(context).padding.bottom,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            top: BorderSide(
-                              color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-                              width: 0.5,
-                            ),
-                          ),
-                          color: Colors.white,
-                        ),
+                  ),
+                ],
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IgnorePointer(
+                    ignoring: !_showUnreadMessageButton,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutQuart,
+                      opacity: _showUnreadMessageButton ? 1.0 : 0.0,
+                      child: _UnreadMessagesButton(
+                        onPressed: _animateToLatest,
                       ),
                     ),
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).padding.bottom + 12),
-                        child: _RecordButton(
-                          onPressed: () async {
-                            _audio.stop();
-                            final result = await showRecordPanel(
-                              context: context,
-                              title: const Text('Recording Message'),
-                              submitLabel: const Text('Finish & Send'),
-                            );
-                            if (result != null && mounted) {
-                              _submit(result.audio, result.duration);
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: IgnorePointer(
-                        ignoring: !_showUnreadMessageButton,
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 200),
-                          curve: Curves.easeOutQuart,
-                          opacity: _showUnreadMessageButton ? 1.0 : 0.0,
-                          child: _UnreadMessagesButton(
-                            onPressed: _animateToLatest,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  void _playPause(ChatMessage message, bool isPlaying) async {
+    if (isPlaying) {
+      _audio.pause();
+    } else {
+      if (_playbackMessageId == message.messageId) {
+        _audio.play();
+      } else {
+        setState(() => _playbackMessageId = message.messageId);
+
+        // Play locally or from network
+        if (message.messageId == null) {
+          await _audio.setPath(message.content.url);
+        } else {
+          await _audio.setUrl(message.content.url);
+        }
+        if (mounted) {
+          _audio.play();
+        }
+      }
+    }
   }
 
   Future<void> _submit(Uint8List audio, Duration duration) async {
@@ -596,9 +584,9 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
   }
 
   void _animateToLatest() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.minScrollExtent,
+    if (_pageController.hasClients) {
+      _pageController.animateTo(
+        _pageController.position.minScrollExtent,
         duration: const Duration(milliseconds: 600),
         curve: Curves.easeOutQuart,
       );
@@ -606,7 +594,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
   }
 
   void _scrollListener() {
-    final offset = _scrollController.offset;
+    final offset = _pageController.offset;
     ref.read(_scrollProvider.notifier).update(offset);
     final messages = _messages;
 
@@ -614,9 +602,9 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
       return;
     }
 
-    if (_scrollController.position.userScrollDirection ==
+    if (_pageController.position.userScrollDirection ==
             ScrollDirection.reverse &&
-        _scrollController.position.extentAfter < 350 &&
+        _pageController.position.extentAfter < 350 &&
         messages.isNotEmpty) {
       var oldest = messages.values.first.date;
       for (final m in messages.values) {
@@ -627,8 +615,8 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
       _fetchHistory(startDate: oldest);
     }
 
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent &&
+    if (_pageController.position.pixels >=
+            _pageController.position.maxScrollExtent &&
         _showUnreadMessageButton) {
       setState(() => _showUnreadMessageButton = false);
     }

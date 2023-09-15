@@ -153,3 +153,44 @@ class AudioChatMessage extends StatelessWidget {
     );
   }
 }
+
+class AudioMessagePlaybackBar extends StatelessWidget {
+  final ChatMessage message;
+  final PlaybackInfo playbackInfo;
+
+  const AudioMessagePlaybackBar({
+    super.key,
+    required this.message,
+    required this.playbackInfo,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+      width: double.infinity,
+      clipBehavior: Clip.hardEdge,
+      height: 13,
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(0xC4, 0xC4, 0xC4, 1.0),
+        border: Border.all(color: const Color.fromRGBO(0xDC, 0xDC, 0xDC, 1.0)),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+      ),
+      child: FractionallySizedBox(
+        widthFactor: playbackInfo.duration.inMilliseconds == 0
+            ? 0
+            : playbackInfo.position.inMilliseconds /
+                playbackInfo.duration.inMilliseconds,
+        heightFactor: 1.0,
+        alignment: Alignment.centerLeft,
+        child: const DecoratedBox(
+          decoration: BoxDecoration(
+            color: Color.fromRGBO(0x00, 0x7C, 0xEE, 1.0),
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+        ),
+      ),
+    );
+  }
+}

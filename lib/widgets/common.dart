@@ -2460,6 +2460,18 @@ String formatLongDateAndTime(DateTime d) {
   return '${dayOfWeekFormat.format(d)}, ${dateFormat.format(d)} at ${timeFormat.format(d)}';
 }
 
+// A long date, ex. September 9th
+String formatDate(DateTime d) {
+  final dateFormat = DateFormat.MMMMd();
+  final suffix = switch (d.day % 10) {
+    1 => 'st',
+    2 => 'nd',
+    3 => 'rd',
+    _ => 'th',
+  };
+  return '${dateFormat.format(d)}$suffix';
+}
+
 enum _BlockResult { block, noBlock }
 
 enum _ReportReason { deceptive, sexual, selfHarm, harmful }
