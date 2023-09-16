@@ -5,10 +5,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -16,6 +14,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/shell_page.dart';
+import 'package:openup/util/photo_picker.dart';
 import 'package:openup/widgets/audio_playback_symbol.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/collection_photo_stack.dart';
@@ -26,7 +25,6 @@ import 'package:openup/widgets/phone_number_input.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/record.dart';
 import 'package:openup/widgets/restart_app.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -705,7 +703,10 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
   }
 
   void _updatePhoto(int index) async {
-    final photo = await _selectPhoto(context);
+    final photo = await selectPhoto(
+      context,
+      label: 'This photo will be used in your profile',
+    );
     if (photo != null && mounted) {
       final notifier = ref.read(userProvider2.notifier);
       final uploadFuture = notifier.updateGalleryPhoto(
@@ -1618,7 +1619,10 @@ class _SimpleCollectionPhotoPickerState
                     children: [
                       Button(
                         onPressed: () async {
-                          final photo = await _selectPhoto(context);
+                          final photo = await selectPhoto(
+                            context,
+                            label: 'This photo will be used in your profile',
+                          );
                           if (mounted && photo != null) {
                             widget.onPhotosUpdated(List.of(widget.photos)
                               ..replaceRange(i, i + 1, [photo]));
@@ -1765,52 +1769,3 @@ class _UploadStep extends StatelessWidget {
 }
 
 enum _CreationStep { photos, upload }
-
-Future<File?> _selectPhoto(BuildContext context) async {
-  final source = await showCupertinoDialog<ImageSource>(
-    context: context,
-    builder: (context) {
-      return CupertinoAlertDialog(
-        title: const Text('Pick a photo'),
-        content: const Text('This photo will be used in your profile'),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.of(context).pop(ImageSource.camera),
-            child: const Text('Take new photo'),
-          ),
-          CupertinoDialogAction(
-            onPressed: () => Navigator.of(context).pop(ImageSource.gallery),
-            child: const Text('Pick from Gallery'),
-          ),
-          CupertinoDialogAction(
-            onPressed: Navigator.of(context).pop,
-            child: const Text('Cancel'),
-          ),
-        ],
-      );
-    },
-  );
-  if (source == null) {
-    return null;
-  }
-
-  final picker = ImagePicker();
-  XFile? result;
-  try {
-    if (source == ImageSource.camera) {
-      await Permission.camera.request();
-    }
-    result = await picker.pickImage(source: source);
-  } on PlatformException catch (e) {
-    if (e.code == 'camera_access_denied') {
-      result = null;
-    } else {
-      rethrow;
-    }
-  }
-  if (result == null) {
-    return null;
-  }
-
-  return File(result.path);
-}

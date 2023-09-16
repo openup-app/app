@@ -1,18 +1,15 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/util/photo_picker.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class SignupPhotos extends ConsumerStatefulWidget {
   const SignupPhotos({super.key});
@@ -92,7 +89,10 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
                       children: [
                         Button(
                           onPressed: () async {
-                            final photos = await _selectPhotos();
+                            final photos = await selectPhotos(
+                              context,
+                              label: 'These photo will be used in your profile',
+                            );
                             if (mounted && photos != null) {
                               setState(() => _photos.replaceRange(
                                   i, i + min(3 - i, photos.length), photos));
@@ -169,60 +169,6 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
         ],
       ),
     );
-  }
-
-  Future<List<File>?> _selectPhotos() async {
-    final source = await showCupertinoDialog<ImageSource>(
-      context: context,
-      builder: (context) {
-        return CupertinoAlertDialog(
-          title: const Text('Pick a photo'),
-          content: const Text('This photo will be used in your profile'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.of(context).pop(ImageSource.camera),
-              child: const Text('Take new photo'),
-            ),
-            CupertinoDialogAction(
-              onPressed: () => Navigator.of(context).pop(ImageSource.gallery),
-              child: const Text('Pick from Gallery'),
-            ),
-            CupertinoDialogAction(
-              onPressed: Navigator.of(context).pop,
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-    if (!mounted || source == null) {
-      return null;
-    }
-
-    final picker = ImagePicker();
-    List<XFile>? result;
-    try {
-      if (source == ImageSource.camera) {
-        await Permission.camera.request();
-        final image = await picker.pickImage(source: source);
-        if (image != null) {
-          result = [image];
-        }
-      } else {
-        result = await picker.pickMultiImage();
-      }
-    } on PlatformException catch (e) {
-      if (e.code == 'camera_access_denied') {
-        result = null;
-      } else {
-        rethrow;
-      }
-    }
-    if (!mounted || result == null) {
-      return null;
-    }
-
-    return result.map((e) => File(e.path)).toList();
   }
 
   void _submit(List<File> photos) {
