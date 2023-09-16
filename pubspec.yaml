@@ -156,6 +156,26 @@ flutter:
       fonts:
         - asset: assets/fonts/CoveredByYourGrace-Regular.ttf
           weight: 400
+    - family: SF Pro
+      fonts:
+        - asset: assets/fonts/SF-Pro-Text-Ultralight.otf
+          weight: 100
+        - asset: assets/fonts/SF-Pro-Text-Thin.otf
+          weight: 200
+        - asset: assets/fonts/SF-Pro-Text-light.otf
+          weight: 300
+        - asset: assets/fonts/SF-Pro-Text-Regular.otf
+          weight: 400
+        - asset: assets/fonts/SF-Pro-Text-Medium.otf
+          weight: 500
+        - asset: assets/fonts/SF-Pro-Text-Semibold.otf
+          weight: 600
+        - asset: assets/fonts/SF-Pro-Text-Bold.otf
+          weight: 700
+        - asset: assets/fonts/SF-Pro-Text-Heavy.otf
+          weight: 800
+        - asset: assets/fonts/SF-Pro-Text-Black.otf
+          weight: 900
 
 
 flutter_launcher_icons:
