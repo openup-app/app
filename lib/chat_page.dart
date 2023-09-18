@@ -22,6 +22,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_message.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/profile_display.dart';
+import 'package:openup/widgets/scaffold.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
@@ -143,357 +144,317 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
       ..removeWhere((i) => i is _Info);
     final chatroom = _chatroom;
 
-    return ColoredBox(
-      color: Colors.black,
-      child: Column(
-        children: [
-          SizedBox(height: MediaQuery.of(context).padding.top),
-          SizedBox(
-            height: 84.0,
-            child: Stack(
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10.0),
-                    child: Button(
-                      onPressed: Navigator.of(context).pop,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: RotatedBox(
-                          quarterTurns: 2,
-                          child: SvgPicture.asset(
-                            'assets/images/chevron_right.svg',
-                            colorFilter: const ColorFilter.mode(
-                              Color.fromRGBO(0x00, 0x7C, 0xEE, 1.0),
-                              BlendMode.srcIn,
-                            ),
-                            height: 28,
-                          ),
+    return Scaffold(
+      appBar: OpenupAppBar(
+        body: OpenupAppBarBody(
+          leading: const OpenupAppBarBackButton(),
+          center: Builder(
+            builder: (context) {
+              final otherProfile = _otherProfile;
+              if (otherProfile == null) {
+                return const SizedBox.shrink();
+              }
+              return Button(
+                onPressed: () {
+                  _audio.pause();
+                  showProfileBottomSheet(
+                    context: context,
+                    profile: _otherProfile!,
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        clipBehavior: Clip.hardEdge,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
                         ),
-                      ),
-                    ),
-                  ),
-                ),
-                if (_otherProfile != null) ...[
-                  Center(
-                    child: Button(
-                      onPressed: () {
-                        _audio.pause();
-                        showProfileBottomSheet(
-                          context: context,
-                          profile: _otherProfile!,
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 42,
-                              height: 42,
-                              clipBehavior: Clip.hardEdge,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
+                        child: _otherProfile?.photo == null
+                            ? const SizedBox.shrink()
+                            : Image.network(
+                                _otherProfile!.photo,
+                                fit: BoxFit.cover,
                               ),
-                              child: _otherProfile?.photo == null
-                                  ? const SizedBox.shrink()
-                                  : Image.network(
-                                      _otherProfile!.photo,
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
-                            const SizedBox(width: 8),
-                            OnlineIndicatorBuilder(
-                              uid: _otherProfile!.uid,
-                              builder: (context, online) {
-                                return Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (online) const SizedBox(height: 12),
-                                    AutoSizeText(
-                                      _otherProfile?.name ?? '',
-                                      minFontSize: 16,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontFamily: 'Covered By Your Grace',
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    if (online)
-                                      const Text(
-                                        'online',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 12,
-                                          color: Color.fromRGBO(
-                                              0x94, 0x94, 0x94, 1.0),
-                                        ),
-                                      ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ],
-                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Expanded(
-            child: Stack(
-              children: [
-                if (messages == null)
-                  Padding(
-                    padding: EdgeInsets.only(
-                        bottom:
-                            (80 + MediaQuery.of(context).padding.bottom) / 2),
-                    child: const Center(
-                      child: LoadingIndicator(),
-                    ),
-                  ),
-                if (messages != null &&
-                    messages.isEmpty &&
-                    _otherProfile != null)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        'Send your first message to ${_otherProfile!.name}',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            color: const Color.fromRGBO(0x70, 0x70, 0x70, 1.0)),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  )
-                else if (items.isNotEmpty && chatroom != null) ...[
-                  Center(
-                    child: SizedBox(
-                      height: 354,
-                      child: PageView.builder(
-                        controller: _pageController,
-                        reverse: true,
-                        itemCount: items.length,
-                        clipBehavior: Clip.none,
-                        itemBuilder: (context, index) {
-                          final item = items[index];
-                          final scrollOffset =
-                              (index - _pageScroll).abs().clamp(0, 1);
-                          return item.when(
-                            info: (info) => const SizedBox.shrink(),
-                            message: (message) {
-                              final fromMe = message.uid == myUid;
-                              final isCurrent =
-                                  _playbackMessageId == message.messageId;
-                              final playbackStream = isCurrent
-                                  ? _audio.playbackInfoStream
-                                  : Stream.fromIterable([
-                                      PlaybackInfo(
-                                        position: Duration.zero,
-                                        duration: message.content.duration,
-                                        state: PlaybackState.idle,
-                                        frequencies: [],
-                                      )
-                                    ]);
-                              return Transform.scale(
-                                alignment: Alignment.center,
-                                scale: 1 - scrollOffset * 0.1,
-                                child: WiggleBuilder(
-                                  enabled: scrollOffset < 1,
-                                  seed: message.messageId.hashCode,
-                                  builder: (context, child, wiggle) {
-                                    final attenuation = 1.0 - scrollOffset;
-                                    final offset = Offset(
-                                          wiggle(frequency: 0.3, amplitude: 20),
-                                          wiggle(frequency: 0.3, amplitude: 20),
-                                        ) *
-                                        attenuation;
-
-                                    final rotationZ = wiggle(
-                                        frequency: 0.5,
-                                        amplitude: radians(4) * attenuation);
-                                    final rotationY = wiggle(
-                                        frequency: 0.5,
-                                        amplitude: radians(10) * attenuation);
-                                    const perspectiveDivide = 0.002;
-                                    final transform = Matrix4.identity()
-                                      ..setEntry(3, 2, perspectiveDivide)
-                                      ..rotateY(rotationY)
-                                      ..rotateZ(rotationZ);
-                                    return Transform.translate(
-                                      offset: offset,
-                                      child: Transform(
-                                        transform: transform,
-                                        alignment: Alignment.center,
-                                        child: child,
-                                      ),
-                                    );
-                                  },
-                                  child: ColorFiltered(
-                                    colorFilter: ColorFilter.mode(
-                                      Color.fromRGBO(
-                                          0x00,
-                                          0x00,
-                                          0x00,
-                                          (index - _pageScroll)
-                                                  .abs()
-                                                  .clamp(0, 1) *
-                                              0.6),
-                                      BlendMode.srcOver,
-                                    ),
-                                    child: StreamBuilder<bool>(
-                                      stream: playbackStream.map((event) =>
-                                          event.state == PlaybackState.playing),
-                                      initialData: false,
-                                      builder: (context, snapshot) {
-                                        final isPlaying = snapshot.requireData;
-                                        return Button(
-                                          onPressed: () =>
-                                              _playPause(message, isPlaying),
-                                          child: Container(
-                                            padding: const EdgeInsets.all(16),
-                                            decoration: const BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(5)),
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.stretch,
-                                              children: [
-                                                AspectRatio(
-                                                  aspectRatio: 1 / 1,
-                                                  child: Stack(
-                                                    fit: StackFit.expand,
-                                                    alignment: Alignment.center,
-                                                    children: [
-                                                      Image.network(
-                                                        fromMe
-                                                            ? myProfile.photo
-                                                            : chatroom.profile
-                                                                .profile.photo,
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                      if (!isPlaying)
-                                                        const Icon(
-                                                          Icons.play_arrow,
-                                                          size: 64,
-                                                          shadows: [
-                                                            Shadow(
-                                                              blurRadius: 8,
-                                                              color: Color
-                                                                  .fromRGBO(
-                                                                      0x00,
-                                                                      0x00,
-                                                                      0x00,
-                                                                      0.25),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Text(
-                                                        formatDate(message.date
-                                                            .toLocal()),
-                                                        style: const TextStyle(
-                                                          fontFamily:
-                                                              'Covered By Your Grace',
-                                                          fontSize: 22,
-                                                          fontWeight:
-                                                              FontWeight.w400,
-                                                          color: Color.fromRGBO(
-                                                              0x29,
-                                                              0x29,
-                                                              0x29,
-                                                              1.0),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      formatTime(message.date
-                                                          .toLocal()),
-                                                      textAlign:
-                                                          TextAlign.right,
-                                                      style: const TextStyle(
-                                                        fontFamily:
-                                                            'Covered By Your Grace',
-                                                        fontSize: 22,
-                                                        fontWeight:
-                                                            FontWeight.w400,
-                                                        color: Color.fromRGBO(
-                                                            0x29,
-                                                            0x29,
-                                                            0x29,
-                                                            1.0),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 14),
-                                                StreamBuilder<PlaybackInfo>(
-                                                  key: ValueKey(
-                                                      message.messageId ?? ''),
-                                                  initialData:
-                                                      const PlaybackInfo(),
-                                                  stream: playbackStream,
-                                                  builder: (context, snapshot) {
-                                                    final playbackInfo =
-                                                        snapshot.requireData;
-                                                    return AudioMessagePlaybackBar(
-                                                      message: message,
-                                                      playbackInfo:
-                                                          playbackInfo,
-                                                    );
-                                                  },
-                                                ),
-                                                const SizedBox(height: 12),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
+                      const SizedBox(width: 8),
+                      OnlineIndicatorBuilder(
+                        uid: _otherProfile!.uid,
+                        builder: (context, online) {
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (online) const SizedBox(height: 12),
+                              AutoSizeText(
+                                _otherProfile?.name ?? '',
+                                minFontSize: 16,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: 'Covered By Your Grace',
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              if (online)
+                                const Text(
+                                  'online',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w400,
+                                    fontSize: 12,
+                                    color:
+                                        Color.fromRGBO(0x94, 0x94, 0x94, 1.0),
                                   ),
                                 ),
-                              );
-                            },
+                            ],
                           );
                         },
                       ),
-                    ),
-                  ),
-                ],
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: IgnorePointer(
-                    ignoring: !_showUnreadMessageButton,
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeOutQuart,
-                      opacity: _showUnreadMessageButton ? 1.0 : 0.0,
-                      child: _UnreadMessagesButton(
-                        onPressed: _animateToLatest,
-                      ),
-                    ),
+                    ],
                   ),
                 ),
-              ],
+              );
+            },
+          ),
+        ),
+      ),
+      body: Stack(
+        children: [
+          if (messages == null)
+            Padding(
+              padding: EdgeInsets.only(
+                  bottom: (80 + MediaQuery.of(context).padding.bottom) / 2),
+              child: const Center(
+                child: LoadingIndicator(),
+              ),
+            ),
+          if (messages != null && messages.isEmpty && _otherProfile != null)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  'Send your first message to ${_otherProfile!.name}',
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: const Color.fromRGBO(0x70, 0x70, 0x70, 1.0)),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          else if (items.isNotEmpty && chatroom != null) ...[
+            Center(
+              child: SizedBox(
+                height: 354,
+                child: ClipRect(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    reverse: true,
+                    itemCount: items.length,
+                    clipBehavior: Clip.none,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final scrollOffset =
+                          (index - _pageScroll).abs().clamp(0, 1);
+                      return item.when(
+                        info: (info) => const SizedBox.shrink(),
+                        message: (message) {
+                          final fromMe = message.uid == myUid;
+                          final isCurrent =
+                              _playbackMessageId == message.messageId;
+                          final playbackStream = isCurrent
+                              ? _audio.playbackInfoStream
+                              : Stream.fromIterable([
+                                  PlaybackInfo(
+                                    position: Duration.zero,
+                                    duration: message.content.duration,
+                                    state: PlaybackState.idle,
+                                    frequencies: [],
+                                  )
+                                ]);
+                          return Transform.scale(
+                            alignment: Alignment.center,
+                            scale: 1 - scrollOffset * 0.1,
+                            child: WiggleBuilder(
+                              enabled: scrollOffset < 1,
+                              seed: message.messageId.hashCode,
+                              builder: (context, child, wiggle) {
+                                final attenuation = 1.0 - scrollOffset;
+                                final offset = Offset(
+                                      wiggle(frequency: 0.3, amplitude: 20),
+                                      wiggle(frequency: 0.3, amplitude: 20),
+                                    ) *
+                                    attenuation;
+
+                                final rotationZ = wiggle(
+                                    frequency: 0.5,
+                                    amplitude: radians(4) * attenuation);
+                                final rotationY = wiggle(
+                                    frequency: 0.5,
+                                    amplitude: radians(10) * attenuation);
+                                const perspectiveDivide = 0.002;
+                                final transform = Matrix4.identity()
+                                  ..setEntry(3, 2, perspectiveDivide)
+                                  ..rotateY(rotationY)
+                                  ..rotateZ(rotationZ);
+                                return Transform.translate(
+                                  offset: offset,
+                                  child: Transform(
+                                    transform: transform,
+                                    alignment: Alignment.center,
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: ColorFiltered(
+                                colorFilter: ColorFilter.mode(
+                                  Color.fromRGBO(
+                                      0x00,
+                                      0x00,
+                                      0x00,
+                                      (index - _pageScroll).abs().clamp(0, 1) *
+                                          0.6),
+                                  BlendMode.srcOver,
+                                ),
+                                child: StreamBuilder<bool>(
+                                  stream: playbackStream.map((event) =>
+                                      event.state == PlaybackState.playing),
+                                  initialData: false,
+                                  builder: (context, snapshot) {
+                                    final isPlaying = snapshot.requireData;
+                                    return Button(
+                                      onPressed: () =>
+                                          _playPause(message, isPlaying),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(5)),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            AspectRatio(
+                                              aspectRatio: 1 / 1,
+                                              child: Stack(
+                                                fit: StackFit.expand,
+                                                alignment: Alignment.center,
+                                                children: [
+                                                  Image.network(
+                                                    fromMe
+                                                        ? myProfile.photo
+                                                        : chatroom.profile
+                                                            .profile.photo,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                  if (!isPlaying)
+                                                    const Icon(
+                                                      Icons.play_arrow,
+                                                      size: 64,
+                                                      shadows: [
+                                                        Shadow(
+                                                          blurRadius: 8,
+                                                          color: Color.fromRGBO(
+                                                              0x00,
+                                                              0x00,
+                                                              0x00,
+                                                              0.25),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    formatDate(
+                                                        message.date.toLocal()),
+                                                    style: const TextStyle(
+                                                      fontFamily:
+                                                          'Covered By Your Grace',
+                                                      fontSize: 22,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      color: Color.fromRGBO(
+                                                          0x29,
+                                                          0x29,
+                                                          0x29,
+                                                          1.0),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  formatTime(
+                                                      message.date.toLocal()),
+                                                  textAlign: TextAlign.right,
+                                                  style: const TextStyle(
+                                                    fontFamily:
+                                                        'Covered By Your Grace',
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: Color.fromRGBO(
+                                                        0x29, 0x29, 0x29, 1.0),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 14),
+                                            StreamBuilder<PlaybackInfo>(
+                                              key: ValueKey(
+                                                  message.messageId ?? ''),
+                                              initialData: const PlaybackInfo(),
+                                              stream: playbackStream,
+                                              builder: (context, snapshot) {
+                                                final playbackInfo =
+                                                    snapshot.requireData;
+                                                return AudioMessagePlaybackBar(
+                                                  message: message,
+                                                  playbackInfo: playbackInfo,
+                                                );
+                                              },
+                                            ),
+                                            const SizedBox(height: 12),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+          Align(
+            alignment: Alignment.centerRight,
+            child: IgnorePointer(
+              ignoring: !_showUnreadMessageButton,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutQuart,
+                opacity: _showUnreadMessageButton ? 1.0 : 0.0,
+                child: _UnreadMessagesButton(
+                  onPressed: _animateToLatest,
+                ),
+              ),
             ),
           ),
         ],
