@@ -15,31 +15,89 @@ import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/scaffold.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 class ConversationsPage extends ConsumerStatefulWidget {
-  const ConversationsPage({
-    Key? key,
-  }) : super(key: key);
+  const ConversationsPage({super.key});
 
   @override
   ConsumerState<ConversationsPage> createState() => _ConversationsPageState();
 }
 
-class _ConversationsPageState extends ConsumerState<ConversationsPage>
-    with SingleTickerProviderStateMixin {
-  final _searchController = TextEditingController();
-  String _filterString = '';
+class _ConversationsPageState extends ConsumerState<ConversationsPage> {
+  String _filter = '';
 
-  final _collections = <Collection>[];
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: OpenupAppBar(
+        body: const OpenupAppBarBody(
+          center: Text('Messages'),
+        ),
+        toolbar: Padding(
+          padding: const EdgeInsets.only(
+            top: 4,
+            left: 11,
+            right: 11,
+          ),
+          child: _SearchField(
+            onSearchChanged: (value) => setState(() => _filter = value),
+          ),
+        ),
+        blurBackground: false,
+      ),
+      body: Builder(
+        builder: (context) {
+          final loggedIn = ref.watch(authProvider.select((p) {
+            return p.map(
+              guest: (_) => false,
+              signedIn: (_) => true,
+            );
+          }));
+          if (!loggedIn) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Log in start conversations'),
+                ElevatedButton(
+                  onPressed: () => context.pushNamed('signup'),
+                  child: const Text('Log in'),
+                ),
+              ],
+            );
+          }
+          return _ConversationsPageContents(
+            filter: _filter,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SearchField extends StatefulWidget {
+  final ValueChanged<String> onSearchChanged;
+
+  const _SearchField({
+    super.key,
+    required this.onSearchChanged,
+  });
+
+  @override
+  State<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends State<_SearchField> {
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(() {
-      if (_filterString != _searchController.text) {
-        setState(() => _filterString = _searchController.text);
-      }
+      widget.onSearchChanged(_searchController.text);
     });
   }
 
@@ -51,211 +109,198 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
 
   @override
   Widget build(BuildContext context) {
-    final loggedIn = ref.watch(authProvider.select((p) {
-      return p.map(
-        guest: (_) => false,
-        signedIn: (_) => true,
-      );
-    }));
-    if (!loggedIn) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
+    return Container(
+      height: 32,
+      clipBehavior: Clip.hardEdge,
+      decoration: const BoxDecoration(
+        color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
+        borderRadius: BorderRadius.all(Radius.circular(6)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Log in start conversations'),
-          ElevatedButton(
-            onPressed: () => context.pushNamed('signup'),
-            child: const Text('Log in'),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 11, right: 6),
+              child: TextFormField(
+                controller: _searchController,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                ),
+                textAlignVertical: TextAlignVertical.center,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  icon: Icon(
+                    Icons.search,
+                    size: 18,
+                  ),
+                  hintText: 'Search',
+                  hintStyle: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w400,
+                    color: Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
+                  ),
+                ),
+              ),
+            ),
           ),
+          if (_searchController.text.isNotEmpty)
+            Button(
+              onPressed: () {
+                setState(() => _searchController.clear());
+                FocusScope.of(context).unfocus();
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Icon(
+                  Icons.close,
+                  color: Colors.black,
+                  size: 16,
+                ),
+              ),
+            ),
         ],
-      );
-    }
+      ),
+    );
+  }
+}
 
+class _ConversationsPageContents extends ConsumerStatefulWidget {
+  final String filter;
+
+  const _ConversationsPageContents({
+    Key? key,
+    this.filter = '',
+  }) : super(key: key);
+
+  @override
+  ConsumerState<_ConversationsPageContents> createState() =>
+      _ConversationsPageContentsState();
+}
+
+class _ConversationsPageContentsState
+    extends ConsumerState<_ConversationsPageContents>
+    with SingleTickerProviderStateMixin {
+  final _collections = <Collection>[];
+
+  @override
+  Widget build(BuildContext context) {
     return ActivePage(
       onActivate: () {
         /// Notifications don't update chats, so refreshe on page activation
         ref.read(userProvider2.notifier).refreshChatrooms();
       },
       onDeactivate: () {},
-      child: ColoredBox(
-        color: Colors.black,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: MediaQuery.of(context).padding.top),
-            const Center(
-              child: Text(
-                'Messages',
-                style: TextStyle(
-                  fontFamily: 'Covered By Your Grace',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 20,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(height: 11),
-            Container(
-              height: 32,
-              margin: const EdgeInsets.symmetric(horizontal: 11),
-              clipBehavior: Clip.hardEdge,
-              decoration: const BoxDecoration(
-                color: Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-                borderRadius: BorderRadius.all(Radius.circular(6)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: MediaQuery.of(context).padding.top),
+          Expanded(
+            child: Column(
+              children: [
+                if (widget.filter.isEmpty)
+                  Visibility(
+                    visible: false,
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 11, right: 6),
-                      child: TextFormField(
-                        controller: _searchController,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        textAlignVertical: TextAlignVertical.center,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          icon: Icon(
-                            Icons.search,
-                            size: 18,
-                          ),
-                          hintText: 'Search',
-                          hintStyle: TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w400,
-                            color: Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
-                          ),
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: SizedBox(
+                        height: 150,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          itemCount: _collections.length,
+                          itemBuilder: (context, index) {
+                            final collection = _collections[index];
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 82,
+                                  height: 110,
+                                  clipBehavior: Clip.hardEdge,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: const Color.fromRGBO(
+                                          0xFF, 0x5F, 0x5F, 1.0),
+                                      width: 2,
+                                    ),
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(11)),
+                                  ),
+                                  margin: const EdgeInsets.all(9),
+                                  child: Image.network(
+                                    collection.photos.first.url,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                SizedBox(
+                                  width: 82,
+                                  child: Text(
+                                    'Name',
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w200,
+                                          color: Colors.white,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),
                   ),
-                  if (_filterString.isNotEmpty)
-                    Button(
-                      onPressed: () {
-                        setState(() => _searchController.text = "");
-                        FocusScope.of(context).unfocus();
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Icon(
-                          Icons.close,
-                          color: Colors.black,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Column(
-                children: [
-                  if (_filterString.isEmpty)
-                    Visibility(
-                      visible: false,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: SizedBox(
-                          height: 150,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            keyboardDismissBehavior:
-                                ScrollViewKeyboardDismissBehavior.onDrag,
-                            itemCount: _collections.length,
-                            itemBuilder: (context, index) {
-                              final collection = _collections[index];
-                              return Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 82,
-                                    height: 110,
-                                    clipBehavior: Clip.hardEdge,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: const Color.fromRGBO(
-                                            0xFF, 0x5F, 0x5F, 1.0),
-                                        width: 2,
-                                      ),
-                                      borderRadius: const BorderRadius.all(
-                                          Radius.circular(11)),
-                                    ),
-                                    margin: const EdgeInsets.all(9),
-                                    child: Image.network(
-                                      collection.photos.first.url,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  SizedBox(
-                                    width: 82,
-                                    child: Text(
-                                      'Name',
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.center,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium!
-                                          .copyWith(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w200,
-                                            color: Colors.white,
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  Expanded(
-                    child: Consumer(
-                      builder: (context, ref, child) {
-                        final filteredChatrooms =
-                            ref.watch(userProvider2.select((p) {
-                          return p.map(
-                            guest: (_) => null,
-                            signedIn: (signedIn) =>
-                                signedIn.chatrooms?.where((c) {
-                              return c.profile.profile.name
-                                  .toLowerCase()
-                                  .contains(_filterString.toLowerCase());
-                            }),
-                          );
-                        }));
-
-                        final nonPendingChatrooms = filteredChatrooms
-                            ?.where((chatroom) =>
-                                chatroom.inviteState != ChatroomState.pending)
-                            .toList();
-                        return _ConversationList(
-                          chatrooms: nonPendingChatrooms,
-                          emptyLabel:
-                              'Invite someone to chat,\nthen continue the conversation here',
-                          filtered: _filterString.isNotEmpty,
-                          onRefresh:
-                              ref.read(userProvider2.notifier).refreshChatrooms,
-                          onOpen: _openChat,
-                          onDelete: (index) => _deleteChatroom(
-                              nonPendingChatrooms![index].profile.profile),
+                Expanded(
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final filteredChatrooms =
+                          ref.watch(userProvider2.select((p) {
+                        return p.map(
+                          guest: (_) => null,
+                          signedIn: (signedIn) =>
+                              signedIn.chatrooms?.where((c) {
+                            return c.profile.profile.name
+                                .toLowerCase()
+                                .contains(widget.filter.toLowerCase());
+                          }),
                         );
-                      },
-                    ),
+                      }));
+
+                      final nonPendingChatrooms = filteredChatrooms
+                          ?.where((chatroom) =>
+                              chatroom.inviteState != ChatroomState.pending)
+                          .toList();
+                      return _ConversationList(
+                        chatrooms: nonPendingChatrooms,
+                        emptyLabel:
+                            'Invite someone to chat,\nthen continue the conversation here',
+                        filtered: widget.filter.isNotEmpty,
+                        onRefresh:
+                            ref.read(userProvider2.notifier).refreshChatrooms,
+                        onOpen: _openChat,
+                        onDelete: (index) => _deleteChatroom(
+                            nonPendingChatrooms![index].profile.profile),
+                      );
+                    },
                   ),
-                  SizedBox(
-                    height: MediaQuery.of(context).viewInsets.bottom,
-                  ),
-                ],
-              ),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).viewInsets.bottom,
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

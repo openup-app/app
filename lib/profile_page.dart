@@ -45,242 +45,249 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return ref.watch(userProvider2).map(
-      guest: (_) {
-        return Container(
-          color: const Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('Log in to create a profile'),
-                ElevatedButton(
-                  onPressed: () => context.pushNamed('signup'),
-                  child: const Text('Log in'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-      signedIn: (signedIn) {
-        final profile = signedIn.account.profile;
-        return ActivePage(
-          onActivate: () {},
-          onDeactivate: () {
-            _profileBuilderKey.currentState?.pause();
-          },
-          child: Container(
+    return Scaffold(
+      body: ref.watch(userProvider2).map(
+        guest: (_) {
+          return Container(
             color: const Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  controller: _scrollController,
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  child: Builder(
-                    builder: (context) {
-                      return Column(
-                        children: [
-                          SizedBox(height: MediaQuery.of(context).padding.top),
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              child: Text(
-                                'Profile & Settings',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color.fromRGBO(0x79, 0x79, 0x79, 1.0),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Log in to create a profile'),
+                  ElevatedButton(
+                    onPressed: () => context.pushNamed('signup'),
+                    child: const Text('Log in'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        signedIn: (signedIn) {
+          final profile = signedIn.account.profile;
+          return ActivePage(
+            onActivate: () {},
+            onDeactivate: () {
+              _profileBuilderKey.currentState?.pause();
+            },
+            child: Container(
+              color: const Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    controller: _scrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    child: Builder(
+                      builder: (context) {
+                        return Column(
+                          children: [
+                            SizedBox(
+                                height: MediaQuery.of(context).padding.top),
+                            const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                child: Text(
+                                  'Profile & Settings',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color:
+                                        Color.fromRGBO(0x79, 0x79, 0x79, 1.0),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          SizedBox(
-                            height: constraints.maxHeight -
-                                (MediaQuery.of(context).padding.bottom + 150),
-                            child: _ProfilePanel(
-                              profile: profile,
-                              profileBuilderKey: _profileBuilderKey,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Button(
-                            onPressed: () {
-                              _profileBuilderKey.currentState?.pause();
-                              showProfileBottomSheet(
-                                context: context,
+                            SizedBox(
+                              height: constraints.maxHeight -
+                                  (MediaQuery.of(context).padding.bottom + 150),
+                              child: _ProfilePanel(
                                 profile: profile,
-                                useBackIconForCloseButton: true,
-                              );
-                            },
-                            child: Container(
-                              height: 52,
-                              clipBehavior: Clip.hardEdge,
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              decoration: const BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(16)),
-                                color: Colors.white,
+                                profileBuilderKey: _profileBuilderKey,
                               ),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'Preview',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
+                            ),
+                            const SizedBox(height: 16),
+                            Button(
+                              onPressed: () {
+                                _profileBuilderKey.currentState?.pause();
+                                showProfileBottomSheet(
+                                  context: context,
+                                  profile: profile,
+                                  useBackIconForCloseButton: true,
+                                );
+                              },
+                              child: Container(
+                                height: 52,
+                                clipBehavior: Clip.hardEdge,
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: const BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(16)),
+                                  color: Colors.white,
+                                ),
+                                alignment: Alignment.center,
+                                child: const Text(
+                                  'Preview',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          DefaultTextStyle(
-                            style: const TextStyle(color: Colors.white),
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const _SectionTitle(label: 'Name'),
-                                  const _CupertinoRow(
-                                    leading: _NameField(),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  const _SectionTitle(
-                                    label: 'Phone Number',
-                                  ),
-                                  const SizedBox(height: 8),
-                                  const _PhoneNumberField(),
-                                  const SizedBox(height: 16),
-                                  Button(
-                                    onPressed: () =>
-                                        context.pushNamed('contacts'),
-                                    child: const _CupertinoRow(
-                                      leading: Row(
-                                        children: [
-                                          Icon(
-                                            CupertinoIcons.book,
-                                            color: Color.fromRGBO(
-                                                0xBA, 0xBA, 0xBA, 1.0),
-                                          ),
-                                          SizedBox(width: 12),
-                                          Expanded(child: Text(' My Contacts')),
-                                        ],
-                                      ),
+                            const SizedBox(height: 16),
+                            DefaultTextStyle(
+                              style: const TextStyle(color: Colors.white),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const _SectionTitle(label: 'Name'),
+                                    const _CupertinoRow(
+                                      leading: _NameField(),
                                     ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Button(
-                                    onPressed: () =>
-                                        context.pushNamed('blocked'),
-                                    child: const _CupertinoRow(
-                                      leading: Text('Blocked users'),
-                                      trailing: Icon(
-                                        Icons.chevron_right,
-                                        color: Color.fromRGBO(
-                                            0xBA, 0xBA, 0xBA, 1.0),
-                                      ),
+                                    const SizedBox(height: 12),
+                                    const _SectionTitle(
+                                      label: 'Phone Number',
                                     ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Button(
-                                    onPressed: () =>
-                                        context.pushNamed('contact_us'),
-                                    child: const _CupertinoRow(
-                                      leading: Text('Contact us'),
-                                      trailing: Icon(
-                                        Icons.chevron_right,
-                                        color: Color.fromRGBO(
-                                            0xBA, 0xBA, 0xBA, 1.0),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Button(
-                                    onPressed: _showSignOutConfirmationModal,
-                                    child: const _CupertinoRow(
-                                      center: Text(
-                                        'Sign out',
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Button(
-                                    onPressed:
-                                        _showDeleteAccountConfirmationModal,
-                                    child: const _CupertinoRow(
-                                      center: Text(
-                                        'Delete Account',
-                                        style: TextStyle(
-                                          color: Color.fromRGBO(
-                                              0xFF, 0x00, 0x00, 1.0),
+                                    const SizedBox(height: 8),
+                                    const _PhoneNumberField(),
+                                    const SizedBox(height: 16),
+                                    Button(
+                                      onPressed: () =>
+                                          context.pushNamed('contacts'),
+                                      child: const _CupertinoRow(
+                                        leading: Row(
+                                          children: [
+                                            Icon(
+                                              CupertinoIcons.book,
+                                              color: Color.fromRGBO(
+                                                  0xBA, 0xBA, 0xBA, 1.0),
+                                            ),
+                                            SizedBox(width: 12),
+                                            Expanded(
+                                                child: Text(' My Contacts')),
+                                          ],
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  if (kDebugMode)
-                                    Builder(
-                                      builder: (context) {
-                                        final authState =
-                                            ref.watch(authProvider);
-                                        final signedIn = authState.map(
-                                          guest: (_) => null,
-                                          signedIn: (signedIn) => signedIn,
-                                        );
-                                        if (signedIn == null) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        return Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const SizedBox(height: 16),
-                                            Center(
-                                              child: Text(
-                                                signedIn.uid,
-                                                textAlign: TextAlign.center,
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Center(
-                                              child: Text(
-                                                signedIn.phoneNumber ?? '',
-                                                textAlign: TextAlign.center,
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
+                                    const SizedBox(height: 16),
+                                    Button(
+                                      onPressed: () =>
+                                          context.pushNamed('blocked'),
+                                      child: const _CupertinoRow(
+                                        leading: Text('Blocked users'),
+                                        trailing: Icon(
+                                          Icons.chevron_right,
+                                          color: Color.fromRGBO(
+                                              0xBA, 0xBA, 0xBA, 1.0),
+                                        ),
+                                      ),
                                     ),
-                                  const SizedBox(height: 16),
-                                  SizedBox(
-                                    height: MediaQuery.of(context)
-                                        .viewInsets
-                                        .bottom,
-                                  ),
-                                ],
+                                    const SizedBox(height: 16),
+                                    Button(
+                                      onPressed: () =>
+                                          context.pushNamed('contact_us'),
+                                      child: const _CupertinoRow(
+                                        leading: Text('Contact us'),
+                                        trailing: Icon(
+                                          Icons.chevron_right,
+                                          color: Color.fromRGBO(
+                                              0xBA, 0xBA, 0xBA, 1.0),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Button(
+                                      onPressed: _showSignOutConfirmationModal,
+                                      child: const _CupertinoRow(
+                                        center: Text(
+                                          'Sign out',
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Button(
+                                      onPressed:
+                                          _showDeleteAccountConfirmationModal,
+                                      child: const _CupertinoRow(
+                                        center: Text(
+                                          'Delete Account',
+                                          style: TextStyle(
+                                            color: Color.fromRGBO(
+                                                0xFF, 0x00, 0x00, 1.0),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    if (kDebugMode)
+                                      Builder(
+                                        builder: (context) {
+                                          final authState =
+                                              ref.watch(authProvider);
+                                          final signedIn = authState.map(
+                                            guest: (_) => null,
+                                            signedIn: (signedIn) => signedIn,
+                                          );
+                                          if (signedIn == null) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          return Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const SizedBox(height: 16),
+                                              Center(
+                                                child: Text(
+                                                  signedIn.uid,
+                                                  textAlign: TextAlign.center,
+                                                  style: const TextStyle(
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Center(
+                                                child: Text(
+                                                  signedIn.phoneNumber ?? '',
+                                                  textAlign: TextAlign.center,
+                                                  style: const TextStyle(
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ),
+                                    const SizedBox(height: 16),
+                                    SizedBox(
+                                      height: MediaQuery.of(context)
+                                          .viewInsets
+                                          .bottom,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                );
-              },
+                            SizedBox(
+                                height: MediaQuery.of(context).padding.bottom),
+                          ],
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 

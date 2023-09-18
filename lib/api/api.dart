@@ -1081,6 +1081,57 @@ class Chatroom with _$Chatroom {
       _$ChatroomFromJson(json);
 }
 
+@freezed
+class Event with _$Event {
+  const factory Event({
+    required String id,
+    required String title,
+    required HostDetails host,
+    required EventLocation location,
+    @_DateTimeConverter() required DateTime startDate,
+    @_DateTimeConverter() required DateTime endDate,
+    @_UriConverter() required Uri photo,
+    required int price,
+    required int views,
+    required EventAttendance attendance,
+    required String description,
+  }) = _Event;
+
+  factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
+}
+
+@freezed
+class EventLocation with _$EventLocation {
+  const factory EventLocation({
+    required LatLong? latLong,
+    required String name,
+  }) = _EventLocation;
+
+  factory EventLocation.fromJson(Map<String, dynamic> json) =>
+      _$EventLocationFromJson(json);
+}
+
+@Freezed(unionKey: 'type')
+class EventAttendance with _$EventAttendance {
+  const factory EventAttendance.unlimited() = _UnlimitedAttendance;
+  const factory EventAttendance.limited(int limit) = _LimitedAttendance;
+
+  factory EventAttendance.fromJson(Map<String, dynamic> json) =>
+      _$EventAttendanceFromJson(json);
+}
+
+@freezed
+class HostDetails with _$HostDetails {
+  const factory HostDetails({
+    required String uid,
+    required String name,
+    required String photo,
+  }) = _HostDetails;
+
+  factory HostDetails.fromJson(Map<String, dynamic> json) =>
+      _$HostDetailsFromJson(json);
+}
+
 class _DateTimeConverter implements JsonConverter<DateTime, String> {
   const _DateTimeConverter();
 
@@ -1099,6 +1150,16 @@ class _Base64Converter implements JsonConverter<Uint8List, String> {
 
   @override
   String toJson(Uint8List data) => base64Encode(data);
+}
+
+class _UriConverter implements JsonConverter<Uri, String> {
+  const _UriConverter();
+
+  @override
+  Uri fromJson(String value) => Uri.parse(value);
+
+  @override
+  String toJson(Uri data) => data.toString();
 }
 
 enum ChatroomState { invited, pending, accepted }

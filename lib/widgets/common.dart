@@ -2287,6 +2287,45 @@ class RadioTile extends StatelessWidget {
   }
 }
 
+class RoundedButton extends StatelessWidget {
+  final Color color;
+  final VoidCallback? onPressed;
+  final Widget child;
+
+  const RoundedButton({
+    super.key,
+    this.color = const Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
+    required this.onPressed,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onPressed,
+      child: Container(
+        width: 140,
+        height: 53,
+        clipBehavior: Clip.hardEdge,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(6),
+          ),
+        ),
+        child: DefaultTextStyle(
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w400,
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
 class UnreadIndicator extends StatelessWidget {
   final int count;
 
@@ -2470,6 +2509,18 @@ String formatDate(DateTime d) {
     _ => 'th',
   };
   return '${dateFormat.format(d)}$suffix';
+}
+
+// Short date, ex. 9.17.23
+String formatDateShort(DateTime d) {
+  final dateFormat = DateFormat('M.d.yy');
+  return dateFormat.format(d);
+}
+
+// Full day of the week, ex. Wednesday
+String formatDayOfWeek(DateTime d) {
+  final dayOfWeekFormat = DateFormat.EEEE();
+  return dayOfWeekFormat.format(d);
 }
 
 enum _BlockResult { block, noBlock }

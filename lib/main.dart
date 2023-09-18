@@ -22,11 +22,14 @@ import 'package:openup/blocked_users_page.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/contact_us_screen.dart';
 import 'package:openup/discover_list_page.dart';
-import 'package:openup/discover_page.dart';
 import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/dynamic_config/dynamic_config_service.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/contacts_page.dart';
+import 'package:openup/events/event_create_page.dart';
+import 'package:openup/events/event_preview_page.dart';
+import 'package:openup/events/event_view_page.dart';
+import 'package:openup/events/events_page.dart';
 import 'package:openup/initial_loading_page.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/profile_page.dart';
@@ -173,7 +176,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   final _discoverKey = GlobalKey<NavigatorState>();
   final _conversationsKey = GlobalKey<NavigatorState>();
-  final _mapKey = GlobalKey<NavigatorState>();
+  final _eventsKey = GlobalKey<NavigatorState>();
   final _settingsKey = GlobalKey<NavigatorState>();
 
   final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -292,21 +295,22 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         routerConfig: _goRouter,
         theme: ThemeData(
           primaryColor: const Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
-          colorScheme: const ColorScheme.light(
+          colorScheme: const ColorScheme.dark(
             primary: Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
             secondary: Color.fromARGB(0xAA, 0xFF, 0x71, 0x71),
           ),
+          scaffoldBackgroundColor: Colors.black,
           fontFamily: 'SF Pro',
           textTheme: textTheme.copyWith(
             bodyMedium: textTheme.bodyMedium!.copyWith(
               fontFamily: 'SF Pro',
-              color: Colors.black,
+              color: Colors.white,
               fontSize: 15,
               fontWeight: FontWeight.w400,
             ),
           ),
           iconTheme: const IconThemeData(
-            color: Colors.black,
+            color: Colors.white,
           ),
         ),
         builder: (context, child) {
@@ -410,9 +414,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         StatefulShellRoute(
           builder: (builder) {
             return builder.buildShell(
-              (context, state, child) {
+              (context, state, navigatorContainer) {
                 return TabShell(
-                  children: child.children,
+                  children: navigatorContainer.children,
                 );
               },
             );
@@ -458,19 +462,62 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ],
             ),
             StatefulShellBranch(
-              navigatorKey: _mapKey,
+              navigatorKey: _eventsKey,
               preload: true,
               routes: [
                 GoRoute(
-                  path: '/map',
-                  name: 'map',
-                  builder: (context, state) {
-                    return DiscoverPage(
-                      onShowConversations: () {},
-                      onShowSettings: () {},
-                    );
-                  },
+                  path: '/meetups',
+                  name: 'meetups',
+                  builder: (context, state) => const EventsPage(),
                   routes: [
+                    GoRoute(
+                      path: 'create',
+                      name: 'meetups_create',
+                      parentNavigatorKey: rootNavigatorKey,
+                      builder: (context, state) {
+                        final now = DateTime.now();
+                        return ProviderScope(
+                          parent: ProviderScope.containerOf(context),
+                          overrides: [
+                            eventCreationProvider.overrideWith((ref) {
+                              return EventStateNotifier(
+                                EventCreationState(
+                                  startDate: now.add(const Duration(hours: 1)),
+                                  endDate: now.add(
+                                    const Duration(hours: 3),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                          child: const EventCreatePage(),
+                        );
+                      },
+                      routes: [
+                        GoRoute(
+                          path: 'preview',
+                          name: 'event_preview',
+                          parentNavigatorKey: rootNavigatorKey,
+                          builder: (context, state) {
+                            final args = state.extra as EventPreviewPageArgs;
+                            return EventPreviewPage(
+                              event: args.event,
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    GoRoute(
+                      path: ':id',
+                      name: 'event_view',
+                      parentNavigatorKey: rootNavigatorKey,
+                      builder: (context, state) {
+                        final args = state.extra as EventViewPageArgs;
+                        return EventViewPage(
+                          event: args.event,
+                        );
+                      },
+                    ),
                     GoRoute(
                       path: 'view',
                       name: 'view_profile',

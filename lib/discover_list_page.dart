@@ -210,189 +210,192 @@ class _ProfileCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final myLatLong = ref.watch(locationProvider.select((s) => s.current));
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 22),
-      child: AspectRatio(
-        aspectRatio: 6 / 10,
-        child: Container(
-          width: 340,
-          height: 567,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.all(Radius.circular(1)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(18),
-                child: AspectRatio(
-                  aspectRatio: 14 / 19,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Button(
-                        onPressed: _togglePlayPause,
-                        child: CameraFlashGallery(
-                          slideshow: true,
-                          gallery: profile.profile.gallery,
-                        ),
-                      ),
-                      IgnorePointer(
-                        child: Center(
-                          child: Builder(
-                            builder: (context) {
-                              return switch (playbackState) {
-                                PlaybackState.idle ||
-                                PlaybackState.paused =>
-                                  const Icon(
-                                    Icons.play_arrow,
-                                    size: 64,
-                                    shadows: [
-                                      Shadow(
-                                        blurRadius: 8,
-                                        color: Color.fromRGBO(
-                                            0x00, 0x00, 0x00, 0.25),
-                                      ),
-                                    ],
-                                  ),
-                                _ => const SizedBox.shrink(),
-                              };
-                            },
+    return DefaultTextStyle(
+      style: const TextStyle(color: Colors.black),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 22),
+        child: AspectRatio(
+          aspectRatio: 6 / 10,
+          child: Container(
+            width: 340,
+            height: 567,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(1)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: AspectRatio(
+                    aspectRatio: 14 / 19,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Button(
+                          onPressed: _togglePlayPause,
+                          child: CameraFlashGallery(
+                            slideshow: true,
+                            gallery: profile.profile.gallery,
                           ),
                         ),
-                      )
-                    ],
+                        IgnorePointer(
+                          child: Center(
+                            child: Builder(
+                              builder: (context) {
+                                return switch (playbackState) {
+                                  PlaybackState.idle ||
+                                  PlaybackState.paused =>
+                                    const Icon(
+                                      Icons.play_arrow,
+                                      size: 64,
+                                      shadows: [
+                                        Shadow(
+                                          blurRadius: 8,
+                                          color: Color.fromRGBO(
+                                              0x00, 0x00, 0x00, 0.25),
+                                        ),
+                                      ],
+                                    ),
+                                  _ => const SizedBox.shrink(),
+                                };
+                              },
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            profile.profile.name.toUpperCase(),
-                            style: const TextStyle(
-                              fontFamily: 'Covered By Your Grace',
-                              fontSize: 29,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            profile.profile.age.toString(),
-                            style: const TextStyle(
-                              fontFamily: 'Covered By Your Grace',
-                              fontSize: 27,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Builder(
-                        builder: (context) {
-                          final distance =
-                              distanceMiles(profile.location.latLong, myLatLong)
-                                  .round();
-                          return Text(
-                            '$distance ${distance == 1 ? 'mile' : 'miles'} away',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w300,
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                  ),
-                  const Spacer(),
-                  Button(
-                    onPressed: _togglePlayPause,
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      alignment: Alignment.center,
-                      margin: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Colors.black,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Builder(
-                        builder: (context) {
-                          return switch (playbackState) {
-                            null => const SizedBox.shrink(),
-                            PlaybackState.idle ||
-                            PlaybackState.paused =>
-                              const Icon(Icons.play_arrow),
-                            PlaybackState.playing => SvgPicture.asset(
-                                'assets/images/audio_indicator.svg',
-                                width: 16,
-                                height: 18,
-                              ),
-                            _ => const LoadingIndicator(),
-                          };
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Divider(
-                height: 1,
-                color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
-              ),
-              SizedBox(
-                height: 50,
-                child: Row(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: Button(
-                        onPressed: onMessage,
-                        child: const Center(
-                          child: Text(
-                            'Message',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.black,
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              profile.profile.name.toUpperCase(),
+                              style: const TextStyle(
+                                fontFamily: 'Covered By Your Grace',
+                                fontSize: 29,
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            Text(
+                              profile.profile.age.toString(),
+                              style: const TextStyle(
+                                fontFamily: 'Covered By Your Grace',
+                                fontSize: 27,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Builder(
+                          builder: (context) {
+                            final distance = distanceMiles(
+                                    profile.location.latLong, myLatLong)
+                                .round();
+                            return Text(
+                              '$distance ${distance == 1 ? 'mile' : 'miles'} away',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w300,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                    const Spacer(),
+                    Button(
+                      onPressed: _togglePlayPause,
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        alignment: Alignment.center,
+                        margin: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Colors.black,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Builder(
+                          builder: (context) {
+                            return switch (playbackState) {
+                              null => const SizedBox.shrink(),
+                              PlaybackState.idle ||
+                              PlaybackState.paused =>
+                                const Icon(Icons.play_arrow),
+                              PlaybackState.playing => SvgPicture.asset(
+                                  'assets/images/audio_indicator.svg',
+                                  width: 16,
+                                  height: 18,
+                                ),
+                              _ => const LoadingIndicator(),
+                            };
+                          },
                         ),
                       ),
                     ),
-                    const VerticalDivider(
-                      width: 1,
-                      color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
-                    ),
-                    Expanded(
-                      child: Button(
-                        onPressed: onOptions,
-                        child: const Center(
-                          child: Text(
-                            'Options',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    const SizedBox(width: 8),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 6),
+                const Divider(
+                  height: 1,
+                  color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
+                ),
+                SizedBox(
+                  height: 50,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Button(
+                          onPressed: onMessage,
+                          child: const Center(
+                            child: Text(
+                              'Message',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const VerticalDivider(
+                        width: 1,
+                        color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
+                      ),
+                      Expanded(
+                        child: Button(
+                          onPressed: onOptions,
+                          child: const Center(
+                            child: Text(
+                              'Options',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
