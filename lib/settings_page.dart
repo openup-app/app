@@ -258,7 +258,7 @@ class _ProfilePageState extends ConsumerState<SettingsPage> {
       builder: (context) {
         return CupertinoActionSheet(
           title: const Text(
-              'This will permanently delete your Bonjour conversations, contacts and profile'),
+              'This will permanently delete your Plus One conversations, contacts and profile'),
           cancelButton: CupertinoActionSheetAction(
             onPressed: Navigator.of(context).pop,
             child: const Text('Cancel'),
