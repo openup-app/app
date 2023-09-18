@@ -68,12 +68,18 @@ class _Toolbar extends StatelessWidget {
               context: context,
               builder: (context) {
                 return AlertDialog(
-                  content: CalendarDatePicker(
-                    initialDate: DateTime.now(),
-                    firstDate:
-                        DateTime.now().subtract(const Duration(days: 365)),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                    onDateChanged: (_) {},
+                  backgroundColor: Colors.black,
+                  insetPadding: const EdgeInsets.all(16),
+                  content: SizedBox(
+                    width: 350,
+                    height: 300,
+                    child: CalendarDatePicker(
+                      initialDate: DateTime.now(),
+                      firstDate:
+                          DateTime.now().subtract(const Duration(days: 365)),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      onDateChanged: (_) => Navigator.of(context).pop(context),
+                    ),
                   ),
                 );
               },
