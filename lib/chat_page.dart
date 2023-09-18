@@ -162,63 +162,59 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
                     profile: _otherProfile!,
                   );
                 },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        clipBehavior: Clip.hardEdge,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
-                        child: _otherProfile?.photo == null
-                            ? const SizedBox.shrink()
-                            : Image.network(
-                                _otherProfile!.photo,
-                                fit: BoxFit.cover,
-                              ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      clipBehavior: Clip.hardEdge,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(width: 8),
-                      OnlineIndicatorBuilder(
-                        uid: _otherProfile!.uid,
-                        builder: (context, online) {
-                          return Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (online) const SizedBox(height: 12),
-                              AutoSizeText(
-                                _otherProfile?.name ?? '',
-                                minFontSize: 16,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontFamily: 'Covered By Your Grace',
-                                  fontSize: 24,
+                      child: _otherProfile?.photo == null
+                          ? const SizedBox.shrink()
+                          : Image.network(
+                              _otherProfile!.photo,
+                              fit: BoxFit.cover,
+                            ),
+                    ),
+                    const SizedBox(width: 8),
+                    OnlineIndicatorBuilder(
+                      uid: _otherProfile!.uid,
+                      builder: (context, online) {
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (online) const SizedBox(height: 3),
+                            AutoSizeText(
+                              _otherProfile?.name ?? '',
+                              minFontSize: 16,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Covered By Your Grace',
+                                fontSize: 24,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white,
+                              ),
+                            ),
+                            if (online)
+                              const Text(
+                                'online',
+                                style: TextStyle(
                                   fontWeight: FontWeight.w400,
-                                  color: Colors.white,
+                                  fontSize: 12,
+                                  color: Color.fromRGBO(0x94, 0x94, 0x94, 1.0),
                                 ),
                               ),
-                              if (online)
-                                const Text(
-                                  'online',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 12,
-                                    color:
-                                        Color.fromRGBO(0x94, 0x94, 0x94, 1.0),
-                                  ),
-                                ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
                 ),
               );
             },
