@@ -21,7 +21,6 @@ class _InitialLoadingPageState extends ConsumerState<InitialLoadingPage> {
       (previous, next) {
         next.map(
           guest: (guest) {
-            print('### Guest by default? ${guest.byDefault}');
             if (!guest.byDefault) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
