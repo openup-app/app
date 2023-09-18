@@ -19,6 +19,7 @@ import 'package:openup/api/in_app_notifications.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/blocked_users_page.dart';
+import 'package:openup/calendar_page.dart';
 import 'package:openup/chat_page.dart';
 import 'package:openup/contact_us_screen.dart';
 import 'package:openup/discover_list_page.dart';
@@ -31,10 +32,12 @@ import 'package:openup/events/event_preview_page.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/events/events_page.dart';
 import 'package:openup/initial_loading_page.dart';
+import 'package:openup/my_meetups_page.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
+import 'package:openup/settings_page.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/signup_age.dart';
 import 'package:openup/signup_gender.dart';
@@ -177,7 +180,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   final _discoverKey = GlobalKey<NavigatorState>();
   final _conversationsKey = GlobalKey<NavigatorState>();
   final _eventsKey = GlobalKey<NavigatorState>();
-  final _settingsKey = GlobalKey<NavigatorState>();
+  final _profileKey = GlobalKey<NavigatorState>();
 
   final rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -540,36 +543,65 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ],
             ),
             StatefulShellBranch(
-              navigatorKey: _settingsKey,
+              navigatorKey: _profileKey,
               preload: true,
               routes: [
                 GoRoute(
-                  path: '/settings',
-                  name: 'settings',
+                  path: '/account',
+                  name: 'account',
                   builder: (context, state) {
                     return const ProfilePage();
                   },
                   routes: [
                     GoRoute(
-                      path: 'contacts',
-                      name: 'contacts',
+                      path: 'meetups',
+                      name: 'my_meetups',
+                      parentNavigatorKey: rootNavigatorKey,
                       builder: (context, state) {
-                        return const ContactsPage();
+                        return const MyMeetupsPage();
                       },
                     ),
                     GoRoute(
-                      path: 'blocked',
-                      name: 'blocked',
+                      path: 'calendar',
+                      name: 'calendar',
+                      parentNavigatorKey: rootNavigatorKey,
                       builder: (context, state) {
-                        return const BlockedUsersPage();
+                        return const CalendarPage();
                       },
                     ),
                     GoRoute(
-                      path: 'contact_us',
-                      name: 'contact_us',
+                      path: 'settings',
+                      name: 'settings',
+                      parentNavigatorKey: rootNavigatorKey,
                       builder: (context, state) {
-                        return const ContactUsScreen();
+                        return const SettingsPage();
                       },
+                      routes: [
+                        GoRoute(
+                          path: 'contacts',
+                          name: 'contacts',
+                          parentNavigatorKey: rootNavigatorKey,
+                          builder: (context, state) {
+                            return const ContactsPage();
+                          },
+                        ),
+                        GoRoute(
+                          path: 'blocked',
+                          name: 'blocked',
+                          parentNavigatorKey: rootNavigatorKey,
+                          builder: (context, state) {
+                            return const BlockedUsersPage();
+                          },
+                        ),
+                        GoRoute(
+                          path: 'contact_us',
+                          name: 'contact_us',
+                          parentNavigatorKey: rootNavigatorKey,
+                          builder: (context, state) {
+                            return const ContactUsScreen();
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),

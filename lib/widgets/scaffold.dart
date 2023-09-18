@@ -82,7 +82,10 @@ class OpenupAppBarBody extends StatelessWidget {
         if (trailing != null)
           Align(
             alignment: Alignment.centerRight,
-            child: trailing,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: trailing,
+            ),
           ),
       ],
     );

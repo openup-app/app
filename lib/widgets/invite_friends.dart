@@ -101,9 +101,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                 return const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: LoadingIndicator(
-                      color: Colors.black,
-                    ),
+                    child: LoadingIndicator(),
                   ),
                 );
               },
@@ -145,7 +143,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                             style: const TextStyle(
                               fontWeight: FontWeight.w400,
                               fontSize: 16,
-                              color: Color.fromRGBO(0x34, 0x34, 0x34, 1.0),
+                              color: Colors.white,
                             ),
                           ),
                           trailing: _InviteButton(
@@ -208,6 +206,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                             style: const TextStyle(
                               fontWeight: FontWeight.w400,
                               fontSize: 16,
+                              color: Colors.black,
                             ),
                           ),
                   ),
@@ -217,7 +216,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                     style: const TextStyle(
                       fontWeight: FontWeight.w400,
                       fontSize: 16,
-                      color: Color.fromRGBO(0x34, 0x34, 0x34, 1.0),
+                      color: Colors.white,
                     ),
                   ),
                   trailing: _InviteButton(
@@ -265,14 +264,15 @@ class _InviteButton extends StatelessWidget {
               color: const Color.fromRGBO(0x34, 0x78, 0xF6, 1.0),
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Text(
               'Add',
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontWeight: FontWeight.w400,
-                  fontSize: 16,
-                  color: const Color.fromRGBO(0x34, 0x78, 0xF6, 1.0)),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: Color.fromRGBO(0x34, 0x78, 0xF6, 1.0),
+              ),
             ),
           ),
         ),

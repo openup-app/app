@@ -38,114 +38,115 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
       child: CupertinoTheme(
         data: const CupertinoThemeData(brightness: Brightness.dark),
         child: Scaffold(
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: MediaQuery.of(context).padding.top + 40),
-              SizedBox(
-                height: 44,
-                child: Stack(
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 16.0),
-                        child: Button(
-                          onPressed: Navigator.of(context).pop,
-                          child: const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(
-                                color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: 44,
+                  child: Stack(
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: Button(
+                            onPressed: Navigator.of(context).pop,
+                            child: const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    const Center(
-                      child: Text(
-                        'Contact us',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w400,
+                      const Center(
+                        child: Text(
+                          'Contact us',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 24,
-                ),
-                child: Text(
-                  'We will respond to you via text',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
+                    ],
                   ),
                 ),
-              ),
-              Expanded(
-                child: DecoratedBox(
-                  decoration: const BoxDecoration(
-                    color: Color.fromRGBO(0x61, 0x61, 0x61, 0.5),
+                const Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 24,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 24,
+                  child: Text(
+                    'We will respond to you via text',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
                     ),
-                    child: TextField(
-                      controller: _textController,
-                      autofocus: true,
-                      focusNode: _messageFocusNode,
-                      textCapitalization: TextCapitalization.sentences,
-                      textInputAction: TextInputAction.done,
-                      maxLines: 10,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
+                  ),
+                ),
+                Expanded(
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: Color.fromRGBO(0x61, 0x61, 0x61, 0.5),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 24,
                       ),
-                      decoration: const InputDecoration.collapsed(
-                        hintText: 'Tell us how we can help you.',
-                        hintStyle: TextStyle(
+                      child: TextField(
+                        controller: _textController,
+                        autofocus: true,
+                        focusNode: _messageFocusNode,
+                        textCapitalization: TextCapitalization.sentences,
+                        textInputAction: TextInputAction.done,
+                        maxLines: 10,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
                         ),
+                        decoration: const InputDecoration.collapsed(
+                          hintText: 'Tell us how we can help you.',
+                          hintStyle: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Button(
-                onPressed: _uploading ? null : _upload,
-                child: SizedBox(
-                  height: 92,
-                  child: Center(
-                    child: Builder(
-                      builder: (context) {
-                        if (_uploading) {
-                          return const LoadingIndicator();
-                        } else {
-                          return const Text(
-                            'Send message',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: Color.fromRGBO(0x3F, 0x80, 0xFF, 1.0),
-                            ),
-                          );
-                        }
-                      },
+                Button(
+                  onPressed: _uploading ? null : _upload,
+                  child: SizedBox(
+                    height: 92,
+                    child: Center(
+                      child: Builder(
+                        builder: (context) {
+                          if (_uploading) {
+                            return const LoadingIndicator();
+                          } else {
+                            return const Text(
+                              'Send message',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: Color.fromRGBO(0x3F, 0x80, 0xFF, 1.0),
+                              ),
+                            );
+                          }
+                        },
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

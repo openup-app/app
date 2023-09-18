@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -15,8 +14,10 @@ import 'package:openup/widgets/card_stack.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/discover_dialogs.dart';
 import 'package:openup/widgets/gallery.dart';
+import 'package:openup/widgets/photo_card.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/record.dart';
+import 'package:openup/widgets/scaffold.dart';
 
 class DiscoverListPage extends ConsumerStatefulWidget {
   const DiscoverListPage({super.key});
@@ -45,39 +46,48 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(discoverProvider);
-    return _Background(
-      child: state.map(
-        init: (_) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Discover people near you',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white,
+    return Scaffold(
+      appBar: const OpenupAppBar(
+        body: OpenupAppBarBody(
+          center: Text('Plus One'),
+        ),
+      ),
+      body: _Background(
+        child: state.map(
+          init: (_) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Discover people near you',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 32),
-                PermissionButton(
-                  icon: const Icon(Icons.public),
-                  label: const Text('Enable Location'),
-                  granted: false,
-                  onPressed: () {
-                    ref.read(discoverProvider.notifier).performQuery();
-                  },
-                ),
-              ],
-            ),
-          );
-        },
-        ready: (ready) {
-          return _ListView(
-            state: ready,
-          );
-        },
+                  const SizedBox(height: 32),
+                  PermissionButton(
+                    icon: const Icon(Icons.public),
+                    label: const Text('Enable Location'),
+                    granted: false,
+                    onPressed: () {
+                      ref.read(discoverProvider.notifier).performQuery();
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+          ready: (ready) {
+            return SafeArea(
+              child: _ListView(
+                state: ready,
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -114,37 +124,37 @@ class _ListViewState extends ConsumerState<_ListView> {
       onDeactivate: () => setState(() => _play = false),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          return Center(
-            child: ProfileBuilder(
-              key: _profileBuilderKey,
-              profile: profiles[_profileIndex % profiles.length].profile,
-              play: _play,
-              builder: (context, playbackState, playbackInfoStream) {
-                final currentProfile =
-                    profiles[_profileIndex % profiles.length].profile;
-                return CardStack(
-                  width: constraints.maxWidth,
-                  items: profiles,
-                  onChanged: (index) {
-                    setState(() => _profileIndex = index);
-                  },
-                  itemBuilder: (context, item) {
-                    final isCurrent = item.profile.uid == currentProfile.uid;
-                    final profile = item;
-                    return _ProfileCard(
-                      profile: profile,
-                      playbackState: isCurrent ? playbackState : null,
-                      playbackInfoStream: isCurrent ? playbackInfoStream : null,
-                      onPlay: () => setState(() => _play = true),
-                      onPause: () => setState(() => _play = false),
-                      onOptions: () {},
-                      onMessage: () =>
-                          _showRecordInvitePanel(context, profile.profile.uid),
-                    );
-                  },
-                );
-              },
-            ),
+          return ProfileBuilder(
+            key: _profileBuilderKey,
+            profile: profiles[_profileIndex % profiles.length].profile,
+            play: _play,
+            builder: (context, playbackState, playbackInfoStream) {
+              final currentProfile =
+                  profiles[_profileIndex % profiles.length].profile;
+              return CardStack(
+                width: constraints.maxWidth,
+                items: profiles,
+                onChanged: (index) {
+                  setState(() => _profileIndex = index);
+                },
+                itemBuilder: (context, item) {
+                  final isCurrent = item.profile.uid == currentProfile.uid;
+                  final profile = item;
+                  return _ProfileDisplay(
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
+                    profile: profile,
+                    playbackState: isCurrent ? playbackState : null,
+                    playbackInfoStream: isCurrent ? playbackInfoStream : null,
+                    onPlay: () => setState(() => _play = true),
+                    onPause: () => setState(() => _play = false),
+                    onOptions: () {},
+                    onMessage: () =>
+                        _showRecordInvitePanel(context, profile.profile.uid),
+                  );
+                },
+              );
+            },
           );
         },
       ),
@@ -186,7 +196,9 @@ class _ListViewState extends ConsumerState<_ListView> {
   void _pauseAudio() => setState(() => _play = false);
 }
 
-class _ProfileCard extends ConsumerWidget {
+class _ProfileDisplay extends ConsumerWidget {
+  final double width;
+  final double height;
   final PlaybackState? playbackState;
   final Stream<PlaybackInfo>? playbackInfoStream;
   final VoidCallback onPlay;
@@ -194,8 +206,10 @@ class _ProfileCard extends ConsumerWidget {
   final VoidCallback onOptions;
   final VoidCallback onMessage;
 
-  const _ProfileCard({
+  const _ProfileDisplay({
     super.key,
+    required this.width,
+    required this.height,
     required this.profile,
     required this.playbackState,
     required this.playbackInfoStream,
@@ -210,195 +224,62 @@ class _ProfileCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final myLatLong = ref.watch(locationProvider.select((s) => s.current));
-    return DefaultTextStyle(
-      style: const TextStyle(color: Colors.black),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 22),
-        child: AspectRatio(
-          aspectRatio: 6 / 10,
-          child: Container(
-            width: 340,
-            height: 567,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(1)),
+    final distance = distanceMiles(profile.location.latLong, myLatLong).round();
+    return PhotoCard(
+      width: width,
+      height: height,
+      photo: Button(
+        onPressed: _togglePlayPause,
+        child: CameraFlashGallery(
+          slideshow: true,
+          gallery: profile.profile.gallery,
+        ),
+      ),
+      titleBuilder: (context) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(profile.profile.name.toUpperCase()),
+            const SizedBox(width: 12),
+            Text(
+              profile.profile.age.toString(),
+              style: const TextStyle(fontSize: 27),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: AspectRatio(
-                    aspectRatio: 14 / 19,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Button(
-                          onPressed: _togglePlayPause,
-                          child: CameraFlashGallery(
-                            slideshow: true,
-                            gallery: profile.profile.gallery,
-                          ),
-                        ),
-                        IgnorePointer(
-                          child: Center(
-                            child: Builder(
-                              builder: (context) {
-                                return switch (playbackState) {
-                                  PlaybackState.idle ||
-                                  PlaybackState.paused =>
-                                    const Icon(
-                                      Icons.play_arrow,
-                                      size: 64,
-                                      shadows: [
-                                        Shadow(
-                                          blurRadius: 8,
-                                          color: Color.fromRGBO(
-                                              0x00, 0x00, 0x00, 0.25),
-                                        ),
-                                      ],
-                                    ),
-                                  _ => const SizedBox.shrink(),
-                                };
-                              },
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              profile.profile.name.toUpperCase(),
-                              style: const TextStyle(
-                                fontFamily: 'Covered By Your Grace',
-                                fontSize: 29,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              profile.profile.age.toString(),
-                              style: const TextStyle(
-                                fontFamily: 'Covered By Your Grace',
-                                fontSize: 27,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Builder(
-                          builder: (context) {
-                            final distance = distanceMiles(
-                                    profile.location.latLong, myLatLong)
-                                .round();
-                            return Text(
-                              '$distance ${distance == 1 ? 'mile' : 'miles'} away',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w300,
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                    const Spacer(),
-                    Button(
-                      onPressed: _togglePlayPause,
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        alignment: Alignment.center,
-                        margin: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: Colors.black,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Builder(
-                          builder: (context) {
-                            return switch (playbackState) {
-                              null => const SizedBox.shrink(),
-                              PlaybackState.idle ||
-                              PlaybackState.paused =>
-                                const Icon(Icons.play_arrow),
-                              PlaybackState.playing => SvgPicture.asset(
-                                  'assets/images/audio_indicator.svg',
-                                  width: 16,
-                                  height: 18,
-                                ),
-                              _ => const LoadingIndicator(),
-                            };
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                const Divider(
-                  height: 1,
-                  color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
-                ),
-                SizedBox(
-                  height: 50,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Button(
-                          onPressed: onMessage,
-                          child: const Center(
-                            child: Text(
-                              'Message',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const VerticalDivider(
-                        width: 1,
-                        color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
-                      ),
-                      Expanded(
-                        child: Button(
-                          onPressed: onOptions,
-                          child: const Center(
-                            child: Text(
-                              'Options',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          ],
+        );
+      },
+      subtitle: Text('$distance ${distance == 1 ? 'mile' : 'miles'} away'),
+      firstButton: Button(
+        onPressed: onMessage,
+        child: const Center(
+          child: Text(
+            'Message',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Colors.black,
             ),
           ),
         ),
       ),
+      secondButton: Button(
+        onPressed: onOptions,
+        child: const Center(
+          child: Text(
+            'Options',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ),
+      playbackState: playbackState,
+      playbackInfoStream: playbackInfoStream,
+      onPlaybackIndicatorPressed: _togglePlayPause,
     );
   }
 

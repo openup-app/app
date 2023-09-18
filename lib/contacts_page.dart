@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/contacts/contacts_provider.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/invite_friends.dart';
+import 'package:openup/widgets/scaffold.dart';
 
 class ContactsPage extends ConsumerStatefulWidget {
   const ContactsPage({super.key});
@@ -43,59 +44,46 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: const Color.fromRGBO(0xF5, 0xF5, 0xF5, 1.0),
-      child: Column(
-        children: [
-          Container(
-            height: MediaQuery.of(context).padding.top + 44 + 44,
-            alignment: Alignment.bottomLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
-              child: Button(
-                onPressed: Navigator.of(context).pop,
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(width: 20),
-                    Icon(
-                      Icons.chevron_left,
-                      size: 40,
-                      color: Color.fromRGBO(0x77, 0x77, 0x77, 1.0),
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      'Profile',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      appBar: OpenupAppBar(
+        body: OpenupAppBarBody(
+          leading: Button(
+            onPressed: Navigator.of(context).pop,
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('Cancel'),
+            ),
+          ),
+          center: const Text('Contacts'),
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            SizedBox(height: MediaQuery.of(context).padding.top),
+            Padding(
+              padding: const EdgeInsets.only(
+                top: 4,
+                bottom: 16,
+              ),
+              child: FriendsSearchField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+              ),
+            ),
+            Expanded(
+              child: InviteFriends(
+                padding: EdgeInsets.only(
+                  top: 0,
+                  bottom: MediaQuery.of(context).padding.bottom + 16,
                 ),
+                filter: _filterString,
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(
-              top: 4,
-              bottom: 16,
-            ),
-            child: FriendsSearchField(
-              controller: _searchController,
-              focusNode: _searchFocusNode,
-            ),
-          ),
-          Expanded(
-            child: InviteFriends(
-              padding: EdgeInsets.only(
-                top: 0,
-                bottom: MediaQuery.of(context).padding.bottom + 16,
-              ),
-              filter: _filterString,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
