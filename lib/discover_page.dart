@@ -9,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/chat_state.dart';
 import 'package:openup/api/user_profile_cache.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
@@ -22,19 +21,13 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/discover_dialogs.dart';
 import 'package:openup/widgets/discover_map_mini_list.dart';
 import 'package:openup/widgets/discover_map.dart';
-import 'package:openup/widgets/drag_handle.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/record.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
-  final VoidCallback onShowConversations;
-  final VoidCallback onShowSettings;
-
   const DiscoverPage({
     Key? key,
-    required this.onShowConversations,
-    required this.onShowSettings,
   }) : super(key: key);
 
   @override
@@ -320,8 +313,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                 ],
               ),
             ),
-          Align(
-            alignment: Alignment.bottomCenter,
+          Positioned(
+            left: 0,
+            right: 9,
+            bottom: MediaQuery.of(context).padding.bottom,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -335,89 +330,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            _MapButton(
-                              onPressed: _showConversationsOrSignIn,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.email,
-                                    color:
-                                        Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
-                                  ),
-                                  Builder(
-                                    builder: (context) {
-                                      final count =
-                                          ref.watch(unreadCountProvider);
-                                      if (count == 0) {
-                                        return const SizedBox.shrink();
-                                      }
-                                      return Align(
-                                        alignment: Alignment.topRight,
-                                        child: Container(
-                                          width: 14.5,
-                                          height: 14.5,
-                                          margin: const EdgeInsets.only(
-                                              top: 1, right: 1),
-                                          decoration: const BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: Color.fromRGBO(
-                                                0xFF, 0x00, 0x00, 1.0),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                offset: Offset(0, 1),
-                                                blurRadius: 1.8,
-                                                color: Color.fromRGBO(
-                                                    0x00, 0x00, 0x00, 0.25),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            Builder(
-                              builder: (context) {
-                                final myAccount =
-                                    ref.watch(userProvider2.select(
-                                  (p) {
-                                    return p.map(
-                                      guest: (_) => null,
-                                      signedIn: (signedIn) => signedIn.account,
-                                    );
-                                  },
-                                ));
-                                return _MapButton(
-                                  onPressed: () async {
-                                    final visibility =
-                                        myAccount?.location.visibility;
-                                    _showLiveLocationModalOrSignIn(
-                                      targetVisibility: visibility ==
-                                              LocationVisibility.private
-                                          ? LocationVisibility.public
-                                          : LocationVisibility.private,
-                                    );
-                                  },
-                                  child: myAccount?.location.visibility ==
-                                          LocationVisibility.public
-                                      ? const Icon(
-                                          Icons.location_on,
-                                          color: Color.fromRGBO(
-                                              0x25, 0xB7, 0x00, 1.0),
-                                        )
-                                      : const Icon(
-                                          Icons.location_off,
-                                          color: Color.fromRGBO(
-                                              0xFF, 0x00, 0x00, 1.0),
-                                        ),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 18),
                             Consumer(
                               builder: (context, ref, child) {
                                 final latLong =
@@ -460,6 +372,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                             width: 86,
                             height: 26,
                             padding: const EdgeInsets.only(top: 1),
+                            margin: const EdgeInsets.only(bottom: 56),
                             alignment: Alignment.center,
                             decoration: const BoxDecoration(
                               borderRadius:
@@ -528,7 +441,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                     ref.read(discoverProvider.notifier).selectProfile(profile);
                   },
                   profileBuilderKey: _profileBuilderKey,
-                  onShowSettings: _showSettingsOrSignIn,
                   onToggleFavorite: () {
                     if (selectedProfile != null) {
                       _toggleFavoriteOrShowSignIn(context, selectedProfile);
@@ -597,15 +509,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         .setFavorite(profile.profile.uid, !profile.favorite);
   }
 
-  void _showSettingsOrSignIn() {
-    _tempPauseAudio();
-    final userState = ref.read(userProvider2);
-    userState.map(
-      guest: (_) => showSignInModal(context),
-      signedIn: (_) => widget.onShowSettings(),
-    );
-  }
-
   void _showLiveLocationModalOrSignIn({
     required LocationVisibility targetVisibility,
   }) {
@@ -625,15 +528,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       },
     );
   }
-
-  void _showConversationsOrSignIn() {
-    _tempPauseAudio();
-    final userState = ref.read(userProvider2);
-    userState.map(
-      guest: (_) => showSignInModal(context),
-      signedIn: (_) => widget.onShowConversations(),
-    );
-  }
 }
 
 class _Panel extends ConsumerStatefulWidget {
@@ -643,7 +537,6 @@ class _Panel extends ConsumerStatefulWidget {
   final DiscoverProfile? selectedProfile;
   final ValueChanged<DiscoverProfile?> onProfileChanged;
   final GlobalKey<ProfileBuilderState> profileBuilderKey;
-  final VoidCallback onShowSettings;
   final VoidCallback onToggleFavorite;
   final void Function(Profile profile) onBlockUser;
   final bool pageActive;
@@ -656,7 +549,6 @@ class _Panel extends ConsumerStatefulWidget {
     required this.selectedProfile,
     required this.onProfileChanged,
     required this.profileBuilderKey,
-    required this.onShowSettings,
     required this.onToggleFavorite,
     required this.onBlockUser,
     required this.pageActive,
@@ -687,9 +579,6 @@ class _PanelState extends ConsumerState<_Panel>
 
   @override
   Widget build(BuildContext context) {
-    const borderSide = BorderSide(
-      color: Color.fromRGBO(0xAB, 0xAB, 0xAB, 0.33),
-    );
     return Container(
       margin: const EdgeInsets.only(top: 20),
       child: ClipRect(
@@ -709,110 +598,6 @@ class _PanelState extends ConsumerState<_Panel>
                           height: 0,
                         )
                       : _buildMiniProfile(),
-                ),
-                Container(
-                  height: 72 + MediaQuery.of(context).padding.bottom,
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.hardEdge,
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      left: borderSide,
-                      top: borderSide,
-                      right: borderSide,
-                    ),
-                  ),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Column(
-                        children: [
-                          const SizedBox(height: 7),
-                          const Center(
-                            child: DragHandle(
-                              color: Color.fromRGBO(0xCE, 0xCE, 0xCE, 1.0),
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              const SizedBox(width: 8),
-                              Button(
-                                onPressed: widget.onShowSettings,
-                                child: const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: ProfileButton(),
-                                ),
-                              ),
-                              Expanded(
-                                child: Button(
-                                  onPressed: () async {
-                                    final prevGender = widget.gender;
-                                    final gender =
-                                        await _showPreferencesSheet();
-                                    if (mounted && gender != prevGender) {
-                                      widget.onGenderChanged(gender);
-                                    }
-                                  },
-                                  child: Container(
-                                    height: 32,
-                                    clipBehavior: Clip.hardEdge,
-                                    margin: const EdgeInsets.all(8),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(11),
-                                      ),
-                                    ),
-                                    child: const Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        SizedBox(width: 18),
-                                        Icon(
-                                          Icons.search,
-                                          size: 18,
-                                          color: Color.fromRGBO(
-                                              0x8D, 0x8D, 0x8D, 1.0),
-                                        ),
-                                        SizedBox(width: 6),
-                                        Padding(
-                                          padding: EdgeInsets.only(top: 2),
-                                          child: Text(
-                                            'Who are you searching for?',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w400,
-                                              color: Color.fromRGBO(
-                                                  0x8D, 0x8D, 0x8D, 1.0),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                          ),
-                        ],
-                      ),
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        right: 0,
-                        bottom: MediaQuery.of(context).padding.bottom,
-                        child: GestureDetector(
-                          onVerticalDragUpdate: (details) {
-                            if (details.delta.dy < 0) {
-                              widget.onShowSettings();
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),

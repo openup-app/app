@@ -33,10 +33,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         children: [
           switch (_view) {
             _View.list => const EventsListPage(),
-            _View.map => DiscoverPage(
-                onShowConversations: () {},
-                onShowSettings: () {},
-              ),
+            _View.map => const DiscoverPage(),
           },
           Align(
             alignment: Alignment.bottomCenter,
