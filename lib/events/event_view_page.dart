@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/events/event_details.dart';
+import 'package:openup/events/event_display.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/common.dart';
 
@@ -64,7 +64,7 @@ class EventViewPage extends ConsumerWidget {
               top: MediaQuery.of(context).padding.top,
               bottom: MediaQuery.of(context).padding.bottom,
             ),
-            child: EventDetails(
+            child: EventDisplayLarge(
               event: event,
               preview: false,
             ),

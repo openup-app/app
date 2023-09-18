@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/events/event_details.dart';
+import 'package:openup/api/user_state.dart';
+import 'package:openup/events/event_display.dart';
 import 'package:openup/events/events_provider.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/scaffold.dart';
@@ -37,7 +38,11 @@ class EventPreviewPage extends ConsumerWidget {
             RoundedButton(
               onPressed: () async {
                 final notifier = ref.read(eventsProvider.notifier);
-                await notifier.createEvent(event);
+                final result = await notifier.createEvent(event);
+                if (!context.mounted || result == null) {
+                  return;
+                }
+                ref.read(userProvider2.notifier).tempAddEvent(result);
                 if (context.mounted) {
                   context.goNamed('meetups');
                 }
@@ -57,7 +62,7 @@ class EventPreviewPage extends ConsumerWidget {
               top: MediaQuery.of(context).padding.top,
               bottom: MediaQuery.of(context).padding.bottom,
             ),
-            child: EventDetails(
+            child: EventDisplayLarge(
               event: event,
               preview: true,
             ),

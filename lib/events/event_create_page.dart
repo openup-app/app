@@ -77,6 +77,7 @@ class EventStateNotifier extends StateNotifier<EventCreationState> {
 @freezed
 class EventCreationState with _$EventCreationState {
   const factory EventCreationState({
+    @Default('') String id,
     @Default('') String title,
     @Default(EventLocation(latLong: null, name: '')) EventLocation location,
     required DateTime startDate,
@@ -90,11 +91,11 @@ class EventCreationState with _$EventCreationState {
 }
 
 class EventCreatePage extends ConsumerStatefulWidget {
-  final Event? event;
+  final bool editing;
 
   const EventCreatePage({
     super.key,
-    this.event,
+    this.editing = false,
   });
 
   @override
@@ -144,10 +145,12 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       extendBody: true,
-      appBar: const OpenupAppBar(
+      appBar: OpenupAppBar(
         body: OpenupAppBarBody(
-          leading: OpenupAppBarBackButton(),
-          center: Text('Create a Meetup'),
+          leading: const OpenupAppBarBackButton(),
+          center: widget.editing
+              ? const Text('Edit Meetup')
+              : const Text('Create a Meetup'),
         ),
         blurBackground: true,
       ),
@@ -155,18 +158,37 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            RoundedButton(
-              onPressed: Navigator.of(context).pop,
-              child: const Text('Cancel'),
-            ),
-            RoundedButton(
-              color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-              onPressed: ref.watch(
-                      eventCreationProvider.select((s) => s.photo == null))
-                  ? null
-                  : _showEventPreview,
-              child: const Text('Preview'),
-            ),
+            if (!widget.editing)
+              RoundedButton(
+                onPressed: Navigator.of(context).pop,
+                child: const Text('Cancel'),
+              )
+            else
+              RoundedButton(
+                onPressed: !widget.editing
+                    ? null
+                    : () =>
+                        _showDeleteModal(ref.read(eventCreationProvider).id),
+                child: const Text('Delete Meet'),
+              ),
+            if (!widget.editing)
+              RoundedButton(
+                color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                onPressed: ref.watch(
+                        eventCreationProvider.select((s) => s.photo == null))
+                    ? null
+                    : _showEventPreview,
+                child: const Text('Preview'),
+              )
+            else
+              RoundedButton(
+                color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                onPressed: ref.watch(
+                        eventCreationProvider.select((s) => s.photo == null))
+                    ? null
+                    : _performUpdate,
+                child: const Text('Update Meet'),
+              ),
           ],
         ),
       ),
@@ -479,6 +501,53 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
       extra: EventPreviewPageArgs(event: previewEvent),
     );
   }
+
+  void _performUpdate() {
+    final userState = ref.read(userProvider2);
+    final myProfile = userState.map(
+      guest: (_) => null,
+      signedIn: (signedIn) => signedIn.account.profile,
+    );
+    if (myProfile == null) {
+      return;
+    }
+    final previewEvent =
+        ref.read(eventCreationProvider.notifier).toPreviewEvent(
+              myProfile.uid,
+              myProfile.name,
+              myProfile.photo,
+            );
+    if (previewEvent == null) {
+      return;
+    }
+    ref.read(userProvider2.notifier).updateEvent(previewEvent);
+    context.goNamed('meetups');
+  }
+
+  void _showDeleteModal(String eventId) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          content: const Text('Are you sure you want to delete your event'),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () async {
+                ref.read(userProvider2.notifier).deleteEvent(eventId);
+                ref.read(userProvider2.notifier).tempDeleteEvent(eventId);
+              },
+              isDestructiveAction: true,
+              child: const Text('Delete'),
+            ),
+            CupertinoDialogAction(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _Input extends StatelessWidget {
@@ -691,4 +760,12 @@ class _SectionTitle extends StatelessWidget {
       ),
     );
   }
+}
+
+class EventCreateArgs {
+  final Event? editEvent;
+
+  EventCreateArgs({
+    this.editEvent,
+  });
 }

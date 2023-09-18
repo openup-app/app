@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
@@ -26,10 +29,11 @@ class EventsNotifier extends StateNotifier<EventsState> {
       return null;
     }
 
-    final newEvents = List.of(state.events)..add(event);
+    final result = event.copyWith(id: Random().nextInt(123123123).toString());
+    final newEvents = List.of(state.events)..add(result);
     state = state.copyWith(events: newEvents);
 
-    return event;
+    return result;
   }
 
   Future<void> updateEvent(String id, Event event) async {

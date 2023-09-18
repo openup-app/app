@@ -478,22 +478,47 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       name: 'meetups_create',
                       parentNavigatorKey: rootNavigatorKey,
                       builder: (context, state) {
-                        final now = DateTime.now();
+                        final initialEvent =
+                            (state.extra as EventCreateArgs?)?.editEvent;
+                        final EventCreationState creationState;
+                        if (initialEvent == null) {
+                          final now = DateTime.now();
+                          creationState = EventCreationState(
+                            startDate: now.add(const Duration(hours: 1)),
+                            endDate: now.add(
+                              const Duration(hours: 3),
+                            ),
+                          );
+                        } else {
+                          creationState = EventCreationState(
+                            id: initialEvent.id,
+                            title: initialEvent.title,
+                            location: initialEvent.location,
+                            startDate: initialEvent.startDate,
+                            endDate: initialEvent.endDate,
+                            price: initialEvent.price,
+                            limitedAttendance: initialEvent.attendance.map(
+                              unlimited: (_) => false,
+                              limited: (_) => true,
+                            ),
+                            attendance: initialEvent.attendance,
+                            description: initialEvent.description,
+                            photo: initialEvent.photo,
+                          );
+                        }
+
                         return ProviderScope(
                           parent: ProviderScope.containerOf(context),
                           overrides: [
                             eventCreationProvider.overrideWith((ref) {
                               return EventStateNotifier(
-                                EventCreationState(
-                                  startDate: now.add(const Duration(hours: 1)),
-                                  endDate: now.add(
-                                    const Duration(hours: 3),
-                                  ),
-                                ),
+                                creationState,
                               );
                             }),
                           ],
-                          child: const EventCreatePage(),
+                          child: EventCreatePage(
+                            editing: initialEvent != null,
+                          ),
                         );
                       },
                       routes: [

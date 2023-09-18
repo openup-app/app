@@ -130,7 +130,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
 
   void signedIn(Account account) async {
     state = _SignedIn(account: account);
-
+    _cacheEvents();
     _cacheChatrooms();
   }
 
@@ -163,6 +163,36 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
           signedIn: (signedIn) => state = signedIn.copyWith(collections: r),
         );
       },
+    );
+  }
+
+  Future<void> _cacheEvents() async {
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) {
+      return;
+    }
+    state.map(
+      guest: (_) {},
+      signedIn: (signedIn) => state = signedIn.copyWith(events: []),
+    );
+  }
+
+  void tempAddEvent(Event event) {
+    state.map(
+      guest: (_) {},
+      signedIn: (signedIn) => state = signedIn.copyWith(
+        events: List.of(signedIn.events ?? [])..add(event),
+      ),
+    );
+  }
+
+  void tempDeleteEvent(String eventId) {
+    state.map(
+      guest: (_) {},
+      signedIn: (signedIn) => state = signedIn.copyWith(
+        events: List.of(signedIn.events ?? [])
+          ..removeWhere((e) => e.id == eventId),
+      ),
     );
   }
 
@@ -436,6 +466,16 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     );
   }
 
+  Future<Either<ApiError, Event>> updateEvent(Event event) async {
+    await Future.delayed(const Duration(seconds: 1));
+    return Right(event);
+  }
+
+  Future<Either<ApiError, void>> deleteEvent(String id) async {
+    await Future.delayed(const Duration(seconds: 1));
+    return const Right(null);
+  }
+
   Future<Either<ApiError, Collection>> createCollection({
     required List<File> photos,
     required File? audio,
@@ -533,6 +573,7 @@ class UserState2 with _$UserState2 {
     required Account account,
     @Default(null) List<Chatroom>? chatrooms,
     @Default(null) List<Collection>? collections,
+    @Default(null) List<Event>? events,
   }) = _SignedIn;
 
   int get unreadCount {

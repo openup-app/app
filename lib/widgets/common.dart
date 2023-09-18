@@ -2326,6 +2326,42 @@ class RoundedButton extends StatelessWidget {
   }
 }
 
+class RectangleButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final Widget child;
+
+  const RectangleButton({
+    super.key,
+    required this.onPressed,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onPressed,
+      child: Container(
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+          color: Color.fromRGBO(0x3D, 0x3D, 0x3D, 1.0),
+          borderRadius: BorderRadius.all(
+            Radius.circular(3),
+          ),
+        ),
+        child: DefaultTextStyle(
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w300,
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
 class UnreadIndicator extends StatelessWidget {
   final int count;
 
