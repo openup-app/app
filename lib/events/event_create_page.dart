@@ -23,6 +23,9 @@ class EventStateNotifier extends StateNotifier<EventCreationState> {
 
   set title(String value) => state = state.copyWith(title: value);
 
+  set location(EventLocation location) =>
+      state = state.copyWith(location: location);
+
   set startDate(DateTime value) {
     final duration = state.endDate.difference(state.startDate);
     state = state.copyWith(
@@ -174,8 +177,11 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
             if (!widget.editing)
               RoundedButton(
                 color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                onPressed: ref.watch(
-                        eventCreationProvider.select((s) => s.photo == null))
+                onPressed: ref.watch(eventCreationProvider.select((s) =>
+                        s.title.isEmpty ||
+                        s.location.name.isEmpty ||
+                        s.description.isEmpty ||
+                        s.photo == null))
                     ? null
                     : _showEventPreview,
                 child: const Text('Preview'),
@@ -183,8 +189,11 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
             else
               RoundedButton(
                 color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                onPressed: ref.watch(
-                        eventCreationProvider.select((s) => s.photo == null))
+                onPressed: ref.watch(eventCreationProvider.select((s) =>
+                        s.title.isEmpty ||
+                        s.location.name.isEmpty ||
+                        s.description.isEmpty ||
+                        s.photo == null))
                     ? null
                     : _performUpdate,
                 child: const Text('Update Meet'),
@@ -210,6 +219,9 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                   title: const Text('Location'),
                   trailing: _TextField(
                     controller: _locationController,
+                    onChanged: (value) => ref
+                        .read(eventCreationProvider.notifier)
+                        .location = EventLocation(latLong: null, name: value),
                   ),
                 ),
                 _Input(
