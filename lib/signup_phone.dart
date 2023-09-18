@@ -53,6 +53,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w500,
+                    color: Colors.black,
                   ),
                 ),
               ],
@@ -124,7 +125,9 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
                               .textTheme
                               .bodyMedium!
                               .copyWith(
-                                  fontSize: 20, fontWeight: FontWeight.w400),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black),
                         ),
                 ),
               ),

@@ -61,6 +61,7 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w500,
+                    color: Colors.black,
                   ),
                 ),
               ],
@@ -141,11 +142,13 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
                       : Text(
                           'Verify',
                           textAlign: TextAlign.center,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w400,
-                                  ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black),
                         ),
                 ),
               ),
