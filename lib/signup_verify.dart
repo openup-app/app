@@ -224,7 +224,8 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
         ref.read(analyticsProvider).trackSignupVerified();
         context.goNamed('signup_age');
       },
-      retry: () {
+      retry: (e) {
+        debugPrint(e.toString());
         context.goNamed('signup_phone');
       },
     );

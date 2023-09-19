@@ -334,7 +334,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   }) {
     return GoRouter(
       observers: observers,
-      debugLogDiagnostics: true,
+      debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
       initialLocation: '/',
       redirect: _redirectGuestsToSignUp,

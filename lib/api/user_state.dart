@@ -104,8 +104,9 @@ void _initUserState({
   getAccountResult.map(
     logIn: (logIn) => onSignedIn(logIn.account),
     signUp: (_) => onAuthorizedButNoAccount(),
-    retry: (_) {
+    retry: (e) {
       // TODO: Handle error
+      debugPrint(e.toString());
     },
   );
 }
@@ -589,19 +590,18 @@ Future<GetAccountResult> getAccount(Api api) async {
   final result = await api.getAccount();
   return result.fold(
     (l) {
-      const retry = _Retry();
       return l.map<GetAccountResult>(
-        network: (_) => retry,
+        network: (_) => _Retry(l),
         client: (apiClientError) {
           return apiClientError.error.map(
-            badRequest: (_) => retry,
-            unauthorized: (_) => retry,
+            badRequest: (_) => _Retry(l),
+            unauthorized: (_) => _Retry(l),
             notFound: (_) => const _SignUp(),
-            forbidden: (_) => retry,
-            conflict: (_) => retry,
+            forbidden: (_) => _Retry(l),
+            conflict: (_) => _Retry(l),
           );
         },
-        server: (_) => retry,
+        server: (e) => _Retry(l),
       );
     },
     (r) => _LogIn(r),
@@ -612,5 +612,5 @@ Future<GetAccountResult> getAccount(Api api) async {
 class GetAccountResult with _$GetAccountResult {
   const factory GetAccountResult.logIn(Account account) = _LogIn;
   const factory GetAccountResult.signUp() = _SignUp;
-  const factory GetAccountResult.retry() = _Retry;
+  const factory GetAccountResult.retry(ApiError e) = _Retry;
 }
