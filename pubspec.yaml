@@ -112,6 +112,7 @@ flutter:
     - assets/images/people_background.png
     - assets/images/preferences_icon.png
     - assets/images/tutorial_photo_good.jpg
+    - assets/images/signup_background.jpg
     - assets/images/signup_background.png
     - assets/images/signup_background/0.svg
     - assets/images/signup_background/1.svg
@@ -121,6 +122,8 @@ flutter:
     - assets/images/signup_background/5.svg
     - assets/images/signup_background/6.svg
     - assets/images/signup_friends_background.png
+    - assets/images/signup_paper1.png
+    - assets/images/signup_paper2.png
     - assets/images/subscribe_background.png
     - assets/images/earth.svg
     - assets/images/loading_icon.png

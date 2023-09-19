@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/auth/auth_provider.dart';
-import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/phone_number_input.dart';
+import 'package:openup/widgets/signup_background.dart';
 
 class SignupPhone extends ConsumerStatefulWidget {
   const SignupPhone({
@@ -24,65 +24,66 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
 
   bool _submitting = false;
 
+  final _phoneNumberNode = FocusNode();
+
+  @override
+  void dispose() {
+    super.dispose();
+    _phoneNumberNode.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
       resizeToAvoidBottomInset: true,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).padding.top,
-          ),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.topCenter,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                if (ModalRoute.of(context)?.canPop == true)
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: BackIconButton(
-                      color: Colors.black,
+      body: SignupBackground(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const Center(
+              child: Text(
+                'Welcome',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Covered By Your Grace',
+                  fontSize: 48,
+                  fontWeight: FontWeight.w400,
+                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.6),
+                ),
+              ),
+            ),
+            DecoratedBox(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/signup_paper1.png'),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Center(
+                    child: Text(
+                      'What\'s your number?',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Covered By Your Grace',
+                        fontSize: 36,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
-                const Text(
-                  'Log in or sign up',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          const Text(
-            'Enter your phone number',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-            ),
-          ),
-          const SizedBox(height: 51),
-          Center(
-            child: ErrorText(
-              errorText: _phoneErrorText,
-              child: RoundedRectangleContainer(
-                child: SizedBox(
-                  width: 238,
-                  height: 42,
-                  child: PhoneInput(
+                  const SizedBox(height: 8),
+                  PhoneInput(
+                    focusNode: _phoneNumberNode,
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontFamily: 'Covered By Your Grace',
+                      fontSize: 45,
                       fontWeight: FontWeight.w400,
                       color: Colors.black,
                     ),
+                    hintTextColor: const Color.fromRGBO(0x00, 0x00, 0x00, 0.3),
                     onChanged: (value, valid) {
                       setState(() {
                         _phoneNumber = value;
@@ -92,52 +93,56 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
                     onValidationError: (error) =>
                         setState(() => _phoneErrorText = error),
                   ),
-                ),
+                ],
               ),
-            ),
-          ),
-          const Text(
-            'Please do not sign up with\n another person\'s number.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              height: 1.6,
-            ),
-          ),
-          const Spacer(),
-          Button(
-            onPressed: _submitting || !_valid ? null : _submit,
-            child: RoundedRectangleContainer(
-              child: SizedBox(
-                width: 171,
-                height: 42,
-                child: Center(
-                  child: _submitting
-                      ? const LoadingIndicator(
-                          color: Colors.black,
-                        )
-                      : Text(
-                          'Send code',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
-                              .copyWith(
+            )
+                .animate(
+                  delay: const Duration(milliseconds: 700),
+                  onComplete: (_) => _phoneNumberNode.requestFocus(),
+                )
+                .rotate(
+                  duration: const Duration(milliseconds: 1500),
+                  curve: Curves.easeOutQuart,
+                  begin: -145 / 360,
+                  end: 7 / 360,
+                )
+                .slideY(
+                  duration: const Duration(milliseconds: 1500),
+                  curve: Curves.easeOutQuart,
+                  begin: -1,
+                  end: 0,
+                ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewPadding.bottom + 32.0),
+                child: Button(
+                  onPressed: _submitting || !_valid ? null : _submit,
+                  child: RoundedRectangleContainer(
+                    child: SizedBox(
+                      width: 171,
+                      height: 42,
+                      child: Center(
+                        child: _submitting
+                            ? const LoadingIndicator(color: Colors.black)
+                            : const Text(
+                                'Send code',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w400,
-                                  color: Colors.black),
-                        ),
+                                  color: Colors.black,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 36),
-          SizedBox(
-            height: MediaQuery.of(context).padding.bottom,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

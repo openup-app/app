@@ -49,133 +49,132 @@ class _PhoneInputState extends State<PhoneInput> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (widget.showCountryCodePicker) ...[
-          Container(
-            width: 60,
-            height: 48,
-            alignment: Alignment.centerRight,
-            child: PopupMenuButton<_Country>(
-              child: RichText(
-                textAlign: TextAlign.right,
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '+ ',
-                      style:
-                          widget.style?.copyWith(color: widget.hintTextColor),
-                    ),
-                    TextSpan(
-                      text: _country.callingCode.toString(),
-                      style: widget.style,
-                    ),
-                  ],
-                ),
-              ),
-              onSelected: (country) {
-                setState(() => _country = country);
-                _validatePhoneWithPrefix(_phoneController.text);
-              },
-              itemBuilder: (context) {
-                return [
-                  for (final country in _countries)
-                    PopupMenuItem(
-                      value: country,
-                      child: Row(
+    return DefaultTextStyle(
+      style: widget.style ?? const TextStyle(),
+      child: Builder(
+        builder: (context) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (widget.showCountryCodePicker) ...[
+                Container(
+                  width: 60,
+                  height: 48,
+                  alignment: Alignment.centerRight,
+                  child: PopupMenuButton<_Country>(
+                    child: RichText(
+                      textAlign: TextAlign.right,
+                      text: TextSpan(
                         children: [
-                          SizedBox(
-                            width: 56,
-                            child: RichText(
-                              textAlign: TextAlign.right,
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: '+ ',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                          fontWeight: FontWeight.w400,
-                                          color: const Color.fromRGBO(
-                                              0x6C, 0x6C, 0x6C, 1.0),
-                                        ),
-                                  ),
-                                  TextSpan(
-                                    text: country.callingCode.toString(),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium!
-                                        .copyWith(
-                                            fontWeight: FontWeight.w400,
-                                            color: Colors.black),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          TextSpan(
+                            text: '+ ',
+                            style: widget.style
+                                ?.copyWith(color: widget.hintTextColor),
                           ),
-                          const SizedBox(width: 8),
-                          Text(country.flag),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              country.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                                    fontWeight: FontWeight.w400,
-                                    color: const Color.fromRGBO(
-                                        0x6C, 0x6C, 0x6C, 1.0),
-                                  ),
-                            ),
+                          TextSpan(
+                            text: _country.callingCode.toString(),
+                            style: widget.style,
                           ),
                         ],
                       ),
                     ),
-                ];
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-        Expanded(
-          child: TextFormField(
-            controller: _phoneController,
-            focusNode: widget.focusNode,
-            keyboardType: TextInputType.phone,
-            textInputAction: TextInputAction.done,
-            textAlignVertical: TextAlignVertical.center,
-            inputFormatters: [
-              FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                    onSelected: (country) {
+                      setState(() => _country = country);
+                      _validatePhoneWithPrefix(_phoneController.text);
+                    },
+                    itemBuilder: (context) {
+                      return [
+                        for (final country in _countries)
+                          PopupMenuItem(
+                            value: country,
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 56,
+                                  child: RichText(
+                                    textAlign: TextAlign.right,
+                                    text: TextSpan(
+                                      children: [
+                                        const TextSpan(
+                                          text: '+ ',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w400,
+                                            color: Color.fromRGBO(
+                                                0x6C, 0x6C, 0x6C, 1.0),
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: country.callingCode.toString(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w400,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(country.flag),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    country.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w400,
+                                      color:
+                                          Color.fromRGBO(0x6C, 0x6C, 0x6C, 1.0),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ];
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: TextFormField(
+                  controller: _phoneController,
+                  focusNode: widget.focusNode,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.done,
+                  textAlignVertical: TextAlignVertical.center,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                  ],
+                  onChanged: (_) {
+                    final value = _phoneController.text;
+                    final String phoneWithPrefix;
+                    if (!value.startsWith('+')) {
+                      phoneWithPrefix = '+${_country.callingCode}$value';
+                    } else {
+                      phoneWithPrefix = value;
+                    }
+                    final error = _validatePhoneWithPrefix(phoneWithPrefix);
+                    widget.onValidationError(error);
+                    widget.onChanged(phoneWithPrefix, error == null);
+                  },
+                  onEditingComplete: () {
+                    FocusScope.of(context).unfocus();
+                  },
+                  textAlign: widget.textAlign,
+                  style: widget.style,
+                  decoration: InputDecoration.collapsed(
+                    hintText: 'Phone Number',
+                    hintStyle: DefaultTextStyle.of(context)
+                        .style
+                        .copyWith(color: widget.hintTextColor),
+                  ),
+                ),
+              ),
             ],
-            onChanged: (_) {
-              final value = _phoneController.text;
-              final String phoneWithPrefix;
-              if (!value.startsWith('+')) {
-                phoneWithPrefix = '+${_country.callingCode}$value';
-              } else {
-                phoneWithPrefix = value;
-              }
-              final error = _validatePhoneWithPrefix(phoneWithPrefix);
-              widget.onValidationError(error);
-              widget.onChanged(phoneWithPrefix, error == null);
-            },
-            onEditingComplete: () {
-              FocusScope.of(context).unfocus();
-            },
-            textAlign: widget.textAlign,
-            style: widget.style,
-            decoration: InputDecoration.collapsed(
-              hintText: 'Phone Number',
-              hintStyle: DefaultTextStyle.of(context)
-                  .style
-                  .copyWith(color: widget.hintTextColor),
-            ),
-          ),
-        ),
-      ],
+          );
+        },
+      ),
     );
   }
 
