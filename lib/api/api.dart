@@ -1020,6 +1020,18 @@ class AccountCreationParams with _$AccountCreationParams {
     @Default(null) File? audio,
     @Default(null) LatLong? latLong,
   }) = _AccountCreationParams;
+
+  const AccountCreationParams._();
+
+  bool get valid =>
+      name != null &&
+      age != null &&
+      age! >= 17 &&
+      gender != null &&
+      photos != null &&
+      photos!.isNotEmpty &&
+      audio != null &&
+      latLong != null;
 }
 
 @freezed

@@ -335,7 +335,7 @@ class _CinematicPhotoState extends State<CinematicPhoto> {
 }
 
 class NonCinematicPhoto extends StatefulWidget {
-  final String url;
+  final Uri uri;
   final BoxFit fit;
   final bool animate;
   final VoidCallback? onLoaded;
@@ -343,7 +343,7 @@ class NonCinematicPhoto extends StatefulWidget {
 
   const NonCinematicPhoto({
     super.key,
-    required this.url,
+    required this.uri,
     this.fit = BoxFit.cover,
     this.animate = true,
     this.onLoaded,
@@ -356,7 +356,7 @@ class NonCinematicPhoto extends StatefulWidget {
 
 class _NonCinematicPhotoState extends State<NonCinematicPhoto>
     with SingleTickerProviderStateMixin {
-  late final _photoImageProvider = NetworkImage(widget.url);
+  late final ImageProvider _photoImageProvider;
 
   bool _loading = true;
 
@@ -365,6 +365,11 @@ class _NonCinematicPhotoState extends State<NonCinematicPhoto>
   @override
   void initState() {
     super.initState();
+    try {
+      _photoImageProvider = FileImage(File(widget.uri.toFilePath()));
+    } on UnsupportedError {
+      _photoImageProvider = NetworkImage(widget.uri.toString());
+    }
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5),

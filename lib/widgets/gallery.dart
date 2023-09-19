@@ -301,7 +301,7 @@ class _NonCinematicGalleryState extends State<NonCinematicGallery> {
             },
             child: NonCinematicPhoto(
               key: ValueKey('${_index}_$photoUrl'),
-              url: photoUrl,
+              uri: Uri.parse(photoUrl),
               animate: _slideshowTimer?.isActive == true,
               onLoaded: () {
                 setState(() => _ready = true);
@@ -317,7 +317,7 @@ class _NonCinematicGalleryState extends State<NonCinematicGallery> {
 }
 
 class CameraFlashGallery extends StatefulWidget {
-  final List<String> gallery;
+  final List<Uri> gallery;
   final bool slideshow;
 
   const CameraFlashGallery({
@@ -409,7 +409,7 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
             return const SizedBox.shrink();
           }
           final i = _index % widget.gallery.length;
-          final photoUrl = widget.gallery[i];
+          final photoUri = widget.gallery[i];
 
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 166),
@@ -429,8 +429,8 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
                   scale: scale,
                   alignment: Alignment.centerRight,
                   child: NonCinematicPhoto(
-                    key: ValueKey('${_index}_$photoUrl'),
-                    url: photoUrl,
+                    key: ValueKey('${_index}_$photoUri'),
+                    uri: photoUri,
                     animate: _slideshowTimer?.isActive == true,
                     onLoaded: () {
                       setState(() => _ready = true);
@@ -448,8 +448,8 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
   }
 
   void _precache() {
-    widget.gallery.forEach((photoUrl) {
-      precacheImage(NetworkImage(photoUrl), context);
-    });
+    // widget.gallery.forEach((photoUrl) {
+    //   precacheImage(NetworkImage(photoUrl), context);
+    // });
   }
 }

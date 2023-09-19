@@ -618,8 +618,8 @@ class ProfileDisplayBehavior extends ConsumerWidget {
                   ? const Text('Recording Voice Bio')
                   : const Text('Recording Message'),
               submitLabel: isMe
-                  ? const Text('Finish & Update')
-                  : const Text('Finish & Send'),
+                  ? const Text('Tap to update')
+                  : const Text('Tap to send'),
             );
             if (context.mounted) {
               if (result == null) {

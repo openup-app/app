@@ -706,9 +706,13 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
     final result = await showRecordPanel(
       context: context,
       title: const Text('Recording Voice Bio'),
-      submitLabel: const Text('Finish & Update'),
+      submitLabel: const Text('Tap to send'),
     );
-    if (!mounted || result == null) {
+    if (result == null) {
+      return;
+    }
+
+    if (!mounted) {
       return;
     }
 

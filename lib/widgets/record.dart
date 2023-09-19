@@ -19,6 +19,7 @@ Future<RecordResult?> showRecordPanel({
     builder: (context) {
       return _PanelSurface(
         child: WobblyRingsRecorder(
+          submitLabel: submitLabel,
           onCancel: Navigator.of(context).pop,
           onRecordingComplete: (audio, duration) {
             Navigator.of(context).pop(RecordResult(audio, duration));
@@ -38,6 +39,7 @@ class RecordResult {
 }
 
 class WobblyRingsRecorder extends StatefulWidget {
+  final Widget submitLabel;
   final Duration minDuration;
   final VoidCallback onCancel;
   final Future<void> Function(Uint8List audio, Duration duration)
@@ -45,6 +47,7 @@ class WobblyRingsRecorder extends StatefulWidget {
 
   const WobblyRingsRecorder({
     super.key,
+    required this.submitLabel,
     this.minDuration = const Duration(seconds: 2),
     required this.onCancel,
     required this.onRecordingComplete,
@@ -103,7 +106,7 @@ class _WobblyRingsRecorderState extends State<WobblyRingsRecorder> {
                           : CrossFadeState.showSecond,
                       alignment: Alignment.center,
                       firstChild: const Text('Recording'),
-                      secondChild: const Text('Tap to send'),
+                      secondChild: widget.submitLabel,
                     ),
                   ),
                 ),
@@ -136,14 +139,10 @@ class _WobblyRingsRecorderState extends State<WobblyRingsRecorder> {
 
   void _onRecordingEnded(Uint8List? audio, Duration duration) async {
     if (audio == null) {
-      Navigator.of(context).pop();
       return;
     }
 
     await widget.onRecordingComplete(audio, duration);
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
   }
 }
 

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -175,7 +176,7 @@ class _ListViewState extends ConsumerState<_ListView> {
     final result = await showRecordPanel(
       context: context,
       title: const Text('Recording Message'),
-      submitLabel: const Text('Finish & Send'),
+      submitLabel: const Text('Tab to send'),
     );
 
     if (!mounted) {
@@ -232,7 +233,7 @@ class _ProfileDisplay extends ConsumerWidget {
         onPressed: _togglePlayPause,
         child: CameraFlashGallery(
           slideshow: true,
-          gallery: profile.profile.gallery,
+          gallery: profile.profile.gallery.map((e) => Uri.parse(e)).toList(),
         ),
       ),
       titleBuilder: (context) {
@@ -277,9 +278,35 @@ class _ProfileDisplay extends ConsumerWidget {
           ),
         ),
       ),
-      playbackState: playbackState,
-      playbackInfoStream: playbackInfoStream,
-      onPlaybackIndicatorPressed: _togglePlayPause,
+      indicatorButton: Button(
+        onPressed: _togglePlayPause,
+        child: Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          margin: const EdgeInsets.all(8),
+          decoration: const BoxDecoration(
+            color: Colors.black,
+            shape: BoxShape.circle,
+          ),
+          child: Builder(
+            builder: (context) {
+              return switch (playbackState) {
+                null => const SizedBox.shrink(),
+                PlaybackState.idle ||
+                PlaybackState.paused =>
+                  const Icon(Icons.play_arrow),
+                PlaybackState.playing => SvgPicture.asset(
+                    'assets/images/audio_indicator.svg',
+                    width: 16,
+                    height: 18,
+                  ),
+                _ => const LoadingIndicator(),
+              };
+            },
+          ),
+        ),
+      ),
     );
   }
 

@@ -606,11 +606,32 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
 
 final accountCreationParamsProvider =
     StateNotifierProvider<AccountCreationParamsNotifier, AccountCreationParams>(
-        (ref) => AccountCreationParamsNotifier());
+        (ref) {
+  final userStateNotifier = ref.read(userProvider.notifier);
+  final userStateNotifier2 = ref.read(userProvider2.notifier);
+  return AccountCreationParamsNotifier(
+      api: ref.read(apiProvider),
+      analytics: ref.read(analyticsProvider),
+      onAccount: (account) {
+        userStateNotifier.profile(account.profile);
+        userStateNotifier2.signedIn(account);
+      });
+});
 
 class AccountCreationParamsNotifier
     extends StateNotifier<AccountCreationParams> {
-  AccountCreationParamsNotifier() : super(const AccountCreationParams());
+  final Api _api;
+  final Analytics _analytics;
+  final void Function(Account account) _onAccount;
+
+  AccountCreationParamsNotifier({
+    required Api api,
+    required Analytics analytics,
+    required void Function(Account account) onAccount,
+  })  : _api = api,
+        _analytics = analytics,
+        _onAccount = onAccount,
+        super(const AccountCreationParams());
 
   void photos(List<File> photos) => state = state.copyWith(photos: photos);
 
@@ -623,6 +644,29 @@ class AccountCreationParamsNotifier
   void gender(Gender gender) => state = state.copyWith(gender: gender);
 
   void latLong(LatLong latLong) => state = state.copyWith(latLong: latLong);
+
+  Future<Either<ApiError, void>?> signUp() async {
+    if (!state.valid) {
+      return null;
+    }
+    _analytics.trackCreateAccount();
+
+    final result = await _api.createAccount(state);
+    if (!mounted) {
+      return null;
+    }
+
+    return result.fold(
+      (l) => Left(l),
+      (r) {
+        _analytics.setUserProperty('name', r.profile.name);
+        _analytics.setUserProperty('age', r.profile.age);
+        _analytics.setUserProperty('gender', r.profile.gender.name);
+        _onAccount(r);
+        return const Right(null);
+      },
+    );
+  }
 }
 
 @freezed

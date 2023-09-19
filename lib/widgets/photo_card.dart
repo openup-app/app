@@ -1,33 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:openup/platform/just_audio_audio_player.dart';
-import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/common.dart';
 
 class PhotoCard extends StatelessWidget {
   final double width;
   final double height;
+  final BoxDecoration? decoration;
   final Widget photo;
   final WidgetBuilder titleBuilder;
-  final Widget subtitle;
+  final Widget? subtitle;
   final Widget firstButton;
   final Widget secondButton;
-  final PlaybackState? playbackState;
-  final Stream<PlaybackInfo>? playbackInfoStream;
-  final VoidCallback onPlaybackIndicatorPressed;
+  final Widget indicatorButton;
 
   const PhotoCard({
     super.key,
     required this.width,
     required this.height,
+    this.decoration,
     required this.photo,
     required this.titleBuilder,
-    required this.subtitle,
+    this.subtitle,
     required this.firstButton,
     required this.secondButton,
-    required this.playbackState,
-    required this.playbackInfoStream,
-    required this.onPlaybackIndicatorPressed,
+    required this.indicatorButton,
   });
 
   @override
@@ -42,7 +36,7 @@ class PhotoCard extends StatelessWidget {
     final availableWidth = width - requiredWidth - margin;
     final availableHeight = height - requiredHeight - margin;
     final availableAspect = availableWidth / availableHeight;
-    const targetAspect = 14 / 23;
+    const targetAspect = 17 / 23;
 
     final double outputWidth, outputHeight;
     if (availableAspect > targetAspect) {
@@ -50,7 +44,7 @@ class PhotoCard extends StatelessWidget {
       outputWidth = height * targetAspect;
     } else {
       outputWidth = width;
-      outputHeight = width * targetAspect;
+      outputHeight = width / targetAspect;
     }
 
     return Center(
@@ -59,7 +53,7 @@ class PhotoCard extends StatelessWidget {
         child: Container(
           width: outputWidth,
           height: outputHeight,
-          color: Colors.white,
+          decoration: decoration ?? const BoxDecoration(color: Colors.white),
           child: Column(
             children: [
               Expanded(
@@ -85,62 +79,38 @@ class PhotoCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              DefaultTextStyle(
-                                style: const TextStyle(
-                                  fontFamily: 'Covered By Your Grace',
-                                  fontSize: 29,
-                                  color: Color.fromRGBO(0x27, 0x27, 0x27, 1.0),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                DefaultTextStyle(
+                                  style: const TextStyle(
+                                    fontFamily: 'Covered By Your Grace',
+                                    fontSize: 29,
+                                    color:
+                                        Color.fromRGBO(0x27, 0x27, 0x27, 1.0),
+                                  ),
+                                  child: Builder(
+                                    builder: (context) {
+                                      return titleBuilder(context);
+                                    },
+                                  ),
                                 ),
-                                child: Builder(
-                                  builder: (context) {
-                                    return titleBuilder(context);
-                                  },
-                                ),
-                              ),
-                              DefaultTextStyle(
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w300,
-                                  color: Color.fromRGBO(0x27, 0x27, 0x27, 1.0),
-                                ),
-                                child: subtitle,
-                              ),
-                              const SizedBox(height: 8),
-                            ],
-                          ),
-                          const Spacer(),
-                          Button(
-                            onPressed: onPlaybackIndicatorPressed,
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              alignment: Alignment.center,
-                              margin: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: Colors.black,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Builder(
-                                builder: (context) {
-                                  return switch (playbackState) {
-                                    null => const SizedBox.shrink(),
-                                    PlaybackState.idle ||
-                                    PlaybackState.paused =>
-                                      const Icon(Icons.play_arrow),
-                                    PlaybackState.playing => SvgPicture.asset(
-                                        'assets/images/audio_indicator.svg',
-                                        width: 16,
-                                        height: 18,
-                                      ),
-                                    _ => const LoadingIndicator(),
-                                  };
-                                },
-                              ),
+                                if (subtitle != null)
+                                  DefaultTextStyle(
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w300,
+                                      color:
+                                          Color.fromRGBO(0x27, 0x27, 0x27, 1.0),
+                                    ),
+                                    child: subtitle!,
+                                  ),
+                                const SizedBox(height: 8),
+                              ],
                             ),
                           ),
+                          indicatorButton,
                         ],
                       ),
                     ),

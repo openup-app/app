@@ -40,15 +40,11 @@ import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/settings_page.dart';
 import 'package:openup/shell_page.dart';
-import 'package:openup/signup_age.dart';
-import 'package:openup/signup_gender.dart';
-import 'package:openup/signup_name.dart';
 import 'package:openup/signup_permissions.dart';
 import 'package:openup/signup_phone.dart';
+import 'package:openup/signup_profile.dart';
+import 'package:openup/signup_rules.dart';
 import 'package:openup/signup_verify.dart';
-import 'package:openup/signup_audio.dart';
-import 'package:openup/signup_photos.dart';
-import 'package:openup/signup_friends.dart';
 import 'package:openup/util/key_value_store_service.dart';
 import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/online_users.dart';
@@ -351,7 +347,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       routes: [
         GoRoute(
           path: '/',
-          name: '/initial_loading',
+          name: 'initial_loading',
           builder: (context, state) => const InitialLoadingPage(),
         ),
         GoRoute(
@@ -377,51 +373,23 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           ],
         ),
         GoRoute(
-          path: '/signup_age',
-          name: 'signup_age',
+          path: '/signup_permissions',
+          name: 'signup_permissions',
           parentNavigatorKey: rootNavigatorKey,
-          builder: (context, state) => const SignupAge(),
+          builder: (context, state) => const SignupPermissionsScreen(),
           routes: [
             GoRoute(
-              path: 'permissions',
-              name: 'signup_permissions',
-              parentNavigatorKey: rootNavigatorKey,
-              builder: (context, state) => const SignupPermissionsScreen(),
-              routes: [
-                GoRoute(
-                  path: 'name',
-                  name: 'signup_name',
-                  builder: (context, state) => const SignupName(),
-                  routes: [
-                    GoRoute(
-                      path: 'gender',
-                      name: 'signup_gender',
-                      builder: (context, state) => const SignupGender(),
-                      routes: [
-                        GoRoute(
-                          path: 'photos',
-                          name: 'signup_photos',
-                          builder: (context, state) => const SignupPhotos(),
-                          routes: [
-                            GoRoute(
-                              path: 'audio',
-                              name: 'signup_audio',
-                              builder: (context, state) => const SignupAudio(),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+              path: 'profile',
+              name: 'signup_profile',
+              builder: (context, state) => const SignupProfile(),
             ),
           ],
         ),
         GoRoute(
-          path: '/signup_friends',
-          name: 'signup_friends',
-          builder: (context, state) => const SignUpFriends(),
+          path: '/signup_rules',
+          name: 'signup_rules',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) => const SignupRules(),
         ),
         StatefulShellRoute(
           builder: (builder) {

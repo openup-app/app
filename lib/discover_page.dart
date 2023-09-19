@@ -470,10 +470,13 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         final result = await showRecordPanel(
           context: context,
           title: const Text('Recording Message'),
-          submitLabel: const Text('Finish & Send'),
+          submitLabel: const Text('Tap to send'),
         );
 
-        if (result == null || !mounted) {
+        if (result == null) {
+          return;
+        }
+        if (!mounted) {
           return;
         }
 

@@ -211,7 +211,7 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
         final latLong = locationValue.current;
         ref.read(accountCreationParamsProvider.notifier).latLong(latLong);
         ref.read(analyticsProvider).trackSignupVerified();
-        context.goNamed('signup_age');
+        context.goNamed('signup_permissions');
       },
       retry: (e) {
         debugPrint(e.toString());

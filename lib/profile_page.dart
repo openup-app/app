@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -12,6 +13,7 @@ import 'package:openup/shell_page.dart';
 import 'package:openup/util/photo_picker.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/card_stack.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/photo_card.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/record.dart';
@@ -207,9 +209,34 @@ class _ProfilePanelState extends ConsumerState<_ProfileStack> {
                       child: Text('Update Photo $photoName'),
                     ),
                   ),
-                  playbackState: playbackState,
-                  playbackInfoStream: playbackInfoStream,
-                  onPlaybackIndicatorPressed: () => _onPlayPause(playbackState),
+                  indicatorButton: Button(
+                    onPressed: () => _onPlayPause(playbackState),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      alignment: Alignment.center,
+                      margin: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.black,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Builder(
+                        builder: (context) {
+                          return switch (playbackState) {
+                            PlaybackState.idle ||
+                            PlaybackState.paused =>
+                              const Icon(Icons.play_arrow),
+                            PlaybackState.playing => SvgPicture.asset(
+                                'assets/images/audio_indicator.svg',
+                                width: 16,
+                                height: 18,
+                              ),
+                            _ => const LoadingIndicator(),
+                          };
+                        },
+                      ),
+                    ),
+                  ),
                 );
               },
             );
@@ -279,7 +306,7 @@ class _ProfilePanelState extends ConsumerState<_ProfileStack> {
     final result = await showRecordPanel(
       context: context,
       title: const Text('Recording Voice Bio'),
-      submitLabel: const Text('Finish & Update'),
+      submitLabel: const Text('Tap to update'),
     );
     if (!mounted || result == null) {
       return;
