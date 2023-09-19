@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/events/event_display.dart';
-import 'package:openup/events/events_provider.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/widgets/common.dart';
 
@@ -22,13 +22,18 @@ class _EventsListPageState extends ConsumerState<EventsListPage> {
     super.initState();
     final latLong = ref.read(locationProvider).current;
     ref
-        .read(eventsProvider.notifier)
+        .read(userProvider2.notifier)
         .refreshEvents(Location(latLong: latLong, radius: 1000));
   }
 
   @override
   Widget build(BuildContext context) {
-    final events = ref.watch(eventsProvider.select((s) => s.events));
+    final events = ref.watch(userProvider2.select((s) {
+      return s.map(
+        guest: (_) => <Event>[],
+        signedIn: (signedIn) => signedIn.events ?? [],
+      );
+    }));
     if (events.isEmpty) {
       return const _CreateEvent();
     }

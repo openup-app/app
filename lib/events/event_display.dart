@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -99,6 +101,8 @@ class EventDisplayListItem extends ConsumerWidget {
                         const SizedBox(width: 5),
                         Expanded(
                           child: RichText(
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             text: TextSpan(
                               style: const TextStyle(
                                 fontSize: 16,
@@ -168,7 +172,7 @@ class EventDisplayListItem extends ConsumerWidget {
                         const Icon(Icons.monetization_on),
                         const SizedBox(width: 8),
                         Text(
-                          event.price == 0 ? 'Free' : '${event.price / 100}',
+                          event.price == 0 ? 'Free' : '${event.price}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w300,
@@ -189,13 +193,13 @@ class EventDisplayListItem extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.people_alt_outlined),
-                        SizedBox(width: 8),
+                        const Icon(Icons.people_alt_outlined),
+                        const SizedBox(width: 8),
                         Text(
-                          '4 going',
-                          style: TextStyle(
+                          '${event.participants.count} going',
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w300,
                           ),
@@ -444,36 +448,8 @@ class EventDisplayLarge extends StatelessWidget {
           const SizedBox(height: 16),
           SizedBox(
             height: 48,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              itemCount: 20,
-              itemBuilder: (context, index) {
-                return Button(
-                  onPressed: () {},
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.all(Radius.circular(16)),
-                      child: Container(
-                        width: 31,
-                        height: 31,
-                        foregroundDecoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            width: 2,
-                            color: Colors.white,
-                          ),
-                        ),
-                        child: Image.network(
-                          event.host.photo,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+            child: _Participants(
+              uids: event.participants.uids,
             ),
           ),
         ],
@@ -502,6 +478,82 @@ class EventDisplayLarge extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _Participants extends ConsumerStatefulWidget {
+  final List<String> uids;
+
+  const _Participants({
+    super.key,
+    required this.uids,
+  });
+
+  @override
+  ConsumerState<_Participants> createState() => _ParticipantsState();
+}
+
+class _ParticipantsState extends ConsumerState<_Participants> {
+  List<Profile>? _profiles;
+
+  @override
+  void initState() {
+    super.initState();
+    final api = ref.read(apiProvider);
+    final futures = <Future<Either<ApiError, Profile>>>[];
+    for (final uid in widget.uids) {
+      futures.add(api.getProfile(uid));
+    }
+    Future.wait(futures).then((results) {
+      final profiles =
+          results.map((e) => e.fold((l) => null, (r) => r)).whereNotNull();
+      if (mounted) {
+        _profiles = profiles.toList();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profiles = _profiles;
+    if (profiles == null) {
+      return const Padding(
+        padding: EdgeInsets.only(left: 16.0),
+        child: LoadingIndicator(color: Colors.white),
+      );
+    }
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      itemCount: profiles.length,
+      itemBuilder: (context, index) {
+        final profile = profiles[index];
+        return Button(
+          onPressed: () {},
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
+              child: Container(
+                width: 31,
+                height: 31,
+                foregroundDecoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    width: 2,
+                    color: Colors.white,
+                  ),
+                ),
+                child: Image.network(
+                  profile.photo,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

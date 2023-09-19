@@ -634,7 +634,9 @@ class Api {
   }
 
   Future<Either<ApiError, Event>> updateEvent(
-      String eventId, EventSubmission submission) {
+    String eventId,
+    EventSubmission submission,
+  ) {
     String? photoPath;
     try {
       photoPath = submission.photo?.toFilePath();
@@ -673,18 +675,20 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, void>> updateEventAttendance(
-      String eventId, bool attending) {
-    return _request(
-      makeRequest: () {
-        return http.post(
-          Uri.parse('$_urlBase/events/$eventId/attendance'),
-          headers: _headers,
-          body: jsonEncode({'attending': attending}),
-        );
-      },
-      handleSuccess: (response) => const Right(null),
-    );
+  Future<Either<ApiError, Event>> updateEventParticipation(
+    String eventId,
+    bool participation,
+  ) {
+    return _request(makeRequest: () {
+      return http.put(
+        Uri.parse('$_urlBase/events/$eventId/participation'),
+        headers: _headers,
+        body: jsonEncode({'participation': participation}),
+      );
+    }, handleSuccess: (response) {
+      final json = jsonDecode(response.body);
+      return Right(Event.fromJson(json['event']));
+    });
   }
 
   Future<Either<ApiError, void>> viewEvent(String eventId) {
@@ -1247,6 +1251,7 @@ class Event with _$Event {
     required int views,
     required EventAttendance attendance,
     required String description,
+    required EventParticipants participants,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
@@ -1291,6 +1296,10 @@ class EventSubmission with _$EventSubmission {
       views: 0,
       attendance: attendance,
       description: description,
+      participants: EventParticipants(
+        count: 1,
+        uids: [hostUid],
+      ),
     );
   }
 
@@ -1318,6 +1327,17 @@ class EventAttendance with _$EventAttendance {
 
   factory EventAttendance.fromJson(Map<String, dynamic> json) =>
       _$EventAttendanceFromJson(json);
+}
+
+@freezed
+class EventParticipants with _$EventParticipants {
+  const factory EventParticipants({
+    required int count,
+    required List<String> uids,
+  }) = _EventParticipants;
+
+  factory EventParticipants.fromJson(Map<String, dynamic> json) =>
+      _$EventParticipantsFromJson(json);
 }
 
 @freezed
