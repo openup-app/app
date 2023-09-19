@@ -190,7 +190,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   void initState() {
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
 
     _initNotifications();
     _initInAppNotifications();
