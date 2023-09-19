@@ -284,6 +284,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   }
 
   @override
+  void reassemble() {
+    super.reassemble();
+    FocusScope.of(context).unfocus();
+  }
+
+  @override
   void dispose() {
     _notificationManager?.dispose();
     _inAppNotificationsApi?.dispose();
