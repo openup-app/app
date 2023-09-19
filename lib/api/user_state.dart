@@ -75,8 +75,10 @@ final userProvider2 =
       final authState = ref.read(authProvider);
       authState.map(
         guest: (_) => userStateNotifier.guest(),
-        signedIn: (_) =>
-            ref.read(authProvider.notifier).deleteHangingAuthAccount(),
+        signedIn: (_) {
+          ref.read(authProvider.notifier).deleteHangingAuthAccount();
+          userStateNotifier.guest();
+        },
       );
     },
   );
