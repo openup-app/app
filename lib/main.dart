@@ -499,6 +499,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                             final args = state.extra as EventPreviewPageArgs;
                             return EventPreviewPage(
                               event: args.event,
+                              submission: args.submission,
                             );
                           },
                         ),

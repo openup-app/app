@@ -32,7 +32,7 @@ class MyMeetupsPage extends ConsumerWidget {
           final events = ref.watch(userProvider2.select((s) {
             return s.map(
               guest: (_) => null,
-              signedIn: (signedIn) => signedIn.events,
+              signedIn: (signedIn) => signedIn.hostingEvents,
             );
           }));
           if (events == null) {

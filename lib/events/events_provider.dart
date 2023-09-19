@@ -1,65 +1,32 @@
-import 'dart:math';
-
-import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/user_state.dart';
 
 part 'events_provider.freezed.dart';
 
-final eventsProvider = StateNotifierProvider<EventsNotifier, EventsState>(
-    (ref) => EventsNotifier());
+final eventsProvider =
+    StateNotifierProvider<EventsNotifier, EventsState>((ref) {
+  final api = ref.read(apiProvider);
+  return EventsNotifier(api);
+});
 
 class EventsNotifier extends StateNotifier<EventsState> {
-  EventsNotifier() : super(const EventsState(events: [])) {
-    refreshEvents();
-  }
+  final Api _api;
+  EventsNotifier(Api api)
+      : _api = api,
+        super(const EventsState(events: []));
 
-  Future<void> refreshEvents() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      state = state.copyWith(events: List.of(_debugEvents));
-    }
-  }
-
-  Future<Event?> createEvent(Event event) async {
-    // TODO: Use Api get event
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) {
-      return null;
-    }
-
-    final result = event.copyWith(id: Random().nextInt(123123123).toString());
-    final newEvents = List.of(state.events)..add(result);
-    state = state.copyWith(events: newEvents);
-
-    return result;
-  }
-
-  Future<void> updateEvent(String id, Event event) async {
-    await Future.delayed(const Duration(seconds: 1));
+  Future<void> refreshEvents(Location location) async {
+    final result = await _api.getEvents(location);
     if (!mounted) {
       return;
     }
 
-    final index = state.events.indexWhere((e) => e.id == id);
-    if (index == -1) {
-      return;
-    }
-
-    final newEvents = List.of(state.events)
-      ..replaceRange(index, index + 1, [event]);
-    state = state.copyWith(events: newEvents);
-  }
-
-  Future<void> deleteEvent(String id) async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) {
-      return;
-    }
-
-    final newEvents = List.of(state.events)..removeWhere((e) => e.id == id);
-    state = state.copyWith(events: newEvents);
+    result.fold(
+      (l) {},
+      (r) => state = state.copyWith(events: r),
+    );
   }
 }
 

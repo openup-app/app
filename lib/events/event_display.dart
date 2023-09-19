@@ -45,12 +45,10 @@ class EventDisplayListItem extends ConsumerWidget {
                       width: 2,
                     ),
                   ),
-                  child: event.photo == null
-                      ? null
-                      : ImageUri(
-                          event.photo!,
-                          fit: BoxFit.cover,
-                        ),
+                  child: ImageUri(
+                    event.photo,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               Expanded(
@@ -62,6 +60,8 @@ class EventDisplayListItem extends ConsumerWidget {
                         Expanded(
                           child: Text(
                             event.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 20,
@@ -309,12 +309,10 @@ class EventDisplayLarge extends StatelessWidget {
                 width: 2,
               ),
             ),
-            child: event.photo == null
-                ? null
-                : ImageUri(
-                    event.photo!,
-                    fit: BoxFit.cover,
-                  ),
+            child: ImageUri(
+              event.photo,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const SizedBox(height: 32),

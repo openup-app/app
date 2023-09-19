@@ -131,7 +131,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
 
   void signedIn(Account account) async {
     state = _SignedIn(account: account);
-    _cacheEvents();
+    _cacheHostingEvents(account.profile.uid);
     _cacheChatrooms();
   }
 
@@ -167,33 +167,35 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     );
   }
 
-  Future<void> _cacheEvents() async {
-    await Future.delayed(const Duration(seconds: 1));
+  Future<void> _cacheHostingEvents(String uid) async {
+    final result = await _api.getMyHostedEvents(uid);
     if (!mounted) {
       return;
     }
-    state.map(
-      guest: (_) {},
-      signedIn: (signedIn) => state = signedIn.copyWith(events: []),
+    result.fold(
+      (l) {},
+      (r) {
+        state.map(
+          guest: (_) {},
+          signedIn: (signedIn) => state = signedIn.copyWith(hostingEvents: r),
+        );
+      },
     );
   }
 
-  void tempAddEvent(Event event) {
-    state.map(
-      guest: (_) {},
-      signedIn: (signedIn) => state = signedIn.copyWith(
-        events: List.of(signedIn.events ?? [])..add(event),
-      ),
-    );
-  }
-
-  void tempDeleteEvent(String eventId) {
-    state.map(
-      guest: (_) {},
-      signedIn: (signedIn) => state = signedIn.copyWith(
-        events: List.of(signedIn.events ?? [])
-          ..removeWhere((e) => e.id == eventId),
-      ),
+  Future<void> _cacheAttendingEvents(String uid) async {
+    final result = await _api.getMyAttendingEvents();
+    if (!mounted) {
+      return;
+    }
+    result.fold(
+      (l) {},
+      (r) {
+        state.map(
+          guest: (_) {},
+          signedIn: (signedIn) => state = signedIn.copyWith(attendingEvents: r),
+        );
+      },
     );
   }
 
@@ -467,14 +469,73 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
     );
   }
 
-  Future<Either<ApiError, Event>> updateEvent(Event event) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return Right(event);
+  Future<bool> createEvent(EventSubmission submission) async {
+    final result = await _api.createEvent(submission);
+    if (!mounted) {
+      return false;
+    }
+
+    return result.fold(
+      (l) => false,
+      (r) {
+        return state.map(
+          guest: (_) => false,
+          signedIn: (signedIn) {
+            state = signedIn.copyWith(
+                hostingEvents: List.of(signedIn.hostingEvents ?? [])..add(r));
+            return true;
+          },
+        );
+      },
+    );
   }
 
-  Future<Either<ApiError, void>> deleteEvent(String id) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return const Right(null);
+  Future<void> deleteEvent(String eventId) async {
+    final result = await _api.deleteEvent(eventId);
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (l) {},
+      (r) {
+        state.map(
+          guest: (_) {},
+          signedIn: (signedIn) {
+            state = signedIn.copyWith(
+              hostingEvents: List.of(signedIn.hostingEvents ?? [])
+                ..removeWhere((e) => e.id == eventId),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> updateEvent(String eventId, EventSubmission submission) async {
+    final result = await _api.updateEvent(eventId, submission);
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (l) {},
+      (r) {
+        state.map(
+          guest: (_) {},
+          signedIn: (signedIn) {
+            final index =
+                signedIn.hostingEvents?.indexWhere((e) => e.id == eventId);
+            if (index != null && index != -1) {
+              state = signedIn.copyWith(
+                hostingEvents: List.of(signedIn.hostingEvents ?? [])
+                  ..replaceRange(index, index + 1, [r]),
+              );
+            }
+          },
+        );
+      },
+    );
   }
 
   Future<Either<ApiError, Collection>> createCollection({
@@ -574,7 +635,8 @@ class UserState2 with _$UserState2 {
     required Account account,
     @Default(null) List<Chatroom>? chatrooms,
     @Default(null) List<Collection>? collections,
-    @Default(null) List<Event>? events,
+    @Default(null) List<Event>? hostingEvents,
+    @Default(null) List<Event>? attendingEvents,
   }) = _SignedIn;
 
   int get unreadCount {

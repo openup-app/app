@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/events/event_display.dart';
-import 'package:openup/events/events_provider.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/scaffold.dart';
 
 class EventPreviewPage extends ConsumerWidget {
   final Event event;
+  final EventSubmission submission;
 
   const EventPreviewPage({
     super.key,
     required this.event,
+    required this.submission,
   });
 
   @override
@@ -37,13 +39,14 @@ class EventPreviewPage extends ConsumerWidget {
             ),
             RoundedButton(
               onPressed: () async {
-                final notifier = ref.read(eventsProvider.notifier);
-                final result = await notifier.createEvent(event);
-                if (!context.mounted || result == null) {
-                  return;
-                }
-                ref.read(userProvider2.notifier).tempAddEvent(result);
-                if (context.mounted) {
+                final notifier = ref.read(userProvider2.notifier);
+                final future = notifier.createEvent(submission);
+                final success = await withBlockingModal(
+                  context: context,
+                  label: 'Creating event',
+                  future: future,
+                );
+                if (success && context.mounted) {
                   context.goNamed('meetups');
                 }
               },
@@ -75,8 +78,10 @@ class EventPreviewPage extends ConsumerWidget {
 
 class EventPreviewPageArgs {
   final Event event;
+  final EventSubmission submission;
 
   EventPreviewPageArgs({
     required this.event,
+    required this.submission,
   });
 }

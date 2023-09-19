@@ -1,75 +1,55 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/events/event_preview_page.dart';
+import 'package:openup/location/location_provider.dart';
 import 'package:openup/util/photo_picker.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/image.dart';
 
-part 'event_create_page.freezed.dart';
-
-final _eventCreationProvider =
-    StateNotifierProvider<_EventCreationStateNotifier, EventCreationState>(
+final _submissionProvider =
+    StateNotifierProvider<_EventCreationStateNotifier, EventSubmission>(
         (ref) => throw 'Uninitialized provider');
 
-class _EventCreationStateNotifier extends StateNotifier<EventCreationState> {
-  _EventCreationStateNotifier(EventCreationState initialState)
-      : super(initialState);
+class _EventCreationStateNotifier extends StateNotifier<EventSubmission> {
+  _EventCreationStateNotifier(EventSubmission submission) : super(submission);
 
-  set title(String value) => state = state.copyWith.event(title: value);
+  set title(String value) => state = state.copyWith(title: value);
 
   set location(EventLocation location) =>
-      state = state.copyWith.event(location: location);
+      state = state.copyWith(location: location);
 
   set startDate(DateTime value) {
-    final duration = state.event.endDate.difference(state.event.startDate);
-    state = state.copyWith.event(
+    final duration = state.endDate.difference(state.startDate);
+    state = state.copyWith(
       startDate: value,
       endDate: value.add(duration),
     );
   }
 
   set endDate(DateTime value) {
-    state = state.copyWith.event(
-      startDate: state.event.startDate.isAfter(value)
+    state = state.copyWith(
+      startDate: state.startDate.isAfter(value)
           ? value.subtract(const Duration(minutes: 1))
-          : state.event.startDate,
+          : state.startDate,
       endDate: value,
     );
   }
 
-  set price(int value) => state = state.copyWith.event(price: value);
+  set price(int value) => state = state.copyWith(price: value);
 
   set attendance(EventAttendance attendance) =>
-      state = state.copyWith.event(attendance: attendance);
+      state = state.copyWith(attendance: attendance);
 
-  set description(String value) =>
-      state = state.copyWith.event(description: value);
+  set description(String value) => state = state.copyWith(description: value);
 
-  set photo(Uri value) => state = state.copyWith.event(photo: value);
-}
-
-@freezed
-class EventCreationState with _$EventCreationState {
-  const factory EventCreationState(Event event) = _EventCreationState;
-
-  const EventCreationState._();
-
-  bool validate() {
-    if (event.title.isEmpty ||
-        event.location.name.isEmpty ||
-        event.description.isEmpty ||
-        event.photo == null) {
-      return false;
-    }
-    return true;
-  }
+  set photo(Uri value) => state = state.copyWith(photo: value);
 }
 
 class EventCreatePage extends ConsumerStatefulWidget {
@@ -85,36 +65,33 @@ class EventCreatePage extends ConsumerStatefulWidget {
 }
 
 class _EventCreatePage0State extends ConsumerState<EventCreatePage> {
-  late Event initialEvent;
+  late EventSubmission initialSubmission;
 
   @override
   void initState() {
     super.initState();
     final editEvent = widget.editEvent;
     if (editEvent == null) {
-      final userState = ref.read(userProvider2);
-      final myProfile = userState.map(
-        guest: (_) => null,
-        signedIn: (signedIn) => signedIn.account.profile,
-      );
-      if (myProfile == null) {
-        throw 'Not signed in';
-      }
-
       final now = DateTime.now();
-      initialEvent = Event(
-        host: HostDetails(
-          uid: myProfile.uid,
-          name: myProfile.name,
-          photo: myProfile.photo,
+      initialSubmission = EventSubmission(
+        location: EventLocation(
+          latLong: ref.read(locationProvider).current,
+          name: '',
         ),
         startDate: now.add(const Duration(hours: 1)),
-        endDate: now.add(
-          const Duration(hours: 3),
-        ),
+        endDate: now.add(const Duration(hours: 3)),
       );
     } else {
-      initialEvent = editEvent;
+      initialSubmission = EventSubmission(
+        title: editEvent.title,
+        location: editEvent.location,
+        startDate: editEvent.startDate,
+        endDate: editEvent.endDate,
+        photo: editEvent.photo,
+        price: editEvent.price,
+        attendance: editEvent.attendance,
+        description: editEvent.description,
+      );
     }
   }
 
@@ -123,25 +100,22 @@ class _EventCreatePage0State extends ConsumerState<EventCreatePage> {
     return ProviderScope(
       parent: ProviderScope.containerOf(context),
       overrides: [
-        _eventCreationProvider.overrideWith((ref) {
-          return _EventCreationStateNotifier(
-            EventCreationState(initialEvent),
-          );
-        }),
+        _submissionProvider.overrideWith(
+            (ref) => _EventCreationStateNotifier(initialSubmission)),
       ],
       child: _EventCreatePageInternal(
-        editing: initialEvent.photo != null,
+        editingEventId: widget.editEvent?.id,
       ),
     );
   }
 }
 
 class _EventCreatePageInternal extends ConsumerStatefulWidget {
-  final bool editing;
+  final String? editingEventId;
 
   const _EventCreatePageInternal({
     super.key,
-    this.editing = false,
+    this.editingEventId,
   });
 
   @override
@@ -160,19 +134,17 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
   void initState() {
     super.initState();
 
-    final initialEvent = ref.read(_eventCreationProvider).event;
-    _titleController = TextEditingController(text: initialEvent.title);
-    _locationController =
-        TextEditingController(text: initialEvent.location.name);
-    _costController =
-        TextEditingController(text: initialEvent.price.toString());
-    final limit = initialEvent.attendance.map(
+    final submission = ref.read(_submissionProvider);
+    _titleController = TextEditingController(text: submission.title);
+    _locationController = TextEditingController(text: submission.location.name);
+    _costController = TextEditingController(text: submission.price.toString());
+    final limit = submission.attendance.map(
       unlimited: (_) => null,
       limited: (limited) => limited.limit.toString(),
     );
     _attendanceController = TextEditingController(text: limit);
     _descriptionController =
-        TextEditingController(text: initialEvent.description);
+        TextEditingController(text: submission.description);
   }
 
   @override
@@ -188,13 +160,14 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
 
   @override
   Widget build(BuildContext context) {
+    final editing = widget.editingEventId != null;
     return Scaffold(
       extendBodyBehindAppBar: true,
       extendBody: true,
       appBar: OpenupAppBar(
         body: OpenupAppBarBody(
           leading: const OpenupAppBarBackButton(),
-          center: widget.editing
+          center: editing
               ? const Text('Edit Meetup')
               : const Text('Create a Meetup'),
         ),
@@ -204,35 +177,34 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            if (!widget.editing)
+            if (!editing)
               RoundedButton(
                 onPressed: Navigator.of(context).pop,
                 child: const Text('Cancel'),
               )
             else
               RoundedButton(
-                onPressed: !widget.editing
+                onPressed: widget.editingEventId == null
                     ? null
-                    : () => _showDeleteModal(
-                        ref.read(_eventCreationProvider).event.id),
+                    : () => _showDeleteModal(widget.editingEventId!),
                 child: const Text('Delete Meet'),
               ),
-            if (!widget.editing)
+            if (!editing)
               RoundedButton(
                 color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                onPressed: ref.watch(
-                        _eventCreationProvider.select((s) => !s.validate()))
-                    ? null
-                    : _showEventPreview,
+                onPressed:
+                    ref.watch(_submissionProvider.select((s) => !s.valid))
+                        ? null
+                        : _showEventPreview,
                 child: const Text('Preview'),
               )
             else
               RoundedButton(
                 color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                onPressed: ref.watch(
-                        _eventCreationProvider.select((s) => !s.validate()))
-                    ? null
-                    : _performUpdate,
+                onPressed:
+                    ref.watch(_submissionProvider.select((s) => !s.valid))
+                        ? null
+                        : _performUpdate,
                 child: const Text('Update Meet'),
               ),
           ],
@@ -248,50 +220,47 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                   title: const Text('Meetup name'),
                   trailing: _TextField(
                       controller: _titleController,
-                      onChanged: (value) => ref
-                          .read(_eventCreationProvider.notifier)
-                          .title = value),
+                      onChanged: (value) =>
+                          ref.read(_submissionProvider.notifier).title = value),
                 ),
                 _Input(
                   title: const Text('Location'),
                   trailing: _TextField(
                     controller: _locationController,
-                    onChanged: (value) => ref
-                        .read(_eventCreationProvider.notifier)
-                        .location = EventLocation(latLong: null, name: value),
+                    onChanged: (value) {
+                      final location = ref.read(_submissionProvider).location;
+                      ref.read(_submissionProvider.notifier).location =
+                          location.copyWith(name: value);
+                    },
                   ),
                 ),
                 _Input(
                   title: const Text('Date'),
                   trailing: _DateField(
-                    date: ref.watch(_eventCreationProvider
-                        .select((s) => s.event.startDate)),
+                    date: ref
+                        .watch(_submissionProvider.select((s) => s.startDate)),
                   ),
                   onPressed: () async {
-                    final startDate =
-                        ref.read(_eventCreationProvider).event.startDate;
+                    final startDate = ref.read(_submissionProvider).startDate;
                     final result = await _showDateDialog(startDate);
                     if (result != null && mounted) {
-                      ref.read(_eventCreationProvider.notifier).startDate =
-                          result;
+                      ref.read(_submissionProvider.notifier).startDate = result;
                     }
                   },
                 ),
                 _Input(
                   title: const Text('Time'),
                   trailing: _TimeField(
-                    start: ref.watch(_eventCreationProvider
-                        .select((s) => s.event.startDate)),
-                    end: ref.watch(
-                        _eventCreationProvider.select((s) => s.event.endDate)),
+                    start: ref
+                        .watch(_submissionProvider.select((s) => s.startDate)),
+                    end:
+                        ref.watch(_submissionProvider.select((s) => s.endDate)),
                   ),
                   onPressed: () async {
-                    final startDate =
-                        ref.read(_eventCreationProvider).event.startDate;
+                    final startDate = ref.read(_submissionProvider).startDate;
                     final result = await _showTimeDialog(startDate);
                     if (result != null && mounted) {
-                      ref.read(_eventCreationProvider.notifier).startDate =
-                          result;
+                      ref.read(_submissionProvider.notifier).startDate = result;
                     }
                   },
                 ),
@@ -304,7 +273,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                     onChanged: (value) {
                       final price = int.tryParse(value);
                       if (price != null) {
-                        ref.read(_eventCreationProvider.notifier).price = price;
+                        ref.read(_submissionProvider.notifier).price = price;
                       }
                     },
                   ),
@@ -313,14 +282,14 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                   title: const Text('Attendance'),
                   trailing: Builder(
                     builder: (context) {
-                      final attendance = ref.watch(_eventCreationProvider
-                          .select((s) => s.event.attendance));
+                      final attendance = ref.watch(
+                          _submissionProvider.select((s) => s.attendance));
                       return attendance.map(
                         unlimited: (_) {
                           return Button(
                             onPressed: () {
                               ref
-                                      .read(_eventCreationProvider.notifier)
+                                      .read(_submissionProvider.notifier)
                                       .attendance =
                                   EventAttendance.limited(int.tryParse(
                                           _attendanceController.text) ??
@@ -349,16 +318,16 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                                     final limit = int.tryParse(value);
                                     if (limit != null) {
                                       final attendance = ref
-                                          .read(_eventCreationProvider)
-                                          .event
+                                          .read(_submissionProvider)
                                           .attendance;
                                       attendance.map(
                                         unlimited: (_) {},
-                                        limited: (limited) => ref
-                                                .read(_eventCreationProvider
-                                                    .notifier)
-                                                .attendance =
-                                            limited.copyWith(limit: limit),
+                                        limited: (limited) =>
+                                            ref
+                                                    .read(_submissionProvider
+                                                        .notifier)
+                                                    .attendance =
+                                                limited.copyWith(limit: limit),
                                       );
                                     }
                                   },
@@ -368,7 +337,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                               Button(
                                 onPressed: () {
                                   ref
-                                          .read(_eventCreationProvider.notifier)
+                                          .read(_submissionProvider.notifier)
                                           .attendance =
                                       const EventAttendance.unlimited();
                                 },
@@ -397,7 +366,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                     hintText: 'Write your description here...',
                     lines: 4,
                     onChanged: (value) => ref
-                        .read(_eventCreationProvider.notifier)
+                        .read(_submissionProvider.notifier)
                         .description = value,
                   ),
                 ),
@@ -406,8 +375,8 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                   onPressed: () => _selectPhoto(),
                   child: Builder(
                     builder: (context) {
-                      final photo = ref.watch(
-                          _eventCreationProvider.select((s) => s.event.photo));
+                      final photo =
+                          ref.watch(_submissionProvider.select((s) => s.photo));
                       return SizedBox(
                         height: 125,
                         child: photo == null
@@ -523,21 +492,10 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
       return;
     }
 
-    ref.read(_eventCreationProvider.notifier).photo = photo.uri;
+    ref.read(_submissionProvider.notifier).photo = photo.uri;
   }
 
   void _showEventPreview() {
-    final event = ref.read(_eventCreationProvider).event;
-    if (ref.read(_eventCreationProvider.select((s) => !s.validate()))) {
-      return;
-    }
-    context.pushNamed(
-      'event_preview',
-      extra: EventPreviewPageArgs(event: event),
-    );
-  }
-
-  void _performUpdate() {
     final userState = ref.read(userProvider2);
     final myProfile = userState.map(
       guest: (_) => null,
@@ -546,25 +504,53 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
     if (myProfile == null) {
       return;
     }
-    final event = ref.read(_eventCreationProvider).event;
-    if (ref.read(_eventCreationProvider.select((s) => !s.validate()))) {
+    final submission = ref.read(_submissionProvider);
+    if (!submission.valid) {
       return;
     }
-    ref.read(userProvider2.notifier).updateEvent(event);
-    context.goNamed('meetups');
+    final event = ref
+        .read(_submissionProvider)
+        .toPreviewEvent(myProfile.uid, myProfile.name, myProfile.photo);
+    context.pushNamed(
+      'event_preview',
+      extra: EventPreviewPageArgs(
+        event: event,
+        submission: submission,
+      ),
+    );
   }
 
-  void _showDeleteModal(String eventId) {
-    showCupertinoDialog(
+  void _performUpdate() async {
+    final editingEventId = widget.editingEventId;
+    final submission = ref.read(_submissionProvider);
+    if (!submission.valid || editingEventId == null) {
+      return;
+    }
+    final future = ref
+        .read(userProvider2.notifier)
+        .updateEvent(editingEventId, submission);
+    await withBlockingModal(
+      context: context,
+      label: 'Updating event',
+      future: future,
+    );
+
+    if (mounted) {
+      context.goNamed('meetups');
+    }
+  }
+
+  void _showDeleteModal(String eventId) async {
+    final deleteFuture = await showCupertinoDialog<Future<void>>(
       context: context,
       builder: (context) {
         return CupertinoAlertDialog(
-          content: const Text('Are you sure you want to delete your event'),
+          content: const Text('Are you sure you want to delete your event?'),
           actions: [
             CupertinoDialogAction(
               onPressed: () async {
-                ref.read(userProvider2.notifier).deleteEvent(eventId);
-                ref.read(userProvider2.notifier).tempDeleteEvent(eventId);
+                Navigator.of(context)
+                    .pop(ref.read(userProvider2.notifier).deleteEvent(eventId));
               },
               isDestructiveAction: true,
               child: const Text('Delete'),
@@ -577,6 +563,23 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
         );
       },
     );
+
+    if (deleteFuture == null) {
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    await withBlockingModal(
+      context: context,
+      label: 'Deleting event',
+      future: deleteFuture,
+    );
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 }
 

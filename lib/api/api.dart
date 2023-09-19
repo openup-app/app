@@ -609,6 +609,146 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, Event>> createEvent(EventSubmission submission) {
+    final photoPath = submission.photo?.toFilePath();
+    if (photoPath == null) {
+      throw StateError('Event photo URI can not be null');
+    }
+    return _requestStreamedResponseAsFuture(
+      makeRequest: () async {
+        final uri = Uri.parse('$_urlBase/events');
+        final request = http.MultipartRequest('POST', uri);
+        request.headers.addAll(_headers);
+        final photoFile = await http.MultipartFile.fromPath('photo', photoPath);
+        request.files.add(photoFile);
+        request.fields.addAll({
+          'submission': jsonEncode(submission),
+        });
+        return request.send();
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(Event.fromJson(json['event']));
+      },
+    );
+  }
+
+  Future<Either<ApiError, Event>> updateEvent(
+      String eventId, EventSubmission submission) {
+    String? photoPath;
+    try {
+      photoPath = submission.photo?.toFilePath();
+    } catch (e) {
+      // Nothing to do, photo not updated
+    }
+    return _requestStreamedResponseAsFuture(
+      makeRequest: () async {
+        final uri = Uri.parse('$_urlBase/events/$eventId');
+        final request = http.MultipartRequest('PUT', uri);
+        request.headers.addAll(_headers);
+        http.MultipartFile? photoFile;
+        if (photoPath != null) {
+          photoFile = await http.MultipartFile.fromPath('photo', photoPath);
+          request.files.add(photoFile);
+        }
+        request.fields.addAll({'submission': jsonEncode(submission.toJson())});
+        return request.send();
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(Event.fromJson(json['event']));
+      },
+    );
+  }
+
+  Future<Either<ApiError, void>> deleteEvent(String eventId) {
+    return _request(
+      makeRequest: () {
+        return http.delete(
+          Uri.parse('$_urlBase/events/$eventId'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
+  Future<Either<ApiError, void>> updateEventAttendance(
+      String eventId, bool attending) {
+    return _request(
+      makeRequest: () {
+        return http.post(
+          Uri.parse('$_urlBase/events/$eventId/attendance'),
+          headers: _headers,
+          body: jsonEncode({'attending': attending}),
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
+  Future<Either<ApiError, void>> viewEvent(String eventId) {
+    return _request(
+      makeRequest: () {
+        return http.post(
+          Uri.parse('$_urlBase/events/$eventId/view'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
+  Future<Either<ApiError, List<Event>>> getEvents(Location location) {
+    return _request(
+      makeRequest: () {
+        final locationQuery =
+            'lat=${location.latLong.latitude}&long=${location.latLong.longitude}&radius=${location.radius}';
+        return http.get(
+          Uri.parse('$_urlBase/events?$locationQuery'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        final events = json['events'] as List<dynamic>;
+        return Right(List.from(events.map((e) => Event.fromJson(e))));
+      },
+    );
+  }
+
+  Future<Either<ApiError, List<Event>>> getMyHostedEvents(String uid) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/events?host=$uid'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        final events = json['events'] as List<dynamic>;
+        return Right(List.from(events.map((e) => Event.fromJson(e))));
+      },
+    );
+  }
+
+  Future<Either<ApiError, List<Event>>> getMyAttendingEvents() {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/events?attending=true'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        final events = json['events'] as List<dynamic>;
+        return Right(List.from(events.map((e) => Event.fromJson(e))));
+      },
+    );
+  }
+
   Future<Either<ApiError, List<KnownContact>>> addContacts(
       List<Contact> contacts) {
     return _request(
@@ -1084,26 +1224,74 @@ class Chatroom with _$Chatroom {
 @freezed
 class Event with _$Event {
   const factory Event({
-    @Default('') String id,
-    @Default('') String title,
+    required String id,
+    required String title,
     required HostDetails host,
-    @Default(EventLocation(latLong: null, name: '')) EventLocation location,
+    required EventLocation location,
     @_DateTimeConverter() required DateTime startDate,
     @_DateTimeConverter() required DateTime endDate,
-    @Default(null) @_UriConverter() Uri? photo,
-    @Default(0) int price,
-    @Default(0) int views,
-    @Default(EventAttendance.limited(2)) EventAttendance attendance,
-    @Default('') String description,
+    @_UriConverter() required Uri photo,
+    required int price,
+    required int views,
+    required EventAttendance attendance,
+    required String description,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
 }
 
 @freezed
+class EventSubmission with _$EventSubmission {
+  const factory EventSubmission({
+    @Default('') String title,
+    required EventLocation location,
+    @_DateTimeConverter() required DateTime startDate,
+    @_DateTimeConverter() required DateTime endDate,
+    @Default(null) @_UriConverter() Uri? photo,
+    @Default(0) int price,
+    @Default(EventAttendance.limited(2)) EventAttendance attendance,
+    @Default('') String description,
+  }) = _EventSubmission;
+
+  factory EventSubmission.fromJson(Map<String, dynamic> json) =>
+      _$EventSubmissionFromJson(json);
+
+  const EventSubmission._();
+
+  Event toPreviewEvent(String hostUid, String hostName, String hostPhoto) {
+    final photoUri = photo;
+    if (photoUri == null) {
+      throw 'Failed to create event preview';
+    }
+    return Event(
+      id: '',
+      title: title,
+      host: HostDetails(
+        uid: hostUid,
+        name: hostName,
+        photo: hostPhoto,
+      ),
+      location: location,
+      startDate: startDate,
+      endDate: endDate,
+      photo: photoUri,
+      price: price,
+      views: 0,
+      attendance: attendance,
+      description: description,
+    );
+  }
+
+  bool get valid => !(title.isEmpty ||
+      location.name.isEmpty ||
+      description.isEmpty ||
+      photo == null);
+}
+
+@freezed
 class EventLocation with _$EventLocation {
   const factory EventLocation({
-    required LatLong? latLong,
+    required LatLong latLong,
     required String name,
   }) = _EventLocation;
 
