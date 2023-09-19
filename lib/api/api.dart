@@ -1084,17 +1084,17 @@ class Chatroom with _$Chatroom {
 @freezed
 class Event with _$Event {
   const factory Event({
-    required String id,
-    required String title,
+    @Default('') String id,
+    @Default('') String title,
     required HostDetails host,
-    required EventLocation location,
+    @Default(EventLocation(latLong: null, name: '')) EventLocation location,
     @_DateTimeConverter() required DateTime startDate,
     @_DateTimeConverter() required DateTime endDate,
-    @_UriConverter() required Uri photo,
-    required int price,
-    required int views,
-    required EventAttendance attendance,
-    required String description,
+    @Default(null) @_UriConverter() Uri? photo,
+    @Default(0) int price,
+    @Default(0) int views,
+    @Default(EventAttendance.limited(2)) EventAttendance attendance,
+    @Default('') String description,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);

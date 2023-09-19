@@ -45,10 +45,12 @@ class EventDisplayListItem extends ConsumerWidget {
                       width: 2,
                     ),
                   ),
-                  child: ImageUri(
-                    event.photo,
-                    fit: BoxFit.cover,
-                  ),
+                  child: event.photo == null
+                      ? null
+                      : ImageUri(
+                          event.photo!,
+                          fit: BoxFit.cover,
+                        ),
                 ),
               ),
               Expanded(
@@ -307,10 +309,12 @@ class EventDisplayLarge extends StatelessWidget {
                 width: 2,
               ),
             ),
-            child: ImageUri(
-              event.photo,
-              fit: BoxFit.cover,
-            ),
+            child: event.photo == null
+                ? null
+                : ImageUri(
+                    event.photo!,
+                    fit: BoxFit.cover,
+                  ),
           ),
         ),
         const SizedBox(height: 32),

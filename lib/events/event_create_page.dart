@@ -14,98 +14,142 @@ import 'package:openup/widgets/image.dart';
 
 part 'event_create_page.freezed.dart';
 
-final eventCreationProvider =
-    StateNotifierProvider<EventStateNotifier, EventCreationState>(
+final _eventCreationProvider =
+    StateNotifierProvider<_EventCreationStateNotifier, EventCreationState>(
         (ref) => throw 'Uninitialized provider');
 
-class EventStateNotifier extends StateNotifier<EventCreationState> {
-  EventStateNotifier(EventCreationState initialState) : super(initialState);
+class _EventCreationStateNotifier extends StateNotifier<EventCreationState> {
+  _EventCreationStateNotifier(EventCreationState initialState)
+      : super(initialState);
 
-  set title(String value) => state = state.copyWith(title: value);
+  set title(String value) => state = state.copyWith.event(title: value);
 
   set location(EventLocation location) =>
-      state = state.copyWith(location: location);
+      state = state.copyWith.event(location: location);
 
   set startDate(DateTime value) {
-    final duration = state.endDate.difference(state.startDate);
-    state = state.copyWith(
+    final duration = state.event.endDate.difference(state.event.startDate);
+    state = state.copyWith.event(
       startDate: value,
       endDate: value.add(duration),
     );
   }
 
   set endDate(DateTime value) {
-    state = state.copyWith(
-      startDate: state.startDate.isAfter(value)
+    state = state.copyWith.event(
+      startDate: state.event.startDate.isAfter(value)
           ? value.subtract(const Duration(minutes: 1))
-          : state.startDate,
+          : state.event.startDate,
       endDate: value,
     );
   }
 
-  set price(int value) => state = state.copyWith(price: value);
+  set price(int value) => state = state.copyWith.event(price: value);
 
   set attendance(EventAttendance attendance) =>
-      state = state.copyWith(attendance: attendance);
+      state = state.copyWith.event(attendance: attendance);
 
-  set description(String value) => state = state.copyWith(description: value);
+  set description(String value) =>
+      state = state.copyWith.event(description: value);
 
-  set photo(Uri value) => state = state.copyWith(photo: value);
-
-  Event? toPreviewEvent(String uid, String name, String photo) {
-    final eventPhoto = state.photo;
-    if (eventPhoto == null) {
-      return null;
-    }
-    return Event(
-      id: '',
-      title: state.title,
-      host: HostDetails(
-        uid: uid,
-        name: name,
-        photo: photo,
-      ),
-      location: state.location,
-      startDate: state.startDate,
-      endDate: state.endDate,
-      photo: eventPhoto,
-      price: state.price,
-      views: 0,
-      attendance: state.attendance,
-      description: state.description,
-    );
-  }
+  set photo(Uri value) => state = state.copyWith.event(photo: value);
 }
 
 @freezed
 class EventCreationState with _$EventCreationState {
-  const factory EventCreationState({
-    @Default('') String id,
-    @Default('') String title,
-    @Default(EventLocation(latLong: null, name: '')) EventLocation location,
-    required DateTime startDate,
-    required DateTime endDate,
-    @Default(0) int price,
-    @Default(true) bool limitedAttendance,
-    @Default(EventAttendance.limited(2)) EventAttendance attendance,
-    @Default('') String description,
-    @Default(null) Uri? photo,
-  }) = _EventCreationState;
+  const factory EventCreationState(Event event) = _EventCreationState;
+
+  const EventCreationState._();
+
+  bool validate() {
+    if (event.title.isEmpty ||
+        event.location.name.isEmpty ||
+        event.description.isEmpty ||
+        event.photo == null) {
+      return false;
+    }
+    return true;
+  }
 }
 
 class EventCreatePage extends ConsumerStatefulWidget {
-  final bool editing;
+  final Event? editEvent;
 
   const EventCreatePage({
+    super.key,
+    this.editEvent,
+  });
+
+  @override
+  ConsumerState<EventCreatePage> createState() => _EventCreatePage0State();
+}
+
+class _EventCreatePage0State extends ConsumerState<EventCreatePage> {
+  late Event initialEvent;
+
+  @override
+  void initState() {
+    super.initState();
+    final editEvent = widget.editEvent;
+    if (editEvent == null) {
+      final userState = ref.read(userProvider2);
+      final myProfile = userState.map(
+        guest: (_) => null,
+        signedIn: (signedIn) => signedIn.account.profile,
+      );
+      if (myProfile == null) {
+        throw 'Not signed in';
+      }
+
+      final now = DateTime.now();
+      initialEvent = Event(
+        host: HostDetails(
+          uid: myProfile.uid,
+          name: myProfile.name,
+          photo: myProfile.photo,
+        ),
+        startDate: now.add(const Duration(hours: 1)),
+        endDate: now.add(
+          const Duration(hours: 3),
+        ),
+      );
+    } else {
+      initialEvent = editEvent;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ProviderScope(
+      parent: ProviderScope.containerOf(context),
+      overrides: [
+        _eventCreationProvider.overrideWith((ref) {
+          return _EventCreationStateNotifier(
+            EventCreationState(initialEvent),
+          );
+        }),
+      ],
+      child: _EventCreatePageInternal(
+        editing: initialEvent.photo != null,
+      ),
+    );
+  }
+}
+
+class _EventCreatePageInternal extends ConsumerStatefulWidget {
+  final bool editing;
+
+  const _EventCreatePageInternal({
     super.key,
     this.editing = false,
   });
 
   @override
-  ConsumerState<EventCreatePage> createState() => _EventCreatePageState();
+  ConsumerState<_EventCreatePageInternal> createState() =>
+      _EventCreatePageState();
 }
 
-class _EventCreatePageState extends ConsumerState<EventCreatePage> {
+class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
   late final TextEditingController _titleController;
   late final TextEditingController _locationController;
   late final TextEditingController _costController;
@@ -116,14 +160,13 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
   void initState() {
     super.initState();
 
-    final initialEvent = ref.read(eventCreationProvider);
+    final initialEvent = ref.read(_eventCreationProvider).event;
     _titleController = TextEditingController(text: initialEvent.title);
     _locationController =
         TextEditingController(text: initialEvent.location.name);
     _costController =
         TextEditingController(text: initialEvent.price.toString());
-    final attendance = ref.read(eventCreationProvider).attendance;
-    final limit = attendance.map(
+    final limit = initialEvent.attendance.map(
       unlimited: (_) => null,
       limited: (limited) => limited.limit.toString(),
     );
@@ -170,18 +213,15 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
               RoundedButton(
                 onPressed: !widget.editing
                     ? null
-                    : () =>
-                        _showDeleteModal(ref.read(eventCreationProvider).id),
+                    : () => _showDeleteModal(
+                        ref.read(_eventCreationProvider).event.id),
                 child: const Text('Delete Meet'),
               ),
             if (!widget.editing)
               RoundedButton(
                 color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                onPressed: ref.watch(eventCreationProvider.select((s) =>
-                        s.title.isEmpty ||
-                        s.location.name.isEmpty ||
-                        s.description.isEmpty ||
-                        s.photo == null))
+                onPressed: ref.watch(
+                        _eventCreationProvider.select((s) => !s.validate()))
                     ? null
                     : _showEventPreview,
                 child: const Text('Preview'),
@@ -189,11 +229,8 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
             else
               RoundedButton(
                 color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                onPressed: ref.watch(eventCreationProvider.select((s) =>
-                        s.title.isEmpty ||
-                        s.location.name.isEmpty ||
-                        s.description.isEmpty ||
-                        s.photo == null))
+                onPressed: ref.watch(
+                        _eventCreationProvider.select((s) => !s.validate()))
                     ? null
                     : _performUpdate,
                 child: const Text('Update Meet'),
@@ -212,7 +249,7 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                   trailing: _TextField(
                       controller: _titleController,
                       onChanged: (value) => ref
-                          .read(eventCreationProvider.notifier)
+                          .read(_eventCreationProvider.notifier)
                           .title = value),
                 ),
                 _Input(
@@ -220,21 +257,22 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                   trailing: _TextField(
                     controller: _locationController,
                     onChanged: (value) => ref
-                        .read(eventCreationProvider.notifier)
+                        .read(_eventCreationProvider.notifier)
                         .location = EventLocation(latLong: null, name: value),
                   ),
                 ),
                 _Input(
                   title: const Text('Date'),
                   trailing: _DateField(
-                    date: ref.watch(
-                        eventCreationProvider.select((s) => s.startDate)),
+                    date: ref.watch(_eventCreationProvider
+                        .select((s) => s.event.startDate)),
                   ),
                   onPressed: () async {
-                    final startDate = ref.read(eventCreationProvider).startDate;
+                    final startDate =
+                        ref.read(_eventCreationProvider).event.startDate;
                     final result = await _showDateDialog(startDate);
                     if (result != null && mounted) {
-                      ref.read(eventCreationProvider.notifier).startDate =
+                      ref.read(_eventCreationProvider.notifier).startDate =
                           result;
                     }
                   },
@@ -242,16 +280,17 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                 _Input(
                   title: const Text('Time'),
                   trailing: _TimeField(
-                    start: ref.watch(
-                        eventCreationProvider.select((s) => s.startDate)),
-                    end: ref
-                        .watch(eventCreationProvider.select((s) => s.endDate)),
+                    start: ref.watch(_eventCreationProvider
+                        .select((s) => s.event.startDate)),
+                    end: ref.watch(
+                        _eventCreationProvider.select((s) => s.event.endDate)),
                   ),
                   onPressed: () async {
-                    final startDate = ref.read(eventCreationProvider).startDate;
+                    final startDate =
+                        ref.read(_eventCreationProvider).event.startDate;
                     final result = await _showTimeDialog(startDate);
                     if (result != null && mounted) {
-                      ref.read(eventCreationProvider.notifier).startDate =
+                      ref.read(_eventCreationProvider.notifier).startDate =
                           result;
                     }
                   },
@@ -265,7 +304,7 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                     onChanged: (value) {
                       final price = int.tryParse(value);
                       if (price != null) {
-                        ref.read(eventCreationProvider.notifier).price = price;
+                        ref.read(_eventCreationProvider.notifier).price = price;
                       }
                     },
                   ),
@@ -274,14 +313,14 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                   title: const Text('Attendance'),
                   trailing: Builder(
                     builder: (context) {
-                      final attendance = ref.watch(
-                          eventCreationProvider.select((s) => s.attendance));
+                      final attendance = ref.watch(_eventCreationProvider
+                          .select((s) => s.event.attendance));
                       return attendance.map(
                         unlimited: (_) {
                           return Button(
                             onPressed: () {
                               ref
-                                      .read(eventCreationProvider.notifier)
+                                      .read(_eventCreationProvider.notifier)
                                       .attendance =
                                   EventAttendance.limited(int.tryParse(
                                           _attendanceController.text) ??
@@ -310,12 +349,13 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                                     final limit = int.tryParse(value);
                                     if (limit != null) {
                                       final attendance = ref
-                                          .read(eventCreationProvider)
+                                          .read(_eventCreationProvider)
+                                          .event
                                           .attendance;
                                       attendance.map(
                                         unlimited: (_) {},
                                         limited: (limited) => ref
-                                                .read(eventCreationProvider
+                                                .read(_eventCreationProvider
                                                     .notifier)
                                                 .attendance =
                                             limited.copyWith(limit: limit),
@@ -328,7 +368,7 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                               Button(
                                 onPressed: () {
                                   ref
-                                          .read(eventCreationProvider.notifier)
+                                          .read(_eventCreationProvider.notifier)
                                           .attendance =
                                       const EventAttendance.unlimited();
                                 },
@@ -357,7 +397,7 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                     hintText: 'Write your description here...',
                     lines: 4,
                     onChanged: (value) => ref
-                        .read(eventCreationProvider.notifier)
+                        .read(_eventCreationProvider.notifier)
                         .description = value,
                   ),
                 ),
@@ -366,8 +406,8 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                   onPressed: () => _selectPhoto(),
                   child: Builder(
                     builder: (context) {
-                      final photo = ref
-                          .watch(eventCreationProvider.select((s) => s.photo));
+                      final photo = ref.watch(
+                          _eventCreationProvider.select((s) => s.event.photo));
                       return SizedBox(
                         height: 125,
                         child: photo == null
@@ -378,28 +418,24 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
                                   size: 48,
                                 ),
                               )
-                            : Builder(
-                                builder: (context) {
-                                  return Center(
-                                    child: Container(
-                                      width: 62,
-                                      height: 105,
-                                      margin: const EdgeInsets.symmetric(
-                                        vertical: 10,
-                                      ),
-                                      foregroundDecoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Colors.white,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: ImageUri(
-                                        photo,
-                                        fit: BoxFit.cover,
-                                      ),
+                            : Center(
+                                child: Container(
+                                  width: 62,
+                                  height: 105,
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
+                                  foregroundDecoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
                                     ),
-                                  );
-                                },
+                                  ),
+                                  child: ImageUri(
+                                    photo,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
                               ),
                       );
                     },
@@ -487,30 +523,17 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
       return;
     }
 
-    ref.read(eventCreationProvider.notifier).photo = photo.uri;
+    ref.read(_eventCreationProvider.notifier).photo = photo.uri;
   }
 
   void _showEventPreview() {
-    final userState = ref.read(userProvider2);
-    final myProfile = userState.map(
-      guest: (_) => null,
-      signedIn: (signedIn) => signedIn.account.profile,
-    );
-    if (myProfile == null) {
-      return;
-    }
-    final previewEvent =
-        ref.read(eventCreationProvider.notifier).toPreviewEvent(
-              myProfile.uid,
-              myProfile.name,
-              myProfile.photo,
-            );
-    if (previewEvent == null) {
+    final event = ref.read(_eventCreationProvider).event;
+    if (ref.read(_eventCreationProvider.select((s) => !s.validate()))) {
       return;
     }
     context.pushNamed(
       'event_preview',
-      extra: EventPreviewPageArgs(event: previewEvent),
+      extra: EventPreviewPageArgs(event: event),
     );
   }
 
@@ -523,16 +546,11 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
     if (myProfile == null) {
       return;
     }
-    final previewEvent =
-        ref.read(eventCreationProvider.notifier).toPreviewEvent(
-              myProfile.uid,
-              myProfile.name,
-              myProfile.photo,
-            );
-    if (previewEvent == null) {
+    final event = ref.read(_eventCreationProvider).event;
+    if (ref.read(_eventCreationProvider.select((s) => !s.validate()))) {
       return;
     }
-    ref.read(userProvider2.notifier).updateEvent(previewEvent);
+    ref.read(userProvider2.notifier).updateEvent(event);
     context.goNamed('meetups');
   }
 
