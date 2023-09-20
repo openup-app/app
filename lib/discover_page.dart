@@ -314,7 +314,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
             ),
           Positioned(
             left: 0,
-            right: 9,
+            right: 0,
             bottom: MediaQuery.of(context).padding.bottom,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -340,7 +340,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                     CupertinoIcons.location_fill,
                                     size: 20,
                                     color:
-                                        Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
+                                        Color.fromRGBO(0x22, 0x22, 0x22, 1.0),
                                   ),
                                 );
                               },

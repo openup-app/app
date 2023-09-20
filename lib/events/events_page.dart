@@ -185,8 +185,8 @@ class _ViewToggleButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.map,
+              Icon(
+                view == _View.list ? Icons.map : Icons.list,
                 color: Colors.black,
               ),
               const SizedBox(width: 8),
