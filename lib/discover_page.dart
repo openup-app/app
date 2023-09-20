@@ -48,8 +48,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   bool _hasShownStartupModals = false;
   bool _firstDidChangeDeps = false;
 
-  Timer? _audioBioUpdatedAnimationTimer;
-
   @override
   void initState() {
     super.initState();
@@ -94,12 +92,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         ),
       );
     });
-  }
-
-  @override
-  void dispose() {
-    _audioBioUpdatedAnimationTimer?.cancel();
-    super.dispose();
   }
 
   @override
