@@ -425,6 +425,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                     GoRoute(
                       path: ':uid',
                       name: 'chat',
+                      parentNavigatorKey: rootNavigatorKey,
                       builder: (context, state) {
                         final otherUid = state.params['uid']!;
                         final args = state.extra as ChatPageArguments?;
