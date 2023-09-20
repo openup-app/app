@@ -3,7 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/discover_page.dart';
+import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';

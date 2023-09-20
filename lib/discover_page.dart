@@ -5,15 +5,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/user_profile_cache.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/discover_provider.dart';
-import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/button.dart';
@@ -45,7 +42,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   final _mapKey = GlobalKey<DiscoverMapState>();
   MarkerRenderStatus _markerRenderStatus = MarkerRenderStatus.ready;
 
-  bool _hasShownStartupModals = false;
   bool _firstDidChangeDeps = false;
 
   @override
@@ -107,16 +103,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     if (readyState != null) {
       _precacheImageAndDepth(readyState.profiles, from: 1, count: 2);
     }
-
-    Future.delayed(Duration.zero).then((_) {
-      if (!mounted) {
-        return;
-      }
-      if (!_hasShownStartupModals) {
-        _hasShownStartupModals = true;
-        _showStartupModals();
-      }
-    });
   }
 
   AlwaysAliveProviderListenable<DiscoverReadyState?>
@@ -159,43 +145,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         await Permission.notification.request();
       }
     }
-  }
-
-  void _showStartupModals() async {
-    final showSafetyNoticeSubscription = ref.listenManual<bool>(
-      showSafetyNoticeProvider,
-      (prev, next) => prev == null && next,
-      fireImmediately: true,
-    );
-
-    final shouldShowSafetyNotice = showSafetyNoticeSubscription.read();
-    if (shouldShowSafetyNotice) {
-      await showSafetyAndPrivacyModal(context);
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    final isSignedOutProvider = userProvider2.select((p) {
-      return p.map(
-        guest: (guest) => !guest.byDefault,
-        signedIn: (_) => false,
-      );
-    });
-    ref.listenManual<bool>(
-      isSignedOutProvider,
-      fireImmediately: true,
-      (previous, next) {
-        if (next) {
-          _tempPauseAudio();
-          showSignupGuestModal(
-            context,
-            onShowSignup: () => context.pushNamed('signup'),
-          );
-        }
-      },
-    );
   }
 
   void _tempPauseAudio() {
@@ -247,8 +196,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                           context, selectedProfile.profile.uid);
                     }
                   },
-                  onLocationSafetyTapped: () =>
-                      showSafetyAndPrivacyModal(context),
+                  onLocationSafetyTapped: () {},
                   onMarkerRenderStatus: (status) {
                     setState(() => _markerRenderStatus = status);
                   },
@@ -502,26 +450,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         .read(discoverProvider.notifier)
         .setFavorite(profile.profile.uid, !profile.favorite);
   }
-
-  void _showLiveLocationModalOrSignIn({
-    required LocationVisibility targetVisibility,
-  }) {
-    _tempPauseAudio();
-    final userState = ref.read(userProvider2);
-    userState.map(
-      guest: (_) => showSignInModal(context),
-      signedIn: (_) async {
-        final confirm = await (targetVisibility == LocationVisibility.public
-            ? _showTurnOnLiveLocationModal(context)
-            : _showTurnOffLiveLocationModal(context));
-        if (mounted && confirm) {
-          ref
-              .read(userProvider2.notifier)
-              .updateLocationVisibility(targetVisibility);
-        }
-      },
-    );
-  }
 }
 
 class _Panel extends ConsumerStatefulWidget {
@@ -644,149 +572,6 @@ class _PanelState extends ConsumerState<_Panel>
       },
     );
   }
-
-  Future<Gender?> _showPreferencesSheet() async {
-    final genderString = await showModalBottomSheet<String>(
-      backgroundColor: Colors.transparent,
-      context: context,
-      builder: (context) {
-        return Surface(
-          child: Padding(
-            padding: const EdgeInsets.only(left: 30.0, right: 45),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 24),
-                Center(
-                  child: Text(
-                    'Who are you searching for?',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                RadioTile(
-                  label: 'Everyone',
-                  selected: widget.gender == null,
-                  onTap: () => Navigator.of(context).pop('any'),
-                  radioAtEnd: true,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white),
-                ),
-                RadioTile(
-                  label: 'Men',
-                  selected: widget.gender == Gender.male,
-                  onTap: () => Navigator.of(context).pop('male'),
-                  radioAtEnd: true,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white),
-                ),
-                RadioTile(
-                  label: 'Women',
-                  selected: widget.gender == Gender.female,
-                  onTap: () => Navigator.of(context).pop('female'),
-                  radioAtEnd: true,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white),
-                ),
-                RadioTile(
-                  label: 'Non-Binary',
-                  selected: widget.gender == Gender.nonBinary,
-                  onTap: () => Navigator.of(context).pop('nonBinary'),
-                  radioAtEnd: true,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white),
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).padding.bottom + 24,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    Gender? gender;
-    if (genderString != null) {
-      try {
-        gender =
-            Gender.values.firstWhere((element) => element.name == genderString);
-      } on StateError {
-        // Ignore
-      }
-    }
-    return gender;
-  }
-}
-
-class ProfileButton extends StatelessWidget {
-  final double _width;
-  final double _height;
-
-  const ProfileButton({
-    super.key,
-    double width = 32,
-    double height = 32,
-  })  : _width = width,
-        _height = height;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _width,
-      height: _height,
-      clipBehavior: Clip.hardEdge,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-      ),
-      child: UserProfileCache(
-        builder: (context, cachedPhoto) {
-          return Consumer(
-            builder: (context, ref, child) {
-              final myProfile = ref.watch(userProvider2.select((p) {
-                return p.map(
-                  guest: (_) => null,
-                  signedIn: (signedIn) => signedIn.account.profile,
-                );
-              }));
-              if (myProfile != null) {
-                return Image(
-                  image: NetworkImage(myProfile.photo),
-                  fit: BoxFit.cover,
-                  gaplessPlayback: true,
-                );
-              } else if (cachedPhoto != null) {
-                return Image.file(
-                  cachedPhoto,
-                  fit: BoxFit.cover,
-                  gaplessPlayback: true,
-                );
-              } else {
-                return const Icon(
-                  Icons.person,
-                  size: 22,
-                  color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-                );
-              }
-            },
-          );
-        },
-      ),
-    );
-  }
 }
 
 class _MapButton extends StatelessWidget {
@@ -825,305 +610,6 @@ class _MapButton extends StatelessWidget {
           alignment: Alignment.center,
           child: child,
         ),
-      ),
-    );
-  }
-}
-
-Future<void> showSafetyAndPrivacyModal(BuildContext context) {
-  return showCupertinoDialog(
-    context: context,
-    builder: (context) {
-      return CupertinoAlertDialog(
-        title: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.shield,
-              size: 16,
-            ),
-            SizedBox(width: 8),
-            Text('Safety & Privacy'),
-          ],
-        ),
-        content: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.0),
-          child: Column(
-            children: [
-              Text(
-                'Safety and privacy is our top priority:',
-                textAlign: TextAlign.left,
-              ),
-              SizedBox(height: 16),
-              _DotPoint(
-                message: Text(
-                  'Your exact location will not be shown',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              _DotPoint(
-                message: Text(
-                  'Locations are approximate and within a half-mile radius',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              _DotPoint(
-                message: Text(
-                  'We do not share your exact location with others, only you can',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: Navigator.of(context).pop,
-            child: const Text('I understand'),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-Future<bool> _showTurnOffLiveLocationModal(BuildContext context) async {
-  final result = await showCupertinoDialog<bool>(
-    context: context,
-    builder: (context) {
-      return CupertinoAlertDialog(
-        title: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.location_on,
-              size: 16,
-            ),
-            SizedBox(width: 8),
-            Text('Live Location'),
-          ],
-        ),
-        content: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.0),
-          child: Column(
-            children: [
-              Text(
-                'Turning off location will prevent the following:',
-                textAlign: TextAlign.left,
-              ),
-              SizedBox(height: 16),
-              _DotPoint(
-                message: Text(
-                  'You will not be visible on the map',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              _DotPoint(
-                message: Text(
-                  'You will not receive messages from new people',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              _DotPoint(
-                message: Text(
-                  'You and your friends can still message each other',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              _DotPoint(
-                message: Text(
-                  'You will not be able to message anyone on the map',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: Navigator.of(context).pop,
-            child: const Text('Cancel'),
-          ),
-          CupertinoDialogAction(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(
-              'Turn off',
-              style: TextStyle(
-                color: Color.fromRGBO(0xFF, 0x00, 0x00, 1.0),
-              ),
-            ),
-          ),
-        ],
-      );
-    },
-  );
-  return result == true;
-}
-
-Future<bool> _showTurnOnLiveLocationModal(BuildContext context) async {
-  final result = await showCupertinoDialog<bool>(
-    context: context,
-    builder: (context) {
-      return CupertinoAlertDialog(
-        title: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.location_on,
-              size: 16,
-            ),
-            SizedBox(width: 8),
-            Text('Live Location'),
-          ],
-        ),
-        content: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.0),
-          child: Column(
-            children: [
-              Text(
-                'Your safety is our top priority:',
-                textAlign: TextAlign.left,
-              ),
-              SizedBox(height: 16),
-              _DotPoint(
-                message: Text(
-                  'Your exact location will not be shown',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              _DotPoint(
-                message: Text(
-                  'Locations are approximate and within a half-mile radius',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              _DotPoint(
-                message: Text(
-                  'We do not share your location with others, only you can',
-                  textAlign: TextAlign.left,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: Navigator.of(context).pop,
-            child: const Text('Cancel'),
-          ),
-          CupertinoDialogAction(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Turn on'),
-          ),
-        ],
-      );
-    },
-  );
-  return result == true;
-}
-
-Future<void> showSignupGuestModal(
-  BuildContext context, {
-  required VoidCallback onShowSignup,
-}) {
-  return showCupertinoDialog(
-    context: context,
-    builder: (context) {
-      return Consumer(
-        builder: (context, ref, child) {
-          final dynamicConfigReady =
-              ref.watch(dynamicConfigStateProvider) == DynamicConfigState.ready;
-          final canContinueAsGuest =
-              ref.watch(dynamicConfigProvider.select((p) => !p.loginRequired));
-          return CupertinoAlertDialog(
-            title: const Text('Sign up'),
-            content: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
-              child: Column(
-                children: [
-                  Text(
-                    'Sign up or log in for free and gain these abilities:',
-                    textAlign: TextAlign.left,
-                  ),
-                  SizedBox(height: 16),
-                  _DotPoint(
-                    message: Text(
-                      'Let people know what you\'re up to by broadcasting a voice message',
-                      textAlign: TextAlign.left,
-                    ),
-                  ),
-                  _DotPoint(
-                    message: Text(
-                      'Send messages to anyone, anytime',
-                      textAlign: TextAlign.left,
-                    ),
-                  ),
-                  _DotPoint(
-                    message: Text(
-                      'Enhance your photos into cinematic photos',
-                      textAlign: TextAlign.left,
-                    ),
-                  ),
-                  _DotPoint(
-                    message: Text(
-                      'Receive voice messages from other people',
-                      textAlign: TextAlign.left,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              if (!dynamicConfigReady)
-                const CupertinoDialogAction(
-                  child: LoadingIndicator(
-                    size: 10,
-                  ),
-                )
-              else ...[
-                CupertinoDialogAction(
-                  onPressed: onShowSignup,
-                  child: const Text(
-                    'Sign up or log in',
-                    style:
-                        TextStyle(color: Color.fromRGBO(0x2C, 0x80, 0xFF, 1.0)),
-                  ),
-                ),
-                if (canContinueAsGuest)
-                  CupertinoDialogAction(
-                    onPressed: Navigator.of(context).pop,
-                    child: const Text('Continue as guest'),
-                  ),
-              ]
-            ],
-          );
-        },
-      );
-    },
-  );
-}
-
-class _DotPoint extends StatelessWidget {
-  final Text message;
-  const _DotPoint({
-    super.key,
-    required this.message,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('•'),
-          const SizedBox(width: 8),
-          Expanded(
-            child: message,
-          ),
-        ],
       ),
     );
   }
