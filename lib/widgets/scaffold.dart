@@ -100,7 +100,7 @@ class OpenupAppBarBackButton extends StatelessWidget {
     return Button(
       onPressed: Navigator.of(context).pop,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: RotatedBox(
           quarterTurns: 2,
           child: SvgPicture.asset(
@@ -109,7 +109,7 @@ class OpenupAppBarBackButton extends StatelessWidget {
               Color.fromRGBO(0x00, 0x7C, 0xEE, 1.0),
               BlendMode.srcIn,
             ),
-            height: 28,
+            height: 24,
           ),
         ),
       ),
