@@ -22,7 +22,6 @@ class DiscoverMap extends ConsumerStatefulWidget {
   final Location initialLocation;
   final ValueChanged<Location> onLocationChanged;
   final double obscuredRatio;
-  final bool enable3d;
   final VoidCallback onShowRecordPanel;
   final VoidCallback onLocationSafetyTapped;
   final void Function(MarkerRenderStatus status) onMarkerRenderStatus;
@@ -35,7 +34,6 @@ class DiscoverMap extends ConsumerStatefulWidget {
     required this.initialLocation,
     required this.onLocationChanged,
     this.obscuredRatio = 0.0,
-    required this.enable3d,
     required this.onShowRecordPanel,
     required this.onLocationSafetyTapped,
     required this.onMarkerRenderStatus,
@@ -247,25 +245,6 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
       });
     }
 
-    final enable3dChanged = oldWidget.enable3d != widget.enable3d;
-    if (enable3dChanged) {
-      final tilt = widget.enable3d ? _preferredTilt : 0.0;
-      final position = ref.read(_cameraPositionProvider);
-      final mapController = _mapController;
-      if (mapController != null && position != null) {
-        _mapController?.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: position.target,
-              bearing: position.bearing,
-              zoom: position.zoom,
-              tilt: tilt,
-            ),
-          ),
-        );
-      }
-    }
-
     _markerRenderStateMachine.profilesUpdated(profiles: widget.profiles);
   }
 
@@ -306,9 +285,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
               onCameraIdle: () {
                 final position = ref.read(_cameraPositionProvider);
                 final mapController = _mapController;
-                if (mapController != null &&
-                    position != null &&
-                    widget.enable3d) {
+                if (mapController != null && position != null) {
                   _mapController?.animateCamera(
                     CameraUpdate.newCameraPosition(
                       CameraPosition(
@@ -489,7 +466,7 @@ class DiscoverMapState extends ConsumerState<DiscoverMap>
     final CameraPosition pos = CameraPosition(
       target: LatLng(targetLatitude, latLong.longitude),
       zoom: _initialZoom,
-      tilt: widget.enable3d ? _preferredTilt : 0,
+      tilt: _preferredTilt,
     );
     _mapController?.animateCamera(CameraUpdate.newCameraPosition(pos));
   }

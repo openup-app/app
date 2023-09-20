@@ -249,7 +249,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                   onLocationChanged:
                       ref.read(discoverProvider.notifier).locationChanged,
                   obscuredRatio: 326 / height,
-                  enable3d: true,
                   onShowRecordPanel: () {
                     if (selectedProfile != null) {
                       _showRecordInvitePanelOrSignIn(
