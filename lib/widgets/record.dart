@@ -85,6 +85,7 @@ class _WobblyRingsRecorderState extends State<WobblyRingsRecorder> {
               useFadeWheNoPressedCallback: false,
               child: WobblyRings(
                 scale: 1.00 + (amplitude / maxAmplitude).clamp(0, 1),
+                thickness: 25,
               ),
             ),
             switch (state) {
@@ -96,8 +97,8 @@ class _WobblyRingsRecorderState extends State<WobblyRingsRecorder> {
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontWeight: FontWeight.w400,
-                      fontSize: 14,
-                      color: Colors.white,
+                      fontSize: 18,
+                      color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.9),
                     ),
                     child: AnimatedCrossFade(
                       duration: const Duration(milliseconds: 300),

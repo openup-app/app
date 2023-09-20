@@ -7,10 +7,14 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 class WobblyRings extends StatefulWidget {
   final double scale;
+  final double? radius;
+  final double thickness;
 
   const WobblyRings({
     super.key,
     this.scale = 1,
+    this.radius,
+    this.thickness = 12,
   });
 
   @override
@@ -28,8 +32,11 @@ class _WobblyRingsState extends State<WobblyRings> {
 
   @override
   Widget build(BuildContext context) {
+    final radius = widget.radius;
     return Stack(
       textDirection: TextDirection.ltr,
+      alignment: Alignment.center,
+      fit: radius == null ? StackFit.expand : StackFit.loose,
       children: [
         for (var i = 3; i >= 0; i--)
           Builder(
@@ -38,39 +45,37 @@ class _WobblyRingsState extends State<WobblyRings> {
               return Opacity(
                 opacity: 1 - i / 4,
                 child: Transform.scale(
-                  scale: 1 - i / 6,
-                  child: SizedBox(
-                    width: 400,
-                    height: 400,
-                    child: WiggleBuilder(
-                      seed: _baseSeed,
-                      builder: (context, child, wiggle) {
-                        final x = wiggle(
-                          frequency: 2,
-                          amplitude: 3,
-                          delay: delay,
-                        );
-                        final y = wiggle(
-                          frequency: 2,
-                          amplitude: 3,
-                          delay: delay,
-                        );
-                        final angle = wiggle(
-                          frequency: 0.4,
-                          amplitude: radians(360),
-                          delay: delay,
-                        );
-                        return CustomPaint(
-                          painter: _CirclePainter(
-                            x: 1 + x * 0.1,
-                            y: 1 + y * 0.1,
-                            scale: widget.scale,
-                            angle: angle,
-                            glow: i == 0,
-                          ),
-                        );
-                      },
-                    ),
+                  scale: 1 - i / 9,
+                  child: WiggleBuilder(
+                    seed: _baseSeed,
+                    builder: (context, child, wiggle) {
+                      final x = wiggle(
+                        frequency: 2,
+                        amplitude: 3,
+                        delay: delay,
+                      );
+                      final y = wiggle(
+                        frequency: 2,
+                        amplitude: 3,
+                        delay: delay,
+                      );
+                      final angle = wiggle(
+                        frequency: 0.4,
+                        amplitude: radians(360),
+                        delay: delay,
+                      );
+                      return CustomPaint(
+                        size: radius == null ? Size.zero : Size.square(radius),
+                        painter: _CirclePainter(
+                          x: 1 + x * 0.1,
+                          y: 1 + y * 0.1,
+                          scale: widget.scale,
+                          angle: angle,
+                          thickness: widget.thickness,
+                          glow: i == 0,
+                        ),
+                      );
+                    },
                   ),
                 ),
               );
@@ -86,6 +91,7 @@ class _CirclePainter extends CustomPainter {
   final double y;
   final double scale;
   final double angle;
+  final double thickness;
   final bool glow;
 
   _CirclePainter({
@@ -93,6 +99,7 @@ class _CirclePainter extends CustomPainter {
     required this.y,
     required this.scale,
     required this.angle,
+    required this.thickness,
     this.glow = false,
   });
 
@@ -107,20 +114,25 @@ class _CirclePainter extends CustomPainter {
     canvas.transform(transform.storage);
 
     final center = size.center(Offset.zero);
+    final radius = size.shortestSide / 2;
     final rect = Rect.fromCenter(
       center: center,
-      width: size.width,
-      height: size.height,
+      width: radius * 2,
+      height: radius * 2,
     );
 
     if (glow) {
       const outerBlue = Color.fromRGBO(0x42, 0xBE, 0xC2, 1.0);
+      final glowRadius = radius * 0.9;
       canvas.drawOval(
-        rect,
+        Rect.fromCircle(
+          center: center,
+          radius: glowRadius,
+        ),
         Paint()
           ..shader = ui.Gradient.radial(
             center,
-            110,
+            glowRadius,
             [
               Colors.transparent,
               outerBlue,
@@ -138,15 +150,16 @@ class _CirclePainter extends CustomPainter {
       );
     }
 
-    final whiteWidth = 12.0 + scale * 50;
-    final whiteRatio = whiteWidth / size.longestSide;
+    const whiteRatio = 0.5;
+    final scaledThickness = thickness + scale * 0.25;
+    final ringRatioOfRect = scaledThickness / radius;
     const innerBlue = Color.fromRGBO(0x56, 0xE6, 0xF5, 1.0);
     canvas.drawOval(
       rect,
       Paint()
         ..shader = ui.Gradient.radial(
           center,
-          100,
+          radius,
           [
             Colors.transparent,
             Colors.transparent,
@@ -159,17 +172,16 @@ class _CirclePainter extends CustomPainter {
           ],
           [
             0.0,
-            0.5 - whiteRatio / 4 - 0.05,
-            0.5 - whiteRatio / 4 - 0.05,
-            0.5 - whiteRatio / 4,
-            0.5 + whiteRatio / 2,
-            0.5 + whiteRatio / 2 + 0.05,
-            0.5 + whiteRatio / 2 + 0.05,
+            0.5 - ringRatioOfRect * 1 / 2,
+            0.5 - ringRatioOfRect * 1 / 2,
+            0.5 - ringRatioOfRect * whiteRatio / 2,
+            0.5 + ringRatioOfRect * whiteRatio / 2,
+            0.5 + ringRatioOfRect * 1 / 2,
+            0.5 + ringRatioOfRect * 1 / 2,
             1.0,
           ],
           TileMode.decal,
-        )
-        ..strokeWidth = 10,
+        ),
     );
   }
 
@@ -179,6 +191,7 @@ class _CirclePainter extends CustomPainter {
         oldDelegate.y != y ||
         oldDelegate.scale != scale ||
         oldDelegate.angle != angle ||
+        oldDelegate.thickness != thickness ||
         oldDelegate.glow != glow;
   }
 }
