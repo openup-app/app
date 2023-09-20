@@ -134,6 +134,7 @@ class _SearchFieldState extends State<_SearchField> {
                   icon: Icon(
                     Icons.search,
                     size: 18,
+                    color: Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
                   ),
                   hintText: 'Search',
                   hintStyle: TextStyle(
