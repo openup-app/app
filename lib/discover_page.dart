@@ -49,18 +49,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   @override
   void initState() {
     super.initState();
-    ref.listenManual<LocationMessage?>(locationMessageProvider,
-        (previous, next) {
-      if (next == null) {
-        return;
-      }
-      switch (next) {
-        case LocationMessage.permissionRationale:
-          showLocationPermissionRationale(context);
-          break;
-      }
-    });
-
     ref.listenManual<DiscoverAction?>(
       discoverActionProvider,
       (previous, next) {
