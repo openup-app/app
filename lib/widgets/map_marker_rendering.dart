@@ -1,12 +1,11 @@
 import 'package:async/async.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:openup/api/api.dart';
+import 'package:flutter/foundation.dart';
 import 'package:openup/util/state_machine.dart';
-import 'package:openup/widgets/discover_map.dart';
+import 'package:openup/widgets/map_display.dart';
 
-typedef RenderStartCallback = Future<List<RenderedProfile>> Function(
-    List<DiscoverProfile> profiles);
-typedef RenderEndCallback = void Function(List<RenderedProfile> markers);
+typedef RenderStartCallback = Future<List<RenderedItem>> Function(
+    List<MapItem> items);
+typedef RenderEndCallback = void Function(List<RenderedItem> markers);
 
 class MarkerRenderingStateMachine extends StateMachine<void, _MarkerState> {
   final RenderStartCallback onRenderStart;
@@ -19,13 +18,13 @@ class MarkerRenderingStateMachine extends StateMachine<void, _MarkerState> {
     reset();
   }
 
-  Future<void> profilesUpdated({required List<DiscoverProfile> profiles}) =>
-      machineState.profilesUpdated(profiles: profiles);
+  Future<void> itemsUpdated({required List<MapItem> items}) =>
+      machineState.itemsUpdated(items: items);
 
   void reset() {
     final state = _Idle(
       stateMachine: this,
-      profiles: [],
+      items: [],
       cache: {},
     );
     initialState(state);
@@ -44,49 +43,49 @@ abstract class _MarkerState extends StateMachineState<void> {
   @protected
   MarkerRenderingStateMachine get stateMachine => _stateMachine;
 
-  Future<void> profilesUpdated({required List<DiscoverProfile> profiles});
+  Future<void> itemsUpdated({required List<MapItem> items});
 
-  List<DiscoverProfile> _newlyAddedProfiles(
-    List<DiscoverProfile> previousProfiles,
-    List<DiscoverProfile> nextProfiles,
+  List<MapItem> _newlyAddedItems(
+    List<MapItem> previousItems,
+    List<MapItem> nextItems,
   ) {
-    final addedProfiles = <DiscoverProfile>[];
-    final previousUids = previousProfiles.map((p) => p.profile.uid).toSet();
-    for (final profile in nextProfiles) {
-      if (!previousUids.contains(profile.profile.uid)) {
-        addedProfiles.add(profile);
+    final addedItems = <MapItem>[];
+    final previousIds = previousItems.map((i) => i.id).toSet();
+    for (final item in nextItems) {
+      if (!previousIds.contains(item.id)) {
+        addedItems.add(item);
       }
     }
-    return addedProfiles;
+    return addedItems;
   }
 }
 
 class _Idle extends _MarkerState {
-  final List<DiscoverProfile> _profiles;
-  final Map<String, RenderedProfile> _cache;
+  final List<MapItem> _items;
+  final Map<int, RenderedItem> _cache;
 
   _Idle({
     required MarkerRenderingStateMachine stateMachine,
-    required List<DiscoverProfile> profiles,
-    required Map<String, RenderedProfile> cache,
-  })  : _profiles = List.of(profiles),
+    required List<MapItem> items,
+    required Map<int, RenderedItem> cache,
+  })  : _items = List.of(items),
         _cache = Map.of(cache),
         super(stateMachine);
 
   @override
-  Future<void> profilesUpdated({required List<DiscoverProfile> profiles}) {
-    final newProfiles = _newlyAddedProfiles(_profiles, profiles);
-    _profiles
+  Future<void> itemsUpdated({required List<MapItem> items}) {
+    final newProfiles = _newlyAddedItems(_items, items);
+    _items
       ..clear()
-      ..addAll(profiles);
+      ..addAll(items);
     if (newProfiles.isEmpty) {
       return Future.value();
     }
     return stateMachine._transitionTo(
       _RenderingMarkers(
         stateMachine: _stateMachine,
-        unrenderedProfiles: newProfiles,
-        profiles: profiles,
+        unrenderedItems: newProfiles,
+        items: items,
         cache: _cache,
       ),
     );
@@ -94,41 +93,40 @@ class _Idle extends _MarkerState {
 }
 
 class _RenderingMarkers extends _MarkerState {
-  final List<DiscoverProfile> _unrenderedProfiles;
-  final List<DiscoverProfile> _profiles;
-  final Map<String, RenderedProfile> _cache;
+  final List<MapItem> _unrenderedItems;
+  final List<MapItem> _items;
+  final Map<int, RenderedItem> _cache;
 
-  late final CancelableOperation<List<RenderedProfile>> _renderingOperation;
+  late final CancelableOperation<List<RenderedItem>> _renderingOperation;
 
   _RenderingMarkers({
     required MarkerRenderingStateMachine stateMachine,
-    required List<DiscoverProfile> unrenderedProfiles,
-    required List<DiscoverProfile> profiles,
-    required Map<String, RenderedProfile> cache,
-  })  : _unrenderedProfiles = unrenderedProfiles,
-        _profiles = List.of(profiles),
+    required List<MapItem> unrenderedItems,
+    required List<MapItem> items,
+    required Map<int, RenderedItem> cache,
+  })  : _unrenderedItems = unrenderedItems,
+        _items = List.of(items),
         _cache = Map.of(cache),
         super(stateMachine);
 
   @override
   Future<void> onEnter() async {
     final cachedUids = _cache.keys.toList();
-    final uncachedProfiles = _unrenderedProfiles
-        .where((p) => !cachedUids.contains(p.profile.uid))
-        .toList();
+    final uncachedItems =
+        _unrenderedItems.where((i) => !cachedUids.contains(i.id)).toList();
     _renderingOperation = CancelableOperation.fromFuture(
-        _stateMachine.onRenderStart(uncachedProfiles));
+        _stateMachine.onRenderStart(uncachedItems));
     final markers = await _renderingOperation.value;
-    _cache.addEntries(markers.map((r) => MapEntry(r.profile.profile.uid, r)));
-    final output = <RenderedProfile>[];
-    for (final profile in _unrenderedProfiles) {
-      output.add(_cache[profile.profile.uid]!);
+    _cache.addEntries(markers.map((r) => MapEntry(r.item.id, r)));
+    final output = <RenderedItem>[];
+    for (final item in _unrenderedItems) {
+      output.add(_cache[item.id]!);
     }
     _stateMachine.onRenderEnd(output);
     return _stateMachine._transitionTo(
       _Idle(
         stateMachine: _stateMachine,
-        profiles: _profiles,
+        items: _items,
         cache: _cache,
       ),
     );
@@ -143,19 +141,19 @@ class _RenderingMarkers extends _MarkerState {
   }
 
   @override
-  Future<void> profilesUpdated({required List<DiscoverProfile> profiles}) {
-    final newProfiles = _newlyAddedProfiles(_profiles, profiles);
-    _profiles
+  Future<void> itemsUpdated({required List<MapItem> items}) {
+    final newItems = _newlyAddedItems(_items, items);
+    _items
       ..clear()
-      ..addAll(profiles);
-    if (newProfiles.isEmpty) {
+      ..addAll(items);
+    if (newItems.isEmpty) {
       return Future.value();
     }
     return _stateMachine._transitionTo(
       _RenderingMarkers(
         stateMachine: _stateMachine,
-        unrenderedProfiles: newProfiles,
-        profiles: profiles,
+        unrenderedItems: newItems,
+        items: items,
         cache: _cache,
       ),
     );

@@ -17,7 +17,8 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/discover_dialogs.dart';
 import 'package:openup/widgets/discover_map_mini_list.dart';
-import 'package:openup/widgets/discover_map.dart';
+import 'package:openup/widgets/map_display.dart';
+import 'package:openup/widgets/map_rendering.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/record.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -38,8 +39,9 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
   final _invitedUsers = <String>{};
 
   final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
+  final _mapKey = GlobalKey<MapDisplayState>();
 
-  final _mapKey = GlobalKey<DiscoverMapState>();
+  final _rendererKey = GlobalKey<MapRenderingState>();
   MarkerRenderStatus _markerRenderStatus = MarkerRenderStatus.ready;
 
   bool _firstDidChangeDeps = false;
@@ -178,27 +180,36 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
               final height = constraints.biggest.height;
               return ColoredBox(
                 color: Colors.black,
-                child: DiscoverMap(
-                  key: _mapKey,
-                  profiles: profiles,
-                  selectedProfile: selectedProfile,
-                  onProfileChanged: _onProfileChanged,
-                  initialLocation: Location(
-                    latLong: ref.read(locationProvider).initialLatLong,
-                    radius: 1800,
-                  ),
-                  onLocationChanged:
-                      ref.read(discoverProvider.notifier).locationChanged,
-                  obscuredRatio: 326 / height,
-                  onShowRecordPanel: () {
-                    if (selectedProfile != null) {
-                      _showRecordInvitePanelOrSignIn(
-                          context, selectedProfile.profile.uid);
-                    }
-                  },
-                  onLocationSafetyTapped: () {},
-                  onMarkerRenderStatus: (status) {
-                    setState(() => _markerRenderStatus = status);
+                child: MapRendering(
+                  items: profiles.map((p) => ProfileMapItem(p)).toList(),
+                  selectedItem: selectedProfile == null
+                      ? null
+                      : ProfileMapItem(selectedProfile),
+                  frameCount: 12,
+                  onMarkerRenderStatus: (status) =>
+                      setState(() => _markerRenderStatus = status),
+                  builder: (context, renderedItems, renderedSelectedItem) {
+                    return MapDisplay(
+                      key: _mapKey,
+                      items: renderedItems,
+                      selectedItem: renderedSelectedItem,
+                      onSelectionChanged: (i) =>
+                          _onProfileChanged((i as ProfileMapItem?)?.profile),
+                      itemAnimationSpeedMultiplier: 1.0,
+                      initialLocation: Location(
+                        latLong: ref.read(locationProvider).initialLatLong,
+                        radius: 1800,
+                      ),
+                      onLocationChanged:
+                          ref.read(discoverProvider.notifier).locationChanged,
+                      obscuredRatio: 326 / height,
+                      onShowRecordPanel: () {
+                        if (selectedProfile != null) {
+                          _showRecordInvitePanelOrSignIn(
+                              context, selectedProfile.profile.uid);
+                        }
+                      },
+                    );
                   },
                 ),
               );
@@ -371,7 +382,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                   gender: readyState?.gender,
                   onGenderChanged: (gender) {
                     ref.read(discoverProvider.notifier).genderChanged(gender);
-                    _mapKey.currentState?.resetMarkers();
+                    _rendererKey.currentState?.resetMarkers();
                   },
                   profiles: profiles,
                   selectedProfile: selectedProfile,
