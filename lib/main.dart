@@ -33,6 +33,8 @@ import 'package:openup/events/event_preview_page.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/events/events_page.dart';
 import 'package:openup/initial_loading_page.dart';
+import 'package:openup/location/location_search.dart';
+import 'package:openup/location/mapbox_location_search_service.dart';
 import 'package:openup/my_meetups_page.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/profile_page.dart';
@@ -105,6 +107,10 @@ void main() async {
     );
     dynamicConfigService.init();
 
+    const mapboxAccessToken = String.fromEnvironment('MAPBOX_ACCESS_TOKEN');
+    final mapboxLocationSearchService =
+        MapboxLocationSearchService(accessToken: mapboxAccessToken);
+
     runApp(
       RestartApp(
         child: ProviderScope(
@@ -127,6 +133,8 @@ void main() async {
             }),
             dynamicConfigProvider.overrideWith(
                 (ref) => DynamicConfigStateNotifier(dynamicConfigService)),
+            locationSearchProvider
+                .overrideWith((ref) => mapboxLocationSearchService),
           ],
           child: const ProviderWatcher(
             child: OpenupApp(),

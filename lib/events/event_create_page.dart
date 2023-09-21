@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/events/event_create_location_search.dart';
 import 'package:openup/events/event_preview_page.dart';
 import 'package:openup/location/location_provider.dart';
+import 'package:openup/location/location_search.dart';
+import 'package:openup/location/mapbox_location_search_service.dart';
 import 'package:openup/util/photo_picker.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/button.dart';
@@ -18,7 +24,10 @@ final _submissionProvider =
         (ref) => throw 'Uninitialized provider');
 
 class _EventCreationStateNotifier extends StateNotifier<EventSubmission> {
-  _EventCreationStateNotifier(EventSubmission submission) : super(submission);
+  _EventCreationStateNotifier({
+    required EventSubmission initialSubmission,
+    required LocationSearchService locationSearchService,
+  }) : super(initialSubmission);
 
   set title(String value) => state = state.copyWith(title: value);
 
@@ -101,7 +110,13 @@ class _EventCreatePage0State extends ConsumerState<EventCreatePage> {
       parent: ProviderScope.containerOf(context),
       overrides: [
         _submissionProvider.overrideWith(
-            (ref) => _EventCreationStateNotifier(initialSubmission)),
+          (ref) {
+            return _EventCreationStateNotifier(
+              initialSubmission: initialSubmission,
+              locationSearchService: ref.read(locationSearchProvider),
+            );
+          },
+        ),
       ],
       child: _EventCreatePageInternal(
         editingEventId: widget.editEvent?.id,
@@ -223,16 +238,52 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                       onChanged: (value) =>
                           ref.read(_submissionProvider.notifier).title = value),
                 ),
-                _Input(
-                  title: const Text('Location'),
-                  trailing: _TextField(
-                    controller: _locationController,
-                    onChanged: (value) {
+                Autocomplete<LocationSearchResult>(
+                  optionsBuilder: (value) {
+                    final notifier = eventCreateLocationSearchProvider.notifier;
+                    return ref
+                        .read(notifier)
+                        .search(value.text)
+                        .then((r) => r ?? []);
+                  },
+                  onSelected: (value) async {
+                    final location = ref.read(_submissionProvider).location;
+                    ref.read(_submissionProvider.notifier).location =
+                        location.copyWith(name: value.name);
+                    final notifier = eventCreateLocationSearchProvider.notifier;
+                    final latLong = await ref.read(notifier).getLocation(value);
+                    if (mounted && latLong != null) {
                       final location = ref.read(_submissionProvider).location;
-                      ref.read(_submissionProvider.notifier).location =
-                          location.copyWith(name: value);
-                    },
-                  ),
+                      final stillSameLocation = location.name == value.name;
+                      if (stillSameLocation) {
+                        ref.read(_submissionProvider.notifier).location =
+                            location.copyWith(latLong: latLong);
+                      }
+                    }
+                  },
+                  displayStringForOption: (result) => result.name,
+                  optionsViewBuilder: (context, onSelected, options) {
+                    return _AutocompleteOptions(
+                      onSelected: onSelected,
+                      results: options,
+                    );
+                  },
+                  fieldViewBuilder: (context, textEditingController, focusNode,
+                      onFieldSubmitted) {
+                    return _Input(
+                      title: const Text('Location'),
+                      trailing: _TextField(
+                        controller: textEditingController,
+                        focusNode: focusNode,
+                        onChanged: (value) {
+                          final location =
+                              ref.read(_submissionProvider).location;
+                          ref.read(_submissionProvider.notifier).location =
+                              location.copyWith(name: value);
+                        },
+                      ),
+                    );
+                  },
                 ),
                 _Input(
                   title: const Text('Date'),
@@ -583,6 +634,83 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
   }
 }
 
+// Based on AutocompleteOptions from Material package
+class _AutocompleteOptions<T extends Object> extends StatelessWidget {
+  final AutocompleteOnSelected<LocationSearchResult> onSelected;
+  final Iterable<LocationSearchResult> results;
+
+  const _AutocompleteOptions({
+    super.key,
+    required this.onSelected,
+    required this.results,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Material(
+        elevation: 4.0,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 200),
+          child: ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemCount: results.length,
+            itemBuilder: (context, index) {
+              final result = results.elementAt(index);
+              return Button(
+                onPressed: () => onSelected(result),
+                child: Builder(
+                  builder: (context) {
+                    final highlight =
+                        AutocompleteHighlightedOption.of(context) == index;
+                    if (highlight) {
+                      SchedulerBinding.instance
+                          .addPostFrameCallback((Duration timeStamp) {
+                        Scrollable.ensureVisible(context, alignment: 0.5);
+                      });
+                    }
+                    return Container(
+                      color: highlight ? Theme.of(context).focusColor : null,
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            result.name,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            result.address ?? '',
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                              color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Input extends StatelessWidget {
   final Widget title;
   final Widget trailing;
@@ -635,6 +763,7 @@ class _Input extends StatelessWidget {
 
 class _TextField extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final TextInputAction textInputAction;
   final TextInputType keyboardType;
   final TextCapitalization textCapitalization;
@@ -646,6 +775,7 @@ class _TextField extends StatelessWidget {
   const _TextField({
     super.key,
     required this.controller,
+    this.focusNode,
     this.textInputAction = TextInputAction.next,
     this.keyboardType = TextInputType.text,
     this.textCapitalization = TextCapitalization.words,
@@ -659,6 +789,7 @@ class _TextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       textInputAction: textInputAction,
       textCapitalization: TextCapitalization.words,
       keyboardType: keyboardType,

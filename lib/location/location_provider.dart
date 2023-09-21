@@ -35,7 +35,7 @@ final locationProvider =
   locationNotifier._initLocation();
 
   // Update location when signed in
-  _updateLocationIfSignedIn(locationNotifier._current, ref);
+  _updateLocationIfSignedIn(locationNotifier.current, ref);
 
   return locationNotifier;
 });
@@ -84,7 +84,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
   Future<LocationState?> retryInitLocation() => _initLocation();
 
-  LatLong get _current => state.current;
+  LatLong get current => state.current;
 
   Future<LocationState?> _initLocation() async {
     final service = LocationService();
