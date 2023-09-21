@@ -506,7 +506,7 @@ class _ParticipantsState extends ConsumerState<_Participants> {
   @override
   Widget build(BuildContext context) {
     final profiles = _profiles;
-    if (!_error) {
+    if (_error) {
       return const Padding(
         padding: EdgeInsets.only(left: 16.0),
         child: Text(
