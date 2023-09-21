@@ -28,6 +28,18 @@ class EventsNotifier extends StateNotifier<EventsState> {
       (r) => state = state.copyWith(events: r),
     );
   }
+
+  Future<List<SimpleProfile>?> participantsForEvent(String eventId) async {
+    final result = await _api.getParticipantSimpleProfiles(eventId);
+    if (!mounted) {
+      return null;
+    }
+
+    return result.fold(
+      (l) => null,
+      (r) => r,
+    );
+  }
 }
 
 @freezed

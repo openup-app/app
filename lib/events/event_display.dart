@@ -1,5 +1,3 @@
-import 'package:collection/collection.dart';
-import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +5,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/events/event_create_page.dart';
 import 'package:openup/events/event_view_page.dart';
+import 'package:openup/events/events_provider.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/image.dart';
@@ -449,7 +448,7 @@ class EventDisplayLarge extends StatelessWidget {
           SizedBox(
             height: 48,
             child: _Participants(
-              uids: event.participants.uids,
+              eventId: event.id,
             ),
           ),
         ],
@@ -483,11 +482,11 @@ class EventDisplayLarge extends StatelessWidget {
 }
 
 class _Participants extends ConsumerStatefulWidget {
-  final List<String> uids;
+  final String eventId;
 
   const _Participants({
     super.key,
-    required this.uids,
+    required this.eventId,
   });
 
   @override
@@ -495,28 +494,30 @@ class _Participants extends ConsumerStatefulWidget {
 }
 
 class _ParticipantsState extends ConsumerState<_Participants> {
-  List<Profile>? _profiles;
+  List<SimpleProfile>? _profiles;
+  bool _error = false;
 
   @override
   void initState() {
     super.initState();
-    final api = ref.read(apiProvider);
-    final futures = <Future<Either<ApiError, Profile>>>[];
-    for (final uid in widget.uids) {
-      futures.add(api.getProfile(uid));
-    }
-    Future.wait(futures).then((results) {
-      final profiles =
-          results.map((e) => e.fold((l) => null, (r) => r)).whereNotNull();
-      if (mounted) {
-        _profiles = profiles.toList();
-      }
-    });
+    _fetchProfiles();
   }
 
   @override
   Widget build(BuildContext context) {
     final profiles = _profiles;
+    if (!_error) {
+      return const Padding(
+        padding: EdgeInsets.only(left: 16.0),
+        child: Text(
+          'Something went wrong',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      );
+    }
     if (profiles == null) {
       return const Padding(
         padding: EdgeInsets.only(left: 16.0),
@@ -555,5 +556,17 @@ class _ParticipantsState extends ConsumerState<_Participants> {
         );
       },
     );
+  }
+
+  void _fetchProfiles() async {
+    final notifier = ref.read(eventsProvider.notifier);
+    final profiles = await notifier.participantsForEvent(widget.eventId);
+    if (mounted) {
+      if (profiles == null) {
+        setState(() => _error = true);
+      } else {
+        setState(() => _profiles = profiles);
+      }
+    }
   }
 }

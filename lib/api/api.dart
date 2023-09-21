@@ -677,13 +677,13 @@ class Api {
 
   Future<Either<ApiError, Event>> updateEventParticipation(
     String eventId,
-    bool participation,
+    bool participating,
   ) {
     return _request(makeRequest: () {
       return http.put(
-        Uri.parse('$_urlBase/events/$eventId/participation'),
+        Uri.parse('$_urlBase/events/$eventId/participats'),
         headers: _headers,
-        body: jsonEncode({'participation': participation}),
+        body: jsonEncode({'participating': participating}),
       );
     }, handleSuccess: (response) {
       final json = jsonDecode(response.body);
@@ -749,6 +749,23 @@ class Api {
         final json = jsonDecode(response.body);
         final events = json['events'] as List<dynamic>;
         return Right(List.from(events.map((e) => Event.fromJson(e))));
+      },
+    );
+  }
+
+  Future<Either<ApiError, List<SimpleProfile>>> getParticipantSimpleProfiles(
+      String eventId) {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/events/$eventId/participants'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        final events = json['participants'] as List<dynamic>;
+        return Right(List.from(events.map((e) => SimpleProfile.fromJson(e))));
       },
     );
   }
