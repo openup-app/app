@@ -57,7 +57,7 @@ class _LocationSearchStateNotifier extends StateNotifier<_LocationSearchState> {
 
   Future<LatLong?> getLocation(LocationSearchResult result) async {
     return state.map(
-      none: (_) => Future.value(null),
+      (_) => Future.value(null),
       results: (results) async {
         final latLongResult = await _searchService.latLongForResult(result);
         if (!mounted) {
