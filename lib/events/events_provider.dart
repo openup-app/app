@@ -32,10 +32,30 @@ final eventParticipantsProvider =
   );
 });
 
+final nearbyEventsDateFilterProvider =
+    StateNotifierProvider<NearbyEventDateFilterNotifier, DateTime?>((ref) {
+  return NearbyEventDateFilterNotifier(ref);
+});
+
+class NearbyEventDateFilterNotifier extends StateNotifier<DateTime?> {
+  final Ref _ref;
+
+  NearbyEventDateFilterNotifier(this._ref) : super(null);
+
+  set date(DateTime? value) {
+    state = value;
+    _ref.invalidate(_nearbyEventsProviderInternal);
+  }
+}
+
 final _nearbyEventsProviderInternal = FutureProvider<IList<Event>>((ref) async {
   final api = ref.watch(apiProvider);
   final latLong = ref.watch(locationProvider.select((s) => s.current));
-  final result = await api.getEvents(Location(latLong: latLong, radius: 2000));
+  final dateFilter = ref.watch(nearbyEventsDateFilterProvider);
+  final result = await api.getEvents(
+    Location(latLong: latLong, radius: 2000),
+    date: dateFilter,
+  );
   return result.fold(
     (l) => throw l,
     (r) => r.toIList(),

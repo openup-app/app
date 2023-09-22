@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/discover_page.dart';
 import 'package:openup/events/events_list_view.dart';
+import 'package:openup/events/events_provider.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/button.dart';
 
@@ -80,46 +81,53 @@ class _Toolbar extends StatelessWidget {
     return Row(
       children: [
         const SizedBox(width: 16),
-        Button(
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) {
-                return AlertDialog(
-                  backgroundColor: Colors.black,
-                  insetPadding: const EdgeInsets.all(16),
-                  content: SizedBox(
-                    width: 350,
-                    height: 300,
-                    child: CalendarDatePicker(
-                      initialDate: DateTime.now(),
-                      firstDate:
-                          DateTime.now().subtract(const Duration(days: 365)),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                      onDateChanged: (_) => Navigator.of(context).pop(context),
+        Consumer(builder: (context, ref, child) {
+          return Button(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    backgroundColor: Colors.black,
+                    insetPadding: const EdgeInsets.all(16),
+                    content: SizedBox(
+                      width: 350,
+                      height: 300,
+                      child: CalendarDatePicker(
+                        initialDate: DateTime.now(),
+                        firstDate:
+                            DateTime.now().subtract(const Duration(days: 365)),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        onDateChanged: (date) {
+                          ref
+                              .read(nearbyEventsDateFilterProvider.notifier)
+                              .date = date;
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+            child: const Padding(
+              padding: EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_month_outlined),
+                  SizedBox(width: 8),
+                  Text(
+                    'Date',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                );
-              },
-            );
-          },
-          child: const Padding(
-            padding: EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_month_outlined),
-                SizedBox(width: 8),
-                Text(
-                  'Date',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        }),
         const SizedBox(width: 8),
         const SizedBox(
           height: 29,
@@ -129,8 +137,14 @@ class _Toolbar extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Button(
-          onPressed: () {},
+        Consumer(
+          builder: (context, ref, child) {
+            return Button(
+              onPressed: () =>
+                  ref.read(nearbyEventsDateFilterProvider.notifier).date = null,
+              child: child!,
+            );
+          },
           child: const Padding(
             padding: EdgeInsets.all(12),
             child: Text(

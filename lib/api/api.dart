@@ -703,13 +703,18 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, List<Event>>> getEvents(Location location) {
+  Future<Either<ApiError, List<Event>>> getEvents(
+    Location location, {
+    DateTime? date,
+  }) {
     return _request(
       makeRequest: () {
         final locationQuery =
             'lat=${location.latLong.latitude}&long=${location.latLong.longitude}&radius=${location.radius}';
+        final dateQuery =
+            date == null ? '' : '&date=${date.toLocal().toIso8601String()}';
         return http.get(
-          Uri.parse('$_urlBase/events?$locationQuery'),
+          Uri.parse('$_urlBase/events?$locationQuery$dateQuery'),
           headers: _headers,
         );
       },
