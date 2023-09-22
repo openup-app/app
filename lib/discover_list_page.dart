@@ -164,7 +164,6 @@ class _ListViewState extends ConsumerState<_ListView> {
                       }
                     },
                     onPause: () => setState(() => _play = false),
-                    onOptions: () {},
                     onMessage: () =>
                         _showRecordInvitePanel(context, profile.profile.uid),
                   );
@@ -219,7 +218,6 @@ class _ProfileDisplay extends ConsumerWidget {
   final Stream<PlaybackInfo>? playbackInfoStream;
   final VoidCallback onPlay;
   final VoidCallback onPause;
-  final VoidCallback onOptions;
   final VoidCallback onMessage;
 
   const _ProfileDisplay({
@@ -231,7 +229,6 @@ class _ProfileDisplay extends ConsumerWidget {
     required this.playbackInfoStream,
     required this.onPlay,
     required this.onPause,
-    required this.onOptions,
     required this.onMessage,
   });
 
@@ -279,19 +276,23 @@ class _ProfileDisplay extends ConsumerWidget {
           ),
         ),
       ),
-      secondButton: Button(
-        onPressed: onOptions,
-        child: const Center(
-          child: Text(
-            'Options',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: Colors.black,
+      secondButton: ReportBlockPopupMenu2(
+        name: profile.profile.name,
+        uid: profile.profile.uid,
+        onBlock: () {},
+        builder: (context) {
+          return const Center(
+            child: Text(
+              'Options',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Colors.black,
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       indicatorButton: Button(
         onPressed: _togglePlayPause,
