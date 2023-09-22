@@ -190,7 +190,25 @@ class _SignupProfileState extends ConsumerState<SignupProfile> {
                             );
                           },
                           firstButton: Button(
-                            onPressed: () {},
+                            onPressed: () {
+                              showCupertinoDialog(
+                                context: context,
+                                builder: (context) {
+                                  return CupertinoAlertDialog(
+                                    title: const Text('Help'),
+                                    content: const Text(
+                                      'Sign up by entering your profile info on this card',
+                                    ),
+                                    actions: [
+                                      CupertinoDialogAction(
+                                        onPressed: Navigator.of(context).pop,
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
                             child: const Center(
                               child: Text('Help'),
                             ),
