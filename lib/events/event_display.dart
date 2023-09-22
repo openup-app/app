@@ -131,10 +131,13 @@ class EventDisplayListItem extends ConsumerWidget {
                           color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          event.location.name,
-                          style: const TextStyle(
-                            color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                        Expanded(
+                          child: Text(
+                            event.location.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                            ),
                           ),
                         ),
                       ],
