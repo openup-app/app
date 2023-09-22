@@ -681,7 +681,7 @@ class Api {
   ) {
     return _request(makeRequest: () {
       return http.put(
-        Uri.parse('$_urlBase/events/$eventId/participats'),
+        Uri.parse('$_urlBase/events/$eventId/participants'),
         headers: _headers,
         body: jsonEncode({'participating': participating}),
       );
