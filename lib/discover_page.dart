@@ -123,7 +123,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       return;
     }
 
-    final isSignedIn = ref.read(userProvider2.select((p) {
+    final isSignedIn = ref.read(userProvider.select((p) {
       return p.map(
         guest: (_) => false,
         signedIn: (_) => true,
@@ -401,7 +401,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
 
   void _showRecordInvitePanelOrSignIn(BuildContext context, String uid) {
     _tempPauseAudio();
-    final userState = ref.read(userProvider2);
+    final userState = ref.read(userProvider);
     userState.map(
       guest: (_) => showSignInModal(context),
       signedIn: (_) async {
@@ -418,7 +418,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
           return;
         }
 
-        final notifier = ref.read(userProvider2.notifier);
+        final notifier = ref.read(userProvider.notifier);
         await withBlockingModal(
           context: context,
           label: 'Sending invite...',
@@ -437,7 +437,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     DiscoverProfile profile,
   ) async {
     _tempPauseAudio();
-    final userState = ref.read(userProvider2);
+    final userState = ref.read(userProvider);
     userState.map(
       guest: (_) => showSignInModal(context),
       signedIn: (_) => _toggleFavorite(profile),

@@ -18,7 +18,7 @@ enum LocationMessage { permissionRationale }
 
 final locationProvider =
     StateNotifierProvider<LocationNotifier, LocationState>((ref) {
-  final latLongOverride = ref.watch(userProvider2.select<LatLong?>((p) {
+  final latLongOverride = ref.watch(userProvider.select<LatLong?>((p) {
     return p.map(
       guest: (_) => null,
       signedIn: (signedIn) => signedIn.account.profile.latLongOverride,
@@ -42,7 +42,7 @@ final locationProvider =
 
 void _updateLocationIfSignedIn(LatLong latLong,
     StateNotifierProviderRef<LocationNotifier, LocationState> ref) {
-  final signedIn = ref.watch(userProvider2.select((p) {
+  final signedIn = ref.watch(userProvider.select((p) {
     return p.map(
       guest: (_) => false,
       signedIn: (_) => true,

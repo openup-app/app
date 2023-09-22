@@ -28,9 +28,8 @@ class MessageStateNotifier extends StateNotifier<String?> {
   void emitMessage(String message) => state = message;
 }
 
-final userProvider2 =
-    StateNotifierProvider<UserStateNotifier2, UserState2>((ref) {
-  final userStateNotifier = UserStateNotifier2(
+final userProvider = StateNotifierProvider<UserStateNotifier, UserState>((ref) {
+  final userStateNotifier = UserStateNotifier(
     api: ref.watch(apiProvider),
     messageNotifier: ref.read(messageProvider.notifier),
     analytics: ref.read(analyticsProvider),
@@ -83,12 +82,12 @@ void _initUserState({
   );
 }
 
-class UserStateNotifier2 extends StateNotifier<UserState2> {
+class UserStateNotifier extends StateNotifier<UserState> {
   final Api _api;
   final MessageStateNotifier _messageNotifier;
   final Analytics _analytics;
 
-  UserStateNotifier2({
+  UserStateNotifier({
     required Api api,
     required MessageStateNotifier messageNotifier,
     required Analytics analytics,
@@ -97,7 +96,7 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
         _analytics = analytics,
         super(const _Guest());
 
-  UserState2 get userState => state;
+  UserState get userState => state;
 
   void guest() => state = const _Guest(byDefault: false);
 
@@ -672,11 +671,11 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
 final accountCreationParamsProvider =
     StateNotifierProvider<AccountCreationParamsNotifier, AccountCreationParams>(
         (ref) {
-  final userStateNotifier2 = ref.read(userProvider2.notifier);
+  final userStateNotifier = ref.read(userProvider.notifier);
   return AccountCreationParamsNotifier(
     api: ref.read(apiProvider),
     analytics: ref.read(analyticsProvider),
-    onAccount: userStateNotifier2.signedIn,
+    onAccount: userStateNotifier.signedIn,
   );
 });
 
@@ -732,14 +731,14 @@ class AccountCreationParamsNotifier
 }
 
 @freezed
-class UserState2 with _$UserState2 {
-  const UserState2._();
+class UserState with _$UserState {
+  const UserState._();
 
-  const factory UserState2.guest({
+  const factory UserState.guest({
     @Default(true) bool byDefault,
   }) = _Guest;
 
-  const factory UserState2.signedIn({
+  const factory UserState.signedIn({
     required Account account,
     @Default(null) List<Chatroom>? chatrooms,
     @Default(null) List<Collection>? collections,

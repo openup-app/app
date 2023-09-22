@@ -1870,7 +1870,7 @@ class ReportBlockPopupMenu2 extends ConsumerStatefulWidget {
 class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
   @override
   Widget build(BuildContext context) {
-    final myUid = ref.watch(userProvider2.select((p) {
+    final myUid = ref.watch(userProvider.select((p) {
       return p.map(
         guest: (_) => null,
         signedIn: (signedIn) => signedIn.account.profile.uid,

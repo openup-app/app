@@ -85,7 +85,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
       setState(() => _pageScroll = _pageController.page ?? 0);
     });
 
-    final userState = ref.read(userProvider2);
+    final userState = ref.read(userProvider);
     myProfile = userState.map(
       guest: (_) => throw 'User is not signed in',
       signedIn: (signedIn) => signedIn.account.profile,
@@ -597,7 +597,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
           setState(() {
             _chatroom = chatroom.copyWith(inviteState: ChatroomState.accepted);
             ref
-                .read(userProvider2.notifier)
+                .read(userProvider.notifier)
                 .acceptChatroom(chatroom.profile.profile.uid);
           });
         }

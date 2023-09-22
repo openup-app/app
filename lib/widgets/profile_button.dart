@@ -28,7 +28,7 @@ class ProfileButton extends StatelessWidget {
         builder: (context, cachedPhoto) {
           return Consumer(
             builder: (context, ref, child) {
-              final myProfile = ref.watch(userProvider2.select((p) {
+              final myProfile = ref.watch(userProvider.select((p) {
                 return p.map(
                   guest: (_) => null,
                   signedIn: (signedIn) => signedIn.account.profile,

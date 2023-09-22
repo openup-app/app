@@ -199,7 +199,7 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
 
     result.when(
       logIn: (account) {
-        ref.read(userProvider2.notifier).signedIn(account);
+        ref.read(userProvider.notifier).signedIn(account);
         ref.read(analyticsProvider).trackLogin();
         RestartApp.restartApp(context);
       },

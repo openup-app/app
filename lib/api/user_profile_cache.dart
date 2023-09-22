@@ -47,7 +47,7 @@ class _UserProfileCacheState extends ConsumerState<UserProfileCache> {
 
   void _listenToProfile(File photoFile) {
     ref.listenManual<_ProfileCheck>(
-      userProvider2.select((p) {
+      userProvider.select((p) {
         return p.map(
           guest: (guest) => _ProfileCheck(
             byDefault: guest.byDefault,

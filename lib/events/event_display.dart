@@ -20,7 +20,7 @@ class EventDisplayListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final uid = ref.watch(userProvider2.select((s) {
+    final uid = ref.watch(userProvider.select((s) {
       return s.map(
         guest: (_) => null,
         signedIn: (signedIn) => signedIn.account.profile.uid,

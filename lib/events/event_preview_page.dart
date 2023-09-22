@@ -39,7 +39,7 @@ class EventPreviewPage extends ConsumerWidget {
             ),
             RoundedButton(
               onPressed: () async {
-                final notifier = ref.read(userProvider2.notifier);
+                final notifier = ref.read(userProvider.notifier);
                 final future = notifier.createEvent(submission);
                 final success = await withBlockingModal(
                   context: context,

@@ -4,7 +4,7 @@ import 'package:openup/api/user_state.dart';
 
 final unreadCountProvider =
     StateNotifierProvider<UnreadCountStateNotifier, int>((ref) {
-  final chatrooms = ref.watch(userProvider2.select((p) {
+  final chatrooms = ref.watch(userProvider.select((p) {
     return p.map(
       guest: (_) => <Chatroom>[],
       signedIn: (signedIn) => signedIn.chatrooms ?? <Chatroom>[],

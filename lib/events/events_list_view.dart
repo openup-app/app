@@ -22,13 +22,13 @@ class _EventsListPageState extends ConsumerState<EventsListPage> {
     super.initState();
     final latLong = ref.read(locationProvider).current;
     ref
-        .read(userProvider2.notifier)
+        .read(userProvider.notifier)
         .refreshEvents(Location(latLong: latLong, radius: 1000));
   }
 
   @override
   Widget build(BuildContext context) {
-    final events = ref.watch(userProvider2.select((s) {
+    final events = ref.watch(userProvider.select((s) {
       return s.map(
         guest: (_) => <Event>[],
         signedIn: (signedIn) => signedIn.events ?? [],

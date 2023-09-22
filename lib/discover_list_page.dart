@@ -164,7 +164,7 @@ class _ListViewState extends ConsumerState<_ListView> {
 
   void _showRecordInvitePanel(BuildContext context, String uid) async {
     _pauseAudio();
-    final userState = ref.read(userProvider2);
+    final userState = ref.read(userProvider);
     final signedIn = userState.map(
       guest: (_) => null,
       signedIn: (signedIn) => signedIn,
@@ -186,7 +186,7 @@ class _ListViewState extends ConsumerState<_ListView> {
       return;
     }
 
-    final notifier = ref.read(userProvider2.notifier);
+    final notifier = ref.read(userProvider.notifier);
     await withBlockingModal(
       context: context,
       label: 'Sending invite...',

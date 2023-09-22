@@ -154,7 +154,7 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
   }
 
   void _upload() async {
-    final userState = ref.read(userProvider2);
+    final userState = ref.read(userProvider);
     final uid = userState.map(
       guest: (_) => null,
       signedIn: (signedIn) => signedIn.account.profile.uid,

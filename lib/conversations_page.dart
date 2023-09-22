@@ -190,7 +190,7 @@ class _ConversationsPageContentsState
     return ActivePage(
       onActivate: () {
         /// Notifications don't update chats, so refreshe on page activation
-        ref.read(userProvider2.notifier).refreshChatrooms();
+        ref.read(userProvider.notifier).refreshChatrooms();
       },
       onDeactivate: () {},
       child: Column(
@@ -265,7 +265,7 @@ class _ConversationsPageContentsState
                   child: Consumer(
                     builder: (context, ref, child) {
                       final filteredChatrooms =
-                          ref.watch(userProvider2.select((p) {
+                          ref.watch(userProvider.select((p) {
                         return p.map(
                           guest: (_) => null,
                           signedIn: (signedIn) =>
@@ -287,7 +287,7 @@ class _ConversationsPageContentsState
                             'Invite someone to chat,\nthen continue the conversation here',
                         filtered: widget.filter.isNotEmpty,
                         onRefresh:
-                            ref.read(userProvider2.notifier).refreshChatrooms,
+                            ref.read(userProvider.notifier).refreshChatrooms,
                         onOpen: _openChat,
                         onDelete: (index) => _deleteChatroom(
                             nonPendingChatrooms![index].profile.profile),
@@ -313,14 +313,14 @@ class _ConversationsPageContentsState
       params: {'uid': chatroom.profile.profile.uid},
       extra: ChatPageArguments(chatroom: chatroom),
     );
-    ref.read(userProvider2.notifier).openChatroom(chatroom.profile.profile.uid);
+    ref.read(userProvider.notifier).openChatroom(chatroom.profile.profile.uid);
   }
 
   void _deleteChatroom(Profile profile) async {
     await withBlockingModal(
       context: context,
       label: 'Removing friend',
-      future: ref.read(userProvider2.notifier).deleteChatroom(profile.uid),
+      future: ref.read(userProvider.notifier).deleteChatroom(profile.uid),
     );
   }
 }

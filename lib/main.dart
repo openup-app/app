@@ -211,7 +211,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
   void _initNotifications() {
     ref.listenManual<bool>(
-      userProvider2.select((p) {
+      userProvider.select((p) {
         return p.map(
           guest: (_) => false,
           signedIn: (signedIn) => true,
@@ -258,7 +258,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           result.fold(
             (l) => null,
             (r) {
-              final userState = ref.read(userProvider2);
+              final userState = ref.read(userProvider);
               final collections = userState.map(
                 guest: (_) => <Collection>[],
                 signedIn: (signedIn) => signedIn.collections ?? [],
@@ -273,7 +273,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         },
         onUnreadCountUpdated: (count) {
           ref.read(unreadCountProvider.notifier).updateUnreadCount(count);
-          ref.read(userProvider2.notifier).cacheChatrooms();
+          ref.read(userProvider.notifier).cacheChatrooms();
         },
       );
     });
@@ -612,7 +612,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       return null;
     }
 
-    final userState = ref.read(userProvider2);
+    final userState = ref.read(userProvider);
     return userState.map(
       guest: (guest) {
         // TODO: Pass along the redirect location to initial loading page

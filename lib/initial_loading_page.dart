@@ -16,7 +16,7 @@ class _InitialLoadingPageState extends ConsumerState<InitialLoadingPage> {
   void initState() {
     super.initState();
     ref.listenManual(
-      userProvider2,
+      userProvider,
       fireImmediately: true,
       (previous, next) {
         next.map(

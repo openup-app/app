@@ -47,7 +47,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ),
         toolbar: _TopTabs(),
       ),
-      body: ref.watch(userProvider2).map(
+      body: ref.watch(userProvider).map(
         guest: (_) {
           return Center(
             child: Column(
@@ -263,7 +263,7 @@ class _ProfilePanelState extends ConsumerState<_ProfileStack> {
       label: 'This photo will be used in your profile',
     );
     if (photo != null && mounted) {
-      final notifier = ref.read(userProvider2.notifier);
+      final notifier = ref.read(userProvider.notifier);
       final uploadFuture = notifier.updateGalleryPhoto(
         index: index,
         photo: photo,
@@ -297,7 +297,7 @@ class _ProfilePanelState extends ConsumerState<_ProfileStack> {
       },
     );
     if (result == true && mounted) {
-      await ref.read(userProvider2.notifier).deleteGalleryPhoto(index);
+      await ref.read(userProvider.notifier).deleteGalleryPhoto(index);
     }
   }
 
@@ -312,7 +312,7 @@ class _ProfilePanelState extends ConsumerState<_ProfileStack> {
       return;
     }
 
-    final notifier = ref.read(userProvider2.notifier);
+    final notifier = ref.read(userProvider.notifier);
     return withBlockingModal(
       context: context,
       label: 'Updating voice bio...',

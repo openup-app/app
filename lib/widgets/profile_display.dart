@@ -592,7 +592,7 @@ class ProfileDisplayBehavior extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Consumer(
       builder: (context, ref, child) {
-        final userState = ref.read(userProvider2);
+        final userState = ref.read(userProvider);
         final myUid = userState.map(
           guest: (_) => null,
           signedIn: (signedIn) => signedIn.account.profile.uid,
@@ -626,7 +626,7 @@ class ProfileDisplayBehavior extends ConsumerWidget {
                 return;
               }
 
-              final notifier = ref.read(userProvider2.notifier);
+              final notifier = ref.read(userProvider.notifier);
               final future = isMe
                   ? notifier.updateAudioBio(result.audio)
                   : notifier.sendMessage(uid: profile.uid, audio: result.audio);

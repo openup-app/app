@@ -57,7 +57,7 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
   @override
   void initState() {
     super.initState();
-    ref.listenManual(userProvider2.select((p) {
+    ref.listenManual(userProvider.select((p) {
       return p.map(
         guest: (_) => null,
         signedIn: (signedIn) => signedIn.account.profile.latLongOverride,

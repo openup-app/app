@@ -122,7 +122,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
     final result = await withBlockingModal(
       context: context,
       label: 'Creating account...',
-      future: ref.read(userProvider2.notifier).createAccount(params),
+      future: ref.read(userProvider.notifier).createAccount(params),
     );
     if (!mounted) {
       return;
@@ -139,7 +139,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
         analytics.setUserProperty('name', r.profile.name);
         analytics.setUserProperty('age', r.profile.age);
         analytics.setUserProperty('gender', r.profile.gender.name);
-        ref.read(userProvider2.notifier).signedIn(r);
+        ref.read(userProvider.notifier).signedIn(r);
         context.goNamed('signup_friends');
       },
     );

@@ -59,7 +59,7 @@ class _ProfilePageState extends ConsumerState<SettingsPage> {
           center: const Text('Settings'),
         ),
       ),
-      body: ref.watch(userProvider2).map(
+      body: ref.watch(userProvider).map(
         guest: (_) {
           return Center(
             child: Column(
@@ -240,7 +240,7 @@ class _ProfilePageState extends ConsumerState<SettingsPage> {
 
   Future<void> _signOut() async {
     ref.read(analyticsProvider).trackSignOut();
-    ref.read(userProvider2.notifier).guest();
+    ref.read(userProvider.notifier).guest();
     ref.read(apiProvider).signOut();
     if (Platform.isAndroid) {
       await FirebaseMessaging.instance.deleteToken();
@@ -283,7 +283,7 @@ class _ProfilePageState extends ConsumerState<SettingsPage> {
 
   Future<void> _deleteAccount() async {
     ref.read(analyticsProvider).trackDeleteAccount();
-    ref.read(userProvider2.notifier).guest();
+    ref.read(userProvider.notifier).guest();
     ref.read(apiProvider).deleteAccount();
     await ref.read(authProvider.notifier).signOut();
   }
@@ -655,7 +655,7 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
       label: 'This photo will be used in your profile',
     );
     if (photo != null && mounted) {
-      final notifier = ref.read(userProvider2.notifier);
+      final notifier = ref.read(userProvider.notifier);
       final uploadFuture = notifier.updateGalleryPhoto(
         index: index,
         photo: photo,
@@ -689,7 +689,7 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
       },
     );
     if (result == true && mounted) {
-      await ref.read(userProvider2.notifier).deleteGalleryPhoto(index);
+      await ref.read(userProvider.notifier).deleteGalleryPhoto(index);
     }
   }
 
@@ -708,7 +708,7 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
       return;
     }
 
-    final notifier = ref.read(userProvider2.notifier);
+    final notifier = ref.read(userProvider.notifier);
     return withBlockingModal(
       context: context,
       label: 'Updating voice bio...',
@@ -1159,8 +1159,8 @@ class _NameFieldState extends ConsumerState<_NameField> {
   @override
   void initState() {
     super.initState();
-    ref.listenManual<UserState2?>(
-      userProvider2,
+    ref.listenManual<UserState?>(
+      userProvider,
       (previous, next) {
         if (_initial && next != null) {
           next.map(
@@ -1214,7 +1214,7 @@ class _NameFieldState extends ConsumerState<_NameField> {
             } else {
               setState(() => _submittingName = true);
               final result = await ref
-                  .read(userProvider2.notifier)
+                  .read(userProvider.notifier)
                   .updateName(_nameController.text);
               if (mounted) {
                 setState(() => _submittingName = false);

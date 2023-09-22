@@ -215,7 +215,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
   }
 
   void _upload() async {
-    final userState = ref.read(userProvider2);
+    final userState = ref.read(userProvider);
     final uid = userState.map(
       guest: (guest) => null,
       signedIn: (signedIn) => signedIn.account.profile.uid,

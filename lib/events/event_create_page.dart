@@ -547,7 +547,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
   }
 
   void _showEventPreview() {
-    final userState = ref.read(userProvider2);
+    final userState = ref.read(userProvider);
     final myProfile = userState.map(
       guest: (_) => null,
       signedIn: (signedIn) => signedIn.account.profile,
@@ -577,9 +577,8 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
     if (!submission.valid || editingEventId == null) {
       return;
     }
-    final future = ref
-        .read(userProvider2.notifier)
-        .updateEvent(editingEventId, submission);
+    final future =
+        ref.read(userProvider.notifier).updateEvent(editingEventId, submission);
     await withBlockingModal(
       context: context,
       label: 'Updating event',
@@ -601,7 +600,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
             CupertinoDialogAction(
               onPressed: () async {
                 Navigator.of(context)
-                    .pop(ref.read(userProvider2.notifier).deleteEvent(eventId));
+                    .pop(ref.read(userProvider.notifier).deleteEvent(eventId));
               },
               isDestructiveAction: true,
               child: const Text('Delete'),
