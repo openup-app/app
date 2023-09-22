@@ -481,7 +481,7 @@ class EventDisplayLarge extends StatelessWidget {
   }
 }
 
-class _Participants extends ConsumerStatefulWidget {
+class _Participants extends ConsumerWidget {
   final String eventId;
 
   const _Participants({
@@ -490,83 +490,62 @@ class _Participants extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_Participants> createState() => _ParticipantsState();
-}
-
-class _ParticipantsState extends ConsumerState<_Participants> {
-  List<SimpleProfile>? _profiles;
-  bool _error = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchProfiles();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final profiles = _profiles;
-    if (_error) {
-      return const Padding(
-        padding: EdgeInsets.only(left: 16.0),
-        child: Text(
-          'Something went wrong',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-      );
-    }
-    if (profiles == null) {
-      return const Padding(
-        padding: EdgeInsets.only(left: 16.0),
-        child: LoadingIndicator(color: Colors.white),
-      );
-    }
-    return ListView.builder(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      itemCount: profiles.length,
-      itemBuilder: (context, index) {
-        final profile = profiles[index];
-        return Button(
-          onPressed: () {},
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(16)),
-              child: Container(
-                width: 31,
-                height: 31,
-                foregroundDecoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    width: 2,
-                    color: Colors.white,
-                  ),
-                ),
-                child: Image.network(
-                  profile.photo,
-                  fit: BoxFit.cover,
-                ),
-              ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final result = ref.watch(eventParicipantsProvider(eventId));
+    return result.map(
+      loading: (_) {
+        return const Padding(
+          padding: EdgeInsets.only(left: 16.0),
+          child: LoadingIndicator(color: Colors.white),
+        );
+      },
+      error: (_) {
+        return const Padding(
+          padding: EdgeInsets.only(left: 16.0),
+          child: Text(
+            'Something went wrong',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
             ),
           ),
         );
       },
+      data: (data) {
+        final profiles = data.value;
+        return ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          itemCount: profiles.length,
+          itemBuilder: (context, index) {
+            final profile = profiles[index];
+            return Button(
+              onPressed: () {},
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
+                  child: Container(
+                    width: 31,
+                    height: 31,
+                    foregroundDecoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        width: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                    child: Image.network(
+                      profile.photo,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
-  }
-
-  void _fetchProfiles() async {
-    final notifier = ref.read(eventsProvider.notifier);
-    final profiles = await notifier.participantsForEvent(widget.eventId);
-    if (mounted) {
-      if (profiles == null) {
-        setState(() => _error = true);
-      } else {
-        setState(() => _profiles = profiles);
-      }
-    }
   }
 }

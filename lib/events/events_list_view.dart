@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/events/event_display.dart';
+import 'package:openup/events/events_provider.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/widgets/common.dart';
 
@@ -22,19 +22,14 @@ class _EventsListPageState extends ConsumerState<EventsListPage> {
     super.initState();
     final latLong = ref.read(locationProvider).current;
     ref
-        .read(userProvider.notifier)
-        .refreshEvents(Location(latLong: latLong, radius: 1000));
+        .read(nearbyEventsProvider.notifier)
+        .refresh(Location(latLong: latLong, radius: 1000));
   }
 
   @override
   Widget build(BuildContext context) {
-    final events = ref.watch(userProvider.select((s) {
-      return s.map(
-        guest: (_) => <Event>[],
-        signedIn: (signedIn) => signedIn.events ?? [],
-      );
-    }));
-    if (events.isEmpty) {
+    final eventIds = ref.watch(nearbyEventsProvider.select((s) => s.eventIds));
+    if (eventIds.isEmpty) {
       return const _CreateEvent();
     }
     return ListView.separated(
@@ -42,7 +37,7 @@ class _EventsListPageState extends ConsumerState<EventsListPage> {
         top: MediaQuery.of(context).padding.top,
         bottom: MediaQuery.of(context).padding.bottom + 48,
       ),
-      itemCount: events.length,
+      itemCount: eventIds.length,
       separatorBuilder: (_, __) {
         return const Divider(
           color: Color.fromRGBO(0x1F, 0x1F, 0x1F, 1.0),
@@ -50,9 +45,9 @@ class _EventsListPageState extends ConsumerState<EventsListPage> {
         );
       },
       itemBuilder: (context, index) {
-        final event = events[index];
+        final eventId = eventIds[index];
         return EventDisplayListItem(
-          event: event,
+          event: ref.watch(eventProvider(eventId)),
         );
       },
     );

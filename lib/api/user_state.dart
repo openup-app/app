@@ -441,23 +441,6 @@ class UserStateNotifier extends StateNotifier<UserState> {
     );
   }
 
-  Future<void> refreshEvents(Location location) async {
-    final result = await _api.getEvents(location);
-    if (!mounted) {
-      return;
-    }
-
-    result.fold(
-      (l) {},
-      (r) {
-        return state.map(
-          guest: (_) => false,
-          signedIn: (signedIn) => state = signedIn.copyWith(events: r),
-        );
-      },
-    );
-  }
-
   Future<bool> createEvent(EventSubmission submission) async {
     final result = await _api.createEvent(submission);
     if (!mounted) {
@@ -496,8 +479,6 @@ class UserStateNotifier extends StateNotifier<UserState> {
                 ..removeWhere((e) => e.id == eventId),
               hostingEvents: List.of(signedIn.hostingEvents ?? [])
                 ..removeWhere((e) => e.id == eventId),
-              events: List.of(signedIn.events ?? [])
-                ..removeWhere((e) => e.id == eventId),
             );
           },
         );
@@ -531,14 +512,6 @@ class UserStateNotifier extends StateNotifier<UserState> {
               state = signedIn.copyWith(
                 hostingEvents: List.of(signedIn.hostingEvents ?? [])
                   ..replaceRange(hostingIndex, hostingIndex + 1, [r]),
-              );
-            }
-            final eventIndex =
-                signedIn.events?.indexWhere((e) => e.id == eventId);
-            if (eventIndex != null && eventIndex != -1) {
-              state = signedIn.copyWith(
-                events: List.of(signedIn.events ?? [])
-                  ..replaceRange(eventIndex, eventIndex + 1, [r]),
               );
             }
           },
@@ -588,14 +561,6 @@ class UserStateNotifier extends StateNotifier<UserState> {
               state = signedIn.copyWith(
                 hostingEvents: List.of(signedIn.hostingEvents ?? [])
                   ..replaceRange(hostingIndex, hostingIndex + 1, [r]),
-              );
-            }
-            final eventIndex =
-                signedIn.events?.indexWhere((e) => e.id == eventId);
-            if (eventIndex != null && eventIndex != -1) {
-              state = signedIn.copyWith(
-                events: List.of(signedIn.events ?? [])
-                  ..replaceRange(eventIndex, eventIndex + 1, [r]),
               );
             }
           },
@@ -744,7 +709,6 @@ class UserState with _$UserState {
     @Default(null) List<Collection>? collections,
     @Default(null) List<Event>? hostingEvents,
     @Default(null) List<Event>? attendingEvents,
-    @Default(null) List<Event>? events,
   }) = _SignedIn;
 
   int get unreadCount {
@@ -777,6 +741,15 @@ Future<GetAccountResult> getAccount(Api api) async {
     (r) => _LogIn(r),
   );
 }
+
+final uidProvider = Provider<String>((ref) {
+  return ref.watch(userProvider.select((s) {
+    return s.map(
+      guest: (_) => throw 'Unable to get uid: user not signed in',
+      signedIn: (signedIn) => signedIn.account.profile.uid,
+    );
+  }));
+});
 
 @freezed
 class GetAccountResult with _$GetAccountResult {
