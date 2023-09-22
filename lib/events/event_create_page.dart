@@ -601,10 +601,16 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
           actions: [
             CupertinoDialogAction(
               onPressed: () async {
-                await ref
+                final future = ref
                     .read(eventManagementProvider.notifier)
                     .deleteEvent(eventId);
-                if (mounted) {
+                final success = await withBlockingModal(
+                  context: context,
+                  label: 'Deleting event',
+                  future: future,
+                );
+                if (success && context.mounted) {
+                  Navigator.of(context).pop();
                   Navigator.of(context).pop();
                 }
               },
