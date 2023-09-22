@@ -10,4 +10,5 @@ final discoverActionProvider = StateProvider<DiscoverAction?>((ref) => null);
 class DiscoverAction with _$DiscoverAction {
   const factory DiscoverAction.viewProfile(DiscoverProfile profile) =
       _ViewProfile;
+  const factory DiscoverAction.viewEvent(Event event) = _ViewEvent;
 }

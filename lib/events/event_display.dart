@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/events/event_create_page.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/events/events_provider.dart';
@@ -123,24 +124,27 @@ class EventDisplayListItem extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_sharp,
-                          size: 16,
-                          color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            event.location.name,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                    Button(
+                      onPressed: () => _showEventOnMap(context, ref, event),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on_sharp,
+                            size: 16,
+                            color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              event.location.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 4),
                     RichText(
@@ -390,33 +394,40 @@ class EventDisplayLarge extends StatelessWidget {
         const SizedBox(height: 6),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.location_on,
-                color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-              ),
-              Expanded(
-                child: Text(
-                  event.location.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w300,
-                    color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                  ),
+          child: Consumer(
+            builder: (context, ref, child) {
+              return Button(
+                onPressed: () => _showEventOnMap(context, ref, event),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on,
+                      color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                    ),
+                    Expanded(
+                      child: Text(
+                        event.location.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w300,
+                          color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '${formatTime(event.startDate).toLowerCase()} - ${formatTime(event.endDate).toLowerCase()}',
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Expanded(
-                child: Text(
-                  '${formatTime(event.startDate).toLowerCase()} - ${formatTime(event.endDate).toLowerCase()}',
-                  textAlign: TextAlign.end,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w300,
-                  ),
-                ),
-              ),
-            ],
+              );
+            },
           ),
         ),
         const SizedBox(height: 6),
@@ -521,6 +532,15 @@ class EventDisplayLarge extends StatelessWidget {
       ],
     );
   }
+}
+
+void _showEventOnMap(BuildContext context, WidgetRef ref, Event event) {
+  ref.read(discoverActionProvider.notifier).state =
+      DiscoverAction.viewEvent(event);
+  context.goNamed(
+    'meetups',
+    queryParams: {'view_map': 'true'},
+  );
 }
 
 class _Participants extends ConsumerWidget {

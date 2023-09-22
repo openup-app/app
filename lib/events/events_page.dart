@@ -9,14 +9,32 @@ import 'package:openup/widgets/button.dart';
 enum _View { list, map }
 
 class EventsPage extends ConsumerStatefulWidget {
-  const EventsPage({super.key});
+  final bool viewMap;
+  const EventsPage({
+    super.key,
+    this.viewMap = false,
+  });
 
   @override
   ConsumerState<EventsPage> createState() => _EventsPageState();
 }
 
 class _EventsPageState extends ConsumerState<EventsPage> {
-  _View _view = _View.list;
+  late _View _view;
+
+  @override
+  void initState() {
+    super.initState();
+    _view = widget.viewMap ? _View.map : _View.list;
+  }
+
+  @override
+  void didUpdateWidget(covariant EventsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewMap != widget.viewMap) {
+      _view = widget.viewMap ? _View.map : _View.list;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

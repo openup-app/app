@@ -456,7 +456,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 GoRoute(
                   path: '/meetups',
                   name: 'meetups',
-                  builder: (context, state) => const EventsPage(),
+                  builder: (context, state) {
+                    final viewMap = state.queryParams['view_map'] == 'true';
+                    return EventsPage(
+                      viewMap: viewMap,
+                    );
+                  },
                   routes: [
                     GoRoute(
                       path: 'create',

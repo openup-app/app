@@ -56,13 +56,15 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
           return;
         }
 
-        next.map(
-          viewProfile: (viewProfile) {
-            final profile = viewProfile.profile;
+        next.when(
+          viewProfile: (profile) {
             _mapKey.currentState?.recenterMap(profile.location.latLong);
             ref
                 .read(discoverProvider.notifier)
                 .uidToSelectWhenAvailable(profile.profile.uid);
+          },
+          viewEvent: (event) {
+            _mapKey.currentState?.recenterMap(event.location.latLong);
           },
         );
       },
