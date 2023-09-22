@@ -403,6 +403,10 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             return builder.buildShell(
               (context, state, navigatorContainer) {
                 return TabShell(
+                  index: StatefulShellRouteState.of(context).currentIndex,
+                  onNavigateToTab: (index) =>
+                      StatefulShellRouteState.of(context)
+                          .goBranch(index: index),
                   children: navigatorContainer.children,
                 );
               },

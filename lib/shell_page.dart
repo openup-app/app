@@ -22,10 +22,14 @@ class _PageNotifier extends StateNotifier<int> {
 }
 
 class TabShell extends ConsumerStatefulWidget {
+  final int index;
+  final void Function(int index) onNavigateToTab;
   final List<Widget> children;
 
   const TabShell({
     super.key,
+    required this.index,
+    required this.onNavigateToTab,
     required this.children,
   });
 
@@ -34,17 +38,14 @@ class TabShell extends ConsumerStatefulWidget {
 }
 
 class _TabShellState extends ConsumerState<TabShell> {
-  int _index = 0;
-
   @override
   void initState() {
     super.initState();
     ref.listenManual<int>(
       _pageNotifierProvider,
       (previous, next) {
-        if (next != _index) {
-          setState(() => _index = next);
-          StatefulShellRouteState.of(context).goBranch(index: _index);
+        if (next != widget.index) {
+          widget.onNavigateToTab(next);
         }
       },
     );
@@ -63,7 +64,7 @@ class _TabShellState extends ConsumerState<TabShell> {
             padding: mediaQueryData.padding.copyWith(bottom: bottomBarHeight),
           ),
           child: IndexedStack(
-            index: _index,
+            index: widget.index,
             children: [
               for (var i = 0; i < widget.children.length; i++)
                 _BranchIndex(
@@ -79,8 +80,8 @@ class _TabShellState extends ConsumerState<TabShell> {
           bottom: 0,
           child: OpenupBottomBar(
             child: _Tabs(
-              index: _index,
-              onTabPressed: ref.read(_pageNotifierProvider.notifier).changePage,
+              index: widget.index,
+              onTabPressed: widget.onNavigateToTab,
             ),
           ),
         ),
