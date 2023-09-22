@@ -173,6 +173,8 @@ final eventManagementProvider =
     api: ref.watch(apiProvider),
     eventStoreNotifier: ref.watch(eventStoreProvider.notifier),
     onRefreshNearbyEvents: () => ref.invalidate(_nearbyEventsProviderInternal),
+    onRefreshEvent: (eventId) =>
+        ref.invalidate(eventParticipantsProvider(eventId)),
   );
 });
 
@@ -180,14 +182,17 @@ class EventManagementNotifier extends StateNotifier<void> {
   final Api _api;
   final StateNotifier<IMap<String, Event>> _eventStoreNotifier;
   final void Function() _onRefreshNearbyEvents;
+  final void Function(String eventId) _onRefreshEvent;
 
   EventManagementNotifier({
     required Api api,
     required StateNotifier<IMap<String, Event>> eventStoreNotifier,
     required void Function() onRefreshNearbyEvents,
+    required void Function(String eventId) onRefreshEvent,
   })  : _api = api,
         _eventStoreNotifier = eventStoreNotifier,
         _onRefreshNearbyEvents = onRefreshNearbyEvents,
+        _onRefreshEvent = onRefreshEvent,
         super(null);
 
   Future<bool> createEvent(EventSubmission submission) async {
@@ -246,6 +251,7 @@ class EventManagementNotifier extends StateNotifier<void> {
     result.fold(
       (l) {},
       (r) {
+        _onRefreshEvent(eventId);
         _eventStoreNotifier.state =
             _eventStoreNotifier.state.update(eventId, (_) => r);
       },
