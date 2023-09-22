@@ -22,12 +22,7 @@ class EventDisplayListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final uid = ref.watch(userProvider.select((s) {
-      return s.map(
-        guest: (_) => null,
-        signedIn: (signedIn) => signedIn.account.profile.uid,
-      );
-    }));
+    final uid = ref.watch(uidProvider);
     final myEvent = event.host.uid == uid;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -40,17 +35,25 @@ class EventDisplayListItem extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(left: 8, right: 20),
-                  foregroundDecoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 2,
+                child: Button(
+                  onPressed: () {
+                    context.pushNamed(
+                      'meetups_create',
+                      extra: EventCreateArgs(editEvent: event),
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 8, right: 20),
+                    foregroundDecoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 2,
+                      ),
                     ),
-                  ),
-                  child: ImageUri(
-                    event.photo,
-                    fit: BoxFit.cover,
+                    child: ImageUri(
+                      event.photo,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
@@ -71,12 +74,9 @@ class EventDisplayListItem extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        Button(
-                          onPressed: () {},
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Icon(Icons.more_vert),
-                          ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Icon(Icons.more_vert),
                         ),
                       ],
                     ),
