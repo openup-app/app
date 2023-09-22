@@ -74,9 +74,18 @@ class EventDisplayListItem extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Icon(Icons.more_vert),
+                        ReportBlockPopupMenu2(
+                          uid: event.host.uid,
+                          name: event.host.name,
+                          onBlock: () {
+                            // TODO: Remove event from local list
+                          },
+                          builder: (context) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Icon(Icons.more_vert),
+                            );
+                          },
                         ),
                       ],
                     ),
