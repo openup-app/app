@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/events/event_display.dart';
+import 'package:openup/events/events_provider.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/scaffold.dart';
 
@@ -39,7 +39,7 @@ class EventPreviewPage extends ConsumerWidget {
             ),
             RoundedButton(
               onPressed: () async {
-                final notifier = ref.read(userProvider.notifier);
+                final notifier = ref.read(eventManagementProvider.notifier);
                 final future = notifier.createEvent(submission);
                 final success = await withBlockingModal(
                   context: context,

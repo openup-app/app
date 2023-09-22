@@ -102,8 +102,6 @@ class UserStateNotifier extends StateNotifier<UserState> {
 
   void signedIn(Account account) async {
     state = _SignedIn(account: account);
-    _cacheHostingEvents(account.profile.uid);
-    _cacheAttendingEvents();
     _cacheChatrooms();
   }
 
@@ -134,38 +132,6 @@ class UserStateNotifier extends StateNotifier<UserState> {
         state.map(
           guest: (_) {},
           signedIn: (signedIn) => state = signedIn.copyWith(collections: r),
-        );
-      },
-    );
-  }
-
-  Future<void> _cacheHostingEvents(String uid) async {
-    final result = await _api.getMyHostedEvents(uid);
-    if (!mounted) {
-      return;
-    }
-    result.fold(
-      (l) {},
-      (r) {
-        state.map(
-          guest: (_) {},
-          signedIn: (signedIn) => state = signedIn.copyWith(hostingEvents: r),
-        );
-      },
-    );
-  }
-
-  Future<void> _cacheAttendingEvents() async {
-    final result = await _api.getMyAttendingEvents();
-    if (!mounted) {
-      return;
-    }
-    result.fold(
-      (l) {},
-      (r) {
-        state.map(
-          guest: (_) {},
-          signedIn: (signedIn) => state = signedIn.copyWith(attendingEvents: r),
         );
       },
     );
@@ -441,134 +407,6 @@ class UserStateNotifier extends StateNotifier<UserState> {
     );
   }
 
-  Future<bool> createEvent(EventSubmission submission) async {
-    final result = await _api.createEvent(submission);
-    if (!mounted) {
-      return false;
-    }
-
-    return result.fold(
-      (l) => false,
-      (r) {
-        return state.map(
-          guest: (_) => false,
-          signedIn: (signedIn) {
-            state = signedIn.copyWith(
-                hostingEvents: List.of(signedIn.hostingEvents ?? [])..add(r));
-            return true;
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> deleteEvent(String eventId) async {
-    final result = await _api.deleteEvent(eventId);
-    if (!mounted) {
-      return;
-    }
-
-    result.fold(
-      (l) {},
-      (r) {
-        state.map(
-          guest: (_) {},
-          signedIn: (signedIn) {
-            state = signedIn.copyWith(
-              attendingEvents: List.of(signedIn.attendingEvents ?? [])
-                ..removeWhere((e) => e.id == eventId),
-              hostingEvents: List.of(signedIn.hostingEvents ?? [])
-                ..removeWhere((e) => e.id == eventId),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> updateEvent(String eventId, EventSubmission submission) async {
-    final result = await _api.updateEvent(eventId, submission);
-    if (!mounted) {
-      return;
-    }
-
-    result.fold(
-      (l) {},
-      (r) {
-        state.map(
-          guest: (_) {},
-          signedIn: (signedIn) {
-            final attendingIndex =
-                signedIn.attendingEvents?.indexWhere((e) => e.id == eventId);
-            if (attendingIndex != null && attendingIndex != -1) {
-              state = signedIn.copyWith(
-                attendingEvents: List.of(signedIn.attendingEvents ?? [])
-                  ..replaceRange(attendingIndex, attendingIndex + 1, [r]),
-              );
-            }
-            final hostingIndex =
-                signedIn.hostingEvents?.indexWhere((e) => e.id == eventId);
-            if (hostingIndex != null && hostingIndex != -1) {
-              state = signedIn.copyWith(
-                hostingEvents: List.of(signedIn.hostingEvents ?? [])
-                  ..replaceRange(hostingIndex, hostingIndex + 1, [r]),
-              );
-            }
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> updateEventParticipation(String eventId) async {
-    final signedIn = state.map(
-      guest: (_) => null,
-      signedIn: (signedIn) => signedIn,
-    );
-    if (signedIn == null) {
-      return;
-    }
-    final uid = signedIn.account.profile.uid;
-    final participation = (signedIn.attendingEvents ?? [])
-        .where((e) => e.participants.uids.contains(uid))
-        .isEmpty;
-
-    final result = await _api.updateEventParticipation(eventId, participation);
-    if (!mounted) {
-      return;
-    }
-
-    result.fold(
-      (l) {},
-      (r) {
-        state.map(
-          guest: (_) {},
-          signedIn: (signedIn) {
-            if (participation) {
-              state = signedIn.copyWith(
-                attendingEvents: List.of(signedIn.attendingEvents ?? [])
-                  ..add(r),
-              );
-            } else {
-              state = signedIn.copyWith(
-                attendingEvents: List.of(signedIn.attendingEvents ?? [])
-                  ..removeWhere((e) => e.id == eventId),
-              );
-            }
-            final hostingIndex =
-                signedIn.hostingEvents?.indexWhere((e) => e.id == eventId);
-            if (hostingIndex != null && hostingIndex != -1) {
-              state = signedIn.copyWith(
-                hostingEvents: List.of(signedIn.hostingEvents ?? [])
-                  ..replaceRange(hostingIndex, hostingIndex + 1, [r]),
-              );
-            }
-          },
-        );
-      },
-    );
-  }
-
   Future<Either<ApiError, Collection>> createCollection({
     required List<File> photos,
     required File? audio,
@@ -707,8 +545,6 @@ class UserState with _$UserState {
     required Account account,
     @Default(null) List<Chatroom>? chatrooms,
     @Default(null) List<Collection>? collections,
-    @Default(null) List<Event>? hostingEvents,
-    @Default(null) List<Event>? attendingEvents,
   }) = _SignedIn;
 
   int get unreadCount {

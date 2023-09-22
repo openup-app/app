@@ -30,6 +30,7 @@ dependencies:
   custom_refresh_indicator: ^2.2.1
   decorated_icon: ^1.2.1
   device_info_plus: ^9.0.3
+  fast_immutable_collections: ^9.1.5
   firebase_analytics: ^10.4.5
   firebase_auth: ^4.2.4
   firebase_core: ^2.4.1

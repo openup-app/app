@@ -491,7 +491,7 @@ class _Participants extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final result = ref.watch(eventParicipantsProvider(eventId));
+    final result = ref.watch(eventParticipantsProvider(eventId));
     return result.map(
       loading: (_) {
         return const Padding(

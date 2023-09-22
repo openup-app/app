@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/events/event_display.dart';
+import 'package:openup/events/events_provider.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/scaffold.dart';
@@ -27,44 +27,66 @@ class CalendarPage extends ConsumerWidget {
           center: const Text('Calendar'),
         ),
       ),
-      body: Builder(
-        builder: (context) {
-          final events = ref.watch(userProvider.select((s) {
-            return s.map(
-              guest: (_) => null,
-              signedIn: (signedIn) => signedIn.attendingEvents,
+      body: const _Body(),
+    );
+  }
+}
+
+class _Body extends ConsumerWidget {
+  const _Body({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final attendingEventsState = ref.watch(attendingEventsProvider);
+    return attendingEventsState.when(
+      loading: () {
+        return const Center(
+          child: LoadingIndicator(),
+        );
+      },
+      error: () {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Something went wrong'),
+              const SizedBox(height: 16),
+              RoundedButton(
+                onPressed: () => ref.refresh(hostingEventsProvider),
+                child: const Text('Refresh'),
+              ),
+            ],
+          ),
+        );
+      },
+      data: (eventIds) {
+        if (eventIds.isEmpty) {
+          return const _FindEvents(noEvents: true);
+        }
+
+        return ListView.separated(
+          itemCount: eventIds.length + 1,
+          separatorBuilder: (_, __) => const Divider(
+            height: 1,
+            color: Color.fromRGBO(0x1F, 0x1F, 0x1F, 1.0),
+          ),
+          itemBuilder: (context, index) {
+            if (index == eventIds.length) {
+              return const SizedBox(
+                height: 320,
+                child: _FindEvents(noEvents: false),
+              );
+            }
+
+            final eventId = eventIds[index];
+            return EventDisplayListItem(
+              event: ref.watch(
+                eventProvider(eventId),
+              ),
             );
-          }));
-          if (events == null) {
-            return const Center(
-              child: LoadingIndicator(),
-            );
-          }
-
-          if (events.isEmpty) {
-            return const _FindEvents(noEvents: true);
-          }
-
-          return ListView.separated(
-            itemCount: events.length + 1,
-            separatorBuilder: (_, __) => const Divider(
-              height: 1,
-              color: Color.fromRGBO(0x1F, 0x1F, 0x1F, 1.0),
-            ),
-            itemBuilder: (context, index) {
-              if (index == events.length) {
-                return const SizedBox(
-                  height: 320,
-                  child: _FindEvents(noEvents: false),
-                );
-              }
-
-              final event = events[index];
-              return EventDisplayListItem(event: event);
-            },
-          );
-        },
-      ),
+          },
+        );
+      },
     );
   }
 }

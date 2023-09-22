@@ -1,53 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/api/api.dart';
 import 'package:openup/events/event_display.dart';
 import 'package:openup/events/events_provider.dart';
-import 'package:openup/location/location_provider.dart';
 import 'package:openup/widgets/common.dart';
 
-class EventsListPage extends ConsumerStatefulWidget {
+class EventsListPage extends ConsumerWidget {
   const EventsListPage({
     super.key,
   });
 
   @override
-  ConsumerState<EventsListPage> createState() => _EventsListPageState();
-}
-
-class _EventsListPageState extends ConsumerState<EventsListPage> {
-  @override
-  void initState() {
-    super.initState();
-    final latLong = ref.read(locationProvider).current;
-    ref
-        .read(nearbyEventsProvider.notifier)
-        .refresh(Location(latLong: latLong, radius: 1000));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final eventIds = ref.watch(nearbyEventsProvider.select((s) => s.eventIds));
-    if (eventIds.isEmpty) {
-      return const _CreateEvent();
-    }
-    return ListView.separated(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top,
-        bottom: MediaQuery.of(context).padding.bottom + 48,
-      ),
-      itemCount: eventIds.length,
-      separatorBuilder: (_, __) {
-        return const Divider(
-          color: Color.fromRGBO(0x1F, 0x1F, 0x1F, 1.0),
-          height: 1,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final nearbyEventsState = ref.watch(nearbyEventsProvider);
+    return nearbyEventsState.when(
+      loading: () {
+        return const Center(
+          child: LoadingIndicator(),
         );
       },
-      itemBuilder: (context, index) {
-        final eventId = eventIds[index];
-        return EventDisplayListItem(
-          event: ref.watch(eventProvider(eventId)),
+      error: () {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Something went wrong'),
+              const SizedBox(height: 16),
+              RoundedButton(
+                onPressed: () => ref.refresh(nearbyEventsProvider),
+                child: const Text('Refresh'),
+              ),
+            ],
+          ),
+        );
+      },
+      data: (eventIds) {
+        if (eventIds.isEmpty) {
+          return const _CreateEvent();
+        }
+        return ListView.separated(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top,
+            bottom: MediaQuery.of(context).padding.bottom + 48,
+          ),
+          itemCount: eventIds.length,
+          separatorBuilder: (_, __) {
+            return const Divider(
+              color: Color.fromRGBO(0x1F, 0x1F, 0x1F, 1.0),
+              height: 1,
+            );
+          },
+          itemBuilder: (context, index) {
+            final eventId = eventIds[index];
+            return EventDisplayListItem(
+              event: ref.watch(eventProvider(eventId)),
+            );
+          },
         );
       },
     );

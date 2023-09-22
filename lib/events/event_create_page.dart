@@ -10,6 +10,7 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/events/event_create_location_search.dart';
 import 'package:openup/events/event_preview_page.dart';
+import 'package:openup/events/events_provider.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/location/location_search.dart';
 import 'package:openup/location/mapbox_location_search_service.dart';
@@ -577,8 +578,9 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
     if (!submission.valid || editingEventId == null) {
       return;
     }
-    final future =
-        ref.read(userProvider.notifier).updateEvent(editingEventId, submission);
+    final future = ref
+        .read(eventManagementProvider.notifier)
+        .updateEvent(editingEventId, submission);
     await withBlockingModal(
       context: context,
       label: 'Updating event',
@@ -599,8 +601,12 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
           actions: [
             CupertinoDialogAction(
               onPressed: () async {
-                Navigator.of(context)
-                    .pop(ref.read(userProvider.notifier).deleteEvent(eventId));
+                await ref
+                    .read(eventManagementProvider.notifier)
+                    .deleteEvent(eventId);
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
               },
               isDestructiveAction: true,
               child: const Text('Delete'),

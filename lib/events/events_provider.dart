@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/location/location_provider.dart';
 
 part 'events_provider.freezed.dart';
 
@@ -20,7 +21,7 @@ final eventProvider =
   }));
 });
 
-final eventParicipantsProvider =
+final eventParticipantsProvider =
     FutureProvider.family<IList<SimpleProfile>, String>(
         (ref, String eventId) async {
   final api = ref.watch(apiProvider);
@@ -31,40 +32,213 @@ final eventParicipantsProvider =
   );
 });
 
-final hostingEventsProvider = Provider<IList<String>>((ref) {
-  final uid = ref.watch(uidProvider);
-  return ref.watch(eventStoreProvider.select((s) =>
-      s.values.where((e) => e.host.uid == uid).map((e) => e.id).toIList()));
-});
-
-final attendingEventsProvider = Provider<IList<String>>((ref) {
-  final uid = ref.watch(uidProvider);
-  return ref.watch(eventStoreProvider.select((s) => s.values
-      .where((e) => e.participants.uids.contains(uid))
-      .map((e) => e.id)
-      .toIList()));
-});
-
-final nearbyEventsProvider =
-    StateNotifierProvider<NearbyEventsNotifier, NearbyEventsState>((ref) {
-  return NearbyEventsNotifier(
-    api: ref.read(apiProvider),
-    eventCacheNotifier: ref.read(eventStoreProvider.notifier),
+final _nearbyEventsProviderInternal = FutureProvider<IList<Event>>((ref) async {
+  final api = ref.watch(apiProvider);
+  final latLong = ref.watch(locationProvider.select((s) => s.current));
+  final result = await api.getEvents(Location(latLong: latLong, radius: 2000));
+  return result.fold(
+    (l) => throw l,
+    (r) => r.toIList(),
   );
 });
 
-class NearbyEventsNotifier extends StateNotifier<NearbyEventsState> {
-  final Api _api;
-  final StateNotifier<IMap<String, Event>> _eventCacheNotifier;
-  NearbyEventsNotifier({
-    required Api api,
-    required StateNotifier<IMap<String, Event>> eventCacheNotifier,
-  })  : _api = api,
-        _eventCacheNotifier = eventCacheNotifier,
-        super(const NearbyEventsState(eventIds: IListConst([])));
+final nearbyEventsProvider = StateProvider<NearbyEventsState>((ref) {
+  final eventStoreNotifier = ref.watch(eventStoreProvider.notifier);
+  ref.listen(
+    _nearbyEventsProviderInternal,
+    (previous, next) {
+      next.when(
+        loading: () {},
+        error: (_, __) {},
+        data: (events) {
+          return eventStoreNotifier.state = eventStoreNotifier.state
+              .addEntries(events.map((e) => MapEntry(e.id, e)));
+        },
+      );
+    },
+  );
 
-  Future<void> refresh(Location location) async {
-    final result = await _api.getEvents(location);
+  final events = ref.watch(_nearbyEventsProviderInternal);
+  final storedEventIds =
+      ref.watch(eventStoreProvider.select((s) => s.keys.toList()));
+  return events.when(
+    loading: () => const NearbyEventsState.loading(),
+    error: (_, __) => const NearbyEventsState.error(),
+    data: (events) => NearbyEventsState.data(events
+        .where((e) => storedEventIds.contains(e.id))
+        .map((e) => e.id)
+        .toList()),
+  );
+});
+
+@freezed
+class NearbyEventsState with _$NearbyEventsState {
+  const factory NearbyEventsState.loading() = _NearbyEventsLoading;
+  const factory NearbyEventsState.error() = _NearbyEventsError;
+  const factory NearbyEventsState.data(List<String> eventIds) =
+      _NearbyEventsData;
+}
+
+final _hostingEventsProviderInternal =
+    FutureProvider<IList<Event>>((ref) async {
+  final api = ref.watch(apiProvider);
+  final uid = ref.watch(uidProvider);
+  final result = await api.getMyHostedEvents(uid);
+  return result.fold(
+    (l) => throw l,
+    (r) => r.toIList(),
+  );
+});
+
+final hostingEventsProvider = Provider<HostingEventsState>((ref) {
+  final eventStoreNotifier = ref.watch(eventStoreProvider.notifier);
+  ref.listen(
+    _hostingEventsProviderInternal,
+    (previous, next) {
+      if (next.hasValue) {
+        final events = next.asData!.value;
+        eventStoreNotifier.state = eventStoreNotifier.state
+            .addEntries(events.map((e) => MapEntry(e.id, e)));
+      }
+    },
+  );
+
+  final events = ref.watch(_hostingEventsProviderInternal);
+  final storedEventIds =
+      ref.watch(eventStoreProvider.select((s) => s.keys.toList()));
+  return events.when(
+    loading: () => const HostingEventsState.loading(),
+    error: (_, __) => const HostingEventsState.error(),
+    data: (events) => HostingEventsState.data(events
+        .where((e) => storedEventIds.contains(e.id))
+        .map((e) => e.id)
+        .toList()),
+  );
+});
+
+@freezed
+class HostingEventsState with _$HostingEventsState {
+  const factory HostingEventsState.loading() = _HostingEventsLoading;
+  const factory HostingEventsState.error() = _HostingEventsError;
+  const factory HostingEventsState.data(List<String> eventIds) =
+      _HostingEventsData;
+}
+
+final _attendingEventsProvider = FutureProvider<IList<Event>>((ref) async {
+  final api = ref.watch(apiProvider);
+  final result = await api.getMyAttendingEvents();
+  return result.fold(
+    (l) => throw l,
+    (r) => r.toIList(),
+  );
+});
+
+final attendingEventsProvider = Provider<AttendingEventsState>((ref) {
+  final eventStoreNotifier = ref.watch(eventStoreProvider.notifier);
+  ref.listen(
+    _attendingEventsProvider,
+    (previous, next) {
+      if (next.hasValue) {
+        final events = next.asData!.value;
+        eventStoreNotifier.state = eventStoreNotifier.state
+            .addEntries(events.map((e) => MapEntry(e.id, e)));
+      }
+    },
+  );
+
+  final events = ref.watch(_attendingEventsProvider);
+  final storedEventIds =
+      ref.watch(eventStoreProvider.select((s) => s.keys.toList()));
+  return events.when(
+    loading: () => const AttendingEventsState.loading(),
+    error: (_, __) => const AttendingEventsState.error(),
+    data: (events) => AttendingEventsState.data(events
+        .where((e) => storedEventIds.contains(e.id))
+        .map((e) => e.id)
+        .toList()),
+  );
+});
+
+@freezed
+class AttendingEventsState with _$AttendingEventsState {
+  const factory AttendingEventsState.loading() = _AttendingEventsLoading;
+  const factory AttendingEventsState.error() = _AttendingEventsError;
+  const factory AttendingEventsState.data(List<String> eventIds) =
+      _AttendingEventsData;
+}
+
+final eventManagementProvider =
+    StateNotifierProvider<EventManagementNotifier, void>((ref) {
+  return EventManagementNotifier(
+    api: ref.watch(apiProvider),
+    eventStoreNotifier: ref.watch(eventStoreProvider.notifier),
+    onRefreshNearbyEvents: () => ref.invalidate(_nearbyEventsProviderInternal),
+  );
+});
+
+class EventManagementNotifier extends StateNotifier<void> {
+  final Api _api;
+  final StateNotifier<IMap<String, Event>> _eventStoreNotifier;
+  final void Function() _onRefreshNearbyEvents;
+
+  EventManagementNotifier({
+    required Api api,
+    required StateNotifier<IMap<String, Event>> eventStoreNotifier,
+    required void Function() onRefreshNearbyEvents,
+  })  : _api = api,
+        _eventStoreNotifier = eventStoreNotifier,
+        _onRefreshNearbyEvents = onRefreshNearbyEvents,
+        super(null);
+
+  Future<bool> createEvent(EventSubmission submission) async {
+    final result = await _api.createEvent(submission);
+    if (!mounted) {
+      return false;
+    }
+
+    return result.fold(
+      (l) => false,
+      (r) {
+        _eventStoreNotifier.state = _eventStoreNotifier.state.add(r.id, r);
+        _onRefreshNearbyEvents();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> updateEvent(String eventId, EventSubmission submission) async {
+    final result = await _api.updateEvent(eventId, submission);
+    if (!mounted) {
+      return false;
+    }
+
+    return result.fold(
+      (l) => false,
+      (r) {
+        _eventStoreNotifier.state = _eventStoreNotifier.state.add(r.id, r);
+        return true;
+      },
+    );
+  }
+
+  Future<bool> deleteEvent(String eventId) async {
+    final result = await _api.deleteEvent(eventId);
+    if (!mounted) {
+      return false;
+    }
+
+    return result.fold(
+      (l) => false,
+      (r) {
+        _eventStoreNotifier.state = _eventStoreNotifier.state.remove(eventId);
+        return true;
+      },
+    );
+  }
+
+  Future<void> updateEventParticipation(
+      String eventId, bool participating) async {
+    final result = await _api.updateEventParticipation(eventId, participating);
     if (!mounted) {
       return;
     }
@@ -72,19 +246,9 @@ class NearbyEventsNotifier extends StateNotifier<NearbyEventsState> {
     result.fold(
       (l) {},
       (r) {
-        _eventCacheNotifier.state = _eventCacheNotifier.state
-            .addEntries(r.map((e) => MapEntry(e.id, e)));
-        return state = state.copyWith(
-          eventIds: r.map((e) => e.id).toIList(),
-        );
+        _eventStoreNotifier.state =
+            _eventStoreNotifier.state.update(eventId, (_) => r);
       },
     );
   }
-}
-
-@freezed
-class NearbyEventsState with _$NearbyEventsState {
-  const factory NearbyEventsState({
-    required IList<String> eventIds,
-  }) = _NearbyEventsState;
 }
