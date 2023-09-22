@@ -107,6 +107,7 @@ class _CreateEvent extends StatelessWidget {
               firstEvent
                   ? 'Doesn’t seem like you created any meets...\nwould you like to create one? '
                   : 'Doesn’t seem like you created any more meets...\nwould you like to create one? ',
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 height: 1.5,
                 fontSize: 16,
