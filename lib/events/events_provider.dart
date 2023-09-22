@@ -61,13 +61,18 @@ final nearbyEventsProvider = StateProvider<NearbyEventsState>((ref) {
   final events = ref.watch(_nearbyEventsProviderInternal);
   final storedEventIds =
       ref.watch(eventStoreProvider.select((s) => s.keys.toList()));
+  if (events.isRefreshing) {
+    return const NearbyEventsState.loading();
+  }
   return events.when(
     loading: () => const NearbyEventsState.loading(),
     error: (_, __) => const NearbyEventsState.error(),
-    data: (events) => NearbyEventsState.data(events
-        .where((e) => storedEventIds.contains(e.id))
-        .map((e) => e.id)
-        .toList()),
+    data: (events) {
+      return NearbyEventsState.data(events
+          .where((e) => storedEventIds.contains(e.id))
+          .map((e) => e.id)
+          .toList());
+    },
   );
 });
 
@@ -106,6 +111,9 @@ final hostingEventsProvider = Provider<HostingEventsState>((ref) {
   final events = ref.watch(_hostingEventsProviderInternal);
   final storedEventIds =
       ref.watch(eventStoreProvider.select((s) => s.keys.toList()));
+  if (events.isRefreshing) {
+    return const HostingEventsState.loading();
+  }
   return events.when(
     loading: () => const HostingEventsState.loading(),
     error: (_, __) => const HostingEventsState.error(),
@@ -124,7 +132,8 @@ class HostingEventsState with _$HostingEventsState {
       _HostingEventsData;
 }
 
-final _attendingEventsProvider = FutureProvider<IList<Event>>((ref) async {
+final _attendingEventsProviderInternal =
+    FutureProvider<IList<Event>>((ref) async {
   final api = ref.watch(apiProvider);
   final result = await api.getMyAttendingEvents();
   return result.fold(
@@ -136,7 +145,7 @@ final _attendingEventsProvider = FutureProvider<IList<Event>>((ref) async {
 final attendingEventsProvider = Provider<AttendingEventsState>((ref) {
   final eventStoreNotifier = ref.watch(eventStoreProvider.notifier);
   ref.listen(
-    _attendingEventsProvider,
+    _attendingEventsProviderInternal,
     (previous, next) {
       if (next.hasValue) {
         final events = next.asData!.value;
@@ -146,9 +155,12 @@ final attendingEventsProvider = Provider<AttendingEventsState>((ref) {
     },
   );
 
-  final events = ref.watch(_attendingEventsProvider);
+  final events = ref.watch(_attendingEventsProviderInternal);
   final storedEventIds =
       ref.watch(eventStoreProvider.select((s) => s.keys.toList()));
+  if (events.isRefreshing) {
+    return const AttendingEventsState.loading();
+  }
   return events.when(
     loading: () => const AttendingEventsState.loading(),
     error: (_, __) => const AttendingEventsState.error(),
@@ -173,8 +185,11 @@ final eventManagementProvider =
     api: ref.watch(apiProvider),
     eventStoreNotifier: ref.watch(eventStoreProvider.notifier),
     onRefreshNearbyEvents: () => ref.invalidate(_nearbyEventsProviderInternal),
-    onRefreshEvent: (eventId) =>
-        ref.invalidate(eventParticipantsProvider(eventId)),
+    onRefreshEvent: (eventId) {
+      ref.invalidate(_hostingEventsProviderInternal);
+      ref.invalidate(_attendingEventsProviderInternal);
+      ref.invalidate(eventParticipantsProvider(eventId));
+    },
   );
 });
 
@@ -235,6 +250,7 @@ class EventManagementNotifier extends StateNotifier<void> {
     return result.fold(
       (l) => false,
       (r) {
+        _onRefreshNearbyEvents();
         _eventStoreNotifier.state = _eventStoreNotifier.state.remove(eventId);
         return true;
       },
