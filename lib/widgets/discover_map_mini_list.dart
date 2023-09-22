@@ -2,33 +2,24 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/events/event_display.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 
 import '../platform/just_audio_audio_player.dart';
 
 class DiscoverMapMiniList extends ConsumerStatefulWidget {
-  final List<DiscoverProfile> profiles;
-  final DiscoverProfile? selectedProfile;
-  final ValueChanged<DiscoverProfile?> onProfileChanged;
-  final PlaybackState playbackState;
-  final Stream<PlaybackInfo> playbackInfoStream;
-  final VoidCallback onPlay;
-  final VoidCallback onPause;
-  final VoidCallback onToggleFavorite;
-  final VoidCallback onProfilePressed;
+  final List<Event> events;
+  final Event? selectedEvent;
+  final ValueChanged<Event?> onEventChanged;
+  final VoidCallback onEventPressed;
 
   const DiscoverMapMiniList({
     super.key,
-    required this.profiles,
-    required this.selectedProfile,
-    required this.onProfileChanged,
-    required this.playbackState,
-    required this.playbackInfoStream,
-    required this.onPlay,
-    required this.onPause,
-    required this.onToggleFavorite,
-    required this.onProfilePressed,
+    required this.events,
+    required this.selectedEvent,
+    required this.onEventChanged,
+    required this.onEventPressed,
   });
 
   @override
@@ -45,24 +36,22 @@ class _DisoverMapMiniListState extends ConsumerState<DiscoverMapMiniList> {
   void initState() {
     super.initState();
 
-    final initialSelectedProfile = widget.selectedProfile;
-    final initialIndex = initialSelectedProfile == null
+    final initialSelectedEvent = widget.selectedEvent;
+    final initialIndex = initialSelectedEvent == null
         ? 0
-        : widget.profiles.indexWhere(
-            (p) => p.profile.uid == initialSelectedProfile.profile.uid);
+        : widget.events.indexWhere((e) => e.id == initialSelectedEvent.id);
     _pageController = PageController(initialPage: initialIndex);
 
     _pageController.addListener(() {
       final page = _pageController.page ?? 0;
       _pageListener.value = page;
-      final selectedProfile = widget.selectedProfile;
-      final selectedIndex = selectedProfile == null
+      final selectedEvent = widget.selectedEvent;
+      final selectedIndex = selectedEvent == null
           ? 0
-          : widget.profiles
-              .indexWhere((p) => p.profile.uid == selectedProfile.profile.uid);
+          : widget.events.indexWhere((e) => e.id == selectedEvent.id);
       final index = _pageController.page?.round() ?? selectedIndex;
       if (index != selectedIndex && _reportPageChange) {
-        widget.onProfileChanged(widget.profiles[index]);
+        widget.onEventChanged(widget.events[index]);
       }
     });
   }
@@ -70,11 +59,10 @@ class _DisoverMapMiniListState extends ConsumerState<DiscoverMapMiniList> {
   @override
   void didUpdateWidget(covariant DiscoverMapMiniList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final selectedProfile = widget.selectedProfile;
-    final selectedIndex = selectedProfile == null
+    final selectedEvent = widget.selectedEvent;
+    final selectedIndex = selectedEvent == null
         ? 0
-        : widget.profiles
-            .indexWhere((p) => p.profile.uid == selectedProfile.profile.uid);
+        : widget.events.indexWhere((e) => e.id == selectedEvent.id);
     final index = _pageController.page?.round() ?? selectedIndex;
     if (index != selectedIndex) {
       setState(() => _reportPageChange = false);
@@ -101,25 +89,72 @@ class _DisoverMapMiniListState extends ConsumerState<DiscoverMapMiniList> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 80,
+      height: 48 + MediaQuery.of(context).padding.bottom,
       child: PageView.builder(
         controller: _pageController,
         clipBehavior: Clip.none,
         padEnds: true,
-        itemCount: widget.profiles.length,
+        itemCount: widget.events.length,
         itemBuilder: (context, index) {
-          final profile = widget.profiles[index];
-          final selected =
-              profile.profile.uid == widget.selectedProfile?.profile.uid;
-          return _MiniProfile(
-            profile: profile,
-            playbackInfoStream:
-                selected ? widget.playbackInfoStream : const Stream.empty(),
-            onProfileChanged: widget.onProfileChanged,
-            onPlay: widget.onPlay,
-            onPause: widget.onPause,
-            onToggleFavorite: widget.onToggleFavorite,
-            onProfilePressed: widget.onProfilePressed,
+          final event = widget.events[index];
+          final selected = event.id == widget.selectedEvent?.id;
+          return ListTile(
+            onTap: widget.onEventPressed,
+            leading: SizedBox(
+              width: 48,
+              height: 48,
+              child: Image.network(
+                event.photo.toString(),
+                fit: BoxFit.cover,
+              ),
+            ),
+            title: Text(
+              event.title,
+              style: const TextStyle(
+                color: Colors.white,
+              ),
+            ),
+            subtitle: Text(
+              event.description,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+              ),
+            ),
+            trailing: AttendUnattendButtonBuilder(
+              eventId: event.id,
+              builder: (context, participating, onPressed) {
+                return AttendUnattendButtonBuilder(
+                  eventId: event.id,
+                  builder: (context, isParticipating, onPressed) {
+                    final color = isParticipating ? Colors.white : Colors.black;
+                    return RoundedButton(
+                      color: isParticipating
+                          ? const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0)
+                          : Colors.white,
+                      onPressed: onPressed,
+                      child: Builder(
+                        builder: (context) {
+                          if (onPressed == null) {
+                            return LoadingIndicator(
+                              color: color,
+                            );
+                          }
+                          return Text(
+                            isParticipating ? 'Attending' : 'Attend',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                              color: color,
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           );
         },
       ),

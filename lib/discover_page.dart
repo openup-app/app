@@ -5,22 +5,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/analytics/analytics.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/discover_provider.dart';
+import 'package:openup/events/event_view_page.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/discover_dialogs.dart';
 import 'package:openup/widgets/discover_map_mini_list.dart';
 import 'package:openup/widgets/map_display.dart';
 import 'package:openup/widgets/map_rendering.dart';
-import 'package:openup/widgets/profile_display.dart';
-import 'package:openup/widgets/record.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
@@ -36,9 +33,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     with SingleTickerProviderStateMixin {
   bool _pageActive = false;
 
-  final _invitedUsers = <String>{};
-
-  final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
   final _mapKey = GlobalKey<MapDisplayState>();
 
   final _rendererKey = GlobalKey<MapRenderingState>();
@@ -61,7 +55,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
             _mapKey.currentState?.recenterMap(profile.location.latLong);
             ref
                 .read(discoverProvider.notifier)
-                .uidToSelectWhenAvailable(profile.profile.uid);
+                .idToSelectWhenAvailable(profile.profile.uid);
           },
           viewEvent: (event) {
             _mapKey.currentState?.recenterMap(event.location.latLong);
@@ -90,11 +84,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       // Location permission also requested from NotificationManager
       _maybeRequestNotification();
     }
-
-    final readyState = ref.read(_discoverReadyProvider);
-    if (readyState != null) {
-      _precacheImageAndDepth(readyState.profiles, from: 1, count: 2);
-    }
   }
 
   AlwaysAliveProviderListenable<DiscoverReadyState?>
@@ -104,18 +93,6 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
         init: (_) => null,
         ready: (ready) => ready,
       );
-    });
-  }
-
-  void _precacheImageAndDepth(
-    List<DiscoverProfile> profiles, {
-    required int from,
-    required int count,
-  }) {
-    profiles.skip(from).take(count).forEach((discoverProfile) {
-      discoverProfile.profile.gallery.forEach((photoUrl) {
-        precacheImage(NetworkImage(photoUrl), context);
-      });
     });
   }
 
@@ -139,27 +116,21 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
     }
   }
 
-  void _tempPauseAudio() {
-    _profileBuilderKey.currentState?.pause();
-  }
-
-  void _onProfileChanged(DiscoverProfile? selectedProfile) {
-    ref.read(discoverProvider.notifier).selectProfile(selectedProfile);
-    _profileBuilderKey.currentState?.play();
+  void _onEventChanged(Event? selectedEvent) {
+    ref.read(discoverProvider.notifier).selectEvent(selectedEvent);
   }
 
   @override
   Widget build(BuildContext context) {
     final readyState = ref.watch(_discoverReadyProvider);
-    final profiles = readyState?.profiles ?? [];
-    final selectedProfile = readyState?.selectedProfile;
+    final events = readyState?.events ?? [];
+    final selectedEvent = readyState?.selectedEvent;
     return ActivePage(
       onActivate: () {
         setState(() => _pageActive = true);
         ref.read(discoverProvider.notifier).performQuery();
       },
       onDeactivate: () {
-        _profileBuilderKey.currentState?.pause();
         setState(() => _pageActive = false);
       },
       child: Stack(
@@ -171,10 +142,10 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
               return ColoredBox(
                 color: Colors.black,
                 child: MapRendering(
-                  items: profiles.map((p) => ProfileMapItem(p)).toList(),
-                  selectedItem: selectedProfile == null
+                  items: events.map((e) => EventMapItem(e)).toList(),
+                  selectedItem: selectedEvent == null
                       ? null
-                      : ProfileMapItem(selectedProfile),
+                      : EventMapItem(selectedEvent),
                   frameCount: 12,
                   onMarkerRenderStatus: (status) =>
                       setState(() => _markerRenderStatus = status),
@@ -184,7 +155,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       items: renderedItems,
                       selectedItem: renderedSelectedItem,
                       onSelectionChanged: (i) =>
-                          _onProfileChanged((i as ProfileMapItem?)?.profile),
+                          _onEventChanged((i as EventMapItem?)?.event),
                       itemAnimationSpeedMultiplier: 1.0,
                       initialLocation: Location(
                         latLong: ref.read(locationProvider).initialLatLong,
@@ -193,12 +164,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                       onLocationChanged:
                           ref.read(discoverProvider.notifier).locationChanged,
                       obscuredRatio: 326 / height,
-                      onShowRecordPanel: () {
-                        if (selectedProfile != null) {
-                          _showRecordInvitePanelOrSignIn(
-                              context, selectedProfile.profile.uid);
-                        }
-                      },
+                      onShowRecordPanel: () {},
                     );
                   },
                 ),
@@ -290,7 +256,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeOutQuart,
                               width: 0,
-                              height: selectedProfile == null ? 0 : 4,
+                              height: selectedEvent == null ? 0 : 4,
                             ),
                           ],
                         ),
@@ -353,7 +319,7 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                                     )
                                   : Center(
                                       child: Text(
-                                        '${profiles.length} result${profiles.length == 1 ? '' : 's'}',
+                                        '${events.length} result${events.length == 1 ? '' : 's'}',
                                         style: const TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w400,
@@ -374,23 +340,12 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
                     ref.read(discoverProvider.notifier).genderChanged(gender);
                     _rendererKey.currentState?.resetMarkers();
                   },
-                  profiles: profiles,
-                  selectedProfile: selectedProfile,
-                  onProfileChanged: (profile) {
-                    ref.read(analyticsProvider).trackViewMiniProfile();
-                    ref.read(discoverProvider.notifier).selectProfile(profile);
+                  events: events,
+                  selectedEvent: selectedEvent,
+                  onEventChanged: (profile) {
+                    ref.read(discoverProvider.notifier).selectEvent(profile);
                   },
-                  profileBuilderKey: _profileBuilderKey,
-                  onToggleFavorite: () {
-                    if (selectedProfile != null) {
-                      _toggleFavoriteOrShowSignIn(context, selectedProfile);
-                    }
-                  },
-                  onBlockUser: (profile) {
-                    ref
-                        .read(discoverProvider.notifier)
-                        .userBlocked(profile.uid);
-                  },
+                  onBlockUser: (profile) {},
                   pageActive: _pageActive,
                 ),
               ],
@@ -400,67 +355,14 @@ class DiscoverPageState extends ConsumerState<DiscoverPage>
       ),
     );
   }
-
-  void _showRecordInvitePanelOrSignIn(BuildContext context, String uid) {
-    _tempPauseAudio();
-    final userState = ref.read(userProvider);
-    userState.map(
-      guest: (_) => showSignInModal(context),
-      signedIn: (_) async {
-        final result = await showRecordPanel(
-          context: context,
-          title: const Text('Recording Message'),
-          submitLabel: const Text('Tap to send'),
-        );
-
-        if (result == null) {
-          return;
-        }
-        if (!mounted) {
-          return;
-        }
-
-        final notifier = ref.read(userProvider.notifier);
-        await withBlockingModal(
-          context: context,
-          label: 'Sending invite...',
-          future: notifier.sendMessage(uid: uid, audio: result.audio),
-        );
-
-        if (mounted) {
-          setState(() => _invitedUsers.add(uid));
-        }
-      },
-    );
-  }
-
-  void _toggleFavoriteOrShowSignIn(
-    BuildContext context,
-    DiscoverProfile profile,
-  ) async {
-    _tempPauseAudio();
-    final userState = ref.read(userProvider);
-    userState.map(
-      guest: (_) => showSignInModal(context),
-      signedIn: (_) => _toggleFavorite(profile),
-    );
-  }
-
-  void _toggleFavorite(DiscoverProfile profile) async {
-    ref
-        .read(discoverProvider.notifier)
-        .setFavorite(profile.profile.uid, !profile.favorite);
-  }
 }
 
 class _Panel extends ConsumerStatefulWidget {
   final Gender? gender;
   final ValueChanged<Gender?> onGenderChanged;
-  final List<DiscoverProfile> profiles;
-  final DiscoverProfile? selectedProfile;
-  final ValueChanged<DiscoverProfile?> onProfileChanged;
-  final GlobalKey<ProfileBuilderState> profileBuilderKey;
-  final VoidCallback onToggleFavorite;
+  final List<Event> events;
+  final Event? selectedEvent;
+  final ValueChanged<Event?> onEventChanged;
   final void Function(Profile profile) onBlockUser;
   final bool pageActive;
 
@@ -468,11 +370,9 @@ class _Panel extends ConsumerStatefulWidget {
     super.key,
     required this.gender,
     required this.onGenderChanged,
-    required this.profiles,
-    required this.selectedProfile,
-    required this.onProfileChanged,
-    required this.profileBuilderKey,
-    required this.onToggleFavorite,
+    required this.events,
+    required this.selectedEvent,
+    required this.onEventChanged,
     required this.onBlockUser,
     required this.pageActive,
   });
@@ -515,7 +415,7 @@ class _PanelState extends ConsumerState<_Panel>
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOutQuart,
-                  child: widget.selectedProfile == null
+                  child: widget.selectedEvent == null
                       ? const SizedBox(
                           width: double.infinity,
                           height: 0,
@@ -531,44 +431,24 @@ class _PanelState extends ConsumerState<_Panel>
   }
 
   Widget _buildMiniProfile() {
-    // Must live above PageView.builder (otherwise duplicate global key)
-    return ProfileBuilder(
-      key: widget.profileBuilderKey,
-      profile: widget.selectedProfile?.profile,
-      play: widget.pageActive,
-      builder: (context, playbackState, playbackInfoStream) {
-        final selectedProfile = widget.selectedProfile;
-        if (selectedProfile == null) {
-          return const SizedBox(
-            height: 0,
-            width: double.infinity,
-          );
-        }
-        return DiscoverMapMiniList(
-          profiles: widget.profiles,
-          selectedProfile: selectedProfile,
-          onProfileChanged: (profile) {
-            // final scrollingForward = index > _profileIndex;
-            // if (scrollingForward) {
-            //   _precacheImageAndDepth(_profiles, from: index + 1, count: 2);
-            // }
-            widget.onProfileChanged(profile);
-          },
-          playbackState: playbackState,
-          playbackInfoStream: playbackInfoStream,
-          onPlay: () => widget.profileBuilderKey.currentState?.play(),
-          onPause: () => widget.profileBuilderKey.currentState?.pause(),
-          onToggleFavorite: widget.onToggleFavorite,
-          onProfilePressed: () {
-            ref.read(analyticsProvider).trackViewFullProfile();
-            showProfileBottomSheet(
-              context: context,
-              transitionAnimationController: _sheetAnimationController,
-              profile: selectedProfile.profile,
-              existingProfileBuilderKey: widget.profileBuilderKey,
-              existingPlaybackInfoStream: playbackInfoStream,
-            );
-          },
+    final selectedEvent = widget.selectedEvent;
+    if (selectedEvent == null) {
+      return const SizedBox(
+        height: 0,
+        width: double.infinity,
+      );
+    }
+    return DiscoverMapMiniList(
+      events: widget.events,
+      selectedEvent: selectedEvent,
+      onEventChanged: (event) {
+        widget.onEventChanged(event);
+      },
+      onEventPressed: () {
+        context.pushNamed(
+          'event_view',
+          params: {'id': selectedEvent.id},
+          extra: EventViewPageArgs(event: selectedEvent),
         );
       },
     );

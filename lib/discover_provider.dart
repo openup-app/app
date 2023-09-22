@@ -43,11 +43,10 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
   final LocationNotifier locationNotifier;
   final void Function(String message) onAlert;
 
-  CancelableOperation<Either<ApiError, DiscoverResultsPage>>?
-      _discoverOperation;
+  CancelableOperation<Either<ApiError, List<Event>>>? _discoverOperation;
   Location? _mapLocation;
   Location? _prevQueryLocation;
-  String? _selectUidWhenAvailable;
+  String? _selectIdWhenAvailable;
 
   DiscoverNotifier({
     required this.api,
@@ -78,26 +77,24 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
     final location = _mapLocation;
     if (location != null) {
       _prevQueryLocation = location;
-      state = readyState.copyWith(selectedProfile: null);
-      return _queryProfilesAt(location.copyWith(radius: location.radius * 0.5));
+      state = readyState.copyWith(selectedEvent: null);
+      return _queryEventsAt(location.copyWith(radius: location.radius * 0.5));
     }
     return Future.value();
   }
 
-  Future<void> _queryProfilesAt(Location location) async {
+  Future<void> _queryEventsAt(Location location) async {
     var readyState = _readyState();
     if (readyState == null) {
       return Future.value();
     }
     state = readyState.copyWith(loading: true);
     _discoverOperation?.cancel();
-    final discoverFuture = api.getDiscover(
-      location: location,
-      gender: readyState.gender,
-      debug: readyState.showDebugUsers,
+    final discoverFuture = api.getEvents(
+      location,
     );
     _discoverOperation = CancelableOperation.fromFuture(discoverFuture);
-    final profiles = await _discoverOperation?.value;
+    final events = await _discoverOperation?.value;
 
     readyState = _readyState();
     if (!mounted || readyState == null) {
@@ -106,11 +103,11 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
 
     readyState = readyState.copyWith(loading: false);
     state = readyState;
-    if (profiles == null) {
+    if (events == null) {
       return;
     }
 
-    profiles.fold(
+    events.fold(
       (l) {
         var message = errorToMessage(l);
         message = l.when(
@@ -127,16 +124,15 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
         onAlert(message);
       },
       (r) {
-        DiscoverProfile? profileToSelect;
-        final targetUid = _selectUidWhenAvailable;
-        if (targetUid != null) {
-          profileToSelect =
-              r.profiles.firstWhereOrNull((p) => p.profile.uid == targetUid);
+        Event? eventToSelect;
+        final targetId = _selectIdWhenAvailable;
+        if (targetId != null) {
+          eventToSelect = r.firstWhereOrNull((e) => e.id == targetId);
         }
-        _selectUidWhenAvailable = null;
+        _selectIdWhenAvailable = null;
         state = readyState!.copyWith(
-          selectedProfile: profileToSelect,
-          profiles: r.profiles,
+          selectedEvent: eventToSelect,
+          events: r,
         );
       },
     );
@@ -148,8 +144,8 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
         loading: false,
         showDebugUsers: false,
         gender: null,
-        profiles: [],
-        selectedProfile: null,
+        events: [],
+        selectedEvent: null,
       );
     }
 
@@ -166,98 +162,33 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
     if (readyState != null) {
       state = readyState.copyWith(
         gender: gender,
-        profiles: [],
-        selectedProfile: null,
+        events: [],
+        selectedEvent: null,
       );
     }
   }
 
-  void selectProfile(DiscoverProfile? profile) {
+  void selectEvent(Event? event) {
     final readyState = _readyState();
     if (readyState != null) {
       state = readyState.copyWith(
         loading: false,
-        selectedProfile: profile,
+        selectedEvent: event,
       );
       _discoverOperation?.cancel();
     }
   }
 
-  void setFavorite(String uid, bool favorite) async {
-    var readyState = _readyState();
-    if (readyState == null) {
-      return;
-    }
+  void userBlocked(String uid) {}
 
-    Either<ApiError, DiscoverProfile> result;
-    var index = readyState.profiles.indexWhere((p) => p.profile.uid == uid);
-
-    if (index != -1) {
-      final profile = readyState.profiles[index];
-      final newProfiles = List.of(readyState.profiles);
-      newProfiles.replaceRange(
-        index,
-        index + 1,
-        [profile.copyWith(favorite: favorite)],
-      );
-      state = readyState.copyWith(
-        profiles: newProfiles,
-      );
-    }
-
-    readyState = _readyState()!;
-    final selectedProfile = readyState.selectedProfile;
-    if (selectedProfile != null && selectedProfile.profile.uid == uid) {
-      state = readyState.copyWith.selectedProfile!(favorite: favorite);
-    }
-
-    if (favorite) {
-      result = await api.addFavorite(uid);
-    } else {
-      result = await api.addFavorite(uid);
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    // index = _profiles.indexWhere((p) => p.profile.uid == profile.profile.uid);
-    // result.fold(
-    //   (l) {
-    //     if (index != -1) {
-    //       setState(() => _profiles.replaceRange(index, index + 1, [profile]));
-    //     }
-    //     displayError(context, l);
-    //   },
-    //   (r) {
-    //     if (index != -1) {
-    //       setState(() => _profiles.replaceRange(index, index + 1, [r]));
-    //     }
-    //   },
-    // );
-  }
-
-  void userBlocked(String uid) {
+  void idToSelectWhenAvailable(String? id) {
+    _selectIdWhenAvailable = id;
+    final targetId = _selectIdWhenAvailable;
     final readyState = _readyState();
-    if (readyState != null) {
-      final newProfiles = List.of(readyState.profiles);
-      newProfiles.removeWhere((p) => p.profile.uid == uid);
-      state = readyState.copyWith(
-        profiles: newProfiles,
-      );
-      _discoverOperation?.cancel();
-    }
-  }
-
-  void uidToSelectWhenAvailable(String? uid) {
-    _selectUidWhenAvailable = uid;
-    final targetUid = _selectUidWhenAvailable;
-    final readyState = _readyState();
-    if (readyState != null && targetUid != null) {
-      final profile = readyState.profiles
-          .firstWhereOrNull((p) => p.profile.uid == targetUid);
-      if (profile != null) {
-        state = readyState.copyWith(selectedProfile: profile);
+    if (readyState != null && targetId != null) {
+      final event = readyState.events.firstWhereOrNull((e) => e.id == targetId);
+      if (event != null) {
+        state = readyState.copyWith(selectedEvent: event);
       }
     }
   }
@@ -300,7 +231,7 @@ class DiscoverState with _$DiscoverState {
     required bool loading,
     required bool showDebugUsers,
     required Gender? gender,
-    required List<DiscoverProfile> profiles,
-    required DiscoverProfile? selectedProfile,
+    required List<Event> events,
+    required Event? selectedEvent,
   }) = DiscoverReadyState;
 }

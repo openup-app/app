@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -8,8 +9,8 @@ import 'package:openup/widgets/map_display.dart';
 import 'package:openup/widgets/map_marker_rendering.dart';
 
 class MapRendering extends StatefulWidget {
-  final List<ProfileMapItem> items;
-  final ProfileMapItem? selectedItem;
+  final List<EventMapItem> items;
+  final EventMapItem? selectedItem;
   final int frameCount;
   final void Function(MarkerRenderStatus status) onMarkerRenderStatus;
   final Widget Function(BuildContext context, List<RenderedItem> renderedItems,
@@ -65,8 +66,7 @@ class MapRenderingState extends State<MapRendering> {
       // Render newly selected
       _selectedRenderOp?.cancel();
       final renderFuture = _renderMapMarker(
-        profile: selectedItem.profile,
-        thumbnail: null,
+        event: selectedItem.event,
         pixelRatio: pixelRatio,
         selected: true,
       );
@@ -85,14 +85,12 @@ class MapRenderingState extends State<MapRendering> {
     } else if (selectedItem != null && selectedItemFavoriteChanged) {
       // Render selected with updated favorites icon
       final unselectedFramesFuture = _renderMapMarker(
-        profile: selectedItem.profile,
-        thumbnail: null,
+        event: selectedItem.event,
         pixelRatio: pixelRatio,
         selected: false,
       );
       final selectedFramesFuture = _renderMapMarker(
-        profile: selectedItem.profile,
-        thumbnail: null,
+        event: selectedItem.event,
         pixelRatio: pixelRatio,
         selected: true,
       );
@@ -149,19 +147,13 @@ class MapRenderingState extends State<MapRendering> {
   }
 
   Future<List<RenderedItem>> _renderMapMarkers(List<MapItem> inputItems) async {
-    final items = inputItems.map((e) => e as ProfileMapItem).toList();
+    final items = inputItems.map((e) => e as EventMapItem).toList();
     final rendered = <RenderedItem>[];
     final pixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final photos = await Future.wait(items.map((item) {
-      return ui
-          .instantiateImageCodec(item.profile.profile.photoThumbnail)
-          .then((codec) => codec.getNextFrame().then((frame) => frame.image));
-    }));
     for (var i = 0; i < items.length; i++) {
       final item = items[i];
       final frames = await _renderMapMarker(
-        profile: item.profile,
-        thumbnail: photos[i],
+        event: item.event,
         pixelRatio: pixelRatio,
         selected: false,
       );
@@ -171,13 +163,10 @@ class MapRenderingState extends State<MapRendering> {
   }
 
   Future<List<Uint8List>> _renderMapMarker({
-    required DiscoverProfile profile,
-    required ui.Image? thumbnail,
+    required Event event,
     required double pixelRatio,
     required bool selected,
   }) async {
-    final thumb =
-        thumbnail ?? await _thumbnailToImage(profile.profile.photoThumbnail);
     return Future.wait([
       for (var i = 0; i < widget.frameCount; i++)
         Future.microtask(() {
@@ -186,9 +175,8 @@ class MapRenderingState extends State<MapRendering> {
                   curve: selected ? Curves.easeOutQuart : Curves.bounceOut)
               .animate(AlwaysStoppedAnimation(t));
           final imageFuture = selected
-              ? _renderSelectedMapMarkerFrame(
-                  profile, thumb, pixelRatio, animation)
-              : _renderMapMarkerFrame(profile, thumb, pixelRatio, animation);
+              ? _renderSelectedMapMarkerFrame(event, pixelRatio, animation)
+              : _renderMapMarkerFrame(event, pixelRatio, animation);
           return imageFuture.then((i) {
             return i.toByteData(format: ui.ImageByteFormat.png).then((b) {
               i.dispose();
@@ -201,13 +189,12 @@ class MapRenderingState extends State<MapRendering> {
   }
 
   Future<ui.Image> _renderMapMarkerFrame(
-    DiscoverProfile profile,
-    ui.Image photo,
+    Event event,
     double pixelRatio,
     Animation<double> animation,
   ) async {
     final textPainter = _createTextPainter(
-      text: profile.profile.name,
+      text: event.title.substring(0, min(event.title.length, 20)),
       style: const TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w700,
@@ -233,24 +220,10 @@ class MapRenderingState extends State<MapRendering> {
     canvas.scale(pixelRatio);
     canvas.transform(scaleAnimation.storage);
 
-    const icon = Icons.favorite;
-    final favoriteIconPainter = !profile.favorite
-        ? null
-        : _createTextPainter(
-            text: String.fromCharCode(icon.codePoint),
-            style: TextStyle(
-              fontSize: 20,
-              color: const Color.fromRGBO(0xFF, 0x4F, 0x4F, 1.0),
-              fontFamily: icon.fontFamily,
-            ),
-          );
-
     _paintItemPill(
       canvas: canvas,
       textPainter: textPainter,
       metrics: metrics,
-      photo: photo,
-      favoriteIconPainter: favoriteIconPainter,
       backgroundColor: Colors.white,
       elevation: 4,
       shadowColor: const Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
@@ -268,13 +241,12 @@ class MapRenderingState extends State<MapRendering> {
   }
 
   Future<ui.Image> _renderSelectedMapMarkerFrame(
-    DiscoverProfile profile,
-    ui.Image thumbnail,
+    Event event,
     double pixelRatio,
     Animation<double> animation,
   ) async {
     final textPainter = _createTextPainter(
-      text: profile.profile.name,
+      text: event.title.substring(0, min(event.title.length, 20)),
       style: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w700,
@@ -303,24 +275,10 @@ class MapRenderingState extends State<MapRendering> {
     canvas.scale(pixelRatio);
     canvas.transform(scaleAnimation.storage);
 
-    const icon = Icons.favorite;
-    final favoriteIconPainter = !profile.favorite
-        ? null
-        : _createTextPainter(
-            text: String.fromCharCode(icon.codePoint),
-            style: TextStyle(
-              fontSize: 20,
-              color: const Color.fromRGBO(0xFF, 0x4F, 0x4F, 1.0),
-              fontFamily: icon.fontFamily,
-            ),
-          );
-
     _paintItemPill(
       canvas: canvas,
       textPainter: textPainter,
       metrics: metrics,
-      photo: thumbnail,
-      favoriteIconPainter: favoriteIconPainter,
       backgroundColor: ColorTween(
         begin: Colors.white,
         end: const Color.fromRGBO(0x0A, 0x7B, 0xFF, 1.0),
@@ -348,8 +306,6 @@ class MapRenderingState extends State<MapRendering> {
     required Canvas canvas,
     required TextPainter textPainter,
     required ui.LineMetrics metrics,
-    required ui.Image photo,
-    required TextPainter? favoriteIconPainter,
     required Color backgroundColor,
     Color? photoOutlineColor,
     required double elevation,
@@ -389,17 +345,6 @@ class MapRenderingState extends State<MapRendering> {
       Offset(textLeftPadding, textTopPadding),
     );
 
-    final iconMetrics = favoriteIconPainter?.computeLineMetrics()[0];
-    if (favoriteIconPainter != null && iconMetrics != null) {
-      favoriteIconPainter.paint(
-        canvas,
-        Offset(
-          width - horizontalPadding / 2 - iconMetrics.width * 0.75,
-          verticalPadding / 2 - iconMetrics.height * 0.3,
-        ),
-      );
-    }
-
     if (photoOutlineColor != null) {
       canvas.drawCircle(
         photoCenter,
@@ -415,16 +360,6 @@ class MapRenderingState extends State<MapRendering> {
           width: photoSize,
           height: photoSize,
         )),
-    );
-    paintImage(
-      canvas: canvas,
-      rect: Rect.fromCenter(
-        center: photoCenter,
-        width: photoSize,
-        height: photoSize,
-      ),
-      fit: BoxFit.cover,
-      image: photo,
     );
   }
 
@@ -443,26 +378,21 @@ class MapRenderingState extends State<MapRendering> {
     textPainter.layout(maxWidth: maxWidth);
     return textPainter;
   }
-
-  Future<ui.Image> _thumbnailToImage(Uint8List thumbnail) => ui
-      .instantiateImageCodec(thumbnail)
-      .then((codec) => codec.getNextFrame())
-      .then((frame) => frame.image);
 }
 
 enum MarkerRenderStatus { ready, rendering }
 
-class ProfileMapItem implements MapItem {
-  final DiscoverProfile profile;
+class EventMapItem implements MapItem {
+  final Event event;
 
-  ProfileMapItem(this.profile);
-
-  @override
-  int get id => profile.profile.uid.hashCode;
+  EventMapItem(this.event);
 
   @override
-  bool get favorite => profile.favorite;
+  int get id => event.id.hashCode;
 
   @override
-  LatLong get latLong => profile.location.latLong;
+  bool get favorite => false;
+
+  @override
+  LatLong get latLong => event.location.latLong;
 }
