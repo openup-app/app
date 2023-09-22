@@ -60,6 +60,7 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
   void _autoInit() async {
     final locationState = await locationNotifier.retryInitLocation();
     if (mounted && locationState != null) {
+      state = const DiscoverState.loading();
       locationChanged(
         Location(
           latLong: locationState.current,
@@ -288,6 +289,7 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
   DiscoverReadyState? _readyState() {
     return state.map(
       init: (_) => null,
+      loading: (_) => null,
       ready: (ready) => ready,
     );
   }
@@ -296,6 +298,7 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
 @freezed
 class DiscoverState with _$DiscoverState {
   const factory DiscoverState.init() = _Init;
+  const factory DiscoverState.loading() = _DiscoverLoading;
   const factory DiscoverState.ready({
     required bool loading,
     required bool showDebugUsers,

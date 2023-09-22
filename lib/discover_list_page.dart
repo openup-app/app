@@ -81,6 +81,11 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
               ),
             );
           },
+          loading: (_) {
+            return const Center(
+              child: LoadingIndicator(),
+            );
+          },
           ready: (ready) {
             return SafeArea(
               child: _ListView(
