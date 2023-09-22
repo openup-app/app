@@ -199,9 +199,6 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
 
     result.when(
       logIn: (account) {
-        final notifier = ref.read(userProvider.notifier);
-        notifier.uid(account.profile.uid);
-        notifier.profile(account.profile);
         ref.read(userProvider2.notifier).signedIn(account);
         ref.read(analyticsProvider).trackLogin();
         RestartApp.restartApp(context);

@@ -139,7 +139,6 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
         analytics.setUserProperty('name', r.profile.name);
         analytics.setUserProperty('age', r.profile.age);
         analytics.setUserProperty('gender', r.profile.gender.name);
-        ref.read(userProvider.notifier).profile(r.profile);
         ref.read(userProvider2.notifier).signedIn(r);
         context.goNamed('signup_friends');
       },

@@ -268,7 +268,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               if (index != -1) {
                 collections[index] = r.collection;
               }
-              ref.read(userProvider.notifier).collections(collections);
             },
           );
         },

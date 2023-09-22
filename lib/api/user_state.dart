@@ -28,32 +28,6 @@ class MessageStateNotifier extends StateNotifier<String?> {
   void emitMessage(String message) => state = message;
 }
 
-final userProvider = StateNotifierProvider<UserStateNotifier, UserState>((ref) {
-  return UserStateNotifier();
-});
-
-class UserStateNotifier extends StateNotifier<UserState> {
-  UserStateNotifier() : super(const UserState());
-
-  void uid(String uid) => state = state.copyWith(uid: uid);
-
-  void profile(Profile? profile) => state = state.copyWith(profile: profile);
-
-  void collections(List<Collection> collections) =>
-      state = state.copyWith(collections: collections);
-
-  UserState get userState => state;
-}
-
-@freezed
-class UserState with _$UserState {
-  const factory UserState({
-    @Default('') String uid,
-    @Default(null) Profile? profile,
-    @Default(<Collection>[]) List<Collection> collections,
-  }) = _UserState;
-}
-
 final userProvider2 =
     StateNotifierProvider<UserStateNotifier2, UserState2>((ref) {
   final userStateNotifier = UserStateNotifier2(
@@ -65,11 +39,7 @@ final userProvider2 =
   _initUserState(
     api: ref.read(apiProvider),
     authState: ref.read(authProvider),
-    onSignedIn: (account) {
-      ref.read(userProvider.notifier).uid(account.profile.uid);
-      ref.read(userProvider.notifier).profile(account.profile);
-      userStateNotifier.signedIn(account);
-    },
+    onSignedIn: userStateNotifier.signedIn,
     onSignedOut: () => userStateNotifier.guest(),
     onAuthorizedButNoAccount: () {
       final authState = ref.read(authProvider);
@@ -702,15 +672,12 @@ class UserStateNotifier2 extends StateNotifier<UserState2> {
 final accountCreationParamsProvider =
     StateNotifierProvider<AccountCreationParamsNotifier, AccountCreationParams>(
         (ref) {
-  final userStateNotifier = ref.read(userProvider.notifier);
   final userStateNotifier2 = ref.read(userProvider2.notifier);
   return AccountCreationParamsNotifier(
-      api: ref.read(apiProvider),
-      analytics: ref.read(analyticsProvider),
-      onAccount: (account) {
-        userStateNotifier.profile(account.profile);
-        userStateNotifier2.signedIn(account);
-      });
+    api: ref.read(apiProvider),
+    analytics: ref.read(analyticsProvider),
+    onAccount: userStateNotifier2.signedIn,
+  );
 });
 
 class AccountCreationParamsNotifier

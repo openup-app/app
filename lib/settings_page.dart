@@ -240,10 +240,6 @@ class _ProfilePageState extends ConsumerState<SettingsPage> {
 
   Future<void> _signOut() async {
     ref.read(analyticsProvider).trackSignOut();
-    ref.read(userProvider.notifier)
-      ..uid('')
-      ..profile(null)
-      ..collections([]);
     ref.read(userProvider2.notifier).guest();
     ref.read(apiProvider).signOut();
     if (Platform.isAndroid) {
@@ -287,10 +283,6 @@ class _ProfilePageState extends ConsumerState<SettingsPage> {
 
   Future<void> _deleteAccount() async {
     ref.read(analyticsProvider).trackDeleteAccount();
-    ref.read(userProvider.notifier)
-      ..uid('')
-      ..profile(null)
-      ..collections([]);
     ref.read(userProvider2.notifier).guest();
     ref.read(apiProvider).deleteAccount();
     await ref.read(authProvider.notifier).signOut();

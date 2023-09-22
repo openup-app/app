@@ -215,6 +215,14 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
   }
 
   void _upload() async {
+    final userState = ref.read(userProvider2);
+    final uid = userState.map(
+      guest: (guest) => null,
+      signedIn: (signedIn) => signedIn.account.profile.uid,
+    );
+    if (uid == null) {
+      return Future.value();
+    }
     setState(() => _uploading = true);
 
     final api = ref.read(apiProvider);
@@ -223,7 +231,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
         ? (extraText.isEmpty ? null : extraText)
         : null;
     final result = await api.reportUser(
-      uid: ref.read(userProvider).uid,
+      uid: uid,
       reportedUid: widget.uid,
       reason: _reason.name,
       extra: extra,

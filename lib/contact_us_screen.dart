@@ -154,9 +154,17 @@ class _ContactUsScreenState extends ConsumerState<ContactUsScreen> {
   }
 
   void _upload() async {
+    final userState = ref.read(userProvider2);
+    final uid = userState.map(
+      guest: (_) => null,
+      signedIn: (signedIn) => signedIn.account.profile.uid,
+    );
+    if (uid == null) {
+      return Future.value();
+    }
     setState(() => _uploading = true);
     final message = _textController.text;
-    final uid = ref.read(userProvider).uid;
+
     final api = ref.read(apiProvider);
     final result = await api.contactUs(uid: uid, message: message);
     if (!mounted) {
