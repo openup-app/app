@@ -123,7 +123,7 @@ class _ListViewState extends ConsumerState<_ListView> {
     final profiles = widget.state.profiles;
     if (profiles.isEmpty) {
       return const Center(
-        child: LoadingIndicator(),
+        child: Text('No profiles nearby'),
       );
     }
     return ActivePage(
