@@ -114,6 +114,7 @@ class _ListView extends ConsumerStatefulWidget {
 class _ListViewState extends ConsumerState<_ListView> {
   final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
 
+  bool _active = false;
   bool _play = true;
   int _profileIndex = 0;
 
@@ -126,8 +127,13 @@ class _ListViewState extends ConsumerState<_ListView> {
       );
     }
     return ActivePage(
-      onActivate: () {},
-      onDeactivate: () => setState(() => _play = false),
+      onActivate: () => setState(() => _active = true),
+      onDeactivate: () {
+        setState(() {
+          _active = false;
+          _play = false;
+        });
+      },
       child: LayoutBuilder(
         builder: (context, constraints) {
           return ProfileBuilder(
@@ -152,7 +158,11 @@ class _ListViewState extends ConsumerState<_ListView> {
                     profile: profile,
                     playbackState: isCurrent ? playbackState : null,
                     playbackInfoStream: isCurrent ? playbackInfoStream : null,
-                    onPlay: () => setState(() => _play = true),
+                    onPlay: () {
+                      if (_active) {
+                        setState(() => _play = true);
+                      }
+                    },
                     onPause: () => setState(() => _play = false),
                     onOptions: () {},
                     onMessage: () =>
