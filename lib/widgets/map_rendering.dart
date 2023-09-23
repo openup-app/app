@@ -4,9 +4,12 @@ import 'dart:ui' as ui;
 
 import 'package:async/async.dart';
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/widgets/map_display.dart';
 import 'package:openup/widgets/map_marker_rendering.dart';
+
+part 'map_rendering.freezed.dart';
 
 class MapRendering extends StatefulWidget {
   final List<EventMapItem> items;
@@ -382,10 +385,11 @@ class MapRenderingState extends State<MapRendering> {
 
 enum MarkerRenderStatus { ready, rendering }
 
-class EventMapItem implements MapItem {
-  final Event event;
+@freezed
+class EventMapItem with _$EventMapItem implements MapItem {
+  const factory EventMapItem(Event event) = _MapItem;
 
-  EventMapItem(this.event);
+  const EventMapItem._();
 
   @override
   int get id => event.id.hashCode;
