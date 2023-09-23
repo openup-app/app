@@ -48,8 +48,6 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
   double _selectedItemFrameIndex = 0;
   bool _animatingItems = false;
 
-  bool _recenterAnimationComplete = false;
-
   final _preferredTilt = 40.0;
   final _initialZoom = 13.9;
 
@@ -153,9 +151,6 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
                   ),
                 ),
               );
-            }
-            if (!_recenterAnimationComplete) {
-              setState(() => _recenterAnimationComplete = true);
             }
             _onCameraMoved();
           },
