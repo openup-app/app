@@ -417,6 +417,16 @@ class _ConversationList extends StatelessWidget {
                 },
                 child: Button(
                   onPressed: () => onOpen(chatroom),
+                  onLongPressStart: () async {
+                    final shouldDelete =
+                        await _showDeleteConversationConfirmationModal(
+                      context: context,
+                      name: chatroom.profile.profile.name,
+                    );
+                    if (context.mounted && shouldDelete) {
+                      onDelete(index);
+                    }
+                  },
                   child: Container(
                     height: 200,
                     margin: EdgeInsets.only(
@@ -493,17 +503,15 @@ class _ConversationList extends StatelessWidget {
     );
   }
 
-  void _showDeleteConversationConfirmationModal({
+  Future<bool> _showDeleteConversationConfirmationModal({
     required BuildContext context,
-    required Profile profile,
-    required int index,
+    required String name,
   }) async {
     final result = await showCupertinoModalPopup<bool>(
       context: context,
       builder: (context) {
         return CupertinoActionSheet(
-          title: Text(
-              'Remove ${profile.name} as a friend and delete this conversation?'),
+          title: Text('Remove $name as a friend and delete this conversation?'),
           cancelButton: CupertinoActionSheetAction(
             onPressed: Navigator.of(context).pop,
             child: const Text('Cancel'),
@@ -519,9 +527,7 @@ class _ConversationList extends StatelessWidget {
       },
     );
 
-    if (result == true) {
-      onDelete(index);
-    }
+    return result == true;
   }
 }
 
