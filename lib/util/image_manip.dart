@@ -9,7 +9,7 @@ import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
-Future<File?> downscaleImage(File image, {int targetSize = 2000}) async {
+Future<File?> downscaleImage(File image, {int targetSize = 1500}) async {
   final imageBytes = await image.readAsBytes();
   final images = await decodeImageFromList(imageBytes);
   final resized = await _downscaleImage(images);
@@ -26,7 +26,7 @@ Future<File?> downscaleImage(File image, {int targetSize = 2000}) async {
 
 Future<ui.Image> _downscaleImage(
   ui.Image image, {
-  int targetSide = 2000,
+  int targetSide = 1500,
 }) async {
   if (max(image.width, image.height) < targetSide) {
     return image;
