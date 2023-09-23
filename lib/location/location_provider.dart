@@ -162,3 +162,84 @@ double distanceMiles(LatLong a, LatLong b) {
 
   return distanceMiles;
 }
+
+final locationProvider2 =
+    StateNotifierProvider<LocationNotifier2, LocationState2>((ref) {
+  throw 'Uninitialized provider';
+});
+
+class LocationNotifier2 extends StateNotifier<LocationState2> {
+  static const _kKeyLastKnownLatLong = 'lastKnownLocation';
+  final LocationService _service;
+  final SharedPreferences _keyValueStore;
+
+  LocationNotifier2(
+      {required LocationService service,
+      required SharedPreferences keyValueStore,
+      required LatLong fallbackInitialLatLong})
+      : _service = service,
+        _keyValueStore = keyValueStore,
+        super(LocationState2(
+            current: _loadLastKnownLatLong(keyValueStore) ??
+                fallbackInitialLatLong)) {
+    _init();
+  }
+
+  void _init() async {
+    final status = await _service.getLatLong();
+    if (!mounted) {
+      return;
+    }
+
+    _updateStateWithStatus(status);
+  }
+
+  void _updateStateWithStatus(LocationStatus status) {
+    final newLatLong = status.map(
+      denied: (_) => null,
+      failure: (_) => null,
+      value: (value) => value.latLong,
+    );
+    if (newLatLong != null) {
+      _saveLastKnownLatLong(_keyValueStore, newLatLong);
+    }
+    state = state.copyWith(
+      status: status,
+      current: newLatLong ?? state.current,
+    );
+  }
+
+  void updateLocationWithRequest() async {
+    await _service.requestPermission();
+    final status = await _service.getLatLong();
+    if (!mounted) {
+      return;
+    }
+    _updateStateWithStatus(status);
+  }
+
+  static LatLong? _loadLastKnownLatLong(SharedPreferences keyValueStore) {
+    final lastKnownLocationString =
+        keyValueStore.getString(_kKeyLastKnownLatLong) ?? '{}';
+    final lastKnownLocationJson = jsonDecode(lastKnownLocationString);
+    try {
+      return LatLong.fromJson(lastKnownLocationJson);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static void _saveLastKnownLatLong(
+      SharedPreferences keyValueStore, LatLong latLong) {
+    keyValueStore.setString(
+        _kKeyLastKnownLatLong, jsonEncode(latLong.toJson()));
+  }
+}
+
+@freezed
+class LocationState2 with _$LocationState2 {
+  const factory LocationState2({
+    @Default(null) LocationStatus? status,
+    required LatLong current,
+  }) = _LocationState2;
+}
