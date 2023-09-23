@@ -13,7 +13,6 @@ import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/card_stack.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/discover_dialogs.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/photo_card.dart';
 import 'package:openup/widgets/profile_display.dart';
@@ -29,24 +28,8 @@ class DiscoverListPage extends ConsumerStatefulWidget {
 
 class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
   @override
-  void initState() {
-    super.initState();
-    ref.listenManual<LocationMessage?>(locationMessageProvider,
-        (previous, next) {
-      if (next == null) {
-        return;
-      }
-      switch (next) {
-        case LocationMessage.permissionRationale:
-          showLocationPermissionRationale(context);
-          break;
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final state = ref.watch(discoverProvider);
+    final state = ref.watch(peopleProvider);
     return Scaffold(
       appBar: const OpenupAppBar(
         body: OpenupAppBarBody(
@@ -55,41 +38,36 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
       ),
       body: _Background(
         child: state.map(
-          init: (_) {
+          uninitialized: (_) {
+            return const Center(
+              child: LoadingIndicator(),
+            );
+          },
+          initializing: (_) {
+            return const Center(
+              child: LoadingIndicator(),
+            );
+          },
+          failed: (_) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Discover people near you',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  PermissionButton(
-                    icon: const Icon(Icons.public),
-                    label: const Text('Enable Location'),
-                    granted: false,
-                    onPressed: () {
-                      ref.read(discoverProvider.notifier).performQuery();
-                    },
+                  const Text('Something went wrong finding people nearby'),
+                  const SizedBox(height: 16),
+                  RoundedButton(
+                    onPressed: () => ref.refresh(peopleProvider),
+                    child: const Text('Retry'),
                   ),
                 ],
               ),
             );
           },
-          loading: (_) {
-            return const Center(
-              child: LoadingIndicator(),
-            );
-          },
           ready: (ready) {
             return SafeArea(
               child: _ListView(
-                state: ready,
+                profiles: ready.profiles,
+                latLong: ready.latLong,
               ),
             );
           },
@@ -100,11 +78,13 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
 }
 
 class _ListView extends ConsumerStatefulWidget {
-  final DiscoverReadyState state;
+  final List<DiscoverProfile> profiles;
+  final LatLong latLong;
 
   const _ListView({
     super.key,
-    required this.state,
+    required this.profiles,
+    required this.latLong,
   });
 
   @override
@@ -120,7 +100,7 @@ class _ListViewState extends ConsumerState<_ListView> {
 
   @override
   Widget build(BuildContext context) {
-    final profiles = widget.state.profiles;
+    final profiles = widget.profiles;
     if (profiles.isEmpty) {
       return const Center(
         child: Text('No profiles nearby'),
@@ -156,6 +136,9 @@ class _ListViewState extends ConsumerState<_ListView> {
                     width: constraints.maxWidth,
                     height: constraints.maxHeight,
                     profile: profile,
+                    distance:
+                        distanceMiles(profile.location.latLong, widget.latLong)
+                            .round(),
                     playbackState: isCurrent ? playbackState : null,
                     playbackInfoStream: isCurrent ? playbackInfoStream : null,
                     onPlay: () {
@@ -214,6 +197,8 @@ class _ListViewState extends ConsumerState<_ListView> {
 class _ProfileDisplay extends ConsumerWidget {
   final double width;
   final double height;
+  final DiscoverProfile profile;
+  final int distance;
   final PlaybackState? playbackState;
   final Stream<PlaybackInfo>? playbackInfoStream;
   final VoidCallback onPlay;
@@ -225,6 +210,7 @@ class _ProfileDisplay extends ConsumerWidget {
     required this.width,
     required this.height,
     required this.profile,
+    required this.distance,
     required this.playbackState,
     required this.playbackInfoStream,
     required this.onPlay,
@@ -232,12 +218,8 @@ class _ProfileDisplay extends ConsumerWidget {
     required this.onMessage,
   });
 
-  final DiscoverProfile profile;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final myLatLong = ref.watch(locationProvider.select((s) => s.current));
-    final distance = distanceMiles(profile.location.latLong, myLatLong).round();
     return PhotoCard(
       width: width,
       height: height,
