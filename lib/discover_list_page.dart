@@ -173,7 +173,7 @@ class _ListViewState extends ConsumerState<_ListView> {
     final result = await showRecordPanel(
       context: context,
       title: const Text('Recording Message'),
-      submitLabel: const Text('Tab to send'),
+      submitLabel: const Text('Tap to send'),
     );
 
     if (!mounted) {
