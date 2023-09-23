@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/widgets/common.dart';
@@ -428,16 +429,28 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
                 return Transform.scale(
                   scale: scale,
                   alignment: Alignment.centerRight,
-                  child: NonCinematicPhoto(
+                  child: KeyedSubtree(
                     key: ValueKey('${_index}_$photoUri'),
-                    uri: photoUri,
-                    animate: _slideshowTimer?.isActive == true,
-                    onLoaded: () {
-                      setState(() => _ready = true);
-                      _maybeStartSlideshowTimer();
-                    },
-                    duration: _duration,
-                  ),
+                    child: NonCinematicPhoto(
+                      uri: photoUri,
+                      animate: _slideshowTimer?.isActive == true,
+                      onLoaded: () {
+                        setState(() => _ready = true);
+                        _maybeStartSlideshowTimer();
+                      },
+                      duration: _duration,
+                    ),
+                  )
+                      .animate(
+                        autoPlay: true,
+                        key: ValueKey('${_index}_$photoUri'),
+                      )
+                      .color(
+                        blendMode: BlendMode.srcOver,
+                        duration: const Duration(milliseconds: 160),
+                        begin: Colors.white,
+                        end: Colors.white.withOpacity(0.0),
+                      ),
                 );
               },
             ),
