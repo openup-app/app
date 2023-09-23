@@ -11,37 +11,48 @@ final peopleGenderFilterProvider = StateProvider<Gender?>((ref) => null);
 
 final peopleDebugUsersFilterProvider = StateProvider<bool>((ref) => false);
 
-final _peopleProvider = FutureProvider<IList<DiscoverProfile>>((ref) async {
-  final latLong = ref.watch(locationProvider.select((s) => s.current));
-  final gender = ref.watch(peopleGenderFilterProvider);
-  final debugUsers = ref.watch(peopleDebugUsersFilterProvider);
-  final api = ref.watch(apiProvider);
-  final results = await api.getDiscover(
-    location: Location(
-      latLong: latLong,
-      radius: 16000,
-    ),
-    gender: gender,
-    debug: debugUsers,
-  );
-  return results.fold(
-    (l) => throw l,
-    (r) => r.profiles.toIList(),
-  );
-});
+final _peopleProvider = FutureProvider<IList<DiscoverProfile>>(
+  (ref) async {
+    final latLong = ref.watch(locationProvider.select((s) => s.current));
+    final gender = ref.watch(peopleGenderFilterProvider);
+    final debugUsers = ref.watch(peopleDebugUsersFilterProvider);
+    final api = ref.watch(apiProvider);
+    final results = await api.getDiscover(
+      location: Location(
+        latLong: latLong,
+        radius: 16000,
+      ),
+      gender: gender,
+      debug: debugUsers,
+    );
+    return results.fold(
+      (l) => throw l,
+      (r) => r.profiles.toIList(),
+    );
+  },
+  dependencies: [
+    locationProvider,
+    peopleGenderFilterProvider,
+    peopleDebugUsersFilterProvider,
+    apiProvider
+  ],
+);
 
-final peopleProvider = StateProvider<PeopleState>((ref) {
-  final latLong = ref.read(locationProvider.select((s) => s.current));
-  final result = ref.watch(_peopleProvider);
-  return result.map(
-    loading: (loading) => const _PeopleInitializing(),
-    error: (error) => const _PeopleFailed(),
-    data: (data) => _PeopleReady(
-      profiles: data.value.toList(),
-      latLong: latLong,
-    ),
-  );
-});
+final peopleProvider = StateProvider<PeopleState>(
+  (ref) {
+    final latLong = ref.read(locationProvider.select((s) => s.current));
+    final result = ref.watch(_peopleProvider);
+    return result.map(
+      loading: (loading) => const _PeopleInitializing(),
+      error: (error) => const _PeopleFailed(),
+      data: (data) => _PeopleReady(
+        profiles: data.value.toList(),
+        latLong: latLong,
+      ),
+    );
+  },
+  dependencies: [locationProvider, _peopleProvider],
+);
 
 @freezed
 class PeopleState with _$PeopleState {

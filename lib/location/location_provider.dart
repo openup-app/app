@@ -13,14 +13,17 @@ final locationMessageProvider = StateProvider<LocationMessage?>((ref) => null);
 
 enum LocationMessage { permissionRationale }
 
-final locationOverrideProvider = StateProvider<LatLong?>((ref) {
-  return ref.watch(userProvider.select((s) {
-    return s.map(
-      guest: (_) => null,
-      signedIn: (signedIn) => signedIn.account.profile.latLongOverride,
-    );
-  }));
-});
+final locationOverrideProvider = StateProvider<LatLong?>(
+  (ref) {
+    return ref.watch(userProvider.select((s) {
+      return s.map(
+        guest: (_) => null,
+        signedIn: (signedIn) => signedIn.account.profile.latLongOverride,
+      );
+    }));
+  },
+  dependencies: [userProvider],
+);
 
 final locationProvider =
     StateNotifierProvider<LocationNotifier, LocationState>((ref) {

@@ -28,32 +28,35 @@ class MessageStateNotifier extends StateNotifier<String?> {
   void emitMessage(String message) => state = message;
 }
 
-final userProvider = StateNotifierProvider<UserStateNotifier, UserState>((ref) {
-  final userStateNotifier = UserStateNotifier(
-    api: ref.watch(apiProvider),
-    messageNotifier: ref.read(messageProvider.notifier),
-    analytics: ref.read(analyticsProvider),
-  );
+final userProvider = StateNotifierProvider<UserStateNotifier, UserState>(
+  (ref) {
+    final userStateNotifier = UserStateNotifier(
+      api: ref.watch(apiProvider),
+      messageNotifier: ref.read(messageProvider.notifier),
+      analytics: ref.read(analyticsProvider),
+    );
 
-  _initUserState(
-    api: ref.read(apiProvider),
-    authState: ref.read(authProvider),
-    onSignedIn: userStateNotifier.signedIn,
-    onSignedOut: () => userStateNotifier.guest(),
-    onAuthorizedButNoAccount: () {
-      final authState = ref.read(authProvider);
-      authState.map(
-        guest: (_) => userStateNotifier.guest(),
-        signedIn: (_) {
-          ref.read(authProvider.notifier).deleteHangingAuthAccount();
-          userStateNotifier.guest();
-        },
-      );
-    },
-  );
+    _initUserState(
+      api: ref.read(apiProvider),
+      authState: ref.read(authProvider),
+      onSignedIn: userStateNotifier.signedIn,
+      onSignedOut: () => userStateNotifier.guest(),
+      onAuthorizedButNoAccount: () {
+        final authState = ref.read(authProvider);
+        authState.map(
+          guest: (_) => userStateNotifier.guest(),
+          signedIn: (_) {
+            ref.read(authProvider.notifier).deleteHangingAuthAccount();
+            userStateNotifier.guest();
+          },
+        );
+      },
+    );
 
-  return userStateNotifier;
-});
+    return userStateNotifier;
+  },
+  dependencies: [apiProvider, messageProvider, analyticsProvider, authProvider],
+);
 
 void _initUserState({
   required Api api,
@@ -457,14 +460,16 @@ class UserStateNotifier extends StateNotifier<UserState> {
 
 final accountCreationParamsProvider =
     StateNotifierProvider<AccountCreationParamsNotifier, AccountCreationParams>(
-        (ref) {
-  final userStateNotifier = ref.read(userProvider.notifier);
-  return AccountCreationParamsNotifier(
-    api: ref.read(apiProvider),
-    analytics: ref.read(analyticsProvider),
-    onAccount: userStateNotifier.signedIn,
-  );
-});
+  (ref) {
+    final userStateNotifier = ref.read(userProvider.notifier);
+    return AccountCreationParamsNotifier(
+      api: ref.read(apiProvider),
+      analytics: ref.read(analyticsProvider),
+      onAccount: userStateNotifier.signedIn,
+    );
+  },
+  dependencies: [apiProvider, analyticsProvider],
+);
 
 class AccountCreationParamsNotifier
     extends StateNotifier<AccountCreationParams> {
@@ -562,14 +567,17 @@ Future<GetAccountResult> getAccount(Api api) async {
   );
 }
 
-final uidProvider = Provider<String>((ref) {
-  return ref.watch(userProvider.select((s) {
-    return s.map(
-      guest: (_) => throw 'Unable to get uid: user not signed in',
-      signedIn: (signedIn) => signedIn.account.profile.uid,
-    );
-  }));
-});
+final uidProvider = Provider<String>(
+  (ref) {
+    return ref.watch(userProvider.select((s) {
+      return s.map(
+        guest: (_) => throw 'Unable to get uid: user not signed in',
+        signedIn: (signedIn) => signedIn.account.profile.uid,
+      );
+    }));
+  },
+  dependencies: [userProvider],
+);
 
 @freezed
 class GetAccountResult with _$GetAccountResult {

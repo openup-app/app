@@ -11,12 +11,14 @@ part 'event_create_location_search.freezed.dart';
 
 final eventCreateLocationSearchProvider =
     StateNotifierProvider<_LocationSearchStateNotifier, _LocationSearchState>(
-        (ref) {
-  return _LocationSearchStateNotifier(
-    searchService: ref.read(locationSearchProvider),
-    latLong: ref.watch(locationProvider.select((s) => s.current)),
-  );
-});
+  (ref) {
+    return _LocationSearchStateNotifier(
+      searchService: ref.read(locationSearchProvider),
+      latLong: ref.watch(locationProvider.select((s) => s.current)),
+    );
+  },
+  dependencies: [locationSearchProvider, locationProvider],
+);
 
 class _LocationSearchStateNotifier extends StateNotifier<_LocationSearchState> {
   final LocationSearchService _searchService;

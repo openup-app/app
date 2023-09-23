@@ -8,12 +8,15 @@ import 'package:openup/contacts/contacts_service.dart';
 part 'contacts_provider.freezed.dart';
 
 final contactsProvider =
-    StateNotifierProvider<ContactsStateNotifier, ContactsState>((ref) {
-  return ContactsStateNotifier(
-    api: ref.read(apiProvider),
-    contactsService: ContactsService(),
-  );
-});
+    StateNotifierProvider<ContactsStateNotifier, ContactsState>(
+  (ref) {
+    return ContactsStateNotifier(
+      api: ref.read(apiProvider),
+      contactsService: ContactsService(),
+    );
+  },
+  dependencies: [apiProvider],
+);
 
 class ContactsStateNotifier extends StateNotifier<ContactsState> {
   final Api api;
