@@ -52,7 +52,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         children: [
           switch (_view) {
             _View.list => const EventsListPage(),
-            _View.map => const DiscoverPage(),
+            _View.map => const EventMap(),
           },
           Align(
             alignment: Alignment.bottomCenter,

@@ -24,7 +24,9 @@ void showLocationPermissionRationale(BuildContext context) {
               return CupertinoDialogAction(
                 onPressed: () async {
                   if (await openAppSettings() && context.mounted) {
-                    ref.read(locationProvider.notifier).retryInitLocation();
+                    ref
+                        .read(locationProvider.notifier)
+                        .updateLocationWithRequest();
                   }
                   if (context.mounted) {
                     Navigator.of(context).pop();

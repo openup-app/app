@@ -8,200 +8,128 @@ import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/location/location_service.dart';
-import 'package:openup/util/key_value_store_service.dart';
 
 part 'discover_provider.freezed.dart';
 
-final discoverAlertProvider = StateProvider<String?>((ref) => null);
+final eventAlertProvider = StateProvider<String?>((ref) => null);
 
-final showSafetyNoticeProvider = StateProvider<bool>((ref) {
-  const safetyNoticeShownKey = 'safety_notice_shown';
-  final keyValueStore = ref.read(keyValueStoreProvider);
-  final shown = keyValueStore.getBool(safetyNoticeShownKey) ?? false;
-  if (shown) {
-    return false;
-  }
-
-  keyValueStore.setBool(safetyNoticeShownKey, true);
-  return true;
-});
-
-final discoverProvider =
-    StateNotifierProvider<DiscoverNotifier, DiscoverState>((ref) {
-  final api = ref.read(apiProvider);
-  final locationNotifier = ref.read(locationProvider.notifier);
-  final alertNotifier = ref.read(discoverAlertProvider.notifier);
-  return DiscoverNotifier(
-    api: api,
-    locationNotifier: locationNotifier,
-    onAlert: (message) => alertNotifier.state = message,
-  );
-});
-
-class DiscoverNotifier extends StateNotifier<DiscoverState> {
-  final Api api;
-  final LocationNotifier locationNotifier;
-  final void Function(String message) onAlert;
-
-  CancelableOperation<Either<ApiError, List<Event>>>? _discoverOperation;
-  Location? _mapLocation;
-  Location? _prevQueryLocation;
-  String? _selectIdWhenAvailable;
-
-  DiscoverNotifier({
-    required this.api,
-    required this.locationNotifier,
-    required this.onAlert,
-  }) : super(const _Init()) {
-    _autoInit();
-  }
-
-  void _autoInit() async {
-    final locationState = await locationNotifier.retryInitLocation();
-    if (mounted && locationState != null) {
-      locationChanged(
-        Location(
-          latLong: locationState.current,
-          radius: 20,
-        ),
-      );
-    }
-  }
-
-  Future<void> performQuery() async {
-    final readyState = _readyState();
-    if (readyState == null) {
-      return Future.value();
-    }
-
-    final location = _mapLocation;
-    if (location != null) {
-      _prevQueryLocation = location;
-      state = readyState.copyWith(selectedEvent: null);
-      return _queryEventsAt(location.copyWith(radius: location.radius * 0.5));
-    }
-    return Future.value();
-  }
-
-  Future<void> _queryEventsAt(Location location) async {
-    var readyState = _readyState();
-    if (readyState == null) {
-      return Future.value();
-    }
-    state = readyState.copyWith(loading: true);
-    _discoverOperation?.cancel();
-    final discoverFuture = api.getEvents(
-      location,
+final eventMapProvider = StateNotifierProvider<EventMapNotifier, EventMapState>(
+  (ref) {
+    final alertNotifier = ref.read(eventAlertProvider.notifier);
+    return EventMapNotifier(
+      api: ref.read(apiProvider),
+      initialLocation: Location(
+        latLong: ref.read(locationProvider).current,
+        radius: 1500,
+      ),
+      onAlert: (alert) => alertNotifier.state = alert,
     );
-    _discoverOperation = CancelableOperation.fromFuture(discoverFuture);
-    final events = await _discoverOperation?.value;
+  },
+  dependencies: [apiProvider, locationProvider],
+);
 
-    readyState = _readyState();
-    if (!mounted || readyState == null) {
-      return;
-    }
+class EventMapNotifier extends StateNotifier<EventMapState> {
+  final Api _api;
+  final void Function(String alert) _onAlert;
 
-    readyState = readyState.copyWith(loading: false);
-    state = readyState;
-    if (events == null) {
-      return;
-    }
+  Location _fetchLocation;
+  Location _prevFetchLocation;
+  CancelableOperation<Either<ApiError, List<Event>>>? _fetchOp;
+  Event? _targetEvent;
 
-    events.fold(
-      (l) {
-        var message = errorToMessage(l);
-        message = l.when(
-          network: (_) => message,
-          client: (client) => client.when(
-            badRequest: () => 'Unable to request users',
-            unauthorized: () => message,
-            notFound: () => 'Unable to find users',
-            forbidden: () => message,
-            conflict: () => message,
+  EventMapNotifier({
+    required Api api,
+    required Location initialLocation,
+    required void Function(String alert) onAlert,
+  })  : _api = api,
+        _fetchLocation = initialLocation,
+        _onAlert = onAlert,
+        _prevFetchLocation = initialLocation,
+        super(
+          EventMapState(
+            initialLocation: initialLocation,
+            refreshing: true,
+            events: [],
+            selectedEvent: null,
           ),
-          server: (_) => message,
-        );
-        onAlert(message);
-      },
+        ) {
+    _init();
+  }
+
+  void _init() async {
+    _fetchEvents();
+  }
+
+  void mapMoved(Location location) {
+    if (_areLocationsDistant(location, _prevFetchLocation)) {
+      _fetchLocation = location;
+      _fetchEvents();
+    }
+  }
+
+  set selectedEvent(Event? event) =>
+      state = state.copyWith(selectedEvent: event);
+
+  void showEvent(Event event) {
+    _targetEvent = event;
+    _fetchLocation = Location(
+      latLong: event.location.latLong,
+      radius: 1500,
+    );
+    _fetchEvents();
+  }
+
+  void fetchEvents() => _fetchEvents();
+
+  void _fetchEvents() async {
+    final fetchLatLong =
+        _targetEvent?.location.latLong ?? _fetchLocation.latLong;
+    final fetchLocation = Location(
+      latLong: fetchLatLong,
+      radius: _targetEvent != null ? 1500 : _fetchLocation.radius,
+    );
+    _prevFetchLocation = fetchLocation;
+    state = state.copyWith(refreshing: true);
+
+    _fetchOp?.cancel();
+    final future = _api.getEvents(fetchLocation);
+    final fetchOp = CancelableOperation.fromFuture(future);
+    _fetchOp = fetchOp;
+    final result = await fetchOp.value;
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      _alertQueryError,
       (r) {
-        Event? eventToSelect;
-        final targetId = _selectIdWhenAvailable;
-        if (targetId != null) {
-          eventToSelect = r.firstWhereOrNull((e) => e.id == targetId);
-        }
-        _selectIdWhenAvailable = null;
-        state = readyState!.copyWith(
-          selectedEvent: eventToSelect,
+        final newSelectedEvent = r.firstWhereOrNull((e) {
+          return (_targetEvent != null && e.id == _targetEvent?.id) ||
+              (_targetEvent == null && e.id == state.selectedEvent?.id);
+        });
+        state = state.copyWith(
+          refreshing: false,
           events: r,
+          selectedEvent: newSelectedEvent,
         );
       },
     );
   }
 
-  void locationChanged(Location location) {
-    if (_mapLocation == null) {
-      state = const DiscoverState.ready(
-        loading: false,
-        showDebugUsers: false,
-        gender: null,
-        events: [],
-        selectedEvent: null,
-      );
-    }
-
-    _mapLocation = location.copyWith(radius: location.radius);
-    final prevQueryLocation = _prevQueryLocation;
-    if (prevQueryLocation == null ||
-        _areLocationsDistant(location, prevQueryLocation)) {
-      performQuery();
-    }
-  }
-
-  void genderChanged(Gender? gender) {
-    final readyState = _readyState();
-    if (readyState != null) {
-      state = readyState.copyWith(
-        gender: gender,
-        events: [],
-        selectedEvent: null,
-      );
-    }
-  }
-
-  void selectEvent(Event? event) {
-    final readyState = _readyState();
-    if (readyState != null) {
-      state = readyState.copyWith(
-        loading: false,
-        selectedEvent: event,
-      );
-      _discoverOperation?.cancel();
-    }
-  }
-
-  void userBlocked(String uid) {}
-
-  void idToSelectWhenAvailable(String? id) {
-    _selectIdWhenAvailable = id;
-    final targetId = _selectIdWhenAvailable;
-    final readyState = _readyState();
-    if (readyState != null && targetId != null) {
-      final event = readyState.events.firstWhereOrNull((e) => e.id == targetId);
-      if (event != null) {
-        state = readyState.copyWith(selectedEvent: event);
-      }
-    }
-  }
-
-  set showDebugUsers(bool value) {
-    final readyState = _readyState();
-    if (readyState != null) {
-      final previous = readyState.showDebugUsers;
-      state = readyState.copyWith(showDebugUsers: value);
-      if (previous != value) {
-        performQuery();
-      }
-    }
+  void _alertQueryError(ApiError error) {
+    var message = errorToMessage(error);
+    message = error.when(
+      network: (_) => message,
+      client: (client) => client.when(
+        badRequest: () => 'Unable to request events',
+        unauthorized: () => message,
+        notFound: () => 'Something went wrong',
+        forbidden: () => message,
+        conflict: () => message,
+      ),
+      server: (_) => message,
+    );
+    _onAlert(message);
   }
 
   bool _areLocationsDistant(Location a, Location b) {
@@ -215,23 +143,14 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
     }
     return false;
   }
-
-  DiscoverReadyState? _readyState() {
-    return state.map(
-      init: (_) => null,
-      ready: (ready) => ready,
-    );
-  }
 }
 
 @freezed
-class DiscoverState with _$DiscoverState {
-  const factory DiscoverState.init() = _Init;
-  const factory DiscoverState.ready({
-    required bool loading,
-    required bool showDebugUsers,
-    required Gender? gender,
+class EventMapState with _$EventMapState {
+  const factory EventMapState({
+    required Location initialLocation,
+    required bool refreshing,
     required List<Event> events,
     required Event? selectedEvent,
-  }) = DiscoverReadyState;
+  }) = EventMapReadyState;
 }

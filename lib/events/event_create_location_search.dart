@@ -14,21 +14,21 @@ final eventCreateLocationSearchProvider =
         (ref) {
   return _LocationSearchStateNotifier(
     searchService: ref.read(locationSearchProvider),
-    locationNotifier: ref.read(locationProvider.notifier),
+    latLong: ref.watch(locationProvider.select((s) => s.current)),
   );
 });
 
 class _LocationSearchStateNotifier extends StateNotifier<_LocationSearchState> {
   final LocationSearchService _searchService;
-  final LocationNotifier _locationNotifier;
+  final LatLong _latLong;
   late final _Debounceable<List<LocationSearchResult>?, String>
       _debouncedSearch;
 
   _LocationSearchStateNotifier({
     required LocationSearchService searchService,
-    required LocationNotifier locationNotifier,
+    required LatLong latLong,
   })  : _searchService = searchService,
-        _locationNotifier = locationNotifier,
+        _latLong = latLong,
         super(const _None()) {
     _debouncedSearch = _debounce(_performSearch);
   }
@@ -41,8 +41,7 @@ class _LocationSearchStateNotifier extends StateNotifier<_LocationSearchState> {
   }
 
   Future<List<LocationSearchResult>?> _performSearch(String query) async {
-    final latLong = _locationNotifier.current;
-    final result = await _searchService.search(LocationSearch(query, latLong));
+    final result = await _searchService.search(LocationSearch(query, _latLong));
     if (!mounted) {
       return null;
     }

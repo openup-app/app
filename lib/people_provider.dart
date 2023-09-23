@@ -12,7 +12,7 @@ final peopleGenderFilterProvider = StateProvider<Gender?>((ref) => null);
 final peopleDebugUsersFilterProvider = StateProvider<bool>((ref) => false);
 
 final _peopleProvider = FutureProvider<IList<DiscoverProfile>>((ref) async {
-  final latLong = ref.read(locationProvider2.select((s) => s.current));
+  final latLong = ref.watch(locationProvider.select((s) => s.current));
   final gender = ref.watch(peopleGenderFilterProvider);
   final debugUsers = ref.watch(peopleDebugUsersFilterProvider);
   final api = ref.watch(apiProvider);
@@ -31,7 +31,7 @@ final _peopleProvider = FutureProvider<IList<DiscoverProfile>>((ref) async {
 });
 
 final peopleProvider = StateProvider<PeopleState>((ref) {
-  final latLong = ref.read(locationProvider2.select((s) => s.current));
+  final latLong = ref.read(locationProvider.select((s) => s.current));
   final result = ref.watch(_peopleProvider);
   return result.map(
     loading: (loading) => const _PeopleInitializing(),

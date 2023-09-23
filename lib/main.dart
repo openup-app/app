@@ -135,15 +135,16 @@ void main() async {
             }),
             dynamicConfigProvider.overrideWith(
                 (ref) => DynamicConfigStateNotifier(dynamicConfigService)),
-            locationProvider2.overrideWith((ref) {
+            locationProvider.overrideWith((ref) {
               const austinLatLong = LatLong(
                 latitude: 30.2672,
                 longitude: 97.7431,
               );
-              return LocationNotifier2(
+              return LocationNotifier(
                 service: LocationService(),
                 keyValueStore: sharedPreferences,
                 fallbackInitialLatLong: austinLatLong,
+                overrideLatLong: ref.watch(locationOverrideProvider),
               );
             }),
             locationSearchProvider

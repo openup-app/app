@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
+import 'package:openup/location/location_provider.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -164,6 +165,7 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
     }
 
     if (status.isGranted || status.isLimited) {
+      ref.read(locationProvider.notifier).updateLocationWithRequest();
       setState(() => _hasLocationPermission = true);
     } else if (status.isPermanentlyDenied && openSettings) {
       openAppSettings();
