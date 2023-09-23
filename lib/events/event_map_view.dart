@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
+import 'package:openup/events/event_display.dart';
 import 'package:openup/events/event_map_provider.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/location/location_provider.dart';
@@ -527,40 +528,40 @@ class _EventMapListState extends ConsumerState<EventMapList> {
               color: Colors.white,
             ),
           ),
-          // trailing: AttendUnattendButtonBuilder(
-          //   eventId: event.id,
-          //   builder: (context, participating, onPressed) {
-          //     return AttendUnattendButtonBuilder(
-          //       eventId: event.id,
-          //       builder: (context, isParticipating, onPressed) {
-          //         final color = isParticipating ? Colors.white : Colors.black;
-          //         return RoundedButton(
-          //           color: isParticipating
-          //               ? const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0)
-          //               : Colors.white,
-          //           onPressed: onPressed,
-          //           child: Builder(
-          //             builder: (context) {
-          //               if (onPressed == null) {
-          //                 return LoadingIndicator(
-          //                   color: color,
-          //                 );
-          //               }
-          //               return Text(
-          //                 isParticipating ? 'Attending' : 'Attend',
-          //                 style: TextStyle(
-          //                   fontSize: 18,
-          //                   fontWeight: FontWeight.w400,
-          //                   color: color,
-          //                 ),
-          //               );
-          //             },
-          //           ),
-          //         );
-          //       },
-          //     );
-          //   },
-          // ),
+          trailing: AttendUnattendButtonBuilder(
+            eventId: event.id,
+            builder: (context, participating, onPressed) {
+              return AttendUnattendButtonBuilder(
+                eventId: event.id,
+                builder: (context, isParticipating, onPressed) {
+                  final color = isParticipating ? Colors.white : Colors.black;
+                  return RoundedButton(
+                    color: isParticipating
+                        ? const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0)
+                        : Colors.white,
+                    onPressed: onPressed,
+                    child: Builder(
+                      builder: (context) {
+                        if (onPressed == null) {
+                          return LoadingIndicator(
+                            color: color,
+                          );
+                        }
+                        return Text(
+                          isParticipating ? 'Attending' : 'Attend',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                            color: color,
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         );
       },
     );
