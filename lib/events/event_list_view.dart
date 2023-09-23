@@ -5,8 +5,8 @@ import 'package:openup/events/event_display.dart';
 import 'package:openup/events/events_provider.dart';
 import 'package:openup/widgets/common.dart';
 
-class EventsListPage extends ConsumerWidget {
-  const EventsListPage({
+class EventListView extends ConsumerWidget {
+  const EventListView({
     super.key,
   });
 

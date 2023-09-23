@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
-import 'package:openup/discover_provider.dart';
+import 'package:openup/events/event_map_provider.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/shell_page.dart';
@@ -18,16 +18,16 @@ import 'package:openup/widgets/map_display.dart';
 import 'package:openup/widgets/map_rendering.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class EventMap extends ConsumerStatefulWidget {
-  const EventMap({
+class EventMapView extends ConsumerStatefulWidget {
+  const EventMapView({
     Key? key,
   }) : super(key: key);
 
   @override
-  ConsumerState<EventMap> createState() => _EventMapState();
+  ConsumerState<EventMapView> createState() => _EventMapViewState();
 }
 
-class _EventMapState extends ConsumerState<EventMap>
+class _EventMapViewState extends ConsumerState<EventMapView>
     with SingleTickerProviderStateMixin {
   final _mapKey = GlobalKey<MapDisplayState>();
   MarkerRenderStatus _markerRenderStatus = MarkerRenderStatus.ready;

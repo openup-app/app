@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/discover_page.dart';
-import 'package:openup/events/events_list_view.dart';
+import 'package:openup/events/event_list_view.dart';
+import 'package:openup/events/event_map_view.dart';
 import 'package:openup/events/events_provider.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/button.dart';
@@ -51,8 +51,8 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         fit: StackFit.expand,
         children: [
           switch (_view) {
-            _View.list => const EventsListPage(),
-            _View.map => const EventMap(),
+            _View.list => const EventListView(),
+            _View.map => const EventMapView(),
           },
           Align(
             alignment: Alignment.bottomCenter,

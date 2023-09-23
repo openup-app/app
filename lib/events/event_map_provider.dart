@@ -9,7 +9,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/location/location_service.dart';
 
-part 'discover_provider.freezed.dart';
+part 'event_map_provider.freezed.dart';
 
 final eventAlertProvider = StateProvider<String?>((ref) => null);
 
