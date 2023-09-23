@@ -178,7 +178,7 @@ class _SignupProfileState extends ConsumerState<SignupProfile> {
                                         return switch (gender) {
                                           null => const Text('Gender'),
                                           Gender.male => const Text('Male'),
-                                          Gender.female => const Text('Male'),
+                                          Gender.female => const Text('Female'),
                                           Gender.nonBinary =>
                                             const Text('Non-binary'),
                                         };
