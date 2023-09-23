@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -528,32 +527,6 @@ class _ConversationList extends StatelessWidget {
     );
 
     return result == true;
-  }
-}
-
-String _formatRelativeDate(DateTime date) {
-  final now = DateTime.now();
-  final diff = now.difference(date);
-  if (diff.isNegative) {
-    return 'now';
-  }
-
-  final localDate = date.toLocal();
-  final yesterday = DateUtils.dateOnly(now).subtract(const Duration(days: 1));
-  if (DateUtils.isSameDay(localDate, now)) {
-    final timeFormat = DateFormat.jm();
-    return timeFormat.format(localDate);
-  } else if (DateUtils.isSameDay(localDate, yesterday)) {
-    return 'yesterday';
-  } else if (diff.inDays < 7) {
-    final dayNameFormat = DateFormat.EEEE();
-    return dayNameFormat.format(localDate);
-  } else if (localDate.year == now.year) {
-    final shortDateFormat = DateFormat.MMMMd();
-    return shortDateFormat.format(localDate);
-  } else {
-    final longDateFormat = DateFormat.yMMMMd();
-    return longDateFormat.format(localDate);
   }
 }
 

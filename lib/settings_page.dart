@@ -725,7 +725,6 @@ class _PhoneNumberField extends ConsumerStatefulWidget {
 }
 
 class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
-  String? _validationError;
   String? _newPhoneNumber;
   bool _newPhoneNumberValid = false;
 
@@ -817,9 +816,7 @@ class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
                         _newPhoneNumberValid = valid;
                       });
                     },
-                    onValidationError: (validationError) {
-                      setState(() => _validationError = validationError);
-                    },
+                    onValidationError: (validationError) {},
                   ),
                   trailing: Button(
                     onPressed: (!_newPhoneNumberValid ||

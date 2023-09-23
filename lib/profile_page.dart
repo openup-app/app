@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -276,31 +275,6 @@ class _ProfilePanelState extends ConsumerState<_ProfileStack> {
     }
   }
 
-  void _showDeletePhotoDialog(int index) async {
-    final result = await showCupertinoDialog<bool>(
-      context: context,
-      builder: (context) {
-        return CupertinoAlertDialog(
-          title: const Text('Delete photo?'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.of(context).pop(true),
-              isDestructiveAction: true,
-              child: const Text('Delete'),
-            ),
-            CupertinoDialogAction(
-              onPressed: Navigator.of(context).pop,
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-    if (result == true && mounted) {
-      await ref.read(userProvider.notifier).deleteGalleryPhoto(index);
-    }
-  }
-
   Future<void> _showRecordPanel(BuildContext context) async {
     widget.profileBuilderKey.currentState?.pause();
     final result = await showRecordPanel(
@@ -308,7 +282,10 @@ class _ProfilePanelState extends ConsumerState<_ProfileStack> {
       title: const Text('Recording Voice Bio'),
       submitLabel: const Text('Tap to update'),
     );
-    if (!mounted || result == null) {
+    if (result == null) {
+      return;
+    }
+    if (!mounted) {
       return;
     }
 

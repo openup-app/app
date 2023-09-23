@@ -14,9 +14,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
-import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_message.dart';
@@ -716,12 +714,6 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
 
     return items.reversed.toList();
   }
-
-  void _showLocation(DiscoverProfile profile) {
-    SheetControl.of(context).close();
-    ref.read(discoverActionProvider.notifier).state =
-        DiscoverAction.viewProfile(profile);
-  }
 }
 
 class _UnreadMessagesButton extends StatelessWidget {
@@ -771,41 +763,6 @@ class RecordingResult {
   final Uint8List audio;
   final Duration duration;
   RecordingResult(this.audio, this.duration);
-}
-
-class _RecordButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
-
-  const _RecordButton({
-    super.key,
-    this.label = 'send message',
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      child: Container(
-        width: 123,
-        height: 46,
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          color: Color.fromRGBO(0x1E, 0x79, 0xF8, 1.0),
-          borderRadius: BorderRadius.all(Radius.circular(25)),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w400,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _LocationOverlay extends StatefulWidget {

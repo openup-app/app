@@ -42,7 +42,6 @@ class MapDisplay extends ConsumerStatefulWidget {
 
 class MapDisplayState extends ConsumerState<MapDisplay> {
   maps.GoogleMapController? _mapController;
-  double _zoomLevel = 14.4746;
   LatLngBounds? _bounds;
 
   final _itemFrameIndexes = <RenderedItem, double>{};
@@ -250,7 +249,6 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
     }
     setState(() {
       _bounds = bounds;
-      _zoomLevel = zoom;
     });
 
     final center = LatLong(
@@ -273,28 +271,6 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
         radius: distance / 2,
       ),
     );
-
-    // _removeOffscreenItems(bounds);
-    setState(() => _zoomLevel = zoom);
-  }
-
-  void _removeOffscreenItems(LatLngBounds bounds) {
-    final offscreenIds = <int>[];
-    final longitudeSpan =
-        (bounds.northeast.longitude - bounds.southwest.longitude).abs();
-    final latitudeSpan =
-        (bounds.northeast.latitude - bounds.southwest.latitude).abs();
-    final longitudePadding = longitudeSpan * 0.15;
-    final latitudePadding = latitudeSpan * 0.15;
-    for (final renderedItem in widget.items) {
-      final latLong = renderedItem.item.latLong;
-      if ((latLong.latitude > bounds.northeast.latitude + latitudePadding) ||
-          (latLong.latitude < bounds.southwest.latitude - latitudePadding) ||
-          (latLong.longitude > bounds.northeast.longitude + longitudePadding) ||
-          (latLong.longitude < bounds.southwest.longitude - longitudePadding)) {
-        offscreenIds.add(renderedItem.item.id);
-      }
-    }
   }
 
   void recenterMap(LatLong latLong) {

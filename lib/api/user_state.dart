@@ -121,22 +121,6 @@ class UserStateNotifier extends StateNotifier<UserState> {
     );
   }
 
-  Future<void> _cacheCollections(String uid) async {
-    final result = await _api.getCollections(uid);
-    if (!mounted) {
-      return;
-    }
-    result.fold(
-      (l) {},
-      (r) {
-        state.map(
-          guest: (_) {},
-          signedIn: (signedIn) => state = signedIn.copyWith(collections: r),
-        );
-      },
-    );
-  }
-
   Future<void> cacheChatrooms() => _cacheChatrooms();
 
   Future<Either<ApiError, Account>> createAccount(

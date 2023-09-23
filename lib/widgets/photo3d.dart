@@ -35,7 +35,6 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
   FragmentProgram? _fragmentProgram;
 
   double _xIntensity = 1.0;
-  double _yIntensity = 1.0;
   double _displacementX = 0;
   double _displacementY = 0;
   double _displacementZ = 0;
@@ -86,7 +85,6 @@ class _Photo3dDisplayState extends State<Photo3dDisplay> {
     final r = Random();
     final startX = (r.nextBool() ? -1 : 1) * (r.nextDouble() * 0.7 + 0.3);
     _xIntensity = startX * intensity;
-    _yIntensity = 0;
     if (!_ticker.isActive) {
       _ticker.start();
     }

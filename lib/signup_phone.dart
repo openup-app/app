@@ -18,7 +18,6 @@ class SignupPhone extends ConsumerStatefulWidget {
 }
 
 class _SignUpPhoneState extends ConsumerState<SignupPhone> {
-  String? _phoneErrorText;
   String? _phoneNumber;
   bool _valid = false;
 
@@ -90,8 +89,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
                         _valid = valid;
                       });
                     },
-                    onValidationError: (error) =>
-                        setState(() => _phoneErrorText = error),
+                    onValidationError: (error) {},
                   ),
                 ],
               ),

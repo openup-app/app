@@ -121,10 +121,10 @@ class _CinematicGalleryState extends State<CinematicGallery> {
   }
 
   void _precache() {
-    widget.gallery.forEach((photo3d) {
+    for (final photo3d in widget.gallery) {
       precacheImage(NetworkImage(photo3d.url), context);
       precacheImage(NetworkImage(photo3d.depthUrl), context);
-    });
+    }
   }
 
   @override
@@ -226,9 +226,9 @@ class _NonCinematicGalleryState extends State<NonCinematicGallery> {
   }
 
   void _precache() {
-    widget.gallery.forEach((photoUrl) {
+    for (final photoUrl in widget.gallery) {
       precacheImage(NetworkImage(photoUrl), context);
-    });
+    }
   }
 
   @override

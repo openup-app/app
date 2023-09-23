@@ -3,13 +3,6 @@ PODS:
     - Flutter
   - device_info_plus (0.0.1):
     - Flutter
-  - ffmpeg-kit-ios-audio (5.1.LTS)
-  - ffmpeg_kit_flutter_audio (5.1.0.LTS):
-    - ffmpeg_kit_flutter_audio/audio-lts (= 5.1.0.LTS)
-    - Flutter
-  - ffmpeg_kit_flutter_audio/audio-lts (5.1.0.LTS):
-    - ffmpeg-kit-ios-audio (= 5.1.LTS)
-    - Flutter
   - Firebase/Analytics (10.12.0):
     - Firebase/Core
   - Firebase/Auth (10.12.0):
@@ -207,7 +200,6 @@ PODS:
 DEPENDENCIES:
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
-  - ffmpeg_kit_flutter_audio (from `.symlinks/plugins/ffmpeg_kit_flutter_audio/ios`)
   - firebase_analytics (from `.symlinks/plugins/firebase_analytics/ios`)
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
@@ -235,7 +227,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - ffmpeg-kit-ios-audio
     - Firebase
     - FirebaseABTesting
     - FirebaseAnalytics
@@ -262,8 +253,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/audio_session/ios"
   device_info_plus:
     :path: ".symlinks/plugins/device_info_plus/ios"
-  ffmpeg_kit_flutter_audio:
-    :path: ".symlinks/plugins/ffmpeg_kit_flutter_audio/ios"
   firebase_analytics:
     :path: ".symlinks/plugins/firebase_analytics/ios"
   firebase_auth:
@@ -316,8 +305,6 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   audio_session: 4f3e461722055d21515cf3261b64c973c062f345
   device_info_plus: 7545d84d8d1b896cb16a4ff98c19f07ec4b298ea
-  ffmpeg-kit-ios-audio: 3432ce2e3e4d7d1032403358ae90c921fb2125ab
-  ffmpeg_kit_flutter_audio: 729b7af46d53f0f5f0c8a2daaa87747b4aa24241
   Firebase: 07150e75d142fb9399f6777fa56a187b17f833a0
   firebase_analytics: 3bdcd8b68b7b8ccf28bbcdcfb994309f6232f873
   firebase_auth: 95f4a6acafa6a7a0d902aa467dd4d7ca336ee4be

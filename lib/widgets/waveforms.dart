@@ -3,8 +3,6 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:ffmpeg_kit_flutter_audio/ffmpeg_kit.dart' as ffmpeg;
-import 'package:ffmpeg_kit_flutter_audio/ffmpeg_session.dart' as ffmpeg_session;
 import 'package:flutter/rendering.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -123,57 +121,5 @@ class FrequenciesPainter extends CustomPainter {
   bool shouldRepaint(covariant FrequenciesPainter oldDelegate) {
     return oldDelegate.barCount != barCount ||
         oldDelegate.frequencies != frequencies;
-  }
-}
-
-class _AacEncoder {
-  ffmpeg_session.FFmpegSession? _session;
-
-  final _completer = Completer<File>();
-
-  _AacEncoder(Uint8List pcm, int bitDepth, int rate, int channels) {
-    _encode(pcm, bitDepth, rate, channels);
-  }
-
-  Future<File> get result => _completer.future;
-
-  void dispose() {
-    _session?.cancel();
-  }
-
-  void _encode(Uint8List samples, int bitDepth, int rate, int channels) async {
-    final dir = await getTemporaryDirectory();
-    final id = DateTime.now().toIso8601String();
-    final input =
-        await File(path.join(dir.path, '$id.pcm')).create(recursive: true);
-    final output = File(path.join(dir.path, '$id.m4a'));
-    await input.writeAsBytes(samples);
-    final String format;
-    if (bitDepth == 8) {
-      format = 'u8';
-    } else if (bitDepth == 16) {
-      format = 's16${Endian.host == Endian.little ? 'le' : 'be'}';
-    } else {
-      throw 'Unable to encode audio with bit depth $bitDepth';
-    }
-    _session = await ffmpeg.FFmpegKit.executeAsync(
-      '-f $format -ar $rate -ac $channels -i ${input.path} -codec:a aac ${output.path}',
-      (session) async {
-        final res = await session.getAllLogs();
-
-        final logs = res.where((log) => log.getLevel() <= 16);
-        for (final log in logs) {
-          debugPrint('Log ${log.getLevel()}) ${log.getMessage()}');
-        }
-
-        final returnCode = await session.getReturnCode();
-        if (returnCode == null || returnCode.isValueError()) {
-          _completer
-              .completeError('FFmpeg error ${returnCode?.getValue() ?? -1}');
-        } else if (returnCode.isValueSuccess()) {
-          _completer.complete(output);
-        }
-      },
-    );
   }
 }

@@ -1918,7 +1918,10 @@ class _ReportBlockPopupMenuState2 extends ConsumerState<ReportBlockPopupMenu2> {
                   context: context,
                   myUid: myUid,
                 );
-                if (reportReason == null || !mounted) {
+                if (reportReason == null) {
+                  return;
+                }
+                if (!mounted) {
                   return;
                 }
 

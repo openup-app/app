@@ -2,8 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openup/api/api.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/contacts/contacts_provider.dart';
 import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/widgets/button.dart';
@@ -285,91 +283,6 @@ void _launchMessagingApp(String phoneNumber, String body) {
   final querySymbol = Platform.isAndroid ? '?' : '&';
   final url = Uri.parse('sms://$phoneNumber/${querySymbol}body=$body');
   launchUrl(url);
-}
-
-class _Heading extends StatelessWidget {
-  final String label;
-  const _Heading({
-    super.key,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontWeight: FontWeight.w300,
-                  fontSize: 14,
-                  color: const Color.fromRGBO(0xA1, 0xA1, 0xA1, 1.0)),
-            ),
-          ),
-          const RotatedBox(
-            quarterTurns: 1,
-            child: Icon(
-              Icons.chevron_right,
-              color: Color.fromRGBO(0x88, 0x88, 0x88, 1.0),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LoadCollectionList extends ConsumerStatefulWidget {
-  final String uid;
-  const _LoadCollectionList({
-    super.key,
-    required this.uid,
-  });
-
-  @override
-  ConsumerState<_LoadCollectionList> createState() =>
-      _LoadCollectionListState();
-}
-
-class _LoadCollectionListState extends ConsumerState<_LoadCollectionList> {
-  List<Collection>? _collections;
-  bool _error = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchCollections();
-  }
-
-  void _fetchCollections() async {
-    final api = ref.read(apiProvider);
-    final result = await api.getCollections(widget.uid);
-    if (!mounted) {
-      return;
-    }
-
-    result.fold(
-      (l) => setState(() => _error = true),
-      (r) => setState(() => _collections = r),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_error) {
-      return Text(
-        'Failed to load collection',
-        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-            fontWeight: FontWeight.w300, fontSize: 12, color: Colors.white),
-      );
-    }
-    return const Center(
-      child: LoadingIndicator(),
-    );
-  }
 }
 
 class FriendsSearchField extends StatelessWidget {
