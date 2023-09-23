@@ -320,39 +320,37 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   @override
   Widget build(BuildContext context) {
     final textTheme = ThemeData().textTheme;
-    return ProviderScope(
-      child: MaterialApp.router(
-        routerConfig: _goRouter,
-        theme: ThemeData(
-          primaryColor: const Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
-          colorScheme: const ColorScheme.dark(
-            primary: Colors.white,
-            secondary: Colors.white,
-          ),
-          scaffoldBackgroundColor: Colors.black,
-          fontFamily: 'SF Pro',
-          textTheme: textTheme.copyWith(
-            bodyMedium: textTheme.bodyMedium!.copyWith(
-              fontFamily: 'SF Pro',
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-          iconTheme: const IconThemeData(
+    return MaterialApp.router(
+      routerConfig: _goRouter,
+      theme: ThemeData(
+        primaryColor: const Color.fromRGBO(0xFF, 0x3E, 0x3E, 1.0),
+        colorScheme: const ColorScheme.dark(
+          primary: Colors.white,
+          secondary: Colors.white,
+        ),
+        scaffoldBackgroundColor: Colors.black,
+        fontFamily: 'SF Pro',
+        textTheme: textTheme.copyWith(
+          bodyMedium: textTheme.bodyMedium!.copyWith(
+            fontFamily: 'SF Pro',
             color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
           ),
         ),
-        builder: (context, child) {
-          return CupertinoTheme(
-            data: const CupertinoThemeData(
-              brightness: Brightness.dark,
-              primaryColor: Colors.white,
-            ),
-            child: child!,
-          );
-        },
+        iconTheme: const IconThemeData(
+          color: Colors.white,
+        ),
       ),
+      builder: (context, child) {
+        return CupertinoTheme(
+          data: const CupertinoThemeData(
+            brightness: Brightness.dark,
+            primaryColor: Colors.white,
+          ),
+          child: child!,
+        );
+      },
     );
   }
 
