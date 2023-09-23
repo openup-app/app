@@ -53,7 +53,7 @@ final _nearbyEventsProviderInternal = FutureProvider<IList<Event>>((ref) async {
   final latLong = ref.watch(locationProvider.select((s) => s.current));
   final dateFilter = ref.watch(nearbyEventsDateFilterProvider);
   final result = await api.getEvents(
-    Location(latLong: latLong, radius: 2000),
+    Location(latLong: latLong, radius: 16000),
     date: dateFilter,
   );
   return result.fold(

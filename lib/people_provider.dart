@@ -19,7 +19,7 @@ final _peopleProvider = FutureProvider<IList<DiscoverProfile>>((ref) async {
   final results = await api.getDiscover(
     location: Location(
       latLong: latLong,
-      radius: 4000,
+      radius: 16000,
     ),
     gender: gender,
     debug: debugUsers,
