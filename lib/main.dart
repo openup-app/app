@@ -113,6 +113,7 @@ void main() async {
     final mapboxLocationSearchService =
         MapboxLocationSearchService(accessToken: mapboxAccessToken);
 
+    // ignore: missing_provider_scope
     runApp(
       RestartApp(
         child: ProviderScope(
