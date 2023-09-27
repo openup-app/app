@@ -463,8 +463,8 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
                         )
                         .color(
                           blendMode: BlendMode.srcOver,
-                          duration: const Duration(milliseconds: 160),
-                          begin: Colors.white,
+                          duration: const Duration(milliseconds: 320),
+                          begin: Colors.white.withOpacity(0.8),
                           end: Colors.white.withOpacity(0.0),
                         ),
                   );
