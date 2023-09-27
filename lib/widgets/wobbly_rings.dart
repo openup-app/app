@@ -50,13 +50,13 @@ class _WobblyRingsState extends State<WobblyRings> {
                     seed: _baseSeed,
                     builder: (context, child, wiggle) {
                       final x = wiggle(
-                        frequency: 2,
-                        amplitude: 3,
+                        frequency: 1.5,
+                        amplitude: 1.5,
                         delay: delay,
                       );
                       final y = wiggle(
-                        frequency: 2,
-                        amplitude: 3,
+                        frequency: 1.5,
+                        amplitude: 1.5,
                         delay: delay,
                       );
                       final angle = wiggle(
