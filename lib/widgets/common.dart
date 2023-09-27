@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
 import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
@@ -141,7 +140,7 @@ class BlurredSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        filter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -177,7 +176,7 @@ class Surface extends StatelessWidget {
         ),
       ),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Material(
           elevation: 0,
           type: MaterialType.transparency,
@@ -426,12 +425,182 @@ class _NonCinematicPhotoState extends State<NonCinematicPhoto>
         ),
         if (_loading)
           const Center(
-            child: LoadingIndicator(
-              color: Colors.black,
+            child: SizedBox(
+              width: 250,
+              height: 250,
+              child: ShimmerLoading(
+                isLoading: true,
+                child: Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 250,
+                ),
+              ),
             ),
           ),
       ],
     );
+  }
+}
+
+class Shimmer extends StatefulWidget {
+  final LinearGradient linearGradient;
+  final Widget? child;
+
+  const Shimmer({
+    super.key,
+    required this.linearGradient,
+    this.child,
+  });
+
+  @override
+  State<Shimmer> createState() => ShimmerState();
+
+  static ShimmerState? of(BuildContext context) {
+    return context.findAncestorStateOfType<ShimmerState>();
+  }
+}
+
+class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
+  late final AnimationController _shimmerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerController = AnimationController.unbounded(vsync: this)
+      ..repeat(min: -0.5, max: 1.5, period: const Duration(milliseconds: 1000));
+  }
+
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child ?? const SizedBox.shrink();
+  }
+
+  Gradient get gradient {
+    return LinearGradient(
+      colors: widget.linearGradient.colors,
+      stops: widget.linearGradient.stops,
+      begin: widget.linearGradient.begin,
+      end: widget.linearGradient.end,
+      transform: _SlidingGradientTransform(
+        slidePercent: _shimmerController.value,
+      ),
+    );
+  }
+
+  Listenable get shimmerChanges => _shimmerController;
+
+  bool get isSized =>
+      (context.findRenderObject() as RenderBox?)?.hasSize ?? false;
+
+  Size get size => (context.findRenderObject() as RenderBox).size;
+
+  Offset getDescendantOffset({
+    required RenderBox descendant,
+    Offset offset = Offset.zero,
+  }) {
+    final shimmerBox = context.findRenderObject() as RenderBox;
+    return descendant.localToGlobal(offset, ancestor: shimmerBox);
+  }
+}
+
+class ShimmerLoading extends StatefulWidget {
+  final bool isLoading;
+  final Widget child;
+
+  const ShimmerLoading({
+    super.key,
+    required this.isLoading,
+    required this.child,
+  });
+
+  @override
+  State<ShimmerLoading> createState() => _ShimmerLoadingState();
+}
+
+class _ShimmerLoadingState extends State<ShimmerLoading> {
+  Listenable? _shimmerChanges;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    var shimmerChanges = _shimmerChanges;
+    if (shimmerChanges != null) {
+      shimmerChanges.removeListener(_onShimmerChange);
+    }
+    shimmerChanges = Shimmer.of(context)?.shimmerChanges;
+    if (shimmerChanges != null) {
+      shimmerChanges.addListener(_onShimmerChange);
+    }
+    _shimmerChanges = shimmerChanges;
+  }
+
+  @override
+  void dispose() {
+    _shimmerChanges?.removeListener(_onShimmerChange);
+    super.dispose();
+  }
+
+  void _onShimmerChange() {
+    if (widget.isLoading) {
+      setState(() {
+        // update the shimmer painting.
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isLoading) {
+      return widget.child;
+    }
+
+    // Collect ancestor shimmer information.
+    final shimmer = Shimmer.of(context)!;
+    final renderBox = context.findRenderObject();
+    if (!shimmer.isSized || renderBox == null) {
+      // The ancestor Shimmer widget isn't laid
+      // out yet. Return an empty box.
+      return const SizedBox();
+    }
+    final shimmerSize = shimmer.size;
+    final gradient = shimmer.gradient;
+    final offsetWithinShimmer = shimmer.getDescendantOffset(
+      descendant: renderBox as RenderBox,
+    );
+    return ShaderMask(
+      blendMode: BlendMode.srcATop,
+      shaderCallback: (bounds) {
+        return gradient.createShader(
+          Rect.fromLTWH(
+            -offsetWithinShimmer.dx,
+            -offsetWithinShimmer.dy,
+            shimmerSize.width,
+            shimmerSize.height,
+          ),
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+class _SlidingGradientTransform extends GradientTransform {
+  final double slidePercent;
+
+  const _SlidingGradientTransform({
+    required this.slidePercent,
+  });
+
+  @override
+  Matrix4? transform(Rect bounds, {ui.TextDirection? textDirection}) {
+    return Matrix4.translationValues(bounds.width * slidePercent, 0.0, 0.0);
   }
 }
 
@@ -1338,7 +1507,7 @@ class RecordPanelSurface extends StatelessWidget {
             ],
           ),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 48, sigmaY: 48),
+            filter: ui.ImageFilter.blur(sigmaX: 48, sigmaY: 48),
             child: child,
           ),
         ),

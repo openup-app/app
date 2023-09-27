@@ -404,58 +404,75 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
   @override
   Widget build(BuildContext context) {
     return ClipRect(
-      child: Builder(
-        builder: (context) {
-          if (widget.gallery.isEmpty) {
-            return const SizedBox.shrink();
-          }
-          final i = _index % widget.gallery.length;
-          final photoUri = widget.gallery[i];
+      child: Shimmer(
+        linearGradient: const LinearGradient(
+          begin: Alignment(-1.0, -0.3),
+          end: Alignment(1.0, 0.3),
+          tileMode: TileMode.clamp,
+          colors: [
+            Color.fromRGBO(0xEB, 0xEB, 0xF4, 1.0),
+            Color.fromRGBO(0xF4, 0xF4, 0xF4, 1.0),
+            Color.fromRGBO(0xEB, 0xEB, 0xF4, 1.0),
+          ],
+          stops: [
+            0.1,
+            0.3,
+            0.4,
+          ],
+        ),
+        child: Builder(
+          builder: (context) {
+            if (widget.gallery.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            final i = _index % widget.gallery.length;
+            final photoUri = widget.gallery[i];
 
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 166),
-            switchInCurve: Curves.easeOutQuart,
-            // Don't animate in reverse
-            reverseDuration: const Duration(days: 1),
-            switchOutCurve: Curves.easeOutQuart,
-            child: TickerBuilder(
-              enabled: widget.slideshow,
-              builder: (context) {
-                final elapsed = DateTime.now().difference(_start);
-                final ratio =
-                    (elapsed.inMilliseconds / _duration.inMilliseconds)
-                        .clamp(0, 1);
-                final scale = 1.13 + ratio * 0.07;
-                return Transform.scale(
-                  scale: scale,
-                  alignment: Alignment.centerRight,
-                  child: KeyedSubtree(
-                    key: ValueKey('${_index}_$photoUri'),
-                    child: NonCinematicPhoto(
-                      uri: photoUri,
-                      animate: _slideshowTimer?.isActive == true,
-                      onLoaded: () {
-                        setState(() => _ready = true);
-                        _maybeStartSlideshowTimer();
-                      },
-                      duration: _duration,
-                    ),
-                  )
-                      .animate(
-                        autoPlay: true,
-                        key: ValueKey('${_index}_$photoUri'),
-                      )
-                      .color(
-                        blendMode: BlendMode.srcOver,
-                        duration: const Duration(milliseconds: 160),
-                        begin: Colors.white,
-                        end: Colors.white.withOpacity(0.0),
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 166),
+              switchInCurve: Curves.easeOutQuart,
+              // Don't animate in reverse
+              reverseDuration: const Duration(days: 1),
+              switchOutCurve: Curves.easeOutQuart,
+              child: TickerBuilder(
+                enabled: widget.slideshow,
+                builder: (context) {
+                  final elapsed = DateTime.now().difference(_start);
+                  final ratio =
+                      (elapsed.inMilliseconds / _duration.inMilliseconds)
+                          .clamp(0, 1);
+                  final scale = 1.13 + ratio * 0.07;
+                  return Transform.scale(
+                    scale: scale,
+                    alignment: Alignment.centerRight,
+                    child: KeyedSubtree(
+                      key: ValueKey('${_index}_$photoUri'),
+                      child: NonCinematicPhoto(
+                        uri: photoUri,
+                        animate: _slideshowTimer?.isActive == true,
+                        onLoaded: () {
+                          setState(() => _ready = true);
+                          _maybeStartSlideshowTimer();
+                        },
+                        duration: _duration,
                       ),
-                );
-              },
-            ),
-          );
-        },
+                    )
+                        .animate(
+                          autoPlay: true,
+                          key: ValueKey('${_index}_$photoUri'),
+                        )
+                        .color(
+                          blendMode: BlendMode.srcOver,
+                          duration: const Duration(milliseconds: 160),
+                          begin: Colors.white,
+                          end: Colors.white.withOpacity(0.0),
+                        ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
