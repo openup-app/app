@@ -19,10 +19,10 @@ class CardStack<T> extends StatefulWidget {
   });
 
   @override
-  State<CardStack> createState() => _CardStackState<T>();
+  State<CardStack> createState() => CardStackState<T>();
 }
 
-class _CardStackState<T> extends State<CardStack<T>>
+class CardStackState<T> extends State<CardStack<T>>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   final _items = <T>[];

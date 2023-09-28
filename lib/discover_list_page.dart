@@ -83,6 +83,7 @@ class _ListView extends ConsumerStatefulWidget {
 }
 
 class _ListViewState extends ConsumerState<_ListView> {
+  final _cardStackKey = GlobalKey<CardStackState<DiscoverProfile?>>();
   final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
 
   bool _active = false;
@@ -99,69 +100,74 @@ class _ListViewState extends ConsumerState<_ListView> {
           _play = false;
         });
       },
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final profiles = widget.profiles;
-          final latLong = widget.latLong;
-          if (profiles == null || latLong == null) {
-            return CardStack(
-              width: constraints.maxWidth,
-              items: List.generate(3, (index) => null),
-              onChanged: (_) {},
-              itemBuilder: (context, _) {
-                return Shimmer(
-                  linearGradient: kShimmerGradient,
-                  child: PhotoCardLoading(
-                    width: constraints.maxWidth,
-                    height: constraints.maxHeight,
-                  ),
-                );
-              },
-            );
-          }
-          if (profiles.isEmpty) {
-            return const Center(
-              child: Text('No profiles nearby'),
-            );
-          }
-          return ProfileBuilder(
-            key: _profileBuilderKey,
-            profile: profiles[_profileIndex % profiles.length].profile,
-            play: _play,
-            builder: (context, playbackState, playbackInfoStream) {
-              final currentProfile =
-                  profiles[_profileIndex % profiles.length].profile;
-              return CardStack(
+      child: Shimmer(
+        linearGradient: kShimmerGradient,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final profiles = widget.profiles;
+            final latLong = widget.latLong;
+            if (profiles == null || latLong == null) {
+              return CardStack<DiscoverProfile?>(
+                key: _cardStackKey,
                 width: constraints.maxWidth,
-                items: profiles,
-                onChanged: (index) {
-                  setState(() => _profileIndex = index);
-                },
-                itemBuilder: (context, item) {
-                  final isCurrent = item.profile.uid == currentProfile.uid;
-                  final profile = item;
-                  return _ProfileDisplay(
+                items: List.generate(3, (index) => null),
+                onChanged: (_) {},
+                itemBuilder: (context, _) {
+                  return PhotoCardLoading(
                     width: constraints.maxWidth,
                     height: constraints.maxHeight,
-                    profile: profile,
-                    distance: distanceMiles(profile.location.latLong, latLong)
-                        .round(),
-                    playbackState: isCurrent ? playbackState : null,
-                    playbackInfoStream: isCurrent ? playbackInfoStream : null,
-                    onPlay: () {
-                      if (_active) {
-                        setState(() => _play = true);
-                      }
-                    },
-                    onPause: () => setState(() => _play = false),
-                    onMessage: () =>
-                        _showRecordInvitePanel(context, profile.profile.uid),
                   );
                 },
               );
-            },
-          );
-        },
+            }
+            if (profiles.isEmpty) {
+              return const Center(
+                child: Text('No profiles nearby'),
+              );
+            }
+            return ProfileBuilder(
+              key: _profileBuilderKey,
+              profile: profiles[_profileIndex % profiles.length].profile,
+              play: _play,
+              builder: (context, playbackState, playbackInfoStream) {
+                final currentProfile =
+                    profiles[_profileIndex % profiles.length].profile;
+                return CardStack<DiscoverProfile?>(
+                  key: _cardStackKey,
+                  width: constraints.maxWidth,
+                  items: profiles,
+                  onChanged: (index) {
+                    setState(() => _profileIndex = index);
+                  },
+                  itemBuilder: (context, item) {
+                    final profile = item;
+                    if (profile == null) {
+                      return const SizedBox.shrink();
+                    }
+                    final isCurrent = profile.profile.uid == currentProfile.uid;
+                    return _ProfileDisplay(
+                      width: constraints.maxWidth,
+                      height: constraints.maxHeight,
+                      profile: profile,
+                      distance: distanceMiles(profile.location.latLong, latLong)
+                          .round(),
+                      playbackState: isCurrent ? playbackState : null,
+                      playbackInfoStream: isCurrent ? playbackInfoStream : null,
+                      onPlay: () {
+                        if (_active) {
+                          setState(() => _play = true);
+                        }
+                      },
+                      onPause: () => setState(() => _play = false),
+                      onMessage: () =>
+                          _showRecordInvitePanel(context, profile.profile.uid),
+                    );
+                  },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -201,7 +207,7 @@ class _ListViewState extends ConsumerState<_ListView> {
   void _pauseAudio() => setState(() => _play = false);
 }
 
-class _ProfileDisplay extends ConsumerWidget {
+class _ProfileDisplay extends ConsumerStatefulWidget {
   final double width;
   final double height;
   final DiscoverProfile profile;
@@ -226,33 +232,69 @@ class _ProfileDisplay extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ProfileDisplay> createState() => _ProfileDisplayState();
+}
+
+class _ProfileDisplayState extends ConsumerState<_ProfileDisplay> {
+  bool _loading = true;
+  bool _initialDidChangeDeps = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialDidChangeDeps) {
+      _precache();
+      _initialDidChangeDeps = false;
+    }
+  }
+
+  void _precache() async {
+    await Future.wait([
+      for (final uri in widget.profile.profile.gallery)
+        precacheImage(NetworkImage(uri.toString()), context)
+    ]);
+    if (mounted) {
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return PhotoCardLoading(
+        width: widget.width,
+        height: widget.height,
+      );
+    }
+
     return PhotoCard(
-      width: width,
-      height: height,
+      width: widget.width,
+      height: widget.height,
       photo: Button(
         onPressed: _togglePlayPause,
         child: CameraFlashGallery(
           slideshow: true,
-          gallery: profile.profile.gallery.map((e) => Uri.parse(e)).toList(),
+          gallery:
+              widget.profile.profile.gallery.map((e) => Uri.parse(e)).toList(),
         ),
       ),
       titleBuilder: (context) {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(profile.profile.name.toUpperCase()),
+            Text(widget.profile.profile.name.toUpperCase()),
             const SizedBox(width: 12),
             Text(
-              profile.profile.age.toString(),
+              widget.profile.profile.age.toString(),
               style: const TextStyle(fontSize: 27),
             ),
           ],
         );
       },
-      subtitle: Text('$distance ${distance == 1 ? 'mile' : 'miles'} away'),
+      subtitle: Text(
+          '${widget.distance} ${widget.distance == 1 ? 'mile' : 'miles'} away'),
       firstButton: Button(
-        onPressed: onMessage,
+        onPressed: widget.onMessage,
         child: const Center(
           child: Text(
             'Message',
@@ -266,8 +308,8 @@ class _ProfileDisplay extends ConsumerWidget {
         ),
       ),
       secondButton: ReportBlockPopupMenu2(
-        name: profile.profile.name,
-        uid: profile.profile.uid,
+        name: widget.profile.profile.name,
+        uid: widget.profile.profile.uid,
         onBlock: () {},
         builder: (context) {
           return const Center(
@@ -296,7 +338,7 @@ class _ProfileDisplay extends ConsumerWidget {
           ),
           child: Builder(
             builder: (context) {
-              return switch (playbackState) {
+              return switch (widget.playbackState) {
                 null => const SizedBox.shrink(),
                 PlaybackState.idle ||
                 PlaybackState.paused =>
@@ -316,14 +358,14 @@ class _ProfileDisplay extends ConsumerWidget {
   }
 
   void _togglePlayPause() {
-    switch (playbackState) {
+    switch (widget.playbackState) {
       case PlaybackState.idle:
       case PlaybackState.paused:
-        onPlay();
+        widget.onPlay();
       case null:
         return;
       default:
-        onPause();
+        widget.onPause();
     }
   }
 }
