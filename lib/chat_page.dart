@@ -252,7 +252,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     padding: EdgeInsets.only(
                         bottom: MediaQuery.of(context).padding.bottom + 80),
                     child: Container(
-                      height: 340,
+                      height: 376,
                       margin: const EdgeInsets.symmetric(vertical: 32),
                       child: PageView.builder(
                         controller: _pageController,
