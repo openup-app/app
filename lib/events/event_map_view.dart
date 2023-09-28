@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide Chip;
@@ -130,8 +129,12 @@ class _EventMapViewState extends ConsumerState<EventMapView>
                       items: renderedItems,
                       selectedItem: renderedSelectedItem,
                       onSelectionChanged: (item) {
-                        ref.read(eventMapProvider.notifier).selectedEvent =
-                            (item as EventMapItem?)?.event;
+                        if (item != null) {
+                          final event = (item as EventMapItem).event;
+                          _showEventPanel(event);
+                          ref.read(eventMapProvider.notifier).selectedEvent =
+                              event;
+                        }
                       },
                       itemAnimationSpeedMultiplier: 1.0,
                       initialLocation: ref.watch(
@@ -163,6 +166,106 @@ class _EventMapViewState extends ConsumerState<EventMapView>
           ),
         ],
       ),
+    );
+  }
+
+  void _showEventPanel(Event event) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return _BottomPanel(
+          onClosePressed: Navigator.of(context).pop,
+          child: Column(
+            children: [
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(width: 25),
+                    Expanded(
+                      child: EventTwoColumnPhoto(event: event),
+                    ),
+                    const SizedBox(width: 25),
+                    Expanded(
+                      child: EventTwoColumnDetails(
+                        event: event,
+                        showMenuButton: false,
+                      ),
+                    ),
+                    const SizedBox(width: 25),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+              SizedBox(
+                height: 46,
+                child: DefaultTextStyle.merge(
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 25),
+                      Expanded(
+                        child: RoundedButton(
+                          onPressed: () {
+                            context.pushNamed(
+                              'event_view',
+                              params: {'id': event.id},
+                              extra: EventViewPageArgs(event: event),
+                            );
+                          },
+                          color: Colors.white,
+                          child: const Text('More Details'),
+                        ),
+                      ),
+                      const SizedBox(width: 25),
+                      Expanded(
+                        child: AttendUnattendButtonBuilder(
+                          eventId: event.id,
+                          builder: (context, isParticipating, onPressed) {
+                            final color =
+                                isParticipating ? Colors.white : Colors.black;
+                            return RoundedButton(
+                              color: isParticipating
+                                  ? const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0)
+                                  : Colors.white,
+                              onPressed: onPressed,
+                              child: Builder(
+                                builder: (context) {
+                                  if (onPressed == null) {
+                                    return LoadingIndicator(
+                                      color: color,
+                                    );
+                                  }
+                                  return Text(
+                                    isParticipating ? 'Attending' : 'Attend',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w400,
+                                      color: color,
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 25),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -233,42 +336,6 @@ class _MapOverlay extends ConsumerWidget {
               ),
             ),
           ],
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutQuart,
-          child: Builder(
-            builder: (context) {
-              final selectedEvent =
-                  ref.watch(eventMapProvider.select((s) => s.selectedEvent));
-              if (selectedEvent == null) {
-                return const SizedBox(
-                  width: double.infinity,
-                  height: 0,
-                );
-              }
-              return _BottomPanelContainer(
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 130,
-                  child: EventMapList(
-                    events: ref.watch(eventMapProvider.select((s) => s.events)),
-                    selectedEvent: selectedEvent,
-                    onEventChanged: (event) {
-                      ref.read(eventMapProvider.notifier).selectedEvent = event;
-                    },
-                    onEventPressed: () {
-                      context.pushNamed(
-                        'event_view',
-                        params: {'id': selectedEvent.id},
-                        extra: EventViewPageArgs(event: selectedEvent),
-                      );
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
         ),
       ],
     );
@@ -347,32 +414,69 @@ class _LoadingRefreshButton extends StatelessWidget {
   }
 }
 
-class _BottomPanelContainer extends StatelessWidget {
+class _BottomPanel extends StatelessWidget {
+  final VoidCallback onClosePressed;
   final Widget child;
 
-  const _BottomPanelContainer({
+  const _BottomPanel({
     super.key,
+    required this.onClosePressed,
     required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20),
-      child: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-          child: ColoredBox(
-            color: const Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      decoration: const BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 52,
+            child: Stack(
+              alignment: Alignment.topCenter,
               children: [
-                child,
-                SizedBox(height: MediaQuery.of(context).padding.bottom),
+                Padding(
+                  padding: const EdgeInsets.only(top: 13.0),
+                  child: Container(
+                    width: 47,
+                    height: 2,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(1),
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Button(
+                    onPressed: onClosePressed,
+                    child: const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('close'),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-        ),
+          SizedBox(
+            height: 250 + 24 + 46,
+            child: child,
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }

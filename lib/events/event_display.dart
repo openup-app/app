@@ -57,186 +57,16 @@ class EventDisplayListItem extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 8, right: 20),
-                    foregroundDecoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 2,
-                      ),
-                    ),
-                    child: ImageUri(
-                      event.photo,
-                      fit: BoxFit.cover,
-                    ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8, right: 20),
+                    child: EventTwoColumnPhoto(event: event),
                   ),
                 ),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              event.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 20,
-                              ),
-                            ),
-                          ),
-                          ReportBlockPopupMenu2(
-                            uid: event.host.uid,
-                            name: event.host.name,
-                            onBlock: () {
-                              // TODO: Remove event from local list
-                            },
-                            builder: (context) {
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                child: Icon(Icons.more_vert),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          ClipRRect(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(13)),
-                            child: Container(
-                              width: 26,
-                              height: 26,
-                              foregroundDecoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border:
-                                    Border.all(color: Colors.white, width: 2),
-                              ),
-                              child: Image.network(
-                                event.host.photo,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          Expanded(
-                            child: RichText(
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              text: TextSpan(
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                                children: [
-                                  const TextSpan(text: 'Hosted by '),
-                                  TextSpan(
-                                    text: event.host.name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      Button(
-                        onPressed: () => _showEventOnMap(context, ref, event),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on_sharp,
-                              size: 16,
-                              color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                event.location.name,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      RichText(
-                        text: TextSpan(
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w300,
-                          ),
-                          children: [
-                            TextSpan(text: formatDayOfWeek(event.endDate)),
-                            const TextSpan(text: ' | '),
-                            TextSpan(
-                              text: formatDateShort(event.startDate),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${formatTime(event.startDate).toLowerCase()} - ${formatTime(event.endDate).toLowerCase()}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w300,
-                        ),
-                      ),
-                      const SizedBox(height: 21),
-                      Row(
-                        children: [
-                          const Icon(Icons.monetization_on),
-                          const SizedBox(width: 8),
-                          Text(
-                            event.price == 0 ? 'Free' : '${event.price}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w300,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.bar_chart_sharp),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${event.views} views',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w300,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.people_alt_outlined),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${event.participants.count} going',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w300,
-                            ),
-                          ),
-                        ],
-                      ),
+                      EventTwoColumnDetails(event: event),
                       const SizedBox(height: 10),
                       AttendUnattendButtonBuilder(
                         eventId: event.id,
@@ -323,6 +153,212 @@ class EventDisplayListItem extends ConsumerWidget {
           const SizedBox(height: 21),
         ],
       ),
+    );
+  }
+}
+
+class EventTwoColumnPhoto extends StatelessWidget {
+  final Event event;
+
+  const EventTwoColumnPhoto({
+    super.key,
+    required this.event,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      foregroundDecoration: BoxDecoration(
+        border: Border.all(
+          color: Colors.white,
+          width: 2,
+        ),
+      ),
+      child: ImageUri(
+        event.photo,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+}
+
+class EventTwoColumnDetails extends ConsumerWidget {
+  final Event event;
+  final bool showMenuButton;
+
+  const EventTwoColumnDetails({
+    super.key,
+    required this.event,
+    this.showMenuButton = true,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                event.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+            if (showMenuButton)
+              ReportBlockPopupMenu2(
+                uid: event.host.uid,
+                name: event.host.name,
+                onBlock: () {
+                  // TODO: Remove event from local list
+                },
+                builder: (context) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Icon(Icons.more_vert),
+                  );
+                },
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(13)),
+              child: Container(
+                width: 26,
+                height: 26,
+                foregroundDecoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: Image.network(
+                  event.host.photo,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(width: 5),
+            Expanded(
+              child: RichText(
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                text: TextSpan(
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w300,
+                  ),
+                  children: [
+                    const TextSpan(text: 'Hosted by '),
+                    TextSpan(
+                      text: event.host.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Button(
+          onPressed: () => _showEventOnMap(context, ref, event),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.location_on_sharp,
+                size: 16,
+                color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  event.location.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        RichText(
+          text: TextSpan(
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w300,
+            ),
+            children: [
+              TextSpan(text: formatDayOfWeek(event.endDate)),
+              const TextSpan(text: ' | '),
+              TextSpan(
+                text: formatDateShort(event.startDate),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${formatTime(event.startDate).toLowerCase()} - ${formatTime(event.endDate).toLowerCase()}',
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w300,
+          ),
+        ),
+        const SizedBox(height: 21),
+        Row(
+          children: [
+            const Icon(Icons.monetization_on),
+            const SizedBox(width: 8),
+            Text(
+              event.price == 0 ? 'Free' : '${event.price}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            const Icon(Icons.bar_chart_sharp),
+            const SizedBox(width: 8),
+            Text(
+              '${event.views} views',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            const Icon(Icons.people_alt_outlined),
+            const SizedBox(width: 8),
+            Text(
+              '${event.participants.count} going',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
