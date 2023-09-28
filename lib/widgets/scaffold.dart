@@ -131,6 +131,7 @@ class OpenupBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _BlurredBackground(
+      darkTop: false,
       child: Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
         child: SizedBox(
@@ -144,23 +145,25 @@ class OpenupBottomBar extends StatelessWidget {
 
 class _BlurredBackground extends StatelessWidget {
   final Widget child;
+  final bool darkTop;
 
   const _BlurredBackground({
     super.key,
     required this.child,
+    this.darkTop = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       clipBehavior: Clip.hardEdge,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color.fromRGBO(0xD9, 0xD9, 0xD9, 0.05),
-            Color.fromRGBO(0x3D, 0x3D, 0x3D, 0.05),
+          begin: darkTop ? Alignment.topCenter : Alignment.bottomCenter,
+          end: darkTop ? Alignment.bottomCenter : Alignment.topCenter,
+          colors: const [
+            Color.fromRGBO(0x00, 0x00, 0x00, 0.8),
+            Color.fromRGBO(0x00, 0x00, 0x00, 0.3),
           ],
         ),
       ),
