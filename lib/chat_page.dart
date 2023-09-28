@@ -9,7 +9,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
@@ -28,8 +27,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
-
-part 'chat_page.freezed.dart';
 
 final _scrollProvider =
     StateNotifierProvider<_ScrollNotifier, double>((ref) => _ScrollNotifier());
@@ -137,10 +134,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final messages = _messages?.values.toList()
-      ?..sort(_dateAscendingMessageSorter);
-    final items = _messagesToItems(messages ?? [])
-      ..removeWhere((i) => i is _Info);
+    final messages =
+        _messages == null ? null : _sortMessages(_messages!.values.toList());
     final chatroom = _chatroom;
 
     return Scaffold(
@@ -230,8 +225,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 child: const Center(
                   child: LoadingIndicator(),
                 ),
-              ),
-            if (messages != null && messages.isEmpty && _otherProfile != null)
+              )
+            else if (messages.isEmpty && _otherProfile != null)
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -245,7 +240,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   ),
                 ),
               )
-            else if (items.isNotEmpty && chatroom != null) ...[
+            else if (messages.isNotEmpty && chatroom != null) ...[
               Center(
                 child: ClipRect(
                   child: Padding(
@@ -256,42 +251,37 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       margin: const EdgeInsets.symmetric(vertical: 32),
                       child: PageView.builder(
                         controller: _pageController,
-                        itemCount: items.length,
+                        itemCount: messages.length,
                         clipBehavior: Clip.none,
                         itemBuilder: (context, index) {
-                          final item = items[index];
-                          return item.map(
-                            info: (_) => const SizedBox.shrink(),
-                            message: (m) {
-                              final message = m.message;
-                              final scrollOffset =
-                                  (index - _pageScroll).abs().clamp(0.0, 1.0);
-                              final fromMe = message.uid == myUid;
-                              final isCurrent =
-                                  _playbackMessageId == message.messageId;
-                              final playbackInfoStream = isCurrent
-                                  ? _audio.playbackInfoStream
-                                  : Stream.fromIterable([
-                                      PlaybackInfo(
-                                        position: Duration.zero,
-                                        duration: message.content.duration,
-                                        state: PlaybackState.idle,
-                                        frequencies: [],
-                                      )
-                                    ]);
-                              return _ChatMessageDisplay(
-                                message: message,
-                                fromMe: fromMe,
-                                photo: fromMe
-                                    ? myProfile.photo
-                                    : chatroom.profile.profile.photo,
-                                scrollOffset: scrollOffset,
-                                isCurrent: isCurrent,
-                                playbackInfoStream: playbackInfoStream,
-                                onPlayPause: (isPlaying) =>
-                                    _playPause(message, isPlaying),
-                              );
-                            },
+                          final message = messages[index];
+
+                          final scrollOffset =
+                              (index - _pageScroll).abs().clamp(0.0, 1.0);
+                          final fromMe = message.uid == myUid;
+                          final isCurrent =
+                              _playbackMessageId == message.messageId;
+                          final playbackInfoStream = isCurrent
+                              ? _audio.playbackInfoStream
+                              : Stream.fromIterable([
+                                  PlaybackInfo(
+                                    position: Duration.zero,
+                                    duration: message.content.duration,
+                                    state: PlaybackState.idle,
+                                    frequencies: [],
+                                  )
+                                ]);
+                          return _ChatMessageDisplay(
+                            message: message,
+                            fromMe: fromMe,
+                            photo: fromMe
+                                ? myProfile.photo
+                                : chatroom.profile.profile.photo,
+                            scrollOffset: scrollOffset,
+                            isCurrent: isCurrent,
+                            playbackInfoStream: playbackInfoStream,
+                            onPlayPause: (isPlaying) =>
+                                _playPause(message, isPlaying),
                           );
                         },
                       ),
@@ -418,6 +408,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       _animateToLatest();
     }
 
+    final analytics = ref.read(analyticsProvider);
     final api = ref.read(apiProvider);
     final result = await api.sendMessage(
       widget.otherUid,
@@ -425,7 +416,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       file.path,
     );
 
-    ref.read(analyticsProvider).trackSendMessage();
+    analytics.trackSendMessage();
 
     if (!mounted) {
       return;
@@ -537,27 +528,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
   }
 
-  List<ChatItem> _messagesToItems(List<ChatMessage> messages) {
+  List<ChatMessage> _sortMessages(List<ChatMessage> messages) {
     if (messages.isEmpty) {
       return [];
     }
 
-    final sortedMessages = List.of(messages)..sort(_dateAscendingMessageSorter);
-    var date = sortedMessages.last.date;
-    final items = sortedMessages.map((e) => ChatItem.message(e)).toList();
-
-    for (var i = items.length - 1; i >= 0; i--) {
-      final itemDate = (items[i] as _Message).message.date;
-      if (itemDate.year != date.year ||
-          itemDate.month != date.month ||
-          itemDate.day != date.day) {
-        items.insert(i + 1, ChatItem.info(ChatInfo.date(date)));
-      }
-      date = itemDate;
-    }
-    items.insert(0, ChatItem.info(ChatInfo.date(date)));
-
-    return items.reversed.toList();
+    return List.of(messages)..sort(_dateAscendingMessageSorter);
   }
 }
 
@@ -891,17 +867,6 @@ class _LocationOverlayState extends State<_LocationOverlay> {
 
 int _dateAscendingMessageSorter(ChatMessage a, ChatMessage b) =>
     a.date.compareTo(b.date);
-
-@freezed
-class ChatItem with _$ChatItem {
-  const factory ChatItem.message(ChatMessage message) = _Message;
-  const factory ChatItem.info(ChatInfo info) = _Info;
-}
-
-@freezed
-class ChatInfo with _$ChatInfo {
-  const factory ChatInfo.date(DateTime date) = _Date;
-}
 
 class _ScrollNotifier extends StateNotifier<double> {
   _ScrollNotifier() : super(0.0);
