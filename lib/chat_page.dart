@@ -452,7 +452,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     if (_pageController.hasClients) {
       _pageController.animateTo(
         _pageController.position.minScrollExtent,
-        duration: const Duration(milliseconds: 600),
+        duration: const Duration(milliseconds: 800),
         curve: Curves.easeOutQuart,
       );
     }
