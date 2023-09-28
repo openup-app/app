@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -219,173 +220,196 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          if (messages == null)
-            Padding(
-              padding: EdgeInsets.only(
-                  bottom: (80 + MediaQuery.of(context).padding.bottom) / 2),
-              child: const Center(
-                child: LoadingIndicator(),
-              ),
-            ),
-          if (messages != null && messages.isEmpty && _otherProfile != null)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'Send your first message to ${_otherProfile!.name}',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: const Color.fromRGBO(0x70, 0x70, 0x70, 1.0)),
-                  textAlign: TextAlign.center,
+      body: _Background(
+        child: Stack(
+          children: [
+            if (messages == null)
+              Padding(
+                padding: EdgeInsets.only(
+                    bottom: (80 + MediaQuery.of(context).padding.bottom) / 2),
+                child: const Center(
+                  child: LoadingIndicator(),
                 ),
               ),
-            )
-          else if (items.isNotEmpty && chatroom != null) ...[
-            Center(
-              child: ClipRect(
+            if (messages != null && messages.isEmpty && _otherProfile != null)
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).padding.bottom + 80),
-                  child: Container(
-                    height: 340,
-                    margin: const EdgeInsets.symmetric(vertical: 32),
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: items.length,
-                      clipBehavior: Clip.none,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        final scrollOffset =
-                            (index - _pageScroll).abs().clamp(0, 1);
-                        return item.when(
-                          info: (info) => const SizedBox.shrink(),
-                          message: (message) {
-                            final fromMe = message.uid == myUid;
-                            final isCurrent =
-                                _playbackMessageId == message.messageId;
-                            final playbackStream = isCurrent
-                                ? _audio.playbackInfoStream
-                                : Stream.fromIterable([
-                                    PlaybackInfo(
-                                      position: Duration.zero,
-                                      duration: message.content.duration,
-                                      state: PlaybackState.idle,
-                                      frequencies: [],
-                                    )
-                                  ]);
-                            return Transform.scale(
-                              alignment: Alignment.center,
-                              scale: 1 - scrollOffset * 0.1,
-                              child: WiggleBuilder(
-                                enabled: scrollOffset < 1,
-                                seed: message.messageId.hashCode,
-                                builder: (context, child, wiggle) {
-                                  final attenuation = 1.0 - scrollOffset;
-                                  final offset = Offset(
-                                        wiggle(frequency: 0.3, amplitude: 20),
-                                        wiggle(frequency: 0.3, amplitude: 20),
-                                      ) *
-                                      attenuation;
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'Send your first message to ${_otherProfile!.name}',
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: const Color.fromRGBO(0x70, 0x70, 0x70, 1.0)),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              )
+            else if (items.isNotEmpty && chatroom != null) ...[
+              Center(
+                child: ClipRect(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).padding.bottom + 80),
+                    child: Container(
+                      height: 340,
+                      margin: const EdgeInsets.symmetric(vertical: 32),
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: items.length,
+                        clipBehavior: Clip.none,
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          final scrollOffset =
+                              (index - _pageScroll).abs().clamp(0, 1);
+                          return item.when(
+                            info: (info) => const SizedBox.shrink(),
+                            message: (message) {
+                              final fromMe = message.uid == myUid;
+                              final isCurrent =
+                                  _playbackMessageId == message.messageId;
+                              final playbackStream = isCurrent
+                                  ? _audio.playbackInfoStream
+                                  : Stream.fromIterable([
+                                      PlaybackInfo(
+                                        position: Duration.zero,
+                                        duration: message.content.duration,
+                                        state: PlaybackState.idle,
+                                        frequencies: [],
+                                      )
+                                    ]);
+                              return Transform.scale(
+                                alignment: Alignment.center,
+                                scale: 1 - scrollOffset * 0.1,
+                                child: WiggleBuilder(
+                                  enabled: scrollOffset < 1,
+                                  seed: message.messageId.hashCode,
+                                  builder: (context, child, wiggle) {
+                                    final attenuation = 1.0 - scrollOffset;
+                                    final offset = Offset(
+                                          wiggle(frequency: 0.3, amplitude: 20),
+                                          wiggle(frequency: 0.3, amplitude: 20),
+                                        ) *
+                                        attenuation;
 
-                                  final rotationZ = wiggle(
-                                      frequency: 0.5,
-                                      amplitude: radians(4) * attenuation);
-                                  final rotationY = wiggle(
-                                      frequency: 0.5,
-                                      amplitude: radians(10) * attenuation);
-                                  const perspectiveDivide = 0.002;
-                                  final transform = Matrix4.identity()
-                                    ..setEntry(3, 2, perspectiveDivide)
-                                    ..rotateY(rotationY)
-                                    ..rotateZ(rotationZ);
-                                  return Transform.translate(
-                                    offset: offset,
-                                    child: Transform(
-                                      transform: transform,
-                                      alignment: Alignment.center,
-                                      child: child,
+                                    final rotationZ = wiggle(
+                                        frequency: 0.5,
+                                        amplitude: radians(4) * attenuation);
+                                    final rotationY = wiggle(
+                                        frequency: 0.5,
+                                        amplitude: radians(10) * attenuation);
+                                    const perspectiveDivide = 0.002;
+                                    final transform = Matrix4.identity()
+                                      ..setEntry(3, 2, perspectiveDivide)
+                                      ..rotateY(rotationY)
+                                      ..rotateZ(rotationZ);
+                                    return Transform.translate(
+                                      offset: offset,
+                                      child: Transform(
+                                        transform: transform,
+                                        alignment: Alignment.center,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: ColorFiltered(
+                                    colorFilter: ColorFilter.mode(
+                                      Color.fromRGBO(
+                                          0x00,
+                                          0x00,
+                                          0x00,
+                                          (index - _pageScroll)
+                                                  .abs()
+                                                  .clamp(0, 1) *
+                                              0.6),
+                                      BlendMode.srcOver,
                                     ),
-                                  );
-                                },
-                                child: ColorFiltered(
-                                  colorFilter: ColorFilter.mode(
-                                    Color.fromRGBO(
-                                        0x00,
-                                        0x00,
-                                        0x00,
-                                        (index - _pageScroll)
-                                                .abs()
-                                                .clamp(0, 1) *
-                                            0.6),
-                                    BlendMode.srcOver,
-                                  ),
-                                  child: StreamBuilder<bool>(
-                                    stream: playbackStream.map((event) =>
-                                        event.state == PlaybackState.playing),
-                                    initialData: false,
-                                    builder: (context, snapshot) {
-                                      final isPlaying = snapshot.requireData;
-                                      return Button(
-                                        onPressed: () =>
-                                            _playPause(message, isPlaying),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(16),
-                                          decoration: const BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(8)),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              AspectRatio(
-                                                aspectRatio: 1 / 1,
-                                                child: Stack(
-                                                  alignment: Alignment.center,
+                                    child: StreamBuilder<bool>(
+                                      stream: playbackStream.map((event) =>
+                                          event.state == PlaybackState.playing),
+                                      initialData: false,
+                                      builder: (context, snapshot) {
+                                        final isPlaying = snapshot.requireData;
+                                        return Button(
+                                          onPressed: () =>
+                                              _playPause(message, isPlaying),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(8)),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                AspectRatio(
+                                                  aspectRatio: 1 / 1,
+                                                  child: Stack(
+                                                    alignment: Alignment.center,
+                                                    children: [
+                                                      Positioned.fill(
+                                                        child: Image.network(
+                                                          fromMe
+                                                              ? myProfile.photo
+                                                              : chatroom
+                                                                  .profile
+                                                                  .profile
+                                                                  .photo,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      ),
+                                                      if (!isPlaying)
+                                                        Container(
+                                                          width: 70,
+                                                          height: 70,
+                                                          decoration:
+                                                              const BoxDecoration(
+                                                            color:
+                                                                Color.fromRGBO(
+                                                                    0x00,
+                                                                    0x00,
+                                                                    0x00,
+                                                                    0.25),
+                                                            shape:
+                                                                BoxShape.circle,
+                                                          ),
+                                                          child: const Icon(
+                                                            Icons
+                                                                .play_arrow_rounded,
+                                                            size: 56,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Row(
                                                   children: [
-                                                    Positioned.fill(
-                                                      child: Image.network(
-                                                        fromMe
-                                                            ? myProfile.photo
-                                                            : chatroom.profile
-                                                                .profile.photo,
-                                                        fit: BoxFit.cover,
+                                                    Expanded(
+                                                      child: Text(
+                                                        formatDate(message.date
+                                                            .toLocal()),
+                                                        style: const TextStyle(
+                                                          fontFamily:
+                                                              'Covered By Your Grace',
+                                                          fontSize: 22,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                          color: Color.fromRGBO(
+                                                              0x29,
+                                                              0x29,
+                                                              0x29,
+                                                              1.0),
+                                                        ),
                                                       ),
                                                     ),
-                                                    if (!isPlaying)
-                                                      Container(
-                                                        width: 70,
-                                                        height: 70,
-                                                        decoration:
-                                                            const BoxDecoration(
-                                                          color: Color.fromRGBO(
-                                                              0x00,
-                                                              0x00,
-                                                              0x00,
-                                                              0.25),
-                                                          shape:
-                                                              BoxShape.circle,
-                                                        ),
-                                                        child: const Icon(
-                                                          Icons
-                                                              .play_arrow_rounded,
-                                                          size: 56,
-                                                        ),
-                                                      ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: Text(
-                                                      formatDate(message.date
+                                                    Text(
+                                                      formatTime(message.date
                                                           .toLocal()),
+                                                      textAlign:
+                                                          TextAlign.right,
                                                       style: const TextStyle(
                                                         fontFamily:
                                                             'Covered By Your Grace',
@@ -399,111 +423,95 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                                                             1.0),
                                                       ),
                                                     ),
-                                                  ),
-                                                  Text(
-                                                    formatTime(
-                                                        message.date.toLocal()),
-                                                    textAlign: TextAlign.right,
-                                                    style: const TextStyle(
-                                                      fontFamily:
-                                                          'Covered By Your Grace',
-                                                      fontSize: 22,
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                      color: Color.fromRGBO(
-                                                          0x29,
-                                                          0x29,
-                                                          0x29,
-                                                          1.0),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 14),
-                                              StreamBuilder<PlaybackInfo>(
-                                                key: ValueKey(
-                                                    message.messageId ?? ''),
-                                                initialData:
-                                                    const PlaybackInfo(),
-                                                stream: playbackStream,
-                                                builder: (context, snapshot) {
-                                                  final playbackInfo =
-                                                      snapshot.requireData;
-                                                  return AudioMessagePlaybackBar(
-                                                    message: message,
-                                                    playbackInfo: playbackInfo,
-                                                  );
-                                                },
-                                              ),
-                                              const SizedBox(height: 12),
-                                            ],
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 14),
+                                                StreamBuilder<PlaybackInfo>(
+                                                  key: ValueKey(
+                                                      message.messageId ?? ''),
+                                                  initialData:
+                                                      const PlaybackInfo(),
+                                                  stream: playbackStream,
+                                                  builder: (context, snapshot) {
+                                                    final playbackInfo =
+                                                        snapshot.requireData;
+                                                    return AudioMessagePlaybackBar(
+                                                      message: message,
+                                                      playbackInfo:
+                                                          playbackInfo,
+                                                    );
+                                                  },
+                                                ),
+                                                const SizedBox(height: 12),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                        );
-                      },
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: ClipRect(
-                child: Container(
-                  width: double.infinity,
-                  height: 175,
-                  margin: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).padding.bottom),
-                  child: Button(
-                    onPressed: _showRecordPanel,
-                    child: const Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        WobblyRings(
-                          radius: 170,
-                          thickness: 10,
-                        ),
-                        Text(
-                          'Message',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.9),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ClipRect(
+                  child: Container(
+                    width: double.infinity,
+                    height: 175,
+                    margin: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).padding.bottom),
+                    child: Button(
+                      onPressed: _showRecordPanel,
+                      child: const Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          WobblyRings(
+                            radius: 170,
+                            thickness: 10,
                           ),
-                        ),
-                      ],
+                          Text(
+                            'Message',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom + 80),
+                child: IgnorePointer(
+                  ignoring: !_showUnreadMessageButton,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOutQuart,
+                    opacity: _showUnreadMessageButton ? 1.0 : 0.0,
+                    child: _UnreadMessagesButton(
+                      onPressed: _animateToLatest,
                     ),
                   ),
                 ),
               ),
             ),
           ],
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).padding.bottom + 80),
-              child: IgnorePointer(
-                ignoring: !_showUnreadMessageButton,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOutQuart,
-                  opacity: _showUnreadMessageButton ? 1.0 : 0.0,
-                  child: _UnreadMessagesButton(
-                    onPressed: _animateToLatest,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -753,6 +761,74 @@ class _UnreadMessagesButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _Background extends StatelessWidget {
+  final Widget child;
+
+  const _Background({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ColoredBox(
+          color: Colors.black,
+          child: Stack(
+            fit: StackFit.expand,
+            alignment: Alignment.center,
+            children: [
+              RepaintBoundary(
+                child: OverflowBox(
+                  minWidth: constraints.maxWidth,
+                  minHeight: constraints.maxHeight * 1.3,
+                  maxWidth: constraints.maxWidth,
+                  maxHeight: constraints.maxHeight * 1.3,
+                  child: ImageFiltered(
+                    imageFilter: ImageFilter.blur(
+                      sigmaX: 12,
+                      sigmaY: 12,
+                      tileMode: TileMode.decal,
+                    ),
+                    child: DefaultTextStyle.merge(
+                      textAlign: TextAlign.start,
+                      overflow: TextOverflow.visible,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: const TextStyle(
+                        fontSize: 90,
+                        fontWeight: FontWeight.w400,
+                        color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: MediaQuery.of(context).padding.top),
+                          SizedBox(height: constraints.maxHeight * 0.15),
+                          const Text('CONVERSATIONS'),
+                          const Spacer(),
+                          const Text('MUST KEEP'),
+                          const Spacer(),
+                          const Text('GOING'),
+                          SizedBox(height: constraints.maxHeight * 0.15),
+                          SizedBox(
+                              height: MediaQuery.of(context).padding.bottom),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              child,
+            ],
+          ),
+        );
+      },
     );
   }
 }
