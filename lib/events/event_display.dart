@@ -35,25 +35,17 @@ class EventDisplayListItem extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: Button(
-                  onPressed: () {
-                    context.pushNamed(
-                      'meetups_create',
-                      extra: EventCreateArgs(editEvent: event),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 8, right: 20),
-                    foregroundDecoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 2,
-                      ),
+                child: Container(
+                  margin: const EdgeInsets.only(left: 8, right: 20),
+                  foregroundDecoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 2,
                     ),
-                    child: ImageUri(
-                      event.photo,
-                      fit: BoxFit.cover,
-                    ),
+                  ),
+                  child: ImageUri(
+                    event.photo,
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
@@ -223,83 +215,52 @@ class EventDisplayListItem extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    if (myEvent)
-                      Button(
-                        onPressed: () {
-                          context.pushNamed(
-                            'meetups_create',
-                            extra: EventCreateArgs(editEvent: event),
-                          );
-                        },
-                        child: Container(
-                          width: 157,
-                          height: 46,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: myEvent
-                                ? const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0)
-                                : const Color.fromRGBO(0xFF, 0xFF, 0xFF, 1.0),
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(6),
+                    AttendUnattendButtonBuilder(
+                      eventId: event.id,
+                      builder: (context, isParticipating, onPressed) {
+                        return Button(
+                          onPressed: onPressed,
+                          child: Container(
+                            width: 157,
+                            height: 46,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isParticipating
+                                  ? const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0)
+                                  : const Color.fromRGBO(0xFF, 0xFF, 0xFF, 1.0),
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(6),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            'Edit Meet',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w400,
-                              color: myEvent
-                                  ? Colors.white
-                                  : const Color.fromRGBO(0x0E, 0x0E, 0x0E, 1.0),
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      AttendUnattendButtonBuilder(
-                        eventId: event.id,
-                        builder: (context, isParticipating, onPressed) {
-                          return Button(
-                            onPressed: () async {
-                              if (!isParticipating) {
-                                context.pushNamed(
-                                  'event_view',
-                                  params: {'id': event.id},
-                                  extra: EventViewPageArgs(event: event),
+                            child: Builder(
+                              builder: (context) {
+                                if (onPressed == null) {
+                                  return Center(
+                                    child: LoadingIndicator(
+                                      color: isParticipating
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                  );
+                                }
+
+                                return Text(
+                                  isParticipating ? 'Attending' : 'Attend',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w400,
+                                    color: isParticipating
+                                        ? Colors.white
+                                        : const Color.fromRGBO(
+                                            0x0E, 0x0E, 0x0E, 1.0),
+                                  ),
                                 );
-                              } else {
-                                showUnattendingModal(context, event.id);
-                              }
-                            },
-                            child: Container(
-                              width: 157,
-                              height: 46,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: isParticipating
-                                    ? const Color.fromRGBO(
-                                        0x00, 0x90, 0xE1, 1.0)
-                                    : const Color.fromRGBO(
-                                        0xFF, 0xFF, 0xFF, 1.0),
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(6),
-                                ),
-                              ),
-                              child: Text(
-                                isParticipating ? 'Attending' : 'Attend',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w400,
-                                  color: isParticipating
-                                      ? Colors.white
-                                      : const Color.fromRGBO(
-                                          0x0E, 0x0E, 0x0E, 1.0),
-                                ),
-                              ),
+                              },
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -630,6 +591,7 @@ class _Participants extends ConsumerWidget {
 
 class AttendUnattendButtonBuilder extends ConsumerStatefulWidget {
   final String eventId;
+  final bool useUnattendModal;
   final Widget Function(
           BuildContext context, bool participating, VoidCallback? onPressed)
       builder;
@@ -637,6 +599,7 @@ class AttendUnattendButtonBuilder extends ConsumerStatefulWidget {
   const AttendUnattendButtonBuilder({
     super.key,
     required this.eventId,
+    this.useUnattendModal = true,
     required this.builder,
   });
 
@@ -660,6 +623,13 @@ class _AttendUnattendButtonBuilderState
       _loading
           ? null
           : () async {
+              if (widget.useUnattendModal && isParticipating) {
+                final confirmUnattend =
+                    await showUnattendingModal(context, widget.eventId);
+                if (!(mounted && confirmUnattend == true)) {
+                  return;
+                }
+              }
               setState(() => _loading = true);
               await ref
                   .read(eventManagementProvider.notifier)
@@ -672,8 +642,8 @@ class _AttendUnattendButtonBuilderState
   }
 }
 
-Future<void> showUnattendingModal(BuildContext context, String eventId) async {
-  showCupertinoModalPopup<bool>(
+Future<bool?> showUnattendingModal(BuildContext context, String eventId) {
+  return showCupertinoModalPopup<bool>(
     context: context,
     builder: (context) {
       return Container(
@@ -687,8 +657,8 @@ Future<void> showUnattendingModal(BuildContext context, String eventId) async {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color.fromRGBO(0xD9, 0xD9, 0xD9, 0.05),
-              Color.fromRGBO(0x3D, 0x3D, 0x3D, 0.05),
+              Color.fromRGBO(0x00, 0x00, 0x00, 0.8),
+              Color.fromRGBO(0x00, 0x00, 0x00, 0.3),
             ],
           ),
         ),
@@ -700,20 +670,13 @@ Future<void> showUnattendingModal(BuildContext context, String eventId) async {
   );
 }
 
-class _UnattendModal extends ConsumerStatefulWidget {
+class _UnattendModal extends StatelessWidget {
   final String eventId;
 
   const _UnattendModal({
     super.key,
     required this.eventId,
   });
-
-  @override
-  ConsumerState<_UnattendModal> createState() => _UnattendModalState();
-}
-
-class _UnattendModalState extends ConsumerState<_UnattendModal> {
-  bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -763,14 +726,12 @@ class _UnattendModalState extends ConsumerState<_UnattendModal> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       RoundedButton(
-                        onPressed: _loading ? null : _unattend,
-                        child: _loading
-                            ? const LoadingIndicator()
-                            : const Text('No'),
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('No'),
                       ),
                       RoundedButton(
                         color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                        onPressed: _loading ? null : Navigator.of(context).pop,
+                        onPressed: Navigator.of(context).pop,
                         child: const Text('Yes'),
                       ),
                     ],
@@ -782,17 +743,5 @@ class _UnattendModalState extends ConsumerState<_UnattendModal> {
         ),
       ),
     );
-  }
-
-  void _unattend() async {
-    setState(() => _loading = true);
-    await ref
-        .read(eventManagementProvider.notifier)
-        .updateEventParticipation(widget.eventId, false);
-
-    if (mounted) {
-      setState(() => _loading = false);
-      Navigator.of(context).pop();
-    }
   }
 }
