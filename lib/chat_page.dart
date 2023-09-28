@@ -78,7 +78,7 @@ class _ChatScreenState extends ConsumerState<ChatPage> {
   void initState() {
     super.initState();
 
-    _pageController = PageController(viewportFraction: 0.7);
+    _pageController = PageController(viewportFraction: 0.8);
     _pageController.addListener(() {
       setState(() => _pageScroll = _pageController.page ?? 0);
     });
