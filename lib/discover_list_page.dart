@@ -203,6 +203,7 @@ class _ListViewState extends ConsumerState<_ListView> {
       label: 'Sending invite...',
       future: notifier.sendMessage(uid: uid, audio: result.audio),
     );
+    notifier.refreshChatrooms();
   }
 
   void _pauseAudio() => setState(() => _play = false);
