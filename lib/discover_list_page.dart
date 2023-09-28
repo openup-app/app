@@ -397,11 +397,18 @@ class _Background extends StatelessWidget {
                   maxWidth: constraints.maxWidth * 1.3,
                   maxHeight: constraints.maxHeight * 1.3,
                   child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    imageFilter: ImageFilter.blur(
+                      sigmaX: 12,
+                      sigmaY: 12,
+                      tileMode: TileMode.decal,
+                    ),
                     child: DefaultTextStyle.merge(
                       textAlign: TextAlign.center,
+                      overflow: TextOverflow.visible,
+                      maxLines: 1,
+                      softWrap: false,
                       style: const TextStyle(
-                        fontSize: 60,
+                        fontSize: 90,
                         fontWeight: FontWeight.w400,
                         color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
                       ),
@@ -411,9 +418,9 @@ class _Background extends StatelessWidget {
                           SizedBox(height: constraints.maxHeight * 0.15),
                           const Text('EVERYONE'),
                           const Spacer(),
-                          const Text('ICEBREAKER'),
+                          const Text('NEEDS AN'),
                           const Spacer(),
-                          const Text('ICEBREAKER'),
+                          const Text('ICE BREAKER'),
                           SizedBox(height: constraints.maxHeight * 0.15),
                           SizedBox(
                               height: MediaQuery.of(context).padding.bottom),
