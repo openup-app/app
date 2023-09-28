@@ -5,6 +5,7 @@ import 'package:openup/widgets/common.dart';
 class PhotoCard extends StatelessWidget {
   final double width;
   final double height;
+  final bool useExtraTopPadding;
   final BoxDecoration? decoration;
   final Widget photo;
   final WidgetBuilder titleBuilder;
@@ -17,6 +18,7 @@ class PhotoCard extends StatelessWidget {
     super.key,
     required this.width,
     required this.height,
+    this.useExtraTopPadding = false,
     this.decoration,
     required this.photo,
     required this.titleBuilder,
@@ -29,12 +31,12 @@ class PhotoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const margin = 24.0;
-    const topPadding = 20.0;
+    final topPadding = 16.0 + (useExtraTopPadding ? 16.0 : 0.0);
     const bottomHeight = 132.0;
-    const leftPadding = 20.0;
-    const rightPadding = 20.0;
+    const leftPadding = 16.0;
+    const rightPadding = 16.0;
     const requiredWidth = leftPadding + rightPadding;
-    const requiredHeight = topPadding + bottomHeight;
+    final requiredHeight = topPadding + bottomHeight;
     final availableWidth = width - requiredWidth - margin;
     final availableHeight = height - requiredHeight - margin;
     final availableAspect = availableWidth / availableHeight;
@@ -60,7 +62,7 @@ class PhotoCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(
+                  padding: EdgeInsets.only(
                     left: leftPadding,
                     top: topPadding,
                     right: rightPadding,
@@ -88,7 +90,7 @@ class PhotoCard extends StatelessWidget {
                                 DefaultTextStyle(
                                   style: const TextStyle(
                                     fontFamily: 'Covered By Your Grace',
-                                    fontSize: 29,
+                                    fontSize: 32,
                                     color:
                                         Color.fromRGBO(0x27, 0x27, 0x27, 1.0),
                                   ),
@@ -101,7 +103,7 @@ class PhotoCard extends StatelessWidget {
                                 if (subtitle != null)
                                   DefaultTextStyle(
                                     style: const TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.w300,
                                       color:
                                           Color.fromRGBO(0x27, 0x27, 0x27, 1.0),
@@ -116,16 +118,16 @@ class PhotoCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                     const Divider(
                       height: 1,
                       color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
                     ),
                     SizedBox(
                       height: 50,
-                      child: DefaultTextStyle(
+                      child: DefaultTextStyle.merge(
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.w400,
                           color: Colors.black,
                         ),
@@ -159,11 +161,13 @@ class PhotoCard extends StatelessWidget {
 class PhotoCardLoading extends StatelessWidget {
   final double width;
   final double height;
+  final bool useExtraTopPadding;
 
   const PhotoCardLoading({
     super.key,
     required this.width,
     required this.height,
+    this.useExtraTopPadding = false,
   });
 
   @override
@@ -171,6 +175,7 @@ class PhotoCardLoading extends StatelessWidget {
     return PhotoCard(
       width: width,
       height: height,
+      useExtraTopPadding: useExtraTopPadding,
       photo: const ShimmerLoading(
         isLoading: true,
         child: _Silhouette(

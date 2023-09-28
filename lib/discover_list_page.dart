@@ -116,6 +116,7 @@ class _ListViewState extends ConsumerState<_ListView> {
                   return PhotoCardLoading(
                     width: constraints.maxWidth,
                     height: constraints.maxHeight,
+                    useExtraTopPadding: true,
                   );
                 },
               );
@@ -270,6 +271,7 @@ class _ProfileDisplayState extends ConsumerState<_ProfileDisplay> {
     return PhotoCard(
       width: widget.width,
       height: widget.height,
+      useExtraTopPadding: true,
       photo: Button(
         onPressed: _togglePlayPause,
         child: CameraFlashGallery(
