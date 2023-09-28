@@ -189,7 +189,7 @@ class _NavButton extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          DefaultTextStyle(
+          DefaultTextStyle.merge(
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,

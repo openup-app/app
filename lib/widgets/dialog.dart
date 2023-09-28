@@ -11,12 +11,12 @@ class OpenupDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-            fontSize: 24,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
-          ),
+    return DefaultTextStyle.merge(
+      style: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
+      ),
       child: Center(
         child: Container(
           width: 321,

@@ -93,7 +93,7 @@ class _WobblyRingsRecorderState extends State<WobblyRingsRecorder> {
               RecorderState.recording ||
               RecorderState.recorded =>
                 IgnorePointer(
-                  child: DefaultTextStyle(
+                  child: DefaultTextStyle.merge(
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontWeight: FontWeight.w400,

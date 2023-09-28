@@ -738,7 +738,7 @@ class _Input extends StatelessWidget {
   Widget build(BuildContext context) {
     return _FieldBackground(
       onPressed: onPressed ?? FocusScope.of(context).requestFocus,
-      child: DefaultTextStyle(
+      child: DefaultTextStyle.merge(
         textAlign: TextAlign.end,
         style: const TextStyle(
           fontSize: 16,
@@ -755,7 +755,7 @@ class _Input extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Builder(
                     builder: (context) {
-                      return DefaultTextStyle(
+                      return DefaultTextStyle.merge(
                         style: DefaultTextStyle.of(context).style.copyWith(
                             color: const Color.fromRGBO(0x00, 0x7C, 0xEE, 1.0)),
                         child: trailing,

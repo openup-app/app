@@ -166,7 +166,7 @@ class _ProfilePageState extends ConsumerState<SettingsPage> {
                                     if (signedIn == null) {
                                       return const SizedBox.shrink();
                                     }
-                                    return DefaultTextStyle(
+                                    return DefaultTextStyle.merge(
                                       style: const TextStyle(
                                         color: Color.fromRGBO(
                                             0x4B, 0x4B, 0x4B, 1.0),
@@ -1080,7 +1080,7 @@ class _CupertinoRow extends StatelessWidget {
             color: Color.fromRGBO(0x2A, 0x2A, 0x2A, 1.0),
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
-      child: DefaultTextStyle(
+      child: DefaultTextStyle.merge(
         style: textStyle,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1094,7 +1094,7 @@ class _CupertinoRow extends StatelessWidget {
                 child: center,
               ),
             if (trailing != null)
-              DefaultTextStyle(
+              DefaultTextStyle.merge(
                 style: textStyle.copyWith(
                   color: const Color.fromRGBO(0x00, 0x7C, 0xEE, 1.0),
                 ),
@@ -1225,7 +1225,7 @@ class _NameFieldState extends ConsumerState<_NameField> {
               }
             }
           },
-          child: DefaultTextStyle(
+          child: DefaultTextStyle.merge(
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w400,

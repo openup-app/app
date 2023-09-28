@@ -7,17 +7,17 @@ class TitleAndTagline extends StatelessWidget {
   Widget build(BuildContext context) {
     return Hero(
       tag: 'title_and_tagline',
-      child: DefaultTextStyle(
+      child: DefaultTextStyle.merge(
         style: Theme.of(context).textTheme.bodyMedium!,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Text(
+            const Text(
               'Plus One',
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontSize: 80,
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: TextStyle(
+                fontSize: 80,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(
               height: 6,

@@ -16,7 +16,7 @@ class SectionTitle extends StatelessWidget {
         top: 17,
         bottom: 4,
       ),
-      child: DefaultTextStyle(
+      child: DefaultTextStyle.merge(
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,

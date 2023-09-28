@@ -398,7 +398,7 @@ class _Background extends StatelessWidget {
                   maxHeight: constraints.maxHeight * 1.3,
                   child: ImageFiltered(
                     imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                    child: DefaultTextStyle(
+                    child: DefaultTextStyle.merge(
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 60,

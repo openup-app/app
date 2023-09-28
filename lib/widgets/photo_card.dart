@@ -101,7 +101,7 @@ class PhotoCard extends StatelessWidget {
                                   ),
                                 ),
                                 if (subtitle != null)
-                                  DefaultTextStyle(
+                                  DefaultTextStyle.merge(
                                     style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w300,

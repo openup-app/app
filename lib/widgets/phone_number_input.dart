@@ -49,7 +49,7 @@ class _PhoneInputState extends State<PhoneInput> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTextStyle(
+    return DefaultTextStyle.merge(
       style: widget.style ?? const TextStyle(),
       child: Builder(
         builder: (context) {

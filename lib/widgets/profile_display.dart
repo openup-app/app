@@ -445,7 +445,7 @@ class _ProfileButtonContents extends StatelessWidget {
           icon,
           if (label != null) ...[
             const SizedBox(width: 8),
-            DefaultTextStyle(
+            DefaultTextStyle.merge(
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
@@ -487,7 +487,7 @@ class _RecordButton extends StatelessWidget {
             ),
           ],
         ),
-        child: DefaultTextStyle(
+        child: DefaultTextStyle.merge(
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 14,

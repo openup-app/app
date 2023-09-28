@@ -53,7 +53,7 @@ class LoadingDialog extends StatelessWidget {
           const LoadingIndicator(color: Colors.white),
           if (label != null) ...[
             const SizedBox(height: 20),
-            DefaultTextStyle(
+            DefaultTextStyle.merge(
               style: const TextStyle(color: Colors.white),
               child: label!,
             ),

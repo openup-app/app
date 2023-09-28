@@ -333,6 +333,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         textTheme: textTheme.copyWith(
           bodyMedium: textTheme.bodyMedium!.copyWith(
             fontFamily: 'SF Pro',
+            letterSpacing: -0.5,
             color: Colors.white,
             fontSize: 15,
             fontWeight: FontWeight.w400,

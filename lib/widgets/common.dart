@@ -1364,7 +1364,7 @@ class SignUpRecorderState extends ConsumerState<SignUpRecorder> {
                   color: Colors.white,
                 ),
                 child: Center(
-                  child: DefaultTextStyle(
+                  child: DefaultTextStyle.merge(
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -1866,7 +1866,7 @@ class PermissionButton extends StatelessWidget {
                   child: icon,
                 ),
                 const SizedBox(width: 13),
-                DefaultTextStyle(
+                DefaultTextStyle.merge(
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w400,
@@ -1895,7 +1895,7 @@ class RoundedRectangleContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTextStyle(
+    return DefaultTextStyle.merge(
       style: const TextStyle(color: Colors.black),
       child: Container(
         clipBehavior: Clip.hardEdge,
@@ -2508,7 +2508,7 @@ class RoundedButton extends StatelessWidget {
             Radius.circular(6),
           ),
         ),
-        child: DefaultTextStyle(
+        child: DefaultTextStyle.merge(
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w400,
@@ -2544,7 +2544,7 @@ class RectangleButton extends StatelessWidget {
             Radius.circular(3),
           ),
         ),
-        child: DefaultTextStyle(
+        child: DefaultTextStyle.merge(
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w300,

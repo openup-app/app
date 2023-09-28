@@ -115,11 +115,10 @@ class GradientButton extends StatelessWidget {
                 ),
           color: white ? Colors.white : null,
         ),
-        child: DefaultTextStyle(
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium!
-              .copyWith(color: white ? Colors.black : null),
+        child: DefaultTextStyle.merge(
+          style: TextStyle(
+            color: white ? Colors.black : null,
+          ),
           child: child,
         ),
       ),

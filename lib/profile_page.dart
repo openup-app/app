@@ -90,7 +90,7 @@ class _TopTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 44,
-      child: DefaultTextStyle(
+      child: DefaultTextStyle.merge(
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
