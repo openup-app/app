@@ -17,7 +17,6 @@ import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/photo_card.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/record.dart';
-import 'package:openup/widgets/scaffold.dart';
 
 class DiscoverListPage extends ConsumerStatefulWidget {
   const DiscoverListPage({super.key});
@@ -31,41 +30,38 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(peopleProvider);
     return Scaffold(
-      appBar: const OpenupAppBar(
-        body: OpenupAppBarBody(
-          center: Text('Plus One'),
-        ),
-      ),
       body: _Background(
-        child: Builder(
-          builder: (context) {
-            if (state is PeopleFailed) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Something went wrong finding people nearby'),
-                    const SizedBox(height: 16),
-                    RoundedButton(
-                      onPressed: () => ref.refresh(peopleProvider),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            }
+        child: SafeArea(
+          child: Builder(
+            builder: (context) {
+              if (state is PeopleFailed) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Something went wrong finding people nearby'),
+                      const SizedBox(height: 16),
+                      RoundedButton(
+                        onPressed: () => ref.refresh(peopleProvider),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              }
 
-            final readyState = state.map(
-              uninitialized: (_) => null,
-              initializing: (_) => null,
-              failed: (_) => null,
-              ready: (ready) => ready,
-            );
-            return _ListView(
-              profiles: readyState?.profiles,
-              latLong: readyState?.latLong,
-            );
-          },
+              final readyState = state.map(
+                uninitialized: (_) => null,
+                initializing: (_) => null,
+                failed: (_) => null,
+                ready: (ready) => ready,
+              );
+              return _ListView(
+                profiles: readyState?.profiles,
+                latLong: readyState?.latLong,
+              );
+            },
+          ),
         ),
       ),
     );
