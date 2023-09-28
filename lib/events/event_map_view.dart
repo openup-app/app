@@ -530,35 +530,30 @@ class _EventMapListState extends ConsumerState<EventMapList> {
           ),
           trailing: AttendUnattendButtonBuilder(
             eventId: event.id,
-            builder: (context, participating, onPressed) {
-              return AttendUnattendButtonBuilder(
-                eventId: event.id,
-                builder: (context, isParticipating, onPressed) {
-                  final color = isParticipating ? Colors.white : Colors.black;
-                  return RoundedButton(
-                    color: isParticipating
-                        ? const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0)
-                        : Colors.white,
-                    onPressed: onPressed,
-                    child: Builder(
-                      builder: (context) {
-                        if (onPressed == null) {
-                          return LoadingIndicator(
-                            color: color,
-                          );
-                        }
-                        return Text(
-                          isParticipating ? 'Attending' : 'Attend',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400,
-                            color: color,
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
+            builder: (context, isParticipating, onPressed) {
+              final color = isParticipating ? Colors.white : Colors.black;
+              return RoundedButton(
+                color: isParticipating
+                    ? const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0)
+                    : Colors.white,
+                onPressed: onPressed,
+                child: Builder(
+                  builder: (context) {
+                    if (onPressed == null) {
+                      return LoadingIndicator(
+                        color: color,
+                      );
+                    }
+                    return Text(
+                      isParticipating ? 'Attending' : 'Attend',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                        color: color,
+                      ),
+                    );
+                  },
+                ),
               );
             },
           ),
