@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -337,24 +338,13 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
   int _index = 0;
   bool _ready = false;
 
-  bool _initialDidChangeDependencies = true;
-
   late DateTime _start;
   Duration _elapsedAtPause = Duration.zero;
 
   @override
   void initState() {
-    _start = DateTime.now();
     super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_initialDidChangeDependencies) {
-      _initialDidChangeDependencies = false;
-      _precache();
-    }
+    _start = DateTime.now();
   }
 
   @override
@@ -362,7 +352,6 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
     super.didUpdateWidget(oldWidget);
     final equals = const DeepCollectionEquality().equals;
     if (!equals(oldWidget.gallery, widget.gallery)) {
-      _precache();
       _index = 0;
       _maybeStartSlideshowTimer();
     }
@@ -458,11 +447,5 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
         },
       ),
     );
-  }
-
-  void _precache() {
-    // widget.gallery.forEach((photoUrl) {
-    //   precacheImage(NetworkImage(photoUrl), context);
-    // });
   }
 }
