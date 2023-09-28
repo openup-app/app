@@ -476,6 +476,23 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         _showUnreadMessageButton) {
       setState(() => _showUnreadMessageButton = false);
     }
+
+    _autoplayScrolledMessage(
+      _sortMessages(messages.values.toList()),
+      _pageController.page ?? 0,
+    );
+  }
+
+  void _autoplayScrolledMessage(
+      List<ChatMessage> messages, double pageOffset) async {
+    if (messages.isEmpty) {
+      return;
+    }
+    final index = pageOffset.round();
+    final message = messages[index];
+    if (message.messageId != null && message.messageId != _playbackMessageId) {
+      _playPause(message, false);
+    }
   }
 
   Future<void> _fetchChatroom(String otherUid) async {
@@ -524,6 +541,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           _messages?.clear();
           _messages = (_messages ?? {})..addEntries(entries);
         });
+        _autoplayScrolledMessage(_messages?.values.toList() ?? [], 0);
       },
     );
   }
