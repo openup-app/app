@@ -1,9 +1,9 @@
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:async/async.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/widgets/map_display.dart';
@@ -40,6 +40,10 @@ class MapRenderingState extends State<MapRendering> {
   List<RenderedItem> _renderedItems = [];
   RenderedItem? _renderedSelectedItem;
 
+  Uint8List? _staticMarker;
+  Uint8List? _staticMarkerSelected;
+  bool _firstDidChangeDeps = true;
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +52,29 @@ class MapRenderingState extends State<MapRendering> {
       onRenderStart: _onRenderStart,
       onRenderEnd: _onRenderEnd,
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_firstDidChangeDeps) {
+      _loadStaticMarkers();
+      _firstDidChangeDeps = false;
+    }
+  }
+
+  void _loadStaticMarkers() async {
+    final markers = await Future.wait([
+      rootBundle.load('assets/images/map_marker.png'),
+      rootBundle.load('assets/images/map_marker_selected.png'),
+    ]);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _staticMarker = markers[0].buffer.asUint8List();
+      _staticMarkerSelected = markers[1].buffer.asUint8List();
+    });
   }
 
   @override
@@ -66,53 +93,66 @@ class MapRenderingState extends State<MapRendering> {
     final pixelRatio = MediaQuery.of(context).devicePixelRatio;
 
     if (selectedItem != null && selectedItemChanged) {
-      // Render newly selected
-      _selectedRenderOp?.cancel();
-      final renderFuture = _renderMapMarker(
-        event: selectedItem.event,
-        pixelRatio: pixelRatio,
-        selected: true,
-      );
-      _selectedRenderOp = CancelableOperation.fromFuture(renderFuture);
-      _selectedRenderOp?.then((frames) {
-        final stillSelected = widget.selectedItem?.id == selectedItem.id;
-        if (mounted && stillSelected) {
-          setState(() {
-            _renderedSelectedItem = RenderedItem(
-              item: selectedItem,
-              frames: frames,
-            );
-          });
-        }
-      });
+      // // Render newly selected
+      // _selectedRenderOp?.cancel();
+      // final renderFuture = _renderMapMarker(
+      //   event: selectedItem.event,
+      //   pixelRatio: pixelRatio,
+      //   selected: true,
+      // );
+      // _selectedRenderOp = CancelableOperation.fromFuture(renderFuture);
+      // _selectedRenderOp?.then((frames) {
+      //   final stillSelected = widget.selectedItem?.id == selectedItem.id;
+      //   if (mounted && stillSelected) {
+      //     setState(() {
+      //       _renderedSelectedItem = RenderedItem(
+      //         item: selectedItem,
+      //         frames: frames,
+      //       );
+      //     });
+      //   }
+      // });
+      _renderedSelectedItem = RenderedItem(item: selectedItem, frames: [
+        _staticMarkerSelected!,
+      ]);
     } else if (selectedItem != null && selectedItemFavoriteChanged) {
       // Render selected with updated favorites icon
-      final unselectedFramesFuture = _renderMapMarker(
-        event: selectedItem.event,
-        pixelRatio: pixelRatio,
-        selected: false,
-      );
-      final selectedFramesFuture = _renderMapMarker(
-        event: selectedItem.event,
-        pixelRatio: pixelRatio,
-        selected: true,
-      );
-      Future.wait([unselectedFramesFuture, selectedFramesFuture])
-          .then((results) {
-        if (mounted) {
-          setState(() {
-            _renderedSelectedItem = RenderedItem(
-              item: selectedItem,
-              frames: results[1],
-            );
-          });
-        }
-      });
+      // final unselectedFramesFuture = _renderMapMarker(
+      //   event: selectedItem.event,
+      //   pixelRatio: pixelRatio,
+      //   selected: false,
+      // );
+      // final selectedFramesFuture = _renderMapMarker(
+      //   event: selectedItem.event,
+      //   pixelRatio: pixelRatio,
+      //   selected: true,
+      // );
+      // Future.wait([unselectedFramesFuture, selectedFramesFuture])
+      //     .then((results) {
+      //   if (mounted) {
+      //     setState(() {
+      //       _renderedSelectedItem = RenderedItem(
+      //         item: selectedItem,
+      //         frames: results[1],
+      //       );
+      //     });
+      //   }
+      // });
+      _renderedSelectedItem = RenderedItem(item: selectedItem, frames: [
+        _staticMarkerSelected!,
+      ]);
     } else if (selectedItem == null && selectedItemChanged) {
-      setState(() => _renderedSelectedItem = null);
+      // setState(() => _renderedSelectedItem = null);
+      _renderedSelectedItem = null;
     }
 
-    _markerRenderStateMachine.itemsUpdated(items: widget.items);
+    _renderedItems = widget.items.map((e) {
+      return RenderedItem(
+        item: e,
+        frames: [_staticMarker!],
+      );
+    }).toList();
+    // _markerRenderStateMachine.itemsUpdated(items: widget.items);
   }
 
   @override

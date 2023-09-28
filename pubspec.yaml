@@ -102,6 +102,8 @@ flutter:
     - assets/images/close_circle.png
     - assets/images/location_off.svg
     - assets/images/location_search.png
+    - assets/images/map_marker_selected.png
+    - assets/images/map_marker.png
     - assets/images/map_searching.json
     - assets/images/menu_background.png
     - assets/images/menu_button.png
