@@ -39,7 +39,6 @@ class ChatPage extends ConsumerStatefulWidget {
   final int socketPort;
   final String otherUid;
   final Chatroom? chatroom;
-  final DateTime? endTime;
 
   const ChatPage({
     Key? key,
@@ -48,14 +47,13 @@ class ChatPage extends ConsumerStatefulWidget {
     required this.socketPort,
     required this.otherUid,
     this.chatroom,
-    this.endTime,
   }) : super(key: key);
 
   @override
-  ConsumerState<ChatPage> createState() => _ChatScreenState();
+  ConsumerState<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatPage> {
+class _ChatPageState extends ConsumerState<ChatPage> {
   late final ChatApi _chatApi;
   Chatroom? _chatroom;
   Map<String, ChatMessage>? _messages;
