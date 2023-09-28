@@ -443,6 +443,22 @@ class _NonCinematicPhotoState extends State<NonCinematicPhoto>
   }
 }
 
+const kShimmerGradient = LinearGradient(
+  begin: Alignment(-1.0, -0.3),
+  end: Alignment(1.0, 0.3),
+  tileMode: TileMode.clamp,
+  colors: [
+    Color.fromRGBO(0xEB, 0xEB, 0xF4, 1.0),
+    Color.fromRGBO(0xF4, 0xF4, 0xF4, 1.0),
+    Color.fromRGBO(0xEB, 0xEB, 0xF4, 1.0),
+  ],
+  stops: [
+    0.1,
+    0.3,
+    0.4,
+  ],
+);
+
 class Shimmer extends StatefulWidget {
   final LinearGradient linearGradient;
   final Widget? child;
@@ -562,9 +578,9 @@ class _ShimmerLoadingState extends State<ShimmerLoading> {
     }
 
     // Collect ancestor shimmer information.
-    final shimmer = Shimmer.of(context)!;
+    final shimmer = Shimmer.of(context);
     final renderBox = context.findRenderObject();
-    if (!shimmer.isSized || renderBox == null) {
+    if (shimmer == null || !shimmer.isSized || renderBox == null) {
       // The ancestor Shimmer widget isn't laid
       // out yet. Return an empty box.
       return const SizedBox();

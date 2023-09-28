@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:openup/widgets/common.dart';
 
 class PhotoCard extends StatelessWidget {
   final double width;
@@ -151,5 +153,129 @@ class PhotoCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class PhotoCardLoading extends StatelessWidget {
+  final double width;
+  final double height;
+
+  const PhotoCardLoading({
+    super.key,
+    required this.width,
+    required this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PhotoCard(
+      width: width,
+      height: height,
+      photo: const ShimmerLoading(
+        isLoading: true,
+        child: _Silhouette(
+          child: Icon(
+            Icons.person,
+            size: 300,
+          ),
+        ),
+      ),
+      titleBuilder: (_) {
+        return ShimmerLoading(
+          isLoading: true,
+          child: Container(
+            width: double.infinity,
+            height: 20,
+            margin: const EdgeInsets.only(right: 16),
+            decoration: const BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.all(
+                Radius.circular(10),
+              ),
+            ),
+          ),
+        );
+      },
+      subtitle: ShimmerLoading(
+        isLoading: true,
+        child: Container(
+          width: double.infinity,
+          height: 12,
+          margin: const EdgeInsets.only(top: 8, right: 16),
+          decoration: const BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.all(
+              Radius.circular(6),
+            ),
+          ),
+        ),
+      ),
+      firstButton: ShimmerLoading(
+        isLoading: true,
+        child: Container(
+          width: double.infinity,
+          margin: const EdgeInsets.all(4),
+          decoration: const BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.all(
+              Radius.circular(10),
+            ),
+          ),
+        ),
+      ),
+      secondButton: ShimmerLoading(
+        isLoading: true,
+        child: Container(
+          width: double.infinity,
+          margin: const EdgeInsets.all(4),
+          decoration: const BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.all(
+              Radius.circular(10),
+            ),
+          ),
+        ),
+      ),
+      indicatorButton: ShimmerLoading(
+        isLoading: true,
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: const BoxDecoration(
+            color: Colors.black,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Silhouette extends SingleChildRenderObjectWidget {
+  const _Silhouette({
+    Key? key,
+    required Widget child,
+  }) : super(child: child);
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderProfile();
+  }
+}
+
+class _RenderProfile extends RenderProxyBox {
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final canvas = context.canvas;
+    canvas.clipRect(offset & size);
+    // Solid black fill is the destination
+    canvas.drawPaint(Paint()..color = Colors.black);
+    // Cut out the child's silhouette
+    canvas.saveLayer(
+      offset & size,
+      Paint()..blendMode = BlendMode.dstOut,
+    );
+    super.paint(context, offset);
+    canvas.restore();
   }
 }

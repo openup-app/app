@@ -44,8 +44,8 @@ final peopleProvider = StateProvider<PeopleState>(
     final result = ref.watch(_peopleProvider);
     return result.map(
       loading: (loading) => const _PeopleInitializing(),
-      error: (error) => const _PeopleFailed(),
-      data: (data) => _PeopleReady(
+      error: (error) => const PeopleFailed(),
+      data: (data) => PeopleReady(
         profiles: data.value.toList(),
         latLong: latLong,
       ),
@@ -58,9 +58,9 @@ final peopleProvider = StateProvider<PeopleState>(
 class PeopleState with _$PeopleState {
   const factory PeopleState.uninitialized() = _PeopleUninitialized;
   const factory PeopleState.initializing() = _PeopleInitializing;
-  const factory PeopleState.failed() = _PeopleFailed;
+  const factory PeopleState.failed() = PeopleFailed;
   const factory PeopleState.ready({
     required List<DiscoverProfile> profiles,
     required LatLong latLong,
-  }) = _PeopleReady;
+  }) = PeopleReady;
 }

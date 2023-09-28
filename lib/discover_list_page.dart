@@ -37,38 +37,33 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
         ),
       ),
       body: _Background(
-        child: state.map(
-          uninitialized: (_) {
-            return const Center(
-              child: LoadingIndicator(),
+        child: Builder(
+          builder: (context) {
+            if (state is PeopleFailed) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Something went wrong finding people nearby'),
+                    const SizedBox(height: 16),
+                    RoundedButton(
+                      onPressed: () => ref.refresh(peopleProvider),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final readyState = state.map(
+              uninitialized: (_) => null,
+              initializing: (_) => null,
+              failed: (_) => null,
+              ready: (ready) => ready,
             );
-          },
-          initializing: (_) {
-            return const Center(
-              child: LoadingIndicator(),
-            );
-          },
-          failed: (_) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Something went wrong finding people nearby'),
-                  const SizedBox(height: 16),
-                  RoundedButton(
-                    onPressed: () => ref.refresh(peopleProvider),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          },
-          ready: (ready) {
-            return SafeArea(
-              child: _ListView(
-                profiles: ready.profiles,
-                latLong: ready.latLong,
-              ),
+            return _ListView(
+              profiles: readyState?.profiles,
+              latLong: readyState?.latLong,
             );
           },
         ),
@@ -78,8 +73,8 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
 }
 
 class _ListView extends ConsumerStatefulWidget {
-  final List<DiscoverProfile> profiles;
-  final LatLong latLong;
+  final List<DiscoverProfile>? profiles;
+  final LatLong? latLong;
 
   const _ListView({
     super.key,
@@ -100,12 +95,6 @@ class _ListViewState extends ConsumerState<_ListView> {
 
   @override
   Widget build(BuildContext context) {
-    final profiles = widget.profiles;
-    if (profiles.isEmpty) {
-      return const Center(
-        child: Text('No profiles nearby'),
-      );
-    }
     return ActivePage(
       onActivate: () => setState(() => _active = true),
       onDeactivate: () {
@@ -116,6 +105,29 @@ class _ListViewState extends ConsumerState<_ListView> {
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
+          final profiles = widget.profiles;
+          final latLong = widget.latLong;
+          if (profiles == null || latLong == null) {
+            return CardStack(
+              width: constraints.maxWidth,
+              items: List.generate(3, (index) => null),
+              onChanged: (_) {},
+              itemBuilder: (context, _) {
+                return Shimmer(
+                  linearGradient: kShimmerGradient,
+                  child: PhotoCardLoading(
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
+                  ),
+                );
+              },
+            );
+          }
+          if (profiles.isEmpty) {
+            return const Center(
+              child: Text('No profiles nearby'),
+            );
+          }
           return ProfileBuilder(
             key: _profileBuilderKey,
             profile: profiles[_profileIndex % profiles.length].profile,
@@ -136,9 +148,8 @@ class _ListViewState extends ConsumerState<_ListView> {
                     width: constraints.maxWidth,
                     height: constraints.maxHeight,
                     profile: profile,
-                    distance:
-                        distanceMiles(profile.location.latLong, widget.latLong)
-                            .round(),
+                    distance: distanceMiles(profile.location.latLong, latLong)
+                        .round(),
                     playbackState: isCurrent ? playbackState : null,
                     playbackInfoStream: isCurrent ? playbackInfoStream : null,
                     onPlay: () {
