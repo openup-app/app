@@ -20,6 +20,8 @@ class RecorderWithoutWaveforms {
     _amplitudeSubscription?.cancel();
   }
 
+  Future<bool> checkAndGetPermission() => _recorder.hasPermission();
+
   Future<void> startRecording({
     required void Function(double current, double max) onAmplitude,
     required void Function(Uint8List?) onComplete,

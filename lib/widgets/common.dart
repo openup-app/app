@@ -1724,6 +1724,7 @@ class PlaybackRecorderController extends ChangeNotifier {
     required void Function(double amplitude, double maxAmplitude) onAmplitude,
     required void Function(Uint8List? bytes) onComplete,
   }) async {
+    await _recorder.checkAndGetPermission();
     await _recorder.startRecording(
       onAmplitude: onAmplitude,
       onComplete: onComplete,
