@@ -51,6 +51,10 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
   final _preferredTilt = 40.0;
   final _initialZoom = 13.9;
 
+  bool _firstChangeDeps = true;
+  BitmapDescriptor? _markerAsset;
+  BitmapDescriptor? _markerSelectedAsset;
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +68,33 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
         recenterMap(next);
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_firstChangeDeps) {
+      _firstChangeDeps = false;
+      final pixelRatio = MediaQuery.of(context).devicePixelRatio;
+      final assetsFuture = Future.wait([
+        BitmapDescriptor.fromAssetImage(
+          ImageConfiguration(devicePixelRatio: pixelRatio),
+          'assets/images/map_marker.png',
+        ),
+        BitmapDescriptor.fromAssetImage(
+          ImageConfiguration(devicePixelRatio: pixelRatio),
+          'assets/images/map_marker_selected.png',
+        ),
+      ]);
+      assetsFuture.then((assets) {
+        if (mounted) {
+          setState(() {
+            _markerAsset = assets[0];
+            _markerSelectedAsset = assets[1];
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -185,6 +216,11 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
       }
       final favorite = item.favorite;
 
+      final markerAsset = _markerAsset;
+      final markerSelectedAsset = _markerSelectedAsset;
+      if (markerAsset == null || markerSelectedAsset == null) {
+        return markers;
+      }
       final marker = Marker(
         markerId: MarkerId(item.id.toString()),
         anchor: const Offset(0.5, 0.5),
@@ -195,7 +231,7 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
           item.latLong.longitude,
         ),
         onTap: () => widget.onSelectionChanged(item),
-        icon: BitmapDescriptor.fromBytes(frame),
+        icon: selected ? markerSelectedAsset : markerAsset,
       );
       markers.add(marker);
     }
