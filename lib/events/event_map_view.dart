@@ -128,12 +128,16 @@ class _EventMapViewState extends ConsumerState<EventMapView>
                       key: _mapKey,
                       items: renderedItems,
                       selectedItem: renderedSelectedItem,
-                      onSelectionChanged: (item) {
+                      onSelectionChanged: (item) async {
                         if (item != null) {
                           final event = (item as EventMapItem).event;
-                          _showEventPanel(event);
                           ref.read(eventMapProvider.notifier).selectedEvent =
                               event;
+                          await _showEventPanel(event);
+                          if (mounted) {
+                            ref.read(eventMapProvider.notifier).selectedEvent =
+                                null;
+                          }
                         }
                       },
                       itemAnimationSpeedMultiplier: 1.0,
@@ -169,8 +173,8 @@ class _EventMapViewState extends ConsumerState<EventMapView>
     );
   }
 
-  void _showEventPanel(Event event) {
-    showModalBottomSheet(
+  Future<void> _showEventPanel(Event event) {
+    return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       useRootNavigator: true,
@@ -284,58 +288,41 @@ class _MapOverlay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
+    return Stack(
+      alignment: Alignment.bottomCenter,
       children: [
-        Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    _MapButton(
-                      onPressed: onRecenterMap,
-                      child: const Icon(
-                        CupertinoIcons.location_fill,
-                        size: 20,
-                        color: Color.fromRGBO(0x22, 0x22, 0x22, 1.0),
-                      ),
-                    ),
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutQuart,
-                      width: 0,
-                      height: ref.watch(eventMapProvider
-                              .select((s) => s.selectedEvent == null))
-                          ? MediaQuery.of(context).padding.bottom + 16
-                          : 4,
-                    ),
-                  ],
+        Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                _MapButton(
+                  onPressed: onRecenterMap,
+                  child: const Icon(
+                    CupertinoIcons.location_fill,
+                    size: 20,
+                    color: Color.fromRGBO(0x22, 0x22, 0x22, 1.0),
+                  ),
                 ),
-              ),
+                SizedBox(
+                  height: MediaQuery.of(context).padding.bottom + 16,
+                ),
+              ],
             ),
-            AnimatedPadding(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutQuart,
-              padding: EdgeInsets.only(
-                bottom: ref.watch(
-                        eventMapProvider.select((s) => s.selectedEvent == null))
-                    ? MediaQuery.of(context).padding.bottom + 72
-                    : 4,
-              ),
-              child: _LoadingRefreshButton(
-                onPressed: searching ? null : onRefetch,
-                count: searching
-                    ? null
-                    : ref
-                        .watch(eventMapProvider.select((s) => s.events.length)),
-              ),
-            ),
-          ],
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + 72,
+          ),
+          child: _LoadingRefreshButton(
+            onPressed: searching ? null : onRefetch,
+            count: searching
+                ? null
+                : ref.watch(eventMapProvider.select((s) => s.events.length)),
+          ),
         ),
       ],
     );
