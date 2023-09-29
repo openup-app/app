@@ -118,7 +118,7 @@ class PhotoCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 3),
                     const Divider(
                       height: 1,
                       color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
@@ -190,8 +190,8 @@ class PhotoCardLoading extends StatelessWidget {
           isLoading: true,
           child: Container(
             width: double.infinity,
-            height: 20,
-            margin: const EdgeInsets.only(right: 16),
+            height: 24,
+            margin: const EdgeInsets.only(right: 16, top: 5),
             decoration: const BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.all(
@@ -205,8 +205,8 @@ class PhotoCardLoading extends StatelessWidget {
         isLoading: true,
         child: Container(
           width: double.infinity,
-          height: 12,
-          margin: const EdgeInsets.only(top: 8, right: 16),
+          height: 16,
+          margin: const EdgeInsets.only(top: 12, right: 16, bottom: 2),
           decoration: const BoxDecoration(
             color: Colors.black,
             borderRadius: BorderRadius.all(
@@ -215,28 +215,36 @@ class PhotoCardLoading extends StatelessWidget {
           ),
         ),
       ),
-      firstButton: ShimmerLoading(
+      firstButton: const ShimmerLoading(
         isLoading: true,
-        child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.all(4),
-          decoration: const BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.all(
-              Radius.circular(10),
+        child: Center(
+          child: SizedBox(
+            width: 100,
+            height: 16,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(10),
+                ),
+              ),
             ),
           ),
         ),
       ),
-      secondButton: ShimmerLoading(
+      secondButton: const ShimmerLoading(
         isLoading: true,
-        child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.all(4),
-          decoration: const BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.all(
-              Radius.circular(10),
+        child: Center(
+          child: SizedBox(
+            width: 100,
+            height: 16,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(10),
+                ),
+              ),
             ),
           ),
         ),
