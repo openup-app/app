@@ -136,28 +136,30 @@ class CardStackState<T> extends State<CardStack<T>>
           _keys.add(_keys.removeAt(0));
           _subItems.add(_subItems.removeAt(0));
         });
-        widget.onChanged((_topItemIndex + 1) % _items.length);
+        widget.onChanged(
+            (_topItemIndex + 1) % _items.length % widget.items.length);
       } else if (!towardsOne && _dragRight) {
         // Undo next
         setState(() {
-          _keys.insert(0, _keys.removeAt(2));
-          _subItems.insert(0, _subItems.removeAt(2));
+          _keys.insert(0, _keys.removeLast());
+          _subItems.insert(0, _subItems.removeLast());
         });
-        widget.onChanged((_topItemIndex - 1) % _items.length);
+        widget.onChanged(_topItemIndex % _items.length % widget.items.length);
       } else if (!towardsOne && !_dragRight) {
         // Previous
         setState(() {
-          _keys.insert(0, _keys.removeAt(2));
-          _subItems.insert(0, _subItems.removeAt(2));
+          _keys.insert(0, _keys.removeLast());
+          _subItems.insert(0, _subItems.removeLast());
         });
-        widget.onChanged((_topItemIndex - 1) % _items.length);
+        widget.onChanged(_topItemIndex % _items.length % widget.items.length);
       } else if (towardsOne && _dragRight) {
         // Undo previous
         setState(() {
           _keys.add(_keys.removeAt(0));
           _subItems.add(_subItems.removeAt(0));
         });
-        widget.onChanged((_topItemIndex + 1) % _items.length);
+        widget.onChanged(
+            (_topItemIndex - 1) % _items.length % widget.items.length);
       }
     }
     _previousValue =

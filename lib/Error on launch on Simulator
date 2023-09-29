@@ -1,0 +1,10 @@
+Error on launch on Simulator
+
+flutter: ### Guest by default? true
+[VERBOSE-2:dart_vm_initializer.cc(41)] Unhandled Exception: [firebase_auth/user-not-found] There is no user record corresponding to this identifier. The user may have been deleted.
+#0      FirebaseAuthUserHostApi.getIdToken (package:firebase_auth_platform_interface/src/pigeon/messages.pigeon.dart:1495:7)
+<asynchronous suspension>
+#1      MethodChannelUser.getIdToken (package:firebase_auth_platform_interface/src/method_channel/method_channel_user.dart:43:20)
+<asynchronous suspension>
+#2      AuthStateNotifier._init (package:openup/auth/auth_provider.dart:50:21)
+<asynchronous suspension>
