@@ -169,7 +169,7 @@ flutter:
           weight: 100
         - asset: assets/fonts/SF-Pro-Text-Thin.otf
           weight: 200
-        - asset: assets/fonts/SF-Pro-Text-light.otf
+        - asset: assets/fonts/SF-Pro-Text-Light.otf
           weight: 300
         - asset: assets/fonts/SF-Pro-Text-Regular.otf
           weight: 400
