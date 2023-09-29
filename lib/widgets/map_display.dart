@@ -134,6 +134,8 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
           tiltGesturesEnabled: false,
           rotateGesturesEnabled: true,
           minMaxZoomPreference: const MinMaxZoomPreference(4, null),
+          zoomControlsEnabled: false,
+          compassEnabled: false,
           onMapCreated: _initMapController,
           myLocationEnabled: true,
           myLocationButtonEnabled: false,
