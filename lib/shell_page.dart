@@ -107,17 +107,17 @@ class _Tabs extends StatelessWidget {
             Expanded(
               child: _NavButton(
                 icon: SvgPicture.asset('assets/images/nav_icon_people.svg'),
-                label: const Text('People'),
+                label: const Text('Discover'),
                 selected: index == 0,
                 onPressed: () => onTabPressed(0),
               ),
             ),
             Expanded(
               child: _NavButton(
-                icon: SvgPicture.asset('assets/images/nav_icon_messages.svg'),
-                label: const Text('Messages'),
-                selected: index == 1,
-                onPressed: () => onTabPressed(1),
+                icon: SvgPicture.asset('assets/images/nav_icon_hangout.svg'),
+                label: const Text('Hangout'),
+                selected: index == 2,
+                onPressed: () => onTabPressed(2),
               ),
             ),
             Expanded(
@@ -143,13 +143,10 @@ class _Tabs extends StatelessWidget {
             ),
             Expanded(
               child: _NavButton(
-                icon: const Icon(
-                  Icons.location_on_sharp,
-                  size: 28,
-                ),
-                label: const Text('Events'),
-                selected: index == 2,
-                onPressed: () => onTabPressed(2),
+                icon: SvgPicture.asset('assets/images/nav_icon_messages.svg'),
+                label: const Text('Messages'),
+                selected: index == 1,
+                onPressed: () => onTabPressed(1),
               ),
             ),
             Expanded(
