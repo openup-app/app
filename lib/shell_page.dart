@@ -122,6 +122,27 @@ class _Tabs extends StatelessWidget {
             ),
             Expanded(
               child: _NavButton(
+                enableFilterOnIcon: false,
+                icon: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color.fromRGBO(0xEE, 0xEE, 0xEE, 1.0),
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    size: 20,
+                    color: Colors.black,
+                  ),
+                ),
+                label: const Text('Create'),
+                selected: false,
+                onPressed: () => context.pushNamed('meetups_create'),
+              ),
+            ),
+            Expanded(
+              child: _NavButton(
                 icon: const Icon(
                   Icons.location_on_sharp,
                   size: 28,
