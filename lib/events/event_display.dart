@@ -28,7 +28,7 @@ class EventDisplayListItem extends ConsumerWidget {
       onPressed: () {
         if (myEvent) {
           context.pushNamed(
-            'meetups_create',
+            'event_create',
             extra: EventCreateArgs(editEvent: event),
           );
         } else {
@@ -570,7 +570,7 @@ void _showEventOnMap(BuildContext context, WidgetRef ref, Event event) {
   ref.read(discoverActionProvider.notifier).state =
       DiscoverAction.viewEvent(event);
   context.goNamed(
-    'meetups',
+    'events',
     queryParams: {'view_map': 'true'},
   );
 }

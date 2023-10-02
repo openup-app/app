@@ -90,7 +90,7 @@ class _CreateEvent extends StatelessWidget {
           child: SizedBox(
             width: 121,
             child: RectangleButton(
-              onPressed: () => context.pushNamed('meetups_create'),
+              onPressed: () => context.pushNamed('event_create'),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

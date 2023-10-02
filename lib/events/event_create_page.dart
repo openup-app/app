@@ -588,7 +588,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
     );
 
     if (mounted) {
-      context.goNamed('meetups');
+      context.goNamed('events');
     }
   }
 

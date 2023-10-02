@@ -47,7 +47,7 @@ class EventPreviewPage extends ConsumerWidget {
                   future: future,
                 );
                 if (success && context.mounted) {
-                  context.goNamed('meetups');
+                  context.goNamed('events');
                 }
               },
               color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),

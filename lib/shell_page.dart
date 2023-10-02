@@ -138,7 +138,7 @@ class _Tabs extends StatelessWidget {
                 ),
                 label: const Text('Create'),
                 selected: false,
-                onPressed: () => context.pushNamed('meetups_create'),
+                onPressed: () => context.pushNamed('event_create'),
               ),
             ),
             Expanded(

@@ -158,7 +158,7 @@ class _Toolbar extends StatelessWidget {
         ),
         const Spacer(),
         Button(
-          onPressed: () => context.pushNamed('meetups_create'),
+          onPressed: () => context.pushNamed('event_create'),
           child: const Padding(
             padding: EdgeInsets.all(12),
             child: Row(

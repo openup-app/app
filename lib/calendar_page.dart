@@ -122,7 +122,7 @@ class _FindEvents extends StatelessWidget {
           child: SizedBox(
             width: 160,
             child: RectangleButton(
-              onPressed: () => context.goNamed('meetups'),
+              onPressed: () => context.goNamed('events'),
               child: const Text('Find Meetups'),
             ),
           ),

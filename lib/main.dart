@@ -472,8 +472,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               preload: true,
               routes: [
                 GoRoute(
-                  path: '/meetups',
-                  name: 'meetups',
+                  path: '/events',
+                  name: 'events',
                   builder: (context, state) {
                     final viewMap = state.queryParams['view_map'] == 'true';
                     return EventsPage(
@@ -483,7 +483,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   routes: [
                     GoRoute(
                       path: 'create',
-                      name: 'meetups_create',
+                      name: 'event_create',
                       parentNavigatorKey: rootNavigatorKey,
                       builder: (context, state) {
                         final args = state.extra as EventCreateArgs?;
@@ -551,8 +551,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   },
                   routes: [
                     GoRoute(
-                      path: 'meetups',
-                      name: 'my_meetups',
+                      path: 'events',
+                      name: 'my_events',
                       parentNavigatorKey: rootNavigatorKey,
                       builder: (context, state) {
                         return const MyMeetupsPage();
