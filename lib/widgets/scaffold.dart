@@ -117,6 +117,26 @@ class OpenupAppBarBackButton extends StatelessWidget {
   }
 }
 
+class OpenupAppBarCloseButton extends StatelessWidget {
+  const OpenupAppBarCloseButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: Navigator.of(context).pop,
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Text(
+          'Close',
+          style: TextStyle(
+            color: Color.fromRGBO(0x00, 0x7C, 0xEE, 1.0),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class OpenupBottomBar extends StatelessWidget {
   final Widget child;
 
