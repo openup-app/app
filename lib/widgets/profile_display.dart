@@ -3,6 +3,7 @@ import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -12,6 +13,7 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/drag_handle.dart';
 import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
+import 'package:openup/widgets/photo_card.dart';
 import 'package:openup/widgets/record.dart';
 
 class ProfileBuilder extends StatefulWidget {
@@ -343,6 +345,170 @@ class ProfileDisplay extends StatelessWidget {
         SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
       ],
     );
+  }
+}
+
+class PhotoCardProfile extends ConsumerStatefulWidget {
+  final double width;
+  final double height;
+  final DiscoverProfile profile;
+  final int distance;
+  final PlaybackState? playbackState;
+  final Stream<PlaybackInfo>? playbackInfoStream;
+  final VoidCallback onPlay;
+  final VoidCallback onPause;
+  final VoidCallback onMessage;
+
+  const PhotoCardProfile({
+    super.key,
+    required this.width,
+    required this.height,
+    required this.profile,
+    required this.distance,
+    required this.playbackState,
+    required this.playbackInfoStream,
+    required this.onPlay,
+    required this.onPause,
+    required this.onMessage,
+  });
+
+  @override
+  ConsumerState<PhotoCardProfile> createState() => _ProfileDisplayState();
+}
+
+class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
+  bool _loading = true;
+  bool _initialDidChangeDeps = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialDidChangeDeps) {
+      _precache();
+      _initialDidChangeDeps = false;
+    }
+  }
+
+  void _precache() async {
+    await Future.wait([
+      for (final uri in widget.profile.profile.gallery)
+        precacheImage(NetworkImage(uri.toString()), context)
+    ]);
+    if (mounted) {
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return PhotoCardLoading(
+        width: widget.width,
+        height: widget.height,
+      );
+    }
+
+    return PhotoCard(
+      width: widget.width,
+      height: widget.height,
+      useExtraTopPadding: true,
+      photo: Button(
+        onPressed: _togglePlayPause,
+        child: CameraFlashGallery(
+          slideshow: true,
+          gallery:
+              widget.profile.profile.gallery.map((e) => Uri.parse(e)).toList(),
+        ),
+      ),
+      titleBuilder: (context) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(widget.profile.profile.name.toUpperCase()),
+            const SizedBox(width: 12),
+            Text(
+              widget.profile.profile.age.toString(),
+              style: const TextStyle(fontSize: 27),
+            ),
+          ],
+        );
+      },
+      subtitle: Text(
+          '${widget.distance} ${widget.distance == 1 ? 'mile' : 'miles'} away'),
+      firstButton: Button(
+        onPressed: widget.onMessage,
+        child: const Center(
+          child: Text(
+            'Message',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ),
+      secondButton: ReportBlockPopupMenu2(
+        name: widget.profile.profile.name,
+        uid: widget.profile.profile.uid,
+        onBlock: () {},
+        builder: (context) {
+          return const Center(
+            child: Text(
+              'Options',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Colors.black,
+              ),
+            ),
+          );
+        },
+      ),
+      indicatorButton: Button(
+        onPressed: _togglePlayPause,
+        child: Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          margin: const EdgeInsets.all(8),
+          decoration: const BoxDecoration(
+            color: Colors.black,
+            shape: BoxShape.circle,
+          ),
+          child: Builder(
+            builder: (context) {
+              return switch (widget.playbackState) {
+                null => const SizedBox.shrink(),
+                PlaybackState.idle ||
+                PlaybackState.paused =>
+                  const Icon(Icons.play_arrow),
+                PlaybackState.playing => SvgPicture.asset(
+                    'assets/images/audio_indicator.svg',
+                    width: 16,
+                    height: 18,
+                  ),
+                _ => const LoadingIndicator(),
+              };
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _togglePlayPause() {
+    switch (widget.playbackState) {
+      case PlaybackState.idle:
+      case PlaybackState.paused:
+        widget.onPlay();
+      case null:
+        return;
+      default:
+        widget.onPause();
+    }
   }
 }
 
