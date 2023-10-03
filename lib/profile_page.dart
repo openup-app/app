@@ -8,10 +8,9 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/util/photo_picker.dart';
+import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:openup/widgets/card_stack.dart';
-import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/record.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
@@ -252,7 +251,17 @@ class _ProfilePanelState extends ConsumerState<_ProfileStack> {
               child: Transform.rotate(
                 angle: radians(5.7),
                 child: Button(
-                  onPressed: () => _showPreview(context),
+                  onPressed: () {
+                    context.pushNamed(
+                      'view_profile',
+                      queryParams: {
+                        'uid': widget.profile.uid,
+                      },
+                      extra: ViewProfilePageArguments.profile(
+                        profile: widget.profile,
+                      ),
+                    );
+                  },
                   child: Container(
                     width: 133,
                     height: 39,
@@ -350,93 +359,6 @@ class _ProfilePanelState extends ConsumerState<_ProfileStack> {
     if (result == true && mounted) {
       await ref.read(userProvider.notifier).deleteGalleryPhoto(index);
     }
-  }
-
-  void _showPreview(BuildContext context) {
-    Navigator.of(context, rootNavigator: true).push(
-      CupertinoModalPopupRoute(
-        builder: (context) {
-          return _PreviewPage(
-            profile: DiscoverProfile(
-              profile: widget.profile,
-              location: const UserLocation(
-                latLong: LatLong(latitude: 0, longitude: 0),
-                radius: 0,
-                visibility: LocationVisibility.private,
-              ),
-              favorite: false,
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _PreviewPage extends StatefulWidget {
-  final DiscoverProfile profile;
-
-  const _PreviewPage({
-    super.key,
-    required this.profile,
-  });
-
-  @override
-  State<_PreviewPage> createState() => _PreviewPageState();
-}
-
-class _PreviewPageState extends State<_PreviewPage> {
-  final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
-  bool _play = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const OpenupAppBar(
-        body: OpenupAppBarBody(
-          leading: OpenupAppBarCloseButton(),
-          center: Text('Preview'),
-        ),
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return ProfileBuilder(
-            key: _profileBuilderKey,
-            profile: widget.profile.profile,
-            play: _play,
-            builder: (context, playbackState, playbackInfoStream) {
-              return CardStack(
-                width: constraints.maxWidth,
-                items: [widget.profile],
-                onChanged: (_) {},
-                itemBuilder: (context, item, key) {
-                  return PhotoCardWiggle(
-                    childKey: key,
-                    child: PhotoCardProfile(
-                      width: constraints.maxWidth,
-                      height: constraints.maxHeight,
-                      profile: item,
-                      distance: 2,
-                      playbackState: playbackState,
-                      playbackInfoStream: playbackInfoStream,
-                      onPlay: () {
-                        _profileBuilderKey.currentState?.play();
-                        setState(() => _play = true);
-                      },
-                      onPause: () {
-                        _profileBuilderKey.currentState?.pause();
-                        setState(() => _play = false);
-                      },
-                      onMessage: () {},
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
-      ),
-    );
   }
 }
 
