@@ -1,16 +1,21 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/events/event_create_page.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/events/events_provider.dart';
+import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/image.dart';
+import 'package:openup/widgets/record.dart';
 
 class EventDisplayListItem extends ConsumerWidget {
   final Event event;
@@ -379,186 +384,247 @@ class EventDisplayLarge extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 20),
-        Center(
-          child: Container(
-            width: 184,
-            height: 311,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.white,
-                width: 2,
-              ),
-            ),
-            child: ImageUri(
-              event.photo,
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        const SizedBox(height: 32),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
+        SizedBox(
+          height: 512,
+          child: Stack(
             children: [
-              Expanded(
-                child: Text(
-                  event.title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
+              Positioned.fill(
+                child: Image.network(
+                  event.host.photo,
+                  fit: BoxFit.cover,
                 ),
               ),
-              Expanded(
-                child: Text(
-                  '${formatDayOfWeek(event.startDate)} | ${formatDateShort(event.startDate)}',
-                  textAlign: TextAlign.end,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w300,
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 115,
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black,
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          event.title,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '${formatDayOfWeek(event.startDate)} | ',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                              TextSpan(
+                                text: formatDateShort(event.startDate),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 6),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Consumer(
-            builder: (context, ref, child) {
-              return Button(
-                onPressed: () => _showEventOnMap(context, ref, event),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on,
-                      color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                    ),
-                    Expanded(
-                      child: Text(
-                        event.location.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w300,
-                          color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        '${formatTime(event.startDate).toLowerCase()} - ${formatTime(event.endDate).toLowerCase()}',
-                        textAlign: TextAlign.end,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w300,
-                        ),
-                      ),
-                    ),
-                  ],
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            const SizedBox(width: 28),
+            ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(24)),
+              child: Container(
+                width: 48,
+                height: 48,
+                foregroundDecoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(width: 2, color: Colors.white),
                 ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 6),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            children: [
-              const Icon(Icons.attach_money_outlined),
-              Expanded(
-                child: Text(
-                  event.price.toString(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w300,
-                  ),
+                child: Image.network(
+                  event.host.photo,
+                  fit: BoxFit.cover,
                 ),
               ),
-              if (preview)
-                Expanded(
-                  child: Builder(
-                    builder: (context) {
-                      return event.attendance.map(
-                        unlimited: (_) {
-                          return const Text(
-                            'Attendance | Unlimited',
-                            textAlign: TextAlign.end,
-                          );
-                        },
-                        limited: (limited) {
-                          return const Text(
-                            'Attendance | Limited',
-                            textAlign: TextAlign.end,
-                          );
-                        },
-                      );
-                    },
-                  ),
-                )
-              else
-                Expanded(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.end,
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
                     children: [
-                      const Icon(Icons.bar_chart_sharp),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${event.views} ${event.views == 1 ? 'view' : 'views'}',
-                        textAlign: TextAlign.end,
+                      const TextSpan(
+                        text: 'Hangout hosted by ',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      TextSpan(
+                        text: event.host.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
-                )
+                ),
+                const SizedBox(height: 6),
+                Builder(
+                  builder: (context) {
+                    final count = event.attendance.map(
+                      limited: (value) => value.limit,
+                      unlimited: (value) => null,
+                    );
+                    final number = count == null
+                        ? 'people'
+                        : (count == 1 ? '1 person' : '$count people');
+                    return Text(
+                      'Wants $number to join',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+        const Divider(
+          height: 36,
+          indent: 28,
+          endIndent: 28,
+          color: Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Row(
+            children: [
+              const Text(
+                'What we\'ll do',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${formatTime(event.startDate).toLowerCase()} - ${formatTime(event.endDate).toLowerCase()}',
+                textAlign: TextAlign.end,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Text(
+            event.description,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ),
+        const Divider(
+          height: 36,
+          indent: 28,
+          endIndent: 28,
+          color: Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
+        ),
         if (!preview) ...[
-          const SizedBox(height: 15),
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            padding: EdgeInsets.symmetric(horizontal: 28),
             child: Text(
               'Who will be there',
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                decoration: TextDecoration.underline,
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          const SizedBox(height: 16),
           SizedBox(
             height: 48,
             child: _Participants(
               eventId: event.id,
             ),
           ),
+          const Divider(
+            height: 36,
+            indent: 28,
+            endIndent: 28,
+            color: Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
+          ),
         ],
-        if (preview) const SizedBox(height: 35) else const SizedBox(height: 12),
         const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
+          padding: EdgeInsets.symmetric(horizontal: 28),
           child: Text(
-            'Event Description',
+            'Where will it be',
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              decoration: TextDecoration.underline,
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
-        const SizedBox(height: 6),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            event.description,
-            style: const TextStyle(
-              height: 1.8,
-              fontSize: 16,
-              fontWeight: FontWeight.w300,
-            ),
+          padding: const EdgeInsets.symmetric(horizontal: 28.0),
+          child: Consumer(
+            builder: (context, ref, child) {
+              return Button(
+                onPressed: () => _showEventOnMap(context, ref, event),
+                child: SizedBox(
+                  height: 48,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                      ),
+                      Expanded(
+                        child: Text(
+                          event.location.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300,
+                            color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -616,25 +682,29 @@ class _Participants extends ConsumerWidget {
         final profiles = data.value;
         return ListView.builder(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: const EdgeInsets.only(left: 28, right: 28),
           itemCount: profiles.length,
           itemBuilder: (context, index) {
             final profile = profiles[index];
-            return Button(
-              onPressed: () {},
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
+            return SizedBox(
+              width: 24,
+              child: OverflowBox(
+                maxWidth: 31,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.all(Radius.circular(16)),
                   child: Container(
                     width: 31,
                     height: 31,
+                    clipBehavior: Clip.hardEdge,
                     foregroundDecoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        width: 2,
+                        width: 1,
                         color: Colors.white,
                       ),
+                    ),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
                     ),
                     child: Image.network(
                       profile.photo,
@@ -696,8 +766,16 @@ class _AttendUnattendButtonBuilderState
               await ref
                   .read(eventManagementProvider.notifier)
                   .updateEventParticipation(widget.eventId, !isParticipating);
-              if (mounted) {
-                setState(() => _loading = false);
+              if (!mounted) {
+                return;
+              }
+              setState(() => _loading = false);
+
+              if (!isParticipating) {
+                showAttendingModal(
+                  context,
+                  ref.read(eventProvider(widget.eventId)),
+                );
               }
             },
     );
@@ -726,6 +804,47 @@ Future<bool?> showUnattendingModal(BuildContext context, String eventId) {
         ),
         child: _UnattendModal(
           eventId: eventId,
+        ),
+      );
+    },
+  );
+}
+
+Future<bool?> showAttendingModal(BuildContext context, Event event) {
+  return showCupertinoModalPopup<bool>(
+    context: context,
+    builder: (context) {
+      return Container(
+        height: 330 + MediaQuery.of(context).padding.bottom,
+        decoration: const BoxDecoration(
+          color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: _AttendingModal(event: event),
+            ),
+            const Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: EdgeInsets.only(top: 12),
+                child: SizedBox(
+                  width: 48,
+                  height: 2,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(2)),
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          ],
         ),
       );
     },
@@ -805,5 +924,172 @@ class _UnattendModal extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _AttendingModal extends ConsumerWidget {
+  final Event event;
+
+  const _AttendingModal({
+    super.key,
+    required this.event,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ClipRect(
+      child: BlurredSurface(
+        child: Material(
+          type: MaterialType.transparency,
+          child: Column(
+            children: [
+              const Spacer(),
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: const TextStyle(
+                        height: 1.3,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                      children: [
+                        const TextSpan(
+                          text: 'Would you like to introduce yourself to ',
+                        ),
+                        TextSpan(
+                          text: event.host.name,
+                          style: const TextStyle(
+                            color: Color.fromRGBO(0x00, 0xA3, 0xFF, 1.0),
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap =
+                                () => _popAndNavigateToProfile(context, event),
+                        ),
+                        const TextSpan(
+                          text: '?',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+              Button(
+                onPressed: () => _popAndNavigateToProfile(context, event),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      clipBehavior: Clip.hardEdge,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                      ),
+                      child: Image.network(
+                        event.host.photo,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          event.host.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        SvgPicture.asset(
+                          'assets/images/chevron_right.svg',
+                          colorFilter: const ColorFilter.mode(
+                            Color.fromRGBO(0x3E, 0x3E, 0x3E, 1.0),
+                            BlendMode.srcIn,
+                          ),
+                          height: 24,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+              Button(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  _showRecordPanel(context, ref.read(userProvider.notifier));
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 53,
+                  clipBehavior: Clip.hardEdge,
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.symmetric(horizontal: 28),
+                  decoration: const BoxDecoration(
+                    color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(6),
+                    ),
+                  ),
+                  child: DefaultTextStyle.merge(
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    child: const Text('Message'),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: MediaQuery.of(context).padding.bottom,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _popAndNavigateToProfile(BuildContext context, Event event) {
+    Navigator.of(context).pop();
+    context.pushNamed(
+      'view_profile',
+      queryParams: {'uid': event.host.uid},
+      extra: ViewProfilePageArguments.uid(uid: event.host.uid),
+    );
+  }
+
+  void _showRecordPanel(
+    BuildContext context,
+    UserStateNotifier notifier,
+  ) async {
+    final result = await showRecordPanel(
+      context: context,
+      title: const Text('Recording Message'),
+      submitLabel: const Text('Tap to send'),
+    );
+    if (result == null) {
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+
+    await withBlockingModal(
+      context: context,
+      label: 'Sending invite...',
+      future: notifier.sendMessage(uid: event.host.uid, audio: result.audio),
+    );
+    notifier.refreshChatrooms();
   }
 }

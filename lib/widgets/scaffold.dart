@@ -117,6 +117,46 @@ class OpenupAppBarBackButton extends StatelessWidget {
   }
 }
 
+class OpenupAppBarBackButtonOutlined extends StatelessWidget {
+  const OpenupAppBarBackButtonOutlined({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: Navigator.of(context).pop,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8.0),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SizedBox(
+            width: 32,
+            height: 32,
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: RotatedBox(
+                  quarterTurns: 2,
+                  child: SvgPicture.asset(
+                    'assets/images/chevron_right.svg',
+                    colorFilter: const ColorFilter.mode(
+                      Colors.black,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class OpenupAppBarCloseButton extends StatelessWidget {
   const OpenupAppBarCloseButton({super.key});
 

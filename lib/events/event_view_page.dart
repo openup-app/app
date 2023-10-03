@@ -18,58 +18,69 @@ class EventViewPage extends StatelessWidget {
       extendBodyBehindAppBar: true,
       extendBody: true,
       appBar: const OpenupAppBar(
+        blurBackground: false,
         body: OpenupAppBarBody(
-          leading: OpenupAppBarBackButton(),
-          center: Text('Event Details'),
+          leading: OpenupAppBarBackButtonOutlined(),
         ),
       ),
       bottomNavigationBar: OpenupBottomBar(
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.monetization_on),
-                const SizedBox(width: 4),
-                Text(
-                  event.price.toString(),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
-                  ),
+            const SizedBox(width: 28),
+            Expanded(
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '\$${event.price.toString()}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const TextSpan(
+                      text: ' / person',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-            AttendUnattendButtonBuilder(
-              eventId: event.id,
-              builder: (context, isParticipating, onPressed) {
-                final color = isParticipating ? Colors.white : Colors.black;
-                return RoundedButton(
-                  color: isParticipating
-                      ? const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0)
-                      : Colors.white,
-                  onPressed: onPressed,
-                  child: Builder(
-                    builder: (context) {
-                      if (onPressed == null) {
-                        return LoadingIndicator(
-                          color: color,
+            Expanded(
+              child: AttendUnattendButtonBuilder(
+                eventId: event.id,
+                builder: (context, isParticipating, onPressed) {
+                  final color = isParticipating ? Colors.black : Colors.white;
+                  return RoundedButton(
+                    color: isParticipating
+                        ? Colors.white
+                        : const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                    onPressed: onPressed,
+                    child: Builder(
+                      builder: (context) {
+                        if (onPressed == null) {
+                          return LoadingIndicator(
+                            color: color,
+                          );
+                        }
+                        return Text(
+                          isParticipating ? 'Attending' : 'Attend',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w400,
+                            color: color,
+                          ),
                         );
-                      }
-                      return Text(
-                        isParticipating ? 'Attending' : 'Attend',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
-                          color: color,
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
+            const SizedBox(width: 28),
           ],
         ),
       ),
@@ -79,7 +90,6 @@ class EventViewPage extends StatelessWidget {
           return SingleChildScrollView(
             // TODO: Determine why padding isn't being set automatically
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top,
               bottom: MediaQuery.of(context).padding.bottom,
             ),
             child: EventDisplayLarge(

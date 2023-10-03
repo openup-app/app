@@ -24,9 +24,9 @@ class EventPreviewPage extends ConsumerWidget {
       extendBodyBehindAppBar: true,
       extendBody: true,
       appBar: const OpenupAppBar(
+        blurBackground: false,
         body: OpenupAppBarBody(
-          leading: OpenupAppBarBackButton(),
-          center: Text('Meetup Preview'),
+          leading: OpenupAppBarBackButtonOutlined(),
         ),
       ),
       bottomNavigationBar: OpenupBottomBar(
@@ -62,7 +62,6 @@ class EventPreviewPage extends ConsumerWidget {
           return SingleChildScrollView(
             // TODO: Determine why padding isn't being set automatically
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top,
               bottom: MediaQuery.of(context).padding.bottom,
             ),
             child: EventDisplayLarge(
