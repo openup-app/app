@@ -409,23 +409,26 @@ class _PreviewPageState extends State<_PreviewPage> {
                 width: constraints.maxWidth,
                 items: [widget.profile],
                 onChanged: (_) {},
-                itemBuilder: (context, item) {
-                  return PhotoCardProfile(
-                    width: constraints.maxWidth,
-                    height: constraints.maxHeight,
-                    profile: item,
-                    distance: 2,
-                    playbackState: playbackState,
-                    playbackInfoStream: playbackInfoStream,
-                    onPlay: () {
-                      _profileBuilderKey.currentState?.play();
-                      setState(() => _play = true);
-                    },
-                    onPause: () {
-                      _profileBuilderKey.currentState?.pause();
-                      setState(() => _play = false);
-                    },
-                    onMessage: () {},
+                itemBuilder: (context, item, key) {
+                  return PhotoCardWiggle(
+                    childKey: key,
+                    child: PhotoCardProfile(
+                      width: constraints.maxWidth,
+                      height: constraints.maxHeight,
+                      profile: item,
+                      distance: 2,
+                      playbackState: playbackState,
+                      playbackInfoStream: playbackInfoStream,
+                      onPlay: () {
+                        _profileBuilderKey.currentState?.play();
+                        setState(() => _play = true);
+                      },
+                      onPause: () {
+                        _profileBuilderKey.currentState?.pause();
+                        setState(() => _play = false);
+                      },
+                      onMessage: () {},
+                    ),
                   );
                 },
               );

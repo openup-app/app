@@ -8,6 +8,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
+import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/drag_handle.dart';
@@ -15,6 +16,7 @@ import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/icon_with_shadow.dart';
 import 'package:openup/widgets/photo_card.dart';
 import 'package:openup/widgets/record.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 class ProfileBuilder extends StatefulWidget {
   final Profile? profile;
@@ -621,6 +623,48 @@ class _ProfileButtonContents extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class PhotoCardWiggle extends StatelessWidget {
+  final Key childKey;
+  final Widget child;
+
+  const PhotoCardWiggle({
+    super.key,
+    this.childKey = const ValueKey('photo'),
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return WiggleBuilder(
+      key: childKey,
+      seed: childKey.hashCode,
+      builder: (context, child, wiggle) {
+        final offset = Offset(
+          wiggle(frequency: 0.3, amplitude: 30),
+          wiggle(frequency: 0.3, amplitude: 30),
+        );
+
+        final rotationZ = wiggle(frequency: 0.5, amplitude: radians(8));
+        final rotationY = wiggle(frequency: 0.5, amplitude: radians(20));
+        const perspectiveDivide = 0.002;
+        final transform = Matrix4.identity()
+          ..setEntry(3, 2, perspectiveDivide)
+          ..rotateY(rotationY)
+          ..rotateZ(rotationZ);
+        return Transform.translate(
+          offset: offset,
+          child: Transform(
+            transform: transform,
+            alignment: Alignment.center,
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

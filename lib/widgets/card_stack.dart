@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:openup/widgets/animation.dart';
-import 'package:vector_math/vector_math_64.dart' hide Colors;
 
-typedef ItemBuilder<T> = Function(BuildContext context, T item);
+typedef ItemBuilder<T> = Function(BuildContext context, T item, Key key);
 
 class CardStack<T> extends StatefulWidget {
   final double width;
@@ -243,55 +241,10 @@ class CardStackState<T> extends State<CardStack<T>>
                   ),
                 );
               },
-              child: _WiggleAnimation(
-                childKey: _keys[i],
-                child: widget.itemBuilder(context, _subItems[i]),
-              ),
+              child: widget.itemBuilder(context, _subItems[i], _keys[i]),
             ),
         ],
       ),
-    );
-  }
-}
-
-class _WiggleAnimation extends StatelessWidget {
-  final GlobalKey childKey;
-  final Widget child;
-
-  const _WiggleAnimation({
-    super.key,
-    required this.childKey,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return WiggleBuilder(
-      key: childKey,
-      seed: childKey.hashCode,
-      builder: (context, child, wiggle) {
-        final offset = Offset(
-          wiggle(frequency: 0.3, amplitude: 30),
-          wiggle(frequency: 0.3, amplitude: 30),
-        );
-
-        final rotationZ = wiggle(frequency: 0.5, amplitude: radians(8));
-        final rotationY = wiggle(frequency: 0.5, amplitude: radians(20));
-        const perspectiveDivide = 0.002;
-        final transform = Matrix4.identity()
-          ..setEntry(3, 2, perspectiveDivide)
-          ..rotateY(rotationY)
-          ..rotateZ(rotationZ);
-        return Transform.translate(
-          offset: offset,
-          child: Transform(
-            transform: transform,
-            alignment: Alignment.center,
-            child: child,
-          ),
-        );
-      },
-      child: child,
     );
   }
 }

@@ -108,11 +108,16 @@ class _ListViewState extends ConsumerState<_ListView> {
                 width: constraints.maxWidth,
                 items: List.generate(3, (index) => null),
                 onChanged: (_) {},
-                itemBuilder: (context, _) {
-                  return PhotoCardLoading(
-                    width: constraints.maxWidth,
-                    height: constraints.maxHeight,
-                    useExtraTopPadding: true,
+                itemBuilder: (context, _, key) {
+                  return PhotoCardWiggle(
+                    childKey: key,
+                    child: Card(
+                      child: PhotoCardLoading(
+                        width: constraints.maxWidth,
+                        height: constraints.maxHeight,
+                        useExtraTopPadding: true,
+                      ),
+                    ),
                   );
                 },
               );
@@ -136,28 +141,33 @@ class _ListViewState extends ConsumerState<_ListView> {
                   onChanged: (index) {
                     setState(() => _profileIndex = index);
                   },
-                  itemBuilder: (context, item) {
+                  itemBuilder: (context, item, key) {
                     final profile = item;
                     if (profile == null) {
                       return const SizedBox.shrink();
                     }
                     final isCurrent = profile.profile.uid == currentProfile.uid;
-                    return PhotoCardProfile(
-                      width: constraints.maxWidth,
-                      height: constraints.maxHeight,
-                      profile: profile,
-                      distance: distanceMiles(profile.location.latLong, latLong)
-                          .round(),
-                      playbackState: isCurrent ? playbackState : null,
-                      playbackInfoStream: isCurrent ? playbackInfoStream : null,
-                      onPlay: () {
-                        if (_active) {
-                          setState(() => _play = true);
-                        }
-                      },
-                      onPause: () => setState(() => _play = false),
-                      onMessage: () =>
-                          _showRecordInvitePanel(context, profile.profile.uid),
+                    return PhotoCardWiggle(
+                      childKey: key,
+                      child: PhotoCardProfile(
+                        width: constraints.maxWidth,
+                        height: constraints.maxHeight,
+                        profile: profile,
+                        distance:
+                            distanceMiles(profile.location.latLong, latLong)
+                                .round(),
+                        playbackState: isCurrent ? playbackState : null,
+                        playbackInfoStream:
+                            isCurrent ? playbackInfoStream : null,
+                        onPlay: () {
+                          if (_active) {
+                            setState(() => _play = true);
+                          }
+                        },
+                        onPause: () => setState(() => _play = false),
+                        onMessage: () => _showRecordInvitePanel(
+                            context, profile.profile.uid),
+                      ),
                     );
                   },
                 );
