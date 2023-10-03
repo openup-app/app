@@ -518,23 +518,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                         );
                       },
                     ),
-                    GoRoute(
-                      path: 'view',
-                      name: 'view_profile',
-                      builder: (context, state) {
-                        final uid = state.queryParams['uid'];
-                        final args = state.extra as ViewProfilePageArguments?;
-                        if (args != null) {
-                          return ViewProfilePage(args: args);
-                        } else if (uid != null) {
-                          return ViewProfilePage(
-                            args: ViewProfilePageArguments.uid(uid: uid),
-                          );
-                        } else {
-                          throw 'Missing page arguments';
-                        }
-                      },
-                    ),
                   ],
                 ),
               ],
@@ -605,6 +588,24 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               ],
             ),
           ],
+        ),
+        GoRoute(
+          path: '/view',
+          name: 'view_profile',
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) {
+            final uid = state.queryParams['uid'];
+            final args = state.extra as ViewProfilePageArguments?;
+            if (args != null) {
+              return ViewProfilePage(args: args);
+            } else if (uid != null) {
+              return ViewProfilePage(
+                args: ViewProfilePageArguments.uid(uid: uid),
+              );
+            } else {
+              throw 'Missing page arguments';
+            }
+          },
         ),
         GoRoute(
           path: '/report',
