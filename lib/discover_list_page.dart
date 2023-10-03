@@ -110,12 +110,10 @@ class _ListViewState extends ConsumerState<_ListView> {
                 itemBuilder: (context, _, key) {
                   return PhotoCardWiggle(
                     childKey: key,
-                    child: Card(
-                      child: PhotoCardLoading(
-                        width: constraints.maxWidth,
-                        height: constraints.maxHeight,
-                        useExtraTopPadding: true,
-                      ),
+                    child: PhotoCardLoading(
+                      width: constraints.maxWidth,
+                      height: constraints.maxHeight,
+                      useExtraTopPadding: true,
                     ),
                   );
                 },
