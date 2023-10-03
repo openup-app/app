@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:openup/events/event_list_view.dart';
 import 'package:openup/events/event_map_view.dart';
 import 'package:openup/events/events_provider.dart';
@@ -21,6 +20,7 @@ class EventsPage extends ConsumerStatefulWidget {
 }
 
 class _EventsPageState extends ConsumerState<EventsPage> {
+  Widget? _label;
   late _View _view;
 
   @override
@@ -41,30 +41,25 @@ class _EventsPageState extends ConsumerState<EventsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const OpenupAppBar(
-        body: OpenupAppBarBody(
-          center: Text('Meetup Scene'),
+      appBar: OpenupAppBar(
+        body: const OpenupAppBarBody(
+          center: Text('Hangouts Nearby'),
         ),
-        toolbar: _Toolbar(),
+        toolbar: _Toolbar(
+          label: _label ?? const SizedBox.shrink(),
+          view: _view,
+          onViewChanged: (view) => setState(() => _view = view),
+        ),
       ),
       body: Stack(
         fit: StackFit.expand,
         children: [
           switch (_view) {
-            _View.list => const EventListView(),
+            _View.list => EventListView(
+                onLabelChanged: (label) => setState(() => _label = Text(label)),
+              ),
             _View.map => const EventMapView(),
           },
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: EdgeInsets.only(
-                  bottom: 8.0 + MediaQuery.of(context).padding.bottom),
-              child: _ViewToggleButton(
-                view: _view,
-                onChanged: (view) => setState(() => _view = view),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -72,111 +67,73 @@ class _EventsPageState extends ConsumerState<EventsPage> {
 }
 
 class _Toolbar extends StatelessWidget {
+  final Widget label;
+  final _View view;
+  final ValueChanged<_View> onViewChanged;
+
   const _Toolbar({
     super.key,
+    required this.label,
+    required this.view,
+    required this.onViewChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const SizedBox(width: 16),
-        Consumer(builder: (context, ref, child) {
-          return Button(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    backgroundColor: Colors.black,
-                    insetPadding: const EdgeInsets.all(16),
-                    content: SizedBox(
-                      width: 350,
-                      height: 300,
-                      child: CalendarDatePicker(
-                        initialDate: DateTime.now(),
-                        firstDate:
-                            DateTime.now().subtract(const Duration(days: 365)),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                        onDateChanged: (date) {
-                          ref
-                              .read(nearbyEventsDateFilterProvider.notifier)
-                              .date = date;
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-            child: const Padding(
-              padding: EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_month_outlined),
-                  SizedBox(width: 8),
-                  Text(
-                    'Date',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
-        const SizedBox(width: 8),
-        const SizedBox(
-          height: 29,
-          child: VerticalDivider(
-            width: 1,
-            color: Color.fromRGBO(0x50, 0x50, 0x50, 1.0),
-          ),
-        ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 24),
         Consumer(
           builder: (context, ref, child) {
             return Button(
-              onPressed: () =>
-                  ref.read(nearbyEventsDateFilterProvider.notifier).date = null,
-              child: child!,
-            );
-          },
-          child: const Padding(
-            padding: EdgeInsets.all(12),
-            child: Text(
-              'All Days',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
-        const Spacer(),
-        Button(
-          onPressed: () => context.pushNamed('event_create'),
-          child: const Padding(
-            padding: EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Icon(Icons.add),
-                SizedBox(width: 4),
-                Text(
-                  'Create',
-                  style: TextStyle(
-                    fontSize: 14,
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      backgroundColor: Colors.black,
+                      insetPadding: const EdgeInsets.all(16),
+                      content: SizedBox(
+                        width: 350,
+                        height: 300,
+                        child: CalendarDatePicker(
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime.now()
+                              .subtract(const Duration(days: 365)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
+                          onDateChanged: (date) {
+                            ref
+                                .read(nearbyEventsDateFilterProvider.notifier)
+                                .date = date;
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: DefaultTextStyle(
+                  style: const TextStyle(
+                    fontFamily: 'Covered By Your Grace',
+                    fontSize: 24,
                     fontWeight: FontWeight.w400,
                   ),
+                  child: label,
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
-        const SizedBox(width: 16),
+        const Spacer(),
+        _ViewToggleButton(
+          view: view,
+          onChanged: onViewChanged,
+        ),
+        const SizedBox(width: 32),
       ],
     );
   }
@@ -198,40 +155,21 @@ class _ViewToggleButton extends StatelessWidget {
       onPressed: () => onChanged(view == _View.map ? _View.list : _View.map),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Container(
-          width: 89,
-          height: 40,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.all(
-              Radius.circular(20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              view == _View.list ? Icons.map : Icons.list,
             ),
-            boxShadow: [
-              BoxShadow(
-                offset: Offset(0, 2),
-                blurRadius: 17,
-                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
-              )
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                view == _View.list ? Icons.map : Icons.list,
-                color: Colors.black,
+            const SizedBox(width: 8),
+            Text(
+              view == _View.list ? 'Map' : 'List',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
               ),
-              const SizedBox(width: 8),
-              Text(
-                view == _View.list ? 'Map' : 'List',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

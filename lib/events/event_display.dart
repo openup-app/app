@@ -12,6 +12,7 @@ import 'package:openup/events/event_create_page.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/events/events_provider.dart';
 import 'package:openup/view_profile_page.dart';
+import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/image.dart';
@@ -156,6 +157,102 @@ class EventDisplayListItem extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 21),
+        ],
+      ),
+    );
+  }
+}
+
+class EventGridTile extends ConsumerWidget {
+  final Event event;
+
+  const EventGridTile({
+    super.key,
+    required this.event,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(uidProvider);
+    final myEvent = event.host.uid == uid;
+    return Button(
+      onPressed: () {
+        if (myEvent) {
+          context.pushNamed(
+            'event_create',
+            extra: EventCreateArgs(editEvent: event),
+          );
+        } else {
+          context.pushNamed(
+            'event_view',
+            params: {'id': event.id},
+            extra: EventViewPageArgs(event: event),
+          );
+        }
+      },
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
+              child: WiggleBuilder(
+                seed: event.hashCode,
+                builder: (context, child, wiggle) {
+                  final offset = Offset(
+                    wiggle(frequency: 0.3, amplitude: 30),
+                    wiggle(frequency: 0.3, amplitude: 30),
+                  );
+
+                  return Transform.translate(
+                    offset: offset,
+                    child: Transform.scale(
+                      scale: 1.15,
+                      child: Image.network(
+                        event.photo.toString(),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 130,
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black,
+                  ],
+                  stops: [
+                    0.0,
+                    0.9,
+                  ],
+                ),
+              ),
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 5, bottom: 32),
+                  child: Text(
+                    event.title,
+                    style: const TextStyle(
+                      fontFamily: 'Covered By Your Grace',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          )
         ],
       ),
     );

@@ -2754,6 +2754,25 @@ String formatDayOfWeek(DateTime d) {
   return dayOfWeekFormat.format(d);
 }
 
+// Previously, Today, Tomorrow, Friday, 9.17.23, etc
+String formatRelativeDate(DateTime now, DateTime then) {
+  final thenSinceEpoch = then.difference(DateTime(1970, 01, 01));
+  final nowSinceEpoch = now.difference(DateTime(1970, 01, 01));
+  final daysApart = thenSinceEpoch.inDays - nowSinceEpoch.inDays;
+
+  if (daysApart < 0) {
+    return 'Previously';
+  } else if (daysApart == 0) {
+    return 'Today';
+  } else if (daysApart == 1) {
+    return 'Tomorrow';
+  } else if (daysApart < 7) {
+    return formatDayOfWeek(then);
+  } else {
+    return formatDateShort(then);
+  }
+}
+
 enum _BlockResult { block, noBlock }
 
 enum _ReportReason { deceptive, sexual, selfHarm, harmful }
