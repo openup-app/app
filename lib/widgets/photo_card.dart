@@ -179,10 +179,7 @@ class PhotoCardLoading extends StatelessWidget {
       photo: const ShimmerLoading(
         isLoading: true,
         child: _Silhouette(
-          child: Icon(
-            Icons.person,
-            size: 300,
-          ),
+          child: SizedBox.shrink(),
         ),
       ),
       titleBuilder: (_) {
