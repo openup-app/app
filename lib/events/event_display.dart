@@ -15,7 +15,6 @@ import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/image.dart';
 import 'package:openup/widgets/record.dart';
 
 class EventDisplayListItem extends ConsumerWidget {
@@ -208,7 +207,7 @@ class EventGridTile extends ConsumerWidget {
                     child: Transform.scale(
                       scale: 1.15,
                       child: Image.network(
-                        event.photo.toString(),
+                        event.host.photo,
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -276,8 +275,8 @@ class EventTwoColumnPhoto extends StatelessWidget {
           width: 2,
         ),
       ),
-      child: ImageUri(
-        event.photo,
+      child: Image.network(
+        event.host.photo,
         fit: BoxFit.cover,
       ),
     );

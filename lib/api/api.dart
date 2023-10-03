@@ -610,21 +610,15 @@ class Api {
   }
 
   Future<Either<ApiError, Event>> createEvent(EventSubmission submission) {
-    final photoPath = submission.photo?.toFilePath();
-    if (photoPath == null) {
-      throw StateError('Event photo URI can not be null');
-    }
-    return _requestStreamedResponseAsFuture(
+    return _request(
       makeRequest: () async {
-        final uri = Uri.parse('$_urlBase/events');
-        final request = http.MultipartRequest('POST', uri);
-        request.headers.addAll(_headers);
-        final photoFile = await http.MultipartFile.fromPath('photo', photoPath);
-        request.files.add(photoFile);
-        request.fields.addAll({
-          'submission': jsonEncode(submission),
-        });
-        return request.send();
+        return http.post(
+          Uri.parse('$_urlBase/events'),
+          headers: _headers,
+          body: jsonEncode({
+            'submission': submission,
+          }),
+        );
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body);
@@ -637,22 +631,11 @@ class Api {
     String eventId,
     EventSubmission submission,
   ) {
-    String? photoPath;
-    try {
-      photoPath = submission.photo?.toFilePath();
-    } catch (e) {
-      // Nothing to do, photo not updated
-    }
     return _requestStreamedResponseAsFuture(
       makeRequest: () async {
         final uri = Uri.parse('$_urlBase/events/$eventId');
         final request = http.MultipartRequest('PUT', uri);
         request.headers.addAll(_headers);
-        http.MultipartFile? photoFile;
-        if (photoPath != null) {
-          photoFile = await http.MultipartFile.fromPath('photo', photoPath);
-          request.files.add(photoFile);
-        }
         request.fields.addAll({'submission': jsonEncode(submission.toJson())});
         return request.send();
       },
@@ -1268,7 +1251,6 @@ class Event with _$Event {
     required EventLocation location,
     @_DateTimeConverter() required DateTime startDate,
     @_DateTimeConverter() required DateTime endDate,
-    @_UriConverter() required Uri photo,
     required int price,
     required int views,
     required EventAttendance attendance,
@@ -1286,7 +1268,6 @@ class EventSubmission with _$EventSubmission {
     required EventLocation location,
     @_DateTimeConverter() required DateTime startDate,
     @_DateTimeConverter() required DateTime endDate,
-    @Default(null) @_UriConverter() Uri? photo,
     @Default(0) int price,
     @Default(EventAttendance.limited(2)) EventAttendance attendance,
     @Default('') String description,
@@ -1298,10 +1279,6 @@ class EventSubmission with _$EventSubmission {
   const EventSubmission._();
 
   Event toPreviewEvent(String hostUid, String hostName, String hostPhoto) {
-    final photoUri = photo;
-    if (photoUri == null) {
-      throw 'Failed to create event preview';
-    }
     return Event(
       id: '',
       title: title,
@@ -1313,7 +1290,6 @@ class EventSubmission with _$EventSubmission {
       location: location,
       startDate: startDate,
       endDate: endDate,
-      photo: photoUri,
       price: price,
       views: 0,
       attendance: attendance,
@@ -1325,10 +1301,8 @@ class EventSubmission with _$EventSubmission {
     );
   }
 
-  bool get valid => !(title.isEmpty ||
-      location.name.isEmpty ||
-      description.isEmpty ||
-      photo == null);
+  bool get valid =>
+      !(title.isEmpty || location.name.isEmpty || description.isEmpty);
 }
 
 @freezed

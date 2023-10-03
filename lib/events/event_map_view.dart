@@ -190,10 +190,6 @@ class _EventMapViewState extends ConsumerState<EventMapView>
                   children: [
                     const SizedBox(width: 25),
                     Expanded(
-                      child: EventTwoColumnPhoto(event: event),
-                    ),
-                    const SizedBox(width: 25),
-                    Expanded(
                       child: EventTwoColumnDetails(
                         event: event,
                         showMenuButton: false,
@@ -602,7 +598,7 @@ class _EventMapListState extends ConsumerState<EventMapList> {
             width: 48,
             height: 48,
             child: Image.network(
-              event.photo.toString(),
+              event.host.photo,
               fit: BoxFit.cover,
             ),
           ),
