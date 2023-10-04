@@ -222,14 +222,30 @@ class EventGridTile extends ConsumerWidget {
               child: Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 5, bottom: 32),
-                  child: Text(
-                    event.title,
-                    style: const TextStyle(
-                      fontFamily: 'Covered By Your Grace',
-                      fontSize: 20,
-                      fontWeight: FontWeight.w400,
-                    ),
+                  padding: const EdgeInsets.only(left: 5, bottom: 32, right: 5),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        event.title,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Covered By Your Grace',
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      Text(
+                        _eventAttendanceText(event),
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w200,
+                          color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -238,6 +254,27 @@ class EventGridTile extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _eventAttendanceText(Event event) {
+    final limit = event.attendance.map(
+      unlimited: (_) => null,
+      limited: (limit) => limit.limit,
+    );
+    if (limit == null) {
+      return '${event.host.name} needs more people';
+    }
+
+    final remaining = limit - event.participants.count;
+    if (remaining <= 0) {
+      return 'Hangout full';
+    }
+
+    if (remaining == 1) {
+      return '${event.host.name} needs a +1';
+    }
+
+    return '${event.host.name} needs +$remaining';
   }
 }
 
