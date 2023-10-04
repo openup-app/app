@@ -332,20 +332,29 @@ class EventTwoColumnDetails extends ConsumerWidget {
                 ),
               ),
             ),
-            if (showMenuButton)
-              ReportBlockPopupMenu2(
-                uid: event.host.uid,
-                name: event.host.name,
-                onBlock: () {
-                  // TODO: Remove event from local list
-                },
-                builder: (context) {
-                  return const Padding(
+            Builder(
+              builder: (context) {
+                if (ref.watch(uidProvider) != event.host.uid) {
+                  return const SizedBox.shrink();
+                }
+                return Button(
+                  onPressed: () async {
+                    final delete = await _showDeleteEventModal(context);
+                    if (delete && context.mounted) {
+                      if (context.mounted && delete == true) {
+                        ref
+                            .read(eventManagementProvider.notifier)
+                            .deleteEvent(event.id);
+                      }
+                    }
+                  },
+                  child: const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8.0),
                     child: Icon(Icons.more_vert),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
         const SizedBox(height: 4),
@@ -482,6 +491,46 @@ class EventTwoColumnDetails extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  Future<bool> _showDeleteEventModal(BuildContext context) async {
+    final delete = await showCupertinoModalPopup(
+      context: context,
+      builder: (context) {
+        return SizedBox(
+          height: 250 + MediaQuery.of(context).padding.bottom,
+          child: _ModalBackground(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const Text('Want to delete your Hangout?'),
+                const SizedBox(height: 72),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    RoundedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Delete'),
+                    ),
+                    RoundedButton(
+                      color: const Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                      onPressed: Navigator.of(context).pop,
+                      child: const Text('Cancel'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: MediaQuery.of(context).padding.bottom,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    return delete == true;
   }
 }
 
@@ -1217,5 +1266,63 @@ class _AttendingModal extends ConsumerWidget {
       future: notifier.sendMessage(uid: event.host.uid, audio: result.audio),
     );
     notifier.refreshChatrooms();
+  }
+}
+
+class _ModalBackground extends StatelessWidget {
+  final Widget child;
+
+  const _ModalBackground({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: BlurredSurface(
+        child: Material(
+          type: MaterialType.transparency,
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.5),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+              ),
+            ),
+            child: Stack(
+              children: [
+                DefaultTextStyle.merge(
+                  style: const TextStyle(
+                    height: 1.3,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                  child: child,
+                ),
+                const Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 12),
+                    child: SizedBox(
+                      width: 48,
+                      height: 2,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(2)),
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
