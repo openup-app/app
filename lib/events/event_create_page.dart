@@ -748,7 +748,7 @@ class _TextField extends StatelessWidget {
       controller: controller,
       focusNode: focusNode,
       textInputAction: textInputAction,
-      textCapitalization: TextCapitalization.words,
+      textCapitalization: textCapitalization,
       keyboardType: keyboardType,
       textAlign: textAlign,
       minLines: lines,
