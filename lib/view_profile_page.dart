@@ -9,6 +9,7 @@ import 'package:openup/widgets/background.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/photo_card.dart';
 import 'package:openup/widgets/profile_display.dart';
+import 'package:openup/widgets/record.dart';
 import 'package:openup/widgets/scaffold.dart';
 
 part 'view_profile_page.freezed.dart';
@@ -114,24 +115,26 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                       builder: (context, playbackState, playbackInfoStream) {
                         return PhotoCardWiggle(
                           child: PhotoCardProfile(
-                            width: constraints.maxWidth,
-                            height: constraints.maxHeight,
-                            profile: DiscoverProfile(
-                              profile: profile,
-                              location: const UserLocation(
-                                latLong: LatLong(latitude: 0, longitude: 0),
-                                radius: 20,
-                                visibility: LocationVisibility.private,
+                              width: constraints.maxWidth,
+                              height: constraints.maxHeight,
+                              profile: DiscoverProfile(
+                                profile: profile,
+                                location: const UserLocation(
+                                  latLong: LatLong(latitude: 0, longitude: 0),
+                                  radius: 20,
+                                  visibility: LocationVisibility.private,
+                                ),
+                                favorite: false,
                               ),
-                              favorite: false,
-                            ),
-                            distance: 2,
-                            playbackState: playbackState,
-                            playbackInfoStream: playbackInfoStream,
-                            onPlay: () => setState(() => _play = true),
-                            onPause: () => setState(() => _play = false),
-                            onMessage: () {},
-                          ),
+                              distance: 2,
+                              playbackState: playbackState,
+                              playbackInfoStream: playbackInfoStream,
+                              onPlay: () => setState(() => _play = true),
+                              onPause: () => setState(() => _play = false),
+                              onMessage: ref.watch(uidProvider) == profile.uid
+                                  ? () {}
+                                  : () =>
+                                      _showRecordPanel(context, profile.uid)),
                         );
                       },
                     );
@@ -144,6 +147,41 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
       ),
     );
   }
+
+  void _showRecordPanel(BuildContext context, String uid) async {
+    _pauseAudio();
+    final userState = ref.read(userProvider);
+    final signedIn = userState.map(
+      guest: (_) => null,
+      signedIn: (signedIn) => signedIn,
+    );
+    if (signedIn == null) {
+      return;
+    }
+
+    final result = await showRecordPanel(
+      context: context,
+      title: const Text('Recording Message'),
+      submitLabel: const Text('Tap to send'),
+    );
+
+    if (!mounted) {
+      return;
+    }
+    if (result == null) {
+      return;
+    }
+
+    final notifier = ref.read(userProvider.notifier);
+    await withBlockingModal(
+      context: context,
+      label: 'Sending invite...',
+      future: notifier.sendMessage(uid: uid, audio: result.audio),
+    );
+    notifier.refreshChatrooms();
+  }
+
+  void _pauseAudio() => setState(() => _play = false);
 }
 
 @freezed
