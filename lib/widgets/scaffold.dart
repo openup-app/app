@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/button.dart';
 
 class OpenupAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -123,7 +124,13 @@ class OpenupAppBarBackButtonOutlined extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Button(
-      onPressed: Navigator.of(context).pop,
+      onPressed: () {
+        if (context.canPop()) {
+          Navigator.of(context).pop();
+        } else {
+          context.goNamed('initial_loading');
+        }
+      },
       child: Padding(
         padding: const EdgeInsets.only(left: 8.0),
         child: Padding(
