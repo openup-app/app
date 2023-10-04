@@ -74,7 +74,8 @@ class EventDisplayListItem extends ConsumerWidget {
                       const SizedBox(height: 10),
                       AttendUnattendButtonBuilder(
                         eventId: event.id,
-                        builder: (context, isParticipating, onPressed) {
+                        builder:
+                            (context, isParticipating, onPressed, isLoading) {
                           return Button(
                             onPressed: onPressed,
                             child: Container(
@@ -93,7 +94,7 @@ class EventDisplayListItem extends ConsumerWidget {
                               ),
                               child: Builder(
                                 builder: (context) {
-                                  if (onPressed == null) {
+                                  if (isLoading) {
                                     return Center(
                                       child: LoadingIndicator(
                                         color: isParticipating
@@ -840,9 +841,8 @@ class _Participants extends ConsumerWidget {
 class AttendUnattendButtonBuilder extends ConsumerStatefulWidget {
   final String eventId;
   final bool useUnattendModal;
-  final Widget Function(
-          BuildContext context, bool participating, VoidCallback? onPressed)
-      builder;
+  final Widget Function(BuildContext context, bool participating,
+      VoidCallback? onPressed, bool isLoading) builder;
 
   const AttendUnattendButtonBuilder({
     super.key,
@@ -863,38 +863,37 @@ class _AttendUnattendButtonBuilderState
   @override
   Widget build(BuildContext context) {
     final uid = ref.watch(uidProvider);
+    final isMyEvent = ref
+        .watch(eventProvider(widget.eventId).select((e) => e.host.uid == uid));
     final isParticipating = ref.watch(eventProvider(widget.eventId)
         .select((e) => e.participants.uids.contains(uid)));
-    return widget.builder(
-      context,
-      isParticipating,
-      _loading
-          ? null
-          : () async {
-              if (widget.useUnattendModal && isParticipating) {
-                final confirmUnattend =
-                    await showUnattendingModal(context, widget.eventId);
-                if (!(mounted && confirmUnattend == true)) {
-                  return;
-                }
-              }
-              setState(() => _loading = true);
-              await ref
-                  .read(eventManagementProvider.notifier)
-                  .updateEventParticipation(widget.eventId, !isParticipating);
-              if (!mounted) {
+    final onPressed = (_loading || isMyEvent)
+        ? null
+        : () async {
+            if (widget.useUnattendModal && isParticipating) {
+              final confirmUnattend =
+                  await showUnattendingModal(context, widget.eventId);
+              if (!(mounted && confirmUnattend == true)) {
                 return;
               }
-              setState(() => _loading = false);
+            }
+            setState(() => _loading = true);
+            await ref
+                .read(eventManagementProvider.notifier)
+                .updateEventParticipation(widget.eventId, !isParticipating);
+            if (!mounted) {
+              return;
+            }
+            setState(() => _loading = false);
 
-              if (!isParticipating) {
-                showAttendingModal(
-                  context,
-                  ref.read(eventProvider(widget.eventId)),
-                );
-              }
-            },
-    );
+            if (!isParticipating) {
+              showAttendingModal(
+                context,
+                ref.read(eventProvider(widget.eventId)),
+              );
+            }
+          };
+    return widget.builder(context, isParticipating, onPressed, _loading);
   }
 }
 

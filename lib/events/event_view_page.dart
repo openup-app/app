@@ -52,7 +52,7 @@ class EventViewPage extends StatelessWidget {
             Expanded(
               child: AttendUnattendButtonBuilder(
                 eventId: event.id,
-                builder: (context, isParticipating, onPressed) {
+                builder: (context, isParticipating, onPressed, isLoading) {
                   final color = isParticipating ? Colors.black : Colors.white;
                   return RoundedButton(
                     color: isParticipating
@@ -61,7 +61,7 @@ class EventViewPage extends StatelessWidget {
                     onPressed: onPressed,
                     child: Builder(
                       builder: (context) {
-                        if (onPressed == null) {
+                        if (isLoading) {
                           return LoadingIndicator(
                             color: color,
                           );

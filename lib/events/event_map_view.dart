@@ -228,7 +228,8 @@ class _EventMapViewState extends ConsumerState<EventMapView>
                       Expanded(
                         child: AttendUnattendButtonBuilder(
                           eventId: event.id,
-                          builder: (context, isParticipating, onPressed) {
+                          builder:
+                              (context, isParticipating, onPressed, isLoading) {
                             final color =
                                 isParticipating ? Colors.white : Colors.black;
                             return RoundedButton(
@@ -238,7 +239,7 @@ class _EventMapViewState extends ConsumerState<EventMapView>
                               onPressed: onPressed,
                               child: Builder(
                                 builder: (context) {
-                                  if (onPressed == null) {
+                                  if (isLoading) {
                                     return LoadingIndicator(
                                       color: color,
                                     );
@@ -617,7 +618,7 @@ class _EventMapListState extends ConsumerState<EventMapList> {
           ),
           trailing: AttendUnattendButtonBuilder(
             eventId: event.id,
-            builder: (context, isParticipating, onPressed) {
+            builder: (context, isParticipating, onPressed, isLoading) {
               final color = isParticipating ? Colors.white : Colors.black;
               return RoundedButton(
                 color: isParticipating
@@ -626,7 +627,7 @@ class _EventMapListState extends ConsumerState<EventMapList> {
                 onPressed: onPressed,
                 child: Builder(
                   builder: (context) {
-                    if (onPressed == null) {
+                    if (isLoading) {
                       return LoadingIndicator(
                         color: color,
                       );
