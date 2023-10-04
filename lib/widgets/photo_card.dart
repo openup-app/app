@@ -178,8 +178,8 @@ class PhotoCardLoading extends StatelessWidget {
       useExtraTopPadding: useExtraTopPadding,
       photo: const ShimmerLoading(
         isLoading: true,
-        child: _Silhouette(
-          child: SizedBox.shrink(),
+        child: ColoredBox(
+          color: Colors.black,
         ),
       ),
       titleBuilder: (_) {

@@ -424,17 +424,11 @@ class _NonCinematicPhotoState extends State<NonCinematicPhoto>
           ),
         ),
         if (_loading)
-          const Center(
-            child: SizedBox(
-              width: 250,
-              height: 250,
-              child: ShimmerLoading(
-                isLoading: true,
-                child: Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 250,
-                ),
+          const SizedBox.expand(
+            child: ShimmerLoading(
+              isLoading: true,
+              child: ColoredBox(
+                color: Colors.black,
               ),
             ),
           ),
