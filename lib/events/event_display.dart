@@ -867,7 +867,18 @@ class _AttendUnattendButtonBuilderState
         .watch(eventProvider(widget.eventId).select((e) => e.host.uid == uid));
     final isParticipating = ref.watch(eventProvider(widget.eventId)
         .select((e) => e.participants.uids.contains(uid)));
-    final onPressed = (_loading || isMyEvent)
+    final isFull = ref.watch(eventProvider(widget.eventId).select((event) {
+      final limit = event.attendance.map(
+        unlimited: (_) => null,
+        limited: (limit) => limit.limit,
+      );
+      if (limit == null) {
+        return false;
+      }
+      final remaining = limit - event.participants.count;
+      return remaining <= 0;
+    }));
+    final onPressed = (_loading || isMyEvent || (isFull && !isParticipating))
         ? null
         : () async {
             if (widget.useUnattendModal && isParticipating) {
