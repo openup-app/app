@@ -32,7 +32,7 @@ class PhotoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     const margin = 24.0;
     final topPadding = 16.0 + (useExtraTopPadding ? 16.0 : 0.0);
-    const bottomHeight = 132.0;
+    const bottomHeight = 140.0;
     const leftPadding = 16.0;
     const rightPadding = 16.0;
     const requiredWidth = leftPadding + rightPadding;
@@ -40,7 +40,7 @@ class PhotoCard extends StatelessWidget {
     final availableWidth = width - requiredWidth - margin;
     final availableHeight = height - requiredHeight - margin;
     final availableAspect = availableWidth / availableHeight;
-    const targetAspect = 17 / 23;
+    const targetAspect = 16 / 24;
 
     final double outputWidth, outputHeight;
     if (availableAspect > targetAspect) {
@@ -73,8 +73,8 @@ class PhotoCard extends StatelessWidget {
               SizedBox(
                 height: bottomHeight,
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    const SizedBox(height: 11),
                     Padding(
                       padding: const EdgeInsets.only(
                         left: leftPadding,
@@ -82,6 +82,7 @@ class PhotoCard extends StatelessWidget {
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: Column(
@@ -90,7 +91,7 @@ class PhotoCard extends StatelessWidget {
                                 DefaultTextStyle(
                                   style: const TextStyle(
                                     fontFamily: 'Covered By Your Grace',
-                                    fontSize: 32,
+                                    fontSize: 34,
                                     color:
                                         Color.fromRGBO(0x27, 0x27, 0x27, 1.0),
                                   ),
@@ -103,10 +104,10 @@ class PhotoCard extends StatelessWidget {
                                 if (subtitle != null)
                                   DefaultTextStyle.merge(
                                     style: const TextStyle(
-                                      fontSize: 13,
+                                      fontSize: 16,
                                       fontWeight: FontWeight.w300,
                                       color:
-                                          Color.fromRGBO(0x27, 0x27, 0x27, 1.0),
+                                          Color.fromRGBO(0x45, 0x45, 0x45, 1.0),
                                     ),
                                     child: subtitle!,
                                   ),
@@ -118,7 +119,6 @@ class PhotoCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 3),
                     const Divider(
                       height: 1,
                       color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),

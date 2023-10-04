@@ -75,7 +75,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
   Widget build(BuildContext context) {
     final profile = _profile;
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       extendBody: true,
       appBar: const OpenupAppBar(
         blurBackground: false,

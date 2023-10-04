@@ -428,10 +428,7 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
           children: [
             Text(widget.profile.profile.name.toUpperCase()),
             const SizedBox(width: 12),
-            Text(
-              widget.profile.profile.age.toString(),
-              style: const TextStyle(fontSize: 27),
-            ),
+            Text(widget.profile.profile.age.toString()),
           ],
         );
       },
@@ -443,11 +440,6 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
           child: Text(
             'Message',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: Colors.black,
-            ),
           ),
         ),
       ),
@@ -460,11 +452,6 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
             child: Text(
               'Options',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Colors.black,
-              ),
             ),
           );
         },
@@ -475,7 +462,7 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
           width: 36,
           height: 36,
           alignment: Alignment.center,
-          margin: const EdgeInsets.all(8),
+          margin: const EdgeInsets.symmetric(horizontal: 8),
           decoration: const BoxDecoration(
             color: Colors.black,
             shape: BoxShape.circle,
