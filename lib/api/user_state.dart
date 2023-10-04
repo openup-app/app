@@ -494,8 +494,6 @@ class AccountCreationParamsNotifier
 
   void age(int age) => state = state.copyWith(age: age);
 
-  void gender(Gender gender) => state = state.copyWith(gender: gender);
-
   void latLong(LatLong latLong) => state = state.copyWith(latLong: latLong);
 
   Future<Either<ApiError, void>?> signUp() async {
@@ -514,7 +512,6 @@ class AccountCreationParamsNotifier
       (r) {
         _analytics.setUserProperty('name', r.profile.name);
         _analytics.setUserProperty('age', r.profile.age);
-        _analytics.setUserProperty('gender', r.profile.gender.name);
         _onAccount(r);
         return const Right(null);
       },

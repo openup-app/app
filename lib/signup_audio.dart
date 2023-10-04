@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
@@ -11,8 +12,13 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/record.dart';
+import 'package:openup/widgets/scaffold.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
+
+import 'widgets/signup_background.dart';
 
 class SignupAudio extends ConsumerStatefulWidget {
   const SignupAudio({
@@ -29,79 +35,119 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(0xF2, 0xF2, 0xF6, 1.0),
-      resizeToAvoidBottomInset: true,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).padding.top,
+      extendBodyBehindAppBar: true,
+      resizeToAvoidBottomInset: false,
+      appBar: const OpenupAppBar(
+        blurBackground: false,
+        body: OpenupAppBarBody(
+          leading: BackIconButton(
+            color: Colors.black,
           ),
-          const SizedBox(height: 16),
-          const Align(
-            alignment: Alignment.topCenter,
+        ),
+      ),
+      body: SignupBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 16, bottom: 16),
             child: Stack(
-              alignment: Alignment.center,
               children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: BackIconButton(
-                    color: Colors.black,
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/images/signup_recorder.png',
                   ),
                 ),
-                Text(
-                  'Add a voice bio',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w500,
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 59, bottom: 350),
+                    child: Transform.rotate(
+                      angle: radians(-3),
+                      child: ClipRect(
+                        child: SizedBox(
+                          width: 176,
+                          height: 94,
+                          child: OverflowBox(
+                            maxWidth: 500,
+                            child: Center(
+                              child: Text(
+                                'HEY ${ref.watch(accountCreationParamsProvider.select((s) => s.name?.toUpperCase()))}... RECORD YOUR VOICE BIO',
+                                maxLines: 1,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              )
+                                  .animate(
+                                    onComplete: (controller) =>
+                                        controller.forward(from: 0),
+                                  )
+                                  .slideX(
+                                    duration: const Duration(seconds: 7),
+                                    begin: 1.0,
+                                    end: -1.0,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 136.0, bottom: 76.0),
+                    child: Button(
+                      onPressed: () async {
+                        final result = await showRecordPanel(
+                          context: context,
+                          title: const Text('Recording Voice Bio'),
+                          submitLabel: const Text('Tap to complete'),
+                        );
+                        if (result != null && mounted) {
+                          _onAudioRecorded(result.audio, result.duration);
+                        }
+                      },
+                      child: const SizedBox(
+                        width: 72,
+                        height: 72,
+                      ),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 50.0, bottom: 144.0),
+                    child: Button(
+                      onPressed: () {},
+                      child: const SizedBox(
+                        width: 46,
+                        height: 46,
+                      ),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 60.0),
+                    child: Button(
+                      onPressed: !ref.watch(accountCreationParamsProvider
+                              .select((s) => s.audioValid))
+                          ? null
+                          : () {
+                              _signup(
+                                params: ref.read(accountCreationParamsProvider),
+                              );
+                            },
+                      child: const SizedBox(
+                        width: 46,
+                        height: 46,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          const Text(
-            'To join you must add a voice bio',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),
-            ),
-          ),
-          Expanded(
-            child: SignUpRecorder(
-              key: _recorderKey,
-              onAudioRecorded: _onAudioRecorded,
-            ),
-          ),
-          Button(
-            onPressed: ref.watch(accountCreationParamsProvider
-                    .select((p) => p.audio == null))
-                ? null
-                : () =>
-                    _signup(params: ref.read(accountCreationParamsProvider)),
-            child: RoundedRectangleContainer(
-              child: SizedBox(
-                width: 171,
-                height: 42,
-                child: Center(
-                  child: Text(
-                    'Next',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontSize: 20, fontWeight: FontWeight.w400),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 36),
-          SizedBox(
-            height: MediaQuery.of(context).padding.bottom,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -138,9 +184,8 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
         final analytics = ref.read(analyticsProvider);
         analytics.setUserProperty('name', r.profile.name);
         analytics.setUserProperty('age', r.profile.age);
-        analytics.setUserProperty('gender', r.profile.gender.name);
         ref.read(userProvider.notifier).signedIn(r);
-        context.goNamed('signup_friends');
+        context.goNamed('initial_loading');
       },
     );
   }

@@ -44,10 +44,11 @@ import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/settings_page.dart';
 import 'package:openup/shell_page.dart';
+import 'package:openup/signup_audio.dart';
+import 'package:openup/signup_name_age.dart';
 import 'package:openup/signup_permissions.dart';
 import 'package:openup/signup_phone.dart';
-import 'package:openup/signup_profile.dart';
-import 'package:openup/signup_rules.dart';
+import 'package:openup/signup_photos.dart';
 import 'package:openup/signup_verify.dart';
 import 'package:openup/util/key_value_store_service.dart';
 import 'package:openup/view_profile_page.dart';
@@ -400,17 +401,25 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           builder: (context, state) => const SignupPermissionsScreen(),
           routes: [
             GoRoute(
-              path: 'profile',
-              name: 'signup_profile',
-              builder: (context, state) => const SignupProfile(),
+              path: 'photos',
+              name: 'signup_photos',
+              builder: (context, state) => const SignupPhotos(),
+              routes: [
+                GoRoute(
+                  path: 'name_age',
+                  name: 'signup_name_age',
+                  builder: (context, state) => const SignupNameAge(),
+                  routes: [
+                    GoRoute(
+                      path: 'audio',
+                      name: 'signup_audio',
+                      builder: (context, state) => const SignupAudio(),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
-        ),
-        GoRoute(
-          path: '/signup_rules',
-          name: 'signup_rules',
-          parentNavigatorKey: rootNavigatorKey,
-          builder: (context, state) => const SignupRules(),
         ),
         StatefulShellRoute(
           builder: (builder) {

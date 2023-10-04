@@ -161,31 +161,6 @@ class _SignupProfileState extends ConsumerState<SignupProfile> {
                                     ),
                                   ),
                                 ),
-                                Button(
-                                  onPressed: _showGenderPicker,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: 0,
-                                      right: 8,
-                                      top: 3,
-                                      bottom: 3,
-                                    ),
-                                    child: Builder(
-                                      builder: (context) {
-                                        final gender = ref.watch(
-                                            accountCreationParamsProvider
-                                                .select((s) => s.gender));
-                                        return switch (gender) {
-                                          null => const Text('Gender'),
-                                          Gender.male => const Text('Male'),
-                                          Gender.female => const Text('Female'),
-                                          Gender.nonBinary =>
-                                            const Text('Non-binary'),
-                                        };
-                                      },
-                                    ),
-                                  ),
-                                ),
                               ],
                             );
                           },
@@ -300,7 +275,7 @@ class _SignupProfileState extends ConsumerState<SignupProfile> {
 
   void _showGenderPicker() async {
     _dismissKeyboard();
-    final gender = await showCupertinoModalPopup<Gender>(
+    await showCupertinoModalPopup<Gender>(
       context: context,
       barrierColor: Colors.transparent,
       useRootNavigator: true,
@@ -323,9 +298,6 @@ class _SignupProfileState extends ConsumerState<SignupProfile> {
         );
       },
     );
-    if (gender != null && mounted) {
-      ref.read(accountCreationParamsProvider.notifier).gender(gender);
-    }
   }
 
   void _showRecordPanel() async {

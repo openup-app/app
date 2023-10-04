@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -167,7 +166,6 @@ class _SignupGenderState extends ConsumerState<SignupGender> {
     }
 
     ref.read(analyticsProvider).trackSignupSubmitGender();
-    ref.read(accountCreationParamsProvider.notifier).gender(gender);
     context.pushNamed('signup_photos');
   }
 }

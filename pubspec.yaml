@@ -92,8 +92,10 @@ flutter:
   assets:
     - assets/images/app_logo.png
     - assets/images/audio_indicator.svg
+    - assets/images/audio_visualizer.json
     - assets/images/call.json
     - assets/images/call.svg
+    - assets/images/cat_paw.png
     - assets/images/video_call.json
     - assets/images/play_icon.svg
     - assets/images/pause_icon.svg
@@ -108,6 +110,7 @@ flutter:
     - assets/images/map_searching.json
     - assets/images/menu_background.png
     - assets/images/menu_button.png
+    - assets/images/name_age_sticker.png
     - assets/images/nav_icon_hangout.svg
     - assets/images/nav_icon_messages.svg
     - assets/images/nav_icon_people.svg
@@ -130,6 +133,7 @@ flutter:
     - assets/images/signup_friends_background.png
     - assets/images/signup_paper1.png
     - assets/images/signup_paper2.png
+    - assets/images/signup_recorder.png
     - assets/images/subscribe_background.png
     - assets/images/earth.svg
     - assets/images/loading_icon.png
@@ -165,6 +169,10 @@ flutter:
       fonts:
         - asset: assets/fonts/CoveredByYourGrace-Regular.ttf
           weight: 400
+    - family: Gotham Black Regular
+      fonts:
+        - asset: assets/fonts/Gotham Black Regular.ttf
+          weight: 500
     - family: SF Pro
       fonts:
         - asset: assets/fonts/SF-Pro-Text-Ultralight.otf

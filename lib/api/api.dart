@@ -47,13 +47,11 @@ class Api {
     final audio = params.audio;
     final name = params.name;
     final age = params.age;
-    final gender = params.gender;
     final latLong = params.latLong;
     if (photos == null ||
         audio == null ||
         name == null ||
         age == null ||
-        gender == null ||
         latLong == null) {
       return Future.value(const Left(ApiError.client(ClientErrorBadRequest())));
     }
@@ -71,7 +69,6 @@ class Api {
           'account': jsonEncode({
             'name': name,
             'age': age,
-            'gender': gender.name,
             'location': latLong,
           }),
         });
@@ -1024,7 +1021,6 @@ class AccountCreationParams with _$AccountCreationParams {
   const factory AccountCreationParams({
     @Default(null) String? name,
     @Default(null) int? age,
-    @Default(null) Gender? gender,
     @Default(null) List<File>? photos,
     @Default(null) File? audio,
     @Default(null) LatLong? latLong,
@@ -1033,14 +1029,15 @@ class AccountCreationParams with _$AccountCreationParams {
   const AccountCreationParams._();
 
   bool get valid =>
-      name != null &&
-      age != null &&
-      age! >= 17 &&
-      gender != null &&
-      photos != null &&
-      photos!.isNotEmpty &&
-      audio != null &&
-      latLong != null;
+      nameValid && ageValid && photosValid && audioValid && latLong != null;
+
+  bool get nameValid => name != null && name!.isNotEmpty;
+
+  bool get ageValid => age != null && age! >= 17;
+
+  bool get photosValid => photos != null && photos!.isNotEmpty;
+
+  bool get audioValid => audio != null;
 }
 
 @freezed
@@ -1070,7 +1067,6 @@ class Profile with _$Profile {
     required String uid,
     required String name,
     int? age,
-    required Gender gender,
     required String photo,
     @_Base64Converter() required Uint8List photoThumbnail,
     String? audio,

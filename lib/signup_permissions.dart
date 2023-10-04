@@ -135,7 +135,7 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
     final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
     if (_hasLocationPermission && _hasContactsPermission && routeCurrent) {
       ref.read(analyticsProvider).trackSignupGrantPermissions();
-      context.pushNamed('signup_profile');
+      context.pushNamed('signup_photos');
     }
   }
 
@@ -152,7 +152,7 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
     final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
     if (_hasLocationPermission && routeCurrent) {
       ref.read(analyticsProvider).trackSignupGrantOnlyLocationPermission();
-      context.pushNamed('signup_profile');
+      context.pushNamed('signup_photos');
     }
   }
 
