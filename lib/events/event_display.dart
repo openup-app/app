@@ -12,7 +12,6 @@ import 'package:openup/events/event_create_page.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/events/events_provider.dart';
 import 'package:openup/view_profile_page.dart';
-import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/record.dart';
@@ -194,25 +193,9 @@ class EventGridTile extends ConsumerWidget {
           Positioned.fill(
             child: ClipRRect(
               borderRadius: const BorderRadius.all(Radius.circular(10)),
-              child: WiggleBuilder(
-                seed: event.hashCode,
-                builder: (context, child, wiggle) {
-                  final offset = Offset(
-                    wiggle(frequency: 0.3, amplitude: 30),
-                    wiggle(frequency: 0.3, amplitude: 30),
-                  );
-
-                  return Transform.translate(
-                    offset: offset,
-                    child: Transform.scale(
-                      scale: 1.15,
-                      child: Image.network(
-                        event.host.photo,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  );
-                },
+              child: Image.network(
+                event.host.photo,
+                fit: BoxFit.cover,
               ),
             ),
           ),
