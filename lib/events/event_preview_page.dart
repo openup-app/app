@@ -43,7 +43,7 @@ class EventPreviewPage extends ConsumerWidget {
                 final future = notifier.createEvent(submission);
                 final success = await withBlockingModal(
                   context: context,
-                  label: 'Creating event',
+                  label: 'Creating Hangout',
                   future: future,
                 );
                 if (success && context.mounted) {

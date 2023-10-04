@@ -989,7 +989,7 @@ class _UnattendModal extends StatelessWidget {
                   child: Padding(
                     padding: EdgeInsets.only(bottom: 37.0),
                     child: Text(
-                      'Are you still attending\nthis event?',
+                      'Are you still attending\nthis Hangout?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         height: 1.3,

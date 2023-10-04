@@ -179,8 +179,8 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
         body: OpenupAppBarBody(
           leading: const OpenupAppBarBackButton(),
           center: editing
-              ? const Text('Edit Meetup')
-              : const Text('Create a Meetup'),
+              ? const Text('Edit Hangout')
+              : const Text('Create a Hangout'),
         ),
         blurBackground: true,
       ),
@@ -198,7 +198,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                 onPressed: widget.editingEventId == null
                     ? null
                     : () => _showDeleteModal(widget.editingEventId!),
-                child: const Text('Delete Meet'),
+                child: const Text('Delete Hangout'),
               ),
             if (!editing)
               RoundedButton(
@@ -216,7 +216,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                     ref.watch(_submissionProvider.select((s) => !s.valid))
                         ? null
                         : _performUpdate,
-                child: const Text('Update Meet'),
+                child: const Text('Update Hangout'),
               ),
           ],
         ),
@@ -228,7 +228,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               children: [
                 _Input(
-                  title: const Text('Meetup name'),
+                  title: const Text('Hangout name'),
                   trailing: _TextField(
                       controller: _titleController,
                       onChanged: (value) =>
@@ -529,7 +529,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
         .updateEvent(editingEventId, submission);
     await withBlockingModal(
       context: context,
-      label: 'Updating event',
+      label: 'Updating Hangout',
       future: future,
     );
 
@@ -543,7 +543,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
       context: context,
       builder: (context) {
         return CupertinoAlertDialog(
-          content: const Text('Are you sure you want to delete your event?'),
+          content: const Text('Are you sure you want to delete your Hangout?'),
           actions: [
             CupertinoDialogAction(
               onPressed: () async {
@@ -552,7 +552,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                     .deleteEvent(eventId);
                 final success = await withBlockingModal(
                   context: context,
-                  label: 'Deleting event',
+                  label: 'Deleting Hangout',
                   future: future,
                 );
                 if (success && context.mounted) {
@@ -582,7 +582,7 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
 
     await withBlockingModal(
       context: context,
-      label: 'Deleting event',
+      label: 'Deleting Hangout',
       future: deleteFuture,
     );
     if (mounted) {

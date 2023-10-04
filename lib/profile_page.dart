@@ -87,7 +87,7 @@ class _TopTabs extends StatelessWidget {
               child: Button(
                 onPressed: () => context.pushNamed('my_events'),
                 child: const Center(
-                  child: Text('My Meetups'),
+                  child: Text('My Hangouts'),
                 ),
               ),
             ),

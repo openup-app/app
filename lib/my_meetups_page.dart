@@ -24,7 +24,7 @@ class MyMeetupsPage extends ConsumerWidget {
               child: Text('Cancel'),
             ),
           ),
-          center: const Text('My Meetups'),
+          center: const Text('My Hangouts'),
         ),
       ),
       body: const _Body(),
@@ -105,8 +105,8 @@ class _CreateEvent extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 190),
             child: Text(
               firstEvent
-                  ? 'Doesn’t seem like you created any meets...\nwould you like to create one? '
-                  : 'Doesn’t seem like you created any more meets...\nwould you like to create one? ',
+                  ? 'Doesn’t seem like you created any Hangouts...\nwould you like to create one? '
+                  : 'Doesn’t seem like you created any more Hangouts...\nwould you like to create one? ',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 height: 1.5,

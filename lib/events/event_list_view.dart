@@ -141,7 +141,7 @@ class _CreateEvent extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.only(bottom: 190),
             child: Text(
-              'Doesn\'t seem like there are any nearby meets...\nwould you like to create one? ',
+              'Doesn\'t seem like there are any nearby Hangouts...\nwould you like to create one? ',
               textAlign: TextAlign.center,
               style: TextStyle(
                 height: 1.5,

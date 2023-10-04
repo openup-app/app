@@ -107,8 +107,8 @@ class _FindEvents extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 190),
             child: Text(
               noEvents
-                  ? 'Doesn’t seem like you are attending any meet ups...\nwould you like to see meet ups?'
-                  : 'Would you like to see more events?',
+                  ? 'Doesn’t seem like you are attending any Hangouts...\nwould you like to see Hangouts?'
+                  : 'Would you like to see more Hangouts?',
               style: const TextStyle(
                 height: 1.5,
                 fontSize: 16,
@@ -123,7 +123,7 @@ class _FindEvents extends StatelessWidget {
             width: 160,
             child: RectangleButton(
               onPressed: () => context.goNamed('events'),
-              child: const Text('Find Meetups'),
+              child: const Text('Find Hangouts'),
             ),
           ),
         ),
