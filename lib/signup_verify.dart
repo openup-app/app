@@ -6,7 +6,6 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/widgets/back_button.dart';
-import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/input_area.dart';
 import 'package:openup/widgets/restart_app.dart';
@@ -50,106 +49,80 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
             ),
             Center(
               child: Transform.rotate(
-                angle: radians(-18),
+                angle: radians(-5),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 32.0),
+                      padding: const EdgeInsets.only(bottom: 12.0),
                       child: Image.asset('assets/images/signup_paper2.png'),
                     ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Center(
-                          child: Text(
-                            'Verification Code?',
+                    ErrorText(
+                      errorText: _errorText,
+                      child: Center(
+                        child: Transform.rotate(
+                          angle: radians(-10),
+                          child: TextField(
+                            controller: _smsCodeController,
+                            autofocus: true,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.done,
+                            style: const TextStyle(
                               fontFamily: 'Covered By Your Grace',
-                              fontSize: 36,
+                              fontSize: 27,
                               fontWeight: FontWeight.w400,
                               color: Colors.black,
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ErrorText(
-                          errorText: _errorText,
-                          child: Center(
-                            child: TextField(
-                              controller: _smsCodeController,
-                              autofocus: true,
-                              textAlign: TextAlign.center,
-                              keyboardType: TextInputType.number,
-                              textInputAction: TextInputAction.done,
-                              style: const TextStyle(
-                                fontFamily: 'Covered By Your Grace',
-                                fontSize: 45,
+                            onChanged: (_) {
+                              setState(() => _errorText = null);
+                              _maybeAutoSubmit();
+                            },
+                            decoration: const InputDecoration.collapsed(
+                              hintText: 'Verification Code?',
+                              hintStyle: TextStyle(
+                                fontSize: 27,
                                 fontWeight: FontWeight.w400,
                                 color: Colors.black,
-                              ),
-                              onChanged: (_) {
-                                setState(() => _errorText = null);
-                              },
-                              decoration: const InputDecoration.collapsed(
-                                hintText: 'Code',
-                                hintStyle: TextStyle(
-                                  fontSize: 45,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color.fromRGBO(0x00, 0x00, 0x00, 0.3),
-                                ),
                               ),
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewPadding.bottom + 32.0),
-                child: Button(
-                  onPressed: _submitting || _smsCodeController.text.isEmpty
-                      ? null
-                      : () async {
-                          final result = await _submit();
-                          if (result == AuthResult.success && mounted) {
-                            _handleVerification();
-                          }
-                        },
-                  child: RoundedRectangleContainer(
-                    child: SizedBox(
-                      width: 171,
-                      height: 42,
-                      child: Center(
-                        child: _submitting
-                            ? const LoadingIndicator(color: Colors.black)
-                            : const Text(
-                                'Verify',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.black,
-                                ),
-                              ),
-                      ),
-                    ),
+            if (_submitting)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.only(top: 128),
+                  child: LoadingIndicator(
+                    color: Colors.black,
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),
     );
+  }
+
+  void _maybeAutoSubmit() async {
+    if (_submitting || _smsCodeController.text.length != 6) {
+      return;
+    }
+
+    final result = await _submit();
+    if (!mounted) {
+      return;
+    }
+    if (result == AuthResult.success) {
+      _handleVerification();
+    } else {
+      FocusScope.of(context).requestFocus();
+    }
   }
 
   Future<AuthResult?> _submit() async {
