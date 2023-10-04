@@ -92,7 +92,6 @@ flutter:
   assets:
     - assets/images/app_logo.png
     - assets/images/audio_indicator.svg
-    - assets/images/audio_visualizer.json
     - assets/images/call.json
     - assets/images/call.svg
     - assets/images/cat_paw.png
