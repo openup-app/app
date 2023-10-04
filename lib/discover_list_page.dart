@@ -12,6 +12,7 @@ import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/photo_card.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/record.dart';
+import 'package:openup/widgets/scaffold.dart';
 
 class DiscoverListPage extends ConsumerStatefulWidget {
   const DiscoverListPage({super.key});
@@ -25,6 +26,12 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(peopleProvider);
     return Scaffold(
+      appBar: const OpenupAppBar(
+        blurBackground: false,
+        body: OpenupAppBarBody(
+          center: Text('Plus One'),
+        ),
+      ),
       body: TextBackground(
         child: SafeArea(
           child: Builder(
