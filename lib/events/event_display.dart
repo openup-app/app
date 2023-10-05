@@ -233,7 +233,7 @@ class EventGridTile extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontFamily: 'Covered By Your Grace',
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
@@ -241,7 +241,7 @@ class EventGridTile extends ConsumerWidget {
                         _eventAttendanceText(event),
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.w200,
                           color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
                         ),
