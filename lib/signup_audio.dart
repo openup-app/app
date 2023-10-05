@@ -9,6 +9,7 @@ import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -31,6 +32,13 @@ class SignupAudio extends ConsumerStatefulWidget {
 
 class _SignupAudioState extends ConsumerState<SignupAudio> {
   final _recorderKey = GlobalKey<SignUpRecorderState>();
+  final _audioPlayer = JustAudioAudioPlayer();
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +102,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
                   alignment: const Alignment(-0.37, -0.15),
                   child: Button(
                     onPressed: () async {
+                      _audioPlayer.stop();
                       final result = await showRecordPanel(
                         context: context,
                         title: const Text('Recording Voice Bio'),
@@ -112,7 +121,15 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
                 Align(
                   alignment: const Alignment(0.25, -0.27),
                   child: Button(
-                    onPressed: () {},
+                    onPressed: !ref.watch(accountCreationParamsProvider
+                            .select((s) => s.audioValid))
+                        ? null
+                        : () {
+                            final audio =
+                                ref.read(accountCreationParamsProvider).audio!;
+                            _audioPlayer.setPath(audio.path);
+                            _audioPlayer.play();
+                          },
                     child: const SizedBox(
                       width: 46,
                       height: 46,
@@ -126,6 +143,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
                             .select((s) => s.audioValid))
                         ? null
                         : () {
+                            _audioPlayer.stop();
                             _signup(
                               params: ref.read(accountCreationParamsProvider),
                             );
