@@ -133,12 +133,11 @@ class _ListViewState extends ConsumerState<_ListView> {
             }
             return ProfileBuilder(
               key: _profileBuilderKey,
-              profile: profiles[_profileIndex % profiles.length].profile,
+              profile: profiles[_profileIndex].profile,
               play: _play,
               builder: (context, playbackState, playbackInfoStream) {
-                final currentProfile =
-                    profiles[_profileIndex % profiles.length].profile;
-                return CardStack<DiscoverProfile?>(
+                final currentProfile = profiles[_profileIndex].profile;
+                return CardStack<DiscoverProfile>(
                   key: _cardStackKey,
                   width: constraints.maxWidth,
                   items: profiles,
@@ -147,13 +146,11 @@ class _ListViewState extends ConsumerState<_ListView> {
                   },
                   itemBuilder: (context, item, key) {
                     final profile = item;
-                    if (profile == null) {
-                      return const SizedBox.shrink();
-                    }
                     final isCurrent = profile.profile.uid == currentProfile.uid;
                     return PhotoCardWiggle(
                       childKey: key,
                       child: PhotoCardProfile(
+                        key: ValueKey(profile.profile.uid),
                         width: constraints.maxWidth,
                         height: constraints.maxHeight,
                         profile: profile,

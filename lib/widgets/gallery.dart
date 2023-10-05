@@ -334,7 +334,6 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
   static const _duration = Duration(seconds: 5);
   Timer? _slideshowTimer;
   int _index = 0;
-  bool _ready = false;
 
   late DateTime _start;
   Duration _elapsedAtPause = Duration.zero;
@@ -343,6 +342,7 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
   void initState() {
     super.initState();
     _start = DateTime.now();
+    _maybeStartSlideshowTimer();
   }
 
   @override
@@ -373,19 +373,16 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
     if (!widget.slideshow) {
       return;
     }
-    if (_ready) {
-      setState(() {
-        _start = DateTime.now().subtract(_elapsedAtPause);
-        _elapsedAtPause = Duration.zero;
-      });
-      _slideshowTimer?.cancel();
-      _slideshowTimer = Timer(_duration, () {
-        setState(() {
-          _index++;
-          _ready = false;
-        });
-      });
-    }
+    setState(() {
+      _start = DateTime.now().subtract(_elapsedAtPause);
+      _elapsedAtPause = Duration.zero;
+    });
+    _slideshowTimer?.cancel();
+    _slideshowTimer = Timer(_duration, () {
+      // Increments forever to create a unique key
+      setState(() => _index++);
+      _maybeStartSlideshowTimer();
+    });
   }
 
   @override
@@ -398,27 +395,47 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 500),
-      switchInCurve: Curves.easeOutQuart,
-      // Don't animate in reverse
-      reverseDuration: const Duration(days: 1),
-      switchOutCurve: Curves.easeOutQuart,
       child: _AnimatedScalingUp(
         key: ValueKey('scale_up_${_index}_$photoUri'),
         scaleTween: Tween(
-          begin: 1.13,
-          end: 1.20,
+          begin: 1.0,
+          end: 1.3,
         ),
-        child: NonCinematicPhoto(
-          uri: photoUri,
-          animate: _slideshowTimer?.isActive == true,
-          onLoaded: () {
-            setState(() => _ready = true);
-            _maybeStartSlideshowTimer();
+        child: Image.network(
+          photoUri.toString(),
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              layoutBuilder: _expandLayoutBuilder,
+              child: loadingProgress == null
+                  ? child
+                  : ShimmerLoading(
+                      isLoading: true,
+                      child: Container(
+                        color: Colors.black,
+                      ),
+                    ),
+            );
           },
         ),
       ),
     );
   }
+}
+
+Widget _expandLayoutBuilder(
+  Widget? currentChild,
+  List<Widget> previousChildren,
+) {
+  return Stack(
+    alignment: Alignment.center,
+    fit: StackFit.expand,
+    children: [
+      if (currentChild != null) currentChild,
+      ...previousChildren,
+    ],
+  );
 }
 
 class _AnimatedScalingUp extends StatefulWidget {

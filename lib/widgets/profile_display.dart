@@ -379,7 +379,6 @@ class PhotoCardProfile extends ConsumerStatefulWidget {
 }
 
 class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
-  bool _loading = true;
   bool _initialDidChangeDeps = true;
 
   @override
@@ -396,20 +395,10 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
       for (final uri in widget.profile.profile.gallery)
         precacheImage(NetworkImage(uri.toString()), context)
     ]);
-    if (mounted) {
-      setState(() => _loading = false);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return PhotoCardLoading(
-        width: widget.width,
-        height: widget.height,
-      );
-    }
-
     return PhotoCard(
       width: widget.width,
       height: widget.height,
