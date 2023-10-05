@@ -375,6 +375,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   void _showRecordPanel() async {
+    _audio.pause();
     final result = await showRecordPanel(
       context: context,
       title: const Text('Record Message'),
