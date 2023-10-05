@@ -66,6 +66,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   bool _fetchingMore = false;
 
   double _pageScroll = 0;
+  Timer? _autoplayTimer;
 
   // Saves the profile/uid here in case the user gets signed out during chat
   late Profile myProfile;
@@ -114,7 +115,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     _fetchHistory().then((_) {
       if (mounted) {
-        _autoplayScrolledMessage(
+        _autoplayMessageAtIndex(
           _sortMessages(_messages?.values.toList() ?? []),
           0,
         );
@@ -137,6 +138,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _chatApi.dispose();
     _audio.dispose();
     _pageController.dispose();
+    _autoplayTimer?.cancel();
     super.dispose();
   }
 
@@ -491,18 +493,20 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       setState(() => _showUnreadMessageButton = false);
     }
 
-    _autoplayScrolledMessage(
-      _sortMessages(messages.values.toList()),
-      _pageController.page ?? 0,
-    );
+    _autoplayTimer?.cancel();
+    _autoplayTimer = Timer(const Duration(milliseconds: 100), () {
+      if (!mounted) {
+        return;
+      }
+      final index = _pageController.page?.round() ?? 0;
+      _autoplayMessageAtIndex(_sortMessages(messages.values.toList()), index);
+    });
   }
 
-  void _autoplayScrolledMessage(
-      List<ChatMessage> messages, double pageOffset) async {
+  void _autoplayMessageAtIndex(List<ChatMessage> messages, int index) async {
     if (messages.isEmpty) {
       return;
     }
-    final index = pageOffset.round();
     final message = messages[index];
     if (message.messageId != null && message.messageId != _playbackMessageId) {
       _playPause(message, false);
