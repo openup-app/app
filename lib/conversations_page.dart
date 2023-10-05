@@ -353,15 +353,19 @@ class _ConversationList extends StatelessWidget {
 
     if (chatrooms.isEmpty) {
       return Center(
-        child: Text(
-          filtered ? 'No results' : emptyLabel,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                height: 1.5,
-                color: const Color.fromRGBO(0x70, 0x70, 0x70, 1.0),
-              ),
+        child: Padding(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+          child: Text(
+            filtered ? 'No results' : emptyLabel,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              height: 1.5,
+              color: Color.fromRGBO(0x70, 0x70, 0x70, 1.0),
+            ),
+          ),
         ),
       );
     }
