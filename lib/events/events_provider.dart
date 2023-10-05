@@ -92,7 +92,8 @@ final nearbyEventsProvider = StateProvider<NearbyEventsState>(
       loading: () => const NearbyEventsState.loading(),
       error: (_, __) => const NearbyEventsState.error(),
       data: (events) {
-        return NearbyEventsState.data(events
+        final sortedEvents = List.of(events)..sort(_dateAscendingEventSorter);
+        return NearbyEventsState.data(sortedEvents
             .where((e) => storedEventIds.contains(e.id))
             .map((e) => e.id)
             .toList());
@@ -146,10 +147,13 @@ final hostingEventsProvider = Provider<HostingEventsState>(
     return events.when(
       loading: () => const HostingEventsState.loading(),
       error: (_, __) => const HostingEventsState.error(),
-      data: (events) => HostingEventsState.data(events
-          .where((e) => storedEventIds.contains(e.id))
-          .map((e) => e.id)
-          .toList()),
+      data: (events) {
+        final sortedEvents = List.of(events)..sort(_dateAscendingEventSorter);
+        return HostingEventsState.data(sortedEvents
+            .where((e) => storedEventIds.contains(e.id))
+            .map((e) => e.id)
+            .toList());
+      },
     );
   },
   dependencies: [eventStoreProvider, _hostingEventsProviderInternal],
@@ -198,10 +202,13 @@ final attendingEventsProvider = Provider<AttendingEventsState>(
     return events.when(
       loading: () => const AttendingEventsState.loading(),
       error: (_, __) => const AttendingEventsState.error(),
-      data: (events) => AttendingEventsState.data(events
-          .where((e) => storedEventIds.contains(e.id))
-          .map((e) => e.id)
-          .toList()),
+      data: (events) {
+        final sortedEvents = List.of(events)..sort(_dateAscendingEventSorter);
+        return AttendingEventsState.data(sortedEvents
+            .where((e) => storedEventIds.contains(e.id))
+            .map((e) => e.id)
+            .toList());
+      },
     );
   },
   dependencies: [eventStoreProvider, _attendingEventsProviderInternal],
@@ -321,3 +328,6 @@ class EventManagementNotifier extends StateNotifier<void> {
     );
   }
 }
+
+int _dateAscendingEventSorter(Event a, Event b) =>
+    a.startDate.compareTo(b.startDate);
