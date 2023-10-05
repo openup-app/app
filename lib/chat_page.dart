@@ -541,7 +541,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           _messages?.clear();
           _messages = (_messages ?? {})..addEntries(entries);
         });
-        _autoplayScrolledMessage(_messages?.values.toList() ?? [], 0);
+        _autoplayScrolledMessage(
+          _sortMessages(_messages?.values.toList() ?? []),
+          0,
+        );
       },
     );
   }
@@ -551,7 +554,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       return [];
     }
 
-    return List.of(messages)..sort(_dateAscendingMessageSorter);
+    return List.of(messages)..sort(_dateDescendingMessageSorter);
   }
 }
 
@@ -883,8 +886,8 @@ class _LocationOverlayState extends State<_LocationOverlay> {
   }
 }
 
-int _dateAscendingMessageSorter(ChatMessage a, ChatMessage b) =>
-    a.date.compareTo(b.date);
+int _dateDescendingMessageSorter(ChatMessage a, ChatMessage b) =>
+    b.date.compareTo(a.date);
 
 class _ScrollNotifier extends StateNotifier<double> {
   _ScrollNotifier() : super(0.0);
