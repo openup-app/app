@@ -150,7 +150,7 @@ class CardStackState<T> extends State<CardStack<T>>
           _subItems.insert(0, _subItems.removeLast());
         });
         widget.onChanged(_topItemIndex % _items.length % widget.items.length);
-      } else if (towardsOne && _dragRight) {
+      } else if (towardsOne && !_dragRight) {
         // Undo previous
         setState(() {
           _keys.add(_keys.removeAt(0));
