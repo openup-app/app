@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
-import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/signup_background.dart';
@@ -78,11 +77,15 @@ class _SignupNameAgeState extends ConsumerState<SignupNameAge> {
                     ),
                   ),
                 ),
-                Image.asset(
-                  'assets/images/name_age_sticker.png',
-                  fit: BoxFit.cover,
+                Align(
+                  alignment: const Alignment(0, -0.3),
+                  child: Image.asset(
+                    'assets/images/name_age_sticker.png',
+                    fit: BoxFit.cover,
+                  ),
                 ),
-                Center(
+                Align(
+                  alignment: const Alignment(0, -0.19),
                   child: Transform.rotate(
                     angle: radians(4),
                     child: ClipRect(
@@ -173,7 +176,7 @@ class _SignupNameAgeState extends ConsumerState<SignupNameAge> {
                   ),
                 ),
                 Align(
-                  alignment: const Alignment(1.0, -0.7),
+                  alignment: const Alignment(1.0, -0.94),
                   child: Padding(
                     padding: const EdgeInsets.only(right: 24),
                     child: SignupNextButton(
