@@ -140,10 +140,10 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
     }
     setState(() => _submitting = false);
 
-    final String message;
+    final String? message;
     switch (result) {
       case AuthResult.success:
-        message = 'Sucessfully verified code';
+        message = null;
       case AuthResult.invalidCode:
         message = 'Invalid code';
       case AuthResult.invalidId:
@@ -153,11 +153,13 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
       case AuthResult.failure:
         message = 'Something went wrong';
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+    if (message != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    }
 
     return result;
   }
