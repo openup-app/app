@@ -111,7 +111,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       },
     );
 
-    _fetchHistory();
+    _fetchHistory().then((_) {
+      if (mounted) {
+        _autoplayScrolledMessage(
+          _sortMessages(_messages?.values.toList() ?? []),
+          0,
+        );
+      }
+    });
 
     _chatroom = widget.chatroom;
     final chatroom = widget.chatroom;
@@ -541,10 +548,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           _messages?.clear();
           _messages = (_messages ?? {})..addEntries(entries);
         });
-        _autoplayScrolledMessage(
-          _sortMessages(_messages?.values.toList() ?? []),
-          0,
-        );
       },
     );
   }
