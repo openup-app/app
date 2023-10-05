@@ -339,7 +339,6 @@ class NonCinematicPhoto extends StatefulWidget {
   final BoxFit fit;
   final bool animate;
   final VoidCallback? onLoaded;
-  final Duration duration;
 
   const NonCinematicPhoto({
     super.key,
@@ -347,7 +346,6 @@ class NonCinematicPhoto extends StatefulWidget {
     this.fit = BoxFit.cover,
     this.animate = true,
     this.onLoaded,
-    required this.duration,
   });
 
   @override
