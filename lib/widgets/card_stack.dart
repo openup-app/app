@@ -157,7 +157,7 @@ class CardStackState<T> extends State<CardStack<T>>
           _subItems.add(_subItems.removeAt(0));
         });
         widget.onChanged(
-            (_topItemIndex - 1) % _items.length % widget.items.length);
+            (_topItemIndex + 1) % _items.length % widget.items.length);
       }
     }
     _previousValue =
