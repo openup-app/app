@@ -9,17 +9,18 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
+import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/chat_message.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/record.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/wobbly_rings.dart';
@@ -158,9 +159,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               return Button(
                 onPressed: () {
                   _audio.pause();
-                  showProfileBottomSheet(
-                    context: context,
-                    profile: _otherProfile!,
+                  context.pushNamed(
+                    'view_profile',
+                    queryParams: {'uid': otherProfile.uid},
+                    extra:
+                        ViewProfilePageArguments.profile(profile: otherProfile),
                   );
                 },
                 child: Row(

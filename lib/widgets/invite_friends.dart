@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/contacts/contacts_provider.dart';
 import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/section.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -146,9 +146,9 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                           ),
                           trailing: _InviteButton(
                             onPressed: () {
-                              showProfileBottomSheetLoadProfile(
-                                context: context,
-                                uid: contact.uid,
+                              context.pushNamed(
+                                'view_profile',
+                                queryParams: {'uid': contact.uid},
                               );
                             },
                           ),
