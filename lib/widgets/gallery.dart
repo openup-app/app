@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/widgets/common.dart';
@@ -398,13 +397,13 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
     final photoUri = widget.gallery[i];
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 500),
       switchInCurve: Curves.easeOutQuart,
       // Don't animate in reverse
       reverseDuration: const Duration(days: 1),
       switchOutCurve: Curves.easeOutQuart,
       child: _AnimatedScalingUp(
-        key: ValueKey('${_index}_$photoUri'),
+        key: ValueKey('scale_up_${_index}_$photoUri'),
         scaleTween: Tween(
           begin: 1.13,
           end: 1.20,
@@ -417,14 +416,7 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
             _maybeStartSlideshowTimer();
           },
         ),
-      )
-          .animate(
-            autoPlay: true,
-            key: ValueKey('${_index}_$photoUri'),
-          )
-          .fadeIn(
-            duration: const Duration(milliseconds: 300),
-          ),
+      ),
     );
   }
 }
