@@ -37,7 +37,7 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       body: SignupBackground(
         child: Stack(
           children: [

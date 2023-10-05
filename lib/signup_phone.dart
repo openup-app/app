@@ -34,7 +34,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       body: SignupBackground(
         child: Stack(
           fit: StackFit.expand,
@@ -114,7 +114,7 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
               alignment: Alignment.bottomCenter,
               child: Padding(
                 padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewPadding.bottom + 32.0),
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 4),
                 child: Button(
                   onPressed: _submitting || !_valid ? null : _submit,
                   child: RoundedRectangleContainer(

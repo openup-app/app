@@ -42,7 +42,7 @@ class _SignupNameAgeState extends ConsumerState<SignupNameAge> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       appBar: const OpenupAppBar(
         blurBackground: false,
         body: OpenupAppBarBody(
@@ -166,7 +166,7 @@ class _SignupNameAgeState extends ConsumerState<SignupNameAge> {
                   ),
                 ),
                 Align(
-                  alignment: const Alignment(1.0, 0.85),
+                  alignment: const Alignment(1.0, -0.65),
                   child: Padding(
                     padding: const EdgeInsets.only(right: 24),
                     child: Transform.rotate(
