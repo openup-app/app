@@ -21,6 +21,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/photo3d.dart';
 import 'package:openup/widgets/waveforms.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 class CountdownTimer extends StatefulWidget {
   final String Function(Duration remaining)? formatter;
@@ -611,6 +612,51 @@ class _SlidingGradientTransform extends GradientTransform {
   @override
   Matrix4? transform(Rect bounds, {ui.TextDirection? textDirection}) {
     return Matrix4.translationValues(bounds.width * slidePercent, 0.0, 0.0);
+  }
+}
+
+class SignupNextButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final Widget child;
+
+  const SignupNextButton({
+    super.key,
+    required this.onPressed,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: radians(-3.92),
+      child: Button(
+        onPressed: onPressed,
+        child: Container(
+          width: 146,
+          height: 42,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 7,
+                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+              ),
+            ],
+          ),
+          child: DefaultTextStyle(
+            style: const TextStyle(
+              fontFamily: 'Covered By Your Grace',
+              fontSize: 21,
+              fontWeight: FontWeight.w400,
+              color: Colors.black,
+            ),
+            child: Center(
+              child: child,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -56,91 +56,83 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
                     'assets/images/signup_recorder.png',
                   ),
                 ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 59, bottom: 350),
-                    child: Transform.rotate(
-                      angle: radians(-3),
-                      child: ClipRect(
-                        child: SizedBox(
-                          width: 176,
-                          height: 94,
-                          child: OverflowBox(
-                            maxWidth: 500,
-                            child: Center(
-                              child: Text(
-                                'HEY ${ref.watch(accountCreationParamsProvider.select((s) => s.name?.toUpperCase()))}... RECORD YOUR VOICE BIO',
-                                maxLines: 1,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w400,
+                Align(
+                  alignment: const Alignment(-0.15, -0.73),
+                  child: Transform.rotate(
+                    angle: radians(-3),
+                    child: ClipRect(
+                      child: SizedBox(
+                        width: 176,
+                        height: 94,
+                        child: OverflowBox(
+                          maxWidth: 500,
+                          child: Center(
+                            child: Text(
+                              'HEY ${ref.watch(accountCreationParamsProvider.select((s) => s.name?.toUpperCase()))} WHAT\'S UP... PLEASE INTRODUCE YOURSELF TO EVERYONE!',
+                              maxLines: 1,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            )
+                                .animate(
+                                  onComplete: (controller) =>
+                                      controller.forward(from: 0),
+                                )
+                                .slideX(
+                                  duration: const Duration(seconds: 12),
+                                  begin: 1.0,
+                                  end: -1.0,
                                 ),
-                              )
-                                  .animate(
-                                    onComplete: (controller) =>
-                                        controller.forward(from: 0),
-                                  )
-                                  .slideX(
-                                    duration: const Duration(seconds: 7),
-                                    begin: 1.0,
-                                    end: -1.0,
-                                  ),
-                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 136.0, bottom: 76.0),
-                    child: Button(
-                      onPressed: () async {
-                        final result = await showRecordPanel(
-                          context: context,
-                          title: const Text('Recording Voice Bio'),
-                          submitLabel: const Text('Tap to complete'),
-                        );
-                        if (result != null && mounted) {
-                          _onAudioRecorded(result.audio, result.duration);
-                        }
-                      },
-                      child: const SizedBox(
-                        width: 72,
-                        height: 72,
-                      ),
+                Align(
+                  alignment: const Alignment(-0.37, -0.15),
+                  child: Button(
+                    onPressed: () async {
+                      final result = await showRecordPanel(
+                        context: context,
+                        title: const Text('Recording Voice Bio'),
+                        submitLabel: const Text('Tap to complete'),
+                      );
+                      if (result != null && mounted) {
+                        _onAudioRecorded(result.audio, result.duration);
+                      }
+                    },
+                    child: const SizedBox(
+                      width: 72,
+                      height: 72,
                     ),
                   ),
                 ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 50.0, bottom: 144.0),
-                    child: Button(
-                      onPressed: () {},
-                      child: const SizedBox(
-                        width: 46,
-                        height: 46,
-                      ),
+                Align(
+                  alignment: const Alignment(0.25, -0.27),
+                  child: Button(
+                    onPressed: () {},
+                    child: const SizedBox(
+                      width: 46,
+                      height: 46,
                     ),
                   ),
                 ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 60.0),
-                    child: Button(
-                      onPressed: !ref.watch(accountCreationParamsProvider
-                              .select((s) => s.audioValid))
-                          ? null
-                          : () {
-                              _signup(
-                                params: ref.read(accountCreationParamsProvider),
-                              );
-                            },
-                      child: const SizedBox(
-                        width: 46,
-                        height: 46,
-                      ),
+                Align(
+                  alignment: const Alignment(0.29, -0.02),
+                  child: Button(
+                    onPressed: !ref.watch(accountCreationParamsProvider
+                            .select((s) => s.audioValid))
+                        ? null
+                        : () {
+                            _signup(
+                              params: ref.read(accountCreationParamsProvider),
+                            );
+                          },
+                    child: const SizedBox(
+                      width: 46,
+                      height: 46,
                     ),
                   ),
                 ),

@@ -11,6 +11,7 @@ import 'package:openup/util/photo_picker.dart';
 import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/signup_background.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
@@ -84,35 +85,9 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 700),
                     opacity: _continueVisible ? 1.0 : 0.0,
-                    child: Transform.rotate(
-                      angle: radians(-3.92),
-                      child: Button(
-                        onPressed: !_canContinue ? null : _submit,
-                        child: Container(
-                          width: 146,
-                          height: 42,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: 7,
-                                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                              ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Next',
-                              style: TextStyle(
-                                fontFamily: 'Covered By Your Grace',
-                                fontSize: 21,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    child: SignupNextButton(
+                      onPressed: !_canContinue ? null : _submit,
+                      child: const Text('Next'),
                     ),
                   ),
                 ),
@@ -144,9 +119,6 @@ class _Photos extends ConsumerStatefulWidget {
 
 class _ProfilePanelState extends ConsumerState<_Photos> {
   late final List<File?> _photos;
-  final _card1Key = GlobalKey();
-  final _card2Key = GlobalKey();
-  final _card3Key = GlobalKey();
 
   @override
   void initState() {

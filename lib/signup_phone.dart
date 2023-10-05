@@ -111,31 +111,23 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
                   end: 0,
                 ),
             Align(
-              alignment: Alignment.bottomCenter,
+              alignment: const Alignment(1.0, -0.7),
               child: Padding(
                 padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom + 4),
-                child: Button(
+                    bottom: MediaQuery.of(context).padding.top + 16, right: 16),
+                child: SignupNextButton(
                   onPressed: _submitting || !_valid ? null : _submit,
-                  child: RoundedRectangleContainer(
-                    child: SizedBox(
-                      width: 171,
-                      height: 42,
-                      child: Center(
-                        child: _submitting
-                            ? const LoadingIndicator(color: Colors.black)
-                            : const Text(
-                                'Send code',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.black,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ),
+                  child: _submitting
+                      ? const LoadingIndicator(color: Colors.black)
+                      : const Text(
+                          'Next',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.black,
+                          ),
+                        ),
                 ),
               ),
             ),

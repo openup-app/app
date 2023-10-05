@@ -6,6 +6,7 @@ import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/signup_background.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
@@ -172,41 +173,15 @@ class _SignupNameAgeState extends ConsumerState<SignupNameAge> {
                   ),
                 ),
                 Align(
-                  alignment: const Alignment(1.0, -0.65),
+                  alignment: const Alignment(1.0, -0.7),
                   child: Padding(
                     padding: const EdgeInsets.only(right: 24),
-                    child: Transform.rotate(
-                      angle: radians(-3.92),
-                      child: Button(
-                        onPressed: ref.watch(accountCreationParamsProvider
-                                .select((s) => !(s.nameValid && s.ageValid)))
-                            ? null
-                            : _submit,
-                        child: Container(
-                          width: 146,
-                          height: 42,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: 7,
-                                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                              ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Next',
-                              style: TextStyle(
-                                fontFamily: 'Covered By Your Grace',
-                                fontSize: 21,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    child: SignupNextButton(
+                      onPressed: ref.watch(accountCreationParamsProvider
+                              .select((s) => !(s.nameValid && s.ageValid)))
+                          ? null
+                          : _submit,
+                      child: const Text('Next'),
                     ),
                   ),
                 ),
