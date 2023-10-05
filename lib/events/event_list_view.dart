@@ -103,7 +103,7 @@ class _EventListViewState extends ConsumerState<EventListView> {
                   : const EdgeInsets.only(top: 64.0),
               child: SizedBox(
                 width: 181,
-                height: 288,
+                height: 300,
                 child: EventGridTile(
                   event: ref.watch(eventProvider(eventId)),
                 ),
