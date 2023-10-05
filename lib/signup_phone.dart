@@ -128,7 +128,9 @@ class _SignUpPhoneState extends ConsumerState<SignupPhone> {
                             color: Colors.black,
                           ),
                         ),
-                ),
+                ).animate().fadeIn(
+                    delay: const Duration(milliseconds: 1500),
+                    duration: const Duration(milliseconds: 300)),
               ),
             ),
           ],
