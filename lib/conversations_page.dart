@@ -389,36 +389,34 @@ class _ConversationList extends StatelessWidget {
         itemCount: chatrooms.length,
         itemBuilder: (context, index) {
           final chatroom = chatrooms[index];
-          return Stack(
+          return WiggleBuilder(
             key: Key(chatroom.profile.profile.uid),
-            children: [
-              WiggleBuilder(
-                seed: chatroom.profile.profile.uid.hashCode,
-                builder: (context, child, wiggle) {
-                  final offset = Offset(
-                    wiggle(frequency: 0.3, amplitude: 20),
-                    wiggle(frequency: 0.3, amplitude: 20),
-                  );
+            seed: chatroom.profile.profile.uid.hashCode,
+            builder: (context, child, wiggle) {
+              final offset = Offset(
+                wiggle(frequency: 0.3, amplitude: 20),
+                wiggle(frequency: 0.3, amplitude: 20),
+              );
 
-                  final rotationZ =
-                      wiggle(frequency: 0.5, amplitude: radians(4));
-                  final rotationY =
-                      wiggle(frequency: 0.5, amplitude: radians(10));
-                  const perspectiveDivide = 0.002;
-                  final transform = Matrix4.identity()
-                    ..setEntry(3, 2, perspectiveDivide)
-                    ..rotateY(rotationY)
-                    ..rotateZ(rotationZ);
-                  return Transform.translate(
-                    offset: offset,
-                    child: Transform(
-                      transform: transform,
-                      alignment: Alignment.center,
-                      child: child,
-                    ),
-                  );
-                },
-                child: Button(
+              final rotationZ = wiggle(frequency: 0.5, amplitude: radians(4));
+              final rotationY = wiggle(frequency: 0.5, amplitude: radians(10));
+              const perspectiveDivide = 0.002;
+              final transform = Matrix4.identity()
+                ..setEntry(3, 2, perspectiveDivide)
+                ..rotateY(rotationY)
+                ..rotateZ(rotationZ);
+              return Transform.translate(
+                offset: offset,
+                child: Transform(
+                  transform: transform,
+                  alignment: Alignment.center,
+                  child: child,
+                ),
+              );
+            },
+            child: Stack(
+              children: [
+                Button(
                   onPressed: () => onOpen(chatroom),
                   onLongPressStart: () async {
                     final shouldDelete =
@@ -468,38 +466,38 @@ class _ConversationList extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
-              if (chatroom.unreadCount != 0)
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Container(
-                    width: 27,
-                    height: 27,
-                    decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color.fromRGBO(0xFF, 0x16, 0x16, 1.0),
-                        boxShadow: [
-                          BoxShadow(
-                            offset: Offset(0, 4),
-                            blurRadius: 4,
-                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                          )
-                        ]),
-                    child: Center(
-                      child: Text(
-                        chatroom.unreadCount > 9
-                            ? '9+'
-                            : chatroom.unreadCount.toString(),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white,
+                if (chatroom.unreadCount != 0)
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      width: 27,
+                      height: 27,
+                      decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color.fromRGBO(0xFF, 0x16, 0x16, 1.0),
+                          boxShadow: [
+                            BoxShadow(
+                              offset: Offset(0, 4),
+                              blurRadius: 4,
+                              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                            )
+                          ]),
+                      child: Center(
+                        child: Text(
+                          chatroom.unreadCount > 9
+                              ? '9+'
+                              : chatroom.unreadCount.toString(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           );
         },
       ),
