@@ -175,18 +175,15 @@ class _ProfilePanelState extends ConsumerState<_Photos> {
               alignment: const Alignment(1.1, 0.0),
               child: Transform.rotate(
                 angle: radians(2.45),
-                child: _WiggleAnimation(
-                  childKey: _card2Key,
-                  child: _ProfilePhotoCard(
-                    width: width,
-                    height: height,
-                    label: const Text('Photo #2'),
-                    photo: _photos.length >= 2 ? _photos[1] : null,
-                    onPressed: () => _updatePhoto(1),
-                    onLongPress: _photos[1] == null
-                        ? null
-                        : () => _showDeletePhotoDialog(1),
-                  ),
+                child: _ProfilePhotoCard(
+                  width: width,
+                  height: height,
+                  label: const Text('Photo #2'),
+                  photo: _photos.length >= 2 ? _photos[1] : null,
+                  onPressed: () => _updatePhoto(1),
+                  onLongPress: _photos[1] == null
+                      ? null
+                      : () => _showDeletePhotoDialog(1),
                 ),
               ),
             ),
@@ -194,18 +191,15 @@ class _ProfilePanelState extends ConsumerState<_Photos> {
               alignment: const Alignment(-0.6, -1.2),
               child: Transform.rotate(
                 angle: radians(23),
-                child: _WiggleAnimation(
-                  childKey: _card1Key,
-                  child: _ProfilePhotoCard(
-                    width: width,
-                    height: height,
-                    label: const Text('Photo #1'),
-                    photo: _photos.isNotEmpty ? _photos[0] : null,
-                    onPressed: () => _updatePhoto(0),
-                    onLongPress: _photos[0] == null
-                        ? null
-                        : () => _showDeletePhotoDialog(0),
-                  ),
+                child: _ProfilePhotoCard(
+                  width: width,
+                  height: height,
+                  label: const Text('Photo #1'),
+                  photo: _photos.isNotEmpty ? _photos[0] : null,
+                  onPressed: () => _updatePhoto(0),
+                  onLongPress: _photos[0] == null
+                      ? null
+                      : () => _showDeletePhotoDialog(0),
                 ),
               ),
             ),
@@ -213,18 +207,15 @@ class _ProfilePanelState extends ConsumerState<_Photos> {
               alignment: const Alignment(-0.9, 0.8),
               child: Transform.rotate(
                 angle: radians(-8),
-                child: _WiggleAnimation(
-                  childKey: _card3Key,
-                  child: _ProfilePhotoCard(
-                    width: width,
-                    height: height,
-                    label: const Text('Photo #3'),
-                    photo: _photos.length >= 3 ? _photos[2] : null,
-                    onPressed: () => _updatePhoto(2),
-                    onLongPress: _photos[2] == null
-                        ? null
-                        : () => _showDeletePhotoDialog(2),
-                  ),
+                child: _ProfilePhotoCard(
+                  width: width,
+                  height: height,
+                  label: const Text('Photo #3'),
+                  photo: _photos.length >= 3 ? _photos[2] : null,
+                  onPressed: () => _updatePhoto(2),
+                  onLongPress: _photos[2] == null
+                      ? null
+                      : () => _showDeletePhotoDialog(2),
                 ),
               ),
             ),
