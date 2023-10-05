@@ -257,7 +257,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     padding: EdgeInsets.only(
                         bottom: MediaQuery.of(context).padding.bottom + 80),
                     child: Container(
-                      height: 376,
                       margin: const EdgeInsets.symmetric(vertical: 32),
                       child: PageView.builder(
                         controller: _pageController,
@@ -281,17 +280,19 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                                     frequencies: [],
                                   )
                                 ]);
-                          return _ChatMessageDisplay(
-                            message: message,
-                            fromMe: fromMe,
-                            photo: fromMe
-                                ? myProfile.photo
-                                : chatroom.profile.profile.photo,
-                            scrollOffset: scrollOffset,
-                            isCurrent: isCurrent,
-                            playbackInfoStream: playbackInfoStream,
-                            onPlayPause: (isPlaying) =>
-                                _playPause(message, isPlaying),
+                          return Center(
+                            child: _ChatMessageDisplay(
+                              message: message,
+                              fromMe: fromMe,
+                              photo: fromMe
+                                  ? myProfile.photo
+                                  : chatroom.profile.profile.photo,
+                              scrollOffset: scrollOffset,
+                              isCurrent: isCurrent,
+                              playbackInfoStream: playbackInfoStream,
+                              onPlayPause: (isPlaying) =>
+                                  _playPause(message, isPlaying),
+                            ),
                           );
                         },
                       ),
@@ -641,6 +642,7 @@ class _ChatMessageDisplay extends StatelessWidget {
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       AspectRatio(
