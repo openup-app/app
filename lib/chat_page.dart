@@ -413,6 +413,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     });
 
     if (mounted) {
+      // Shifts to the previous newest message first
+      _pageController.jumpToPage((_pageController.page?.toInt() ?? 0) + 1);
       _animateToLatest();
     }
 
