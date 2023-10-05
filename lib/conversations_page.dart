@@ -429,7 +429,7 @@ class _ConversationList extends StatelessWidget {
                     }
                   },
                   child: Container(
-                    height: 200,
+                    height: double.infinity,
                     margin: EdgeInsets.only(
                       left: index.isEven ? 6 : 10,
                       top: 8,
