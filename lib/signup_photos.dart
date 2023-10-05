@@ -144,7 +144,7 @@ class _ProfilePanelState extends ConsumerState<_Photos> {
         return Stack(
           children: [
             Align(
-              alignment: const Alignment(1.1, 0.0),
+              alignment: const Alignment(1.0, 0.0),
               child: Transform.rotate(
                 angle: radians(2.45),
                 child: _ProfilePhotoCard(
@@ -160,7 +160,7 @@ class _ProfilePanelState extends ConsumerState<_Photos> {
               ),
             ),
             Align(
-              alignment: const Alignment(-0.6, -1.2),
+              alignment: const Alignment(-0.6, -1.0),
               child: Transform.rotate(
                 angle: radians(23),
                 child: _ProfilePhotoCard(
