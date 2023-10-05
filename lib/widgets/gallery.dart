@@ -309,7 +309,6 @@ class _NonCinematicGalleryState extends State<NonCinematicGallery> {
                 setState(() => _ready = true);
                 _maybeStartSlideshowTimer();
               },
-              duration: _duration,
             ),
           );
         },
@@ -392,59 +391,91 @@ class _CameraFlashGalleryState extends State<CameraFlashGallery> {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: Builder(
-        builder: (context) {
-          if (widget.gallery.isEmpty) {
-            return const SizedBox.shrink();
-          }
-          final i = _index % widget.gallery.length;
-          final photoUri = widget.gallery[i];
+    if (widget.gallery.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final i = _index % widget.gallery.length;
+    final photoUri = widget.gallery[i];
 
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 166),
-            switchInCurve: Curves.easeOutQuart,
-            // Don't animate in reverse
-            reverseDuration: const Duration(days: 1),
-            switchOutCurve: Curves.easeOutQuart,
-            child: TickerBuilder(
-              enabled: widget.slideshow,
-              builder: (context) {
-                final elapsed = DateTime.now().difference(_start);
-                final ratio =
-                    (elapsed.inMilliseconds / _duration.inMilliseconds)
-                        .clamp(0, 1);
-                final scale = 1.13 + ratio * 0.07;
-                return Transform.scale(
-                  scale: scale,
-                  alignment: Alignment.centerRight,
-                  child: KeyedSubtree(
-                    key: ValueKey('${_index}_$photoUri'),
-                    child: NonCinematicPhoto(
-                      uri: photoUri,
-                      animate: _slideshowTimer?.isActive == true,
-                      onLoaded: () {
-                        setState(() => _ready = true);
-                        _maybeStartSlideshowTimer();
-                      },
-                      duration: _duration,
-                    ),
-                  )
-                      .animate(
-                        autoPlay: true,
-                        key: ValueKey('${_index}_$photoUri'),
-                      )
-                      .color(
-                        blendMode: BlendMode.srcOver,
-                        duration: const Duration(milliseconds: 320),
-                        begin: Colors.white.withOpacity(0.8),
-                        end: Colors.white.withOpacity(0.0),
-                      ),
-                );
-              },
-            ),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      switchInCurve: Curves.easeOutQuart,
+      // Don't animate in reverse
+      reverseDuration: const Duration(days: 1),
+      switchOutCurve: Curves.easeOutQuart,
+      child: _AnimatedScalingUp(
+        key: ValueKey('${_index}_$photoUri'),
+        scaleTween: Tween(
+          begin: 1.13,
+          end: 1.20,
+        ),
+        child: NonCinematicPhoto(
+          uri: photoUri,
+          animate: _slideshowTimer?.isActive == true,
+          onLoaded: () {
+            setState(() => _ready = true);
+            _maybeStartSlideshowTimer();
+          },
+        ),
+      )
+          .animate(
+            autoPlay: true,
+            key: ValueKey('${_index}_$photoUri'),
+          )
+          .fadeIn(
+            duration: const Duration(milliseconds: 300),
+          ),
+    );
+  }
+}
+
+class _AnimatedScalingUp extends StatefulWidget {
+  final Tween<double> scaleTween;
+  final Widget child;
+
+  const _AnimatedScalingUp({
+    super.key,
+    required this.scaleTween,
+    required this.child,
+  });
+
+  @override
+  State<_AnimatedScalingUp> createState() => _AnimatedScalingUpState();
+}
+
+class _AnimatedScalingUpState extends State<_AnimatedScalingUp>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return ScaleTransition(
+            scale: widget.scaleTween.animate(_controller),
+            alignment: Alignment.centerRight,
+            child: child,
           );
         },
+        child: widget.child,
       ),
     );
   }
