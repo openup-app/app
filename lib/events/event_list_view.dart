@@ -116,6 +116,10 @@ class _EventListViewState extends ConsumerState<EventListView> {
   }
 
   void _maybeUpdateLabel(double scrollPosition) {
+    if (_nearbyEvents.isEmpty) {
+      return;
+    }
+
     const itemHeight = 288.0;
     final index = 2 * scrollPosition ~/ itemHeight;
     final event =
