@@ -29,7 +29,7 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
       appBar: const OpenupAppBar(
         blurBackground: false,
         body: OpenupAppBarBody(
-          center: Text('Plus One'),
+          center: Text('+One'),
         ),
       ),
       body: TextBackground(

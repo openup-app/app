@@ -38,7 +38,7 @@ class _SignupRulesState extends State<SignupRules> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
-                        'Plus One Rules',
+                        '+One Rules',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 55,

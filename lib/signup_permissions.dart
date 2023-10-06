@@ -44,7 +44,7 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
               const SizedBox(height: 16),
               const Spacer(),
               const Text(
-                'Plus One needs your location and contacts to help\nyou have the best experience.',
+                '+One needs your location and contacts to help\nyou have the best experience.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -98,7 +98,7 @@ class _SignUpPermissionsState extends ConsumerState<SignupPermissionsScreen> {
               ),
               const Spacer(),
               const Text(
-                'Plus One cares about your privacy. We will not\ntext, call or spam anyone from your contacts.',
+                '+One cares about your privacy. We will not\ntext, call or spam anyone from your contacts.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Color.fromRGBO(0x8D, 0x8D, 0x8D, 1.0),

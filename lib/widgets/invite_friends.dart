@@ -82,7 +82,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
           child: SizedBox(height: widget.padding.top),
         ),
         const SliverToBoxAdapter(
-          child: SectionTitle(title: Text('Contacts using Plus One')),
+          child: SectionTitle(title: Text('Contacts using +One')),
         ),
         Builder(
           builder: (context) {
