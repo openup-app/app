@@ -45,7 +45,8 @@ class LocationNotifier extends StateNotifier<LocationState> {
         _keyValueStore = keyValueStore,
         _overrideLatLong = overrideLatLong,
         super(LocationState(
-            current: _loadLastKnownLatLong(keyValueStore) ??
+            current: overrideLatLong ??
+                _loadLastKnownLatLong(keyValueStore) ??
                 fallbackInitialLatLong)) {
     _init();
   }
@@ -70,7 +71,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
     }
     state = state.copyWith(
       status: status,
-      current: newLatLong ?? _overrideLatLong ?? state.current,
+      current: _overrideLatLong ?? newLatLong ?? state.current,
     );
   }
 
