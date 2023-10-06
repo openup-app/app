@@ -463,10 +463,10 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
                 PlaybackState.idle ||
                 PlaybackState.paused =>
                   const Icon(Icons.play_arrow),
-                PlaybackState.playing => SvgPicture.asset(
-                    'assets/images/audio_indicator.svg',
-                    width: 16,
-                    height: 18,
+                PlaybackState.playing => Image.asset(
+                    'assets/images/audio_playback.gif',
+                    width: 32,
+                    height: 32,
                   ),
                 _ => const LoadingIndicator(),
               };

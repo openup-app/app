@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 import 'package:openup/widgets/profile_button.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
@@ -106,7 +106,7 @@ class _Tabs extends StatelessWidget {
           children: [
             Expanded(
               child: _NavButton(
-                icon: SvgPicture.asset('assets/images/nav_icon_people.svg'),
+                icon: Lottie.asset('assets/images/discover.json'),
                 label: const Text('Discover'),
                 selected: index == 0,
                 onPressed: () => onTabPressed(0),
@@ -114,7 +114,7 @@ class _Tabs extends StatelessWidget {
             ),
             Expanded(
               child: _NavButton(
-                icon: SvgPicture.asset('assets/images/nav_icon_hangout.svg'),
+                icon: Lottie.asset('assets/images/hangout.json'),
                 label: const Text('Hangout'),
                 selected: index == 2,
                 onPressed: () => onTabPressed(2),
@@ -143,7 +143,7 @@ class _Tabs extends StatelessWidget {
             ),
             Expanded(
               child: _NavButton(
-                icon: SvgPicture.asset('assets/images/nav_icon_messages.svg'),
+                icon: Lottie.asset('assets/images/messages.json'),
                 label: const Text('Messages'),
                 selected: index == 1,
                 onPressed: () => onTabPressed(1),

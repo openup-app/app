@@ -92,6 +92,7 @@ flutter:
   assets:
     - assets/images/app_logo.png
     - assets/images/audio_indicator.svg
+    - assets/images/audio_playback.gif
     - assets/images/call.json
     - assets/images/call.svg
     - assets/images/cat_paw.png
@@ -102,11 +103,14 @@ flutter:
     - assets/images/chevron_right.png
     - assets/images/chevron_right.svg
     - assets/images/close_circle.png
+    - assets/images/discover.json
+    - assets/images/hangout.json
     - assets/images/location_off.svg
     - assets/images/location_search.png
     - assets/images/map_marker_selected.png
     - assets/images/map_marker.png
     - assets/images/map_searching.json
+    - assets/images/messages.json
     - assets/images/menu_background.png
     - assets/images/menu_button.png
     - assets/images/name_age_sticker.png
