@@ -33,7 +33,6 @@ import 'package:openup/events/event_preview_page.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/events/events_page.dart';
 import 'package:openup/initial_loading_page.dart';
-import 'package:openup/location/location_provider.dart';
 import 'package:openup/location/location_search.dart';
 import 'package:openup/location/location_service.dart';
 import 'package:openup/location/mapbox_location_search_service.dart';
@@ -137,18 +136,7 @@ void main() async {
             }),
             dynamicConfigProvider.overrideWith(
                 (ref) => DynamicConfigStateNotifier(dynamicConfigService)),
-            locationProvider.overrideWith((ref) {
-              const austinLatLong = LatLong(
-                latitude: 30.2672,
-                longitude: 97.7431,
-              );
-              return LocationNotifier(
-                service: LocationService(),
-                keyValueStore: sharedPreferences,
-                fallbackInitialLatLong: austinLatLong,
-                overrideLatLong: ref.watch(locationOverrideProvider),
-              );
-            }),
+            locationServiceProvider.overrideWithValue(LocationService()),
             locationSearchProvider
                 .overrideWith((ref) => mapboxLocationSearchService),
           ],

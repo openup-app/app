@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:location/location.dart' as loc;
 import 'package:location/location.dart' hide Location;
@@ -8,6 +9,9 @@ import 'package:openup/api/api.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 part 'location_service.freezed.dart';
+
+final locationServiceProvider =
+    Provider<LocationService>((ref) => throw 'Uninitialized provider');
 
 class LocationService {
   final _location = loc.Location();

@@ -5,6 +5,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/location/location_service.dart';
+import 'package:openup/util/key_value_store_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'location_provider.freezed.dart';
@@ -25,10 +26,23 @@ final locationOverrideProvider = StateProvider<LatLong?>(
   dependencies: [userProvider],
 );
 
-final locationProvider =
-    StateNotifierProvider<LocationNotifier, LocationState>((ref) {
-  throw 'Uninitialized provider';
-});
+final locationProvider = StateNotifierProvider<LocationNotifier, LocationState>(
+    (ref) {
+  const austinLatLong = LatLong(
+    latitude: 30.2672,
+    longitude: 97.7431,
+  );
+  return LocationNotifier(
+    service: ref.watch(locationServiceProvider),
+    keyValueStore: ref.watch(keyValueStoreProvider),
+    fallbackInitialLatLong: austinLatLong,
+    overrideLatLong: ref.watch(locationOverrideProvider),
+  );
+}, dependencies: [
+  locationServiceProvider,
+  keyValueStoreProvider,
+  locationOverrideProvider
+]);
 
 class LocationNotifier extends StateNotifier<LocationState> {
   static const _kKeyLastKnownLatLong = 'lastKnownLocation';
