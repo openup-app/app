@@ -39,11 +39,7 @@ class _TabShellState extends ConsumerState<TabShell> {
     super.initState();
     ref.listenManual<int>(
       _pageNotifierProvider,
-      (previous, next) {
-        if (next != widget.index) {
-          widget.onNavigateToTab(next);
-        }
-      },
+      (previous, next) => widget.onNavigateToTab(next),
     );
   }
 
