@@ -41,17 +41,17 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Take profile photos</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Discover people nearby</string>
+	<string>Discover people and events nearby</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Discover people nearby (won't be used in the background)</string>
+	<string>Discover people and events nearby (won't be used in the background)</string>
 	<key>NSLocationUsageDescription</key>
-	<string>Discover people nearby</string>
+	<string>Discover people and events nearby</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Record your audio bio and chat with new friends</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Add profile photos from your gallery</string>
 	<key>NSContactsUsageDescription</key>
-    <string>Invite your friends to Openup, and see who's already here</string>
+    <string>Invite your friends to +One, and see who's already here</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
