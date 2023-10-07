@@ -5,7 +5,6 @@ import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/events/event_display.dart';
 import 'package:openup/events/event_map_provider.dart';
@@ -16,7 +15,6 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/map_display.dart';
 import 'package:openup/widgets/map_rendering.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class EventMapView extends ConsumerStatefulWidget {
   const EventMapView({
@@ -31,8 +29,6 @@ class _EventMapViewState extends ConsumerState<EventMapView>
     with SingleTickerProviderStateMixin {
   final _mapKey = GlobalKey<MapDisplayState>();
   MarkerRenderStatus _markerRenderStatus = MarkerRenderStatus.ready;
-
-  bool _firstDidChangeDeps = false;
 
   @override
   void initState() {
@@ -64,36 +60,6 @@ class _EventMapViewState extends ConsumerState<EventMapView>
         ),
       );
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_firstDidChangeDeps) {
-      _firstDidChangeDeps = false;
-      // Location permission also requested from NotificationManager
-      _maybeRequestNotification();
-    }
-  }
-
-  Future<void> _maybeRequestNotification() async {
-    final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
-    if (!routeCurrent) {
-      return;
-    }
-
-    final isSignedIn = ref.read(userProvider.select((p) {
-      return p.map(
-        guest: (_) => false,
-        signedIn: (_) => true,
-      );
-    }));
-    if (isSignedIn) {
-      final status = await Permission.notification.status;
-      if (!(status.isGranted || status.isLimited)) {
-        await Permission.notification.request();
-      }
-    }
   }
 
   @override
