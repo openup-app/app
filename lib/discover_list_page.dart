@@ -43,10 +43,30 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(peopleProvider);
     return Scaffold(
-      appBar: const OpenupAppBar(
+      appBar: OpenupAppBar(
         blurBackground: false,
         body: OpenupAppBarBody(
-          center: Text('+One'),
+          center: Column(
+            children: [
+              Builder(
+                builder: (context) {
+                  return Text(
+                    '+One',
+                    style: DefaultTextStyle.of(context)
+                        .style
+                        .copyWith(fontSize: 27),
+                  );
+                },
+              ),
+              const Text(
+                'Find a plus one',
+                style: TextStyle(
+                  fontFamily: 'SF Pro',
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       body: TextBackground(

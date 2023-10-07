@@ -86,7 +86,10 @@ class _Tabs extends StatelessWidget {
             ),
             Expanded(
               child: _NavButton(
-                icon: Lottie.asset('assets/images/hangout.json'),
+                icon: Transform.scale(
+                  scale: 1.1,
+                  child: Lottie.asset('assets/images/hangout.json'),
+                ),
                 label: const Text('Hangout'),
                 selected: index == 1,
                 onPressed: () => onTabPressed(1),
@@ -115,7 +118,10 @@ class _Tabs extends StatelessWidget {
             ),
             Expanded(
               child: _NavButton(
-                icon: Lottie.asset('assets/images/messages.json'),
+                icon: Transform.scale(
+                  scale: 1.7,
+                  child: Lottie.asset('assets/images/messages.json'),
+                ),
                 label: const Text('Messages'),
                 selected: index == 2,
                 onPressed: () => onTabPressed(2),
@@ -124,8 +130,8 @@ class _Tabs extends StatelessWidget {
             Expanded(
               child: _NavButton(
                 icon: const ProfileButton(
-                  width: 28,
-                  height: 28,
+                  width: 32,
+                  height: 32,
                 ),
                 label: const Text('Profile'),
                 selected: index == 3,
@@ -163,7 +169,7 @@ class _NavButton extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(
-            height: 28,
+            height: 32,
             child: Center(
               child: enableFilterOnIcon
                   ? ColorFiltered(
