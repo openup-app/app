@@ -42,3 +42,31 @@ Widget fadePageTransition(
     child: child,
   );
 }
+
+class SlideUpTransition extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
+
+  const SlideUpTransition({
+    super.key,
+    required this.animation,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final pushingNext = animation.status == AnimationStatus.forward;
+    return SlideTransition(
+      position: Tween(
+        begin: const Offset(0.0, 1.0),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          curve: pushingNext ? Curves.easeOutQuart : Curves.easeInQuart,
+          parent: animation,
+        ),
+      ),
+      child: child,
+    );
+  }
+}

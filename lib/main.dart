@@ -49,6 +49,7 @@ import 'package:openup/signup_phone.dart';
 import 'package:openup/signup_photos.dart';
 import 'package:openup/signup_verify.dart';
 import 'package:openup/util/key_value_store_service.dart';
+import 'package:openup/util/page_transition.dart';
 import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/online_users.dart';
 import 'package:openup/widgets/restart_app.dart';
@@ -527,24 +528,51 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                       path: 'events',
                       name: 'my_events',
                       parentNavigatorKey: rootNavigatorKey,
-                      builder: (context, state) {
-                        return const MyMeetupsPage();
+                      pageBuilder: (context, state) {
+                        return CustomTransitionPage(
+                          child: const MyMeetupsPage(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            return SlideUpTransition(
+                              animation: animation,
+                              child: child,
+                            );
+                          },
+                        );
                       },
                     ),
                     GoRoute(
                       path: 'calendar',
                       name: 'calendar',
                       parentNavigatorKey: rootNavigatorKey,
-                      builder: (context, state) {
-                        return const CalendarPage();
+                      pageBuilder: (context, state) {
+                        return CustomTransitionPage(
+                          child: const CalendarPage(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            return SlideUpTransition(
+                              animation: animation,
+                              child: child,
+                            );
+                          },
+                        );
                       },
                     ),
                     GoRoute(
                       path: 'settings',
                       name: 'settings',
                       parentNavigatorKey: rootNavigatorKey,
-                      builder: (context, state) {
-                        return const SettingsPage();
+                      pageBuilder: (context, state) {
+                        return CustomTransitionPage(
+                          child: const SettingsPage(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            return SlideUpTransition(
+                              animation: animation,
+                              child: child,
+                            );
+                          },
+                        );
                       },
                       routes: [
                         GoRoute(
