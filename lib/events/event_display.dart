@@ -341,6 +341,7 @@ class EventTwoColumnDetails extends ConsumerWidget {
                     final delete = await _showDeleteEventModal(context);
                     if (delete && context.mounted) {
                       if (context.mounted && delete == true) {
+                        Navigator.of(context).pop();
                         ref
                             .read(eventManagementProvider.notifier)
                             .deleteEvent(event.id);
