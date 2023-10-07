@@ -31,8 +31,8 @@ class LocationService {
   }
 
   Future<LocationStatus> getLatLong() async {
-    if (!await _location.serviceEnabled()) {
-      if (!await _location.requestService()) {
+    if (!await hasPermission()) {
+      if (!await requestPermission()) {
         return const _LocationFailure();
       }
     }

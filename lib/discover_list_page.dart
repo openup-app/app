@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/location/location_provider.dart';
 import 'package:openup/people_provider.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/util/location.dart';
@@ -22,6 +23,14 @@ class DiscoverListPage extends ConsumerStatefulWidget {
 }
 
 class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Tries to show the location request if it's not already granted
+    ref.read(locationProvider.notifier).refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(peopleProvider);
