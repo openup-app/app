@@ -766,7 +766,9 @@ class EventDisplayLarge extends StatelessWidget {
           child: Consumer(
             builder: (context, ref, child) {
               return Button(
-                onPressed: () => _showEventOnMap(context, ref, event),
+                onPressed:
+                    preview ? null : () => _showEventOnMap(context, ref, event),
+                useFadeWheNoPressedCallback: false,
                 child: SizedBox(
                   height: 48,
                   child: Row(
