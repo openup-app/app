@@ -30,7 +30,7 @@ final locationProvider = StateNotifierProvider<LocationNotifier, LocationState>(
     (ref) {
   const austinLatLong = LatLong(
     latitude: 30.2672,
-    longitude: 97.7431,
+    longitude: -97.7431,
   );
   return LocationNotifier(
     service: ref.watch(locationServiceProvider),
