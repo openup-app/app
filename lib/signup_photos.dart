@@ -9,10 +9,8 @@ import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/util/photo_picker.dart';
 import 'package:openup/widgets/animation.dart';
-import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
-import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/signup_background.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
@@ -32,66 +30,59 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
-          extendBodyBehindAppBar: true,
           resizeToAvoidBottomInset: true,
-          appBar: const OpenupAppBar(
-            blurBackground: false,
-            body: OpenupAppBarBody(
-              leading: BackIconButton(
-                color: Colors.black,
-              ),
-            ),
-          ),
           body: SignupBackground(
-            child: Stack(
-              children: [
-                SafeArea(
-                  child: _Photos(
-                    onCanContinueChanged: (canContinue) =>
-                        setState(() => _canContinue = canContinue),
-                  ),
-                )
-                    .animate(
-                      onComplete: (_) =>
-                          setState(() => _continueVisible = true),
-                    )
-                    .slideY(
-                      duration: const Duration(milliseconds: 800),
-                      curve: Curves.easeOutQuart,
-                      begin: 1,
-                      end: 0,
+            child: SafeArea(
+              child: Stack(
+                children: [
+                  SafeArea(
+                    child: _Photos(
+                      onCanContinueChanged: (canContinue) =>
+                          setState(() => _canContinue = canContinue),
                     ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Image.asset('assets/images/cat_paw.png')
-                      .animate()
+                  )
+                      .animate(
+                        onComplete: (_) =>
+                            setState(() => _continueVisible = true),
+                      )
                       .slideY(
                         duration: const Duration(milliseconds: 800),
                         curve: Curves.easeOutQuart,
                         begin: 1,
                         end: 0,
-                      )
-                      .slideY(
-                        delay: const Duration(milliseconds: 1000),
-                        duration: const Duration(milliseconds: 1000),
-                        curve: Curves.easeOut,
-                        begin: 0,
-                        end: 1,
                       ),
-                ),
-                Positioned(
-                  right: 24,
-                  bottom: MediaQuery.of(context).padding.bottom + 40,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 700),
-                    opacity: _continueVisible ? 1.0 : 0.0,
-                    child: SignupNextButton(
-                      onPressed: !_canContinue ? null : _submit,
-                      child: const Text('Next'),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Image.asset('assets/images/cat_paw.png')
+                        .animate()
+                        .slideY(
+                          duration: const Duration(milliseconds: 800),
+                          curve: Curves.easeOutQuart,
+                          begin: 1,
+                          end: 0,
+                        )
+                        .slideY(
+                          delay: const Duration(milliseconds: 1000),
+                          duration: const Duration(milliseconds: 1000),
+                          curve: Curves.easeOut,
+                          begin: 0,
+                          end: 1,
+                        ),
+                  ),
+                  Positioned(
+                    right: 24,
+                    bottom: 40,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 700),
+                      opacity: _continueVisible ? 1.0 : 0.0,
+                      child: SignupNextButton(
+                        onPressed: !_canContinue ? null : _submit,
+                        child: const Text('Next'),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
