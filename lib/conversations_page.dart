@@ -28,6 +28,12 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage> {
   String _filter = '';
 
   @override
+  void initState() {
+    super.initState();
+    ref.read(userProvider.notifier).refreshChatrooms();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -189,7 +195,6 @@ class _ConversationsPageContentsState
     return ActivePage(
       onActivate: () {
         /// Notifications don't update chats, so refreshe on page activation
-        ref.read(userProvider.notifier).refreshChatrooms();
       },
       onDeactivate: () {},
       child: Column(
