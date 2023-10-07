@@ -293,21 +293,10 @@ class UserStateNotifier extends StateNotifier<UserState> {
     );
   }
 
-  void updateLocationVisibility(LocationVisibility visibility) {
-    _analytics.trackUpdateVisibility(visibility);
+  void updateLocation(LatLong latLong) {
     state.map(
       guest: (_) => Future.value(),
-      signedIn: (signedIn) async {
-        state = signedIn.copyWith.account.location(visibility: visibility);
-        final result = await _api.updateLocationVisibility(visibility);
-        if (!mounted) {
-          return;
-        }
-        result.fold(
-          (l) => _messageNotifier.emitMessage(errorToMessage(l)),
-          (r) {},
-        );
-      },
+      signedIn: (signedIn) => _api.updateLocation(latLong),
     );
   }
 

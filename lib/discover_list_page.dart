@@ -28,7 +28,15 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
     super.initState();
 
     // Tries to show the location request if it's not already granted
-    ref.read(locationProvider.notifier).refresh();
+    ref.read(locationProvider.notifier).refresh().then((_) {
+      // TODO: userProvider should watch locationProvider, handling this itself
+      //   once it's a NotifierProvider rather than a StateNotifierProvider
+      if (mounted) {
+        ref
+            .read(userProvider.notifier)
+            .updateLocation(ref.read(locationProvider).current);
+      }
+    });
   }
 
   @override
