@@ -163,6 +163,13 @@ class _EventMapViewState extends ConsumerState<EventMapView>
   void initState() {
     super.initState();
 
+    // Refresh map events on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.invalidate(mapEventsStateProviderInternal);
+      }
+    });
+
     final initialSelectedEventId = widget.initialSelectedEventId;
     if (initialSelectedEventId != null) {
       _showInitialEvent(initialSelectedEventId);
