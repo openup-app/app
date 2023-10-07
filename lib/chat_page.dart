@@ -125,7 +125,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _chatroom = widget.chatroom;
     final chatroom = widget.chatroom;
     if (chatroom != null) {
-      _otherProfile = chatroom.profile.profile;
+      _otherProfile = chatroom.profile;
     } else {
       _fetchChatroom(widget.otherUid);
     }
@@ -288,7 +288,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                               fromMe: fromMe,
                               photo: fromMe
                                   ? myProfile.photo
-                                  : chatroom.profile.profile.photo,
+                                  : chatroom.profile.photo,
                               scrollOffset: scrollOffset,
                               isCurrent: isCurrent,
                               playbackInfoStream: playbackInfoStream,
@@ -448,7 +448,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             _chatroom = chatroom.copyWith(inviteState: ChatroomState.accepted);
             ref
                 .read(userProvider.notifier)
-                .acceptChatroom(chatroom.profile.profile.uid);
+                .acceptChatroom(chatroom.profile.uid);
           });
         }
       },
@@ -524,7 +524,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       (l) => displayError(context, l),
       (r) => setState(() {
         _chatroom = r;
-        _otherProfile = r.profile.profile;
+        _otherProfile = r.profile;
       }),
     );
   }

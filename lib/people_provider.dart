@@ -11,7 +11,7 @@ final peopleGenderFilterProvider = StateProvider<Gender?>((ref) => null);
 
 final peopleDebugUsersFilterProvider = StateProvider<bool>((ref) => false);
 
-final _peopleProvider = FutureProvider<IList<DiscoverProfile>?>(
+final _peopleProvider = FutureProvider<IList<Profile>?>(
   (ref) async {
     final status = ref.watch(locationProvider.select((s) => s.status));
     final latLong = status?.map(
@@ -74,7 +74,7 @@ class PeopleState with _$PeopleState {
   const factory PeopleState.initializing() = _PeopleInitializing;
   const factory PeopleState.failed() = PeopleFailed;
   const factory PeopleState.ready({
-    required List<DiscoverProfile> profiles,
+    required List<Profile> profiles,
     required LatLong latLong,
   }) = PeopleReady;
 }

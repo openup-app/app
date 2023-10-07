@@ -332,7 +332,7 @@ class UserStateNotifier extends StateNotifier<UserState> {
       guest: (_) {},
       signedIn: (signedIn) {
         final index =
-            signedIn.chatrooms?.indexWhere((c) => c.profile.profile.uid == uid);
+            signedIn.chatrooms?.indexWhere((c) => c.profile.uid == uid);
         if (index != null && index != -1) {
           final chatrooms = signedIn.chatrooms!;
           final newChatrooms = List.of(chatrooms)
@@ -355,7 +355,7 @@ class UserStateNotifier extends StateNotifier<UserState> {
         if (chatrooms == null) {
           return;
         }
-        final index = chatrooms.indexWhere((c) => c.profile.profile.uid == uid);
+        final index = chatrooms.indexWhere((c) => c.profile.uid == uid);
         if (index != -1) {
           final accepted =
               chatrooms[index].copyWith(inviteState: ChatroomState.accepted);

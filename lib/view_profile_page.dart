@@ -117,15 +117,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                           child: PhotoCardProfile(
                               width: constraints.maxWidth,
                               height: constraints.maxHeight,
-                              profile: DiscoverProfile(
-                                profile: profile,
-                                location: const UserLocation(
-                                  latLong: LatLong(latitude: 0, longitude: 0),
-                                  radius: 20,
-                                  visibility: LocationVisibility.private,
-                                ),
-                                favorite: false,
-                              ),
+                              profile: profile,
                               distance: 2,
                               playbackState: playbackState,
                               playbackInfoStream: playbackInfoStream,

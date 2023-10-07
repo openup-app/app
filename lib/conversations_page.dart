@@ -275,7 +275,7 @@ class _ConversationsPageContentsState
                               guest: (_) => null,
                               signedIn: (signedIn) =>
                                   signedIn.chatrooms?.where((c) {
-                                return c.profile.profile.name
+                                return c.profile.name
                                     .toLowerCase()
                                     .contains(widget.filter.toLowerCase());
                               }),
@@ -290,8 +290,8 @@ class _ConversationsPageContentsState
                         onRefresh:
                             ref.read(userProvider.notifier).refreshChatrooms,
                         onOpen: _openChat,
-                        onDelete: (index) => _deleteChatroom(
-                            filteredChatrooms![index].profile.profile),
+                        onDelete: (index) =>
+                            _deleteChatroom(filteredChatrooms![index].profile),
                       );
                     },
                   ),
@@ -311,10 +311,10 @@ class _ConversationsPageContentsState
     FocusScope.of(context).unfocus();
     context.pushNamed(
       'chat',
-      params: {'uid': chatroom.profile.profile.uid},
+      params: {'uid': chatroom.profile.uid},
       extra: ChatPageArguments(chatroom: chatroom),
     );
-    ref.read(userProvider.notifier).openChatroom(chatroom.profile.profile.uid);
+    ref.read(userProvider.notifier).openChatroom(chatroom.profile.uid);
   }
 
   void _deleteChatroom(Profile profile) async {
@@ -392,8 +392,8 @@ class _ConversationList extends StatelessWidget {
         itemBuilder: (context, index) {
           final chatroom = chatrooms[index];
           return WiggleBuilder(
-            key: Key(chatroom.profile.profile.uid),
-            seed: chatroom.profile.profile.uid.hashCode,
+            key: Key(chatroom.profile.uid),
+            seed: chatroom.profile.uid.hashCode,
             builder: (context, child, wiggle) {
               final offset = Offset(
                 wiggle(frequency: 0.3, amplitude: 20),
@@ -424,7 +424,7 @@ class _ConversationList extends StatelessWidget {
                     final shouldDelete =
                         await _showDeleteConversationConfirmationModal(
                       context: context,
-                      name: chatroom.profile.profile.name,
+                      name: chatroom.profile.name,
                     );
                     if (context.mounted && shouldDelete) {
                       onDelete(index);
@@ -449,13 +449,13 @@ class _ConversationList extends StatelessWidget {
                           child: AspectRatio(
                             aspectRatio: 1 / 1,
                             child: Image.network(
-                              chatroom.profile.profile.photo,
+                              chatroom.profile.photo,
                               fit: BoxFit.cover,
                             ),
                           ),
                         ),
                         Text(
-                          chatroom.profile.profile.name.toUpperCase(),
+                          chatroom.profile.name.toUpperCase(),
                           style: const TextStyle(
                             fontFamily: 'Covered By Your Grace',
                             fontWeight: FontWeight.w400,

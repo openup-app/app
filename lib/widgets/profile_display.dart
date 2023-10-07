@@ -3,7 +3,6 @@ import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -353,7 +352,7 @@ class ProfileDisplay extends StatelessWidget {
 class PhotoCardProfile extends ConsumerStatefulWidget {
   final double width;
   final double height;
-  final DiscoverProfile profile;
+  final Profile profile;
   final int distance;
   final PlaybackState? playbackState;
   final Stream<PlaybackInfo>? playbackInfoStream;
@@ -392,7 +391,7 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
 
   void _precache() async {
     await Future.wait([
-      for (final uri in widget.profile.profile.gallery)
+      for (final uri in widget.profile.gallery)
         precacheImage(NetworkImage(uri.toString()), context)
     ]);
   }
@@ -407,17 +406,16 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
         onPressed: _togglePlayPause,
         child: CameraFlashGallery(
           slideshow: true,
-          gallery:
-              widget.profile.profile.gallery.map((e) => Uri.parse(e)).toList(),
+          gallery: widget.profile.gallery.map((e) => Uri.parse(e)).toList(),
         ),
       ),
       titleBuilder: (context) {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(widget.profile.profile.name.toUpperCase()),
+            Text(widget.profile.name.toUpperCase()),
             const SizedBox(width: 12),
-            Text(widget.profile.profile.age.toString()),
+            Text(widget.profile.age.toString()),
           ],
         );
       },
@@ -433,8 +431,8 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
         ),
       ),
       secondButton: ReportBlockPopupMenu2(
-        name: widget.profile.profile.name,
-        uid: widget.profile.profile.uid,
+        name: widget.profile.name,
+        uid: widget.profile.uid,
         onBlock: () {},
         builder: (context) {
           return const Center(

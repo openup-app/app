@@ -489,7 +489,7 @@ class Api {
     );
   }
 
-  Future<Either<ApiError, DiscoverProfile>> addFavorite(String otherUid) {
+  Future<Either<ApiError, Profile>> addFavorite(String otherUid) {
     return _request(
       makeRequest: () {
         return http.put(
@@ -499,12 +499,12 @@ class Api {
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body);
-        return Right(DiscoverProfile.fromJson(json));
+        return Right(Profile.fromJson(json));
       },
     );
   }
 
-  Future<Either<ApiError, DiscoverProfile>> removeFavorite(String otherUid) {
+  Future<Either<ApiError, Profile>> removeFavorite(String otherUid) {
     return _request(
       makeRequest: () {
         return http.delete(
@@ -514,7 +514,7 @@ class Api {
       },
       handleSuccess: (response) {
         final json = jsonDecode(response.body);
-        return Right(DiscoverProfile.fromJson(json));
+        return Right(Profile.fromJson(json));
       },
     );
   }
@@ -1044,21 +1044,10 @@ class AccountCreationParams with _$AccountCreationParams {
 class Account with _$Account {
   const factory Account({
     required Profile profile,
-    required AccountLocation location,
   }) = _Account;
 
   factory Account.fromJson(Map<String, dynamic> json) =>
       _$AccountFromJson(json);
-}
-
-@freezed
-class AccountLocation with _$AccountLocation {
-  const factory AccountLocation({
-    required LocationVisibility visibility,
-  }) = _AccountLocation;
-
-  factory AccountLocation.fromJson(Map<String, dynamic> json) =>
-      _$AccountLocationFromJson(json);
 }
 
 @freezed
@@ -1071,6 +1060,7 @@ class Profile with _$Profile {
     @_Base64Converter() required Uint8List photoThumbnail,
     String? audio,
     required List<String> gallery,
+    required UserNamedLocation location,
     @Default([]) List<KnownContact> mutualContacts,
     @Default(0) int friendCount,
     @Default(null) LatLong? latLongOverride,
@@ -1105,18 +1095,6 @@ class SimpleProfile with _$SimpleProfile {
 }
 
 @freezed
-class DiscoverProfile with _$DiscoverProfile {
-  const factory DiscoverProfile({
-    required Profile profile,
-    required UserLocation location,
-    required bool favorite,
-  }) = _DiscoverProfile;
-
-  factory DiscoverProfile.fromJson(Map<String, dynamic> json) =>
-      _$DiscoverProfileFromJson(json);
-}
-
-@freezed
 class UserLocation with _$UserLocation {
   const factory UserLocation({
     required LatLong latLong,
@@ -1126,6 +1104,17 @@ class UserLocation with _$UserLocation {
 
   factory UserLocation.fromJson(Map<String, dynamic> json) =>
       _$UserLocationFromJson(json);
+}
+
+@freezed
+class UserNamedLocation with _$UserNamedLocation {
+  const factory UserNamedLocation({
+    required LatLong latLong,
+    required String name,
+  }) = _UserNamedLocation;
+
+  factory UserNamedLocation.fromJson(Map<String, dynamic> json) =>
+      _$UserNamedLocationFromJson(json);
 }
 
 @freezed
@@ -1178,7 +1167,7 @@ class KnownContact with _$KnownContact {
 @freezed
 class DiscoverResultsPage with _$DiscoverResultsPage {
   const factory DiscoverResultsPage({
-    required List<DiscoverProfile> profiles,
+    required List<Profile> profiles,
   }) = _DiscoverResultsPage;
 
   factory DiscoverResultsPage.fromJson(Map<String, dynamic> json) =>
@@ -1228,7 +1217,7 @@ enum RelatedCollectionsType { user }
 @freezed
 class Chatroom with _$Chatroom {
   const factory Chatroom({
-    required DiscoverProfile profile,
+    required Profile profile,
     @_DateTimeConverter() required DateTime lastUpdated,
     required ChatroomState inviteState,
     required int unreadCount,

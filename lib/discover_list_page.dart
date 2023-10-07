@@ -108,7 +108,7 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
 }
 
 class _ListView extends ConsumerStatefulWidget {
-  final List<DiscoverProfile>? profiles;
+  final List<Profile>? profiles;
   final LatLong? latLong;
 
   const _ListView({
@@ -122,7 +122,7 @@ class _ListView extends ConsumerStatefulWidget {
 }
 
 class _ListViewState extends ConsumerState<_ListView> {
-  final _cardStackKey = GlobalKey<CardStackState<DiscoverProfile?>>();
+  final _cardStackKey = GlobalKey<CardStackState<Profile?>>();
   final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
 
   bool _active = false;
@@ -146,7 +146,7 @@ class _ListViewState extends ConsumerState<_ListView> {
             final profiles = widget.profiles;
             final latLong = widget.latLong;
             if (profiles == null || latLong == null) {
-              return CardStack<DiscoverProfile?>(
+              return CardStack<Profile?>(
                 key: _cardStackKey,
                 width: constraints.maxWidth,
                 items: List.generate(3, (index) => null),
@@ -170,11 +170,11 @@ class _ListViewState extends ConsumerState<_ListView> {
             }
             return ProfileBuilder(
               key: _profileBuilderKey,
-              profile: profiles[_profileIndex].profile,
+              profile: profiles[_profileIndex],
               play: _play,
               builder: (context, playbackState, playbackInfoStream) {
-                final currentProfile = profiles[_profileIndex].profile;
-                return CardStack<DiscoverProfile>(
+                final currentProfile = profiles[_profileIndex];
+                return CardStack<Profile>(
                   key: _cardStackKey,
                   width: constraints.maxWidth,
                   items: profiles,
@@ -183,11 +183,11 @@ class _ListViewState extends ConsumerState<_ListView> {
                   },
                   itemBuilder: (context, item, key) {
                     final profile = item;
-                    final isCurrent = profile.profile.uid == currentProfile.uid;
+                    final isCurrent = profile.uid == currentProfile.uid;
                     return PhotoCardWiggle(
                       childKey: key,
                       child: PhotoCardProfile(
-                        key: ValueKey(profile.profile.uid),
+                        key: ValueKey(profile.uid),
                         width: constraints.maxWidth,
                         height: constraints.maxHeight,
                         profile: profile,
@@ -203,8 +203,8 @@ class _ListViewState extends ConsumerState<_ListView> {
                           }
                         },
                         onPause: () => setState(() => _play = false),
-                        onMessage: () => _showRecordInvitePanel(
-                            context, profile.profile.uid),
+                        onMessage: () =>
+                            _showRecordInvitePanel(context, profile.uid),
                       ),
                     );
                   },
