@@ -188,11 +188,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   late final GoRouter _goRouter;
   final _routeObserver = RouteObserver<PageRoute>();
 
-  final _discoverKey = GlobalKey<NavigatorState>();
-  final _conversationsKey = GlobalKey<NavigatorState>();
-  final _eventsKey = GlobalKey<NavigatorState>();
-  final _profileKey = GlobalKey<NavigatorState>();
-
   final rootNavigatorKey = GlobalKey<NavigatorState>();
 
   NotificationManager? _notificationManager;
@@ -460,205 +455,201 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             ),
           ],
         ),
-        StatefulShellRoute(
-          builder: (builder) {
-            return builder.buildShell(
-              (context, state, navigatorContainer) {
-                return TabShell(
-                  index: StatefulShellRouteState.of(context).currentIndex,
-                  onNavigateToTab: (index) {
-                    final shellRouteState = StatefulShellRouteState.of(context);
-                    shellRouteState.resetBranch(index: index);
-                    shellRouteState.goBranch(index: index);
-                  },
-                  children: navigatorContainer.children,
-                );
-              },
+        ShellRoute(
+          builder: (context, state, child) {
+            final location = state.location;
+            final int index;
+            if (location.startsWith('/discover')) {
+              index = 0;
+            } else if (location.startsWith('/events')) {
+              index = 1;
+            } else if (location.startsWith('/chats')) {
+              index = 2;
+            } else if (location.startsWith('/account')) {
+              index = 3;
+            } else {
+              throw 'Unknown tab index for location "$location"';
+            }
+            return TabShell(
+              index: index,
+              child: child,
             );
           },
-          branches: [
-            StatefulShellBranch(
-              navigatorKey: _discoverKey,
-              preload: true,
-              routes: [
-                GoRoute(
-                  path: '/discover',
-                  name: 'discover',
-                  builder: (context, state) => const DiscoverListPage(),
-                ),
-              ],
+          routes: [
+            GoRoute(
+              path: '/discover',
+              name: 'discover',
+              pageBuilder: (context, state) {
+                return const CustomTransitionPage(
+                  child: DiscoverListPage(),
+                  transitionsBuilder: fadePageTransition,
+                );
+              },
             ),
-            StatefulShellBranch(
-              navigatorKey: _conversationsKey,
-              preload: true,
+            GoRoute(
+              path: '/chats',
+              name: 'chats',
+              pageBuilder: (context, state) {
+                return const CustomTransitionPage(
+                  child: ConversationsPage(),
+                  transitionsBuilder: fadePageTransition,
+                );
+              },
               routes: [
                 GoRoute(
-                  path: '/chats',
-                  name: 'chats',
-                  builder: (context, state) => const ConversationsPage(),
-                  routes: [
-                    GoRoute(
-                      path: ':uid',
-                      name: 'chat',
-                      parentNavigatorKey: rootNavigatorKey,
-                      builder: (context, state) {
-                        final otherUid = state.params['uid']!;
-                        final args = state.extra as ChatPageArguments?;
-                        return ChatPage(
-                          host: host,
-                          webPort: webPort,
-                          socketPort: socketPort,
-                          otherUid: otherUid,
-                          chatroom: args?.chatroom,
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            StatefulShellBranch(
-              navigatorKey: _eventsKey,
-              preload: true,
-              routes: [
-                GoRoute(
-                  path: '/events',
-                  name: 'events',
+                  path: ':uid',
+                  name: 'chat',
+                  parentNavigatorKey: rootNavigatorKey,
                   builder: (context, state) {
-                    final viewMap = state.queryParams['view_map'] == 'true';
-                    return EventsPage(
-                      viewMap: viewMap,
+                    final otherUid = state.params['uid']!;
+                    final args = state.extra as ChatPageArguments?;
+                    return ChatPage(
+                      host: host,
+                      webPort: webPort,
+                      socketPort: socketPort,
+                      otherUid: otherUid,
+                      chatroom: args?.chatroom,
+                    );
+                  },
+                ),
+              ],
+            ),
+            GoRoute(
+              path: '/events',
+              name: 'events',
+              pageBuilder: (context, state) {
+                final viewMap = state.queryParams['view_map'] == 'true';
+                return CustomTransitionPage(
+                  child: EventsPage(
+                    viewMap: viewMap,
+                  ),
+                  transitionsBuilder: fadePageTransition,
+                );
+              },
+              routes: [
+                GoRoute(
+                  path: 'create',
+                  name: 'event_create',
+                  parentNavigatorKey: rootNavigatorKey,
+                  builder: (context, state) {
+                    final args = state.extra as EventCreateArgs?;
+                    final editEvent = args?.editEvent;
+                    return EventCreatePage(
+                      editEvent: editEvent,
                     );
                   },
                   routes: [
                     GoRoute(
-                      path: 'create',
-                      name: 'event_create',
+                      path: 'preview',
+                      name: 'event_preview',
                       parentNavigatorKey: rootNavigatorKey,
                       builder: (context, state) {
-                        final args = state.extra as EventCreateArgs?;
-                        final editEvent = args?.editEvent;
-                        return EventCreatePage(
-                          editEvent: editEvent,
-                        );
-                      },
-                      routes: [
-                        GoRoute(
-                          path: 'preview',
-                          name: 'event_preview',
-                          parentNavigatorKey: rootNavigatorKey,
-                          builder: (context, state) {
-                            final args = state.extra as EventPreviewPageArgs;
-                            return EventPreviewPage(
-                              event: args.event,
-                              submission: args.submission,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    GoRoute(
-                      path: ':id',
-                      name: 'event_view',
-                      parentNavigatorKey: rootNavigatorKey,
-                      builder: (context, state) {
-                        final args = state.extra as EventViewPageArgs;
-                        return EventViewPage(
+                        final args = state.extra as EventPreviewPageArgs;
+                        return EventPreviewPage(
                           event: args.event,
+                          submission: args.submission,
                         );
                       },
                     ),
                   ],
                 ),
+                GoRoute(
+                  path: ':id',
+                  name: 'event_view',
+                  parentNavigatorKey: rootNavigatorKey,
+                  builder: (context, state) {
+                    final args = state.extra as EventViewPageArgs;
+                    return EventViewPage(
+                      event: args.event,
+                    );
+                  },
+                ),
               ],
             ),
-            StatefulShellBranch(
-              navigatorKey: _profileKey,
-              preload: true,
+            GoRoute(
+              path: '/account',
+              name: 'account',
+              pageBuilder: (context, state) {
+                return const CustomTransitionPage(
+                  child: ProfilePage(),
+                  transitionsBuilder: fadePageTransition,
+                );
+              },
               routes: [
                 GoRoute(
-                  path: '/account',
-                  name: 'account',
-                  builder: (context, state) {
-                    return const ProfilePage();
+                  path: 'events',
+                  name: 'my_events',
+                  parentNavigatorKey: rootNavigatorKey,
+                  pageBuilder: (context, state) {
+                    return CustomTransitionPage(
+                      child: const MyMeetupsPage(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                        return SlideUpTransition(
+                          animation: animation,
+                          child: child,
+                        );
+                      },
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: 'calendar',
+                  name: 'calendar',
+                  parentNavigatorKey: rootNavigatorKey,
+                  pageBuilder: (context, state) {
+                    return CustomTransitionPage(
+                      child: const CalendarPage(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                        return SlideUpTransition(
+                          animation: animation,
+                          child: child,
+                        );
+                      },
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: 'settings',
+                  name: 'settings',
+                  parentNavigatorKey: rootNavigatorKey,
+                  pageBuilder: (context, state) {
+                    return CustomTransitionPage(
+                      child: const SettingsPage(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                        return SlideUpTransition(
+                          animation: animation,
+                          child: child,
+                        );
+                      },
+                    );
                   },
                   routes: [
                     GoRoute(
-                      path: 'events',
-                      name: 'my_events',
+                      path: 'contacts',
+                      name: 'contacts',
                       parentNavigatorKey: rootNavigatorKey,
-                      pageBuilder: (context, state) {
-                        return CustomTransitionPage(
-                          child: const MyMeetupsPage(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            return SlideUpTransition(
-                              animation: animation,
-                              child: child,
-                            );
-                          },
-                        );
+                      builder: (context, state) {
+                        return const ContactsPage();
                       },
                     ),
                     GoRoute(
-                      path: 'calendar',
-                      name: 'calendar',
+                      path: 'blocked',
+                      name: 'blocked',
                       parentNavigatorKey: rootNavigatorKey,
-                      pageBuilder: (context, state) {
-                        return CustomTransitionPage(
-                          child: const CalendarPage(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            return SlideUpTransition(
-                              animation: animation,
-                              child: child,
-                            );
-                          },
-                        );
+                      builder: (context, state) {
+                        return const BlockedUsersPage();
                       },
                     ),
                     GoRoute(
-                      path: 'settings',
-                      name: 'settings',
+                      path: 'contact_us',
+                      name: 'contact_us',
                       parentNavigatorKey: rootNavigatorKey,
-                      pageBuilder: (context, state) {
-                        return CustomTransitionPage(
-                          child: const SettingsPage(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            return SlideUpTransition(
-                              animation: animation,
-                              child: child,
-                            );
-                          },
-                        );
+                      builder: (context, state) {
+                        return const ContactUsScreen();
                       },
-                      routes: [
-                        GoRoute(
-                          path: 'contacts',
-                          name: 'contacts',
-                          parentNavigatorKey: rootNavigatorKey,
-                          builder: (context, state) {
-                            return const ContactsPage();
-                          },
-                        ),
-                        GoRoute(
-                          path: 'blocked',
-                          name: 'blocked',
-                          parentNavigatorKey: rootNavigatorKey,
-                          builder: (context, state) {
-                            return const BlockedUsersPage();
-                          },
-                        ),
-                        GoRoute(
-                          path: 'contact_us',
-                          name: 'contact_us',
-                          parentNavigatorKey: rootNavigatorKey,
-                          builder: (context, state) {
-                            return const ContactUsScreen();
-                          },
-                        ),
-                      ],
                     ),
                   ],
                 ),

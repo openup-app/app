@@ -8,40 +8,15 @@ import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/app_lifecycle.dart';
 import 'package:openup/widgets/button.dart';
 
-final _pageNotifierProvider =
-    StateNotifierProvider<_PageNotifier, int>((ref) => _PageNotifier());
-
-class _PageNotifier extends StateNotifier<int> {
-  _PageNotifier() : super(0);
-
-  void changePage(int index) => state = index;
-}
-
-class TabShell extends ConsumerStatefulWidget {
+class TabShell extends StatelessWidget {
   final int index;
-  final void Function(int index) onNavigateToTab;
-  final List<Widget> children;
+  final Widget child;
 
   const TabShell({
     super.key,
     required this.index,
-    required this.onNavigateToTab,
-    required this.children,
+    required this.child,
   });
-
-  @override
-  ConsumerState<TabShell> createState() => _TabShellState();
-}
-
-class _TabShellState extends ConsumerState<TabShell> {
-  @override
-  void initState() {
-    super.initState();
-    ref.listenManual<int>(
-      _pageNotifierProvider,
-      (previous, next) => widget.onNavigateToTab(next),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,16 +30,7 @@ class _TabShellState extends ConsumerState<TabShell> {
           data: mediaQueryData.copyWith(
             padding: mediaQueryData.padding.copyWith(bottom: bottomBarHeight),
           ),
-          child: IndexedStack(
-            index: widget.index,
-            children: [
-              for (var i = 0; i < widget.children.length; i++)
-                _BranchIndex(
-                  index: i,
-                  child: widget.children[i],
-                ),
-            ],
-          ),
+          child: child,
         ),
         Positioned(
           left: 0,
@@ -72,8 +38,18 @@ class _TabShellState extends ConsumerState<TabShell> {
           bottom: 0,
           child: OpenupBottomBar(
             child: _Tabs(
-              index: widget.index,
-              onTabPressed: widget.onNavigateToTab,
+              index: index,
+              onTabPressed: (index) {
+                if (index == 0) {
+                  context.goNamed('discover');
+                } else if (index == 1) {
+                  context.goNamed('events');
+                } else if (index == 2) {
+                  context.goNamed('chats');
+                } else if (index == 3) {
+                  context.goNamed('account');
+                }
+              },
             ),
           ),
         ),
@@ -112,8 +88,8 @@ class _Tabs extends StatelessWidget {
               child: _NavButton(
                 icon: Lottie.asset('assets/images/hangout.json'),
                 label: const Text('Hangout'),
-                selected: index == 2,
-                onPressed: () => onTabPressed(2),
+                selected: index == 1,
+                onPressed: () => onTabPressed(1),
               ),
             ),
             Expanded(
@@ -141,8 +117,8 @@ class _Tabs extends StatelessWidget {
               child: _NavButton(
                 icon: Lottie.asset('assets/images/messages.json'),
                 label: const Text('Messages'),
-                selected: index == 1,
-                onPressed: () => onTabPressed(1),
+                selected: index == 2,
+                onPressed: () => onTabPressed(2),
               ),
             ),
             Expanded(
