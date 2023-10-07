@@ -63,7 +63,16 @@ class LocationNotifier extends StateNotifier<LocationState> {
                 _loadLastKnownLatLong(keyValueStore) ??
                 fallbackInitialLatLong));
 
-  Future<void> refresh() async {
+  Future<void> retry() async {
+    final needsRetry = state.status?.map(
+          value: (_) => false,
+          denied: (_) => true,
+          failure: (_) => true,
+        ) ??
+        true;
+    if (!needsRetry) {
+      return;
+    }
     final status = await _service.getLatLong();
     if (!mounted) {
       return;

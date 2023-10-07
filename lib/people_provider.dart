@@ -11,9 +11,17 @@ final peopleGenderFilterProvider = StateProvider<Gender?>((ref) => null);
 
 final peopleDebugUsersFilterProvider = StateProvider<bool>((ref) => false);
 
-final _peopleProvider = FutureProvider<IList<DiscoverProfile>>(
+final _peopleProvider = FutureProvider<IList<DiscoverProfile>?>(
   (ref) async {
-    final latLong = ref.watch(locationProvider.select((s) => s.current));
+    final status = ref.watch(locationProvider.select((s) => s.status));
+    final latLong = status?.map(
+      value: (value) => value.latLong,
+      denied: (_) => null,
+      failure: (_) => null,
+    );
+    if (latLong == null) {
+      return null;
+    }
     final gender = ref.watch(peopleGenderFilterProvider);
     final debugUsers = ref.watch(peopleDebugUsersFilterProvider);
     final api = ref.watch(apiProvider);
@@ -45,10 +53,16 @@ final peopleProvider = StateProvider<PeopleState>(
     return result.map(
       loading: (loading) => const _PeopleInitializing(),
       error: (error) => const PeopleFailed(),
-      data: (data) => PeopleReady(
-        profiles: data.value.toList(),
-        latLong: latLong,
-      ),
+      data: (data) {
+        final value = data.value;
+        if (value == null) {
+          return const _PeopleInitializing();
+        }
+        return PeopleReady(
+          profiles: value.toList(),
+          latLong: latLong,
+        );
+      },
     );
   },
   dependencies: [locationProvider, _peopleProvider],

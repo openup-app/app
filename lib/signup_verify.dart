@@ -179,7 +179,7 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
         RestartApp.restartApp(context);
       },
       signUp: () {
-        ref.read(locationProvider.notifier).refresh();
+        ref.read(locationProvider.notifier).retry();
         ref.read(analyticsProvider).trackSignupVerified();
         context.goNamed('signup_photos');
       },
