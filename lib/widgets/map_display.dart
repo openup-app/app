@@ -11,6 +11,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/location/location_service.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 final _cameraPositionProvider = StateProvider<CameraPosition?>((ref) => null);
 
@@ -313,9 +314,26 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
   }
 
   Location _boundsToLocation(LatLngBounds bounds) {
+    final latitudeRadsNe = radians(bounds.northeast.latitude);
+    final longitudeRadsNe = radians(bounds.northeast.longitude);
+    final latitudeRadsSw = radians(bounds.southwest.latitude);
+    final longitudeRadsSw = radians(bounds.southwest.longitude);
+    final projectionEw =
+        cos(latitudeRadsSw) * cos(longitudeRadsSw - longitudeRadsNe);
+    final projectionNs =
+        cos(latitudeRadsSw) * sin(longitudeRadsSw - longitudeRadsNe);
+    final latitudeMidpointRads = atan2(
+        sin(latitudeRadsNe) + sin(latitudeRadsSw),
+        sqrt((cos(latitudeRadsNe) + projectionEw) *
+                (cos(latitudeRadsNe) + projectionEw) +
+            projectionNs * projectionNs));
+    final longitudeMidpointRads = longitudeRadsNe +
+        atan2(projectionNs, cos(latitudeRadsNe) + projectionEw);
+
+    // Degrees in range [-90, 90] and -[180, 180]
     final center = LatLong(
-      latitude: (bounds.northeast.latitude + bounds.southwest.latitude) / 2,
-      longitude: (bounds.northeast.longitude + bounds.southwest.longitude) / 2,
+      latitude: max(-90, min(90, degrees(latitudeMidpointRads))),
+      longitude: (degrees(longitudeMidpointRads) + 540) % 360 - 180,
     );
     final distance = greatCircleDistance(
       LatLong(
