@@ -265,23 +265,20 @@ class _ConversationsPageContentsState
                     builder: (context, ref, child) {
                       final filteredChatrooms =
                           ref.watch(userProvider.select((p) {
-                        return p.map(
-                          guest: (_) => null,
-                          signedIn: (signedIn) =>
-                              signedIn.chatrooms?.where((c) {
-                            return c.profile.profile.name
-                                .toLowerCase()
-                                .contains(widget.filter.toLowerCase());
-                          }),
-                        );
+                        return p
+                            .map(
+                              guest: (_) => null,
+                              signedIn: (signedIn) =>
+                                  signedIn.chatrooms?.where((c) {
+                                return c.profile.profile.name
+                                    .toLowerCase()
+                                    .contains(widget.filter.toLowerCase());
+                              }),
+                            )
+                            ?.toList();
                       }));
-
-                      final nonPendingChatrooms = filteredChatrooms
-                          ?.where((chatroom) =>
-                              chatroom.inviteState != ChatroomState.pending)
-                          .toList();
                       return _ConversationList(
-                        chatrooms: nonPendingChatrooms,
+                        chatrooms: filteredChatrooms,
                         emptyLabel:
                             'Invite someone to chat,\nthen continue the conversation here',
                         filtered: widget.filter.isNotEmpty,
@@ -289,7 +286,7 @@ class _ConversationsPageContentsState
                             ref.read(userProvider.notifier).refreshChatrooms,
                         onOpen: _openChat,
                         onDelete: (index) => _deleteChatroom(
-                            nonPendingChatrooms![index].profile.profile),
+                            filteredChatrooms![index].profile.profile),
                       );
                     },
                   ),
