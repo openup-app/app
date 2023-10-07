@@ -30,7 +30,7 @@ class _SignupPhotosState extends ConsumerState<SignupPhotos> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
-          resizeToAvoidBottomInset: true,
+          resizeToAvoidBottomInset: false,
           body: SignupBackground(
             child: SafeArea(
               child: Stack(
