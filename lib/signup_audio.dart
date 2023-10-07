@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:marquee/marquee.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api_util.dart';
@@ -14,6 +13,7 @@ import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/record.dart';
+import 'package:openup/widgets/restart_app.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -187,7 +187,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
         analytics.setUserProperty('name', r.profile.name);
         analytics.setUserProperty('age', r.profile.age);
         ref.read(userProvider.notifier).signedIn(r);
-        context.goNamed('initial_loading');
+        RestartApp.restartApp(context);
       },
     );
   }

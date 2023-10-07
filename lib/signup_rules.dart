@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/restart_app.dart';
 
 class SignupRules extends StatefulWidget {
   const SignupRules({super.key});
@@ -80,7 +80,7 @@ class _SignupRulesState extends State<SignupRules> {
                                 _ticked4 &&
                                 _ticked5)
                             ? null
-                            : () => context.goNamed('initial_loading'),
+                            : () => RestartApp.restartApp(context),
                         child: Container(
                           width: 279,
                           height: 72,

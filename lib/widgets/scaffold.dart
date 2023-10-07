@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/restart_app.dart';
 
 class OpenupAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget body;
@@ -128,7 +129,7 @@ class OpenupAppBarBackButtonOutlined extends StatelessWidget {
         if (context.canPop()) {
           Navigator.of(context).pop();
         } else {
-          context.goNamed('initial_loading');
+          RestartApp.restartApp(context);
         }
       },
       child: Padding(
