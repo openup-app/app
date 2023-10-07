@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:openup/events/event_list_view.dart';
 import 'package:openup/events/event_map_view.dart';
 import 'package:openup/events/events_provider.dart';
@@ -10,9 +11,11 @@ enum _View { list, map }
 
 class EventsPage extends ConsumerStatefulWidget {
   final bool viewMap;
+  final String? initialSelectedEventId;
   const EventsPage({
     super.key,
     this.viewMap = false,
+    this.initialSelectedEventId,
   });
 
   @override
@@ -48,7 +51,12 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         toolbar: _Toolbar(
           label: _label ?? const SizedBox.shrink(),
           view: _view,
-          onViewChanged: (view) => setState(() => _view = view),
+          onViewChanged: (view) => context.goNamed(
+            'events',
+            queryParams: {
+              'view_map': (view == _View.map).toString(),
+            },
+          ),
         ),
       ),
       body: Stack(
@@ -58,7 +66,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             _View.list => EventListView(
                 onLabelChanged: (label) => setState(() => _label = Text(label)),
               ),
-            _View.map => const EventMapView(),
+            _View.map => EventMapView(
+                initialSelectedEventId: widget.initialSelectedEventId,
+              ),
           },
         ],
       ),

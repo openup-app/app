@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/events/event_map_view.dart';
 import 'package:openup/location/location_provider.dart';
 
 part 'events_provider.freezed.dart';
@@ -228,8 +229,10 @@ final eventManagementProvider =
     return EventManagementNotifier(
       api: ref.watch(apiProvider),
       eventStoreNotifier: ref.watch(eventStoreProvider.notifier),
-      onRefreshNearbyEvents: () =>
-          ref.invalidate(_nearbyEventsProviderInternal),
+      onRefreshNearbyEvents: () {
+        ref.invalidate(_nearbyEventsProviderInternal);
+        ref.invalidate(mapEventsStateProviderInternal);
+      },
       onRefreshEvent: (eventId) {
         ref.invalidate(_hostingEventsProviderInternal);
         ref.invalidate(_attendingEventsProviderInternal);

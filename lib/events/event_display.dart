@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/events/event_create_page.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/events/events_provider.dart';
@@ -401,7 +400,7 @@ class EventTwoColumnDetails extends ConsumerWidget {
         ),
         const SizedBox(height: 18),
         Button(
-          onPressed: () => _showEventOnMap(context, ref, event),
+          onPressed: () => _showEventOnMap(context, event),
           child: Row(
             children: [
               const Icon(
@@ -763,36 +762,31 @@ class EventDisplayLarge extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28.0),
-          child: Consumer(
-            builder: (context, ref, child) {
-              return Button(
-                onPressed:
-                    preview ? null : () => _showEventOnMap(context, ref, event),
-                useFadeWheNoPressedCallback: false,
-                child: SizedBox(
-                  height: 48,
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on,
+          child: Button(
+            onPressed: preview ? null : () => _showEventOnMap(context, event),
+            useFadeWheNoPressedCallback: false,
+            child: SizedBox(
+              height: 48,
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.location_on,
+                    color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
+                  ),
+                  Expanded(
+                    child: Text(
+                      event.location.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w300,
                         color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
                       ),
-                      Expanded(
-                        child: Text(
-                          event.location.name,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w300,
-                            color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              );
-            },
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -800,12 +794,13 @@ class EventDisplayLarge extends StatelessWidget {
   }
 }
 
-void _showEventOnMap(BuildContext context, WidgetRef ref, Event event) {
-  ref.read(discoverActionProvider.notifier).state =
-      DiscoverAction.viewEvent(event);
+void _showEventOnMap(BuildContext context, Event event) {
   context.goNamed(
     'events',
-    queryParams: {'view_map': 'true'},
+    queryParams: {
+      'view_map': 'true',
+      'event_id': event.id,
+    },
   );
 }
 

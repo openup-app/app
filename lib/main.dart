@@ -522,6 +522,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                 return CustomTransitionPage(
                   child: EventsPage(
                     viewMap: viewMap,
+                    initialSelectedEventId: state.queryParams['event_id'],
                   ),
                   transitionsBuilder: fadePageTransition,
                 );

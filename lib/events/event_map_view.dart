@@ -9,7 +9,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/events/event_display.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/events/events_provider.dart';
@@ -72,7 +71,7 @@ class _MapLocationNotifier extends StateNotifier<Location> {
 
 final selectedEventProvider = StateProvider<String?>((ref) => null);
 
-final _mapEventsStateProviderInternal = FutureProvider<IList<Event>>(
+final mapEventsStateProviderInternal = FutureProvider<IList<Event>>(
   (ref) async {
     final api = ref.watch(apiProvider);
     final location = ref.watch(_mapLocationProvider);
@@ -89,7 +88,7 @@ final _mapEventsStateProvider = StateProvider<NearbyEventsState>(
   (ref) {
     final eventStoreNotifier = ref.watch(eventStoreProvider.notifier);
     ref.listen(
-      _mapEventsStateProviderInternal,
+      mapEventsStateProviderInternal,
       (previous, next) {
         next.when(
           loading: () {},
@@ -102,7 +101,7 @@ final _mapEventsStateProvider = StateProvider<NearbyEventsState>(
       },
     );
 
-    final events = ref.watch(_mapEventsStateProviderInternal);
+    final events = ref.watch(mapEventsStateProviderInternal);
     final storedEventIds =
         ref.watch(eventStoreProvider.select((s) => s.keys.toList()));
     if (events.isRefreshing) {
@@ -120,7 +119,7 @@ final _mapEventsStateProvider = StateProvider<NearbyEventsState>(
       },
     );
   },
-  dependencies: [eventStoreProvider, _mapEventsStateProviderInternal],
+  dependencies: [eventStoreProvider, mapEventsStateProviderInternal],
 );
 
 final _mapEventsProvider = Provider<_MapEvents>(
@@ -142,8 +141,11 @@ class _MapEvents with _$_MapEvents {
 }
 
 class EventMapView extends ConsumerStatefulWidget {
+  final String? initialSelectedEventId;
+
   const EventMapView({
     Key? key,
+    this.initialSelectedEventId,
   }) : super(key: key);
 
   @override
@@ -160,28 +162,11 @@ class _EventMapViewState extends ConsumerState<EventMapView>
   @override
   void initState() {
     super.initState();
-    ref.listenManual<DiscoverAction?>(
-      discoverActionProvider,
-      (previous, next) {
-        if (next == null) {
-          return;
-        }
 
-        next.when(
-          viewProfile: (profile) {},
-          viewEvent: (event) {
-            final mapLocationNotifier = ref.read(_mapLocationProvider.notifier);
-            mapLocationNotifier.mapMoved(
-              Location(
-                latLong: event.location.latLong,
-                radius: _initialRadius,
-              ),
-            );
-            _mapKey.currentState?.recenterMap(event.location.latLong);
-          },
-        );
-      },
-    );
+    final initialSelectedEventId = widget.initialSelectedEventId;
+    if (initialSelectedEventId != null) {
+      _showInitialEvent(initialSelectedEventId);
+    }
   }
 
   @override
@@ -385,6 +370,39 @@ class _EventMapViewState extends ConsumerState<EventMapView>
         );
       },
     );
+  }
+
+  void _showInitialEvent(String eventId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      final event = ref.read(eventProvider(eventId));
+      ref.read(selectedEventProvider.notifier).state =
+          widget.initialSelectedEventId;
+      final mapLocationNotifier = ref.read(_mapLocationProvider.notifier);
+      mapLocationNotifier.mapMoved(
+        Location(
+          latLong: event.location.latLong,
+          radius: _initialRadius,
+        ),
+      );
+
+      _showEventPanel(event).then((_) {
+        if (mounted) {
+          ref.read(selectedEventProvider.notifier).state = null;
+        }
+      });
+
+      // Second post frame callback seems to allow recentering of the map
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+
+        _mapKey.currentState?.recenterMap(event.location.latLong);
+      });
+    });
   }
 }
 
