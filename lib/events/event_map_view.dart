@@ -1,20 +1,144 @@
 import 'dart:async';
 
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide Chip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/api/api.dart';
+import 'package:openup/api/user_state.dart';
 import 'package:openup/discover/discover_provider.dart';
 import 'package:openup/events/event_display.dart';
-import 'package:openup/events/event_map_provider.dart';
 import 'package:openup/events/event_view_page.dart';
+import 'package:openup/events/events_provider.dart';
 import 'package:openup/location/location_provider.dart';
+import 'package:openup/location/location_service.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/map_display.dart';
 import 'package:openup/widgets/map_rendering.dart';
+
+part 'event_map_view.freezed.dart';
+
+const _initialRadius = 1500.0;
+
+final _mapLocationProvider =
+    StateNotifierProvider<_MapLocationNotifier, Location>(
+  (ref) {
+    return _MapLocationNotifier(
+      initialLocation: Location(
+        latLong: ref.watch(locationProvider).current,
+        radius: _initialRadius,
+      ),
+    );
+  },
+  dependencies: [locationProvider],
+);
+
+class _MapLocationNotifier extends StateNotifier<Location> {
+  Location _prevFetchLocation;
+
+  _MapLocationNotifier({
+    required Location initialLocation,
+  })  : _prevFetchLocation = initialLocation,
+        super(initialLocation);
+
+  void mapMoved(Location location) {
+    if (_areLocationsDistant(location, _prevFetchLocation)) {
+      refetch(location);
+    }
+  }
+
+  void refetch(Location location) {
+    _prevFetchLocation = location;
+    state = location;
+  }
+
+  bool _areLocationsDistant(Location a, Location b) {
+    // Reduced radius for improved experience when searching
+    final panRatio = greatCircleDistance(a.latLong, b.latLong) / a.radius;
+    final zoomRatio = b.radius / a.radius;
+    final panned = panRatio > 0.5;
+    final zoomed = zoomRatio > 2.0 || zoomRatio < 0.5;
+    if (panned || zoomed) {
+      return true;
+    }
+    return false;
+  }
+}
+
+final selectedEventProvider = StateProvider<String?>((ref) => null);
+
+final _mapEventsStateProviderInternal = FutureProvider<IList<Event>>(
+  (ref) async {
+    final api = ref.watch(apiProvider);
+    final location = ref.watch(_mapLocationProvider);
+    final result = await api.getEvents(location);
+    return result.fold(
+      (l) => throw l,
+      (r) => r.toIList(),
+    );
+  },
+  dependencies: [apiProvider, _mapLocationProvider],
+);
+
+final _mapEventsStateProvider = StateProvider<NearbyEventsState>(
+  (ref) {
+    final eventStoreNotifier = ref.watch(eventStoreProvider.notifier);
+    ref.listen(
+      _mapEventsStateProviderInternal,
+      (previous, next) {
+        next.when(
+          loading: () {},
+          error: (_, __) {},
+          data: (events) {
+            return eventStoreNotifier.state = eventStoreNotifier.state
+                .addEntries(events.map((e) => MapEntry(e.id, e)));
+          },
+        );
+      },
+    );
+
+    final events = ref.watch(_mapEventsStateProviderInternal);
+    final storedEventIds =
+        ref.watch(eventStoreProvider.select((s) => s.keys.toList()));
+    if (events.isRefreshing) {
+      return const NearbyEventsState.loading();
+    }
+    return events.when(
+      loading: () => const NearbyEventsState.loading(),
+      error: (_, __) => const NearbyEventsState.error(),
+      data: (events) {
+        final sortedEvents = List.of(events)..sort(dateAscendingEventSorter);
+        return NearbyEventsState.data(sortedEvents
+            .where((e) => storedEventIds.contains(e.id))
+            .map((e) => e.id)
+            .toList());
+      },
+    );
+  },
+  dependencies: [eventStoreProvider, _mapEventsStateProviderInternal],
+);
+
+final _mapEventsProvider = Provider<_MapEvents>(
+  (ref) {
+    return _MapEvents(
+      events: ref.watch(_mapEventsStateProvider),
+      selectedEvent: ref.watch(selectedEventProvider),
+    );
+  },
+  dependencies: [_mapEventsStateProvider],
+);
+
+@freezed
+class _MapEvents with _$_MapEvents {
+  const factory _MapEvents({
+    required NearbyEventsState events,
+    required String? selectedEvent,
+  }) = __MapEvents;
+}
 
 class EventMapView extends ConsumerStatefulWidget {
   const EventMapView({
@@ -43,31 +167,24 @@ class _EventMapViewState extends ConsumerState<EventMapView>
         next.when(
           viewProfile: (profile) {},
           viewEvent: (event) {
-            ref.read(eventMapProvider.notifier).showEvent(event);
+            final mapLocationNotifier = ref.read(_mapLocationProvider.notifier);
+            mapLocationNotifier.mapMoved(
+              Location(
+                latLong: event.location.latLong,
+                radius: _initialRadius,
+              ),
+            );
             _mapKey.currentState?.recenterMap(event.location.latLong);
           },
         );
       },
     );
-
-    ref.listenManual<String?>(eventAlertProvider, (previous, next) {
-      if (next == null) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(next),
-        ),
-      );
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return ActivePage(
-      onActivate: () {
-        ref.read(eventMapProvider.notifier).fetchEvents();
-      },
+      onActivate: () => ref.invalidate(_mapEventsStateProvider),
       onDeactivate: () {},
       child: Stack(
         fit: StackFit.expand,
@@ -75,42 +192,52 @@ class _EventMapViewState extends ConsumerState<EventMapView>
           LayoutBuilder(
             builder: (context, constraints) {
               final height = constraints.biggest.height;
+              final events = ref.watch(
+                _mapEventsProvider.select(
+                  (s) => s.events.map(
+                    loading: (_) => null,
+                    error: (_) => null,
+                    data: (data) => data.eventIds,
+                  ),
+                ),
+              );
               return ColoredBox(
                 color: Colors.black,
                 child: MapRendering(
-                  items: ref
-                      .watch(eventMapProvider.select((s) => s.events))
-                      .map((e) => EventMapItem(e))
-                      .toList(),
-                  selectedItem: ref.watch(eventMapProvider.select((s) =>
-                      s.selectedEvent == null
+                  items: events == null
+                      ? []
+                      : events
+                          .map((eventId) =>
+                              EventMapItem(ref.watch(eventProvider(eventId))))
+                          .toList(),
+                  selectedItem: ref.watch(selectedEventProvider.select((s) =>
+                      s == null
                           ? null
-                          : EventMapItem(s.selectedEvent!))),
+                          : EventMapItem(ref.watch(eventProvider(s))))),
                   frameCount: 12,
                   onMarkerRenderStatus: (status) =>
                       setState(() => _markerRenderStatus = status),
                   builder: (context, renderedItems, renderedSelectedItem) {
                     return MapDisplay(
                       key: _mapKey,
-                      items: renderedItems,
+                      items: List.of(renderedItems),
                       selectedItem: renderedSelectedItem,
                       onSelectionChanged: (item) async {
                         if (item != null) {
                           final event = (item as EventMapItem).event;
-                          ref.read(eventMapProvider.notifier).selectedEvent =
-                              event;
+                          ref.read(selectedEventProvider.notifier).state =
+                              event.id;
                           await _showEventPanel(event);
                           if (mounted) {
-                            ref.read(eventMapProvider.notifier).selectedEvent =
+                            ref.read(selectedEventProvider.notifier).state =
                                 null;
                           }
                         }
                       },
                       itemAnimationSpeedMultiplier: 1.0,
-                      initialLocation: ref.watch(
-                          eventMapProvider.select((s) => s.initialLocation)),
+                      initialLocation: ref.watch(_mapLocationProvider),
                       onLocationChanged:
-                          ref.read(eventMapProvider.notifier).mapMoved,
+                          ref.read(_mapLocationProvider.notifier).mapMoved,
                       obscuredRatio: 326 / height,
                       onShowRecordPanel: () {},
                     );
@@ -123,15 +250,33 @@ class _EventMapViewState extends ConsumerState<EventMapView>
             left: 0,
             right: 0,
             bottom: 0,
-            child: _MapOverlay(
-              searching:
-                  (ref.watch(eventMapProvider.select((s) => s.refreshing)) ||
-                      _markerRenderStatus == MarkerRenderStatus.rendering),
-              onRecenterMap: () {
-                final latLong = ref.read(locationProvider).current;
-                _mapKey.currentState?.recenterMap(latLong);
+            child: Builder(
+              builder: (context) {
+                final searching = ref.watch(
+                  _mapEventsProvider.select(
+                    (s) => s.events.map(
+                      loading: (_) => true,
+                      error: (_) => false,
+                      data: (data) => false,
+                    ),
+                  ),
+                );
+                return _MapOverlay(
+                  searching: searching ||
+                      _markerRenderStatus == MarkerRenderStatus.rendering,
+                  onRecenterMap: () {
+                    final latLong = ref.read(locationProvider).current;
+                    _mapKey.currentState?.recenterMap(latLong);
+                  },
+                  onRefetch: () async {
+                    final location =
+                        await _mapKey.currentState?.currentLocation();
+                    if (location != null) {
+                      ref.read(_mapLocationProvider.notifier).refetch(location);
+                    }
+                  },
+                );
               },
-              onRefetch: ref.read(eventMapProvider.notifier).fetchEvents,
             ),
           ),
         ],
@@ -280,11 +425,22 @@ class _MapOverlay extends ConsumerWidget {
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).padding.bottom + 72,
           ),
-          child: _LoadingRefreshButton(
-            onPressed: searching ? null : onRefetch,
-            count: searching
-                ? null
-                : ref.watch(eventMapProvider.select((s) => s.events.length)),
+          child: Builder(
+            builder: (context) {
+              final count = ref.watch(
+                _mapEventsProvider.select(
+                  (s) => s.events.map(
+                    loading: (_) => null,
+                    error: (_) => 0,
+                    data: (data) => data.eventIds.length,
+                  ),
+                ),
+              );
+              return _LoadingRefreshButton(
+                onPressed: searching ? null : onRefetch,
+                count: count,
+              );
+            },
           ),
         ),
       ],

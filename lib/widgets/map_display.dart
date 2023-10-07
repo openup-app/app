@@ -280,30 +280,9 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
     if (bounds == null || zoom == null || !mounted) {
       return;
     }
-    setState(() {
-      _bounds = bounds;
-    });
+    setState(() => _bounds = bounds);
 
-    final center = LatLong(
-      latitude: (bounds.northeast.latitude + bounds.southwest.latitude) / 2,
-      longitude: (bounds.northeast.longitude + bounds.southwest.longitude) / 2,
-    );
-    final distance = greatCircleDistance(
-      LatLong(
-        latitude: bounds.northeast.latitude,
-        longitude: bounds.northeast.longitude,
-      ),
-      LatLong(
-        latitude: bounds.southwest.latitude,
-        longitude: bounds.southwest.longitude,
-      ),
-    );
-    widget.onLocationChanged(
-      Location(
-        latLong: center,
-        radius: distance / 2,
-      ),
-    );
+    widget.onLocationChanged(_boundsToLocation(bounds));
   }
 
   void recenterMap(LatLong latLong) {
@@ -323,6 +302,35 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
       tilt: _preferredTilt,
     );
     _mapController?.animateCamera(CameraUpdate.newCameraPosition(pos));
+  }
+
+  Future<Location?> currentLocation() async {
+    final bounds = await _mapController?.getVisibleRegion();
+    if (bounds == null) {
+      return Future.value();
+    }
+    return _boundsToLocation(bounds);
+  }
+
+  Location _boundsToLocation(LatLngBounds bounds) {
+    final center = LatLong(
+      latitude: (bounds.northeast.latitude + bounds.southwest.latitude) / 2,
+      longitude: (bounds.northeast.longitude + bounds.southwest.longitude) / 2,
+    );
+    final distance = greatCircleDistance(
+      LatLong(
+        latitude: bounds.northeast.latitude,
+        longitude: bounds.northeast.longitude,
+      ),
+      LatLong(
+        latitude: bounds.southwest.latitude,
+        longitude: bounds.southwest.longitude,
+      ),
+    );
+    return Location(
+      latLong: center,
+      radius: distance / 2,
+    );
   }
 }
 

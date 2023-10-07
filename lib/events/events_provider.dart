@@ -92,7 +92,7 @@ final nearbyEventsProvider = StateProvider<NearbyEventsState>(
       loading: () => const NearbyEventsState.loading(),
       error: (_, __) => const NearbyEventsState.error(),
       data: (events) {
-        final sortedEvents = List.of(events)..sort(_dateAscendingEventSorter);
+        final sortedEvents = List.of(events)..sort(dateAscendingEventSorter);
         return NearbyEventsState.data(sortedEvents
             .where((e) => storedEventIds.contains(e.id))
             .map((e) => e.id)
@@ -148,7 +148,7 @@ final hostingEventsProvider = Provider<HostingEventsState>(
       loading: () => const HostingEventsState.loading(),
       error: (_, __) => const HostingEventsState.error(),
       data: (events) {
-        final sortedEvents = List.of(events)..sort(_dateAscendingEventSorter);
+        final sortedEvents = List.of(events)..sort(dateAscendingEventSorter);
         return HostingEventsState.data(sortedEvents
             .where((e) => storedEventIds.contains(e.id))
             .map((e) => e.id)
@@ -203,7 +203,7 @@ final attendingEventsProvider = Provider<AttendingEventsState>(
       loading: () => const AttendingEventsState.loading(),
       error: (_, __) => const AttendingEventsState.error(),
       data: (events) {
-        final sortedEvents = List.of(events)..sort(_dateAscendingEventSorter);
+        final sortedEvents = List.of(events)..sort(dateAscendingEventSorter);
         return AttendingEventsState.data(sortedEvents
             .where((e) => storedEventIds.contains(e.id))
             .map((e) => e.id)
@@ -329,5 +329,5 @@ class EventManagementNotifier extends StateNotifier<void> {
   }
 }
 
-int _dateAscendingEventSorter(Event a, Event b) =>
+int dateAscendingEventSorter(Event a, Event b) =>
     a.startDate.compareTo(b.startDate);
