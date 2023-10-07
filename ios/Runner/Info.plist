@@ -47,7 +47,7 @@
 	<key>NSLocationUsageDescription</key>
 	<string>Discover people nearby</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Send audio invites and chat with new friends</string>
+	<string>Record your audio bio and chat with new friends</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Add profile photos from your gallery</string>
 	<key>NSContactsUsageDescription</key>
