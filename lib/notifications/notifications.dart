@@ -97,6 +97,7 @@ class NotificationManager {
     }
 
     if (Platform.isAndroid) {
+      await FirebaseMessaging.instance.requestPermission();
       yield await FirebaseMessaging.instance.getToken();
       yield* FirebaseMessaging.instance.onTokenRefresh;
     } else if (Platform.isIOS) {
