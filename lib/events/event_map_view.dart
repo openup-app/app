@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/cupertino.dart';
@@ -149,6 +150,8 @@ class EventMapView extends ConsumerStatefulWidget {
   ConsumerState<EventMapView> createState() => _EventMapViewState();
 }
 
+final _boundsProvider = StateProvider<(LatLong, LatLong)?>((ref) => null);
+
 class _EventMapViewState extends ConsumerState<EventMapView>
     with SingleTickerProviderStateMixin {
   final _mapKey = GlobalKey<MapDisplayState>();
@@ -238,6 +241,9 @@ class _EventMapViewState extends ConsumerState<EventMapView>
                       initialLocation: ref.watch(_mapLocationProvider),
                       onLocationChanged:
                           ref.read(_mapLocationProvider.notifier).mapMoved,
+                      onBoundsChanged: (northEast, southWest) => ref
+                          .read(_boundsProvider.notifier)
+                          .state = (northEast, southWest),
                       obscuredRatio: 326 / height,
                       onShowRecordPanel: () {},
                     );
@@ -427,15 +433,31 @@ class _MapOverlay extends ConsumerWidget {
           ),
           child: Builder(
             builder: (context) {
-              final count = ref.watch(
+              final bounds = ref.watch(_boundsProvider);
+
+              final eventIds = ref.watch(
                 _mapEventsProvider.select(
                   (s) => s.events.map(
                     loading: (_) => null,
-                    error: (_) => 0,
-                    data: (data) => data.eventIds.length,
+                    error: (_) => [],
+                    data: (data) => data.eventIds,
                   ),
                 ),
               );
+
+              final int? count;
+              if (bounds == null || eventIds == null) {
+                count = eventIds?.length;
+              } else {
+                final northEast = bounds.$1;
+                final southWest = bounds.$2;
+                final eventsInBounds = eventIds
+                    .map((eventId) => ref.read(eventProvider(eventId)))
+                    .where((e) =>
+                        _isInBounds(e.location.latLong, northEast, southWest));
+                count = eventsInBounds.length;
+              }
+
               return _LoadingRefreshButton(
                 onPressed: searching ? null : onRefetch,
                 count: count,
@@ -445,6 +467,23 @@ class _MapOverlay extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  // TODO: Not robust, start must be east and end must be west
+  bool _isInBounds(LatLong target, LatLong start, LatLong end) {
+    double minLat = min(start.latitude, end.latitude);
+    double maxLat = max(start.latitude, end.latitude);
+
+    if (target.latitude >= minLat && target.latitude <= maxLat) {
+      if (start.longitude >= end.longitude) {
+        return target.longitude <= start.longitude &&
+            target.longitude >= end.longitude;
+      } else {
+        return target.longitude <= start.longitude ||
+            target.longitude >= end.longitude;
+      }
+    }
+    return false;
   }
 }
 

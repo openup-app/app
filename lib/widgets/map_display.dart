@@ -22,6 +22,7 @@ class MapDisplay extends ConsumerStatefulWidget {
   final double itemAnimationSpeedMultiplier;
   final Location initialLocation;
   final ValueChanged<Location> onLocationChanged;
+  final void Function(LatLong northEast, LatLong southWest) onBoundsChanged;
   final double obscuredRatio;
   final VoidCallback onShowRecordPanel;
 
@@ -33,6 +34,7 @@ class MapDisplay extends ConsumerStatefulWidget {
     this.itemAnimationSpeedMultiplier = 1.0,
     required this.initialLocation,
     required this.onLocationChanged,
+    required this.onBoundsChanged,
     this.obscuredRatio = 0.0,
     required this.onShowRecordPanel,
   }) : assert(itemAnimationSpeedMultiplier >= 0);
@@ -283,7 +285,10 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
     }
     setState(() => _bounds = bounds);
 
-    widget.onLocationChanged(_boundsToLocation(bounds));
+    final northEast = _latLngToLatLong(bounds.northeast);
+    final southWest = _latLngToLatLong(bounds.southwest);
+    widget.onLocationChanged(_boundsToLocation(northEast, southWest));
+    widget.onBoundsChanged(northEast, southWest);
   }
 
   void recenterMap(LatLong latLong) {
@@ -310,14 +315,16 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
     if (bounds == null) {
       return Future.value();
     }
-    return _boundsToLocation(bounds);
+    final northEast = _latLngToLatLong(bounds.northeast);
+    final southWest = _latLngToLatLong(bounds.southwest);
+    return _boundsToLocation(northEast, southWest);
   }
 
-  Location _boundsToLocation(LatLngBounds bounds) {
-    final latitudeRadsNe = radians(bounds.northeast.latitude);
-    final longitudeRadsNe = radians(bounds.northeast.longitude);
-    final latitudeRadsSw = radians(bounds.southwest.latitude);
-    final longitudeRadsSw = radians(bounds.southwest.longitude);
+  Location _boundsToLocation(LatLong northEast, LatLong southWest) {
+    final latitudeRadsNe = radians(northEast.latitude);
+    final longitudeRadsNe = radians(northEast.longitude);
+    final latitudeRadsSw = radians(southWest.latitude);
+    final longitudeRadsSw = radians(southWest.longitude);
     final projectionEw =
         cos(latitudeRadsSw) * cos(longitudeRadsSw - longitudeRadsNe);
     final projectionNs =
@@ -335,19 +342,18 @@ class MapDisplayState extends ConsumerState<MapDisplay> {
       latitude: max(-90, min(90, degrees(latitudeMidpointRads))),
       longitude: (degrees(longitudeMidpointRads) + 540) % 360 - 180,
     );
-    final distance = greatCircleDistance(
-      LatLong(
-        latitude: bounds.northeast.latitude,
-        longitude: bounds.northeast.longitude,
-      ),
-      LatLong(
-        latitude: bounds.southwest.latitude,
-        longitude: bounds.southwest.longitude,
-      ),
-    );
+
+    final distance = greatCircleDistance(northEast, southWest);
     return Location(
       latLong: center,
       radius: distance / 2,
+    );
+  }
+
+  LatLong _latLngToLatLong(LatLng latLng) {
+    return LatLong(
+      latitude: latLng.latitude,
+      longitude: latLng.longitude,
     );
   }
 }
