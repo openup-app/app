@@ -33,22 +33,9 @@ class _EventCreationStateNotifier extends StateNotifier<EventSubmission> {
   set location(EventLocation location) =>
       state = state.copyWith(location: location);
 
-  set startDate(DateTime value) {
-    final duration = state.endDate.difference(state.startDate);
-    state = state.copyWith(
-      startDate: value,
-      endDate: value.add(duration),
-    );
-  }
+  set startDate(DateTime value) => state = state.copyWith(startDate: value);
 
-  set endDate(DateTime value) {
-    state = state.copyWith(
-      startDate: state.startDate.isAfter(value)
-          ? value.subtract(const Duration(minutes: 1))
-          : state.startDate,
-      endDate: value,
-    );
-  }
+  set endDate(DateTime value) => state = state.copyWith(endDate: value);
 
   set price(int value) => state = state.copyWith(price: value);
 
@@ -78,14 +65,14 @@ class _EventCreatePage0State extends ConsumerState<EventCreatePage> {
     super.initState();
     final editEvent = widget.editEvent;
     if (editEvent == null) {
-      final now = DateTime.now();
+      final roundedNow = _roundToNearest15MinuteInterval(DateTime.now());
       initialSubmission = EventSubmission(
         location: EventLocation(
           latLong: ref.read(locationProvider).current,
           name: '',
         ),
-        startDate: now.add(const Duration(hours: 1)),
-        endDate: now.add(const Duration(hours: 3)),
+        startDate: roundedNow.add(const Duration(hours: 1)),
+        endDate: roundedNow.add(const Duration(hours: 3)),
       );
     } else {
       initialSubmission = EventSubmission(
@@ -118,6 +105,13 @@ class _EventCreatePage0State extends ConsumerState<EventCreatePage> {
         editingEventId: widget.editEvent?.id,
       ),
     );
+  }
+
+  DateTime _roundToNearest15MinuteInterval(DateTime time) {
+    final minutes = time.minute;
+    final remainder = minutes % 15;
+    final minutesToAdd = remainder > 0 ? 15 - remainder : 0;
+    return time.add(Duration(minutes: minutesToAdd));
   }
 }
 
@@ -297,19 +291,62 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                 ),
                 _Input(
                   title: const Text('Time'),
-                  trailing: _TimeField(
-                    start: ref
-                        .watch(_submissionProvider.select((s) => s.startDate)),
-                    end:
-                        ref.watch(_submissionProvider.select((s) => s.endDate)),
+                  trailing: SizedBox(
+                    height: 48,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Button(
+                          onPressed: () async {
+                            final result = await _showTimeDialog(
+                              initialDate:
+                                  ref.read(_submissionProvider).startDate,
+                            );
+                            if (result != null && mounted) {
+                              ref.read(_submissionProvider.notifier).startDate =
+                                  result;
+                            }
+                          },
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Center(
+                              child: Text(
+                                formatTime(ref.watch(_submissionProvider
+                                    .select((s) => s.startDate))).toLowerCase(),
+                                textAlign: TextAlign.end,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Center(child: Text('-')),
+                        Button(
+                          onPressed: () async {
+                            final result = await _showTimeDialog(
+                              initialDate:
+                                  ref.read(_submissionProvider).endDate,
+                            );
+                            if (result != null && mounted) {
+                              ref.read(_submissionProvider.notifier).endDate =
+                                  result;
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Center(
+                              child: Text(
+                                formatTime(ref.watch(_submissionProvider
+                                    .select((s) => s.endDate))).toLowerCase(),
+                                textAlign: TextAlign.end,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  onPressed: () async {
-                    final startDate = ref.read(_submissionProvider).startDate;
-                    final result = await _showTimeDialog(startDate);
-                    if (result != null && mounted) {
-                      ref.read(_submissionProvider.notifier).startDate = result;
-                    }
-                  },
                 ),
                 _Input(
                   title: const Text('Cost'),
@@ -459,8 +496,8 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
     return null;
   }
 
-  Future<DateTime?> _showTimeDialog(DateTime initialValue) async {
-    DateTime output = initialValue;
+  Future<DateTime?> _showTimeDialog({required DateTime initialDate}) async {
+    DateTime output = initialDate;
     final result = await showCupertinoModalPopup<DateTime>(
       context: context,
       builder: (context) {
@@ -475,7 +512,8 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
               height: 400,
               child: CupertinoDatePicker(
                 mode: CupertinoDatePickerMode.time,
-                initialDateTime: initialValue,
+                initialDateTime: initialDate,
+                minuteInterval: 15,
                 onDateTimeChanged: (dateTime) => output = dateTime,
               ),
             ),
@@ -485,9 +523,9 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
     );
     if (result != null) {
       return result.copyWith(
-        year: initialValue.year,
-        month: initialValue.month,
-        day: initialValue.day,
+        year: initialDate.year,
+        month: initialDate.month,
+        day: initialDate.day,
       );
     }
     return null;
@@ -836,6 +874,7 @@ class _FieldBackground extends StatelessWidget {
       ),
       child: Button(
         onPressed: onPressed,
+        useFadeWheNoPressedCallback: false,
         child: DecoratedBox(
           decoration: const BoxDecoration(
             color: Color.fromRGBO(0x2A, 0x2A, 0x2A, 1.0),
