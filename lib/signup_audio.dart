@@ -2,9 +2,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:marquee/marquee.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
@@ -75,24 +75,16 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
                         child: OverflowBox(
                           maxWidth: 500,
                           child: Center(
-                            child: Text(
-                              'HEY ${ref.watch(accountCreationParamsProvider.select((s) => s.name?.toUpperCase()))} WHAT\'S UP... PLEASE INTRODUCE YOURSELF TO EVERYONE!',
-                              maxLines: 1,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            )
-                                .animate(
-                                  onComplete: (controller) =>
-                                      controller.forward(from: 0),
-                                )
-                                .slideX(
-                                  duration: const Duration(seconds: 12),
-                                  begin: 1.0,
-                                  end: -1.0,
-                                ),
-                          ),
+                              child: Marquee(
+                            text:
+                                'HEY ${ref.watch(accountCreationParamsProvider.select((s) => s.name?.toUpperCase()))} WHAT\'S UP... PLEASE INTRODUCE YOURSELF TO EVERYONE! ',
+                            blankSpace: 64,
+                            velocity: 50,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          )),
                         ),
                       ),
                     ),
