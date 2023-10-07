@@ -40,7 +40,7 @@ final _peopleProvider = FutureProvider<IList<DiscoverProfile>>(
 
 final peopleProvider = StateProvider<PeopleState>(
   (ref) {
-    final latLong = ref.read(locationProvider.select((s) => s.current));
+    final latLong = ref.watch(locationProvider.select((s) => s.current));
     final result = ref.watch(_peopleProvider);
     return result.map(
       loading: (loading) => const _PeopleInitializing(),

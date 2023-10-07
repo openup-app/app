@@ -45,7 +45,6 @@ import 'package:openup/settings_page.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/signup_audio.dart';
 import 'package:openup/signup_name_age.dart';
-import 'package:openup/signup_permissions.dart';
 import 'package:openup/signup_phone.dart';
 import 'package:openup/signup_photos.dart';
 import 'package:openup/signup_verify.dart';
@@ -383,27 +382,19 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           ],
         ),
         GoRoute(
-          path: '/signup_permissions',
-          name: 'signup_permissions',
-          parentNavigatorKey: rootNavigatorKey,
-          builder: (context, state) => const SignupPermissionsScreen(),
+          path: '/create_account',
+          name: 'signup_photos',
+          builder: (context, state) => const SignupPhotos(),
           routes: [
             GoRoute(
-              path: 'photos',
-              name: 'signup_photos',
-              builder: (context, state) => const SignupPhotos(),
+              path: 'name_age',
+              name: 'signup_name_age',
+              builder: (context, state) => const SignupNameAge(),
               routes: [
                 GoRoute(
-                  path: 'name_age',
-                  name: 'signup_name_age',
-                  builder: (context, state) => const SignupNameAge(),
-                  routes: [
-                    GoRoute(
-                      path: 'audio',
-                      name: 'signup_audio',
-                      builder: (context, state) => const SignupAudio(),
-                    ),
-                  ],
+                  path: 'audio',
+                  name: 'signup_audio',
+                  builder: (context, state) => const SignupAudio(),
                 ),
               ],
             ),
@@ -623,13 +614,15 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     BuildContext context,
     GoRouterState state,
   ) {
+    final location = state.location;
     // Initial loading page redirects by itself
-    if (state.location == '/') {
+    if (location == '/') {
       return null;
     }
 
     // No need to redirect away from signup
-    if (state.location.startsWith('/signup')) {
+    if (location.startsWith('/signup') ||
+        location.startsWith('/create_account')) {
       return null;
     }
 

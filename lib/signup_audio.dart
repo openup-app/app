@@ -6,9 +6,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
-import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/location/location_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/button.dart';
@@ -144,9 +144,7 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
                         ? null
                         : () {
                             _audioPlayer.stop();
-                            _signup(
-                              params: ref.read(accountCreationParamsProvider),
-                            );
+                            _signup();
                           },
                     child: const SizedBox(
                       width: 46,
@@ -169,11 +167,13 @@ class _SignupAudioState extends ConsumerState<SignupAudio> {
     ref.read(accountCreationParamsProvider.notifier).audio(file);
   }
 
-  void _signup({
-    required AccountCreationParams params,
-  }) async {
+  void _signup() async {
     _recorderKey.currentState?.stopRecording();
     ref.read(analyticsProvider).trackSignupSubmitAudio();
+
+    final latLong = ref.read(locationProvider).current;
+    ref.read(accountCreationParamsProvider.notifier).latLong(latLong);
+    final params = ref.read(accountCreationParamsProvider);
 
     final result = await withBlockingModal(
       context: context,

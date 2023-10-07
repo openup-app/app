@@ -61,11 +61,9 @@ class LocationNotifier extends StateNotifier<LocationState> {
         super(LocationState(
             current: overrideLatLong ??
                 _loadLastKnownLatLong(keyValueStore) ??
-                fallbackInitialLatLong)) {
-    _init();
-  }
+                fallbackInitialLatLong));
 
-  void _init() async {
+  Future<void> refresh() async {
     final status = await _service.getLatLong();
     if (!mounted) {
       return;
