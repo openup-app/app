@@ -364,19 +364,39 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           path: '/signup',
           name: 'signup',
           parentNavigatorKey: rootNavigatorKey,
-          builder: (context, state) => const SignupPhone(),
+          pageBuilder: (context, state) {
+            return CustomTransitionPage(
+              child: const SignupPhone(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                return SlideOutLeftTransition(
+                  secondaryAnimation: secondaryAnimation,
+                  child: child,
+                );
+              },
+            );
+          },
           routes: [
             GoRoute(
               path: 'verify',
               name: 'signup_verify',
               parentNavigatorKey: rootNavigatorKey,
-              builder: (context, state) {
+              pageBuilder: (context, state) {
                 final verificationId = state.queryParams['verificationId'];
                 if (verificationId == null) {
                   throw 'Missing verification ID';
                 }
-                return SignupVerify(
-                  verificationId: verificationId,
+                return CustomTransitionPage(
+                  child: SignupVerify(
+                    verificationId: verificationId,
+                  ),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    return SlideInRightPopLeftTransition(
+                      animation: animation,
+                      child: child,
+                    );
+                  },
                 );
               },
             ),
@@ -385,17 +405,56 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         GoRoute(
           path: '/create_account',
           name: 'signup_photos',
-          builder: (context, state) => const SignupPhotos(),
+          pageBuilder: (context, state) {
+            return CustomTransitionPage(
+              child: const SignupPhotos(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                return SlideInRightTransition(
+                  animation: animation,
+                  child: SlideOutLeftTransition(
+                    secondaryAnimation: secondaryAnimation,
+                    child: child,
+                  ),
+                );
+              },
+            );
+          },
           routes: [
             GoRoute(
               path: 'name_age',
               name: 'signup_name_age',
-              builder: (context, state) => const SignupNameAge(),
+              pageBuilder: (context, state) {
+                return CustomTransitionPage(
+                  child: const SignupNameAge(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    return SlideInRightTransition(
+                      animation: animation,
+                      child: SlideOutLeftTransition(
+                        secondaryAnimation: secondaryAnimation,
+                        child: child,
+                      ),
+                    );
+                  },
+                );
+              },
               routes: [
                 GoRoute(
                   path: 'audio',
                   name: 'signup_audio',
-                  builder: (context, state) => const SignupAudio(),
+                  pageBuilder: (context, state) {
+                    return CustomTransitionPage(
+                      child: const SignupAudio(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                        return SlideInRightTransition(
+                          animation: animation,
+                          child: child,
+                        );
+                      },
+                    );
+                  },
                 ),
               ],
             ),

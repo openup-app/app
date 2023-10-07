@@ -70,3 +70,70 @@ class SlideUpTransition extends StatelessWidget {
     );
   }
 }
+
+class SlideOutLeftTransition extends StatelessWidget {
+  final Animation<double> secondaryAnimation;
+  final Widget child;
+
+  const SlideOutLeftTransition({
+    super.key,
+    required this.secondaryAnimation,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SlideTransition(
+      position: Tween(
+        begin: Offset.zero,
+        end: const Offset(-1.0, 0.0),
+      ).animate(secondaryAnimation),
+      child: child,
+    );
+  }
+}
+
+class SlideInRightTransition extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
+
+  const SlideInRightTransition({
+    super.key,
+    required this.animation,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SlideTransition(
+      position: Tween(
+        begin: const Offset(1.0, 0.0),
+        end: Offset.zero,
+      ).animate(animation),
+      child: child,
+    );
+  }
+}
+
+class SlideInRightPopLeftTransition extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
+
+  const SlideInRightPopLeftTransition({
+    super.key,
+    required this.animation,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final forward = animation.status == AnimationStatus.forward;
+    return SlideTransition(
+      position: Tween(
+        begin: forward ? const Offset(1.0, 0.0) : const Offset(-1.0, 0.0),
+        end: Offset.zero,
+      ).animate(animation),
+      child: child,
+    );
+  }
+}
