@@ -233,6 +233,10 @@ final eventManagementProvider =
         ref.invalidate(_nearbyEventsProviderInternal);
         ref.invalidate(mapEventsStateProviderInternal);
       },
+      onRefreshHostingEvents: () =>
+          ref.invalidate(_hostingEventsProviderInternal),
+      onRefreshAttendingEvents: () =>
+          ref.invalidate(_attendingEventsProviderInternal),
       onRefreshEvent: (eventId) {
         ref.invalidate(_hostingEventsProviderInternal);
         ref.invalidate(_attendingEventsProviderInternal);
@@ -254,16 +258,22 @@ class EventManagementNotifier extends StateNotifier<void> {
   final Api _api;
   final StateNotifier<IMap<String, Event>> _eventStoreNotifier;
   final void Function() _onRefreshNearbyEvents;
+  final void Function() _onRefreshHostingEvents;
+  final void Function() _onRefreshAttendingEvents;
   final void Function(String eventId) _onRefreshEvent;
 
   EventManagementNotifier({
     required Api api,
     required StateNotifier<IMap<String, Event>> eventStoreNotifier,
     required void Function() onRefreshNearbyEvents,
+    required void Function() onRefreshHostingEvents,
+    required void Function() onRefreshAttendingEvents,
     required void Function(String eventId) onRefreshEvent,
   })  : _api = api,
         _eventStoreNotifier = eventStoreNotifier,
         _onRefreshNearbyEvents = onRefreshNearbyEvents,
+        _onRefreshHostingEvents = onRefreshHostingEvents,
+        _onRefreshAttendingEvents = onRefreshAttendingEvents,
         _onRefreshEvent = onRefreshEvent,
         super(null);
 
@@ -278,6 +288,8 @@ class EventManagementNotifier extends StateNotifier<void> {
       (r) {
         _eventStoreNotifier.state = _eventStoreNotifier.state.add(r.id, r);
         _onRefreshNearbyEvents();
+        _onRefreshHostingEvents();
+        _onRefreshAttendingEvents();
         return true;
       },
     );
@@ -293,6 +305,7 @@ class EventManagementNotifier extends StateNotifier<void> {
       (l) => false,
       (r) {
         _eventStoreNotifier.state = _eventStoreNotifier.state.add(r.id, r);
+        _onRefreshEvent(eventId);
         return true;
       },
     );
@@ -307,8 +320,10 @@ class EventManagementNotifier extends StateNotifier<void> {
     return result.fold(
       (l) => false,
       (r) {
-        _onRefreshNearbyEvents();
         _eventStoreNotifier.state = _eventStoreNotifier.state.remove(eventId);
+        _onRefreshNearbyEvents();
+        _onRefreshHostingEvents();
+        _onRefreshAttendingEvents();
         return true;
       },
     );
@@ -324,9 +339,9 @@ class EventManagementNotifier extends StateNotifier<void> {
     result.fold(
       (l) {},
       (r) {
-        _onRefreshEvent(eventId);
         _eventStoreNotifier.state =
             _eventStoreNotifier.state.update(eventId, (_) => r);
+        _onRefreshEvent(eventId);
       },
     );
   }
