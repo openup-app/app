@@ -1,3 +1,4 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -727,30 +728,28 @@ class EventDisplayLarge extends StatelessWidget {
           endIndent: 28,
           color: Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
         ),
-        if (!preview) ...[
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 28),
-            child: Text(
-              'Who will be there',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-              ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 28),
+          child: Text(
+            'Who will be there',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(
-            height: 48,
-            child: _Participants(
-              eventId: event.id,
-            ),
+        ),
+        SizedBox(
+          height: 48,
+          child: _Participants(
+            event: event,
           ),
-          const Divider(
-            height: 36,
-            indent: 28,
-            endIndent: 28,
-            color: Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
-          ),
-        ],
+        ),
+        const Divider(
+          height: 36,
+          indent: 28,
+          endIndent: 28,
+          color: Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
+        ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 28),
           child: Text(
@@ -806,16 +805,21 @@ void _showEventOnMap(BuildContext context, Event event) {
 }
 
 class _Participants extends ConsumerWidget {
-  final String eventId;
+  final Event event;
 
-  const _Participants({
-    super.key,
-    required this.eventId,
-  });
+  const _Participants({super.key, required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final result = ref.watch(eventParticipantsProvider(eventId));
+    final result = event.id.isNotEmpty
+        ? ref.watch(eventParticipantsProvider(event.id))
+        : AsyncValue.data(IList([
+            SimpleProfile(
+              uid: event.host.uid,
+              name: event.host.name,
+              photo: event.host.photo,
+            )
+          ]));
     if (result.isRefreshing) {
       return const Padding(
         padding: EdgeInsets.only(left: 16.0),
