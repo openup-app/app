@@ -800,7 +800,7 @@ class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
           }
           return DecoratedBox(
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: Color.fromRGBO(0x2A, 0x2A, 0x2A, 1.0),
               borderRadius: BorderRadius.all(Radius.circular(8)),
             ),
             child: Column(
@@ -811,6 +811,7 @@ class _PhoneNumberFieldState extends ConsumerState<_PhoneNumberField> {
                     textController: _phoneController,
                     focusNode: _phoneFocusNode,
                     textAlign: TextAlign.start,
+                    style: const TextStyle(color: Colors.white),
                     onChanged: (value, valid) {
                       setState(() {
                         _newPhoneNumber = value;
