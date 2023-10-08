@@ -521,7 +521,7 @@ class EventTwoColumnDetails extends ConsumerWidget {
   }
 }
 
-class EventDisplayLarge extends StatelessWidget {
+class EventDisplayLarge extends ConsumerWidget {
   final Event event;
   final bool preview;
 
@@ -532,7 +532,8 @@ class EventDisplayLarge extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    _popIfEventDoesNotExist(context, ref, event.id);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -788,6 +789,24 @@ void _showEventOnMap(BuildContext context, Event event) {
       'event_id': event.id,
     },
   );
+}
+
+void _popIfEventDoesNotExist(
+  BuildContext context,
+  WidgetRef ref,
+  String eventId,
+) {
+  try {
+    if (eventId.isNotEmpty) {
+      ref.watch(eventProvider(eventId));
+    }
+  } catch (e) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
 }
 
 class _Participants extends ConsumerWidget {
