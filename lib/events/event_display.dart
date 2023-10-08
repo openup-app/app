@@ -1195,8 +1195,11 @@ class _AttendingModal extends ConsumerWidget {
               const SizedBox(height: 30),
               Button(
                 onPressed: () async {
-                  Navigator.of(context).pop();
-                  _showRecordPanel(context, ref.read(userProvider.notifier));
+                  await _showRecordPanel(
+                      context, ref.read(userProvider.notifier));
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                  }
                 },
                 child: Container(
                   width: double.infinity,
@@ -1239,7 +1242,7 @@ class _AttendingModal extends ConsumerWidget {
     );
   }
 
-  void _showRecordPanel(
+  Future<void> _showRecordPanel(
     BuildContext context,
     UserStateNotifier notifier,
   ) async {
