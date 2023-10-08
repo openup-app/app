@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>+One</string>
+	<string>Plus One</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>+One</string>
+	<string>Plus One</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -30,7 +30,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.254565720868-ecl1kblgqkg65v267b1dm200qt2sgn2r</string>
-				<string>bonjour</string>
+				<string>plusone</string>
 			</array>
 		</dict>
 	</array>
@@ -51,7 +51,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Add profile photos from your gallery</string>
 	<key>NSContactsUsageDescription</key>
-    <string>Invite your friends to +One, and see who's already here</string>
+    <string>Invite your friends to Plus One, and see who's already here</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

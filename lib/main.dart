@@ -103,7 +103,7 @@ void main() async {
     final dynamicConfigService = DynamicConfigService(
       defaults: const DynamicConfig(
         contactInviteMessage:
-            'I\'m on +One, a new way to meet online. https://bonjourland.com',
+            'I\'m on Plus One, a new way to meet online. https://plus-one.app',
         loginRequired: true,
       ),
     );

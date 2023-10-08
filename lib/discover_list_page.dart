@@ -51,7 +51,7 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
               Builder(
                 builder: (context) {
                   return Text(
-                    '+One',
+                    'Plus One',
                     style: DefaultTextStyle.of(context)
                         .style
                         .copyWith(fontSize: 27),

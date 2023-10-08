@@ -13,7 +13,7 @@ class TitleAndTagline extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             const Text(
-              '+One',
+              'Plus One',
               style: TextStyle(
                 fontSize: 80,
                 fontWeight: FontWeight.w700,
