@@ -26,22 +26,13 @@ class EventDisplayListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final uid = ref.watch(uidProvider);
-    final myEvent = event.host.uid == uid;
     return ElevatedButton(
       onPressed: () {
-        if (myEvent) {
-          context.pushNamed(
-            'event_create',
-            extra: EventCreateArgs(editEvent: event),
-          );
-        } else {
-          context.pushNamed(
-            'event_view',
-            params: {'id': event.id},
-            extra: EventViewPageArgs(event: event),
-          );
-        }
+        context.pushNamed(
+          'event_view',
+          params: {'id': event.id},
+          extra: EventViewPageArgs(event: event),
+        );
       },
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.zero,
@@ -74,8 +65,8 @@ class EventDisplayListItem extends ConsumerWidget {
                       const SizedBox(height: 10),
                       AttendUnattendButtonBuilder(
                         eventId: event.id,
-                        builder:
-                            (context, isParticipating, onPressed, isLoading) {
+                        builder: (context, isParticipating, isMyEvent,
+                            onPressed, isLoading) {
                           return Button(
                             onPressed: onPressed,
                             child: Container(
@@ -105,7 +96,11 @@ class EventDisplayListItem extends ConsumerWidget {
                                   }
 
                                   return Text(
-                                    isParticipating ? 'Attending' : 'Attend',
+                                    isMyEvent
+                                        ? 'Edit'
+                                        : (isParticipating
+                                            ? 'Attending'
+                                            : 'Attend'),
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w400,
@@ -172,22 +167,13 @@ class EventGridTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final uid = ref.watch(uidProvider);
-    final myEvent = event.host.uid == uid;
     return Button(
       onPressed: () {
-        if (myEvent) {
-          context.pushNamed(
-            'event_create',
-            extra: EventCreateArgs(editEvent: event),
-          );
-        } else {
-          context.pushNamed(
-            'event_view',
-            params: {'id': event.id},
-            extra: EventViewPageArgs(event: event),
-          );
-        }
+        context.pushNamed(
+          'event_view',
+          params: {'id': event.id},
+          extra: EventViewPageArgs(event: event),
+        );
       },
       child: Stack(
         children: [
@@ -892,7 +878,7 @@ class _Participants extends ConsumerWidget {
 class AttendUnattendButtonBuilder extends ConsumerStatefulWidget {
   final String eventId;
   final bool useUnattendModal;
-  final Widget Function(BuildContext context, bool participating,
+  final Widget Function(BuildContext context, bool participating, bool myEvent,
       VoidCallback? onPressed, bool isLoading) builder;
 
   const AttendUnattendButtonBuilder({
@@ -914,48 +900,55 @@ class _AttendUnattendButtonBuilderState
   @override
   Widget build(BuildContext context) {
     final uid = ref.watch(uidProvider);
-    final isMyEvent = ref
-        .watch(eventProvider(widget.eventId).select((e) => e.host.uid == uid));
-    final isParticipating = ref.watch(eventProvider(widget.eventId)
-        .select((e) => e.participants.uids.contains(uid)));
-    final isFull = ref.watch(eventProvider(widget.eventId).select((event) {
-      final limit = event.attendance.map(
-        unlimited: (_) => null,
-        limited: (limit) => limit.limit,
-      );
-      if (limit == null) {
-        return false;
-      }
-      final remaining = limit - event.participants.count;
-      return remaining <= 0;
-    }));
-    final onPressed = (_loading || isMyEvent || (isFull && !isParticipating))
-        ? null
-        : () async {
-            if (widget.useUnattendModal && isParticipating) {
-              final confirmUnattend =
-                  await showUnattendingModal(context, widget.eventId);
-              if (!(mounted && confirmUnattend == true)) {
-                return;
-              }
-            }
-            setState(() => _loading = true);
-            await ref
-                .read(eventManagementProvider.notifier)
-                .updateEventParticipation(widget.eventId, !isParticipating);
-            if (!mounted) {
-              return;
-            }
-            setState(() => _loading = false);
+    final event = ref.watch(eventProvider(widget.eventId));
+    final isMyEvent = event.host.uid == uid;
+    final isParticipating = event.participants.uids.contains(uid);
+    final isFull = event.attendance.map(
+      unlimited: (_) => false,
+      limited: (limit) {
+        final remaining = limit.limit - event.participants.count;
+        return remaining <= 0;
+      },
+    );
 
-            if (!isParticipating) {
-              showAttendingModal(
-                context,
-                ref.read(eventProvider(widget.eventId)),
-              );
-            }
-          };
-    return widget.builder(context, isParticipating, onPressed, _loading);
+    final VoidCallback? onPressed;
+    if (isMyEvent) {
+      onPressed = () {
+        context.pushNamed(
+          'event_create',
+          extra: EventCreateArgs(editEvent: event),
+        );
+      };
+    } else if (_loading || (isFull && !isParticipating)) {
+      onPressed = null;
+    } else {
+      onPressed = () async {
+        if (widget.useUnattendModal && isParticipating) {
+          final confirmUnattend =
+              await showUnattendingModal(context, widget.eventId);
+          if (!(mounted && confirmUnattend == true)) {
+            return;
+          }
+        }
+        setState(() => _loading = true);
+        await ref
+            .read(eventManagementProvider.notifier)
+            .updateEventParticipation(widget.eventId, !isParticipating);
+        if (!mounted) {
+          return;
+        }
+        setState(() => _loading = false);
+
+        if (!isParticipating) {
+          showAttendingModal(
+            context,
+            ref.read(eventProvider(widget.eventId)),
+          );
+        }
+      };
+    }
+    return widget.builder(
+        context, isParticipating, isMyEvent, onPressed, _loading);
   }
 }
 

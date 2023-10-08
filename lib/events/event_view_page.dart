@@ -52,7 +52,8 @@ class EventViewPage extends StatelessWidget {
             Expanded(
               child: AttendUnattendButtonBuilder(
                 eventId: event.id,
-                builder: (context, isParticipating, onPressed, isLoading) {
+                builder: (context, isParticipating, isMyEvent, onPressed,
+                    isLoading) {
                   final color = isParticipating ? Colors.black : Colors.white;
                   return RoundedButton(
                     color: isParticipating
@@ -67,7 +68,9 @@ class EventViewPage extends StatelessWidget {
                           );
                         }
                         return Text(
-                          isParticipating ? 'Attending' : 'Attend',
+                          isMyEvent
+                              ? 'Edit'
+                              : (isParticipating ? 'Attending' : 'Attend'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w400,

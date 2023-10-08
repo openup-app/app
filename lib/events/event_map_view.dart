@@ -337,8 +337,8 @@ class _EventMapViewState extends ConsumerState<EventMapView>
                       Expanded(
                         child: AttendUnattendButtonBuilder(
                           eventId: event.id,
-                          builder:
-                              (context, isParticipating, onPressed, isLoading) {
+                          builder: (context, isParticipating, isMyEvent,
+                              onPressed, isLoading) {
                             final color =
                                 isParticipating ? Colors.white : Colors.black;
                             return RoundedButton(
@@ -354,7 +354,11 @@ class _EventMapViewState extends ConsumerState<EventMapView>
                                     );
                                   }
                                   return Text(
-                                    isParticipating ? 'Attending' : 'Attend',
+                                    isMyEvent
+                                        ? 'Edit'
+                                        : (isParticipating
+                                            ? 'Attending'
+                                            : 'Attend'),
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w400,
@@ -804,7 +808,8 @@ class _EventMapListState extends ConsumerState<EventMapList> {
           ),
           trailing: AttendUnattendButtonBuilder(
             eventId: event.id,
-            builder: (context, isParticipating, onPressed, isLoading) {
+            builder:
+                (context, isParticipating, isMyEvent, onPressed, isLoading) {
               final color = isParticipating ? Colors.white : Colors.black;
               return RoundedButton(
                 color: isParticipating
@@ -819,7 +824,9 @@ class _EventMapListState extends ConsumerState<EventMapList> {
                       );
                     }
                     return Text(
-                      isParticipating ? 'Attending' : 'Attend',
+                      isMyEvent
+                          ? 'Edit'
+                          : (isParticipating ? 'Attending' : 'Attend'),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w400,
