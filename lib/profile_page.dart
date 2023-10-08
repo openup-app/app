@@ -33,6 +33,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       extendBody: true,
+      resizeToAvoidBottomInset: false,
       appBar: const OpenupAppBar(
         body: OpenupAppBarBody(
           center: Text('Profile'),
