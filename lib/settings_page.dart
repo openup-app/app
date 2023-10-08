@@ -14,6 +14,7 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/platform/just_audio_audio_player.dart';
 import 'package:openup/util/photo_picker.dart';
+import 'package:openup/util/text_editing.dart';
 import 'package:openup/widgets/audio_playback_symbol.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -1191,7 +1192,10 @@ class _NameFieldState extends ConsumerState<_NameField> {
               controller: _nameController,
               focusNode: _nameFocusNode,
               enabled: _editingName,
-              textCapitalization: TextCapitalization.sentences,
+              textCapitalization: TextCapitalization.characters,
+              textInputAction: TextInputAction.done,
+              inputFormatters: [denyLowerCaseInputFormatter],
+              onSubmitted: (_) => _submit(),
               style: DefaultTextStyle.of(context).style,
               decoration: const InputDecoration.collapsed(
                 hintText: '',
@@ -1200,29 +1204,20 @@ class _NameFieldState extends ConsumerState<_NameField> {
           ),
         ),
         Button(
-          onPressed: () async {
+          onPressed: () {
             if (!_editingName) {
               setState(() => _editingName = true);
               _nameController.selection = TextSelection(
                 baseOffset: 0,
                 extentOffset: _nameController.text.length,
               );
-              _nameFocusNode.requestFocus();
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _nameFocusNode.requestFocus();
+                }
+              });
             } else {
-              setState(() => _submittingName = true);
-              final result = await ref
-                  .read(userProvider.notifier)
-                  .updateName(_nameController.text);
-              if (mounted) {
-                setState(() => _submittingName = false);
-                result.fold(
-                  (l) => displayError(context, l),
-                  (r) {
-                    setState(() => _editingName = false);
-                    _nameFocusNode.unfocus();
-                  },
-                );
-              }
+              _submit();
             }
           },
           child: DefaultTextStyle.merge(
@@ -1256,5 +1251,21 @@ class _NameFieldState extends ConsumerState<_NameField> {
         ),
       ],
     );
+  }
+
+  void _submit() async {
+    setState(() => _submittingName = true);
+    final result =
+        await ref.read(userProvider.notifier).updateName(_nameController.text);
+    if (mounted) {
+      setState(() => _submittingName = false);
+      result.fold(
+        (l) => displayError(context, l),
+        (r) {
+          setState(() => _editingName = false);
+          _nameFocusNode.unfocus();
+        },
+      );
+    }
   }
 }
