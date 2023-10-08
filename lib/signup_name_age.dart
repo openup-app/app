@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/util/text_editing.dart';
 import 'package:openup/widgets/back_button.dart';
 import 'package:openup/widgets/common.dart';
 import 'package:openup/widgets/scaffold.dart';
@@ -20,9 +20,6 @@ class SignupNameAge extends ConsumerStatefulWidget {
 class _SignupNameAgeState extends ConsumerState<SignupNameAge> {
   late final TextEditingController _nameController;
   late final TextEditingController _ageController;
-
-  final _denyLowerCaseInputFormatter =
-      FilteringTextInputFormatter.deny(RegExp('[a-zá-ú]'));
 
   @override
   void initState() {
@@ -105,7 +102,7 @@ class _SignupNameAgeState extends ConsumerState<SignupNameAge> {
                                     TextCapitalization.characters,
                                 textInputAction: TextInputAction.next,
                                 textAlign: TextAlign.end,
-                                inputFormatters: [_denyLowerCaseInputFormatter],
+                                inputFormatters: [denyLowerCaseInputFormatter],
                                 onChanged: ref
                                     .read(
                                         accountCreationParamsProvider.notifier)
