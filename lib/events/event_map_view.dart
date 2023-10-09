@@ -325,7 +325,7 @@ class _EventMapViewState extends ConsumerState<EventMapView>
                           onPressed: () {
                             context.pushNamed(
                               'event_view',
-                              params: {'id': event.id},
+                              pathParameters: {'id': event.id},
                               extra: EventViewPageArgs(event: event),
                             );
                           },

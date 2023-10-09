@@ -237,32 +237,21 @@ class ActivePage extends ConsumerStatefulWidget {
 }
 
 class _ActivePageState extends ConsumerState<ActivePage> {
-  int? _myBranchIndex;
-  int? _currentIndex;
   bool _active = false;
   bool _appResumed = true;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _myBranchIndex ??= _BranchIndex.of(context);
-    final oldIndex = _currentIndex;
     try {
-      _currentIndex = StatefulShellRouteState.of(context).currentIndex;
-      if (oldIndex != _currentIndex) {
-        _updateActivation();
-      }
+      _updateActivation();
     } catch (e) {
       // Not a branch route
     }
   }
 
   void _updateActivation() {
-    final isBranchRoute = _myBranchIndex != null;
-    final onCurrentBranch = _currentIndex == _myBranchIndex;
-    final routeCurrent = ModalRoute.of(context)?.isCurrent == true;
-    final visible = isBranchRoute ? onCurrentBranch : routeCurrent;
-    final shouldBeActive = visible && _appResumed;
+    final shouldBeActive = _appResumed;
 
     if (!_active && shouldBeActive) {
       SchedulerBinding.instance.addPostFrameCallback((_) {

@@ -377,7 +377,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               name: 'signup_verify',
               parentNavigatorKey: rootNavigatorKey,
               pageBuilder: (context, state) {
-                final verificationId = state.queryParams['verificationId'];
+                final verificationId =
+                    state.uri.queryParameters['verificationId'];
                 if (verificationId == null) {
                   throw 'Missing verification ID';
                 }
@@ -457,18 +458,18 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         ),
         ShellRoute(
           builder: (context, state, child) {
-            final location = state.location;
+            final path = state.matchedLocation;
             final int index;
-            if (location.startsWith('/discover')) {
+            if (path.startsWith('/discover')) {
               index = 0;
-            } else if (location.startsWith('/events')) {
+            } else if (path.startsWith('/events')) {
               index = 1;
-            } else if (location.startsWith('/chats')) {
+            } else if (path.startsWith('/chats')) {
               index = 2;
-            } else if (location.startsWith('/account')) {
+            } else if (path.startsWith('/account')) {
               index = 3;
             } else {
-              throw 'Unknown tab index for location "$location"';
+              throw 'Unknown tab index for path "$path"';
             }
             return TabShell(
               index: index,
@@ -501,7 +502,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   name: 'chat',
                   parentNavigatorKey: rootNavigatorKey,
                   builder: (context, state) {
-                    final otherUid = state.params['uid']!;
+                    final otherUid = state.pathParameters['uid']!;
                     final args = state.extra as ChatPageArguments?;
                     return ChatPage(
                       host: host,
@@ -518,11 +519,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               path: '/events',
               name: 'events',
               pageBuilder: (context, state) {
-                final viewMap = state.queryParams['view_map'] == 'true';
+                final viewMap = state.uri.queryParameters['view_map'] == 'true';
                 return CustomTransitionPage(
                   child: EventsPage(
                     viewMap: viewMap,
-                    initialSelectedEventId: state.queryParams['event_id'],
+                    initialSelectedEventId:
+                        state.uri.queryParameters['event_id'],
                   ),
                   transitionsBuilder: fadePageTransition,
                 );
@@ -663,7 +665,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           name: 'view_profile',
           parentNavigatorKey: rootNavigatorKey,
           builder: (context, state) {
-            final uid = state.queryParams['uid'];
+            final uid = state.uri.queryParameters['uid'];
             final args = state.extra as ViewProfilePageArguments?;
             if (args != null) {
               return ViewProfilePage(args: args);
@@ -695,15 +697,14 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     BuildContext context,
     GoRouterState state,
   ) {
-    final location = state.location;
+    final path = state.path ?? '/';
     // Initial loading page redirects by itself
-    if (location == '/') {
+    if (path == '/') {
       return null;
     }
 
     // No need to redirect away from signup
-    if (location.startsWith('/signup') ||
-        location.startsWith('/create_account')) {
+    if (path.startsWith('/signup') || path.startsWith('/create_account')) {
       return null;
     }
 

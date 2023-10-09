@@ -255,7 +255,7 @@ class _ProfilePanelState extends ConsumerState<_ProfileStack> {
                   onPressed: () {
                     context.pushNamed(
                       'view_profile',
-                      queryParams: {
+                      queryParameters: {
                         'uid': widget.profile.uid,
                       },
                       extra: ViewProfilePageArguments.profile(

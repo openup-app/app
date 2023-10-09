@@ -311,7 +311,7 @@ class _ConversationsPageContentsState
     FocusScope.of(context).unfocus();
     context.pushNamed(
       'chat',
-      params: {'uid': chatroom.profile.uid},
+      pathParameters: {'uid': chatroom.profile.uid},
       extra: ChatPageArguments(chatroom: chatroom),
     );
     ref.read(userProvider.notifier).openChatroom(chatroom.profile.uid);

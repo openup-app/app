@@ -684,12 +684,11 @@ packages:
   go_router:
     dependency: "direct main"
     description:
-      path: "packages/go_router"
-      ref: fd5412f9bad9d511778b06e66a754454a409feea
-      resolved-ref: fd5412f9bad9d511778b06e66a754454a409feea
-      url: "https://github.com/tolo/flutter_packages"
-    source: git
-    version: "6.1.0"
+      name: go_router
+      sha256: a07c781bf55bf11ae85133338e4850f0b4e33e261c44a66c750fc707d65d8393
+      url: "https://pub.dev"
+    source: hosted
+    version: "11.1.2"
   google_maps:
     dependency: transitive
     description:

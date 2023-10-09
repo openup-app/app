@@ -163,7 +163,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   _audio.pause();
                   context.pushNamed(
                     'view_profile',
-                    queryParams: {'uid': otherProfile.uid},
+                    queryParameters: {'uid': otherProfile.uid},
                     extra:
                         ViewProfilePageArguments.profile(profile: otherProfile),
                   );

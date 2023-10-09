@@ -71,7 +71,7 @@ class _SignUpFriendsState extends ConsumerState<SignUpFriends> {
                     onPressed: () {
                       context.goNamed(
                         'discover',
-                        queryParams: {'welcome': 'true'},
+                        queryParameters: {'welcome': 'true'},
                       );
                     },
                     child: const Padding(

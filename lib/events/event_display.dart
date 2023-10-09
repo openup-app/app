@@ -30,7 +30,7 @@ class EventDisplayListItem extends ConsumerWidget {
       onPressed: () {
         context.pushNamed(
           'event_view',
-          params: {'id': event.id},
+          pathParameters: {'id': event.id},
           extra: EventViewPageArgs(event: event),
         );
       },
@@ -171,7 +171,7 @@ class EventGridTile extends ConsumerWidget {
       onPressed: () {
         context.pushNamed(
           'event_view',
-          params: {'id': event.id},
+          pathParameters: {'id': event.id},
           extra: EventViewPageArgs(event: event),
         );
       },
@@ -784,7 +784,7 @@ class EventDisplayLarge extends ConsumerWidget {
 void _showEventOnMap(BuildContext context, Event event) {
   context.goNamed(
     'events',
-    queryParams: {
+    queryParameters: {
       'view_map': 'true',
       'event_id': event.id,
     },
@@ -1256,7 +1256,7 @@ class _AttendingModal extends ConsumerWidget {
     Navigator.of(context).pop();
     context.pushNamed(
       'view_profile',
-      queryParams: {'uid': event.host.uid},
+      queryParameters: {'uid': event.host.uid},
       extra: ViewProfilePageArguments.uid(uid: event.host.uid),
     );
   }

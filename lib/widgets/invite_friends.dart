@@ -148,7 +148,7 @@ class _InviteFriendsState extends ConsumerState<InviteFriends> {
                             onPressed: () {
                               context.pushNamed(
                                 'view_profile',
-                                queryParams: {'uid': contact.uid},
+                                queryParameters: {'uid': contact.uid},
                               );
                             },
                           ),

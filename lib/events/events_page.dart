@@ -53,7 +53,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
           view: _view,
           onViewChanged: (view) => context.goNamed(
             'events',
-            queryParams: {
+            queryParameters: {
               'view_map': (view == _View.map).toString(),
             },
           ),
