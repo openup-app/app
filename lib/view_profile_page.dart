@@ -115,18 +115,18 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                       builder: (context, playbackState, playbackInfoStream) {
                         return PhotoCardWiggle(
                           child: PhotoCardProfile(
-                              width: constraints.maxWidth,
-                              height: constraints.maxHeight,
-                              profile: profile,
-                              distance: 2,
-                              playbackState: playbackState,
-                              playbackInfoStream: playbackInfoStream,
-                              onPlay: () => setState(() => _play = true),
-                              onPause: () => setState(() => _play = false),
-                              onMessage: ref.watch(uidProvider) == profile.uid
-                                  ? () {}
-                                  : () =>
-                                      _showRecordPanel(context, profile.uid)),
+                            width: constraints.maxWidth,
+                            height: constraints.maxHeight,
+                            profile: profile,
+                            distance: 2,
+                            playbackState: playbackState,
+                            playbackInfoStream: playbackInfoStream,
+                            onPlay: () => setState(() => _play = true),
+                            onPause: () => setState(() => _play = false),
+                            onMessage: ref.watch(uidProvider) == profile.uid
+                                ? () {}
+                                : () => _showRecordPanel(context, profile.uid),
+                          ),
                         );
                       },
                     );

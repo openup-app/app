@@ -398,6 +398,12 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
 
   @override
   Widget build(BuildContext context) {
+    const optionsButton = Center(
+      child: Text(
+        'Options',
+        textAlign: TextAlign.center,
+      ),
+    );
     return PhotoCard(
       width: widget.width,
       height: widget.height,
@@ -430,19 +436,14 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
           ),
         ),
       ),
-      secondButton: ReportBlockPopupMenu2(
-        name: widget.profile.name,
-        uid: widget.profile.uid,
-        onBlock: () {},
-        builder: (context) {
-          return const Center(
-            child: Text(
-              'Options',
-              textAlign: TextAlign.center,
+      secondButton: ref.watch(uidProvider) == widget.profile.uid
+          ? optionsButton
+          : ReportBlockPopupMenu2(
+              name: widget.profile.name,
+              uid: widget.profile.uid,
+              onBlock: () {},
+              builder: (context) => optionsButton,
             ),
-          );
-        },
-      ),
       indicatorButton: Button(
         onPressed: _togglePlayPause,
         child: Container(

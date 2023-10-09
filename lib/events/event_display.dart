@@ -853,41 +853,93 @@ class _Participants extends ConsumerWidget {
       },
       data: (data) {
         final profiles = data.value;
-        return ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.only(left: 28, right: 28),
-          itemCount: profiles.length,
-          itemBuilder: (context, index) {
-            final profile = profiles[index];
-            return SizedBox(
-              width: 24,
-              child: OverflowBox(
-                maxWidth: 31,
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.all(Radius.circular(16)),
-                  child: Container(
-                    width: 31,
-                    height: 31,
-                    clipBehavior: Clip.hardEdge,
-                    foregroundDecoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        width: 1,
-                        color: Colors.white,
+        return Button(
+          onPressed: () async {
+            final uid = await _showParticipantsSheet(context, profiles);
+            if (context.mounted && uid != null) {
+              context.pushNamed(
+                'view_profile',
+                queryParameters: {'uid': uid},
+              );
+            }
+          },
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(left: 28, right: 28),
+            itemCount: profiles.length,
+            itemBuilder: (context, index) {
+              final profile = profiles[index];
+              return SizedBox(
+                width: 24,
+                child: OverflowBox(
+                  maxWidth: 31,
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
+                    child: Container(
+                      width: 31,
+                      height: 31,
+                      clipBehavior: Clip.hardEdge,
+                      foregroundDecoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          width: 1,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                    ),
-                    child: Image.network(
-                      profile.photo,
-                      fit: BoxFit.cover,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                      ),
+                      child: Image.network(
+                        profile.photo,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<String?> _showParticipantsSheet(
+    BuildContext context,
+    IList<SimpleProfile> profiles,
+  ) {
+    return showCupertinoModalPopup<String>(
+      context: context,
+      builder: (context) {
+        return SizedBox(
+          height: 250 + MediaQuery.of(context).padding.bottom,
+          child: _ModalBackground(
+            child: ListView.separated(
+              itemCount: profiles.length,
+              separatorBuilder: (context, index) => const Divider(),
+              itemBuilder: (context, index) {
+                final profile = profiles[index];
+                return ListTile(
+                  onTap: () => Navigator.of(context).pop(profile.uid),
+                  leading: ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(48)),
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Image.network(
+                        profile.photo,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    profile.name,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                );
+              },
+            ),
+          ),
         );
       },
     );
