@@ -61,8 +61,8 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
               const Text(
                 'Find a plus one',
                 style: TextStyle(
-                  fontFamily: 'SF Pro',
-                  fontSize: 12,
+                  fontSize: 17,
+                  color: Color.fromRGBO(0xCC, 0xCC, 0xCC, 1.0),
                 ),
               ),
             ],

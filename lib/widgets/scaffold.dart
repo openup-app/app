@@ -75,6 +75,7 @@ class OpenupAppBarBody extends StatelessWidget {
               style: const TextStyle(
                 fontFamily: 'Covered By Your Grace',
                 fontSize: 24,
+                height: 1.1,
                 fontWeight: FontWeight.w400,
                 color: Colors.white,
               ),
