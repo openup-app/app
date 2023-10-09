@@ -353,7 +353,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         GoRoute(
           path: '/',
           name: 'initial_loading',
-          builder: (context, state) => const InitialLoadingPage(),
+          builder: (context, state) {
+            final redirect = state.uri.queryParameters['redirect'];
+            return InitialLoadingPage(
+              redirect: redirect == null ? null : Uri.decodeComponent(redirect),
+            );
+          },
         ),
         GoRoute(
           path: '/signup',
@@ -697,23 +702,24 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     BuildContext context,
     GoRouterState state,
   ) {
-    final path = state.path ?? '/';
+    final location = state.matchedLocation;
+
     // Initial loading page redirects by itself
-    if (path == '/') {
+    if (location == '/') {
       return null;
     }
 
     // No need to redirect away from signup
-    if (path.startsWith('/signup') || path.startsWith('/create_account')) {
+    if (location.startsWith('/signup') ||
+        location.startsWith('/create_account')) {
       return null;
     }
 
     final userState = ref.read(userProvider);
     return userState.map(
       guest: (guest) {
-        // TODO: Pass along the redirect location to initial loading page
         if (guest.byDefault) {
-          return '/';
+          return '/?redirect=${Uri.encodeComponent(state.uri.toString())}';
         }
         return '/signup';
       },

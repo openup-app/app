@@ -5,7 +5,12 @@ import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/common.dart';
 
 class InitialLoadingPage extends ConsumerStatefulWidget {
-  const InitialLoadingPage({super.key});
+  final String? redirect;
+
+  const InitialLoadingPage({
+    super.key,
+    this.redirect,
+  });
 
   @override
   ConsumerState<InitialLoadingPage> createState() => _InitialLoadingPageState();
@@ -32,7 +37,8 @@ class _InitialLoadingPageState extends ConsumerState<InitialLoadingPage> {
           signedIn: (_) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
-                context.goNamed('discover');
+                context.goNamed(
+                    widget.redirect == null ? 'discover' : widget.redirect!);
               }
             });
           },
