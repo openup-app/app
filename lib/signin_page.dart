@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -87,15 +88,42 @@ class _SigninPageState extends ConsumerState<SigninPage> {
     );
   }
 
-  void _googleSignIn() {
-    _signInComplete();
+  void _googleSignIn() async {
+    final result = await ref.read(authProvider.notifier).signInWithGoogle();
+    if (!mounted) {
+      return;
+    }
+
+    if (result == null) {
+      return;
+    }
+    final message = switch (result) {
+      AuthResult.success => null,
+      AuthResult.invalidCode ||
+      AuthResult.invalidId ||
+      AuthResult.quotaExceeded ||
+      AuthResult.failure =>
+        'Failed to sign in',
+    };
+    if (message != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    }
+
+    if (result == AuthResult.success) {
+      final uid = ref.read(uidProvider);
+      _signInComplete(uid);
+    }
   }
 
   void _appleSignIn() {
-    _signInComplete();
+    // _signInComplete();
   }
 
-  void _signInComplete() {
+  void _signInComplete(String uid) {
     final uid = ref.read(uidProvider);
     context.pushNamed(
       'waitlist',
@@ -250,13 +278,12 @@ class _PoliciesState extends State<_Policies> {
     super.initState();
     _privacyPolicyRecognizer = TapGestureRecognizer()
       ..onTap = () {
-        launchUrl(Uri.parse(
-            'https://openup-app.github.io/policies/privacy_policy.html'));
+        launchUrl(Uri.parse('https://plus-one.app/Privacy.html'));
       };
 
     _termsRecognizer = TapGestureRecognizer()
       ..onTap = () {
-        launchUrl(Uri.parse('https://openup-app.github.io/policies/eula.html'));
+        launchUrl(Uri.parse('https://plus-one.app/Terms.html'));
       };
   }
 

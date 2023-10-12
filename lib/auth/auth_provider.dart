@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -17,6 +19,7 @@ final authProvider =
 class AuthStateNotifier extends StateNotifier<AuthState> {
   final Api api;
   final Analytics analytics;
+  final _googleSignIn = GoogleSignIn();
 
   int? _forceResendingToken;
   User? _user;
@@ -135,6 +138,33 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         uid: user.uid,
         phoneNumber: user.phoneNumber,
       );
+    }
+  }
+
+  Future<AuthResult?> signInWithGoogle() async {
+    late final GoogleSignInAccount account;
+    try {
+      final result = await _googleSignIn.signIn();
+      if (result == null) {
+        return null;
+      }
+      account = result;
+    } on PlatformException catch (e) {
+      if (e.code == 'sign_in_failed') {
+        return AuthResult.failure;
+      }
+    }
+    final authentication = await account.authentication;
+    final credential = GoogleAuthProvider.credential(
+      idToken: authentication.idToken,
+      accessToken: authentication.accessToken,
+    );
+    final result = await FirebaseAuth.instance.signInWithCredential(credential);
+    final user = result.user;
+    if (user != null) {
+      return AuthResult.success;
+    } else {
+      return AuthResult.failure;
     }
   }
 
