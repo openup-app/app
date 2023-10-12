@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -115,18 +114,28 @@ void main() async {
     final mapboxLocationSearchService =
         MapboxLocationSearchService(accessToken: mapboxAccessToken);
 
+    final analytics = Analytics(
+      mixpanel: mixpanel,
+      firebaseAnalytics: firebaseAnalytics,
+    );
+
+    final api = Api(
+      host: host,
+      port: webPort,
+    );
+
     // ignore: missing_provider_scope
     runApp(
       RestartApp(
         child: ProviderScope(
           overrides: [
             mixpanelProvider.overrideWithValue(mixpanel),
-            firebaseAnalyticsProvider.overrideWithValue(firebaseAnalytics),
-            apiProvider.overrideWith((ref) {
-              Random().nextInt(1 << 32).toString();
-              return Api(
-                host: host,
-                port: webPort,
+            analyticsProvider.overrideWithValue(analytics),
+            apiProvider.overrideWithValue(api),
+            authProvider.overrideWith((ref) {
+              return AuthStateNotifier(
+                api: api,
+                analytics: analytics,
               );
             }),
             keyValueStoreProvider.overrideWithValue(sharedPreferences),

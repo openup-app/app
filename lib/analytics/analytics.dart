@@ -6,15 +6,8 @@ import 'package:openup/api/api.dart';
 final mixpanelProvider =
     Provider<Mixpanel>((ref) => throw 'Mixpanel is uninitialized');
 
-final firebaseAnalyticsProvider = Provider<FirebaseAnalytics>(
-    (ref) => throw 'Firebase Analytics is uninitialized');
-
-final analyticsProvider = Provider<Analytics>((ref) {
-  return Analytics(
-    mixpanel: ref.read(mixpanelProvider),
-    firebaseAnalytics: ref.read(firebaseAnalyticsProvider),
-  );
-});
+final analyticsProvider =
+    Provider<Analytics>((ref) => throw 'Uninitialized provider');
 
 class Analytics {
   final Mixpanel _mixpanel;

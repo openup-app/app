@@ -6,18 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 part 'auth_provider.freezed.dart';
 
 final authProvider =
-    StateNotifierProvider.autoDispose<AuthStateNotifier, AuthState>((ref) {
-  return AuthStateNotifier(
-    api: ref.read(apiProvider),
-    analytics: ref.read(analyticsProvider),
-  );
-});
+    StateNotifierProvider.autoDispose<AuthStateNotifier, AuthState>(
+        (ref) => throw 'Uninitialized provider');
 
 class AuthStateNotifier extends StateNotifier<AuthState> {
   final Api api;
