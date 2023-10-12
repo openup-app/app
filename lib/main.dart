@@ -740,7 +740,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
     final uid = ref.read(authProvider.notifier).uid;
     final email = ref.read(authProvider.notifier).email;
-    if (uid != null && email != null) {
+    if (uid != null && email != null && email.isNotEmpty) {
       return '/waitlist?uid=$uid';
     }
 

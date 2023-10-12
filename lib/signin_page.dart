@@ -27,7 +27,10 @@ class _SigninPageState extends ConsumerState<SigninPage> {
     _authStateChangesSubscription =
         FirebaseAuth.instance.authStateChanges().listen((user) {
       final uid = user?.uid;
-      if (mounted && uid != null && user?.email != null) {
+      if (mounted &&
+          uid != null &&
+          user?.email != null &&
+          user?.email?.isEmpty == false) {
         _signInComplete(uid);
       }
     });
