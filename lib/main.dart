@@ -43,6 +43,7 @@ import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
 import 'package:openup/settings_page.dart';
 import 'package:openup/shell_page.dart';
+import 'package:openup/signin_page.dart';
 import 'package:openup/signup_audio.dart';
 import 'package:openup/signup_name_age.dart';
 import 'package:openup/signup_phone.dart';
@@ -51,6 +52,7 @@ import 'package:openup/signup_verify.dart';
 import 'package:openup/util/key_value_store_service.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/view_profile_page.dart';
+import 'package:openup/waitlist_page.dart';
 import 'package:openup/widgets/online_users.dart';
 import 'package:openup/widgets/restart_app.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -357,6 +359,26 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             final redirect = state.uri.queryParameters['redirect'];
             return InitialLoadingPage(
               redirect: redirect == null ? null : Uri.decodeComponent(redirect),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/signin',
+          name: 'signin',
+          builder: (context, state) {
+            return const SigninPage();
+          },
+        ),
+        GoRoute(
+          path: '/waitlist',
+          name: 'waitlist',
+          builder: (context, state) {
+            final uid = state.uri.queryParameters['uid'];
+            if (uid == null) {
+              throw 'Missing uid for Waitlist';
+            }
+            return WaitlistPage(
+              uid: uid,
             );
           },
         ),

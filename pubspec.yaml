@@ -64,6 +64,7 @@ dependencies:
   path_provider: ^2.0.9
   permission_handler: ^10.1.0
   photo_manager: ^2.5.2
+  qr_flutter: ^4.1.0
   record: ^4.4.1
   sentry_flutter: ^7.9.0
   share_plus: ^7.1.0
@@ -87,8 +88,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/app_logo.png
+    - assets/images/apple_logo.svg
     - assets/images/audio_indicator.svg
     - assets/images/audio_playback.gif
+    - assets/images/bat.json
     - assets/images/call.json
     - assets/images/call.svg
     - assets/images/cat_paw.png
@@ -96,6 +99,7 @@ flutter:
     - assets/images/play_icon.svg
     - assets/images/pause_icon.svg
     - assets/images/friends.json
+    - assets/images/google_logo.svg
     - assets/images/chevron_right.png
     - assets/images/chevron_right.svg
     - assets/images/close_circle.png
@@ -120,6 +124,7 @@ flutter:
     - assets/images/people_background.png
     - assets/images/preferences_icon.png
     - assets/images/tutorial_photo_good.jpg
+    - assets/images/river_background.json
     - assets/images/signup_background.jpg
     - assets/images/signup_background.png
     - assets/images/signup_background/0.svg
@@ -133,12 +138,15 @@ flutter:
     - assets/images/signup_paper1.png
     - assets/images/signup_paper2.png
     - assets/images/signup_recorder.png
+    - assets/images/skull.json
+    - assets/images/ticket.json
     - assets/images/subscribe_background.png
     - assets/images/earth.svg
     - assets/images/loading_icon.png
     - assets/images/videocam.svg
     - assets/images/welcome_background.png
     - assets/images/welcome_tile_background.png
+    - assets/images/wind.json
 
   shaders:
     - assets/shaders/depth.frag
