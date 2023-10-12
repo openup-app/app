@@ -344,6 +344,8 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   }
 
   String? get uid => FirebaseAuth.instance.currentUser?.uid;
+
+  String? get email => FirebaseAuth.instance.currentUser?.email;
 }
 
 @freezed

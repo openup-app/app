@@ -40,6 +40,55 @@ class Api {
     _headers['Authorization'] = 'Bearer $value';
   }
 
+  Future<void> updateWaitlist(
+    String uid,
+    String email,
+    NotificationToken? notificationToken,
+  ) {
+    late final String? token;
+    late final bool? voip;
+    late final String? service;
+    if (notificationToken == null) {
+      token = null;
+      voip = null;
+      service = null;
+    }
+    notificationToken?.map(
+      fcmMessagingAndVoip: (fcmMessagingAndVoip) {
+        token = fcmMessagingAndVoip.token;
+        voip = true;
+        service = 'fcm';
+      },
+      apnsMessaging: (apnsMessaging) {
+        token = apnsMessaging.token;
+        voip = false;
+        service = 'apns';
+      },
+    );
+
+    return _request(
+      makeRequest: () {
+        return http.post(
+          Uri.parse('$_urlBase/waitlist'),
+          headers: _headers,
+          body: jsonEncode({
+            'uid': uid,
+            'email': email,
+            if (token != null && voip != null && service != null) ...{
+              'token': {
+                'token': token,
+                'messaging': true,
+                'voip': voip,
+                'service': service,
+              },
+            },
+          }),
+        );
+      },
+      handleSuccess: (_) => const Right(null),
+    );
+  }
+
   Future<Either<ApiError, Account>> createAccount(
     AccountCreationParams params,
   ) {

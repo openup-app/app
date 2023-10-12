@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_apns/flutter_apns.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 part 'notifications.freezed.dart';
@@ -51,6 +52,8 @@ class NotificationManager {
       _iosNotificationTokenController = StreamController<String?>.broadcast();
     }
   }
+
+  Future<bool> hasNotificationPermission() => Permission.notification.isGranted;
 
   void requestNotificationPermission() {
     _tokenStream.listen(_onNotificationToken);

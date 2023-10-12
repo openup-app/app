@@ -1,15 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
+import 'package:openup/api/user_state.dart';
+import 'package:openup/auth/auth_provider.dart';
+import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-class WaitlistPage extends StatelessWidget {
+class WaitlistPage extends ConsumerStatefulWidget {
   final String uid;
 
   const WaitlistPage({
     super.key,
     required this.uid,
   });
+
+  @override
+  ConsumerState<WaitlistPage> createState() => _WaitlistPageState();
+}
+
+class _WaitlistPageState extends ConsumerState<WaitlistPage> {
+  bool _showNotificationButton = true;
+  late final NotificationManager _notificationManager;
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationManager = NotificationManager(
+      onToken: (token) => _updateWaitlist(token),
+      onDeepLink: (_) {},
+    );
+    _notificationManager.hasNotificationPermission().then((granted) {
+      if (mounted) {
+        setState(() => _showNotificationButton = false);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +76,7 @@ class WaitlistPage extends StatelessWidget {
                     AspectRatio(
                       aspectRatio: 1 / 1,
                       child: _QrCodeDisplay(
-                        content: uid,
+                        content: widget.uid,
                       ),
                     ),
                     Expanded(
@@ -100,7 +126,6 @@ class WaitlistPage extends StatelessWidget {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            // TextSpan(text: ' with this ticket'),
                           ],
                         ),
                       );
@@ -130,30 +155,36 @@ class WaitlistPage extends StatelessWidget {
                   minHeight: 16,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 41),
-                child: Button(
-                  onPressed: () {},
-                  child: Container(
-                    height: 49,
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(6)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color.fromRGBO(0xC7, 0x00, 0xCB, 1.0),
-                          Color.fromRGBO(0xBE, 0x17, 0xF9, 1.0),
-                        ],
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      'Notify me once my Glamour Shot is ready',
-                    ),
+              if (_showNotificationButton)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 41),
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      return Button(
+                        onPressed:
+                            _notificationManager.requestNotificationPermission,
+                        child: Container(
+                          height: 49,
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(6)),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Color.fromRGBO(0xC7, 0x00, 0xCB, 1.0),
+                                Color.fromRGBO(0xBE, 0x17, 0xF9, 1.0),
+                              ],
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Text(
+                            'Notify me once my Glamour Shot is ready',
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
               const SizedBox(height: 32),
               SizedBox(height: MediaQuery.of(context).padding.bottom),
             ],
@@ -161,6 +192,18 @@ class WaitlistPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _updateWaitlist([NotificationToken? notificationToken]) async {
+    final api = ref.read(apiProvider);
+    final uid = ref.read(authProvider.notifier).uid;
+    final email = ref.read(authProvider.notifier).email;
+    if (uid != null && email != null) {
+      await api.updateWaitlist(uid, email, notificationToken);
+      if (mounted) {
+        setState(() => _showNotificationButton = false);
+      }
+    }
   }
 }
 
