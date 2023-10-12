@@ -357,8 +357,8 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       observers: observers,
       debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
-      initialLocation: '/',
-      redirect: _redirectGuestsToSignUp,
+      initialLocation: '/signin',
+      redirect: _redirectGuestsToSignin,
       errorBuilder: (context, state) => const ErrorScreen(),
       routes: [
         GoRoute(
@@ -727,6 +727,24 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         ),
       ],
     );
+  }
+
+  FutureOr<String>? _redirectGuestsToSignin(
+    BuildContext context,
+    GoRouterState state,
+  ) {
+    final location = state.matchedLocation;
+    if (!(location.startsWith('/signin') || location.startsWith('/waitlist'))) {
+      return '/signin';
+    }
+
+    final uid = ref.read(authProvider.notifier).uid;
+    final email = ref.read(authProvider.notifier).email;
+    if (uid != null && email != null) {
+      return '/waitlist?uid=$uid';
+    }
+
+    return null;
   }
 
   FutureOr<String>? _redirectGuestsToSignUp(
