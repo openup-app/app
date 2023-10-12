@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,26 @@ class SigninPage extends ConsumerStatefulWidget {
 }
 
 class _SigninPageState extends ConsumerState<SigninPage> {
+  late final StreamSubscription _authStateChangesSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _authStateChangesSubscription =
+        FirebaseAuth.instance.authStateChanges().listen((user) {
+      final uid = user?.uid;
+      if (mounted && uid != null && user?.email != null) {
+        _signInComplete(uid);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _authStateChangesSubscription.cancel();
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTextStyle.merge(
@@ -111,11 +132,6 @@ class _SigninPageState extends ConsumerState<SigninPage> {
         ),
       );
     }
-
-    final uid = ref.read(authProvider.notifier).uid;
-    if (result == AuthResult.success && uid != null) {
-      _signInComplete(uid);
-    }
   }
 
   void _appleSignIn() async {
@@ -142,15 +158,10 @@ class _SigninPageState extends ConsumerState<SigninPage> {
         ),
       );
     }
-
-    final uid = ref.read(authProvider.notifier).uid;
-    if (result == AuthResult.success && uid != null) {
-      _signInComplete(uid);
-    }
   }
 
   void _signInComplete(String uid) {
-    context.pushNamed(
+    context.goNamed(
       'waitlist',
       queryParameters: {'uid': uid},
     );

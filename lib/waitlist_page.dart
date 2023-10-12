@@ -31,7 +31,7 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
       onDeepLink: (_) {},
     );
     _notificationManager.hasNotificationPermission().then((granted) {
-      if (mounted) {
+      if (granted) {
         setState(() => _showNotificationButton = false);
       }
     });
