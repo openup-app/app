@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
-import 'package:openup/api/user_state.dart';
 import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -113,18 +112,44 @@ class _SigninPageState extends ConsumerState<SigninPage> {
       );
     }
 
-    if (result == AuthResult.success) {
-      final uid = ref.read(uidProvider);
+    final uid = ref.read(authProvider.notifier).uid;
+    if (result == AuthResult.success && uid != null) {
       _signInComplete(uid);
     }
   }
 
-  void _appleSignIn() {
-    // _signInComplete();
+  void _appleSignIn() async {
+    final result = await ref.read(authProvider.notifier).signInWithApple();
+    if (!mounted) {
+      return;
+    }
+
+    if (result == null) {
+      return;
+    }
+    final message = switch (result) {
+      AuthResult.success => null,
+      AuthResult.invalidCode ||
+      AuthResult.invalidId ||
+      AuthResult.quotaExceeded ||
+      AuthResult.failure =>
+        'Failed to sign in',
+    };
+    if (message != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    }
+
+    final uid = ref.read(authProvider.notifier).uid;
+    if (result == AuthResult.success && uid != null) {
+      _signInComplete(uid);
+    }
   }
 
   void _signInComplete(String uid) {
-    final uid = ref.read(uidProvider);
     context.pushNamed(
       'waitlist',
       queryParameters: {'uid': uid},

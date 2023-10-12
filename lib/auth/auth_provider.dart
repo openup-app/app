@@ -168,6 +168,18 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<AuthResult?> signInWithApple() async {
+    final appleProvider = AppleAuthProvider()..addScope('email');
+    final result =
+        await FirebaseAuth.instance.signInWithProvider(appleProvider);
+    final user = result.user;
+    if (user != null) {
+      return AuthResult.success;
+    } else {
+      return AuthResult.failure;
+    }
+  }
+
   Future<SendCodeResult> signInWithPhoneNumber(String phoneNumber) async {
     analytics.trackSignupSubmitPhone();
     final completer = Completer<SendCodeResult>();
@@ -330,6 +342,8 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       return AuthResult.failure;
     }
   }
+
+  String? get uid => FirebaseAuth.instance.currentUser?.uid;
 }
 
 @freezed
