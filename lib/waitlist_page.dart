@@ -22,6 +22,7 @@ class WaitlistPage extends ConsumerStatefulWidget {
 class _WaitlistPageState extends ConsumerState<WaitlistPage> {
   bool _showNotificationButton = true;
   late final NotificationManager _notificationManager;
+  late String _qrContent;
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
         setState(() => _showNotificationButton = false);
       }
     });
+    _qrContent = ref.read(authProvider.notifier).email ?? widget.uid;
   }
 
   @override
@@ -76,7 +78,7 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
                     AspectRatio(
                       aspectRatio: 1 / 1,
                       child: _QrCodeDisplay(
-                        content: widget.uid,
+                        content: _qrContent,
                       ),
                     ),
                     Expanded(
