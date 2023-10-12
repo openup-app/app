@@ -101,7 +101,9 @@ class _SigninPageState extends ConsumerState<SigninPage> {
                 label: const Text('Continue with Apple'),
               ),
               const Spacer(),
-              const _Policies(),
+              const Center(
+                child: _Policies(),
+              ),
               const SizedBox(height: 50),
               SizedBox(height: MediaQuery.of(context).padding.bottom),
             ],
@@ -329,7 +331,7 @@ class _PoliciesState extends State<_Policies> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 262,
+      width: 270,
       child: RichText(
         textAlign: TextAlign.center,
         text: TextSpan(

@@ -157,6 +157,7 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
                   minHeight: 16,
                 ),
               ),
+              const Spacer(),
               if (_showNotificationButton)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 41),
