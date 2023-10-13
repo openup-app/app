@@ -324,7 +324,7 @@ class _PoliciesState extends State<_Policies> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 270,
+      width: 280,
       child: RichText(
         textAlign: TextAlign.center,
         text: TextSpan(
