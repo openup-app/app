@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/auth/auth_provider.dart';
+import 'package:openup/waitlist/waitlist_provider.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -19,27 +19,17 @@ class SigninPage extends ConsumerStatefulWidget {
 }
 
 class _SigninPageState extends ConsumerState<SigninPage> {
-  late final StreamSubscription _authStateChangesSubscription;
-
   @override
   void initState() {
     super.initState();
-    _authStateChangesSubscription =
-        FirebaseAuth.instance.authStateChanges().listen((user) {
-      final uid = user?.uid;
-      if (mounted &&
-          uid != null &&
-          user?.email != null &&
-          user?.email?.isEmpty == false) {
-        _signInComplete(uid);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _authStateChangesSubscription.cancel();
+    ref.listenManual(
+      waitlistProvider,
+      (previous, next) {
+        if (next != null) {
+          _signInComplete(next);
+        }
+      },
+    );
   }
 
   @override
@@ -165,10 +155,13 @@ class _SigninPageState extends ConsumerState<SigninPage> {
     }
   }
 
-  void _signInComplete(String uid) {
+  void _signInComplete(WaitlistUser user) {
     context.goNamed(
       'waitlist',
-      queryParameters: {'uid': uid},
+      queryParameters: {
+        'uid': user.uid,
+        'email': user.email,
+      },
     );
   }
 }

@@ -51,6 +51,7 @@ import 'package:openup/signup_verify.dart';
 import 'package:openup/util/key_value_store_service.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/view_profile_page.dart';
+import 'package:openup/waitlist/waitlist_provider.dart';
 import 'package:openup/waitlist_page.dart';
 import 'package:openup/widgets/online_users.dart';
 import 'package:openup/widgets/restart_app.dart';
@@ -383,11 +384,15 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           name: 'waitlist',
           builder: (context, state) {
             final uid = state.uri.queryParameters['uid'];
+            final email = state.uri.queryParameters['email'];
             if (uid == null) {
               throw 'Missing uid for Waitlist';
+            } else if (email == null) {
+              throw 'Missing email for Waitlist';
             }
             return WaitlistPage(
               uid: uid,
+              email: email,
             );
           },
         ),
@@ -738,10 +743,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       return '/signin';
     }
 
-    final uid = ref.read(authProvider.notifier).uid;
-    final email = ref.read(authProvider.notifier).email;
-    if (uid != null && email != null && email.isNotEmpty) {
-      return '/waitlist?uid=$uid';
+    final waitlistUser = ref.read(waitlistProvider);
+    if (waitlistUser != null) {
+      return '/waitlist?uid=${waitlistUser.uid}&email=${waitlistUser.email}';
     }
 
     return null;

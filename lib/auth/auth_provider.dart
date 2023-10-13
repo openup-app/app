@@ -32,6 +32,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         : AuthState.signedIn(
             uid: user.uid,
             phoneNumber: user.phoneNumber,
+            emailAddress: user.email,
           );
   }
 
@@ -114,6 +115,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         state = AuthSignedIn(
           uid: user.uid,
           phoneNumber: user.phoneNumber,
+          emailAddress: user.email,
         );
         final token = await _refreshAuthToken(user);
         if (!mounted) {
@@ -137,6 +139,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       state = AuthState.signedIn(
         uid: user.uid,
         phoneNumber: user.phoneNumber,
+        emailAddress: user.email,
       );
     }
   }
@@ -342,10 +345,6 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       return AuthResult.failure;
     }
   }
-
-  String? get uid => FirebaseAuth.instance.currentUser?.uid;
-
-  String? get email => FirebaseAuth.instance.currentUser?.email;
 }
 
 @freezed
@@ -372,6 +371,7 @@ class AuthState with _$AuthState {
   const factory AuthState.signedIn({
     required String uid,
     required String? phoneNumber,
+    required String? emailAddress,
     @Default(null) String? token,
   }) = AuthSignedIn;
 }

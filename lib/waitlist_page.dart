@@ -2,17 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/api/user_state.dart';
-import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class WaitlistPage extends ConsumerStatefulWidget {
   final String uid;
+  final String email;
 
   const WaitlistPage({
     super.key,
     required this.uid,
+    required this.email,
   });
 
   @override
@@ -22,11 +23,12 @@ class WaitlistPage extends ConsumerStatefulWidget {
 class _WaitlistPageState extends ConsumerState<WaitlistPage> {
   bool _showNotificationButton = true;
   late final NotificationManager _notificationManager;
-  late String _qrContent;
+  late final String _qrContent;
 
   @override
   void initState() {
     super.initState();
+    _qrContent = widget.email;
     _notificationManager = NotificationManager(
       onToken: (token) => _updateWaitlist(token),
       onDeepLink: (_) {},
@@ -36,7 +38,6 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
         setState(() => _showNotificationButton = false);
       }
     });
-    _qrContent = ref.read(authProvider.notifier).email ?? widget.uid;
   }
 
   @override
@@ -199,13 +200,9 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
 
   void _updateWaitlist([NotificationToken? notificationToken]) async {
     final api = ref.read(apiProvider);
-    final uid = ref.read(authProvider.notifier).uid;
-    final email = ref.read(authProvider.notifier).email;
-    if (uid != null && email != null) {
-      await api.updateWaitlist(uid, email, notificationToken);
-      if (mounted) {
-        setState(() => _showNotificationButton = false);
-      }
+    await api.updateWaitlist(widget.uid, widget.email, notificationToken);
+    if (mounted) {
+      setState(() => _showNotificationButton = false);
     }
   }
 }
