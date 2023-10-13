@@ -19,7 +19,6 @@ final authProvider =
 class AuthStateNotifier extends StateNotifier<AuthState> {
   final Api api;
   final Analytics analytics;
-  final _googleSignIn = GoogleSignIn();
 
   int? _forceResendingToken;
   User? _user;
@@ -146,8 +145,9 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
   Future<AuthResult?> signInWithGoogle() async {
     late final GoogleSignInAccount account;
+    final googleSignIn = GoogleSignIn(scopes: ['email']);
     try {
-      final result = await _googleSignIn.signIn();
+      final result = await googleSignIn.signIn();
       if (result == null) {
         return null;
       }
@@ -156,6 +156,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       if (e.code == 'sign_in_failed') {
         return AuthResult.failure;
       }
+      return AuthResult.failure;
     }
     final authentication = await account.authentication;
     final credential = GoogleAuthProvider.credential(
@@ -172,9 +173,8 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   }
 
   Future<AuthResult?> signInWithApple() async {
-    final appleProvider = AppleAuthProvider()..addScope('email');
-    final result =
-        await FirebaseAuth.instance.signInWithProvider(appleProvider);
+    final provider = AppleAuthProvider()..addScope('email');
+    final result = await FirebaseAuth.instance.signInWithProvider(provider);
     final user = result.user;
     if (user != null) {
       return AuthResult.success;
