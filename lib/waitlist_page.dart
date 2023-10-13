@@ -4,6 +4,7 @@ import 'package:lottie/lottie.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class WaitlistPage extends ConsumerStatefulWidget {
@@ -164,8 +165,19 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
                   child: Consumer(
                     builder: (context, ref, child) {
                       return Button(
-                        onPressed:
-                            _notificationManager.requestNotificationPermission,
+                        onPressed: () async {
+                          final permanentlyDenied =
+                              await Permission.notification.isPermanentlyDenied;
+                          if (!mounted) {
+                            return;
+                          }
+                          if (permanentlyDenied) {
+                            openAppSettings();
+                          } else {
+                            _notificationManager
+                                .requestNotificationPermission();
+                          }
+                        },
                         child: Container(
                           height: 49,
                           decoration: const BoxDecoration(
