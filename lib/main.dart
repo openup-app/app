@@ -134,10 +134,12 @@ void main() async {
             analyticsProvider.overrideWithValue(analytics),
             apiProvider.overrideWithValue(api),
             authProvider.overrideWith((ref) {
-              return AuthStateNotifier(
+              final notifier = AuthStateNotifier(
                 api: api,
                 analytics: analytics,
               );
+              ref.onDispose(() => notifier.dispose());
+              return notifier;
             }),
             keyValueStoreProvider.overrideWithValue(sharedPreferences),
             dynamicConfigStateProvider.overrideWith((ref) {
