@@ -42,14 +42,7 @@ final userProvider = StateNotifierProvider<UserStateNotifier, UserState>(
       onSignedIn: userStateNotifier.signedIn,
       onSignedOut: () => userStateNotifier.guest(),
       onAuthorizedButNoAccount: () {
-        final authState = ref.read(authProvider);
-        authState.map(
-          guest: (_) => userStateNotifier.guest(),
-          signedIn: (_) {
-            ref.read(authProvider.notifier).deleteHangingAuthAccount();
-            userStateNotifier.guest();
-          },
-        );
+        // Ignore
       },
     );
 
