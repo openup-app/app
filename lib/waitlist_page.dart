@@ -53,12 +53,12 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
           Column(
             children: [
               SizedBox(height: MediaQuery.of(context).padding.top),
-              const SizedBox(height: 12),
+              const SizedBox(height: 24),
               const Text(
                 'Here\'s your ticket to the\nDelta House party on\nOctober 28th, 2023',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 26,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -68,7 +68,7 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
                   height: 96,
                 ),
               ),
-              Flexible(
+              Expanded(
                 child: Row(
                   children: [
                     Expanded(
@@ -120,7 +120,7 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
                       return RichText(
                         text: TextSpan(
                           style: DefaultTextStyle.of(context).style.copyWith(
-                              fontSize: 14, fontWeight: FontWeight.w300),
+                              fontSize: 15, fontWeight: FontWeight.w300),
                           children: const [
                             TextSpan(text: 'You\'re granted a free '),
                             TextSpan(
@@ -158,7 +158,6 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
                   minHeight: 16,
                 ),
               ),
-              const Spacer(),
               if (_showNotificationButton)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 41),
@@ -322,7 +321,7 @@ class _DotPoint extends StatelessWidget {
           child: DefaultTextStyle.merge(
             style: const TextStyle(
               height: 1.3,
-              fontSize: 14,
+              fontSize: 15,
               fontWeight: FontWeight.w300,
             ),
             child: child,
