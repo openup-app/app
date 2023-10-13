@@ -22,7 +22,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
   int? _forceResendingToken;
   User? _user;
-  StreamSubscription? _idTokenChangesSubscription;
+  StreamSubscription? _authStateChangesSubscription;
 
   static AuthState _initialState() {
     final user = FirebaseAuth.instance.currentUser;
@@ -39,68 +39,18 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     required this.api,
     required this.analytics,
   }) : super(_initialState()) {
-    _init();
-  }
-
-  void _init() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final token = await _refreshAuthToken(user);
-      if (!mounted) {
-        return;
-      }
-
-      if (token != null) {
-        api.authToken = token;
-      }
-    }
-
     // Logging in/out triggers
-    _idTokenChangesSubscription =
-        FirebaseAuth.instance.idTokenChanges().listen(_onIdTokenChange);
+    _authStateChangesSubscription =
+        FirebaseAuth.instance.authStateChanges().listen(_onAuthStateChange);
   }
 
   @override
   void dispose() {
-    _idTokenChangesSubscription?.cancel();
+    _authStateChangesSubscription?.cancel();
     super.dispose();
   }
 
-  Future<void> signOut() => FirebaseAuth.instance.signOut();
-
-  void deleteHangingAuthAccount() async {
-    try {
-      await FirebaseAuth.instance.currentUser?.delete();
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'requires-recent-login') {
-        Sentry.captureMessage('User has created an account but not onboarded');
-      }
-    }
-  }
-
-  Future<String?> _refreshAuthToken(User user) async {
-    for (var retryAttempt = 0; retryAttempt < 3; retryAttempt++) {
-      debugPrint('FirebaseAuth getIdToken attempt $retryAttempt');
-      try {
-        return user.getIdToken(true);
-      } on FirebaseAuthException catch (e) {
-        debugPrint('FirebaseAuth error ${e.code}');
-        if (e.code == 'user-not-found') {
-          return null;
-        } else if (e.code == 'unknown') {
-          // Retry
-          debugPrint('FirebaseAuth unknown error, retrying');
-          await Future.delayed(const Duration(milliseconds: 300));
-          continue;
-        } else {
-          rethrow;
-        }
-      }
-    }
-    return null;
-  }
-
-  void _onIdTokenChange(User? user) async {
+  void _onAuthStateChange(User? user) async {
     final oldUser = _user;
     _user = user;
     final wasLoggedIn = oldUser != null;
@@ -140,6 +90,37 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         phoneNumber: user.phoneNumber,
         emailAddress: user.email,
       );
+    }
+  }
+
+  Future<String?> _refreshAuthToken(User user) async {
+    for (var retryAttempt = 0; retryAttempt < 3; retryAttempt++) {
+      try {
+        return user.getIdToken(true);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found') {
+          return null;
+        } else if (e.code == 'unknown') {
+          // Retry
+          await Future.delayed(const Duration(milliseconds: 300));
+          continue;
+        } else {
+          rethrow;
+        }
+      }
+    }
+    return null;
+  }
+
+  Future<void> signOut() => FirebaseAuth.instance.signOut();
+
+  void deleteHangingAuthAccount() async {
+    try {
+      await FirebaseAuth.instance.currentUser?.delete();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        Sentry.captureMessage('User has created an account but not onboarded');
+      }
     }
   }
 
