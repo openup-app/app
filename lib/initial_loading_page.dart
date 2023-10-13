@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openup/api/user_state.dart';
+import 'package:openup/waitlist/waitlist_provider.dart';
 import 'package:openup/widgets/common.dart';
 
 class InitialLoadingPage extends ConsumerStatefulWidget {
@@ -21,28 +21,28 @@ class _InitialLoadingPageState extends ConsumerState<InitialLoadingPage> {
   void initState() {
     super.initState();
     ref.listenManual(
-      userProvider,
+      waitlistProvider,
       fireImmediately: true,
       (previous, next) {
-        next.map(
-          guest: (guest) {
-            if (!guest.byDefault) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  context.goNamed('signup');
-                }
-              });
+        if (next == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.goNamed('signin');
             }
-          },
-          signedIn: (_) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                context.goNamed(
-                    widget.redirect == null ? 'discover' : widget.redirect!);
-              }
-            });
-          },
-        );
+          });
+        } else {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.goNamed(
+                'waitlist',
+                queryParameters: {
+                  'uid': next.uid,
+                  'email': next.email,
+                },
+              );
+            }
+          });
+        }
       },
     );
   }

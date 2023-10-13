@@ -360,7 +360,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       observers: observers,
       debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
-      initialLocation: '/signin',
+      initialLocation: '/',
       redirect: _redirectGuestsToSignin,
       errorBuilder: (context, state) => const ErrorScreen(),
       routes: [
@@ -741,6 +741,11 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
     GoRouterState state,
   ) {
     final location = state.matchedLocation;
+
+    if (location == '/') {
+      return null;
+    }
+
     if (!(location.startsWith('/signin') || location.startsWith('/waitlist'))) {
       return '/signin';
     }
