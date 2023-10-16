@@ -105,7 +105,9 @@ flutter:
     - assets/images/chevron_right.svg
     - assets/images/close_circle.png
     - assets/images/discover.json
+    - assets/images/glitter.json
     - assets/images/hangout.json
+    - assets/images/lightning.json
     - assets/images/location_off.svg
     - assets/images/location_search.png
     - assets/images/map_marker_selected.png
@@ -123,7 +125,9 @@ flutter:
     - assets/images/onboard_countdown.jpg
     - assets/images/online.json
     - assets/images/people_background.png
+    - assets/images/photo_session.json
     - assets/images/preferences_icon.png
+    - assets/images/present.json
     - assets/images/tutorial_photo_good.jpg
     - assets/images/river_background.json
     - assets/images/signup_background.jpg
@@ -140,6 +144,7 @@ flutter:
     - assets/images/signup_paper2.png
     - assets/images/signup_recorder.png
     - assets/images/skull.json
+    - assets/images/stars_background.json
     - assets/images/ticket.json
     - assets/images/subscribe_background.png
     - assets/images/earth.svg

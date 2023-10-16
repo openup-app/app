@@ -31,6 +31,7 @@ import 'package:openup/events/event_create_page.dart';
 import 'package:openup/events/event_preview_page.dart';
 import 'package:openup/events/event_view_page.dart';
 import 'package:openup/events/events_page.dart';
+import 'package:openup/gift_page.dart';
 import 'package:openup/initial_loading_page.dart';
 import 'package:openup/location/location_search.dart';
 import 'package:openup/location/location_service.dart';
@@ -48,6 +49,7 @@ import 'package:openup/signup_name_age.dart';
 import 'package:openup/signup_phone.dart';
 import 'package:openup/signup_photos.dart';
 import 'package:openup/signup_verify.dart';
+import 'package:openup/ticket_page.dart';
 import 'package:openup/util/key_value_store_service.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/view_profile_page.dart';
@@ -397,6 +399,42 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               email: email,
             );
           },
+          routes: [
+            GoRoute(
+              path: 'ticket',
+              name: 'ticket',
+              builder: (context, state) {
+                final uid = state.uri.queryParameters['uid'];
+                final email = state.uri.queryParameters['email'];
+                if (uid == null) {
+                  throw 'Missing uid for Ticket Page';
+                } else if (email == null) {
+                  throw 'Missing email for Ticket Page';
+                }
+                return TicketPage(
+                  uid: uid,
+                  email: email,
+                );
+              },
+            ),
+            GoRoute(
+              path: 'gift',
+              name: 'gift',
+              builder: (context, state) {
+                final uid = state.uri.queryParameters['uid'];
+                final email = state.uri.queryParameters['email'];
+                if (uid == null) {
+                  throw 'Missing uid for Gift Page';
+                } else if (email == null) {
+                  throw 'Missing email for Gift Page';
+                }
+                return GiftPage(
+                  uid: uid,
+                  email: email,
+                );
+              },
+            ),
+          ],
         ),
         GoRoute(
           path: '/signup',
@@ -752,7 +790,14 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
 
     final waitlistUser = ref.read(waitlistProvider);
     if (waitlistUser != null) {
-      return '/waitlist?uid=${waitlistUser.uid}&email=${waitlistUser.email}';
+      final query = 'uid=${waitlistUser.uid}&email=${waitlistUser.email}';
+      if (location.startsWith('/waitlist/ticket')) {
+        return '/waitlist/ticket?$query';
+      } else if (location.startsWith('/waitlist/gift')) {
+        return '/waitlist/gift?$query';
+      } else {
+        return '/waitlist?$query';
+      }
     }
 
     return null;

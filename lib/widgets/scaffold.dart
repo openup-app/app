@@ -121,7 +121,16 @@ class OpenupAppBarBackButton extends StatelessWidget {
 }
 
 class OpenupAppBarBackButtonOutlined extends StatelessWidget {
-  const OpenupAppBarBackButtonOutlined({super.key});
+  final Color iconColor;
+  final Color backgroundColor;
+  final EdgeInsets padding;
+
+  const OpenupAppBarBackButtonOutlined({
+    super.key,
+    this.iconColor = Colors.black,
+    this.backgroundColor = Colors.white,
+    this.padding = const EdgeInsets.only(left: 8),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -134,15 +143,15 @@ class OpenupAppBarBackButtonOutlined extends StatelessWidget {
         }
       },
       child: Padding(
-        padding: const EdgeInsets.only(left: 8.0),
+        padding: padding,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: SizedBox(
-            width: 32,
-            height: 32,
+            width: 33,
+            height: 33,
             child: DecoratedBox(
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: backgroundColor,
                 shape: BoxShape.circle,
               ),
               child: Padding(
@@ -151,8 +160,8 @@ class OpenupAppBarBackButtonOutlined extends StatelessWidget {
                   quarterTurns: 2,
                   child: SvgPicture.asset(
                     'assets/images/chevron_right.svg',
-                    colorFilter: const ColorFilter.mode(
-                      Colors.black,
+                    colorFilter: ColorFilter.mode(
+                      iconColor,
                       BlendMode.srcIn,
                     ),
                   ),
