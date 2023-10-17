@@ -49,7 +49,6 @@ import 'package:openup/signup_name_age.dart';
 import 'package:openup/signup_phone.dart';
 import 'package:openup/signup_photos.dart';
 import 'package:openup/signup_verify.dart';
-import 'package:openup/ticket_page.dart';
 import 'package:openup/util/key_value_store_service.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/view_profile_page.dart';
@@ -400,23 +399,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
             );
           },
           routes: [
-            GoRoute(
-              path: 'ticket',
-              name: 'ticket',
-              builder: (context, state) {
-                final uid = state.uri.queryParameters['uid'];
-                final email = state.uri.queryParameters['email'];
-                if (uid == null) {
-                  throw 'Missing uid for Ticket Page';
-                } else if (email == null) {
-                  throw 'Missing email for Ticket Page';
-                }
-                return TicketPage(
-                  uid: uid,
-                  email: email,
-                );
-              },
-            ),
             GoRoute(
               path: 'gift',
               name: 'gift',
