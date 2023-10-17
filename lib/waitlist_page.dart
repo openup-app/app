@@ -81,7 +81,7 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
                       child: Column(
                         children: [
                           Expanded(
-                            child: _giftOpened
+                            child: !_giftOpened
                                 ? Transform.scale(
                                     scale: 1.2,
                                     child: Lottie.asset(
