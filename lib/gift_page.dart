@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
+import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/button.dart';
@@ -178,6 +179,9 @@ class _WaitlistPageState extends ConsumerState<GiftPage> {
                         if (permanentlyDenied) {
                           openAppSettings();
                         } else {
+                          ref
+                              .read(analyticsProvider)
+                              .trackWaitlistRequestGlamourShotNotification();
                           _notificationManager.requestNotificationPermission();
                         }
                       },

@@ -19,6 +19,19 @@ class Analytics {
   })  : _mixpanel = mixpanel,
         _firebaseAnalytics = firebaseAnalytics;
 
+  void trackSigninEmailSuccess(String providerName) => _track(
+        'signin_email_success',
+        properties: {'provider': providerName},
+      );
+
+  void trackSigninEmailFailure(String providerName) => _track(
+        'signin_email_failure',
+        properties: {'provider': providerName},
+      );
+
+  void trackWaitlistRequestGlamourShotNotification() =>
+      _track('waitlist_request_glamour_shot_notification');
+
   void trackSignupSubmitPhone() => _track('signup_submit_phone');
 
   void trackSignupCodeSent() => _track('signup_code_sent');

@@ -125,6 +125,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   }
 
   Future<AuthResult?> signInWithGoogle() async {
+    const providerName = 'google';
     late final GoogleSignInAccount account;
     final googleSignIn = GoogleSignIn(scopes: ['email']);
     try {
@@ -135,6 +136,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       account = result;
     } on PlatformException catch (e) {
       if (e.code == 'sign_in_failed') {
+        analytics.trackSigninEmailFailure(providerName);
         return AuthResult.failure;
       }
       return AuthResult.failure;
@@ -147,19 +149,24 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     final result = await FirebaseAuth.instance.signInWithCredential(credential);
     final user = result.user;
     if (user != null) {
+      analytics.trackSigninEmailSuccess(providerName);
       return AuthResult.success;
     } else {
+      analytics.trackSigninEmailFailure(providerName);
       return AuthResult.failure;
     }
   }
 
   Future<AuthResult?> signInWithApple() async {
+    const providerName = 'apple';
     final provider = AppleAuthProvider()..addScope('email');
     final result = await FirebaseAuth.instance.signInWithProvider(provider);
     final user = result.user;
     if (user != null) {
+      analytics.trackSigninEmailSuccess(providerName);
       return AuthResult.success;
     } else {
+      analytics.trackSigninEmailFailure(providerName);
       return AuthResult.failure;
     }
   }
