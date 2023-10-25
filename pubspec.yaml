@@ -121,6 +121,7 @@ flutter:
     - assets/images/nav_icon_hangout.svg
     - assets/images/nav_icon_messages.svg
     - assets/images/nav_icon_people.svg
+    - assets/images/notification.json
     - assets/images/onboard_discover.jpg
     - assets/images/onboard_chat.jpg
     - assets/images/onboard_countdown.jpg
@@ -154,6 +155,7 @@ flutter:
     - assets/images/welcome_background.png
     - assets/images/welcome_tile_background.png
     - assets/images/wind.json
+    - assets/videos/after_party_waitlist_background.mp4
 
   shaders:
     - assets/shaders/depth.frag
