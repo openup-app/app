@@ -4,11 +4,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/waitlist/waitlist_provider.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/restart_app.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SigninPage extends ConsumerStatefulWidget {
@@ -156,13 +156,9 @@ class _SigninPageState extends ConsumerState<SigninPage> {
   }
 
   void _signInComplete(WaitlistUser user) {
-    context.goNamed(
-      'waitlist',
-      queryParameters: {
-        'uid': user.uid,
-        'email': user.email,
-      },
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      RestartApp.restartApp(context);
+    });
   }
 }
 

@@ -12,6 +12,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixpanel_flutter/mixpanel_flutter.dart';
+import 'package:openup/after_party_processing.dart';
 import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/chat_state.dart';
@@ -27,6 +28,7 @@ import 'package:openup/dynamic_config/dynamic_config.dart';
 import 'package:openup/dynamic_config/dynamic_config_service.dart';
 import 'package:openup/error_screen.dart';
 import 'package:openup/contacts_page.dart';
+import 'package:openup/after_party_waitlist.dart';
 import 'package:openup/events/event_create_page.dart';
 import 'package:openup/events/event_preview_page.dart';
 import 'package:openup/events/event_view_page.dart';
@@ -362,7 +364,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
       initialLocation: '/',
-      redirect: _redirectGuestsToSignin,
+      // redirect: _redirectGuestsToSignUp,
       errorBuilder: (context, state) => const ErrorScreen(),
       routes: [
         GoRoute(
@@ -417,6 +419,24 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               },
             ),
           ],
+        ),
+        GoRoute(
+          path: '/after_party_waitlist',
+          name: 'after_party_waitlist',
+          builder: (context, state) {
+            final params = state.extra as AfterPartyWaitlistParams?;
+            if (params == null) {
+              throw 'Missing extra';
+            }
+            return AfterPartyWaitlist(videos: params.sampleVideos);
+          },
+        ),
+        GoRoute(
+          path: '/after_party_processing',
+          name: 'after_party_processing',
+          builder: (context, state) {
+            return const AfterPartyProcessing();
+          },
         ),
         GoRoute(
           path: '/signup',

@@ -119,7 +119,7 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
       return;
     }
     if (result == AuthResult.success) {
-      _handleVerification();
+      // Handle verification disabled
     } else {
       FocusScope.of(context).requestFocus();
     }
@@ -162,31 +162,5 @@ class _SignupVerifyState extends ConsumerState<SignupVerify> {
     }
 
     return result;
-  }
-
-  void _handleVerification() async {
-    setState(() => _submitting = true);
-    final result = await getAccount(ref.read(apiProvider));
-    if (!mounted) {
-      return;
-    }
-    setState(() => _submitting = false);
-
-    result.when(
-      logIn: (account) {
-        ref.read(userProvider.notifier).signedIn(account);
-        ref.read(analyticsProvider).trackLogin();
-        RestartApp.restartApp(context);
-      },
-      signUp: () {
-        ref.read(locationProvider.notifier).retry();
-        ref.read(analyticsProvider).trackSignupVerified();
-        context.goNamed('signup_photos');
-      },
-      retry: (e) {
-        debugPrint(e.toString());
-        context.goNamed('signup_phone');
-      },
-    );
   }
 }

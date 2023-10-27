@@ -157,6 +157,36 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, AppAvailability>> getAppAvailability() {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/app_availability'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(AppAvailability.fromJson(json));
+      },
+    );
+  }
+
+  Future<Either<ApiError, AccountState>> getAccountState() {
+    return _request(
+      makeRequest: () {
+        return http.get(
+          Uri.parse('$_urlBase/account_state'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) {
+        final json = jsonDecode(response.body);
+        return Right(AccountState.fromJson(json));
+      },
+    );
+  }
+
   Future<Either<ApiError, void>> signOut() {
     return _request(
       makeRequest: () {
@@ -1097,6 +1127,28 @@ class Account with _$Account {
 
   factory Account.fromJson(Map<String, dynamic> json) =>
       _$AccountFromJson(json);
+}
+
+@freezed
+class AppAvailability with _$AppAvailability {
+  const factory AppAvailability({
+    required bool partyComplete,
+    required bool appLocked,
+    required List<String> sampleVideos,
+  }) = _AppAvailability;
+
+  factory AppAvailability.fromJson(Map<String, dynamic> json) =>
+      _$AppAvailabilityFromJson(json);
+}
+
+@Freezed(unionKey: 'state', unionValueCase: FreezedUnionCase.none)
+class AccountState with _$AccountState {
+  const factory AccountState.account(Account account) = _AccountState;
+  const factory AccountState.needsSignup(String video) = _NeedsSignup;
+  const factory AccountState.none() = _None;
+
+  factory AccountState.fromJson(Map<String, dynamic> json) =>
+      _$AccountStateFromJson(json);
 }
 
 @freezed
