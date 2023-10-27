@@ -12,9 +12,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 part 'auth_provider.freezed.dart';
 
-final authProvider =
-    StateNotifierProvider.autoDispose<AuthStateNotifier, AuthState>(
-        (ref) => throw 'Uninitialized provider');
+final authProvider = StateNotifierProvider<AuthStateNotifier, AuthState>(
+    (ref) => throw 'Uninitialized provider');
 
 class AuthStateNotifier extends StateNotifier<AuthState> {
   final Api api;

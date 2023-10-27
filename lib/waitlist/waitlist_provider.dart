@@ -4,7 +4,7 @@ import 'package:openup/auth/auth_provider.dart';
 
 part 'waitlist_provider.freezed.dart';
 
-final waitlistProvider = Provider.autoDispose<WaitlistUser?>((ref) {
+final waitlistProvider = Provider<WaitlistUser?>((ref) {
   return ref.watch(authProvider.select<WaitlistUser?>((s) {
     return s.map(
       guest: (_) => null,
