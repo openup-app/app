@@ -97,26 +97,6 @@ class _ProfilePageState extends ConsumerState<SettingsPage> {
                               const _CupertinoRow(
                                 leading: _NameField(),
                               ),
-                              const SizedBox(height: 12),
-                              const SizedBox(height: 8),
-                              const _PhoneNumberField(),
-                              const SizedBox(height: 16),
-                              Button(
-                                onPressed: () => context.pushNamed('contacts'),
-                                child: const _CupertinoRow(
-                                  leading: Row(
-                                    children: [
-                                      Icon(
-                                        CupertinoIcons.book,
-                                        color: Color.fromRGBO(
-                                            0xBA, 0xBA, 0xBA, 1.0),
-                                      ),
-                                      SizedBox(width: 12),
-                                      Expanded(child: Text(' My Contacts')),
-                                    ],
-                                  ),
-                                ),
-                              ),
                               const SizedBox(height: 16),
                               Button(
                                 onPressed: () => context.pushNamed('blocked'),
