@@ -152,7 +152,7 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(widget.profile.name.toUpperCase()),
+            Text(widget.profile.name),
             const SizedBox(width: 12),
             Text(widget.profile.age.toString()),
           ],

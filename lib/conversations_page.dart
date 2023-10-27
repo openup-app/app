@@ -455,7 +455,7 @@ class _ConversationList extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          chatroom.profile.name.toUpperCase(),
+                          chatroom.profile.name,
                           style: const TextStyle(
                             fontFamily: 'Covered By Your Grace',
                             fontWeight: FontWeight.w400,
