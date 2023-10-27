@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 class AfterPartyProcessing extends StatelessWidget {
   const AfterPartyProcessing({super.key});
@@ -10,10 +11,13 @@ class AfterPartyProcessing extends StatelessWidget {
       body: Column(
         children: [
           SizedBox(height: MediaQuery.of(context).padding.top),
-          const SizedBox(height: 24),
-          const Expanded(
+          // const SizedBox(height: 24),
+          Expanded(
             child: Center(
-              child: FlutterLogo(),
+              child: Transform.scale(
+                scale: 1.3,
+                child: Lottie.asset('assets/images/thankyou.json'),
+              ),
             ),
           ),
           Padding(

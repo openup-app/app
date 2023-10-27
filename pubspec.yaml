@@ -147,6 +147,7 @@ flutter:
     - assets/images/signup_recorder.png
     - assets/images/skull.json
     - assets/images/stars_background.json
+    - assets/images/thankyou.json
     - assets/images/ticket.json
     - assets/images/subscribe_background.png
     - assets/images/earth.svg
