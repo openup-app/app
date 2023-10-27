@@ -75,10 +75,10 @@ class AfterPartyWaitlist extends StatelessWidget {
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 40),
-                    itemCount: 10,
+                    itemCount: videos.length,
                     itemBuilder: (context, index) {
                       return _Video(
-                        url: '',
+                        url: videos[index],
                       );
                     },
                   ),
@@ -290,4 +290,9 @@ class _BackgroundState extends State<_Background> {
   Widget build(BuildContext context) {
     return VideoPlayer(_controller);
   }
+}
+
+class AfterPartyWaitlistParams {
+  final List<String> sampleVideos;
+  const AfterPartyWaitlistParams(this.sampleVideos);
 }
