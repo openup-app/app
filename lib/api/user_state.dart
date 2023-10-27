@@ -113,21 +113,8 @@ class UserStateNotifier extends StateNotifier<UserState> {
 
   Future<Either<ApiError, Account>> createAccount(
     AccountCreationParams params,
-  ) async {
-    final photos = params.photos;
-    if (photos == null) {
-      debugPrint('Photos were null when creating account');
-      return Future.value(const Left(ApiClientError(ClientErrorBadRequest())));
-    }
-
-    final downscaled = await _downscalePhotos(photos);
-    if (downscaled == null) {
-      debugPrint('Failed to downscale profile images');
-      return Future.value(const Left(ApiClientError(ClientErrorBadRequest())));
-    }
-
-    _analytics.trackCreateAccount();
-    return _api.createAccount(params.copyWith(photos: downscaled));
+  ) {
+    return _api.createAccount(params);
   }
 
   Future<Either<ApiError, Profile>> updateName(String name) async {
@@ -459,8 +446,6 @@ class AccountCreationParamsNotifier
         _analytics = analytics,
         _onAccount = onAccount,
         super(const AccountCreationParams());
-
-  void photos(List<File> photos) => state = state.copyWith(photos: photos);
 
   void audio(File audio) => state = state.copyWith(audio: audio);
 

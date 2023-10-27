@@ -50,12 +50,16 @@ class OpenupAppBarBody extends StatelessWidget {
   final Widget? leading;
   final Widget? center;
   final Widget? trailing;
+  final EdgeInsets leadingPadding;
+  final EdgeInsets trailingPadding;
 
   const OpenupAppBarBody({
     super.key,
     this.leading,
     this.center,
     this.trailing,
+    this.leadingPadding = EdgeInsets.zero,
+    this.trailingPadding = const EdgeInsets.all(8),
   });
 
   @override
@@ -66,7 +70,10 @@ class OpenupAppBarBody extends StatelessWidget {
         if (leading != null)
           Align(
             alignment: Alignment.centerLeft,
-            child: leading,
+            child: Padding(
+              padding: leadingPadding,
+              child: leading,
+            ),
           ),
         if (center != null)
           Padding(
@@ -86,7 +93,7 @@ class OpenupAppBarBody extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: trailingPadding,
               child: trailing,
             ),
           ),
@@ -188,6 +195,35 @@ class OpenupAppBarCloseButton extends StatelessWidget {
           'Close',
           style: TextStyle(
             color: Color.fromRGBO(0x00, 0x7C, 0xEE, 1.0),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class OpenupAppBarTextButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final String label;
+
+  const OpenupAppBarTextButton({
+    super.key,
+    this.onPressed,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Button(
+      onPressed: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w300,
           ),
         ),
       ),

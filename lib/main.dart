@@ -46,11 +46,11 @@ import 'package:openup/report_screen.dart';
 import 'package:openup/settings_page.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/signin_page.dart';
-import 'package:openup/signup_audio.dart';
-import 'package:openup/signup_name_age.dart';
-import 'package:openup/signup_phone.dart';
-import 'package:openup/signup_photos.dart';
-import 'package:openup/signup_verify.dart';
+import 'package:openup/signup_glamour_age.dart';
+import 'package:openup/signup_glamour_audio.dart';
+import 'package:openup/signup_glamour_intro.dart';
+import 'package:openup/signup_glamour_name.dart';
+import 'package:openup/signup_glamour_preview.dart';
 import 'package:openup/util/key_value_store_service.dart';
 import 'package:openup/util/page_transition.dart';
 import 'package:openup/view_profile_page.dart';
@@ -364,7 +364,6 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
       initialLocation: '/',
-      // redirect: _redirectGuestsToSignUp,
       errorBuilder: (context, state) => const ErrorScreen(),
       routes: [
         GoRoute(
@@ -444,7 +443,7 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           parentNavigatorKey: rootNavigatorKey,
           pageBuilder: (context, state) {
             return CustomTransitionPage(
-              child: const SignupPhone(),
+              child: const SignupGlamourIntro(),
               transitionsBuilder:
                   (context, animation, secondaryAnimation, child) {
                 return SlideOutLeftTransition(
@@ -456,56 +455,11 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
           },
           routes: [
             GoRoute(
-              path: 'verify',
-              name: 'signup_verify',
-              parentNavigatorKey: rootNavigatorKey,
-              pageBuilder: (context, state) {
-                final verificationId =
-                    state.uri.queryParameters['verificationId'];
-                if (verificationId == null) {
-                  throw 'Missing verification ID';
-                }
-                return CustomTransitionPage(
-                  child: SignupVerify(
-                    verificationId: verificationId,
-                  ),
-                  transitionsBuilder:
-                      (context, animation, secondaryAnimation, child) {
-                    return SlideInRightPopLeftTransition(
-                      animation: animation,
-                      child: child,
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-        GoRoute(
-          path: '/create_account',
-          name: 'signup_photos',
-          pageBuilder: (context, state) {
-            return CustomTransitionPage(
-              child: const SignupPhotos(),
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                return SlideInRightTransition(
-                  animation: animation,
-                  child: SlideOutLeftTransition(
-                    secondaryAnimation: secondaryAnimation,
-                    child: child,
-                  ),
-                );
-              },
-            );
-          },
-          routes: [
-            GoRoute(
-              path: 'name_age',
-              name: 'signup_name_age',
+              path: 'name',
+              name: 'signup_name',
               pageBuilder: (context, state) {
                 return CustomTransitionPage(
-                  child: const SignupNameAge(),
+                  child: const SignupGlamourName(),
                   transitionsBuilder:
                       (context, animation, secondaryAnimation, child) {
                     return SlideInRightTransition(
@@ -520,24 +474,65 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
               },
               routes: [
                 GoRoute(
-                  path: 'audio',
-                  name: 'signup_audio',
+                  path: 'age',
+                  name: 'signup_age',
                   pageBuilder: (context, state) {
                     return CustomTransitionPage(
-                      child: const SignupAudio(),
+                      child: const SignupGlamourAge(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) {
                         return SlideInRightTransition(
                           animation: animation,
-                          child: child,
+                          child: SlideOutLeftTransition(
+                            secondaryAnimation: secondaryAnimation,
+                            child: child,
+                          ),
                         );
                       },
                     );
                   },
+                  routes: [
+                    GoRoute(
+                      path: 'audio',
+                      name: 'signup_audio',
+                      pageBuilder: (context, state) {
+                        return CustomTransitionPage(
+                          child: const SignupGlamourAudio(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            return SlideInRightTransition(
+                              animation: animation,
+                              child: child,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
           ],
+        ),
+        GoRoute(
+          path: '/signup_preview',
+          name: 'signup_preview',
+          pageBuilder: (context, state) {
+            final args = state.extra as SignupGlamourPreviewArgs?;
+            if (args == null) {
+              throw 'Missing extra';
+            }
+            return CustomTransitionPage(
+              child: SignupGlamourPreview(profile: args.profile),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                return SlideInRightTransition(
+                  animation: animation,
+                  child: child,
+                );
+              },
+            );
+          },
         ),
         ShellRoute(
           builder: (context, state, child) {

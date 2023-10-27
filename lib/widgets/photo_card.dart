@@ -10,8 +10,8 @@ class PhotoCard extends StatelessWidget {
   final Widget photo;
   final WidgetBuilder titleBuilder;
   final Widget? subtitle;
-  final Widget firstButton;
-  final Widget secondButton;
+  final Widget? firstButton;
+  final Widget? secondButton;
   final Widget indicatorButton;
 
   const PhotoCard({
@@ -23,8 +23,8 @@ class PhotoCard extends StatelessWidget {
     required this.photo,
     required this.titleBuilder,
     this.subtitle,
-    required this.firstButton,
-    required this.secondButton,
+    this.firstButton,
+    this.secondButton,
     required this.indicatorButton,
   });
 
@@ -32,7 +32,8 @@ class PhotoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     const margin = 24.0;
     final topPadding = 16.0 + (useExtraTopPadding ? 16.0 : 0.0);
-    const bottomHeight = 140.0;
+    final bottomHeight =
+        (firstButton != null && secondButton != null) ? 140.0 : 90.0;
     const leftPadding = 16.0;
     const rightPadding = 16.0;
     const requiredWidth = leftPadding + rightPadding;
@@ -119,34 +120,36 @@ class PhotoCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Divider(
-                      height: 1,
-                      color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
-                    ),
-                    SizedBox(
-                      height: 50,
-                      child: DefaultTextStyle.merge(
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.black,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: firstButton,
-                            ),
-                            const VerticalDivider(
-                              width: 1,
-                              color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
-                            ),
-                            Expanded(
-                              child: secondButton,
-                            ),
-                          ],
+                    if (firstButton != null && secondButton != null) ...[
+                      const Divider(
+                        height: 1,
+                        color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
+                      ),
+                      SizedBox(
+                        height: 50,
+                        child: DefaultTextStyle.merge(
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.black,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: firstButton!,
+                              ),
+                              const VerticalDivider(
+                                width: 1,
+                                color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
+                              ),
+                              Expanded(
+                                child: secondButton!,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -256,6 +259,67 @@ class PhotoCardLoading extends StatelessWidget {
             shape: BoxShape.circle,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class SimplePhotoCard extends StatelessWidget {
+  final Widget contents;
+  final Widget? title;
+  final Widget? trailing;
+
+  const SimplePhotoCard({
+    super.key,
+    required this.contents,
+    this.title,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(left: 14, right: 14, top: 14),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(1)),
+      ),
+      child: Column(
+        children: [
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 3 / 4,
+              child: contents,
+            ),
+          ),
+          SizedBox(
+            height: 56,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Container(
+                color: Colors.pink,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: DefaultTextStyle(
+                        style: const TextStyle(
+                          fontFamily: 'Covered By Your Grace',
+                          fontSize: 34,
+                          color: Color.fromRGBO(0x27, 0x27, 0x27, 1.0),
+                        ),
+                        child: title ?? const SizedBox.shrink(),
+                      ),
+                    ),
+                    if (trailing != null) trailing!,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

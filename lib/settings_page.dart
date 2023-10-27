@@ -364,170 +364,170 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
           Expanded(
             child: Row(
               children: [
-                Flexible(
-                  flex: 6,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                      horizontal: 8,
-                    ),
-                    child: ProfileBuilder(
-                      key: widget.profileBuilderKey,
-                      profile: widget.profile,
-                      play: false,
-                      builder: (context, playbackState, playbackInfoStream) {
-                        return Column(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                clipBehavior: Clip.hardEdge,
-                                decoration: const BoxDecoration(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(22),
-                                  ),
-                                ),
-                                child: NonCinematicGallery(
-                                  slideshow: true,
-                                  gallery: widget.profile.gallery,
-                                ),
-                              ),
-                            ),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 16.0),
-                                      child: AudioPlaybackSymbol(
-                                        play: playbackState ==
-                                            PlaybackState.playing,
-                                        size: 16,
-                                        padding: const EdgeInsets.only(
-                                            left: 4, right: 12),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: StreamBuilder<double>(
-                                        stream: playbackInfoStream.map((e) {
-                                          return e.duration.inMilliseconds == 0
-                                              ? 0
-                                              : e.position.inMilliseconds /
-                                                  e.duration.inMilliseconds;
-                                        }),
-                                        initialData: 0.0,
-                                        builder: (context, snapshot) {
-                                          return DecoratedBox(
-                                            decoration: const BoxDecoration(
-                                              color: Color.fromRGBO(
-                                                  0xE1, 0xE1, 0xE1, 1.0),
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(2)),
-                                            ),
-                                            child: FractionallySizedBox(
-                                              widthFactor: snapshot.requireData,
-                                              alignment: Alignment.centerLeft,
-                                              child: Container(
-                                                height: 4,
-                                                decoration: const BoxDecoration(
-                                                  color: Color.fromRGBO(
-                                                      0x3E, 0x97, 0xFF, 1.0),
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                          Radius.circular(2)),
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Button(
-                                        onPressed: () =>
-                                            _showRecordPanel(context),
-                                        child: Container(
-                                          width: 146,
-                                          height: 51,
-                                          alignment: Alignment.center,
-                                          decoration: const BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [
-                                                Color.fromRGBO(
-                                                    0x28, 0x98, 0xFF, 1.0),
-                                                Color.fromRGBO(
-                                                    0x02, 0x7D, 0xED, 1.0),
-                                              ],
-                                            ),
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(25)),
-                                          ),
-                                          child: Text(
-                                            'Update Voice Bio',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium!
-                                                .copyWith(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w400,
-                                                    color: Colors.white),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Button(
-                                      onPressed: () =>
-                                          _onPlayPause(playbackState),
-                                      child: Container(
-                                        width: 46,
-                                        height: 46,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Color.fromRGBO(
-                                              0x05, 0x7F, 0xEF, 1.0),
-                                        ),
-                                        child: Builder(
-                                          builder: (context) {
-                                            switch (playbackState) {
-                                              case PlaybackState.playing:
-                                                return const Icon(
-                                                  Icons.pause_rounded,
-                                                  size: 34,
-                                                  color: Colors.white,
-                                                );
-                                              case PlaybackState.loading:
-                                                return const LoadingIndicator(
-                                                  color: Colors.white,
-                                                );
-                                              default:
-                                                return const Icon(
-                                                  Icons.play_arrow_rounded,
-                                                  size: 34,
-                                                  color: Colors.white,
-                                                );
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
+                // Flexible(
+                //   flex: 6,
+                //   child: Padding(
+                //     padding: const EdgeInsets.symmetric(
+                //       vertical: 14,
+                //       horizontal: 8,
+                //     ),
+                //     child: ProfileBuilder(
+                //       key: widget.profileBuilderKey,
+                //       profile: widget.profile,
+                //       play: false,
+                //       builder: (context, playbackState, playbackInfoStream) {
+                //         return Column(
+                //           children: [
+                //             Expanded(
+                //               child: Container(
+                //                 clipBehavior: Clip.hardEdge,
+                //                 decoration: const BoxDecoration(
+                //                   borderRadius: BorderRadius.all(
+                //                     Radius.circular(22),
+                //                   ),
+                //                 ),
+                //                 child: NonCinematicGallery(
+                //                   slideshow: true,
+                //                   gallery: widget.profile.gallery,
+                //                 ),
+                //               ),
+                //             ),
+                //             Column(
+                //               mainAxisSize: MainAxisSize.min,
+                //               children: [
+                //                 Row(
+                //                   children: [
+                //                     Padding(
+                //                       padding: const EdgeInsets.symmetric(
+                //                           vertical: 16.0),
+                //                       child: AudioPlaybackSymbol(
+                //                         play: playbackState ==
+                //                             PlaybackState.playing,
+                //                         size: 16,
+                //                         padding: const EdgeInsets.only(
+                //                             left: 4, right: 12),
+                //                       ),
+                //                     ),
+                //                     Expanded(
+                //                       child: StreamBuilder<double>(
+                //                         stream: playbackInfoStream.map((e) {
+                //                           return e.duration.inMilliseconds == 0
+                //                               ? 0
+                //                               : e.position.inMilliseconds /
+                //                                   e.duration.inMilliseconds;
+                //                         }),
+                //                         initialData: 0.0,
+                //                         builder: (context, snapshot) {
+                //                           return DecoratedBox(
+                //                             decoration: const BoxDecoration(
+                //                               color: Color.fromRGBO(
+                //                                   0xE1, 0xE1, 0xE1, 1.0),
+                //                               borderRadius: BorderRadius.all(
+                //                                   Radius.circular(2)),
+                //                             ),
+                //                             child: FractionallySizedBox(
+                //                               widthFactor: snapshot.requireData,
+                //                               alignment: Alignment.centerLeft,
+                //                               child: Container(
+                //                                 height: 4,
+                //                                 decoration: const BoxDecoration(
+                //                                   color: Color.fromRGBO(
+                //                                       0x3E, 0x97, 0xFF, 1.0),
+                //                                   borderRadius:
+                //                                       BorderRadius.all(
+                //                                           Radius.circular(2)),
+                //                                 ),
+                //                               ),
+                //                             ),
+                //                           );
+                //                         },
+                //                       ),
+                //                     ),
+                //                   ],
+                //                 ),
+                //                 Row(
+                //                   children: [
+                //                     Expanded(
+                //                       child: Button(
+                //                         onPressed: () =>
+                //                             _showRecordPanel(context),
+                //                         child: Container(
+                //                           width: 146,
+                //                           height: 51,
+                //                           alignment: Alignment.center,
+                //                           decoration: const BoxDecoration(
+                //                             gradient: LinearGradient(
+                //                               begin: Alignment.topCenter,
+                //                               end: Alignment.bottomCenter,
+                //                               colors: [
+                //                                 Color.fromRGBO(
+                //                                     0x28, 0x98, 0xFF, 1.0),
+                //                                 Color.fromRGBO(
+                //                                     0x02, 0x7D, 0xED, 1.0),
+                //                               ],
+                //                             ),
+                //                             borderRadius: BorderRadius.all(
+                //                                 Radius.circular(25)),
+                //                           ),
+                //                           child: Text(
+                //                             'Update Voice Bio',
+                //                             style: Theme.of(context)
+                //                                 .textTheme
+                //                                 .bodyMedium!
+                //                                 .copyWith(
+                //                                     fontSize: 14,
+                //                                     fontWeight: FontWeight.w400,
+                //                                     color: Colors.white),
+                //                           ),
+                //                         ),
+                //                       ),
+                //                     ),
+                //                     const SizedBox(width: 16),
+                //                     Button(
+                //                       onPressed: () =>
+                //                           _onPlayPause(playbackState),
+                //                       child: Container(
+                //                         width: 46,
+                //                         height: 46,
+                //                         decoration: const BoxDecoration(
+                //                           shape: BoxShape.circle,
+                //                           color: Color.fromRGBO(
+                //                               0x05, 0x7F, 0xEF, 1.0),
+                //                         ),
+                //                         child: Builder(
+                //                           builder: (context) {
+                //                             switch (playbackState) {
+                //                               case PlaybackState.playing:
+                //                                 return const Icon(
+                //                                   Icons.pause_rounded,
+                //                                   size: 34,
+                //                                   color: Colors.white,
+                //                                 );
+                //                               case PlaybackState.loading:
+                //                                 return const LoadingIndicator(
+                //                                   color: Colors.white,
+                //                                 );
+                //                               default:
+                //                                 return const Icon(
+                //                                   Icons.play_arrow_rounded,
+                //                                   size: 34,
+                //                                   color: Colors.white,
+                //                                 );
+                //                             }
+                //                           },
+                //                         ),
+                //                       ),
+                //                     ),
+                //                   ],
+                //                 ),
+                //               ],
+                //             ),
+                //           ],
+                //         );
+                //       },
+                //     ),
+                //   ),
+                // ),
                 Flexible(
                   flex: 4,
                   child: Padding(
@@ -643,10 +643,10 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
     switch (playbackState) {
       case PlaybackState.idle:
       case PlaybackState.paused:
-        widget.profileBuilderKey.currentState?.play();
+        // widget.profileBuilderKey.currentState?.play();
         break;
       default:
-        widget.profileBuilderKey.currentState?.pause();
+      // widget.profileBuilderKey.currentState?.pause();
     }
   }
 
@@ -695,7 +695,7 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
   }
 
   Future<void> _showRecordPanel(BuildContext context) async {
-    widget.profileBuilderKey.currentState?.pause();
+    // widget.profileBuilderKey.currentState?.pause();
     final result = await showRecordPanel(
       context: context,
       title: const Text('Recording Voice Bio'),

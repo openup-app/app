@@ -28,9 +28,8 @@ class ViewProfilePage extends ConsumerStatefulWidget {
 
 class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
   Profile? _profile;
-  bool _play = true;
 
-  final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
+  ProfileController? _controller;
 
   @override
   void initState() {
@@ -70,8 +69,6 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     );
   }
 
-  void _playAudio() => _profileBuilderKey.currentState?.play();
-
   @override
   Widget build(BuildContext context) {
     final profile = _profile;
@@ -87,14 +84,8 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
       ),
       body: TextBackground(
         child: ActivePage(
-          onActivate: () {
-            setState(() => _play = true);
-            _playAudio();
-          },
-          onDeactivate: () {
-            setState(() => _play = false);
-            _profileBuilderKey.currentState?.pause();
-          },
+          onActivate: () {},
+          onDeactivate: () {},
           child: LayoutBuilder(
             builder: (context, constraints) {
               return Shimmer(
@@ -109,20 +100,19 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                       );
                     }
                     return ProfileBuilder(
-                      key: _profileBuilderKey,
                       profile: profile,
-                      play: _play,
-                      builder: (context, playbackState, playbackInfoStream) {
+                      onController: (controller) =>
+                          setState(() => _controller = controller),
+                      builder: (context, controller) {
                         return PhotoCardWiggle(
                           child: PhotoCardProfile(
                             width: constraints.maxWidth,
                             height: constraints.maxHeight,
                             profile: profile,
                             distance: 2,
-                            playbackState: playbackState,
-                            playbackInfoStream: playbackInfoStream,
-                            onPlay: () => setState(() => _play = true),
-                            onPause: () => setState(() => _play = false),
+                            playbackStream: controller.audioPlaybackStream,
+                            onPlay: controller.play,
+                            onPause: controller.pause,
                             onMessage: ref.watch(uidProvider) == profile.uid
                                 ? () {}
                                 : () => _showRecordPanel(context, profile.uid),
@@ -173,7 +163,9 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     notifier.refreshChatrooms();
   }
 
-  void _pauseAudio() => setState(() => _play = false);
+  void _playAudio() => _controller?.play();
+
+  void _pauseAudio() => _controller?.pause();
 }
 
 @freezed
