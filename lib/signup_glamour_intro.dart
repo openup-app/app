@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/gradient_mask.dart';
+import 'package:openup/widgets/party_force_field.dart';
 import 'package:openup/widgets/photo_card.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
@@ -52,7 +53,7 @@ class SignupGlamourIntro extends StatelessWidget {
                           ),
                         ],
                       ),
-                      photo: const ColoredBox(color: Colors.amber),
+                      photo: const PartyForceField(),
                       titleBuilder: (_) => const SizedBox.shrink(),
                       indicatorButton: const SizedBox.shrink(),
                     ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/widgets/button.dart';
-import 'package:video_player/video_player.dart';
+
+import 'widgets/party_force_field.dart';
 
 class AfterPartyWaitlist extends StatelessWidget {
   final List<String> videos;
@@ -18,7 +19,7 @@ class AfterPartyWaitlist extends StatelessWidget {
       body: Stack(
         children: [
           const Positioned.fill(
-            child: _Background(),
+            child: PartyForceField(),
           ),
           Positioned(
             top: MediaQuery.of(context).padding.top + 24,
@@ -249,46 +250,6 @@ class _NotificationButton extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _Background extends StatefulWidget {
-  const _Background({super.key});
-
-  @override
-  State<_Background> createState() => _BackgroundState();
-}
-
-class _BackgroundState extends State<_Background> {
-  late final VideoPlayerController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _init();
-  }
-
-  void _init() async {
-    _controller = VideoPlayerController.asset(
-      'assets/videos/after_party_waitlist_background.mp4',
-    );
-    await _controller.initialize();
-    if (mounted) {
-      _controller.play();
-      _controller.setLooping(true);
-      setState(() {});
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return VideoPlayer(_controller);
   }
 }
 

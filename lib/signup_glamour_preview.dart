@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/gradient_mask.dart';
+import 'package:openup/widgets/party_force_field.dart';
 import 'package:openup/widgets/photo_card.dart';
 import 'package:openup/widgets/profile_display.dart';
 import 'package:openup/widgets/restart_app.dart';
@@ -66,9 +67,7 @@ class SignupGlamourPreview extends ConsumerWidget {
                             photo: Stack(
                               fit: StackFit.expand,
                               children: [
-                                const ColoredBox(color: Colors.amber)
-                                    .animate()
-                                    .fadeOut(delay: const Duration(seconds: 6)),
+                                const PartyForceField(),
                                 Button(
                                   onPressed: controller.togglePlayPause,
                                   child: const ColoredBox(color: Colors.blue)
