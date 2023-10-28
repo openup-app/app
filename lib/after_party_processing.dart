@@ -1,9 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
+import 'package:openup/analytics/analytics.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/user_state.dart';
+import 'package:openup/auth/auth_provider.dart';
+import 'package:openup/notifications/notifications.dart';
+import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/notification_request_builder.dart';
 
-class AfterPartyProcessing extends StatelessWidget {
+class AfterPartyProcessing extends ConsumerStatefulWidget {
   const AfterPartyProcessing({super.key});
 
+  @override
+  ConsumerState<AfterPartyProcessing> createState() =>
+      _AfterPartyProcessingState();
+}
+
+class _AfterPartyProcessingState extends ConsumerState<AfterPartyProcessing> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,23 +66,8 @@ class AfterPartyProcessing extends StatelessWidget {
           const SizedBox(height: 54),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40.0),
-            child: Container(
-              height: 49,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(6),
-                ),
-              ),
-              child: const Text(
-                'Notify me once my glamour shot is ready',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
+            child: _NotificationButton(
+              onRequestNotification: _updateWaitlist,
             ),
           ),
           const SizedBox(height: 100),
@@ -76,5 +75,89 @@ class AfterPartyProcessing extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _updateWaitlist([NotificationToken? notificationToken]) async {
+    ref
+        .read(analyticsProvider)
+        .trackAfterPartyProcessingRequestGlamourShotNotification();
+    final api = ref.read(apiProvider);
+    final authState = ref.read(authProvider);
+    authState.map(
+      guest: (_) {},
+      signedIn: (signedIn) async {
+        await api.updateWaitlist(
+          signedIn.uid,
+          signedIn.emailAddress,
+          notificationToken,
+          event: WaitlistEvent.glamourShotDeltaHouseHalloween2023,
+        );
+      },
+    );
+  }
+}
+
+class _NotificationButton extends StatefulWidget {
+  final void Function(NotificationToken token) onRequestNotification;
+  const _NotificationButton({super.key, required this.onRequestNotification});
+
+  @override
+  State<_NotificationButton> createState() => _NotificationButtonState();
+}
+
+class _NotificationButtonState extends State<_NotificationButton> {
+  bool _userRequested = false;
+  bool _calledback = false;
+  NotificationToken? _token;
+
+  @override
+  Widget build(BuildContext context) {
+    return NotificationRequestBuilder(
+      onGranted: _maybeCallback,
+      onToken: (token) {
+        setState(() => _token = token);
+        _maybeCallback();
+      },
+      builder: (context, granted, onRequest) {
+        if (_calledback) {
+          return const SizedBox.shrink();
+        }
+        return Button(
+          onPressed: () async {
+            setState(() => _userRequested = true);
+            onRequest();
+          },
+          child: Container(
+            height: 49,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.all(
+                Radius.circular(6),
+              ),
+            ),
+            child: const Text(
+              'Notify me once my glamour shot is ready',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _maybeCallback() {
+    final token = _token;
+    if (_userRequested && token != null) {
+      setState(() {
+        _userRequested = false;
+        _calledback = true;
+      });
+      widget.onRequestNotification(token);
+    }
   }
 }

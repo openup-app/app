@@ -1,11 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
+import 'package:openup/analytics/analytics.dart';
+import 'package:openup/api/api.dart';
+import 'package:openup/api/user_state.dart';
+import 'package:openup/auth/auth_provider.dart';
+import 'package:openup/notifications/notifications.dart';
 import 'package:openup/video/video.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/notification_request_builder.dart';
 
 import 'widgets/party_force_field.dart';
 
-class AfterPartyWaitlist extends StatelessWidget {
+class AfterPartyWaitlist extends ConsumerStatefulWidget {
   final List<String> videos;
 
   const AfterPartyWaitlist({
@@ -13,6 +22,11 @@ class AfterPartyWaitlist extends StatelessWidget {
     required this.videos,
   });
 
+  @override
+  ConsumerState<AfterPartyWaitlist> createState() => _AfterPartyWaitlistState();
+}
+
+class _AfterPartyWaitlistState extends ConsumerState<AfterPartyWaitlist> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,18 +36,11 @@ class AfterPartyWaitlist extends StatelessWidget {
           const Positioned.fill(
             child: PartyForceField(),
           ),
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 24,
-            right: 16,
-            child: _NotificationButton(
-              onPressed: () {},
-            ),
-          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: MediaQuery.of(context).padding.top),
-              if (videos.isEmpty) const Spacer(),
+              if (widget.videos.isEmpty) const Spacer(),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40.0),
                 child: Row(
@@ -60,76 +67,37 @@ class AfterPartyWaitlist extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 40.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40.0),
                 child: Text(
-                  'Plus one is an exclusive product made for people who want to connect in a real way.\n\nPlease wait to be invited to the next Plus One event to take your Glamour Shot and gain access. Check out the Glamour shots from our last event.',
-                  style: TextStyle(
+                  'Plus one is an exclusive product made for people who want to connect in a real way.\n\nPlease wait to be invited to the next Plus One event to take your Glamour Shot and gain access. ${widget.videos.isEmpty ? 'Check back soon for Glamour shots from our last event' : 'Check out the Glamour shots from our last event.'}',
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
               ),
-              if (videos.isEmpty)
+              if (widget.videos.isEmpty)
                 const Spacer()
               else
                 Expanded(
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 40),
-                    itemCount: videos.length,
+                    itemCount: widget.videos.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 15),
                     itemBuilder: (context, index) {
                       return _Video(
-                        url: videos[index],
+                        url: widget.videos[index],
                       );
                     },
                   ),
                 ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 40),
-                child: Text(
-                  'Want access sooner? See how you can by tapping the button below.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Button(
-                onPressed: () {},
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 40.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 49,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(6),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-                            blurRadius: 14,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Get Quick Access',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                child: _NotificationButton2(
+                  onRequestNotification: _updateNextEventWaitlist,
                 ),
               ),
               const SizedBox(height: 24),
@@ -139,6 +107,114 @@ class AfterPartyWaitlist extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _updateNextEventWaitlist(NotificationToken token) {
+    ref.read(analyticsProvider).trackAfterPartyRequestNextEventNotification();
+    final api = ref.read(apiProvider);
+    final authState = ref.read(authProvider);
+    authState.map(
+      guest: (_) {},
+      signedIn: (signedIn) {
+        api.updateWaitlist(
+          signedIn.uid,
+          signedIn.emailAddress,
+          token,
+          event: WaitlistEvent.next,
+        );
+      },
+    );
+  }
+}
+
+class _NotificationButton2 extends StatefulWidget {
+  final void Function(NotificationToken token) onRequestNotification;
+
+  const _NotificationButton2({
+    super.key,
+    required this.onRequestNotification,
+  });
+
+  @override
+  State<_NotificationButton2> createState() => _NotificationButton2State();
+}
+
+class _NotificationButton2State extends State<_NotificationButton2> {
+  bool _enabled = false;
+  bool _userRequested = false;
+  NotificationToken? _token;
+
+  @override
+  Widget build(BuildContext context) {
+    return NotificationRequestBuilder(
+      onGranted: _maybeCallback,
+      onToken: (token) {
+        setState(() => _token = token);
+        _maybeCallback();
+      },
+      builder: (context, granted, onRequest) {
+        return Button(
+          onPressed: _userRequested
+              ? null
+              : () {
+                  setState(() => _userRequested = true);
+                  onRequest();
+                },
+          useFadeWheNoPressedCallback: false,
+          child: SizedBox(
+            width: double.infinity,
+            height: 49,
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(6),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                    blurRadius: 14,
+                  ),
+                ],
+              ),
+              child: SizedBox(
+                width: 300,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 32,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 2.0),
+                        child: _NotificationIcon(
+                          enabled: _enabled,
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      'Notify me of the next event',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _maybeCallback() {
+    final token = _token;
+    if (_userRequested && token != null) {
+      setState(() => _enabled = true);
+      widget.onRequestNotification(token);
+    }
   }
 }
 
@@ -255,6 +331,77 @@ class _NotificationButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _NotificationIcon extends StatefulWidget {
+  final bool enabled;
+  const _NotificationIcon({
+    super.key,
+    required this.enabled,
+  });
+
+  @override
+  State<_NotificationIcon> createState() => _NotificationIconState();
+}
+
+class _NotificationIconState extends State<_NotificationIcon> {
+  Timer? _timer;
+  bool _animate = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.enabled) {
+      _animateIcon();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _NotificationIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.enabled && widget.enabled) {
+      _animateIcon();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: OverflowBox(
+        maxWidth: 180,
+        maxHeight: 180,
+        child: ColorFiltered(
+          colorFilter: const ColorFilter.mode(
+            Colors.black,
+            BlendMode.srcIn,
+          ),
+          child: Lottie.asset(
+            'assets/images/notification.json',
+            width: 180,
+            height: 180,
+            animate: _animate,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _animateIcon() {
+    final timer = Timer(
+      const Duration(seconds: 2),
+      () => setState(() => _animate = false),
+    );
+    setState(() {
+      _timer = timer;
+      _animate = true;
+    });
   }
 }
 

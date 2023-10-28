@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/gradient_mask.dart';
@@ -215,7 +216,12 @@ class _WaitlistPageState extends ConsumerState<WaitlistPage> {
 
   void _updateWaitlist() async {
     final api = ref.read(apiProvider);
-    await api.updateWaitlist(widget.uid, widget.email, null);
+    await api.updateWaitlist(
+      widget.uid,
+      widget.email,
+      null,
+      event: WaitlistEvent.glamourShotDeltaHouseHalloween2023,
+    );
   }
 
   void _goToGiftPage() {

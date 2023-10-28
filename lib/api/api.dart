@@ -43,8 +43,9 @@ class Api {
   Future<void> updateWaitlist(
     String uid,
     String email,
-    NotificationToken? notificationToken,
-  ) {
+    NotificationToken? notificationToken, {
+    required WaitlistEvent event,
+  }) {
     late final String? token;
     late final bool? voip;
     late final String? service;
@@ -82,6 +83,7 @@ class Api {
                 'service': service,
               },
             },
+            'event': event.name,
           }),
         );
       },
@@ -1139,6 +1141,8 @@ class AccountState with _$AccountState {
   factory AccountState.fromJson(Map<String, dynamic> json) =>
       _$AccountStateFromJson(json);
 }
+
+enum WaitlistEvent { glamourShotDeltaHouseHalloween2023, next }
 
 @freezed
 class Profile with _$Profile {

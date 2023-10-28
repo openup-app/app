@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:openup/analytics/analytics.dart';
+import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/notifications/notifications.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/gradient_mask.dart';
+import 'package:openup/widgets/notification_request_builder.dart';
 import 'package:openup/widgets/scaffold.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class GiftPage extends ConsumerStatefulWidget {
@@ -25,24 +26,12 @@ class GiftPage extends ConsumerStatefulWidget {
 }
 
 class _WaitlistPageState extends ConsumerState<GiftPage> {
-  bool _showNotificationButton = true;
-  late final NotificationManager _notificationManager;
   late final String _qrContent;
 
   @override
   void initState() {
     super.initState();
-    _notificationManager = NotificationManager(
-      onToken: (token) => _updateWaitlist(token),
-      onDeepLink: (_) {},
-    );
     _qrContent = widget.email;
-
-    _notificationManager.hasNotificationPermission().then((granted) {
-      if (granted) {
-        setState(() => _showNotificationButton = false);
-      }
-    });
   }
 
   @override
@@ -164,49 +153,9 @@ class _WaitlistPageState extends ConsumerState<GiftPage> {
               ),
             ),
             const SizedBox(height: 24),
-            if (_showNotificationButton)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 41),
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    return Button(
-                      onPressed: () async {
-                        final permanentlyDenied =
-                            await Permission.notification.isPermanentlyDenied;
-                        if (!mounted) {
-                          return;
-                        }
-                        if (permanentlyDenied) {
-                          openAppSettings();
-                        } else {
-                          ref
-                              .read(analyticsProvider)
-                              .trackWaitlistRequestGlamourShotNotification();
-                          _notificationManager.requestNotificationPermission();
-                        }
-                      },
-                      child: Container(
-                        height: 49,
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(6)),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Color.fromRGBO(0xC7, 0x00, 0xCB, 1.0),
-                              Color.fromRGBO(0xBE, 0x17, 0xF9, 1.0),
-                            ],
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          'Notify me once my Glamour Shot is ready',
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
+            _NotificationButton(
+              onRequestNotification: _updateWaitlist,
+            ),
             const SizedBox(height: 24),
             SizedBox(height: MediaQuery.of(context).padding.bottom),
           ],
@@ -216,10 +165,81 @@ class _WaitlistPageState extends ConsumerState<GiftPage> {
   }
 
   void _updateWaitlist([NotificationToken? notificationToken]) async {
+    ref.read(analyticsProvider).trackWaitlistRequestGlamourShotNotification();
     final api = ref.read(apiProvider);
-    await api.updateWaitlist(widget.uid, widget.email, notificationToken);
-    if (mounted) {
-      setState(() => _showNotificationButton = false);
+    await api.updateWaitlist(
+      widget.uid,
+      widget.email,
+      notificationToken,
+      event: WaitlistEvent.glamourShotDeltaHouseHalloween2023,
+    );
+  }
+}
+
+class _NotificationButton extends StatefulWidget {
+  final void Function(NotificationToken token) onRequestNotification;
+  const _NotificationButton({super.key, required this.onRequestNotification});
+
+  @override
+  State<_NotificationButton> createState() => _NotificationButtonState();
+}
+
+class _NotificationButtonState extends State<_NotificationButton> {
+  bool _userRequested = false;
+  bool _calledback = false;
+  NotificationToken? _token;
+
+  @override
+  Widget build(BuildContext context) {
+    return NotificationRequestBuilder(
+      onGranted: _maybeCallback,
+      onToken: (token) {
+        setState(() => _token = token);
+        _maybeCallback();
+      },
+      builder: (context, granted, onRequest) {
+        if (_calledback) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 41),
+          child: Button(
+            onPressed: () async {
+              setState(() => _userRequested = true);
+              onRequest();
+            },
+            child: Container(
+              height: 49,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(6)),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color.fromRGBO(0xC7, 0x00, 0xCB, 1.0),
+                    Color.fromRGBO(0xBE, 0x17, 0xF9, 1.0),
+                  ],
+                ),
+              ),
+              alignment: Alignment.center,
+              child: const Text(
+                'Notify me once my Glamour Shot is ready',
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _maybeCallback() {
+    final token = _token;
+    if (_userRequested && token != null) {
+      setState(() {
+        _userRequested = false;
+        _calledback = true;
+      });
+      widget.onRequestNotification(token);
     }
   }
 }

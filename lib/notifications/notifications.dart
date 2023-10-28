@@ -6,8 +6,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_apns/flutter_apns.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:rxdart/subjects.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 part 'notifications.freezed.dart';
@@ -15,19 +17,18 @@ part 'notifications.g.dart';
 
 typedef DeepLinkCallback = void Function(String path);
 
+final notificationManagerProvider =
+    Provider<NotificationManager>((ref) => throw 'Uninitialized provider');
+
 class NotificationManager {
-  final void Function(NotificationToken token) onToken;
-  final void Function(String path) onDeepLink;
+  final _tokenController = BehaviorSubject<NotificationToken>();
+  final _deepLinkController = BehaviorSubject<String>();
 
   ApnsPushConnector? _apnsPushConnector;
-  StreamController<String?>? _iosNotificationTokenController;
   StreamSubscription? _iosEventChannelTokenSubscription;
   bool _disposed = false;
 
-  NotificationManager({
-    required this.onToken,
-    required this.onDeepLink,
-  }) {
+  NotificationManager() {
     if (Platform.isIOS) {
       _apnsPushConnector = ApnsPushConnector();
       _apnsPushConnector?.shouldPresent = (_) => Future.value(true);
@@ -49,31 +50,44 @@ class NotificationManager {
           return Future.value();
         },
       );
-      _iosNotificationTokenController = StreamController<String?>.broadcast();
+    }
+
+    if (Platform.isAndroid) {
+      _listenToFcmNotificationTokens(_tokenController.sink);
+    } else if (Platform.isIOS) {
+      _listenToApnsNotificationTokens(_tokenController.sink);
     }
   }
 
   Future<bool> hasNotificationPermission() => Permission.notification.isGranted;
 
-  void requestNotificationPermission() {
-    _tokenStream.listen(_onNotificationToken);
-  }
+  Future<bool> isPermanentlyDenied() =>
+      Permission.notification.isPermanentlyDenied;
 
-  void _onNotificationToken(String? token) {
-    debugPrint('On notification token: $token');
-    if (token != null && !_disposed) {
-      final notificationToken =
-          Platform.isIOS ? _ApnsMessaging(token) : _FcmMessagingAndVoip(token);
-      onToken(notificationToken);
+  Future<bool> requestNotificationPermission() async {
+    if (Platform.isAndroid) {
+      final settings = await FirebaseMessaging.instance.requestPermission();
+      return settings.authorizationStatus == AuthorizationStatus.authorized;
+    } else {
+      final status = await _apnsPushConnector?.getAuthorizationStatus();
+      if (status == ApnsAuthorizationStatus.authorized) {
+        return true;
+      } else {
+        return await _apnsPushConnector!
+            .requestNotificationPermissions(const IosNotificationSettings());
+      }
     }
   }
 
-  void dispose() => _disposeNotifications();
+  void dispose() {
+    _tokenController.close();
+    _deepLinkController.close();
+    _disposeNotifications();
+  }
 
   void _disposeNotifications() {
     _disposed = true;
     _iosEventChannelTokenSubscription?.cancel();
-    _iosNotificationTokenController?.close();
     if (Platform.isIOS) {
       _apnsPushConnector = null;
     }
@@ -86,53 +100,42 @@ class NotificationManager {
       case 'deep_link':
         try {
           final deepLink = NotificationPayload.fromJson(body);
-          onDeepLink(deepLink.path);
+          _deepLinkController.add(deepLink.path);
         } catch (e, s) {
           Sentry.captureException(e, stackTrace: s);
         }
     }
   }
 
-  Stream<String?> get _tokenStream async* {
-    if (_disposed) {
-      yield* const Stream.empty();
-      return;
-    }
+  Stream<NotificationToken> get tokenStream => _tokenController.stream;
 
-    if (Platform.isAndroid) {
-      await FirebaseMessaging.instance.requestPermission();
-      yield await FirebaseMessaging.instance.getToken();
-      yield* FirebaseMessaging.instance.onTokenRefresh;
-    } else if (Platform.isIOS) {
-      var status = await _apnsPushConnector?.getAuthorizationStatus();
-      if (status != ApnsAuthorizationStatus.authorized) {
-        await _apnsPushConnector
-            ?.requestNotificationPermissions(const IosNotificationSettings());
-      }
+  Stream<String> get deepLinkStream => _deepLinkController.stream;
 
-      status = await _apnsPushConnector?.getAuthorizationStatus();
-      if (status == ApnsAuthorizationStatus.authorized) {
-        // APNSPushConnector is receving a null token, so manually get it ourselves
-        const eventChannel =
-            EventChannel('com.openupdating/notification_tokens');
-        _iosEventChannelTokenSubscription =
-            eventChannel.receiveBroadcastStream().listen((token) {
-          if (_iosNotificationTokenController?.isClosed != true) {
-            _iosNotificationTokenController?.add(token);
-          }
-        });
-        _apnsPushConnector?.token.addListener(() {
-          if (_iosNotificationTokenController?.isClosed != true) {
-            _iosNotificationTokenController
-                ?.add(_apnsPushConnector?.token.value);
-          }
-        });
-      }
-      final stream = _iosNotificationTokenController?.stream;
-      if (stream != null) {
-        yield* stream;
-      }
+  void _listenToFcmNotificationTokens(
+      StreamSink<NotificationToken> sink) async {
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      sink.add(NotificationToken.fcmMessagingAndVoip(token));
     }
+    sink.addStream(FirebaseMessaging.instance.onTokenRefresh
+        .map(NotificationToken.fcmMessagingAndVoip));
+  }
+
+  void _listenToApnsNotificationTokens(Sink<NotificationToken> sink) async {
+    // APNSPushConnector is receving a null token, so manually get it ourselves
+    const eventChannel = EventChannel('com.openupdating/notification_tokens');
+    _iosEventChannelTokenSubscription =
+        eventChannel.receiveBroadcastStream().listen((token) {
+      if (!_disposed && token != null) {
+        sink.add(NotificationToken.apnsMessaging(token));
+      }
+    });
+    _apnsPushConnector?.token.addListener(() {
+      final value = _apnsPushConnector?.token.value;
+      if (!_disposed && value != null) {
+        sink.add(NotificationToken.apnsMessaging(value));
+      }
+    });
   }
 }
 

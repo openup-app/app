@@ -32,6 +32,12 @@ class Analytics {
   void trackWaitlistRequestGlamourShotNotification() =>
       _track('waitlist_request_glamour_shot_notification');
 
+  void trackAfterPartyProcessingRequestGlamourShotNotification() =>
+      _track('after_party_processing_glamour_shot_notification');
+
+  void trackAfterPartyRequestNextEventNotification() =>
+      _track('after_party_request_next_event_notification');
+
   void trackSignupSubmitPhone() => _track('signup_submit_phone');
 
   void trackSignupCodeSent() => _track('signup_code_sent');

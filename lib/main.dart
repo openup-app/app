@@ -128,6 +128,8 @@ void main() async {
       port: webPort,
     );
 
+    final notificationManager = NotificationManager();
+
     // ignore: missing_provider_scope
     runApp(
       RestartApp(
@@ -136,6 +138,7 @@ void main() async {
             mixpanelProvider.overrideWithValue(mixpanel),
             analyticsProvider.overrideWithValue(analytics),
             apiProvider.overrideWithValue(api),
+            notificationManagerProvider.overrideWithValue(notificationManager),
             authProvider.overrideWith((ref) {
               final notifier = AuthStateNotifier(
                 api: api,
@@ -210,6 +213,9 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   NotificationManager? _notificationManager;
   InAppNotificationsApi? _inAppNotificationsApi;
 
+  NotificationToken? _lastestNotificationToken;
+  String? _latestDeepLink;
+
   @override
   void initState() {
     super.initState();
@@ -226,6 +232,12 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
   }
 
   void _initNotifications() {
+    final notificationManager = ref.read(notificationManagerProvider);
+    notificationManager.tokenStream.listen(
+        (notificationToken) => _lastestNotificationToken = notificationToken);
+    notificationManager.deepLinkStream
+        .listen((deepLink) => _latestDeepLink = deepLink);
+
     ref.listenManual<bool>(
       userProvider.select((p) {
         return p.map(
@@ -234,14 +246,20 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
         );
       }),
       (previous, next) {
-        _notificationManager?.dispose();
         if (next) {
-          _notificationManager = NotificationManager(
-            onToken: (token) =>
-                ref.read(apiProvider).addNotificationToken(token),
-            onDeepLink: _goRouter.go,
-          );
-          _notificationManager?.requestNotificationPermission();
+          final notificationToken = _lastestNotificationToken;
+          if (notificationToken != null) {
+            ref.read(apiProvider).addNotificationToken(notificationToken);
+            setState(() => _lastestNotificationToken = null);
+          }
+
+          final deepLink = _latestDeepLink;
+          if (deepLink != null) {
+            _goRouter.go(deepLink);
+            setState(() => _latestDeepLink = null);
+          }
+
+          notificationManager.requestNotificationPermission();
         }
       },
       fireImmediately: true,
