@@ -11,7 +11,6 @@ class AfterPartyProcessing extends StatelessWidget {
       body: Column(
         children: [
           SizedBox(height: MediaQuery.of(context).padding.top),
-          // const SizedBox(height: 24),
           Expanded(
             child: Center(
               child: Transform.scale(

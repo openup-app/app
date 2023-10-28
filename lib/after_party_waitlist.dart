@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:openup/video/video.dart';
 import 'package:openup/widgets/button.dart';
 
 import 'widgets/party_force_field.dart';
@@ -73,10 +74,11 @@ class AfterPartyWaitlist extends StatelessWidget {
                 const Spacer()
               else
                 Expanded(
-                  child: ListView.builder(
+                  child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     itemCount: videos.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 15),
                     itemBuilder: (context, index) {
                       return _Video(
                         url: videos[index],
@@ -150,31 +152,34 @@ class _Video extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 3 / 4,
-      child: Container(
-        width: 200,
-        margin: const EdgeInsets.symmetric(
-          horizontal: 4,
-          vertical: 24,
-        ),
-        padding: const EdgeInsets.all(8),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(
-            Radius.circular(12),
-          ),
-          boxShadow: [
-            BoxShadow(
-              offset: Offset(0, 1),
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-              blurRadius: 13,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        vertical: 24,
+      ),
+      child: AspectRatio(
+        aspectRatio: 3 / 4,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.all(
+              Radius.circular(12),
             ),
-          ],
-        ),
-        child: const ClipRRect(
-          borderRadius: BorderRadius.all(Radius.circular(6)),
-          child: ColoredBox(color: Colors.brown),
+            boxShadow: [
+              BoxShadow(
+                offset: Offset(0, 1),
+                color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
+                blurRadius: 13,
+              ),
+            ],
+          ),
+          child: VideoBuilder(
+            uri: Uri.parse(url),
+            autoPlay: true,
+            builder: (context, video, controller) {
+              return video;
+            },
+          ),
         ),
       ),
     );
