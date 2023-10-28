@@ -64,16 +64,25 @@ class _WobblyRingsState extends State<WobblyRings> {
                         amplitude: radians(360),
                         delay: delay,
                       );
-                      return CustomPaint(
-                        size: radius == null ? Size.zero : Size.square(radius),
-                        painter: _CirclePainter(
-                          x: 1 + x * 0.1,
-                          y: 1 + y * 0.1,
-                          scale: widget.scale,
-                          angle: angle,
-                          thickness: widget.thickness,
-                          glow: i == 0,
-                        ),
+                      return TweenAnimationBuilder<double>(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOutQuart,
+                        tween: Tween(begin: 1, end: widget.scale),
+                        builder: (context, value, child) {
+                          return CustomPaint(
+                            size: radius == null
+                                ? Size.zero
+                                : Size.square(radius),
+                            painter: _CirclePainter(
+                              x: 1 + x * 0.1,
+                              y: 1 + y * 0.1,
+                              scale: value,
+                              angle: angle,
+                              thickness: widget.thickness,
+                              glow: i == 0,
+                            ),
+                          );
+                        },
                       );
                     },
                   ),

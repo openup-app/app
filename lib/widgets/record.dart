@@ -107,7 +107,7 @@ class _WobblyRingsRecorderState extends State<WobblyRingsRecorder> {
               onPressed: () => _onPressed(state, short),
               useFadeWheNoPressedCallback: false,
               child: WobblyRings(
-                scale: 1.00 + (amplitude / maxAmplitude).clamp(0, 1),
+                scale: 1.00 + 1.5 * (amplitude / maxAmplitude).clamp(0, 1),
                 thickness: 25,
               ),
             ),
