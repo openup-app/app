@@ -55,6 +55,7 @@ class SignupGlamourPreview extends ConsumerWidget {
                           child: PhotoCard(
                             width: constraints.maxWidth,
                             height: constraints.maxHeight,
+                            useExtraTopPadding: true,
                             decoration: const BoxDecoration(
                               color: Colors.white,
                               boxShadow: [

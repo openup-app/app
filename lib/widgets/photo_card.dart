@@ -31,130 +31,135 @@ class PhotoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const margin = 24.0;
+    const doubleMargin = margin * 2;
     final topPadding = 16.0 + (useExtraTopPadding ? 16.0 : 0.0);
     final bottomHeight =
-        (firstButton != null && secondButton != null) ? 140.0 : 90.0;
-    const leftPadding = 16.0;
-    const rightPadding = 16.0;
-    const requiredWidth = leftPadding + rightPadding;
-    final requiredHeight = topPadding + bottomHeight;
-    final availableWidth = width - requiredWidth - margin;
-    final availableHeight = height - requiredHeight - margin;
-    final availableAspect = availableWidth / availableHeight;
-    const targetAspect = 16 / 24;
+        (firstButton != null && secondButton != null) ? 140.0 : 72.0;
+    const horizontalPadding = 32.0;
+    final verticalPadding = topPadding + bottomHeight;
+    final maxContentsWidth = width - horizontalPadding - doubleMargin;
+    final maxContentsHeight = height - verticalPadding - doubleMargin;
 
+    final availableAspect = maxContentsWidth / maxContentsHeight;
+    const targetAspect = 3 / 4;
     final double outputWidth, outputHeight;
+
     if (availableAspect > targetAspect) {
-      outputHeight = height;
-      outputWidth = height * targetAspect;
+      outputHeight = height - doubleMargin;
+      outputWidth = maxContentsHeight * targetAspect + horizontalPadding;
     } else {
-      outputWidth = width;
-      outputHeight = width / targetAspect;
+      outputWidth = width - doubleMargin;
+      outputHeight = maxContentsWidth / targetAspect + verticalPadding;
     }
+    final contentWidth = outputWidth - horizontalPadding;
+    final contentHeight = outputHeight - verticalPadding;
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(margin),
-        child: Container(
-          width: outputWidth,
-          height: outputHeight,
-          decoration: decoration ?? const BoxDecoration(color: Colors.white),
-          child: Column(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: leftPadding,
-                    top: topPadding,
-                    right: rightPadding,
+      child: Container(
+        width: outputWidth,
+        height: outputHeight,
+        margin: const EdgeInsets.all(margin),
+        clipBehavior: Clip.hardEdge,
+        decoration: decoration ?? const BoxDecoration(color: Colors.white),
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: horizontalPadding / 2,
+                  top: topPadding,
+                  right: horizontalPadding / 2,
+                ),
+                child: SizedBox(
+                  width: contentWidth,
+                  height: contentHeight,
+                  child: AspectRatio(
+                    aspectRatio: targetAspect,
+                    child: photo,
                   ),
-                  child: SizedBox.expand(child: photo),
                 ),
               ),
-              SizedBox(
-                height: bottomHeight,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        left: leftPadding,
-                        right: rightPadding,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                DefaultTextStyle(
-                                  style: const TextStyle(
-                                    fontFamily: 'Covered By Your Grace',
-                                    fontSize: 34,
-                                    color:
-                                        Color.fromRGBO(0x27, 0x27, 0x27, 1.0),
-                                  ),
-                                  child: Builder(
-                                    builder: (context) {
-                                      return titleBuilder(context);
-                                    },
-                                  ),
-                                ),
-                                if (subtitle != null)
-                                  DefaultTextStyle.merge(
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w300,
-                                      color:
-                                          Color.fromRGBO(0x45, 0x45, 0x45, 1.0),
-                                    ),
-                                    child: subtitle!,
-                                  ),
-                                const SizedBox(height: 8),
-                              ],
-                            ),
-                          ),
-                          indicatorButton,
-                        ],
-                      ),
-                    ),
-                    if (firstButton != null && secondButton != null) ...[
-                      const Divider(
-                        height: 1,
-                        color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
-                      ),
-                      SizedBox(
-                        height: 50,
-                        child: DefaultTextStyle.merge(
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black,
-                          ),
-                          child: Row(
+            ),
+            SizedBox(
+              height: bottomHeight,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: horizontalPadding / 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: firstButton!,
+                              DefaultTextStyle(
+                                style: const TextStyle(
+                                  fontFamily: 'Covered By Your Grace',
+                                  fontSize: 34,
+                                  color: Color.fromRGBO(0x27, 0x27, 0x27, 1.0),
+                                ),
+                                child: Builder(
+                                  builder: (context) {
+                                    return titleBuilder(context);
+                                  },
+                                ),
                               ),
-                              const VerticalDivider(
-                                width: 1,
-                                color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
-                              ),
-                              Expanded(
-                                child: secondButton!,
-                              ),
+                              if (subtitle != null)
+                                DefaultTextStyle.merge(
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w300,
+                                    color:
+                                        Color.fromRGBO(0x45, 0x45, 0x45, 1.0),
+                                  ),
+                                  child: subtitle!,
+                                ),
+                              const SizedBox(height: 8),
                             ],
                           ),
                         ),
+                        indicatorButton,
+                      ],
+                    ),
+                  ),
+                  if (firstButton != null && secondButton != null) ...[
+                    const Divider(
+                      height: 1,
+                      color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
+                    ),
+                    SizedBox(
+                      height: 50,
+                      child: DefaultTextStyle.merge(
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: firstButton!,
+                            ),
+                            const VerticalDivider(
+                              width: 1,
+                              color: Color.fromRGBO(0xD2, 0xD2, 0xD2, 1.0),
+                            ),
+                            Expanded(
+                              child: secondButton!,
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ],
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

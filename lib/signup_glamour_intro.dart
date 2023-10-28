@@ -4,7 +4,7 @@ import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/gradient_mask.dart';
 import 'package:openup/widgets/party_force_field.dart';
 import 'package:openup/widgets/photo_card.dart';
-import 'package:vector_math/vector_math_64.dart' hide Colors;
+import 'package:openup/widgets/profile_display.dart';
 
 class SignupGlamourIntro extends StatelessWidget {
   const SignupGlamourIntro({super.key});
@@ -36,13 +36,13 @@ class SignupGlamourIntro extends StatelessWidget {
             ),
             const SizedBox(height: 48),
             Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return Transform.rotate(
-                    angle: radians(-4),
-                    child: PhotoCard(
+              child: PhotoCardWiggle(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return PhotoCard(
                       width: constraints.maxWidth,
                       height: constraints.maxHeight,
+                      useExtraTopPadding: true,
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         boxShadow: [
@@ -56,9 +56,9 @@ class SignupGlamourIntro extends StatelessWidget {
                       photo: const PartyForceField(),
                       titleBuilder: (_) => const SizedBox.shrink(),
                       indicatorButton: const SizedBox.shrink(),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 48),
@@ -84,7 +84,7 @@ class SignupGlamourIntro extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 84),
+            const SizedBox(height: 48),
           ],
         ),
       ),
