@@ -24,6 +24,7 @@ class _SigninPageState extends ConsumerState<SigninPage> {
     super.initState();
     ref.listenManual(
       waitlistProvider,
+      fireImmediately: true,
       (previous, next) {
         if (next != null) {
           _signInComplete(next);
