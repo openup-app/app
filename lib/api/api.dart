@@ -1149,6 +1149,7 @@ class Profile with _$Profile {
     required String photo,
     @_Base64Converter() required Uint8List photoThumbnail,
     required String audio,
+    required String video,
     required List<String> gallery,
     required UserNamedLocation location,
     @Default([]) List<KnownContact> mutualContacts,

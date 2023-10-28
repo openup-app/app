@@ -71,33 +71,38 @@ class _DiscoverListPageState extends ConsumerState<DiscoverListPage> {
       ),
       body: TextBackground(
         child: SafeArea(
-          child: Builder(
-            builder: (context) {
-              if (state is PeopleFailed) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Something went wrong finding people nearby'),
-                      const SizedBox(height: 16),
-                      RoundedButton(
-                        onPressed: () => ref.refresh(peopleProvider),
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              final readyState = state.map(
-                uninitialized: (_) => null,
-                initializing: (_) => null,
-                failed: (_) => null,
-                ready: (ready) => ready,
+          child: state.map(
+            uninitialized: (_) {
+              return const _ListView(
+                profiles: null,
+                latLong: null,
               );
+            },
+            initializing: (_) {
+              return const _ListView(
+                profiles: null,
+                latLong: null,
+              );
+            },
+            failed: (_) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Something went wrong finding people nearby'),
+                    const SizedBox(height: 16),
+                    RoundedButton(
+                      onPressed: () => ref.refresh(peopleProvider),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            ready: (ready) {
               return _ListView(
-                profiles: readyState?.profiles,
-                latLong: readyState?.latLong,
+                profiles: ready.profiles,
+                latLong: ready.latLong,
               );
             },
           ),
@@ -123,6 +128,7 @@ class _ListView extends ConsumerStatefulWidget {
 
 class _ListViewState extends ConsumerState<_ListView> {
   final _cardStackKey = GlobalKey<CardStackState<Profile?>>();
+  late final ProfileController _controller;
   final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
 
   bool _active = false;
@@ -168,11 +174,13 @@ class _ListViewState extends ConsumerState<_ListView> {
                 child: Text('No profiles nearby'),
               );
             }
+
+            final profile = profiles[_profileIndex];
             return ProfileBuilder(
-              key: _profileBuilderKey,
-              profile: profiles[_profileIndex],
-              play: _play,
-              builder: (context, playbackState, playbackInfoStream) {
+              profile: profile,
+              onController: (controller) =>
+                  setState(() => _controller = controller),
+              builder: (context, video, controller) {
                 final currentProfile = profiles[_profileIndex];
                 return CardStack<Profile>(
                   key: _cardStackKey,
@@ -194,15 +202,10 @@ class _ListViewState extends ConsumerState<_ListView> {
                         distance:
                             distanceMiles(profile.location.latLong, latLong)
                                 .round(),
-                        playbackState: isCurrent ? playbackState : null,
-                        playbackInfoStream:
-                            isCurrent ? playbackInfoStream : null,
-                        onPlay: () {
-                          if (_active) {
-                            setState(() => _play = true);
-                          }
-                        },
-                        onPause: () => setState(() => _play = false),
+                        playbackStream:
+                            isCurrent ? controller.audioPlaybackStream : null,
+                        onPlay: controller.play,
+                        onPause: controller.pause,
                         onMessage: () =>
                             _showRecordInvitePanel(context, profile.uid),
                       ),
@@ -250,5 +253,5 @@ class _ListViewState extends ConsumerState<_ListView> {
     notifier.refreshChatrooms();
   }
 
-  void _pauseAudio() => setState(() => _play = false);
+  void _pauseAudio() => _controller.pause();
 }

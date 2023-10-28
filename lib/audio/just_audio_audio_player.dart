@@ -81,10 +81,6 @@ class JustAudioAudioPlayer extends AudioPlayer {
     }
 
     if (ready) {
-      if (uri != null) {
-        await _setAudioSource(uri);
-      }
-
       await _justAudio.play();
     }
   }

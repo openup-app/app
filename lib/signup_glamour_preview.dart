@@ -47,7 +47,8 @@ class SignupGlamourPreview extends ConsumerWidget {
                 padding: const EdgeInsets.only(top: 89, bottom: 140),
                 child: ProfileBuilder(
                   profile: profile,
-                  builder: (context, controller) {
+                  autoPlay: false,
+                  builder: (context, video, controller) {
                     return LayoutBuilder(
                       builder: (context, constraints) {
                         return PhotoCardWiggle(
@@ -67,13 +68,23 @@ class SignupGlamourPreview extends ConsumerWidget {
                             photo: Stack(
                               fit: StackFit.expand,
                               children: [
-                                const PartyForceField(),
+                                const PartyForceField()
+                                    .animate()
+                                    .fadeOut(delay: const Duration(seconds: 6)),
                                 Button(
                                   onPressed: controller.togglePlayPause,
-                                  child: const ColoredBox(color: Colors.blue)
-                                      .animate()
-                                      .fadeIn(
-                                          delay: const Duration(seconds: 6)),
+                                  child: video.animate().custom(
+                                        delay: const Duration(seconds: 6),
+                                        builder: (context, value, child) {
+                                          if (value != 0) {
+                                            controller.play();
+                                          }
+                                          return Opacity(
+                                            opacity: value,
+                                            child: child,
+                                          );
+                                        },
+                                      ),
                                 ),
                               ],
                             ),
@@ -86,9 +97,18 @@ class SignupGlamourPreview extends ConsumerWidget {
                               onTogglePlayPause: controller.togglePlayPause,
                               audioStateStream: controller.audioPlaybackStream
                                   .map((event) => event.state),
-                            )
-                                .animate(onPlay: (_) => controller.play())
-                                .fadeIn(delay: const Duration(seconds: 5)),
+                            ).animate().custom(
+                                  delay: const Duration(seconds: 5),
+                                  builder: (context, value, child) {
+                                    if (value != 0) {
+                                      controller.playAudioOnly();
+                                    }
+                                    return Opacity(
+                                      opacity: value,
+                                      child: child,
+                                    );
+                                  },
+                                ),
                           ),
                         );
                       },

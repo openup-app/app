@@ -6,6 +6,8 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/audio/audio.dart';
 import 'package:openup/audio/audio_player.dart';
+import 'package:openup/video/video.dart';
+import 'package:openup/video/video_player.dart';
 import 'package:openup/widgets/animation.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -15,14 +17,17 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 class ProfileBuilder extends StatefulWidget {
   final Profile profile;
+  final bool autoPlay;
   final void Function(ProfileController controller)? onController;
   final Widget Function(
     BuildContext context,
+    Widget video,
     ProfileController controller,
   ) builder;
 
   const ProfileBuilder({
     super.key,
+    this.autoPlay = true,
     this.onController,
     required this.profile,
     required this.builder,
@@ -33,30 +38,69 @@ class ProfileBuilder extends StatefulWidget {
 }
 
 class ProfileBuilderState extends State<ProfileBuilder> {
-  ProfileController? _controller;
+  AudioController? _audioController;
+  VideoController? _videoController;
+  ProfileController? _playerController;
 
   @override
   Widget build(BuildContext context) {
     return AudioBuilder(
       key: ValueKey(widget.profile.uid),
       uri: Uri.parse(widget.profile.audio),
-      autoPlay: true,
+      autoPlay: widget.autoPlay,
       loop: true,
-      onController: (controller) {
-        final playerController = _constructController(controller);
-        setState(() => _controller = playerController);
-        widget.onController?.call(playerController);
-      },
-      builder: (context, child, controller) {
-        return widget.builder(
-            context, _controller ?? _constructController(controller));
+      onController: (controller) => _onController(audioController: controller),
+      builder: (context, child, audioController) {
+        return VideoBuilder(
+          uri: Uri.parse(widget.profile.video),
+          autoPlay: widget.autoPlay,
+          onController: (controller) =>
+              _onController(videoController: controller),
+          builder: (context, video, videoController) {
+            return widget.builder(
+              context,
+              video,
+              _playerController ??
+                  _constructController(audioController, videoController),
+            );
+          },
+        );
       },
     );
   }
 
-  ProfileController _constructController(AudioController controller) {
+  void _onController({
+    AudioController? audioController,
+    VideoController? videoController,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _audioController = _audioController ?? audioController;
+        _videoController = _videoController ?? videoController;
+      });
+      if (_audioController != null && _videoController != null) {
+        final playerController = _constructController(
+          _audioController!,
+          _videoController!,
+        );
+        setState(() {
+          _playerController = playerController;
+        });
+        widget.onController?.call(playerController);
+      }
+    });
+  }
+
+  ProfileController _constructController(
+    AudioController audioController,
+    VideoController videoController,
+  ) {
     return ProfileController(
-      audioController: controller,
+      audioController: audioController,
+      videoController: videoController,
     );
   }
 }
@@ -395,59 +439,42 @@ class PhotoCardWiggle extends StatelessWidget {
   }
 }
 
-class _RecordButton extends StatelessWidget {
-  final Widget label;
-  final VoidCallback? onPressed;
-
-  const _RecordButton({
-    super.key,
-    required this.label,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Button(
-      onPressed: onPressed,
-      child: Container(
-        height: 51,
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          color: Color.fromRGBO(0x00, 0x85, 0xFF, 1.0),
-          borderRadius: BorderRadius.all(Radius.circular(11)),
-          boxShadow: [
-            BoxShadow(
-              offset: Offset(0, 2),
-              blurRadius: 17,
-              color: Color.fromRGBO(0x00, 0x00, 0x00, 0.25),
-            ),
-          ],
-        ),
-        child: DefaultTextStyle.merge(
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: Colors.white,
-          ),
-          child: label,
-        ),
-      ),
-    );
-  }
-}
-
 class ProfileController {
   final AudioController _audioController;
+  final VideoController _videoController;
 
-  ProfileController({required AudioController audioController})
-      : _audioController = audioController;
+  ProfileController({
+    required AudioController audioController,
+    required VideoController videoController,
+  })  : _audioController = audioController,
+        _videoController = videoController;
 
   Stream<Playback> get audioPlaybackStream => _audioController.playbackStream;
 
-  void togglePlayPause() => _audioController.togglePlayPause();
+  Stream<VideoState> get videoStateStream => _videoController.videoStateStream;
 
-  void play() => _audioController.play();
+  void togglePlayPause() {
+    if (_audioController.isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+  }
 
-  void pause() => _audioController.pause();
+  void playAudioOnly() => _audioController.play();
+
+  void play() {
+    _audioController.play();
+    _videoController.play();
+  }
+
+  void pause() {
+    _audioController.pause();
+    _videoController.pause();
+  }
+
+  void stop() {
+    _audioController.stop();
+    _videoController.stop();
+  }
 }

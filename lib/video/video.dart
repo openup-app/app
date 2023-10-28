@@ -11,10 +11,9 @@ class VideoBuilder extends StatefulWidget {
   final void Function(VideoController controller)? onController;
   final Widget Function(
     BuildContext context,
-    Widget player,
+    Widget video,
     VideoController controller,
   ) builder;
-  final Widget? child;
 
   const VideoBuilder({
     super.key,
@@ -22,7 +21,6 @@ class VideoBuilder extends StatefulWidget {
     this.autoPlay = false,
     this.onController,
     required this.builder,
-    this.child,
   });
 
   @override
@@ -44,8 +42,7 @@ class _VideoBuilderState extends State<VideoBuilder> {
   @override
   void didUpdateWidget(covariant VideoBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.uri != widget.uri ||
-        (widget.autoPlay && oldWidget.autoPlay != widget.autoPlay)) {
+    if (oldWidget.uri != widget.uri) {
       _vpController.dispose();
       _initPlayer();
     }
@@ -68,9 +65,18 @@ class _VideoBuilderState extends State<VideoBuilder> {
   }
 
   void _initPlayer() async {
-    _vpController = vp.VideoPlayerController.networkUrl(widget.uri);
+    _vpController = vp.VideoPlayerController.networkUrl(
+      widget.uri,
+      videoPlayerOptions: vp.VideoPlayerOptions(
+        // Enabled to play video with separate audio source on Android
+        mixWithOthers: true,
+      ),
+    );
     _vpController.setLooping(true);
-    _vpController.play();
+    _vpController.setVolume(0);
+    if (widget.autoPlay) {
+      _vpController.play();
+    }
     await _vpController.initialize();
     if (mounted) {
       // Show first frame
