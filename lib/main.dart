@@ -50,6 +50,7 @@ import 'package:openup/signup_glamour_age.dart';
 import 'package:openup/signup_glamour_audio.dart';
 import 'package:openup/signup_glamour_intro.dart';
 import 'package:openup/signup_glamour_name.dart';
+import 'package:openup/signup_glamour_photos.dart';
 import 'package:openup/signup_glamour_preview.dart';
 import 'package:openup/util/key_value_store_service.dart';
 import 'package:openup/util/page_transition.dart';
@@ -511,20 +512,41 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
                   },
                   routes: [
                     GoRoute(
-                      path: 'audio',
-                      name: 'signup_audio',
+                      path: 'photos',
+                      name: 'signup_photos',
                       pageBuilder: (context, state) {
                         return CustomTransitionPage(
-                          child: const SignupGlamourAudio(),
+                          child: const SignupGlamourPhotos(),
                           transitionsBuilder:
                               (context, animation, secondaryAnimation, child) {
                             return SlideInRightTransition(
                               animation: animation,
-                              child: child,
+                              child: SlideOutLeftTransition(
+                                secondaryAnimation: secondaryAnimation,
+                                child: child,
+                              ),
                             );
                           },
                         );
                       },
+                      routes: [
+                        GoRoute(
+                          path: 'audio',
+                          name: 'signup_audio',
+                          pageBuilder: (context, state) {
+                            return CustomTransitionPage(
+                              child: const SignupGlamourAudio(),
+                              transitionsBuilder: (context, animation,
+                                  secondaryAnimation, child) {
+                                return SlideInRightTransition(
+                                  animation: animation,
+                                  child: child,
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),

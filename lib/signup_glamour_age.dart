@@ -118,7 +118,7 @@ class _SignupGlamourAgeState extends ConsumerState<SignupGlamourAge> {
     }
     final analytics = ref.read(analyticsProvider);
     analytics.trackSignupSubmitAge();
-    context.pushNamed('signup_audio');
+    context.pushNamed('signup_photos');
   }
 }
 
