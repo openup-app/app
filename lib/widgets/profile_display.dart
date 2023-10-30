@@ -15,14 +15,14 @@ import 'package:openup/widgets/gallery.dart';
 import 'package:openup/widgets/photo_card.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
-class ProfileBuilder extends StatefulWidget {
+class ProfileBuilder extends StatelessWidget {
   final Profile profile;
   final bool autoPlay;
-  final void Function(ProfileController controller)? onController;
+  final void Function(AudioController controller)? onController;
   final Widget Function(
     BuildContext context,
     Widget video,
-    ProfileController controller,
+    AudioController controller,
   ) builder;
 
   const ProfileBuilder({
@@ -34,73 +34,16 @@ class ProfileBuilder extends StatefulWidget {
   });
 
   @override
-  State<ProfileBuilder> createState() => ProfileBuilderState();
-}
-
-class ProfileBuilderState extends State<ProfileBuilder> {
-  AudioController? _audioController;
-  VideoController? _videoController;
-  ProfileController? _playerController;
-
-  @override
   Widget build(BuildContext context) {
     return AudioBuilder(
-      key: ValueKey(widget.profile.uid),
-      uri: Uri.parse(widget.profile.audio),
-      autoPlay: widget.autoPlay,
+      key: ValueKey(profile.uid),
+      uri: Uri.parse(profile.audio),
+      autoPlay: autoPlay,
       loop: true,
-      onController: (controller) => _onController(audioController: controller),
+      onController: onController,
       builder: (context, child, audioController) {
-        return VideoBuilder(
-          uri: Uri.parse(widget.profile.video),
-          autoPlay: widget.autoPlay,
-          onController: (controller) =>
-              _onController(videoController: controller),
-          builder: (context, video, videoController) {
-            return widget.builder(
-              context,
-              video,
-              _playerController ??
-                  _constructController(audioController, videoController),
-            );
-          },
-        );
+        return builder(context, Image.network(profile.photo), audioController);
       },
-    );
-  }
-
-  void _onController({
-    AudioController? audioController,
-    VideoController? videoController,
-  }) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _audioController = _audioController ?? audioController;
-        _videoController = _videoController ?? videoController;
-      });
-      if (_audioController != null && _videoController != null) {
-        final playerController = _constructController(
-          _audioController!,
-          _videoController!,
-        );
-        setState(() {
-          _playerController = playerController;
-        });
-        widget.onController?.call(playerController);
-      }
-    });
-  }
-
-  ProfileController _constructController(
-    AudioController audioController,
-    VideoController videoController,
-  ) {
-    return ProfileController(
-      audioController: audioController,
-      videoController: videoController,
     );
   }
 }

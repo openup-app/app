@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/audio/audio.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/people_provider.dart';
 import 'package:openup/shell_page.dart';
@@ -128,8 +129,7 @@ class _ListView extends ConsumerStatefulWidget {
 
 class _ListViewState extends ConsumerState<_ListView> {
   final _cardStackKey = GlobalKey<CardStackState<Profile?>>();
-  late final ProfileController _controller;
-  final _profileBuilderKey = GlobalKey<ProfileBuilderState>();
+  late final AudioController _controller;
 
   bool _active = false;
   bool _play = true;
@@ -203,7 +203,7 @@ class _ListViewState extends ConsumerState<_ListView> {
                             distanceMiles(profile.location.latLong, latLong)
                                 .round(),
                         playbackStream:
-                            isCurrent ? controller.audioPlaybackStream : null,
+                            isCurrent ? controller.playbackStream : null,
                         onPlay: controller.play,
                         onPause: controller.pause,
                         onMessage: () =>

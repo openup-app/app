@@ -74,18 +74,8 @@ class SignupGlamourPreview extends ConsumerWidget {
                                     .fadeOut(delay: const Duration(seconds: 6)),
                                 Button(
                                   onPressed: controller.togglePlayPause,
-                                  child: video.animate().custom(
-                                        delay: const Duration(seconds: 6),
-                                        builder: (context, value, child) {
-                                          if (value != 0) {
-                                            controller.play();
-                                          }
-                                          return Opacity(
-                                            opacity: value,
-                                            child: child,
-                                          );
-                                        },
-                                      ),
+                                  child: video.animate().fadeIn(
+                                      delay: const Duration(seconds: 6)),
                                 ),
                               ],
                             ),
@@ -96,13 +86,13 @@ class SignupGlamourPreview extends ConsumerWidget {
                             },
                             indicatorButton: AudioPlaybackIndicator(
                               onTogglePlayPause: controller.togglePlayPause,
-                              audioStateStream: controller.audioPlaybackStream
+                              audioStateStream: controller.playbackStream
                                   .map((event) => event.state),
                             ).animate().custom(
                                   delay: const Duration(seconds: 5),
                                   builder: (context, value, child) {
                                     if (value != 0) {
-                                      controller.playAudioOnly();
+                                      controller.play();
                                     }
                                     return Opacity(
                                       opacity: value,

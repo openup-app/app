@@ -309,12 +309,10 @@ class _AppVersionState extends State<_AppVersion> {
 
 class _ProfilePanel extends ConsumerStatefulWidget {
   final Profile profile;
-  final GlobalKey<ProfileBuilderState> profileBuilderKey;
 
   const _ProfilePanel({
     super.key,
     required this.profile,
-    required this.profileBuilderKey,
   });
 
   @override

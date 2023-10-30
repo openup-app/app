@@ -4,6 +4,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/user_state.dart';
+import 'package:openup/audio/audio.dart';
 import 'package:openup/shell_page.dart';
 import 'package:openup/widgets/background.dart';
 import 'package:openup/widgets/common.dart';
@@ -29,7 +30,7 @@ class ViewProfilePage extends ConsumerStatefulWidget {
 class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
   Profile? _profile;
 
-  ProfileController? _controller;
+  AudioController? _controller;
 
   @override
   void initState() {
@@ -110,7 +111,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                             height: constraints.maxHeight,
                             profile: profile,
                             distance: 2,
-                            playbackStream: controller.audioPlaybackStream,
+                            playbackStream: controller.playbackStream,
                             onPlay: controller.play,
                             onPause: controller.pause,
                             onMessage: ref.watch(uidProvider) == profile.uid
