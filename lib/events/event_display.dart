@@ -715,14 +715,36 @@ class EventDisplayLarge extends ConsumerWidget {
           endIndent: 28,
           color: Color.fromRGBO(0x3B, 0x3B, 0x3B, 1.0),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 28),
-          child: Text(
-            'Who will be there',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Row(
+            children: [
+              const Text(
+                'Who will be there',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              Builder(
+                builder: (context) {
+                  final text = event.attendance.map(
+                    unlimited: (_) => event.participants.count.toString(),
+                    limited: (limited) =>
+                        '${event.participants.count} / ${limited.limit}',
+                  );
+                  return Text(
+                    text,
+                    textAlign: TextAlign.end,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ),
         SizedBox(
