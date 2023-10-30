@@ -94,11 +94,16 @@ class Api {
   Future<Either<ApiError, Account>> createAccount(
     AccountCreationParams params,
   ) {
+    final photos = params.photos;
     final audio = params.audio;
     final name = params.name;
     final age = params.age;
     final latLong = params.latLong;
-    if (audio == null || name == null || age == null || latLong == null) {
+    if (photos == null ||
+        audio == null ||
+        name == null ||
+        age == null ||
+        latLong == null) {
       return Future.value(const Left(ApiError.client(ClientErrorBadRequest())));
     }
     return _requestStreamedResponseAsFuture(
@@ -107,6 +112,8 @@ class Api {
         final request = http.MultipartRequest('POST', uri);
         request.headers.addAll(_headers);
         request.files.addAll([
+          for (final photo in photos)
+            await http.MultipartFile.fromPath('photos', photo.path),
           await http.MultipartFile.fromPath('audio', audio.path),
         ]);
         request.fields.addAll({
@@ -1095,17 +1102,22 @@ class AccountCreationParams with _$AccountCreationParams {
   const factory AccountCreationParams({
     @Default(null) String? name,
     @Default(null) int? age,
+    @Default(null) List<File>? photos,
     @Default(null) File? audio,
     @Default(null) LatLong? latLong,
   }) = _AccountCreationParams;
 
   const AccountCreationParams._();
 
-  bool get valid => nameValid && ageValid && audioValid && latLong != null;
+  bool get valid =>
+      nameValid && ageValid && photosValid && audioValid && latLong != null;
 
   bool get nameValid => name != null && name!.isNotEmpty;
 
   bool get ageValid => age != null && age! >= 17;
+
+  bool get photosValid =>
+      photos != null && photos!.whereType<File>().isNotEmpty;
 
   bool get audioValid => audio != null;
 }
