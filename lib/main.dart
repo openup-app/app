@@ -40,6 +40,7 @@ import 'package:openup/location/location_service.dart';
 import 'package:openup/location/mapbox_location_search_service.dart';
 import 'package:openup/my_meetups_page.dart';
 import 'package:openup/notifications/notifications.dart';
+import 'package:openup/pay_test.dart';
 import 'package:openup/profile_page.dart';
 import 'package:openup/conversations_page.dart';
 import 'package:openup/report_screen.dart';
@@ -382,9 +383,14 @@ class _OpenupAppState extends ConsumerState<OpenupApp> {
       observers: observers,
       debugLogDiagnostics: !kReleaseMode,
       navigatorKey: rootNavigatorKey,
-      initialLocation: '/',
+      initialLocation: '/pay_test',
       errorBuilder: (context, state) => const ErrorScreen(),
       routes: [
+        GoRoute(
+          path: '/pay_test',
+          name: 'pay_test',
+          builder: (context, state) => const PayTest(),
+        ),
         GoRoute(
           path: '/',
           name: 'initial_loading',
