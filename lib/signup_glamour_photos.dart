@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import 'package:openup/api/api.dart';
 import 'package:openup/api/user_state.dart';
 import 'package:openup/util/photo_picker.dart';
 import 'package:openup/widgets/button.dart';
+import 'package:openup/widgets/gradient_mask.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
@@ -24,6 +26,7 @@ class _SignupGlamourPhotosState extends ConsumerState<SignupGlamourPhotos> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       resizeToAvoidBottomInset: false,
       appBar: OpenupAppBar(
         blurBackground: false,
@@ -42,10 +45,38 @@ class _SignupGlamourPhotosState extends ConsumerState<SignupGlamourPhotos> {
           ),
         ),
       ),
-      body: const SafeArea(
-        child: SafeArea(
-          child: _Photos(),
-        ),
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 89,
+            left: 0,
+            right: 72,
+            child: const GradientMask(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white,
+                  Color.fromRGBO(0x56, 0x56, 0x56, 1.0),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 29),
+                child: AutoSizeText(
+                  'Add a\nphoto',
+                  maxLines: 2,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 64,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const _Photos(),
+        ],
       ),
     );
   }
@@ -85,55 +116,27 @@ class _ProfilePanelState extends ConsumerState<_Photos> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const width = 193.0;
-        const height = 298.0;
+        const width = 238.0;
+        const height = 353.0;
         return Stack(
           children: [
             Align(
-              alignment: const Alignment(1.0, 0.0),
-              child: Transform.rotate(
-                angle: radians(2.45),
-                child: _ProfilePhotoCard(
-                  width: width,
-                  height: height,
-                  label: const Text('Photo #2'),
-                  photo: _photos.length >= 2 ? _photos[1] : null,
-                  onPressed: () => _updatePhoto(1),
-                  onLongPress: _photos[1] == null
-                      ? null
-                      : () => _showDeletePhotoDialog(1),
-                ),
-              ),
-            ),
-            Align(
-              alignment: const Alignment(-0.6, -1.0),
-              child: Transform.rotate(
-                angle: radians(23),
-                child: _ProfilePhotoCard(
-                  width: width,
-                  height: height,
-                  label: const Text('Photo #1'),
-                  photo: _photos.isNotEmpty ? _photos[0] : null,
-                  onPressed: () => _updatePhoto(0),
-                  onLongPress: _photos[0] == null
-                      ? null
-                      : () => _showDeletePhotoDialog(0),
-                ),
-              ),
-            ),
-            Align(
-              alignment: const Alignment(-0.9, 0.8),
-              child: Transform.rotate(
-                angle: radians(-8),
-                child: _ProfilePhotoCard(
-                  width: width,
-                  height: height,
-                  label: const Text('Photo #3'),
-                  photo: _photos.length >= 3 ? _photos[2] : null,
-                  onPressed: () => _updatePhoto(2),
-                  onLongPress: _photos[2] == null
-                      ? null
-                      : () => _showDeletePhotoDialog(2),
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom + 48.0),
+                child: Transform.rotate(
+                  angle: radians(-8),
+                  child: _ProfilePhotoCard(
+                    width: width,
+                    height: height,
+                    label: const SizedBox.shrink(),
+                    photo: _photos.isNotEmpty ? _photos[0] : null,
+                    onPressed: () => _updatePhoto(0),
+                    onLongPress: _photos[0] == null
+                        ? null
+                        : () => _showDeletePhotoDialog(0),
+                  ),
                 ),
               ),
             ),
@@ -235,7 +238,18 @@ class _ProfilePhotoCard extends StatelessWidget {
                   if (photo == null) {
                     return const DecoratedBox(
                       decoration: BoxDecoration(
-                          color: Color.fromRGBO(0x25, 0x25, 0x25, 1.0)),
+                        color: Color.fromRGBO(0x33, 0x33, 0x33, 1.0),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'tap here',
+                          style: TextStyle(
+                            fontFamily: 'Covered By Your Grace',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
                     );
                   }
                   return Image.file(
