@@ -2786,6 +2786,12 @@ String formatDateShort(DateTime d) {
   return dateFormat.format(d);
 }
 
+// Short date alternative form, ex. Oct 1, 23
+String formatDateShortAlternative(DateTime d) {
+  final dateFormat = DateFormat('MMM d, yy');
+  return dateFormat.format(d);
+}
+
 // Full day of the week, ex. Wednesday
 String formatDayOfWeek(DateTime d) {
   final dayOfWeekFormat = DateFormat.EEEE();

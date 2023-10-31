@@ -14,6 +14,7 @@ import 'package:openup/events/events_provider.dart';
 import 'package:openup/view_profile_page.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
+import 'package:openup/widgets/image.dart';
 import 'package:openup/widgets/record.dart';
 
 class EventDisplayListItem extends ConsumerWidget {
@@ -157,10 +158,10 @@ class EventDisplayListItem extends ConsumerWidget {
   }
 }
 
-class EventGridTile extends ConsumerWidget {
+class EventListTile extends ConsumerWidget {
   final Event event;
 
-  const EventGridTile({
+  const EventListTile({
     super.key,
     required this.event,
   });
@@ -175,93 +176,150 @@ class EventGridTile extends ConsumerWidget {
           extra: EventViewPageArgs(event: event),
         );
       },
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-              child: Image.network(
-                event.host.photo,
-                fit: BoxFit.cover,
+      child: Container(
+        clipBehavior: Clip.hardEdge,
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+        child: DefaultTextStyle.merge(
+          style: const TextStyle(color: Colors.black),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Image.network(
+                        event.host.photo,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      right: 13,
+                      bottom: 12,
+                      child: Container(
+                        height: 21,
+                        clipBehavior: Clip.hardEdge,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(3),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: Text(
+                            _eventAttendanceText(event),
+                            style: const TextStyle(
+                              color: Color.fromRGBO(0x21, 0x21, 0x21, 1.0),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              Container(
+                color: Colors.white,
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, right: 16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 32),
+                            child: Text(
+                              event.title,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_month,
+                                color: Color.fromRGBO(0x65, 0x65, 0x65, 1.0),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${formatDayOfWeek(event.startDate)}, ${formatDateShortAlternative(event.startDate)}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              Text(
+                                ' • ${formatTime(event.startDate)}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Container(
+                                width: 18,
+                                height: 18,
+                                clipBehavior: Clip.hardEdge,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Image.network(
+                                  event.host.photo,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Hosted by ${event.host.name}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                        ],
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Button(
+                        onPressed: () {},
+                        child: const Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: Icon(
+                            Icons.more_horiz,
+                            color: Color.fromRGBO(0x65, 0x65, 0x65, 1.0),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            ],
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 130,
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black,
-                  ],
-                  stops: [
-                    0.0,
-                    0.9,
-                  ],
-                ),
-              ),
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 5, bottom: 32, right: 5),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.title,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: 'Covered By Your Grace',
-                          fontSize: 22,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      Text(
-                        _eventAttendanceText(event),
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w200,
-                          color: Color.fromRGBO(0xFF, 0xFF, 0xFF, 0.5),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          )
-        ],
+        ),
       ),
     );
-  }
-
-  String _eventAttendanceText(Event event) {
-    final limit = event.attendance.map(
-      unlimited: (_) => null,
-      limited: (limit) => limit.limit,
-    );
-    if (limit == null) {
-      return '${event.host.name} needs more people';
-    }
-
-    final remaining = limit - event.participants.count;
-    if (remaining <= 0) {
-      return 'Hangout full';
-    }
-
-    if (remaining == 1) {
-      return '${event.host.name} needs a +1';
-    }
-
-    return '${event.host.name} needs +$remaining';
   }
 }
 
@@ -282,8 +340,8 @@ class EventTwoColumnPhoto extends StatelessWidget {
           width: 2,
         ),
       ),
-      child: Image.network(
-        event.host.photo,
+      child: ImageUri(
+        event.photo,
         fit: BoxFit.cover,
       ),
     );
@@ -543,8 +601,8 @@ class EventDisplayLarge extends ConsumerWidget {
           child: Stack(
             children: [
               Positioned.fill(
-                child: Image.network(
-                  event.host.photo,
+                child: ImageUri(
+                  event.photo,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -727,22 +785,13 @@ class EventDisplayLarge extends ConsumerWidget {
                 ),
               ),
               const Spacer(),
-              Builder(
-                builder: (context) {
-                  final text = event.attendance.map(
-                    unlimited: (_) => event.participants.count.toString(),
-                    limited: (limited) =>
-                        '${event.participants.count} / ${limited.limit}',
-                  );
-                  return Text(
-                    text,
-                    textAlign: TextAlign.end,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  );
-                },
+              Text(
+                _eventAttendanceText(event, displayFull: false),
+                textAlign: TextAlign.end,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
@@ -801,6 +850,116 @@ class EventDisplayLarge extends ConsumerWidget {
       ],
     );
   }
+}
+
+class EventDisplayMini extends StatelessWidget {
+  final Event event;
+
+  const EventDisplayMini({
+    super.key,
+    required this.event,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: double.infinity,
+          height: 138,
+          margin: const EdgeInsets.symmetric(horizontal: 25),
+          clipBehavior: Clip.hardEdge,
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(
+              Radius.circular(13),
+            ),
+          ),
+          child: ImageUri(
+            event.photo,
+            fit: BoxFit.cover,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          event.title,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.calendar_month,
+              color: Color.fromRGBO(0x65, 0x65, 0x65, 1.0),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '${formatDayOfWeek(event.startDate)}, ${formatDateShortAlternative(event.startDate)}',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            Text(
+              ' • ${formatTime(event.startDate)}',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 18,
+              height: 18,
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+              ),
+              child: Image.network(
+                event.host.photo,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Hosted by ${event.host.name}',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+String _eventAttendanceText(Event event, {bool displayFull = true}) {
+  final limit = event.attendance.map(
+    unlimited: (_) => null,
+    limited: (limit) => limit.limit,
+  );
+  if (limit == null) {
+    return event.participants.count.toString();
+  }
+
+  final remaining = limit - event.participants.count;
+  if (remaining <= 0 && displayFull) {
+    return 'Hangout full';
+  }
+
+  return '${event.participants.count} / $limit';
 }
 
 void _showEventOnMap(BuildContext context, Event event) {

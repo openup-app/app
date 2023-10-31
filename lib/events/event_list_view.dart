@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openup/events/event_display.dart';
 import 'package:openup/events/events_provider.dart';
@@ -84,29 +83,22 @@ class _EventListViewState extends ConsumerState<EventListView> {
           return const _CreateEvent();
         }
 
-        return MasonryGridView.count(
+        return ListView.separated(
           controller: _scrollController,
           padding: EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top,
-            bottom: MediaQuery.of(context).padding.bottom + 48,
-            left: 12,
-            right: 12,
+            top: MediaQuery.of(context).padding.top + 16,
+            bottom: MediaQuery.of(context).padding.bottom + 16,
+            left: 21,
+            right: 21,
           ),
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
           itemCount: eventIds.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 16),
           itemBuilder: (context, index) {
             final eventId = eventIds[index];
-            return Padding(
-              padding: index != 1
-                  ? EdgeInsets.zero
-                  : const EdgeInsets.only(top: 64.0),
-              child: SizedBox(
-                width: 181,
-                height: 300,
-                child: EventGridTile(
-                  event: ref.watch(eventProvider(eventId)),
-                ),
+            return SizedBox(
+              height: 279,
+              child: EventListTile(
+                event: ref.watch(eventProvider(eventId)),
               ),
             );
           },

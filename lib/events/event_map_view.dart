@@ -293,20 +293,8 @@ class _EventMapViewState extends ConsumerState<EventMapView>
           onClosePressed: Navigator.of(context).pop,
           child: Column(
             children: [
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(width: 25),
-                    Expanded(
-                      child: EventTwoColumnDetails(
-                        event: event,
-                        showMenuButton: false,
-                      ),
-                    ),
-                    const SizedBox(width: 25),
-                  ],
-                ),
+              EventDisplayMini(
+                event: event,
               ),
               const SizedBox(height: 28),
               SizedBox(
