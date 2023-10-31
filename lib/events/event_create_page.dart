@@ -14,6 +14,8 @@ import 'package:openup/events/events_provider.dart';
 import 'package:openup/location/location_provider.dart';
 import 'package:openup/location/location_search.dart';
 import 'package:openup/location/mapbox_location_search_service.dart';
+import 'package:openup/util/photo_picker.dart';
+import 'package:openup/widgets/image.dart';
 import 'package:openup/widgets/scaffold.dart';
 import 'package:openup/widgets/button.dart';
 import 'package:openup/widgets/common.dart';
@@ -43,6 +45,8 @@ class _EventCreationStateNotifier extends StateNotifier<EventSubmission> {
       state = state.copyWith(attendance: attendance);
 
   set description(String value) => state = state.copyWith(description: value);
+
+  set photo(Uri value) => state = state.copyWith(photo: value);
 }
 
 class EventCreatePage extends ConsumerStatefulWidget {
@@ -80,6 +84,7 @@ class _EventCreatePage0State extends ConsumerState<EventCreatePage> {
         location: editEvent.location,
         startDate: editEvent.startDate,
         endDate: editEvent.endDate,
+        photo: editEvent.photo,
         price: editEvent.price,
         attendance: editEvent.attendance,
         description: editEvent.description,
@@ -454,6 +459,46 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
                         .description = value,
                   ),
                 ),
+                const _SectionTitle('Photo'),
+                _FieldBackground(
+                  onPressed: () => _selectPhoto(),
+                  child: Builder(
+                    builder: (context) {
+                      final photo =
+                          ref.watch(_submissionProvider.select((s) => s.photo));
+                      return SizedBox(
+                        height: 125,
+                        child: photo == null
+                            ? const Center(
+                                child: Icon(
+                                  Icons.add_a_photo_outlined,
+                                  color: Color.fromRGBO(0x92, 0x92, 0x92, 1.0),
+                                  size: 48,
+                                ),
+                              )
+                            : Center(
+                                child: Container(
+                                  width: 62,
+                                  height: 105,
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
+                                  foregroundDecoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: ImageUri(
+                                    photo,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
           ),
@@ -529,6 +574,15 @@ class _EventCreatePageState extends ConsumerState<_EventCreatePageInternal> {
       );
     }
     return null;
+  }
+
+  void _selectPhoto() async {
+    final photo = await selectPhoto(context);
+    if (!mounted || photo == null) {
+      return;
+    }
+
+    ref.read(_submissionProvider.notifier).photo = photo.uri;
   }
 
   void _showEventPreview() {
