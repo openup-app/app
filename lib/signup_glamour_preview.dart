@@ -48,7 +48,7 @@ class SignupGlamourPreview extends ConsumerWidget {
                 child: ProfileBuilder(
                   profile: profile,
                   autoPlay: false,
-                  builder: (context, video, controller) {
+                  builder: (context, image, controller) {
                     return LayoutBuilder(
                       builder: (context, constraints) {
                         return PhotoCardWiggle(
@@ -74,7 +74,7 @@ class SignupGlamourPreview extends ConsumerWidget {
                                     .fadeOut(delay: const Duration(seconds: 6)),
                                 Button(
                                   onPressed: controller.togglePlayPause,
-                                  child: video.animate().fadeIn(
+                                  child: image.animate().fadeIn(
                                       delay: const Duration(seconds: 6)),
                                 ),
                               ],

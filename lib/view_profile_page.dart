@@ -104,7 +104,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                       profile: profile,
                       onController: (controller) =>
                           setState(() => _controller = controller),
-                      builder: (context, video, controller) {
+                      builder: (context, image, controller) {
                         return PhotoCardWiggle(
                           child: PhotoCardProfile(
                             width: constraints.maxWidth,

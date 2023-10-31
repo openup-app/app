@@ -42,7 +42,14 @@ class ProfileBuilder extends StatelessWidget {
       loop: true,
       onController: onController,
       builder: (context, child, audioController) {
-        return builder(context, Image.network(profile.photo), audioController);
+        return builder(
+          context,
+          Image.network(
+            profile.photo,
+            fit: BoxFit.cover,
+          ),
+          audioController,
+        );
       },
     );
   }
