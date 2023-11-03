@@ -1365,6 +1365,7 @@ class Event with _$Event {
     required EventAttendance attendance,
     required String description,
     required EventParticipants participants,
+    @Default(false) bool specialTbd,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);

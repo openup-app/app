@@ -255,14 +255,16 @@ class EventListTile extends ConsumerWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '${formatDayOfWeek(event.startDate)}, ${formatDateShortAlternative(event.startDate)}',
+                                (event.specialTbd)
+                                    ? 'TBA'
+                                    : '${formatDayOfWeek(event.startDate)}, ${formatDateShortAlternative(event.startDate)}',
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
                               Text(
-                                ' • ${formatTime(event.startDate)}',
+                                ' • ${event.specialTbd ? 'TBA' : formatTime(event.startDate)}',
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w300,
@@ -457,7 +459,7 @@ class EventTwoColumnDetails extends ConsumerWidget {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  event.location.name,
+                  event.specialTbd ? 'TBA' : event.location.name,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Color.fromRGBO(0x00, 0x90, 0xE1, 1.0),
@@ -475,10 +477,14 @@ class EventTwoColumnDetails extends ConsumerWidget {
               fontWeight: FontWeight.w300,
             ),
             children: [
-              TextSpan(text: formatDayOfWeek(event.endDate)),
+              TextSpan(
+                  text: event.specialTbd
+                      ? 'TBA'
+                      : formatDayOfWeek(event.endDate)),
               const TextSpan(text: ' | '),
               TextSpan(
-                text: formatDateShort(event.startDate),
+                text:
+                    event.specialTbd ? 'TBA' : formatDateShort(event.startDate),
                 style: const TextStyle(
                   fontWeight: FontWeight.w500,
                 ),
@@ -488,7 +494,9 @@ class EventTwoColumnDetails extends ConsumerWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${formatTime(event.startDate).toLowerCase()} - ${formatTime(event.endDate).toLowerCase()}',
+          event.specialTbd
+              ? 'TBA'
+              : '${formatTime(event.startDate).toLowerCase()} - ${formatTime(event.endDate).toLowerCase()}',
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w300,
@@ -637,14 +645,17 @@ class EventDisplayLarge extends ConsumerWidget {
                           text: TextSpan(
                             children: [
                               TextSpan(
-                                text: '${formatDayOfWeek(event.startDate)} | ',
+                                text:
+                                    '${event.specialTbd ? 'TBA' : formatDayOfWeek(event.startDate)} | ',
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w300,
                                 ),
                               ),
                               TextSpan(
-                                text: formatDateShort(event.startDate),
+                                text: event.specialTbd
+                                    ? 'TBA'
+                                    : formatDateShort(event.startDate),
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w500,
@@ -746,7 +757,9 @@ class EventDisplayLarge extends ConsumerWidget {
               ),
               const Spacer(),
               Text(
-                '${formatTime(event.startDate).toLowerCase()} - ${formatTime(event.endDate).toLowerCase()}',
+                event.specialTbd
+                    ? ''
+                    : '${formatTime(event.startDate).toLowerCase()} - ${formatTime(event.endDate).toLowerCase()}',
                 textAlign: TextAlign.end,
                 style: const TextStyle(
                   fontSize: 14,
@@ -833,7 +846,7 @@ class EventDisplayLarge extends ConsumerWidget {
                   ),
                   Expanded(
                     child: Text(
-                      event.location.name,
+                      event.specialTbd ? 'TBA' : event.location.name,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 16,
@@ -899,14 +912,16 @@ class EventDisplayMini extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              '${formatDayOfWeek(event.startDate)}, ${formatDateShortAlternative(event.startDate)}',
+              event.specialTbd
+                  ? 'TBA'
+                  : '${formatDayOfWeek(event.startDate)}, ${formatDateShortAlternative(event.startDate)}',
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
               ),
             ),
             Text(
-              ' • ${formatTime(event.startDate)}',
+              ' • ${event.specialTbd ? 'TBA' : formatTime(event.startDate)}',
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w300,
