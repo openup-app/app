@@ -26,7 +26,7 @@ class SignupGlamourIntro extends StatelessWidget {
                 ],
               ),
               child: Text(
-                'Before we show you the\nparty location...',
+                'Before we show you the\nparty details...',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24,
