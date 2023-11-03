@@ -21,6 +21,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
   int? _forceResendingToken;
   User? _user;
+  late StreamSubscription _authStateChangesSubscription;
 
   static AuthState _initialState() {
     final user = FirebaseAuth.instance.currentUser;
@@ -38,10 +39,20 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     required this.analytics,
   }) : super(_initialState()) {
     // Logging in/out triggers
-    FirebaseAuth.instance.authStateChanges().listen(_onAuthStateChange);
+    _authStateChangesSubscription =
+        FirebaseAuth.instance.authStateChanges().listen(_onAuthStateChange);
+  }
+
+  void disposeInternal() {
+    _authStateChangesSubscription.cancel();
   }
 
   void _onAuthStateChange(User? user) async {
+    // This check shouldn't be needed if the subscription is properly canceled
+    if (!mounted) {
+      return;
+    }
+
     final oldUser = _user;
     _user = user;
     final wasLoggedIn = oldUser != null;
