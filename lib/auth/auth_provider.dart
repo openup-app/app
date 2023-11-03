@@ -21,7 +21,6 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
   int? _forceResendingToken;
   User? _user;
-  StreamSubscription? _authStateChangesSubscription;
 
   static AuthState _initialState() {
     final user = FirebaseAuth.instance.currentUser;
@@ -39,14 +38,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     required this.analytics,
   }) : super(_initialState()) {
     // Logging in/out triggers
-    _authStateChangesSubscription =
-        FirebaseAuth.instance.authStateChanges().listen(_onAuthStateChange);
-  }
-
-  @override
-  void dispose() {
-    _authStateChangesSubscription?.cancel();
-    super.dispose();
+    FirebaseAuth.instance.authStateChanges().listen(_onAuthStateChange);
   }
 
   void _onAuthStateChange(User? user) async {
