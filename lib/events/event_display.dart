@@ -190,8 +190,8 @@ class EventListTile extends ConsumerWidget {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: Image.network(
-                        event.host.photo,
+                      child: ImageUri(
+                        event.photo,
                         fit: BoxFit.cover,
                       ),
                     ),
