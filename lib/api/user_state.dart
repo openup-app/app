@@ -28,7 +28,7 @@ class MessageStateNotifier extends StateNotifier<String?> {
   void emitMessage(String message) => state = message;
 }
 
-final _getAccountProvider = FutureProvider<GetAccountResult>((ref) async {
+final getAccountProvider = FutureProvider<GetAccountResult>((ref) async {
   final api = ref.watch(apiProvider);
   return getAccount(api);
 }, dependencies: [apiProvider]);
@@ -38,7 +38,7 @@ final userInitProvider = FutureProvider<UserInit?>((ref) async {
   return authState.map(
     guest: (guest) => const UserInit.signedOut(),
     signedIn: (signedIn) async {
-      final getAccountResult = ref.watch(_getAccountProvider);
+      final getAccountResult = ref.watch(getAccountProvider);
       return getAccountResult.when(
         loading: () => null,
         error: (_, __) => null,
@@ -52,7 +52,7 @@ final userInitProvider = FutureProvider<UserInit?>((ref) async {
       );
     },
   );
-}, dependencies: [authProvider, _getAccountProvider]);
+}, dependencies: [authProvider, getAccountProvider]);
 
 final userProvider = StateNotifierProvider<UserStateNotifier, UserState>(
   (ref) {
