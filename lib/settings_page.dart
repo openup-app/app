@@ -1171,9 +1171,8 @@ class _NameFieldState extends ConsumerState<_NameField> {
               controller: _nameController,
               focusNode: _nameFocusNode,
               enabled: _editingName,
-              textCapitalization: TextCapitalization.characters,
+              textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.done,
-              inputFormatters: [denyLowerCaseInputFormatter],
               onSubmitted: (_) => _submit(),
               style: DefaultTextStyle.of(context).style,
               decoration: const InputDecoration.collapsed(
