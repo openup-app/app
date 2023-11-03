@@ -8,8 +8,8 @@ import 'package:openup/analytics/analytics.dart';
 import 'package:openup/api/api.dart';
 import 'package:openup/api/api_util.dart';
 import 'package:openup/api/chat_api.dart';
+import 'package:openup/auth/auth_provider.dart';
 import 'package:openup/util/image_manip.dart';
-import 'package:openup/waitlist/waitlist_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
@@ -28,19 +28,31 @@ class MessageStateNotifier extends StateNotifier<String?> {
   void emitMessage(String message) => state = message;
 }
 
-final appInitProvider = FutureProvider<AppInit?>((ref) async {
+final _getAccountProvider = FutureProvider<GetAccountResult>((ref) async {
   final api = ref.watch(apiProvider);
-  final waitlistUser = ref.watch(waitlistProvider);
-  if (waitlistUser == null) {
-    // This also means there is no authenticated user
-    return null;
-  }
-  final accountState = await getAccount(api, waitlistUser);
-  return accountState.map(
-    (value) => value,
-    retry: (_) => null,
+  return getAccount(api);
+}, dependencies: [apiProvider]);
+
+final userInitProvider = FutureProvider<UserInit?>((ref) async {
+  final authState = ref.watch(authProvider);
+  return authState.map(
+    guest: (guest) => const UserInit.signedOut(),
+    signedIn: (signedIn) async {
+      final getAccountResult = ref.watch(_getAccountProvider);
+      return getAccountResult.when(
+        loading: () => null,
+        error: (_, __) => null,
+        data: (value) {
+          return value.map(
+            retry: (_) => null,
+            noAccount: (_) => const UserInit.signedInWithoutAccount(),
+            account: (account) => UserInit.signedInWithAccount(account.account),
+          );
+        },
+      );
+    },
   );
-}, dependencies: [apiProvider, waitlistProvider]);
+}, dependencies: [authProvider, _getAccountProvider]);
 
 final userProvider = StateNotifierProvider<UserStateNotifier, UserState>(
   (ref) {
@@ -49,24 +61,30 @@ final userProvider = StateNotifierProvider<UserStateNotifier, UserState>(
       messageNotifier: ref.read(messageProvider.notifier),
       analytics: ref.read(analyticsProvider),
     );
-    final appInit = ref.watch(appInitProvider);
-    if (!(appInit.hasValue && appInit.value != null)) {
-      return userStateNotifier;
-    } else {
-      final accountState = appInit.value!.accountState;
-      return accountState.map(
-        account: (accountState) =>
-            userStateNotifier..signedIn(accountState.account),
-        needsSignup: (_) => userStateNotifier,
-        none: (_) => userStateNotifier,
-      );
-    }
+
+    final userInit = ref.watch(userInitProvider);
+    return userInit.when(
+      loading: () => userStateNotifier,
+      error: (_, __) => userStateNotifier,
+      data: (value) {
+        if (value == null) {
+          return userStateNotifier..guest();
+        }
+        return value.map(
+          signedOut: (signedOut) => userStateNotifier..guest(),
+          signedInWithoutAccount: (signedInWithoutAccount) =>
+              userStateNotifier..guest(),
+          signedInWithAccount: (signedInWithAccount) =>
+              userStateNotifier..signedIn(signedInWithAccount.account),
+        );
+      },
+    );
   },
   dependencies: [
     apiProvider,
     messageProvider,
-    appInitProvider,
-    analyticsProvider
+    analyticsProvider,
+    userInitProvider,
   ],
 );
 
@@ -516,26 +534,25 @@ class UserState with _$UserState {
   }
 }
 
-Future<GetAccountResult> getAccount(Api api, WaitlistUser waitlistUser) async {
-  final results =
-      await Future.wait([api.getAppAvailability(), api.getAccountState()]);
-  final appAvailabilityResult = results[0] as Either<ApiError, AppAvailability>;
-  final accountStateResult = results[1] as Either<ApiError, AccountState>;
-  if (appAvailabilityResult.isLeft()) {
-    return appAvailabilityResult.fold(
-      (l) => _Retry(l),
-      (r) => throw 'Invalid state',
-    );
-  }
-
-  final appAvailability = appAvailabilityResult.fold(
-    (l) => throw 'Invalid state',
-    (r) => r,
-  );
-
-  return accountStateResult.fold(
-    (l) => _Retry(l),
-    (r) => GetAccountResult(appAvailability, waitlistUser, r),
+Future<GetAccountResult> getAccount(Api api) async {
+  final result = await api.getAccount();
+  return result.fold(
+    (l) {
+      return l.map<GetAccountResult>(
+        network: (_) => _Retry(l),
+        client: (apiClientError) {
+          return apiClientError.error.map(
+            badRequest: (_) => _Retry(l),
+            unauthorized: (_) => _Retry(l),
+            notFound: (_) => const _NoAccount(),
+            forbidden: (_) => _Retry(l),
+            conflict: (_) => _Retry(l),
+          );
+        },
+        server: (e) => _Retry(l),
+      );
+    },
+    (r) => _Account(r),
   );
 }
 
@@ -553,10 +570,15 @@ final uidProvider = Provider<String>(
 
 @freezed
 class GetAccountResult with _$GetAccountResult {
-  const factory GetAccountResult(
-    AppAvailability appAvailability,
-    WaitlistUser waitlistUser,
-    AccountState accountState,
-  ) = AppInit;
   const factory GetAccountResult.retry(ApiError e) = _Retry;
+  const factory GetAccountResult.noAccount() = _NoAccount;
+  const factory GetAccountResult.account(Account account) = _Account;
+}
+
+@freezed
+class UserInit with _$UserInit {
+  const factory UserInit.signedOut() = _SignedOut;
+  const factory UserInit.signedInWithoutAccount() = _SignedInWithoutAccount;
+  const factory UserInit.signedInWithAccount(Account account) =
+      _SignedInWithAccount;
 }
