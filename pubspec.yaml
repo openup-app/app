@@ -46,7 +46,7 @@ dependencies:
       ref: master
       path: flutter_apns
   flutter_local_notifications: ^15.0.1
-  flutter_riverpod: ^2.0.1
+  flutter_riverpod: ^2.4.5
   flutter_slidable: ^3.0.0
   flutter_svg: ^2.0.5
   go_router: ^11.1.2
