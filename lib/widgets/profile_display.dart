@@ -109,6 +109,12 @@ class _ProfileDisplayState extends ConsumerState<PhotoCardProfile> {
     }
   }
 
+  @override
+  void dispose() {
+    _isPlayingSubscription?.cancel();
+    super.dispose();
+  }
+
   void _listenForIsPlaying() {
     _isPlayingSubscription?.cancel();
     _isPlayingSubscription = widget.playbackStream
