@@ -304,7 +304,26 @@ class EventListTile extends ConsumerWidget {
                     Align(
                       alignment: Alignment.topRight,
                       child: Button(
-                        onPressed: () {},
+                        onPressed: () {
+                          showCupertinoModalPopup(
+                            context: context,
+                            builder: (context) {
+                              return CupertinoActionSheet(
+                                actions: [
+                                  CupertinoActionSheetAction(
+                                    onPressed: () {
+                                      ref
+                                          .read(apiProvider)
+                                          .reportEvent(eventId: event.id);
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('Report hangout'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                         child: const Padding(
                           padding: EdgeInsets.all(12.0),
                           child: Icon(

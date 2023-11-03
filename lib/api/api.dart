@@ -404,6 +404,20 @@ class Api {
     );
   }
 
+  Future<Either<ApiError, void>> reportEvent({
+    required String eventId,
+  }) {
+    return _request(
+      makeRequest: () {
+        return http.post(
+          Uri.parse('$_urlBase/events/$eventId/reports'),
+          headers: _headers,
+        );
+      },
+      handleSuccess: (response) => const Right(null),
+    );
+  }
+
   Future<Either<ApiError, String>> call(
     String calleeUid,
     bool video, {
